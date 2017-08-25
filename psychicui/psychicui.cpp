@@ -1,7 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <map>
-#include <psychicui/Screen.hpp>
+#include "Window.hpp"
 #include "psychicui.hpp"
 
 namespace psychicui {
@@ -45,15 +45,15 @@ namespace psychicui {
                 glfwPollEvents();
 
                 int       numScreens = 0;
-                for (auto kv : Screen::screens) {
-                    Screen *screen = kv.second;
-                    if (!screen->visible()) {
+                for (auto kv : Window::windows) {
+                    Window *window = kv.second;
+                    if (!window->visible()) {
                         continue;
-                    } else if (glfwWindowShouldClose(screen->window())) {
-                        screen->setVisible(false);
+                    } else if (glfwWindowShouldClose(window->window())) {
+                        window->setVisible(false);
                         continue;
                     }
-                    screen->drawAll();
+                    window->drawAll();
                     numScreens++;
                 }
 

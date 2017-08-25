@@ -13,11 +13,6 @@ set(PSYCHICUI_EXTRA_LIBS "")
 set(PSYCHICUI_EXTRA_DEFS "")
 set(LIBPSYCHICUI_EXTRA_SOURCE "")
 
-if (PSYCHICUI_BUILD_SHARED)
-    list(APPEND PSYCHICUI_EXTRA_DEFS -DPSYCHICUI_SHARED -DNVG_SHARED -DGLAD_GLAPI_EXPORT)
-endif ()
-
-
 # GLAD
 
 if (WIN32)
@@ -53,6 +48,9 @@ if (PSYCHICUI_USE_GLAD)
     )
 
     list(APPEND PSYCHICUI_EXTRA_DEFS -DPSYCHICUI_GLAD)
+    if (PSYCHICUI_BUILD_SHARED)
+        list(APPEND PSYCHICUI_EXTRA_DEFS -DGLAD_GLAPI_EXPORT)
+    endif ()
 endif ()
 
 
@@ -76,9 +74,9 @@ include_directories(
     ${GLFW_INCLUDE_DIRS}
 )
 
-link_libraries(
-    ${GLFW_LIBRARIES}
-)
+#link_libraries(
+#    ${GLFW_LIBRARIES}
+#)
 
 
 # EIGEN
@@ -95,6 +93,18 @@ set(EIGEN_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/eigen-prefix/src/eigen)
 include_directories(
     ${EIGEN_INCLUDE_DIRS}
 )
+
+
+# YOGA
+
+ExternalProject_Add(yoga
+    GIT_REPOSITORY git@github.com:facebook/yoga.git
+    GIT_TAG master
+    INSTALL_COMMAND ""
+    )
+
+set(YOGA_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/yoga-prefix/src/yoga)
+set(YOGA_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/yoga-prefix/src/yoga-build/${CMAKE_STATIC_LIBRARY_PREFIX}yogacore${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 
 # NANOVG
@@ -144,35 +154,39 @@ add_definitions(${PSYCHICUI_EXTRA_DEFS})
 set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     ${NANOVG_SOURCES}
     psychicui/psychicui.cpp
-    psychicui/Screen.cpp
-    psychicui/Screen.hpp
+    psychicui/Window.cpp
+    psychicui/Window.hpp
     psychicui/Widget.cpp
     psychicui/Widget.hpp
     psychicui/Style.cpp
     psychicui/Style.hpp
-    psychicui/Window.cpp
-    psychicui/Window.hpp
+    psychicui/Panel.cpp
+    psychicui/Panel.hpp
     psychicui/Layout.cpp
     psychicui/Layout.hpp
     psychicui/Popup.cpp
     psychicui/Popup.hpp psychicui/Button.cpp psychicui/Button.hpp)
 add_library(psychicui SHARED ${SOURCE_FILES})
-target_include_directories(psychicui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(psychicui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${YOGA_INCLUDE_DIRS})
+target_link_libraries(psychicui ${GLFW_LIBRARIES})
+target_link_libraries(psychicui ${YOGA_LIBRARIES})
 add_dependencies(psychicui eigen)
 add_dependencies(psychicui glfw)
+add_dependencies(psychicui yoga)
 add_dependencies(psychicui nanovg)
 
 if (PSYCHICUI_BUILD_SHARED)
     set_property(TARGET psychicui PROPERTY POSITION_INDEPENDENT_CODE ON)
-    set_property(TARGET psychicui APPEND PROPERTY COMPILE_DEFINITIONS "_GLFW_BUILD_DLL;NVG_SHARED")
+    set_property(TARGET psychicui APPEND PROPERTY COMPILE_DEFINITIONS "_GLFW_BUILD_DLL")
     target_link_libraries(psychicui ${PSYCHICUI_EXTRA_LIBS})
 endif ()
 
-set_property(TARGET psychicui APPEND PROPERTY COMPILE_DEFINITIONS "PSYCHICUI_BUILD;NVG_BUILD")
-
-if (PSYCHICUI_USE_GLAD AND PSYCHICUI_BUILD_SHARED)
-    set_property(TARGET psychicui APPEND PROPERTY COMPILE_DEFINITIONS "GLAD_GLAPI_EXPORT;GLAD_GLAPI_EXPORT_BUILD")
-endif ()
+if (PSYCHICUI_USE_GLAD)
+    add_dependencies(psychicui glad)
+    if(PSYCHICUI_BUILD_SHARED)
+        set_property(TARGET psychicui APPEND PROPERTY COMPILE_DEFINITIONS "GLAD_GLAPI_EXPORT;GLAD_GLAPI_EXPORT_BUILD")
+    endif ()
+endif()
 
 if (PSYCHICUI_BUILD_SHARED AND NOT ${U_CMAKE_BUILD_TYPE} MATCHES DEB)
     # Platform-specific strip flags for reducing the library size.

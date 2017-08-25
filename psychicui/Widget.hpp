@@ -1,40 +1,45 @@
 #pragma once
 
 #include <vector>
+#include <yoga/Yoga.h>
 #include "psychicui.hpp"
 #include "Layout.hpp"
 #include "Style.hpp"
 
 namespace psychicui {
-    class Widget {
+    class Panel;
+
+    class Widget : public std::enable_shared_from_this<Widget> {
     public:
-        Widget(Widget *parent);
+        Widget();
 
         Widget *parent();
         const Widget *parent() const;
         void setParent(Widget *parent);
+        virtual std::shared_ptr<Panel> panel();
+        std::vector<std::shared_ptr<Widget>> path();
 
         int childCount() const;
-        const std::vector<Widget *> &children() const;
+        const std::vector<std::shared_ptr<Widget>> children() const;
 
-        virtual void addChild(int index, Widget *widget);
-        void addChild(Widget *widget);
+        void addChild(unsigned int index, std::shared_ptr<Widget> widget);
+        void addChild(std::shared_ptr<Widget> widget);
         void removeChild(int index);
-        void removeChild(const Widget *widget);
-        const Widget *childAt(int index) const;
-        Widget *childAt(int index);
-        int childIndex(Widget *widget) const;
+        void removeChild(const std::shared_ptr<Widget> widget);
+        const std::shared_ptr<Widget> childAt(int index) const;
+        std::shared_ptr<Widget> childAt(int index);
+        int childIndex(std::shared_ptr<Widget> widget) const;
 
         template<typename WidgetClass, typename... Args>
-        WidgetClass *add(const Args &... args) {
-            return new WidgetClass(this, args...);
+        std::shared_ptr<WidgetClass> add(const Args &... args) {
+            return std::make_shared<WidgetClass>(this, args...);
         }
 
         bool visible() const;
         bool visibleRecursive() const;
         bool focused() const;
-        void setFocused(bool focused);
         void requestFocus();
+        virtual void requestFocus(Widget *widget);
 
         virtual void setVisible(bool visible);
 
@@ -63,19 +68,15 @@ namespace psychicui {
         Cursor cursor() const;
         void setCursor(Cursor cursor);
 
-        Widget *findWidget(const Vector2i &p);
+        std::shared_ptr<Widget> findWidget(const Vector2i &p);
         bool contains(const Vector2i &p) const;
 
-        Style *style();
-        const Style *style() const;
-        void setStyle(Style *style);
+        std::shared_ptr<Style> style();
+        const std::shared_ptr<Style> style() const;
+        void setStyle(std::shared_ptr<Style> style);
 
-        Layout *layout();
-        const Layout *layout() const;
-        void setLayout(Layout *layout);
+        YGNodeRef yogaNode();
 
-        virtual Vector2i preferredSize(NVGcontext *ctx) const;
-        virtual void performLayout(NVGcontext *ctx);
         virtual void draw(NVGcontext *ctx);
 
         // Events
@@ -87,19 +88,21 @@ namespace psychicui {
 
     protected:
         virtual ~Widget();
-        bool                  _enabled{true};
-        bool                  _visible{true};
-        Vector2i              _position{0, 0};
-        Vector2i              _size{0, 0};
-        Vector2i              _fixedSize{0, 0};
-        bool                  _focused{false};
-        bool                  _mouseOver{false};
-        Style                 *_style{nullptr};
-        Cursor                _cursor{Cursor::Arrow};
-        Layout                *_layout{nullptr};
-        Widget                *_parent{nullptr};
-        std::vector<Widget *> _children;
+        bool                                 _enabled{true};
+        bool                                 _visible{true};
+        Vector2i                             _position{0, 0};
+        Vector2i                             _size     = Vector2i(0, 0);
+        Vector2i                             _fixedSize{0, 0};
+        bool                                 _focused{false};
+        bool                                 _mouseOver{false};
+        std::shared_ptr<Style>               _style{nullptr};
+        Cursor                               _cursor{Cursor::Arrow};
+        Layout                               *_layout{nullptr};
+        Widget                               *_parent{nullptr};
+        std::vector<std::shared_ptr<Widget>> _children;
+        YGNodeRef                            _yogaNode = YGNodeNew();
 
+        void setFocused(bool focused);
         void mouseMovedPropagation(const Vector2i &p, int button, int modifiers);
         bool mouseScrolledPropagation(const Vector2i &p, const Vector2f &rel);
         bool mouseButtonPropagation(const Vector2i &p, int button, bool down, int modifiers);

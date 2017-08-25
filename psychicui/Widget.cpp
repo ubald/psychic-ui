@@ -1,34 +1,41 @@
 #include "Widget.hpp"
-#include "Screen.hpp"
+#include "Window.hpp"
 
 namespace psychicui {
 
-    Widget::Widget(Widget *parent) {
-        if (parent) {
-            parent->addChild(this);
-        }
+    Widget::Widget() {
+        YGNodeSetContext(_yogaNode, this);
     }
 
     Widget::~Widget() {
-        for (auto child : _children) {
-            if (child) {
-//                child->decRef();
-            }
-        }
+        YGNodeFree(_yogaNode);
     }
 
     // HIERARCHY
 
-    Widget *Widget::parent() {
+    Widget * Widget::parent() {
         return _parent;
     }
 
-    const Widget *Widget::parent() const {
+    const Widget * Widget::parent() const {
         return _parent;
     }
 
-    void Widget::setParent(Widget *parent) {
+    void Widget::setParent(Widget * parent) {
         _parent = parent;
+    }
+
+    std::shared_ptr<Panel> Widget::panel() {
+        return _parent ? _parent->panel() : nullptr;
+    }
+
+    std::vector<std::shared_ptr<Widget>> Widget::path() {
+        std::vector<std::shared_ptr<Widget>> path;
+        if (_parent) {
+            path = _parent->path();
+        }
+        path.insert(path.begin(), shared_from_this());
+        return path;
     }
 
     // CHILDREN
@@ -37,34 +44,36 @@ namespace psychicui {
         return (int) _children.size();
     }
 
-    const std::vector<Widget *> &Widget::children() const {
+    const std::vector<std::shared_ptr<Widget>> Widget::children() const {
         return _children;
     }
 
-    void Widget::addChild(int index, Widget *widget) {
+    void Widget::addChild(unsigned int index, std::shared_ptr<Widget> widget) {
         assert(index <= childCount());
+        assert(widget != nullptr);
         _children.insert(_children.begin() + index, widget);
-//        widget->incRef();
+        YGNodeInsertChild(_yogaNode, widget->yogaNode(), index);
         widget->setParent(this);
-//        widget->setTheme(mTheme);
     }
 
-    void Widget::addChild(Widget *widget) {
+    void Widget::addChild(std::shared_ptr<Widget> widget) {
+        assert(widget != nullptr);
         addChild(childCount(), widget);
     }
 
-    void Widget::removeChild(const Widget *widget) {
+    void Widget::removeChild(const std::shared_ptr<Widget> widget) {
+        assert(widget != nullptr);
         _children.erase(std::remove(_children.begin(), _children.end(), widget), _children.end());
-//        widget->decRef();
     }
 
     void Widget::removeChild(int index) {
-        Widget *widget = _children[index];
+        assert(index <= childCount());
+        std::shared_ptr<Widget> widget = _children[index];
         _children.erase(_children.begin() + index);
-//        widget->decRef();
     }
 
-    int Widget::childIndex(Widget *widget) const {
+    int Widget::childIndex(std::shared_ptr<Widget> widget) const {
+        assert(widget != nullptr);
         auto it = std::find(_children.begin(), _children.end(), widget);
         if (it == _children.end()) {
             return -1;
@@ -72,11 +81,13 @@ namespace psychicui {
         return (int) (it - _children.begin());
     }
 
-    const Widget *Widget::childAt(int index) const {
+    const std::shared_ptr<Widget> Widget::childAt(int index) const {
+        assert(index <= childCount());
         return _children[index];
     }
 
-    Widget *Widget::childAt(int index) {
+    std::shared_ptr<Widget> Widget::childAt(int index) {
+        assert(index <= childCount());
         return _children[index];
     }
 
@@ -91,11 +102,9 @@ namespace psychicui {
     }
 
     bool Widget::visibleRecursive() const {
-        bool visible = true;
-        const Widget *widget = this;
-        while (widget) {
-            visible &= widget->visible();
-            widget = widget->parent();
+        bool visible = _visible;
+        if (_parent) {
+            visible &= _parent->visibleRecursive();
         }
         return visible;
     }
@@ -111,11 +120,13 @@ namespace psychicui {
     }
 
     void Widget::requestFocus() {
-        Widget *widget = this;
-        while (widget->parent()) {
-            widget = widget->parent();
+        requestFocus(this);
+    }
+
+    void Widget::requestFocus(Widget *widget) {
+        if (_parent) {
+            _parent->requestFocus(widget);
         }
-        ((Screen *) widget)->updateFocus(this);
     }
 
     // CURSOR
@@ -135,13 +146,13 @@ namespace psychicui {
         return (d >= 0).all() && (d < _size.array()).all();
     }
 
-    Widget *Widget::findWidget(const Vector2i &p) {
+    std::shared_ptr<Widget> Widget::findWidget(const Vector2i &p) {
         for (auto child: _children) {
             if (child->visible() && child->contains(p - _position)) {
                 return child->findWidget(p - _position);
             }
         }
-        return contains(p) ? this : nullptr;
+        return contains(p) ? shared_from_this() : nullptr;
     }
 
     // POSITION
@@ -155,7 +166,7 @@ namespace psychicui {
     }
 
     const Vector2i Widget::absolutePosition() const {
-        return _parent ? (parent()->absolutePosition() + _position) : _position;
+        return _parent ? _parent->absolutePosition() + _position : _position;
     }
 
     int Widget::x() const {
@@ -163,7 +174,7 @@ namespace psychicui {
     }
 
     void Widget::setX(int x) {
-        _position.x() = x;
+        _position[0] = x;
     }
 
     int Widget::y() const {
@@ -171,7 +182,7 @@ namespace psychicui {
     }
 
     void Widget::setY(int y) {
-        _position.y() = y;
+        _position[1] = y;
     }
 
     // SIZE
@@ -189,7 +200,7 @@ namespace psychicui {
     }
 
     void Widget::setWidth(int width) {
-        _size.x() = width;
+        _size[0] = width;
     }
 
     int Widget::height() const {
@@ -197,7 +208,7 @@ namespace psychicui {
     }
 
     void Widget::setHeight(int height) {
-        _size.y() = height;
+        _size[1] = height;
     }
 
     void Widget::setFixedSize(const Vector2i &fixedSize) {
@@ -213,7 +224,7 @@ namespace psychicui {
     }
 
     void Widget::setFixedWidth(int width) {
-        _fixedSize.x() = width;
+        _fixedSize[0] = width;
     }
 
     int Widget::fixedHeight() const {
@@ -221,59 +232,39 @@ namespace psychicui {
     }
 
     void Widget::setFixedHeight(int height) {
-        _fixedSize.y() = height;
+        _fixedSize[1] = height;
     }
 
     // STYLE
 
-    Style *Widget::style() {
-        return _style ? _style : _parent->style();
+    std::shared_ptr<Style> Widget::style() {
+        if (_style) {
+            return _style;
+        } else if (_parent) {
+            return _parent->style();
+        } else {
+            return Style::defaultStyle;
+        }
     }
 
-    const Style *Widget::style() const {
-        return _style ? _style : _parent->style();
+    const std::shared_ptr<Style> Widget::style() const {
+        if (_style) {
+            return _style;
+        } else if (_parent) {
+            return _parent->style();
+        } else {
+            return Style::defaultStyle;
+        }
     }
 
-    void Widget::setStyle(Style *style) {
+    void Widget::setStyle(std::shared_ptr<Style> style) {
         _style = style;
     }
 
     // LAYOUT
 
-    Layout *Widget::layout() {
-        return _layout;
-    }
-
-    const Layout *Widget::layout() const {
-        return _layout;
-    }
-
-    void Widget::setLayout(Layout *layout) {
-        _layout = layout;
-    }
-
-    Vector2i Widget::preferredSize(NVGcontext *ctx) const {
-        if (_layout) {
-            return _layout->preferredSize(ctx, this);
-        } else {
-            return _size;
-        }
-    }
-
-    void Widget::performLayout(NVGcontext *ctx) {
-        if (_layout) {
-            _layout->performLayout(ctx, this);
-        } else {
-            for (auto c : _children) {
-                Vector2i pref = c->preferredSize(ctx), fix = c->fixedSize();
-                c->setSize(
-                    Vector2i(
-                        fix[0] ? fix[0] : pref[0],
-                        fix[1] ? fix[1] : pref[1]
-                    ));
-                c->performLayout(ctx);
-            }
-        }
+    YGNodeRef Widget::yogaNode() {
+        return _yogaNode;
     }
 
     // DRAW
@@ -352,7 +343,7 @@ namespace psychicui {
             return;
         }
 
-        bool over = contains(p);
+        bool over       = contains(p);
         bool overBefore = _mouseOver;
 
         if (over != _mouseOver) {

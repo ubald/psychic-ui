@@ -2,9 +2,9 @@
 
 namespace psychicui {
 
-    Popup::Popup(Widget *parent, Window *parentWindow) :
-        Window(parent, ""),
-        _parentWindow(parentWindow),
+    Popup::Popup(std::shared_ptr<Panel> parentPanel) :
+        Panel(""),
+        _parentPanel(parentPanel),
         _anchorPosition(Vector2i::Zero()),
         _anchorHeight(30),
         _side(Side::Right) {
@@ -34,31 +34,20 @@ namespace psychicui {
         return _side;
     }
 
-    Window *Popup::parentWindow() {
-        return _parentWindow;
+    std::shared_ptr<Panel> Popup::parentPanel() {
+        return _parentPanel.lock();
     }
 
-    const Window *Popup::parentWindow() const {
-        return _parentWindow;
-    }
-
-    void Popup::performLayout(NVGcontext *ctx) {
-        if (_layout || _children.size() != 1) {
-            Widget::performLayout(ctx);
-        } else {
-            _children[0]->setPosition(Vector2i::Zero());
-            _children[0]->setSize(_size);
-            _children[0]->performLayout(ctx);
-        }
-        if (_side == Side::Left) {
-            _anchorPosition[0] -= size()[0];
-        }
+    const std::shared_ptr<Panel> Popup::parentPanel() const {
+        return _parentPanel.lock();
     }
 
     void Popup::refreshRelativePlacement() {
-        _parentWindow->refreshRelativePlacement();
-        _visible &= _parentWindow->visibleRecursive();
-        _position = _parentWindow->position() + _anchorPosition - Vector2i(0, _anchorHeight);
+        if (auto pp = _parentPanel.lock()) {
+            pp->refreshRelativePlacement();
+            _visible &= pp->visibleRecursive();
+            _position = pp->position() + _anchorPosition - Vector2i(0, _anchorHeight);
+        }
     }
 
     void Popup::draw(NVGcontext *ctx) {
@@ -68,8 +57,8 @@ namespace psychicui {
             return;
         }
 
-        int ds = style()->windowDropShadowSize;
-        int cr = style()->windowCornerRadius;
+        int ds = style()->panelDropShadowSize;
+        int cr = style()->panelCornerRadius;
 
         nvgSave(ctx);
         nvgResetScissor(ctx);
@@ -77,7 +66,7 @@ namespace psychicui {
         /* Draw a drop shadow */
         NVGpaint shadowPaint = nvgBoxGradient(
             ctx, _position.x(), _position.y(), _size.x(), _size.y(), cr * 2, ds * 2,
-            style()->windowDropShadowColor, style()->transparent
+            style()->panelDropShadowColor, style()->transparent
         );
 
         nvgBeginPath(ctx);
@@ -87,7 +76,7 @@ namespace psychicui {
         nvgFillPaint(ctx, shadowPaint);
         nvgFill(ctx);
 
-        /* Draw window */
+        /* Draw panel */
         nvgBeginPath(ctx);
         nvgRoundedRect(ctx, _position.x(), _position.y(), _size.x(), _size.y(), cr);
 

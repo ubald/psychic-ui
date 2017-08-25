@@ -1,5 +1,5 @@
 #include <psychicui/psychicui.hpp>
-#include <psychicui/Screen.hpp>
+#include <psychicui/Window.hpp>
 #include <psychicui/Button.hpp>
 #include <memory>
 #include <stdexcept>
@@ -7,13 +7,33 @@
 
 using namespace psychicui;
 
-class DemoApplication : public Screen {
+class TitleBar: public Widget {
 public:
+    TitleBar() :
+        Widget() {
+        setHeight(style()->titleBarHeight);
+        }
+};
+
+class DemoApplication : public Window {
+public:
+    std::shared_ptr<Button> button2;
+
     DemoApplication() :
-        Screen("Demo Application") {
-        auto button = new Button(nullptr, "Test");
+        Window("Demo Application") {
+        //_decorated = false;
+
+        auto titleBar = std::make_shared<TitleBar>();
+        addChild(titleBar);
+
+        auto button = std::make_shared<Button>("Test");
         button->setSize(Vector2i(20, 20));
         addChild(button);
+
+        button2 = std::make_shared<Button>("Coucou");
+        button2->setPosition(Vector2i(40, 40));
+        button2->setSize(Vector2i(40, 40));
+        addChild(button2);
     }
 };
 
@@ -22,7 +42,7 @@ int main(int /* argc */, char ** /* argv */) {
         psychicui::init();
 
         {
-            std::unique_ptr<DemoApplication> app = std::make_unique<DemoApplication>();
+            std::shared_ptr<DemoApplication> app = std::make_shared<DemoApplication>();
             app->open();
             psychicui::mainloop();
         }

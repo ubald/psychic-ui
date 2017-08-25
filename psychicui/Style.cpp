@@ -1,5 +1,5 @@
 #include "Style.hpp"
 
 namespace psychicui {
-    Style Style::defaultStyle;
+    std::shared_ptr<Style> Style::defaultStyle = std::make_shared<Style>();
 }
