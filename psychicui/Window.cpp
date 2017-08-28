@@ -127,8 +127,8 @@ namespace psychicui {
         glfwGetWindowSize(_window, &_width, &_height);
         _pixelRatio = get_pixel_ratio(_window);
         #if defined(_WIN32) || defined(__linux__)
-        if (_pixelRatio != 1 && !setFullscreen)
-            glfwSetWindowSize(_window, _size.setX() * _pixelRatio, _size.setY() * _pixelRatio);
+        if (_pixelRatio != 1 && !_fullscreen)
+            glfwSetWindowSize(_window, _width * _pixelRatio, _height * _pixelRatio);
         #endif
 
         glfwGetFramebufferSize(_window, &_fbWidth, &_fbHeight);
@@ -496,10 +496,10 @@ namespace psychicui {
         glfwGetWindowSize(_window, &_width, &_height);
 
         #if defined(_WIN32) || defined(__linux__)
-        _width = (_width / _pixelRatio).cast<int>();
-        _height = (_height / _pixelRatio).cast<int>();
-        _fbWidth = (_fbWidth * _pixelRatio).cast<int>();
-        _fbHeight = (_fbHeight * _pixelRatio).cast<int>();
+        _width = (int)(_width / _pixelRatio);
+        _height =(int)(_height / _pixelRatio);
+        _fbWidth = (int)(_fbWidth * _pixelRatio);
+        _fbHeight = (int)(_fbHeight * _pixelRatio);
         #else
         if (_width) {
             _pixelRatio = (float) _fbWidth / (float) _width;
@@ -583,8 +583,8 @@ namespace psychicui {
 
     void Window::cursorPosEventCallback(double x, double y) {
         #if defined(_WIN32) || defined(__linux__)
-        setX /= _pixelRatio;
-        setY /= _pixelRatio;
+        _x /= _pixelRatio;
+        _y /= _pixelRatio;
         #endif
 
         _lastInteraction = glfwGetTime();
@@ -735,8 +735,8 @@ namespace psychicui {
         glfwGetWindowSize(_window, &width, &height);
 
         #if defined(_WIN32) || defined(__linux__)
-        setWidth /= mPixelRatio;
-        setHeight /= mPixelRatio;
+        _width /= _pixelRatio;
+        _height /= _pixelRatio;
         #endif
 
         if ((fbWidth == 0 && fbHeight == 0) || (width == 0 && height == 0)) {

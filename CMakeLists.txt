@@ -28,7 +28,6 @@ if (PSYCHICUI_USE_GLAD)
     ExternalProject_Add(glad
         GIT_REPOSITORY https://github.com/Dav1dde/glad
         GIT_TAG master
-        UPDATE_DISCONNECTED 1
         CMAKE_ARGS -DGLAD_API=gl=4.5
         CMAKE_ARGS -DGLAD_PROFILE=core
         CMAKE_ARGS -DGLAD_GENERATOR=c
@@ -59,7 +58,6 @@ endif ()
 
 ExternalProject_Add(glfw
     URL https://github.com/glfw/glfw/archive/3.2.1.tar.gz
-    UPDATE_DISCONNECTED 1
     CMAKE_ARGS -DBUILD_SHARED_LIBS=FALSE
     CMAKE_ARGS -DGLFW_BUILD_EXAMPLES=FALSE
     CMAKE_ARGS -DGLFW_BUILD_TESTS=FALSE
@@ -103,7 +101,6 @@ include_directories(
 ExternalProject_Add(yoga
     GIT_REPOSITORY git@github.com:facebook/yoga.git
     GIT_TAG master
-    UPDATE_DISCONNECTED 1
     INSTALL_COMMAND ""
     )
 
@@ -128,7 +125,6 @@ configure_file("tools/skia_build.sh.in" "skia_build.sh" @ONLY)
 ExternalProject_Add(depot_tools
     GIT_REPOSITORY https://chromium.googlesource.com/chromium/tools/depot_tools.git
     GIT_TAG master
-    UPDATE_DISCONNECTED 1
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
@@ -138,7 +134,6 @@ ExternalProject_Add(skia
     GIT_REPOSITORY https://skia.googlesource.com/skia.git
     GIT_TAG master
     DEPENDS depot_tools
-    UPDATE_DISCONNECTED 1
     PATCH_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_patch.sh
     CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_configure.sh
     BUILD_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_build.sh
