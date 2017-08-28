@@ -101,12 +101,14 @@ include_directories(
 ExternalProject_Add(yoga
     GIT_REPOSITORY git@github.com:facebook/yoga.git
     GIT_TAG master
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
     INSTALL_COMMAND ""
     )
 
 set(YOGA_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/yoga-prefix/src/yoga)
-set(YOGA_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/yoga-prefix/src/yoga-build/${CMAKE_STATIC_LIBRARY_PREFIX}yogacore${CMAKE_STATIC_LIBRARY_SUFFIX})
-
+file(GLOB YOGA_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/yoga-prefix/src/yoga/yoga/*.c)
+#set(YOGA_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/yoga-prefix/src/yoga-build/${CMAKE_STATIC_LIBRARY_PREFIX}yogacore${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 # SKIA
 
@@ -134,6 +136,7 @@ ExternalProject_Add(skia
     GIT_REPOSITORY https://skia.googlesource.com/skia.git
     GIT_TAG master
     DEPENDS depot_tools
+    UPDATE_DISCONNECTED 1
     PATCH_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_patch.sh
     CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_configure.sh
     BUILD_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_build.sh
@@ -194,7 +197,21 @@ elseif (APPLE)
     )
     list(APPEND LIBPSYCHICUI_EXTRA_SOURCE psychicui/darwin.mm)
 elseif (CMAKE_SYSTEM MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
-    list(APPEND PSYCHICUI_EXTRA_LIBS GL Xxf86vm Xrandr Xinerama Xcursor Xi X11 pthread)
+    list(APPEND PSYCHICUI_EXTRA_LIBS
+        GL
+        Xxf86vm
+        Xrandr
+        Xinerama
+        Xcursor
+        Xi
+        X11
+        pthread
+        png
+        jpeg
+        turbojpeg
+        freetype
+        fontconfig
+    )
     if (NOT CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
         list(APPEND PSYCHICUI_EXTRA_LIBS rt)
     endif ()
@@ -208,7 +225,8 @@ endif ()
 add_definitions(${PSYCHICUI_EXTRA_DEFS})
 
 set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
-    ${NANOVG_SOURCES}
+#    ${NANOVG_SOURCES}
+    ${YOGA_SOURCES}
     psychicui/psychicui.cpp
     psychicui/Window.cpp
     psychicui/Window.hpp
