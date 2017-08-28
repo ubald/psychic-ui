@@ -28,6 +28,7 @@ if (PSYCHICUI_USE_GLAD)
     ExternalProject_Add(glad
         GIT_REPOSITORY https://github.com/Dav1dde/glad
         GIT_TAG master
+        UPDATE_DISCONNECTED 1
         CMAKE_ARGS -DGLAD_API=gl=4.5
         CMAKE_ARGS -DGLAD_PROFILE=core
         CMAKE_ARGS -DGLAD_GENERATOR=c
@@ -58,6 +59,7 @@ endif ()
 
 ExternalProject_Add(glfw
     URL https://github.com/glfw/glfw/archive/3.2.1.tar.gz
+    UPDATE_DISCONNECTED 1
     CMAKE_ARGS -DBUILD_SHARED_LIBS=FALSE
     CMAKE_ARGS -DGLFW_BUILD_EXAMPLES=FALSE
     CMAKE_ARGS -DGLFW_BUILD_TESTS=FALSE
@@ -81,18 +83,19 @@ include_directories(
 
 # EIGEN
 
-ExternalProject_Add(eigen
-    URL http://bitbucket.org/eigen/eigen/get/3.3.4.tar.gz
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    )
-
-set(EIGEN_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/eigen-prefix/src/eigen)
-
-include_directories(
-    ${EIGEN_INCLUDE_DIRS}
-)
+#ExternalProject_Add(eigen
+#    URL http://bitbucket.org/eigen/eigen/get/3.3.4.tar.gz
+#    UPDATE_DISCONNECTED 1
+#    CONFIGURE_COMMAND ""
+#    BUILD_COMMAND ""
+#    INSTALL_COMMAND ""
+#    )
+#
+#set(EIGEN_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/eigen-prefix/src/eigen)
+#
+#include_directories(
+#    ${EIGEN_INCLUDE_DIRS}
+#)
 
 
 # YOGA
@@ -100,6 +103,7 @@ include_directories(
 ExternalProject_Add(yoga
     GIT_REPOSITORY git@github.com:facebook/yoga.git
     GIT_TAG master
+    UPDATE_DISCONNECTED 1
     INSTALL_COMMAND ""
     )
 
@@ -107,22 +111,61 @@ set(YOGA_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/yoga-prefix/src/yoga)
 set(YOGA_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/yoga-prefix/src/yoga-build/${CMAKE_STATIC_LIBRARY_PREFIX}yogacore${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 
-# NANOVG
+# SKIA
 
-ExternalProject_Add(nanovg
-    GIT_REPOSITORY git@github.com:memononen/nanovg.git
+set(SKIA_ARGS_LIST skia_use_dng_sdk=false skia_use_expat=false skia_use_libwebp=false skia_use_piex=false skia_use_freetype=true)
+if (APPLE)
+    list(APPEND SKIA_ARGS_LIST "extra_cflags=[\"-I/usr/local/opt/icu4c/include\", \"-I/usr/local/opt/jpeg-turbo/include\", \"-I/usr/local/opt/freetype/include/freetype2\"]")
+    list(APPEND SKIA_ARGS_LIST "extra_ldflags=[\"-L/usr/local/opt/icu4c/lib\", \"-L/usr/local/opt/jpeg-turbo\", \"-L/usr/local/opt/freetype\"]")
+endif ()
+
+string(REPLACE ";" " " SKIA_ARGS "${SKIA_ARGS_LIST}")
+
+configure_file("tools/skia_patch.sh.in" "skia_patch.sh" @ONLY)
+configure_file("tools/skia_configure.sh.in" "skia_configure.sh" @ONLY)
+configure_file("tools/skia_build.sh.in" "skia_build.sh" @ONLY)
+
+ExternalProject_Add(depot_tools
+    GIT_REPOSITORY https://chromium.googlesource.com/chromium/tools/depot_tools.git
     GIT_TAG master
+    UPDATE_DISCONNECTED 1
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
     )
 
-set(NANOVG_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/nanovg-prefix/src/nanovg/src)
-set(NANOVG_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/nanovg-prefix/src/nanovg/src/nanovg.c)
+ExternalProject_Add(skia
+    GIT_REPOSITORY https://skia.googlesource.com/skia.git
+    GIT_TAG master
+    DEPENDS depot_tools
+    UPDATE_DISCONNECTED 1
+    PATCH_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_patch.sh
+    CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_configure.sh
+    BUILD_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_build.sh
+    INSTALL_COMMAND ""
+    )
 
-include_directories(
-    ${NANOVG_INCLUDE_DIRS}
-)
+add_dependencies(skia depot_tools)
+file(GLOB SKIA_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/skia-prefix/src/skia/include/*)
+set(SKIA_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/skia-prefix/src/skia/out/Static/${CMAKE_STATIC_LIBRARY_PREFIX}skia${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+# NANOVG
+
+#ExternalProject_Add(nanovg
+#    GIT_REPOSITORY git@github.com:memononen/nanovg.git
+#    GIT_TAG master
+#    UPDATE_DISCONNECTED 1
+#    CONFIGURE_COMMAND ""
+#    BUILD_COMMAND ""
+#    INSTALL_COMMAND ""
+#    )
+#
+#set(NANOVG_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/nanovg-prefix/src/nanovg/src)
+#set(NANOVG_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/nanovg-prefix/src/nanovg/src/nanovg.c)
+#
+#include_directories(
+#    ${NANOVG_INCLUDE_DIRS}
+#)
 
 
 # EXTRAS
@@ -135,7 +178,25 @@ elseif (APPLE)
     find_library(opengl_library OpenGL)
     find_library(corevideo_library CoreVideo)
     find_library(iokit_library IOKit)
-    list(APPEND PSYCHICUI_EXTRA_LIBS ${cocoa_library} ${opengl_library} ${corevideo_library} ${iokit_library})
+#    find_library(coreservices_library CoreServices)
+#    find_library(coregraphics_library CoreGraphics)
+#    find_library(coretext_library CoreText)
+#    find_library(corefoundation_library CoreFoundation)
+    list(APPEND PSYCHICUI_EXTRA_LIBS
+        ${cocoa_library}
+        ${opengl_library}
+        ${corevideo_library}
+        ${iokit_library}
+        png
+        -L/usr/local/opt/jpeg-turbo/lib
+        jpeg
+        turbojpeg
+        freetype
+#        ${coreservices_library}
+#        ${coregraphics_library}
+#        ${coretext_library}
+#        ${corefoundation_library}
+    )
     list(APPEND LIBPSYCHICUI_EXTRA_SOURCE psychicui/darwin.mm)
 elseif (CMAKE_SYSTEM MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
     list(APPEND PSYCHICUI_EXTRA_LIBS GL Xxf86vm Xrandr Xinerama Xcursor Xi X11 pthread)
@@ -162,18 +223,20 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/Style.hpp
     psychicui/Panel.cpp
     psychicui/Panel.hpp
-    psychicui/Layout.cpp
-    psychicui/Layout.hpp
-    psychicui/Popup.cpp
-    psychicui/Popup.hpp psychicui/Button.cpp psychicui/Button.hpp)
+#    psychicui/Popup.cpp
+#    psychicui/Popup.hpp
+    psychicui/Button.cpp
+    psychicui/Button.hpp
+    psychicui/Label.cpp
+    psychicui/Label.hpp)
 add_library(psychicui SHARED ${SOURCE_FILES})
-target_include_directories(psychicui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${YOGA_INCLUDE_DIRS})
-target_link_libraries(psychicui ${GLFW_LIBRARIES})
-target_link_libraries(psychicui ${YOGA_LIBRARIES})
-add_dependencies(psychicui eigen)
+target_include_directories(psychicui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${YOGA_INCLUDE_DIRS} ${SKIA_INCLUDE_DIRS})
+target_link_libraries(psychicui ${GLFW_LIBRARIES} ${YOGA_LIBRARIES} ${SKIA_LIBRARIES})
+#add_dependencies(psychicui eigen)
 add_dependencies(psychicui glfw)
 add_dependencies(psychicui yoga)
-add_dependencies(psychicui nanovg)
+#add_dependencies(psychicui nanovg)
+add_dependencies(psychicui skia)
 
 if (PSYCHICUI_BUILD_SHARED)
     set_property(TARGET psychicui PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -189,7 +252,7 @@ if (PSYCHICUI_USE_GLAD)
 endif()
 
 if (PSYCHICUI_BUILD_SHARED AND NOT ${U_CMAKE_BUILD_TYPE} MATCHES DEB)
-    # Platform-specific strip flags for reducing the library size.
+    # Platform-specific strip flags for reducing the library setSize.
     if (APPLE)
         # Strip .dylib library on OSX
         add_custom_command(TARGET psychicui POST_BUILD COMMAND strip -u -r "$<TARGET_FILE_DIR:nanogui>/$<TARGET_FILE_NAME:nanogui>")
@@ -198,6 +261,9 @@ if (PSYCHICUI_BUILD_SHARED AND NOT ${U_CMAKE_BUILD_TYPE} MATCHES DEB)
         add_custom_command(TARGET psychicui POST_BUILD COMMAND strip "$<TARGET_FILE_DIR:nanogui>/$<TARGET_FILE_NAME:nanogui>")
     endif ()
 endif ()
+
+# RESOURCES
+file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # SAMPLE
 

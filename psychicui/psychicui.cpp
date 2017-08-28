@@ -29,6 +29,9 @@ namespace psychicui {
         }
 
         glfwSetTime(0);
+
+        // Initialize Yoga
+        YGConfigSetUseWebDefaults(YGConfigGetDefault(), true);
     }
 
     static bool mainloop_active = false;

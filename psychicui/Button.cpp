@@ -3,13 +3,40 @@
 
 namespace psychicui {
     Button::Button(const std::string &label)
-        : Widget() {}
+        : Widget() {
+        //TODO: Implement a createChildren method that'll be universal, whatever the constructor used
+        _label = std::make_shared<Label>(label);
+        addChild(_label);
+    }
 
-    void Button::draw(NVGcontext *ctx) {
-        nvgBeginPath(ctx);
-        nvgRoundedRect(ctx, _position.x(), _position.y(), _size.x(), _size.y(), style()->buttonCornerRadius);
-        nvgFillColor(ctx, style()->buttonColor);
-        nvgFill(ctx);
-        Widget::draw(ctx);
+    std::string Button::label() {
+        return _label->text();
+    }
+
+    void Button::setLabel(std::string label) {
+        _label->setText(label);
+    }
+
+    void Button::draw(SkCanvas *canvas) {
+        Widget::draw(canvas);
+
+        // TODO: Cache setStyle
+        Style *s = style().get();
+
+        SkPaint paint;
+        if (_mouseDown) {
+            paint.setColor(s->buttonDownColor);
+        } else if (_mouseOver) {
+            paint.setColor(s->buttonOverColor);
+        } else {
+            paint.setColor(s->buttonColor);
+        }
+        paint.setStyle(SkPaint::kFill_Style);
+        if (s->buttonCornerRadius > 0) {
+            paint.setAntiAlias(true);
+            canvas->drawRoundRect(_rect, s->buttonCornerRadius, s->buttonCornerRadius, paint);
+        } else {
+            canvas->drawRect(_rect, paint);
+        }
     }
 }

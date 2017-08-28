@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -e
+
+cd ../skia
+../../../depot_tools-prefix/src/depot_tools/ninja -C out/Static

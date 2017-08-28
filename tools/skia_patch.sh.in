@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+
+cd ../skia
+python tools/git-sync-deps
+cd third_party/externals/sfntly && git checkout master

@@ -14,7 +14,6 @@
 #endif
 
 #include <GLFW/glfw3.h>
-#include <nanovg.h>
 
 // Special treatment of linux Nvidia opengl headers
 #if !defined(_WIN32) && !defined(__APPLE__)

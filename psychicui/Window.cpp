@@ -1,14 +1,5 @@
-#include <map>
 #include <iostream>
-#include <vector>
-#include "opengl.hpp"
 #include "Window.hpp"
-#include "Panel.hpp"
-#include "Popup.hpp"
-
-#define NANOVG_GL3_IMPLEMENTATION
-
-#include <nanovg_gl.h>
 
 namespace psychicui {
 
@@ -69,8 +60,9 @@ namespace psychicui {
     Window::Window(const std::string &title) :
         Widget::Widget(),
         _title(title) {
-            _size = Vector2i(1440, 900);
-            YGNodeStyleSetOverflow(_yogaNode, YGOverflowHidden);
+        setSize(1440, 900);
+        YGNodeStyleSetOverflow(_yogaNode, YGOverflowHidden);
+        YGNodeStyleSetPositionType(_yogaNode, YGPositionTypeAbsolute);
     }
 
     Window::~Window() {
@@ -80,9 +72,13 @@ namespace psychicui {
                 glfwDestroyCursor(_cursors[i]);
             }
         }
-        if (_nvgContext) {
-            nvgDeleteGL3(_nvgContext);
-        }
+
+        delete _sk_context;
+        delete _sk_surface;
+
+//        if (_nvgContext) {
+//            nvgDeleteGL3(_nvgContext);
+//        }
         if (_window) {
             glfwDestroyWindow(_window);
         }
@@ -110,7 +106,7 @@ namespace psychicui {
             const GLFWvidmode *mode    = glfwGetVideoMode(monitor);
             _window = glfwCreateWindow(mode->width, mode->height, _title.c_str(), monitor, nullptr);
         } else {
-            _window = glfwCreateWindow(_size.x(), _size.y(), _title.c_str(), nullptr, nullptr);
+            _window = glfwCreateWindow(_width, _height, _title.c_str(), nullptr, nullptr);
         }
 
         if (!_window) {
@@ -128,20 +124,20 @@ namespace psychicui {
         }
         #endif
 
-        glfwGetWindowSize(_window, &_size[0], &_size[1]);
+        glfwGetWindowSize(_window, &_width, &_height);
         _pixelRatio = get_pixel_ratio(_window);
         #if defined(_WIN32) || defined(__linux__)
-        if (_pixelRatio != 1 && !fullscreen)
-            glfwSetWindowSize(_window, _size.x() * _pixelRatio, _size.y() * _pixelRatio);
+        if (_pixelRatio != 1 && !setFullscreen)
+            glfwSetWindowSize(_window, _size.setX() * _pixelRatio, _size.setY() * _pixelRatio);
         #endif
 
-        glfwGetFramebufferSize(_window, &_fbSize[0], &_fbSize[1]);
-        glViewport(0, 0, _fbSize[0], _fbSize[1]);
+        glfwGetFramebufferSize(_window, &_fbWidth, &_fbHeight);
+        glViewport(0, 0, _fbWidth, _fbHeight);
         glClearColor(
-            style()->windowBackgroundColor.r(),
-            style()->windowBackgroundColor.g(),
-            style()->windowBackgroundColor.b(),
-            style()->windowBackgroundColor.a()
+            SkColorGetR(style()->windowBackgroundColor),
+            SkColorGetG(style()->windowBackgroundColor),
+            SkColorGetB(style()->windowBackgroundColor),
+            SkColorGetA(style()->windowBackgroundColor)
         );
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glfwSwapInterval(0);
@@ -152,34 +148,60 @@ namespace psychicui {
         glfwPollEvents();
         #endif
 
-        // Detect framebuffer properties and set up compatible NanoVG context
-        GLint nStencilBits = 0, nSamples = 0;
+        // Get Some info about the framebuffer
         glGetFramebufferAttachmentParameteriv(
             GL_DRAW_FRAMEBUFFER,
             GL_STENCIL,
             GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE,
-            &nStencilBits
+            &_stencilBits
         );
-        glGetIntegerv(GL_SAMPLES, &nSamples);
+        glGetIntegerv(GL_SAMPLES, &_samples);
 
-        int flags = 0;
-        if (nStencilBits >= 8) {
-            flags |= NVG_STENCIL_STROKES;
-        }
-        if (nSamples <= 1) {
-            flags |= NVG_ANTIALIAS;
-        }
-        #if !defined(NDEBUG)
-        flags |= NVG_DEBUG;
-        #endif
-
-        _nvgContext = nvgCreateGL3(flags);
-        if (_nvgContext == nullptr) {
-            throw std::runtime_error("Could not initialize NanoVG!");
-        }
+        // Setup Skia
+        initSkia();
 
         // Setup Callbacks
+        attachCallbacks();
 
+        // Be ready to start
+        _visible         = glfwGetWindowAttrib(_window, GLFW_VISIBLE) != 0;
+        _lastInteraction = glfwGetTime();
+
+        for (int i = 0; i < (int) Cursor::CursorCount; ++i) {
+            _cursors[i] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR + i);
+        }
+
+        windows[_window] = this;
+
+        /// Fixes retina display-related font rendering issue
+//        nvgBeginFrame(_nvgContext, _size.setX(), _size.setY(), _pixelRatio);
+//        nvgEndFrame(_nvgContext);
+    }
+
+    void Window::initSkia() {
+        const GrGLInterface *interface = nullptr;
+        _sk_context = GrContext::MakeGL(interface).release();
+        getSkiaSurface();
+    }
+
+    void Window::getSkiaSurface() {
+        GrBackendRenderTargetDesc desc;
+        desc.fWidth              = _width;
+        desc.fHeight             = _height;
+        desc.fConfig             = kSkia8888_GrPixelConfig;
+        desc.fOrigin             = kBottomLeft_GrSurfaceOrigin;
+        desc.fSampleCnt          = _samples;
+        desc.fStencilBits        = _stencilBits;
+        desc.fRenderTargetHandle = 0;  // assume default framebuffer
+        _sk_surface = SkSurface::MakeFromBackendRenderTarget(_sk_context, desc, nullptr, nullptr).release();
+        if (!_sk_surface) {
+            SkDebugf("SkSurface::MakeFromBackendRenderTarget returned null\n");
+            return;
+        }
+        _sk_canvas = _sk_surface->getCanvas();
+    }
+
+    void Window::attachCallbacks() {
         glfwSetCursorPosCallback(
             _window,
             [](GLFWwindow *w, double x, double y) {
@@ -312,27 +334,13 @@ namespace psychicui {
                 s->drawAll();
             }
         );
-
-        // Be ready to start
-        _visible = glfwGetWindowAttrib(_window, GLFW_VISIBLE) != 0;
-        _lastInteraction = glfwGetTime();
-
-        for (int i = 0; i < (int) Cursor::CursorCount; ++i) {
-            _cursors[i] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR + i);
-        }
-
-        windows[_window] = this;
-
-        /// Fixes retina display-related font rendering issue
-        nvgBeginFrame(_nvgContext, _size.x(), _size.y(), _pixelRatio);
-        nvgEndFrame(_nvgContext);
     }
 
     GLFWwindow *Window::window() {
         return _window;
     }
 
-    // TITLE
+    // region Title
 
     const std::string Window::title() const {
         return _title;
@@ -347,7 +355,9 @@ namespace psychicui {
         }
     }
 
-    // FULLSCREEN
+    // endregion
+
+    // region Fullscreen
 
     bool Window::fullscreen() const {
         return _fullscreen;
@@ -360,8 +370,8 @@ namespace psychicui {
                 if (_fullscreen) {
                     GLFWmonitor       *monitor = glfwGetPrimaryMonitor();
                     const GLFWvidmode *mode    = glfwGetVideoMode(monitor);
-                    glfwGetWindowPos(_window, &_previousWindowPosition[0], &_previousWindowPosition[1]);
-                    glfwGetWindowSize(_window, &_previousWindowSize[0], &_previousWindowSize[1]);
+                    glfwGetWindowPos(_window, &_previousWindowX, &_previousWindowY);
+                    glfwGetWindowSize(_window, &_previousWindowWidth, &_previousWindowHeight);
                     glfwSetWindowMonitor(
                         _window,
                         monitor,
@@ -375,10 +385,10 @@ namespace psychicui {
                     glfwSetWindowMonitor(
                         _window,
                         nullptr,
-                        _previousWindowPosition[0],
-                        _previousWindowPosition[1],
-                        _previousWindowSize[0],
-                        _previousWindowSize[1],
+                        _previousWindowX,
+                        _previousWindowY,
+                        _previousWindowWidth,
+                        _previousWindowHeight,
                         GLFW_DONT_CARE
                     );
                 }
@@ -386,7 +396,9 @@ namespace psychicui {
         }
     }
 
-    // MINIMIZED
+    // endregion
+
+    // region Minimized
 
     bool Window::minimized() const {
         return _minimized;
@@ -397,19 +409,21 @@ namespace psychicui {
             _minimized = minimized;
             if (_window) {
                 if (_minimized) {
-                     glfwIconifyWindow(_window);
+                    glfwIconifyWindow(_window);
                 } else {
                     glfwRestoreWindow(_window);
                 }
             }
         }
     }
-    
-    // VISIBLE
 
-    void Window::setVisible(bool visible) {
-        if (_visible != visible) {
-            _visible = visible;
+    // endregion
+
+    // region Visible
+
+    void Window::setVisible(bool value) {
+        if (_visible != value) {
+            _visible = value;
             if (_visible) {
                 glfwShowWindow(_window);
             } else {
@@ -418,40 +432,49 @@ namespace psychicui {
         }
     }
 
-    // POSITION
+    // endregion
 
-    const Vector2i &Window::windowPosition() const {
-        return _windowPosition;
-    }
+    // region Position
 
-    void Window::setWindowPosition(const Vector2i &windowPosition) {
-        _windowPosition = windowPosition;
+//    const Vector2i &Window::setWindowPosition() const {
+//        return _windowPosition;
+//    }
+
+    void Window::setWindowPosition(const int &x, const int &y) {
+        _windowX = x;
+        _windowY = y;
         if (_window) {
-            glfwSetWindowPos(_window, _windowPosition[0], _windowPosition[1]);
+            glfwSetWindowPos(_window, _windowX, _windowY);
         }
     }
 
-    // SIZE
+    // endregion
 
-    const Vector2i &Window::windowSize() const {
-        return size();
-    }
+    // region Size
 
-    void Window::setWindowSize(const Vector2i &size) {
-        setSize(size);
+//    const Vector2i &Window::setWindowSize() const {
+//        return setSize();
+//    }
+
+    void Window::setWindowSize(const int &width, const int &height) {
+        setSize(width, height);
         if (_window) {
-            glfwSetWindowSize(_window, _size[0], _size[1]);
+            glfwSetWindowSize(_window, _width, _height);
         }
     }
 
-    // DRAW
+    // endregion
+
+    // region Draw
 
     void Window::drawAll() {
+        // TODO: Cache setStyle changes
+        Style *s = style().get();
         glClearColor(
-            style()->windowBackgroundColor.r(),
-            style()->windowBackgroundColor.g(),
-            style()->windowBackgroundColor.b(),
-            style()->windowBackgroundColor.a()
+            SkColorGetR(s->windowBackgroundColor),
+            SkColorGetG(s->windowBackgroundColor),
+            SkColorGetB(s->windowBackgroundColor),
+            SkColorGetA(s->windowBackgroundColor)
         );
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         drawContents();
@@ -469,30 +492,40 @@ namespace psychicui {
         }
 
         glfwMakeContextCurrent(_window);
-        glfwGetFramebufferSize(_window, &_fbSize[0], &_fbSize[1]);
-        glfwGetWindowSize(_window, &_size[0], &_size[1]);
+        glfwGetFramebufferSize(_window, &_fbWidth, &_fbHeight);
+        glfwGetWindowSize(_window, &_width, &_height);
 
         #if defined(_WIN32) || defined(__linux__)
-        _size = (_size / _pixelRatio).cast<int>();
-        _fbSize = (_fbSize * _pixelRatio).cast<int>();
+        _width = (_width / _pixelRatio).cast<int>();
+        _height = (_height / _pixelRatio).cast<int>();
+        _fbWidth = (_fbWidth * _pixelRatio).cast<int>();
+        _fbHeight = (_fbHeight * _pixelRatio).cast<int>();
         #else
-        if (_size[0]) {
-            _pixelRatio = (float) _fbSize[0] / (float) _size[0];
+        if (_width) {
+            _pixelRatio = (float) _fbWidth / (float) _width;
         }
         #endif
 
-        // DO layout
+        // Do setLayout
         if (YGNodeIsDirty(_yogaNode)) {
-            std::cout << "Layout is dirty" << std::endl;
-            YGNodeCalculateLayout(_yogaNode, _size[0], _size[1], YGDirectionLTR);
+            YGNodeCalculateLayout(_yogaNode, _width, _width, YGDirectionLTR);
         }
 
-        glViewport(0, 0, _fbSize[0], _fbSize[1]);
+        glViewport(0, 0, _fbWidth, _fbHeight);
         glBindSampler(0, 0);
-        nvgBeginFrame(_nvgContext, _size[0], _size[1], _pixelRatio);
-        draw(_nvgContext);
-        nvgEndFrame(_nvgContext);
+
+//        nvgBeginFrame(_nvgContext, _size[0], _size[1], _pixelRatio);
+//        draw(_nvgContext);
+//        nvgEndFrame(_nvgContext);
+        _sk_canvas->clear(style()->windowBackgroundColor);
+//        _sk_canvas->clear(SK_ColorBLACK);
+        render(_sk_canvas);
+        _sk_canvas->flush();
     }
+
+    // endregion
+
+    // region Events???
 
     bool Window::keyboardEvent(int key, int scancode, int action, int modifiers) {
         if (_focusPath.size() > 0) {
@@ -516,9 +549,11 @@ namespace psychicui {
         return false;
     }
 
-    // WINDOW DELEGATE
+    // endregion
 
-    void Window::windowResized(const Vector2i &size) {
+    // region Callback Delegates
+
+    void Window::windowResized(const int &width, const int &height) {
         // std::cout << "Resized" << std::endl;
     }
 
@@ -542,29 +577,31 @@ namespace psychicui {
         return true;
     }
 
-    // CALLBACKS
+    // endregion
+
+    // region Event Callbacks
 
     void Window::cursorPosEventCallback(double x, double y) {
-        Vector2i p((int) x, (int) y);
-
         #if defined(_WIN32) || defined(__linux__)
-        p /= _pixelRatio;
+        setX /= _pixelRatio;
+        setY /= _pixelRatio;
         #endif
 
         _lastInteraction = glfwGetTime();
         try {
             bool ret = false;
-            p -= Vector2i(1, 2);
+            x -= 1;
+            y -= 2;
 
             if (!_dragActive) {
-                auto widget = findWidget(p);
+                auto widget = findWidget(x, y);
                 if (widget != nullptr && widget->cursor() != _cursor) {
                     _cursor = widget->cursor();
                     glfwSetCursor(_window, _cursors[(int) _cursor]);
                 }
             } else {
 //                ret = _dragWidget->mouseDragEvent(
-//                    p - _dragWidget->parent()->absolutePosition(),
+//                    p - _dragWidget->setParent()->absolutePosition(),
 //                    p - _mousePosition,
 //                    _mouseState,
 //                    _modifiers
@@ -572,10 +609,11 @@ namespace psychicui {
             }
 
             if (!ret) {
-                mouseMovedPropagation(p, _mouseState, _modifiers);
+                mouseMovedPropagation(x, y, _mouseState, _modifiers);
             }
 
-            _mousePosition = p;
+            _mouseX = x;
+            _mouseY = y;
 
         } catch (const std::exception &e) {
             std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
@@ -586,14 +624,17 @@ namespace psychicui {
         _modifiers       = modifiers;
         _lastInteraction = glfwGetTime();
         try {
-            if (_focusPath.size() > 1) {
-                const std::shared_ptr<Panel> panel = std::dynamic_pointer_cast<Panel>(_focusPath[_focusPath.size() - 2]);
-                if (panel && panel->modal()) {
-                    if (!panel->contains(_mousePosition)) {
-                        return;
-                    }
-                }
-            }
+//            if (_focusPath.setSize() > 1) {
+//                const std::shared_ptr<Panel> panel = std::dynamic_pointer_cast<Panel>(
+//                    _focusPath[_focusPath.setSize()
+//                               - 2]
+//                );
+//                if (panel && panel->modal()) {
+//                    if (!panel->contains(_mouseX, _mouseY)) {
+//                        return;
+//                    }
+//                }
+//            }
 
             if (action == GLFW_PRESS) {
                 _mouseState |= 1 << button;
@@ -601,11 +642,11 @@ namespace psychicui {
                 _mouseState &= ~(1 << button);
             }
 
-            auto dropWidget = findWidget(_mousePosition);
+            auto dropWidget = findWidget(_mouseX, _mouseY);
             if (_dragActive && action == GLFW_RELEASE && dropWidget != _dragWidget) {
                 // TODO: Actually call a drop event, don't send the mouse event
 //                _dragWidget->mouseButtonPropagation(
-//                    _mousePosition - _dragWidget->parent()->absolutePosition(),
+//                    _mousePosition - _dragWidget->setParent()->absolutePosition(),
 //                    button,
 //                    false,
 //                    _modifiers
@@ -618,7 +659,7 @@ namespace psychicui {
             }
 
             if (action == GLFW_PRESS && (button == GLFW_MOUSE_BUTTON_1 || button == GLFW_MOUSE_BUTTON_2)) {
-                _dragWidget = findWidget(_mousePosition);
+                _dragWidget = findWidget(_mouseX, _mouseY);
                 if (_dragWidget.get() == this) {
                     _dragWidget = nullptr;
                 }
@@ -631,7 +672,7 @@ namespace psychicui {
                 _dragWidget = nullptr;
             }
 
-            mouseButtonPropagation(_mousePosition, button, action == GLFW_PRESS, _modifiers);
+            mouseButtonPropagation(_mouseX, _mouseY, button, action == GLFW_PRESS, _modifiers);
 
         } catch (const std::exception &e) {
             std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
@@ -641,15 +682,18 @@ namespace psychicui {
     void Window::scrollEventCallback(double x, double y) {
         _lastInteraction = glfwGetTime();
         try {
-            if (_focusPath.size() > 1) {
-                const std::shared_ptr<Panel> panel = std::dynamic_pointer_cast<Panel>(_focusPath[_focusPath.size() - 2]);
-                if (panel && panel->modal()) {
-                    if (!panel->contains(_mousePosition)) {
-                        return;
-                    }
-                }
-            }
-            mouseScrolledPropagation(_mousePosition, Vector2f(x, y));
+//            if (_focusPath.setSize() > 1) {
+//                const std::shared_ptr<Panel> panel = std::dynamic_pointer_cast<Panel>(
+//                    _focusPath[_focusPath.setSize()
+//                               - 2]
+//                );
+//                if (panel && panel->modal()) {
+//                    if (!panel->contains(_mouseX, _mouseY)) {
+//                        return;
+//                    }
+//                }
+//            }
+            mouseScrolledPropagation(_mouseX, _mouseY, x, y);
         } catch (const std::exception &e) {
             std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
         }
@@ -675,7 +719,7 @@ namespace psychicui {
 
     void Window::dropEventCallback(int count, const char **filenames) {
         std::vector<std::string> arg(count);
-        for (int i = 0; i < count; ++i) {
+        for (int                 i = 0; i < count; ++i) {
             arg[i] = filenames[i];
         }
         try {
@@ -685,30 +729,36 @@ namespace psychicui {
         }
     }
 
-    void Window::resizeEventCallback(int /*width*/, int /*height*/) {
-        Vector2i fbSize, size;
-        glfwGetFramebufferSize(_window, &fbSize[0], &fbSize[1]);
-        glfwGetWindowSize(_window, &size[0], &size[1]);
+    void Window::resizeEventCallback(int /*setWidth*/, int /*setHeight*/) {
+        int fbWidth, fbHeight, width, height;
+        glfwGetFramebufferSize(_window, &fbWidth, &fbHeight);
+        glfwGetWindowSize(_window, &width, &height);
 
         #if defined(_WIN32) || defined(__linux__)
-        size /= mPixelRatio;
+        setWidth /= mPixelRatio;
+        setHeight /= mPixelRatio;
         #endif
 
-        if (_fbSize == Vector2i(0, 0) || _size == Vector2i(0, 0)) {
+        if ((fbWidth == 0 && fbHeight == 0) || (width == 0 && height == 0)) {
             return;
         }
 
-        _fbSize = fbSize;
-        _size   = size;
+        _fbWidth  = fbWidth;
+        _fbHeight = fbHeight;
+        _width    = width;
+        _height   = height;
 
-        // Set layout size
-        YGNodeStyleSetWidth(_yogaNode, _size[0]);
-        YGNodeStyleSetHeight(_yogaNode, _size[1]);
+        // Set setLayout setSize
+        YGNodeStyleSetWidth(_yogaNode, _width);
+        YGNodeStyleSetHeight(_yogaNode, _height);
+
+        // Get a new surface
+        getSkiaSurface();
 
         _lastInteraction = glfwGetTime();
 
         try {
-            windowResized(_size);
+            windowResized(_width, _height);
         } catch (const std::exception &e) {
             std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
         }
@@ -751,6 +801,8 @@ namespace psychicui {
         }
     }
 
+    // endregion
+
     // PANELS
 
     void Window::requestFocus(Widget *widget) {
@@ -762,56 +814,56 @@ namespace psychicui {
         }
         _focusPath.clear();
         if (widget) {
-            _focusPath = widget->path();
+            _focusPath  = widget->path();
             for (auto w: _focusPath) {
                 w->focusEvent(true);
             }
-            if (auto p = widget->panel()) {
+            if (auto  p = widget->panel()) {
                 movePanelToFront(p);
             }
         }
     }
 
     void Window::disposePanel(std::shared_ptr<Panel> panel) {
-        if (std::find(_focusPath.begin(), _focusPath.end(), panel) != _focusPath.end()) {
-            _focusPath.clear();
-        }
-        if (_dragWidget == panel) {
-            _dragWidget = nullptr;
-        }
-        removeChild(panel);
+//        if (std::find(_focusPath.begin(), _focusPath.end(), panel) != _focusPath.end()) {
+//            _focusPath.clear();
+//        }
+//        if (_dragWidget == panel) {
+//            _dragWidget = nullptr;
+//        }
+//        removeChild(panel);
     }
 
     void Window::centerPanel(std::shared_ptr<Panel> panel) {
-//        if (panel->size() == Vector2i::Zero()) {
+//        if (panel->setSize() == Vector2i::Zero()) {
 //            panel->setSize(panel->preferredSize(_nvgContext));
 //            panel->performLayout(_nvgContext);
 //        }
-//        panel->setPosition((_size - panel->size()) / 2);
+//        panel->setPosition((_size - panel->setSize()) / 2);
     }
 
     void Window::movePanelToFront(std::shared_ptr<Panel> panel) {
-        _children.erase(std::remove(_children.begin(), _children.end(), panel), _children.end());
-        _children.push_back(panel);
-        /* Brute force topological sort (no problem for a few panels..) */
-        bool changed = false;
-        do {
-            size_t      baseIndex = 0;
-            for (size_t index     = 0; index < _children.size(); ++index) {
-                if (_children[index] == panel) {
-                    baseIndex = index;
-                }
-            }
-            changed               = false;
-            for (size_t index = 0; index < _children.size(); ++index) {
-                auto pw = std::dynamic_pointer_cast<Popup>(_children[index]);
-                if (pw && pw->parentPanel() == panel && index < baseIndex) {
-                    movePanelToFront(pw);
-                    changed = true;
-                    break;
-                }
-            }
-        } while (changed);
+//        _children.erase(std::remove(_children.begin(), _children.end(), panel), _children.end());
+//        _children.push_back(panel);
+//        /* Brute force topological sort (no problem for a few panels..) */
+//        bool changed = false;
+//        do {
+//            size_t      baseIndex = 0;
+//            for (size_t index     = 0; index < _children.setSize(); ++index) {
+//                if (_children[index] == panel) {
+//                    baseIndex = index;
+//                }
+//            }
+//            changed               = false;
+//            for (size_t index = 0; index < _children.setSize(); ++index) {
+//                auto pw = std::dynamic_pointer_cast<Popup>(_children[index]);
+//                if (pw && pw->parentPanel() == panel && index < baseIndex) {
+//                    movePanelToFront(pw);
+//                    changed = true;
+//                    break;
+//                }
+//            }
+//        } while (changed);
     }
 
 }

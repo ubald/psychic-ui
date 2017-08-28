@@ -2,10 +2,19 @@
 
 #include <string>
 #include <map>
+#include "GrContext.h"
+#include "gl/GrGLInterface.h"
+#include "SkData.h"
+#include "SkImage.h"
+#include "SkStream.h"
+#include "SkSurface.h"
+#include "SkPaint.h"
 #include "opengl.hpp"
-#include "Panel.hpp"
 #include "Widget.hpp"
 #include "Style.hpp"
+
+//#define NANOVG_GL3_IMPLEMENTATION
+//#include <nanovg_gl.h>
 
 namespace psychicui {
     class Window : public Widget {
@@ -27,46 +36,67 @@ namespace psychicui {
         bool fullscreen() const;
         void setFullscreen(bool fullscreen);
 
-        void setVisible(bool visible) override;
+        void setVisible(bool value) override;
 
-        const Vector2i &windowPosition() const;
-        void setWindowPosition(const Vector2i &position);
+//        const Vector2i &setWindowPosition() const;
+        void setWindowPosition(const int &x, const int &y);
 
-        const Vector2i &windowSize() const;
-        virtual void setWindowSize(const Vector2i &size);
+//        const Vector2i &setWindowSize() const;
+        virtual void setWindowSize(const int &width, const int &height);
 
         void open();
         void drawAll();
-
         virtual void drawContents();
         void drawWidgets();
+
         void disposePanel(std::shared_ptr<Panel> panel);
         void centerPanel(std::shared_ptr<Panel> panel);
         void movePanelToFront(std::shared_ptr<Panel> panel);
 
     protected:
-        GLFWwindow                           *_window{nullptr};
-        NVGcontext                           *_nvgContext{nullptr};
-        std::string                          _title;
-        Vector2i                             _windowPosition{0, 0};
-        Vector2i                             _fbSize{0, 0};
-        float                                _pixelRatio;
-        Vector2i                             _previousWindowPosition{0, 0};
-        Vector2i                             _previousWindowSize{0, 0};
-        bool                                 _fullscreen{false};
-        bool                                 _minimized{false};
-        bool                                 _windowFocused{false};
-        bool                                 _resizable{true};
-        bool                                 _decorated{true};
-        double                               _lastInteraction;
-        int                                  _mouseState{0};
-        int                                  _modifiers{0};
-        Vector2i                             _mousePosition{0, 0};
-        bool                                 _dragActive{false};
+        // GLFW
+        GLFWwindow *_window{nullptr};
+
+        // Rendering
+        GrContext *_sk_context{nullptr};
+        SkSurface *_sk_surface{nullptr};
+        SkCanvas  *_sk_canvas{nullptr};
+        int       _stencilBits = 0;
+        int       _samples     = 0;
+
+        // Window
+        std::string _title;
+        bool        _fullscreen{false};
+        bool        _minimized{false};
+        bool        _windowFocused{false};
+        bool        _resizable{true};
+        bool        _decorated{true};
+        GLFWcursor  *_cursors[(int) Cursor::CursorCount];
+
+        int      _fbWidth{0};
+        int      _fbHeight{0};
+        float    _pixelRatio;
+        int      _windowX{0};
+        int      _windowY{0};
+        int      _previousWindowX{0};
+        int      _previousWindowY{0};
+        int      _previousWindowWidth{0};
+        int      _previousWindowHeight{0};
+
+        double _lastInteraction;
+
+        int  _mouseState{0};
+        int  _modifiers{0};
+        int  _mouseX{0};
+        int  _mouseY{0};
+        bool _dragActive{false};
+
         std::shared_ptr<Widget>              _dragWidget = nullptr;
-        GLFWcursor                           *_cursors[(int) Cursor::CursorCount];
         std::vector<std::shared_ptr<Widget>> _focusPath;
 
+        void initSkia();
+        void getSkiaSurface();
+        void attachCallbacks();
         void requestFocus(Widget *widget) override;
 
         /* Events */
@@ -76,7 +106,7 @@ namespace psychicui {
         bool keyboardCharacterEvent(unsigned int codepoint) override;
 
         // Window Delegate
-        virtual void windowResized(const Vector2i &size);
+        virtual void windowResized(const int &width, const int &height);
         virtual void windowActivated();
         virtual void windowDeactivated();
         virtual void windowMinimized();
@@ -94,8 +124,6 @@ namespace psychicui {
         void focusEventCallback(int focused);
         void iconifyEventCallback(int iconified);
         void closeEventCallback();
-    public:
-        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
 }
 
