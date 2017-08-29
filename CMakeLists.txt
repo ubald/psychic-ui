@@ -230,8 +230,8 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/psychicui.cpp
     psychicui/Window.cpp
     psychicui/Window.hpp
-    psychicui/Widget.cpp
-    psychicui/Widget.hpp
+    psychicui/Component.cpp
+    psychicui/Component.hpp
     psychicui/Style.cpp
     psychicui/Style.hpp
     psychicui/Panel.cpp
@@ -241,7 +241,7 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/Button.cpp
     psychicui/Button.hpp
     psychicui/Label.cpp
-    psychicui/Label.hpp)
+    psychicui/Label.hpp psychicui/Registry.cpp psychicui/Registry.hpp psychicui/StyleManager.cpp psychicui/StyleManager.hpp psychicui/utils/StringUtils.cpp psychicui/utils/StringUtils.hpp psychicui/StyleDeclaration.cpp psychicui/StyleDeclaration.hpp)
 add_library(psychicui SHARED ${SOURCE_FILES})
 target_include_directories(psychicui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${YOGA_INCLUDE_DIRS} ${SKIA_INCLUDE_DIRS})
 target_link_libraries(psychicui ${GLFW_LIBRARIES} ${YOGA_LIBRARIES} ${SKIA_LIBRARIES})
@@ -277,6 +277,20 @@ endif ()
 
 # RESOURCES
 file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+# TESTS
+
+ExternalProject_Add(catch
+    GIT_REPOSITORY git@github.com:philsquared/Catch.git
+    GIT_TAG master
+    )
+
+set(CATCH_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/catch-prefix/src/catch/single_include)
+
+add_executable(psychicui_tests tests/main.cpp tests/main.cpp tests/style_manager_tests.cpp tests/style_tests.cpp)
+target_include_directories(psychicui_tests PUBLIC ${CATCH_INCLUDE_DIRS})
+target_link_libraries(psychicui_tests psychicui ${PSYCHICUI_EXTRA_LIBS})
+add_dependencies(psychicui_tests  catch)
 
 # SAMPLE
 

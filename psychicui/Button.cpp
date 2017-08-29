@@ -3,7 +3,8 @@
 
 namespace psychicui {
     Button::Button(const std::string &label)
-        : Widget() {
+        : Component() {
+        setComponentType("Button");
         //TODO: Implement a createChildren method that'll be universal, whatever the constructor used
         _label = std::make_shared<Label>(label);
         addChild(_label);
@@ -18,23 +19,23 @@ namespace psychicui {
     }
 
     void Button::draw(SkCanvas *canvas) {
-        Widget::draw(canvas);
+        Component::draw(canvas);
 
         // TODO: Cache setStyle
         Style *s = style().get();
 
         SkPaint paint;
         if (_mouseDown) {
-            paint.setColor(s->buttonDownColor);
+            paint.setColor(s->getValue(buttonDownColor));
         } else if (_mouseOver) {
-            paint.setColor(s->buttonOverColor);
+            paint.setColor(s->getValue(buttonOverColor));
         } else {
-            paint.setColor(s->buttonColor);
+            paint.setColor(s->getValue(buttonColor));
         }
         paint.setStyle(SkPaint::kFill_Style);
-        if (s->buttonCornerRadius > 0) {
+        if (s->getValue(buttonCornerRadius) > 0) {
             paint.setAntiAlias(true);
-            canvas->drawRoundRect(_rect, s->buttonCornerRadius, s->buttonCornerRadius, paint);
+            canvas->drawRoundRect(_rect, s->getValue(buttonCornerRadius), s->getValue(buttonCornerRadius), paint);
         } else {
             canvas->drawRect(_rect, paint);
         }

@@ -7,57 +7,83 @@
 #include "psychicui.hpp"
 #include "Style.hpp"
 
+
 namespace psychicui {
     class Panel;
+    class StyleManager;
 
     enum Layout {
         Horizontal,
         Vertical
     };
 
-    class Widget : public std::enable_shared_from_this<Widget> {
+    class Component : public std::enable_shared_from_this<Component> {
+        friend class StyleManager;
     public:
-        Widget();
-        virtual ~Widget();
+        Component();
+        virtual ~Component();
 
-        Widget *parent();
-        const Widget *parent() const;
-        void setParent(Widget *parent);
+        /**
+         * Set the component type, it wil be appended to _componentType in order to get a type hierarchy for stylinh.
+         * Obviously this should be static and/or use Reflection but in order to progress in other parts of teh library
+         * it will stay local for the time being, until a better technique is implemented.
+         * @param componentName
+         */
+        void setComponentType(std::string componentName);
+
+
+        // region Hierarchy
+
+        Component *parent();
+        const Component *parent() const;
+        void setParent(Component *parent);
         virtual std::shared_ptr<Panel> panel();
-        std::vector<std::shared_ptr<Widget>> path();
+        std::vector<std::shared_ptr<Component>> path();
+
+        // endregion
+
+        // region Children
 
         unsigned int childCount() const;
-        const std::vector<std::shared_ptr<Widget>> children() const;
-
-        void addChild(unsigned int index, std::shared_ptr<Widget> widget);
-        void addChild(std::shared_ptr<Widget> widget);
+        const std::vector<std::shared_ptr<Component>> children() const;
+        void addChild(unsigned int index, std::shared_ptr<Component> component);
+        void addChild(std::shared_ptr<Component> component);
         void removeChild(unsigned int index);
-        void removeChild(const std::shared_ptr<Widget> widget);
-        const std::shared_ptr<Widget> childAt(unsigned int index) const;
-        std::shared_ptr<Widget> childAt(unsigned int index);
-        int childIndex(std::shared_ptr<Widget> widget) const;
+        void removeChild(const std::shared_ptr<Component> component);
+        const std::shared_ptr<Component> childAt(unsigned int index) const;
+        std::shared_ptr<Component> childAt(unsigned int index);
+        int childIndex(std::shared_ptr<Component> component) const;
 
-        template<typename WidgetClass, typename... Args>
-        std::shared_ptr<WidgetClass> add(const Args &... args) {
-            return std::make_shared<WidgetClass>(this, args...);
+        // endregion
+
+        template<typename ComponentClass, typename... Args>
+        std::shared_ptr<ComponentClass> add(const Args &... args) {
+            return std::make_shared<ComponentClass>(this, args...);
         }
+
+        // region Visibility & Focus
 
         bool visible() const;
         virtual void setVisible(bool value);
         bool visibleRecursive() const;
         bool focused() const;
         void requestFocus();
-        virtual void requestFocus(Widget *widget);
+        virtual void requestFocus(Component *component);
 
-//        const Vector2i &setPosition() const;
+        // endregion
+
+        // region Position
+
         void setPosition(int x, int y);
-//        const Vector2i absolutePosition() const;
         int x() const;
         void setX(int x);
         int y() const;
         void setY(int y);
 
-//        const Vector2i &setSize() const;
+        // endregion
+
+        // region Dimensions
+
         void setSize(int width, int height);
         int width() const;
         void setWidth(int width);
@@ -76,6 +102,10 @@ namespace psychicui {
         float maxHeight() const;
         void setMaxHeight(float maxHeight);
 
+        // endregion
+
+        // region Constraints
+
         void setPadding(int value = 0);
         void setPadding(int horizontal, int vertical);
         void setPadding(int left, int right, int top, int bottom);
@@ -87,6 +117,10 @@ namespace psychicui {
         void setPaddingTop(int paddingTop = 0);
         int paddingBottom() const;
         void setPaddingBottom(int paddingBottom = 0);
+
+        // endregion
+
+        // region Layout
 
         Layout layout() const;
         void setLayout(Layout layout);
@@ -106,29 +140,36 @@ namespace psychicui {
         float flexBasis() const;
         void setFlexBasis(float flexBasis);
 
-//        void fixedSize(const Vector2i &fixedSize);
-//        const Vector2i &fixedSize() const;
-//        int fixedWidth() const;
-//        int fixedHeight() const;
-//        void fixedWidth(int setWidth);
-//        void fixedHeight(int setHeight);
+        // endregion
 
-        Cursor cursor() const;
-        void setCursor(Cursor cursor);
-
-        std::shared_ptr<Widget> findWidget(const int &x, const int &y);
-        bool contains(const int &x, const int &y) const;
-
-        std::shared_ptr<Style> style();
-        const std::shared_ptr<Style> style() const;
-        void setStyle(std::shared_ptr<Style> style);
+        // region Style
 
         YGNodeRef yogaNode();
-        void setMeasurable();
+        std::shared_ptr<Style> style();
+        void setStyle(std::shared_ptr<Style> style);
+        std::shared_ptr<Style> getComputedStyle();
+        std::vector<std::string> classNames();
+        void setClassNames(std::vector<std::string> additionalClassNames);
+
+
+        // endregion
+
+        // region Rendering
+
         void invalidate();
         virtual YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode);
         virtual void render(SkCanvas *canvas);
         virtual void draw(SkCanvas *canvas);
+
+        // endregion
+
+        Cursor cursor() const;
+        void setCursor(Cursor cursor);
+
+        std::shared_ptr<Component> findComponent(const int &x, const int &y);
+        bool contains(const int &x, const int &y) const;
+
+        void setMeasurable();
 
         // Events
         virtual bool mouseDragEvent(const int &mouseX, const int &mouseY, const int &dragX, const int &dragY, int button, int modifiers);
@@ -138,6 +179,10 @@ namespace psychicui {
 
 
     protected:
+        // region Style
+        std::vector<std::string> _componentType{};
+        std::vector<std::string> _classNames{};
+        // endregion
         bool                                 _enabled{true};
         bool                                 _visible{true};
         int                                  _x{0};
@@ -157,8 +202,8 @@ namespace psychicui {
         bool                                 _mouseDown{false};
         std::shared_ptr<Style>               _style{nullptr};
         Cursor                               _cursor{Cursor::Arrow};
-        Widget                               *_parent{nullptr};
-        std::vector<std::shared_ptr<Widget>> _children;
+        Component                               *_parent{nullptr};
+        std::vector<std::shared_ptr<Component>> _children;
 
         YGNodeRef                            _yogaNode{nullptr};
 

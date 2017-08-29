@@ -58,8 +58,9 @@ namespace psychicui {
     std::map<GLFWwindow *, Window *> Window::windows;
 
     Window::Window(const std::string &title) :
-        Widget::Widget(),
+        Component::Component(),
         _title(title) {
+        setComponentType("Window");
         setSize(1440, 900);
         YGNodeStyleSetOverflow(_yogaNode, YGOverflowHidden);
         YGNodeStyleSetPositionType(_yogaNode, YGPositionTypeAbsolute);
@@ -134,10 +135,10 @@ namespace psychicui {
         glfwGetFramebufferSize(_window, &_fbWidth, &_fbHeight);
         glViewport(0, 0, _fbWidth, _fbHeight);
         glClearColor(
-            SkColorGetR(style()->windowBackgroundColor),
-            SkColorGetG(style()->windowBackgroundColor),
-            SkColorGetB(style()->windowBackgroundColor),
-            SkColorGetA(style()->windowBackgroundColor)
+            SkColorGetR(style()->getValue(windowBackgroundColor)),
+            SkColorGetG(style()->getValue(windowBackgroundColor)),
+            SkColorGetB(style()->getValue(windowBackgroundColor)),
+            SkColorGetA(style()->getValue(windowBackgroundColor))
         );
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glfwSwapInterval(0);
@@ -469,16 +470,16 @@ namespace psychicui {
 
     void Window::drawAll() {
         // TODO: Cache setStyle changes
-        Style *s = style().get();
+        auto s = style();
         glClearColor(
-            SkColorGetR(s->windowBackgroundColor),
-            SkColorGetG(s->windowBackgroundColor),
-            SkColorGetB(s->windowBackgroundColor),
-            SkColorGetA(s->windowBackgroundColor)
+            SkColorGetR(s->getValue(windowBackgroundColor)),
+            SkColorGetG(s->getValue(windowBackgroundColor)),
+            SkColorGetB(s->getValue(windowBackgroundColor)),
+            SkColorGetA(s->getValue(windowBackgroundColor))
         );
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         drawContents();
-        drawWidgets();
+        drawComponents();
         glfwSwapBuffers(_window);
     }
 
@@ -486,7 +487,7 @@ namespace psychicui {
 
     }
 
-    void Window::drawWidgets() {
+    void Window::drawComponents() {
         if (!_visible) {
             return;
         }
@@ -517,7 +518,7 @@ namespace psychicui {
 //        nvgBeginFrame(_nvgContext, _size[0], _size[1], _pixelRatio);
 //        draw(_nvgContext);
 //        nvgEndFrame(_nvgContext);
-        _sk_canvas->clear(style()->windowBackgroundColor);
+        _sk_canvas->clear(style()->getValue(windowBackgroundColor));
 //        _sk_canvas->clear(SK_ColorBLACK);
         render(_sk_canvas);
         _sk_canvas->flush();
@@ -594,14 +595,14 @@ namespace psychicui {
             y -= 2;
 
             if (!_dragActive) {
-                auto widget = findWidget(x, y);
-                if (widget != nullptr && widget->cursor() != _cursor) {
-                    _cursor = widget->cursor();
+                auto component = findComponent(x, y);
+                if (component != nullptr && component->cursor() != _cursor) {
+                    _cursor = component->cursor();
                     glfwSetCursor(_window, _cursors[(int) _cursor]);
                 }
             } else {
-//                ret = _dragWidget->mouseDragEvent(
-//                    p - _dragWidget->setParent()->absolutePosition(),
+//                ret = _dragComponent->mouseDragEvent(
+//                    p - _dragComponent->setParent()->absolutePosition(),
 //                    p - _mousePosition,
 //                    _mouseState,
 //                    _modifiers
@@ -642,34 +643,34 @@ namespace psychicui {
                 _mouseState &= ~(1 << button);
             }
 
-            auto dropWidget = findWidget(_mouseX, _mouseY);
-            if (_dragActive && action == GLFW_RELEASE && dropWidget != _dragWidget) {
+            auto dropComponent = findComponent(_mouseX, _mouseY);
+            if (_dragActive && action == GLFW_RELEASE && dropComponent != _dragComponent) {
                 // TODO: Actually call a drop event, don't send the mouse event
-//                _dragWidget->mouseButtonPropagation(
-//                    _mousePosition - _dragWidget->setParent()->absolutePosition(),
+//                _dragComponent->mouseButtonPropagation(
+//                    _mousePosition - _dragComponent->setParent()->absolutePosition(),
 //                    button,
 //                    false,
 //                    _modifiers
 //                );
             }
 
-            if (dropWidget != nullptr && dropWidget->cursor() != _cursor) {
-                _cursor = dropWidget->cursor();
+            if (dropComponent != nullptr && dropComponent->cursor() != _cursor) {
+                _cursor = dropComponent->cursor();
                 glfwSetCursor(_window, _cursors[(int) _cursor]);
             }
 
             if (action == GLFW_PRESS && (button == GLFW_MOUSE_BUTTON_1 || button == GLFW_MOUSE_BUTTON_2)) {
-                _dragWidget = findWidget(_mouseX, _mouseY);
-                if (_dragWidget.get() == this) {
-                    _dragWidget = nullptr;
+                _dragComponent = findComponent(_mouseX, _mouseY);
+                if (_dragComponent.get() == this) {
+                    _dragComponent = nullptr;
                 }
-                _dragActive = _dragWidget != nullptr;
+                _dragActive = _dragComponent != nullptr;
                 if (!_dragActive) {
                     requestFocus(nullptr);
                 }
             } else {
                 _dragActive = false;
-                _dragWidget = nullptr;
+                _dragComponent = nullptr;
             }
 
             mouseButtonPropagation(_mouseX, _mouseY, button, action == GLFW_PRESS, _modifiers);
@@ -805,7 +806,7 @@ namespace psychicui {
 
     // PANELS
 
-    void Window::requestFocus(Widget *widget) {
+    void Window::requestFocus(Component *component) {
         for (auto w: _focusPath) {
             if (!w->focused()) {
                 continue;
@@ -813,12 +814,12 @@ namespace psychicui {
             w->focusEvent(false);
         }
         _focusPath.clear();
-        if (widget) {
-            _focusPath  = widget->path();
+        if (component) {
+            _focusPath  = component->path();
             for (auto w: _focusPath) {
                 w->focusEvent(true);
             }
-            if (auto  p = widget->panel()) {
+            if (auto  p = component->panel()) {
                 movePanelToFront(p);
             }
         }
@@ -828,8 +829,8 @@ namespace psychicui {
 //        if (std::find(_focusPath.begin(), _focusPath.end(), panel) != _focusPath.end()) {
 //            _focusPath.clear();
 //        }
-//        if (_dragWidget == panel) {
-//            _dragWidget = nullptr;
+//        if (_dragComponent == panel) {
+//            _dragComponent = nullptr;
 //        }
 //        removeChild(panel);
     }

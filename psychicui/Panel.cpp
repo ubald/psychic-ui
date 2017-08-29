@@ -4,12 +4,13 @@
 namespace psychicui {
 
     Panel::Panel(const std::string &title) :
-        Widget(),
+        Component(),
         _title(title),
         _buttonPanel(nullptr),
         _modal(false),
         _drag(false) {
-            YGNodeStyleSetPositionType(_yogaNode, YGPositionTypeAbsolute);
+        setComponentType("Panel");
+        YGNodeStyleSetPositionType(_yogaNode, YGPositionTypeAbsolute);
     }
 
     std::shared_ptr<Panel> Panel::panel() {
@@ -17,23 +18,23 @@ namespace psychicui {
     }
 
     void Panel::draw(SkCanvas *canvas) {
-        Widget::draw(canvas);
+        Component::draw(canvas);
     }
 
     void Panel::dispose() {
-//        Widget *widget = this;
-//        while (widget->setParent()) {
-//            widget = widget->setParent();
+//        Component *component = this;
+//        while (component->setParent()) {
+//            component = component->setParent();
 //        }
-//        ((Window *) widget)->disposePanel(this);
+//        ((Window *) component)->disposePanel(this);
     }
 
     void Panel::center() {
-//        Widget *widget = this;
-//        while (widget->setParent()) {
-//            widget = widget->setParent();
+//        Component *component = this;
+//        while (component->setParent()) {
+//            component = component->setParent();
 //        }
-//        ((Window *) widget)->centerPanel(this);
+//        ((Window *) component)->centerPanel(this);
     }
 
     bool Panel::mouseDragEvent(const int &mouseX, const int &mouseY, const int &dragX, const int &dragY, int button, int modifiers) {
@@ -48,10 +49,10 @@ namespace psychicui {
     }
 
     void Panel::mouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers) {
-        Widget::mouseButton(mouseX, mouseY, button, down, modifiers);
-        if (button == GLFW_MOUSE_BUTTON_1) {
-            _drag = down && (mouseY - _y) < style()->titleBarHeight;
-        }
+//        Component::mouseButton(mouseX, mouseY, button, down, modifiers);
+//        if (button == GLFW_MOUSE_BUTTON_1) {
+//            _drag = down && (mouseY - _y) < style()->getValue(titleBarHeight);
+//        }
     }
 
     void Panel::refreshRelativePlacement() {

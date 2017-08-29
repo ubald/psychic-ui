@@ -4,28 +4,30 @@
 
 namespace psychicui {
 
+
+    static std::string componentType = "label";
+
     Label::Label(const std::string &text):
-    Widget::Widget() {
+    Component::Component() {
+        setComponentType("Label");
         setMeasurable();
         setText(text);
 
-
         // TODO: Implement invalidation method for when setStyle changes
-        Style *s = style().get();
-        std::cout << s->font->fontStyle().weight() << std::endl;
-        _paint.setAntiAlias(s->textAntiAlias);
-        if ( s->textAntiAlias ) {
+        auto s = style();
+        _paint.setAntiAlias(s->getValue(textAntiAlias));
+        if ( s->getValue(textAntiAlias) ) {
             _paint.setLCDRenderText(true);
             _paint.setSubpixelText(true);
         }
-        _paint.setTypeface(s->font);
-        _paint.setTextSize(s->textSize);
+//        _paint.setTypeface(s->getValue(font)); TODO: Find/implement a font manager
+        _paint.setTextSize(s->getValue(textSize));
         _paint.setEmbeddedBitmapText(true);
-        _paint.setColor(s->textColor);
+        _paint.setColor(s->getValue(color));
 
         // TextBox doesn't measure the same way it draws, we have to set the spacing manually
-        _textBox.setSpacing(s->textSize / _paint.getFontSpacing(), s->textLeading - s->textSize);
-        setMinHeight(s->textLeading);
+        _textBox.setSpacing(s->getValue(textSize) / _paint.getFontSpacing(), s->getValue(textLeading) - s->getValue(textSize));
+        setMinHeight(s->getValue(textLeading));
     }
 
     std::string Label::text() {
@@ -39,7 +41,7 @@ namespace psychicui {
     }
 
     YGSize Label::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
-        YGSize size = Widget::measure(width, widthMode, height, heightMode);
+        YGSize size = Component::measure(width, widthMode, height, heightMode);
 
         if (widthMode == YGMeasureModeUndefined) {
             // Don't care about setWidth so do one line
@@ -54,7 +56,7 @@ namespace psychicui {
                 _textBox.setBox(0, 0, width, height);
                 // size.height = _textBox.getTextHeight();
                 // TextBox doesn't measure the same way it draws, we have to set the spacing manually
-                size.height = _textBox.countLines() * s->textLeading;
+                size.height = _textBox.countLines() * s->getValue(textLeading);
             } else {
                 size.width = w;
                 size.height = _paint.getFontSpacing();
@@ -66,7 +68,7 @@ namespace psychicui {
     }
 
     void Label::draw(SkCanvas *canvas) {
-        Widget::draw(canvas);
+        Component::draw(canvas);
         _textBox.setBox(_paddingLeft, _paddingTop, _width - _paddingRight, _height - _paddingBottom);
         _textBox.draw(canvas);
     }

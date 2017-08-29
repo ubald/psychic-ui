@@ -1,36 +1,81 @@
 #pragma once
 
+#include <map>
 #include <SkTypeface.h>
 #include <psychicui/psychicui.hpp>
 
+#define PSYCHIC_STYLE_PROPERTY(type, values, name, defaultValue)                                                       \
+public:                                                                                                                \
+type getValue(values property) const {                                                                                 \
+    try {                                                                                                              \
+        return _##name##Values.at(property);                                                                           \
+    } catch (const std::out_of_range &exception){                                                                      \
+        return defaultValue;                                                                                           \
+    }                                                                                                                  \
+}                                                                                                                      \
+void setValue(values property, type value) {                                                                           \
+    _##name##Values[property] = value;                                                                                 \
+}                                                                                                                      \
+protected:                                                                                                             \
+std::map<values, type> _##name##Values{};                                                                              \
+
+
 namespace psychicui {
+    enum ColorProperty {
+        // General
+            transparent,
+        // Background
+            windowBackgroundColor,
+            panelDropShadowColor,
+            popupBackgroundColor,
+        // Button
+            buttonColor,
+            buttonOverColor,
+            buttonDownColor,
+        // Text
+            color
+    };
+
+    enum StringProperty {
+        fontFamily
+    };
+
+    enum BoolProperty {
+        // Text
+        antiAlias,
+            textAntiAlias
+    };
+
+    enum IntProperty {
+        // Text
+            textSize,
+            textLeading,
+        // Components
+            titleBarHeight,
+            panelCornerRadius,
+            panelDropShadowSize,
+            buttonCornerRadius
+    };
+
     class Style {
     public:
-        static std::shared_ptr<Style> defaultStyle;
-        static sk_sp<SkTypeface>      defaultFont;
+        static Style * getDefaultStyle();
+        static sk_sp<SkTypeface> defaultFont;
 
         Style();
 
-        Color transparent{0x00000000};
-        Color windowBackgroundColor{0xFF000000};
-        Color panelDropShadowColor{0xFF000000};
-        Color popupBackgroundColor{0xFF000000};
-
-
         sk_sp<SkTypeface> font{nullptr};
-        bool              textAntiAlias{true};
-        int               textSize{12};
-        int               textLeading{16};
-        Color             textColor{0xFFFFFFFF};
 
-        Color buttonColor{0xFF313033};
-        Color buttonOverColor{0xFF00FF00};
-        Color buttonDownColor{0xFF0000FF};
+        void overlay(Style * style);
 
-        int titleBarHeight{24};
-        int panelCornerRadius{0};
-        int panelDropShadowSize{0};
-        int buttonCornerRadius{10};
-    protected:
+        bool operator==(const Style &other) const;
+        bool operator!=(const Style &other) const;
+
+        // Macro stuff, don't put anything below, it'll end up protected
+    PSYCHIC_STYLE_PROPERTY(Color, ColorProperty, color, 0xFF000000);
+    PSYCHIC_STYLE_PROPERTY(std::string, StringProperty, string, "");
+    PSYCHIC_STYLE_PROPERTY(bool, BoolProperty, bool, false);
+    PSYCHIC_STYLE_PROPERTY(int, IntProperty, int, 0);
+
     };
 }

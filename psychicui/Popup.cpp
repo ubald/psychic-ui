@@ -94,7 +94,7 @@ namespace psychicui {
 //        nvgFill(ctx);
 //        nvgRestore(ctx);
 //
-//        Widget::draw(ctx);
+//        Component::draw(ctx);
 //    }
 
 }

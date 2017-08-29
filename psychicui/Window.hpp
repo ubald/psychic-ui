@@ -10,14 +10,14 @@
 #include "SkSurface.h"
 #include "SkPaint.h"
 #include "opengl.hpp"
-#include "Widget.hpp"
+#include "Component.hpp"
 #include "Style.hpp"
 
 //#define NANOVG_GL3_IMPLEMENTATION
 //#include <nanovg_gl.h>
 
 namespace psychicui {
-    class Window : public Widget {
+    class Window : public Component {
     public:
         static std::map<GLFWwindow *, Window *> windows;
 
@@ -47,7 +47,7 @@ namespace psychicui {
         void open();
         void drawAll();
         virtual void drawContents();
-        void drawWidgets();
+        void drawComponents();
 
         void disposePanel(std::shared_ptr<Panel> panel);
         void centerPanel(std::shared_ptr<Panel> panel);
@@ -91,13 +91,13 @@ namespace psychicui {
         int  _mouseY{0};
         bool _dragActive{false};
 
-        std::shared_ptr<Widget>              _dragWidget = nullptr;
-        std::vector<std::shared_ptr<Widget>> _focusPath;
+        std::shared_ptr<Component>              _dragComponent = nullptr;
+        std::vector<std::shared_ptr<Component>> _focusPath;
 
         void initSkia();
         void getSkiaSurface();
         void attachCallbacks();
-        void requestFocus(Widget *widget) override;
+        void requestFocus(Component *component) override;
 
         /* Events */
         virtual bool dropEvent(const std::vector<std::string> & /* filenames */) { return false; /* To be overridden */ }

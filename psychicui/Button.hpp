@@ -3,11 +3,11 @@
 #include <SkCanvas.h>
 #include <SkPaint.h>
 #include "psychicui.hpp"
-#include "Widget.hpp"
+#include "Component.hpp"
 #include "Label.hpp"
 
 namespace psychicui {
-    class Button : public Widget {
+    class Button : public Component {
     public:
         Button(const std::string &label = "Untitled");
         std::string label();
