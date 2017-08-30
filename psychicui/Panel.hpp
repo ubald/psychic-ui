@@ -24,7 +24,7 @@ namespace psychicui {
 
         void draw(SkCanvas *canvas) override;
         bool mouseDragEvent(const int &mouseX, const int &mouseY, const int &dragX, const int &dragY, int button, int modifiers) override;
-        void mouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers) override;
+        void onMouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers) override;
         void refreshRelativePlacement();
 
     protected:

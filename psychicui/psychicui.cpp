@@ -52,7 +52,7 @@ namespace psychicui {
                     Window *window = kv.second;
                     if (!window->visible()) {
                         continue;
-                    } else if (glfwWindowShouldClose(window->window())) {
+                    } else if (glfwWindowShouldClose(window->glfwWindow())) {
                         window->setVisible(false);
                         continue;
                     }

@@ -9,7 +9,7 @@ namespace psychicui {
         _buttonPanel(nullptr),
         _modal(false),
         _drag(false) {
-        setComponentType("Panel");
+        setTag("Panel");
         YGNodeStyleSetPositionType(_yogaNode, YGPositionTypeAbsolute);
     }
 
@@ -48,8 +48,8 @@ namespace psychicui {
         return false;
     }
 
-    void Panel::mouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers) {
-//        Component::mouseButton(mouseX, mouseY, button, down, modifiers);
+    void Panel::onMouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers) {
+//        Component::onMouseButton(mouseX, mouseY, button, down, modifiers);
 //        if (button == GLFW_MOUSE_BUTTON_1) {
 //            _drag = down && (mouseY - _y) < style()->getValue(titleBarHeight);
 //        }

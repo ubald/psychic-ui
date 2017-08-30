@@ -13,6 +13,8 @@ namespace psychicui {
         std::string text();
         void setText(const std::string &text);
 
+        void styleUpdated() override;
+
         YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) override;
         void draw(SkCanvas *canvas) override;
 

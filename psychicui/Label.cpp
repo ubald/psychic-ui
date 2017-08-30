@@ -4,30 +4,11 @@
 
 namespace psychicui {
 
-
-    static std::string componentType = "label";
-
     Label::Label(const std::string &text):
     Component::Component() {
-        setComponentType("Label");
+        setTag("Label");
         setMeasurable();
         setText(text);
-
-        // TODO: Implement invalidation method for when setStyle changes
-        auto s = style();
-        _paint.setAntiAlias(s->getValue(textAntiAlias));
-        if ( s->getValue(textAntiAlias) ) {
-            _paint.setLCDRenderText(true);
-            _paint.setSubpixelText(true);
-        }
-//        _paint.setTypeface(s->getValue(font)); TODO: Find/implement a font manager
-        _paint.setTextSize(s->getValue(textSize));
-        _paint.setEmbeddedBitmapText(true);
-        _paint.setColor(s->getValue(color));
-
-        // TextBox doesn't measure the same way it draws, we have to set the spacing manually
-        _textBox.setSpacing(s->getValue(textSize) / _paint.getFontSpacing(), s->getValue(textLeading) - s->getValue(textSize));
-        setMinHeight(s->getValue(textLeading));
     }
 
     std::string Label::text() {
@@ -40,6 +21,28 @@ namespace psychicui {
         invalidate();
     }
 
+    void Label::styleUpdated() {
+        Component::styleUpdated();
+
+        _paint.setAntiAlias(_computedStyle->getValue(textAntiAlias));
+        if ( _computedStyle->getValue(textAntiAlias) ) {
+            _paint.setLCDRenderText(true);
+            _paint.setSubpixelText(true);
+        }
+
+        _paint.setTypeface(styleManager() ? styleManager()->getFont(_computedStyle->getValue(fontFamily)) : nullptr);
+        _paint.setTextSize(_computedStyle->getValue(fontSize));
+        _paint.setColor(_computedStyle->getValue(color));
+
+        // TextBox doesn't measure the same way it draws, we have to set the spacing manually
+        _textBox.setSpacing(
+            _computedStyle->getValue(fontSize) / _paint.getFontSpacing(),
+            _computedStyle->getValue(lineHeight) - _computedStyle->getValue(lineHeight)
+        );
+
+        YGNodeStyleSetMinHeight(_yogaNode, std::max(_computedStyle->getValue(minHeight), _computedStyle->getValue(lineHeight)));
+    }
+
     YGSize Label::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
         YGSize size = Component::measure(width, widthMode, height, heightMode);
 
@@ -50,13 +53,13 @@ namespace psychicui {
         } else {
             float w = _paint.measureText(_text.c_str(), _text.length());
             if (w > width) {
-                Style *s = style().get();
+                Style *s = style();
 
                 _textBox.setMode(SkTextBox::kLineBreak_Mode);
                 _textBox.setBox(0, 0, width, height);
                 // size.height = _textBox.getTextHeight();
                 // TextBox doesn't measure the same way it draws, we have to set the spacing manually
-                size.height = _textBox.countLines() * s->getValue(textLeading);
+                size.height = _textBox.countLines() * s->getValue(lineHeight);
             } else {
                 size.width = w;
                 size.height = _paint.getFontSpacing();
@@ -69,7 +72,12 @@ namespace psychicui {
 
     void Label::draw(SkCanvas *canvas) {
         Component::draw(canvas);
-        _textBox.setBox(_paddingLeft, _paddingTop, _width - _paddingRight, _height - _paddingBottom);
+        _textBox.setBox(
+            _computedStyle->getValue(paddingLeft),
+            _computedStyle->getValue(paddingTop),
+            _width - _computedStyle->getValue(paddingRight),
+            _height - _computedStyle->getValue(paddingBottom)
+        );
         _textBox.draw(canvas);
     }
 }

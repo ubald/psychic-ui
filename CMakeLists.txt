@@ -232,8 +232,8 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/Window.hpp
     psychicui/Component.cpp
     psychicui/Component.hpp
-    psychicui/Style.cpp
-    psychicui/Style.hpp
+    psychicui/style/Style.cpp
+    psychicui/style/Style.hpp
     psychicui/Panel.cpp
     psychicui/Panel.hpp
 #    psychicui/Popup.cpp
@@ -241,7 +241,20 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/Button.cpp
     psychicui/Button.hpp
     psychicui/Label.cpp
-    psychicui/Label.hpp psychicui/Registry.cpp psychicui/Registry.hpp psychicui/StyleManager.cpp psychicui/StyleManager.hpp psychicui/utils/StringUtils.cpp psychicui/utils/StringUtils.hpp psychicui/StyleDeclaration.cpp psychicui/StyleDeclaration.hpp)
+    psychicui/Label.hpp
+    psychicui/Registry.cpp
+    psychicui/Registry.hpp
+    psychicui/style/StyleManager.cpp
+    psychicui/style/StyleManager.hpp
+    psychicui/utils/StringUtils.hpp
+    psychicui/style/StyleDeclaration.cpp
+    psychicui/style/StyleDeclaration.hpp
+    psychicui/style/StyleRule.cpp
+    psychicui/style/StyleRule.hpp
+    psychicui/style/StyleSheet.cpp
+    psychicui/style/StyleSheet.hpp
+    psychicui/utils/ColorUtils.hpp
+    )
 add_library(psychicui SHARED ${SOURCE_FILES})
 target_include_directories(psychicui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${YOGA_INCLUDE_DIRS} ${SKIA_INCLUDE_DIRS})
 target_link_libraries(psychicui ${GLFW_LIBRARIES} ${YOGA_LIBRARIES} ${SKIA_LIBRARIES})
@@ -283,11 +296,17 @@ file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 ExternalProject_Add(catch
     GIT_REPOSITORY git@github.com:philsquared/Catch.git
     GIT_TAG master
+    INSTALL_COMMAND ""
     )
 
 set(CATCH_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/catch-prefix/src/catch/single_include)
 
-add_executable(psychicui_tests tests/main.cpp tests/main.cpp tests/style_manager_tests.cpp tests/style_tests.cpp)
+add_executable(psychicui_tests
+    tests/main.cpp
+    tests/style_manager_tests.cpp
+    tests/style_tests.cpp
+    tests/style_rule_tests.cpp
+)
 target_include_directories(psychicui_tests PUBLIC ${CATCH_INCLUDE_DIRS})
 target_link_libraries(psychicui_tests psychicui ${PSYCHICUI_EXTRA_LIBS})
 add_dependencies(psychicui_tests  catch)
@@ -295,6 +314,6 @@ add_dependencies(psychicui_tests  catch)
 # SAMPLE
 
 if (PSYCHICUI_BUILD_EXAMPLE)
-    add_executable(psychicui_demo example/demo.cpp example/demo.cpp)
+    add_executable(psychicui_demo example/demo.cpp example/demo.cpp example/demo-stylesheet.hpp)
     target_link_libraries(psychicui_demo psychicui ${PSYCHICUI_EXTRA_LIBS})
 endif ()

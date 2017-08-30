@@ -4,9 +4,10 @@
 namespace psychicui {
     Button::Button(const std::string &label)
         : Component() {
-        setComponentType("Button");
+        setTag("Button");
         //TODO: Implement a createChildren method that'll be universal, whatever the constructor used
         _label = std::make_shared<Label>(label);
+        // TODO: _label->style()->setValue(position, "absolute");
         addChild(_label);
     }
 
@@ -18,24 +19,23 @@ namespace psychicui {
         _label->setText(label);
     }
 
+    void Button::styleUpdated() {
+        Component::styleUpdated();
+
+        paint.setColor(_computedStyle->getValue(backgroundColor));
+        paint.setStyle(SkPaint::kFill_Style);
+        if (_computedStyle->getValue(cornerRadius) > 0) {
+            paint.setAntiAlias(true);
+        } else {
+            paint.setAntiAlias(_computedStyle->getValue(antiAlias));
+        }
+    }
+
     void Button::draw(SkCanvas *canvas) {
         Component::draw(canvas);
 
-        // TODO: Cache setStyle
-        Style *s = style().get();
-
-        SkPaint paint;
-        if (_mouseDown) {
-            paint.setColor(s->getValue(buttonDownColor));
-        } else if (_mouseOver) {
-            paint.setColor(s->getValue(buttonOverColor));
-        } else {
-            paint.setColor(s->getValue(buttonColor));
-        }
-        paint.setStyle(SkPaint::kFill_Style);
-        if (s->getValue(buttonCornerRadius) > 0) {
-            paint.setAntiAlias(true);
-            canvas->drawRoundRect(_rect, s->getValue(buttonCornerRadius), s->getValue(buttonCornerRadius), paint);
+        if (_computedStyle->getValue(cornerRadius) > 0) {
+            canvas->drawRoundRect(_rect, _computedStyle->getValue(cornerRadius), _computedStyle->getValue(cornerRadius), paint);
         } else {
             canvas->drawRect(_rect, paint);
         }

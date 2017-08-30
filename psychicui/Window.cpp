@@ -12,7 +12,7 @@ namespace psychicui {
      */
     static float get_pixel_ratio(GLFWwindow *window) {
         #if defined(_WIN32)
-        HWND hWnd = glfwGetWin32Window(window);
+        HWND hWnd = glfwGetWin32Window(glfwWindow);
         HMONITOR monitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
         /* The following function only exists on Windows 8.1+, but we don't want to make that a dependency */
         static HRESULT (WINAPI *GetDpiForMonitor_)(HMONITOR, UINT, UINT*, UINT*) = nullptr;
@@ -32,7 +32,7 @@ namespace psychicui {
         }
         return 1.f;
         #elif defined(__linux__)
-        (void) window;
+        (void) glfwWindow;
 
         /* Try to read the pixel ratio from GTK */
         FILE *fp = popen("gsettings get org.gnome.desktop.interface scaling-factor", "r");
@@ -59,15 +59,16 @@ namespace psychicui {
 
     Window::Window(const std::string &title) :
         Component::Component(),
+        _styleManager(StyleManager::getInstance()),
         _title(title) {
-        setComponentType("Window");
+        setTag("Window");
         setSize(1440, 900);
         YGNodeStyleSetOverflow(_yogaNode, YGOverflowHidden);
         YGNodeStyleSetPositionType(_yogaNode, YGPositionTypeAbsolute);
     }
 
     Window::~Window() {
-        windows.erase(_window);
+        windows.erase(_glfwWindow);
         for (int i = 0; i < (int) Cursor::CursorCount; ++i) {
             if (_cursors[i]) {
                 glfwDestroyCursor(_cursors[i]);
@@ -80,10 +81,24 @@ namespace psychicui {
 //        if (_nvgContext) {
 //            nvgDeleteGL3(_nvgContext);
 //        }
-        if (_window) {
-            glfwDestroyWindow(_window);
+        if (_glfwWindow) {
+            glfwDestroyWindow(_glfwWindow);
         }
     }
+
+    GLFWwindow *Window::glfwWindow() {
+        return _glfwWindow;
+    }
+
+    // region Hierarchy
+
+    const Window *Window::window() const {
+        return this;
+    }
+
+    // endregion
+
+    // region Lifecycle
 
     void Window::open() {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -105,16 +120,16 @@ namespace psychicui {
         if (_fullscreen) {
             GLFWmonitor       *monitor = glfwGetPrimaryMonitor();
             const GLFWvidmode *mode    = glfwGetVideoMode(monitor);
-            _window = glfwCreateWindow(mode->width, mode->height, _title.c_str(), monitor, nullptr);
+            _glfwWindow = glfwCreateWindow(mode->width, mode->height, _title.c_str(), monitor, nullptr);
         } else {
-            _window = glfwCreateWindow(_width, _height, _title.c_str(), nullptr, nullptr);
+            _glfwWindow = glfwCreateWindow(_width, _height, _title.c_str(), nullptr, nullptr);
         }
 
-        if (!_window) {
+        if (!_glfwWindow) {
             throw std::runtime_error("Could not create an OpenGL context!");
         }
 
-        glfwMakeContextCurrent(_window);
+        glfwMakeContextCurrent(_glfwWindow);
 
         #if defined(PSYCHICUI_GLAD)
         if (!gladInitialized) {
@@ -125,24 +140,24 @@ namespace psychicui {
         }
         #endif
 
-        glfwGetWindowSize(_window, &_width, &_height);
-        _pixelRatio = get_pixel_ratio(_window);
+        glfwGetWindowSize(_glfwWindow, &_width, &_height);
+        _pixelRatio = get_pixel_ratio(_glfwWindow);
         #if defined(_WIN32) || defined(__linux__)
         if (_pixelRatio != 1 && !_fullscreen)
-            glfwSetWindowSize(_window, _width * _pixelRatio, _height * _pixelRatio);
+            glfwSetWindowSize(_glfwWindow, _width * _pixelRatio, _height * _pixelRatio);
         #endif
 
-        glfwGetFramebufferSize(_window, &_fbWidth, &_fbHeight);
+        glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
         glViewport(0, 0, _fbWidth, _fbHeight);
         glClearColor(
-            SkColorGetR(style()->getValue(windowBackgroundColor)),
-            SkColorGetG(style()->getValue(windowBackgroundColor)),
-            SkColorGetB(style()->getValue(windowBackgroundColor)),
-            SkColorGetA(style()->getValue(windowBackgroundColor))
+            SkColorGetR(_computedStyle->getValue(backgroundColor)),
+            SkColorGetG(_computedStyle->getValue(backgroundColor)),
+            SkColorGetB(_computedStyle->getValue(backgroundColor)),
+            SkColorGetA(_computedStyle->getValue(backgroundColor))
         );
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glfwSwapInterval(0);
-        glfwSwapBuffers(_window);
+        glfwSwapBuffers(_glfwWindow);
 
         #if defined(__APPLE__)
         // Poll for events once before starting. This is needed to be classified as "interactive"
@@ -165,18 +180,14 @@ namespace psychicui {
         attachCallbacks();
 
         // Be ready to start
-        _visible         = glfwGetWindowAttrib(_window, GLFW_VISIBLE) != 0;
+        _visible         = glfwGetWindowAttrib(_glfwWindow, GLFW_VISIBLE) != 0;
         _lastInteraction = glfwGetTime();
 
         for (int i = 0; i < (int) Cursor::CursorCount; ++i) {
             _cursors[i] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR + i);
         }
 
-        windows[_window] = this;
-
-        /// Fixes retina display-related font rendering issue
-//        nvgBeginFrame(_nvgContext, _size.setX(), _size.setY(), _pixelRatio);
-//        nvgEndFrame(_nvgContext);
+        windows[_glfwWindow] = this;
     }
 
     void Window::initSkia() {
@@ -204,7 +215,7 @@ namespace psychicui {
 
     void Window::attachCallbacks() {
         glfwSetCursorPosCallback(
-            _window,
+            _glfwWindow,
             [](GLFWwindow *w, double x, double y) {
                 auto it = windows.find(w);
                 if (it == windows.end()) {
@@ -216,7 +227,7 @@ namespace psychicui {
         );
 
         glfwSetMouseButtonCallback(
-            _window,
+            _glfwWindow,
             [](GLFWwindow *w, int button, int action, int modifiers) {
                 auto it = windows.find(w);
                 if (it == windows.end()) {
@@ -228,7 +239,7 @@ namespace psychicui {
         );
 
         glfwSetScrollCallback(
-            _window,
+            _glfwWindow,
             [](GLFWwindow *w, double x, double y) {
                 auto it = windows.find(w);
                 if (it == windows.end()) {
@@ -240,7 +251,7 @@ namespace psychicui {
         );
 
         glfwSetKeyCallback(
-            _window,
+            _glfwWindow,
             [](GLFWwindow *w, int key, int scancode, int action, int mods) {
                 auto it = windows.find(w);
                 if (it == windows.end()) {
@@ -252,7 +263,7 @@ namespace psychicui {
         );
 
         glfwSetCharCallback(
-            _window,
+            _glfwWindow,
             [](GLFWwindow *w, unsigned int codepoint) {
                 auto it = windows.find(w);
                 if (it == windows.end()) {
@@ -264,7 +275,7 @@ namespace psychicui {
         );
 
         glfwSetDropCallback(
-            _window,
+            _glfwWindow,
             [](GLFWwindow *w, int count, const char **filenames) {
                 auto it = windows.find(w);
                 if (it == windows.end()) {
@@ -276,7 +287,7 @@ namespace psychicui {
         );
 
         glfwSetFramebufferSizeCallback(
-            _window,
+            _glfwWindow,
             [](GLFWwindow *w, int width, int height) {
                 auto it = windows.find(w);
                 if (it == windows.end()) {
@@ -288,7 +299,7 @@ namespace psychicui {
         );
 
         glfwSetWindowFocusCallback(
-            _window,
+            _glfwWindow,
             [](GLFWwindow *w, int focused) {
                 auto it = windows.find(w);
                 if (it == windows.end()) {
@@ -300,7 +311,7 @@ namespace psychicui {
         );
 
         glfwSetWindowIconifyCallback(
-            _window,
+            _glfwWindow,
             [](GLFWwindow *w, int iconified) {
                 auto it = windows.find(w);
                 if (it == windows.end()) {
@@ -312,7 +323,7 @@ namespace psychicui {
         );
 
         glfwSetWindowCloseCallback(
-            _window,
+            _glfwWindow,
             [](GLFWwindow *w) {
                 auto it = windows.find(w);
                 if (it == windows.end()) {
@@ -325,7 +336,7 @@ namespace psychicui {
 
         // Continue rendering while event polling is frozen by a resize
         glfwSetWindowRefreshCallback(
-            _window,
+            _glfwWindow,
             [](GLFWwindow *w) {
                 auto it = windows.find(w);
                 if (it == windows.end()) {
@@ -337,9 +348,7 @@ namespace psychicui {
         );
     }
 
-    GLFWwindow *Window::window() {
-        return _window;
-    }
+    // endregion
 
     // region Title
 
@@ -350,8 +359,8 @@ namespace psychicui {
     void Window::setTitle(const std::string &title) {
         if (_title != title) {
             _title = title;
-            if (_window) {
-                glfwSetWindowTitle(_window, _title.c_str());
+            if (_glfwWindow) {
+                glfwSetWindowTitle(_glfwWindow, _title.c_str());
             }
         }
     }
@@ -367,14 +376,14 @@ namespace psychicui {
     void Window::setFullscreen(bool fullscreen) {
         if (_fullscreen != fullscreen) {
             _fullscreen = fullscreen;
-            if (_window) {
+            if (_glfwWindow) {
                 if (_fullscreen) {
                     GLFWmonitor       *monitor = glfwGetPrimaryMonitor();
                     const GLFWvidmode *mode    = glfwGetVideoMode(monitor);
-                    glfwGetWindowPos(_window, &_previousWindowX, &_previousWindowY);
-                    glfwGetWindowSize(_window, &_previousWindowWidth, &_previousWindowHeight);
+                    glfwGetWindowPos(_glfwWindow, &_previousWindowX, &_previousWindowY);
+                    glfwGetWindowSize(_glfwWindow, &_previousWindowWidth, &_previousWindowHeight);
                     glfwSetWindowMonitor(
-                        _window,
+                        _glfwWindow,
                         monitor,
                         0,
                         0,
@@ -384,7 +393,7 @@ namespace psychicui {
                     );
                 } else {
                     glfwSetWindowMonitor(
-                        _window,
+                        _glfwWindow,
                         nullptr,
                         _previousWindowX,
                         _previousWindowY,
@@ -408,11 +417,11 @@ namespace psychicui {
     void Window::setMinimized(bool minimized) {
         if (_minimized != minimized) {
             _minimized = minimized;
-            if (_window) {
+            if (_glfwWindow) {
                 if (_minimized) {
-                    glfwIconifyWindow(_window);
+                    glfwIconifyWindow(_glfwWindow);
                 } else {
-                    glfwRestoreWindow(_window);
+                    glfwRestoreWindow(_glfwWindow);
                 }
             }
         }
@@ -426,9 +435,9 @@ namespace psychicui {
         if (_visible != value) {
             _visible = value;
             if (_visible) {
-                glfwShowWindow(_window);
+                glfwShowWindow(_glfwWindow);
             } else {
-                glfwHideWindow(_window);
+                glfwHideWindow(_glfwWindow);
             }
         }
     }
@@ -437,15 +446,11 @@ namespace psychicui {
 
     // region Position
 
-//    const Vector2i &Window::setWindowPosition() const {
-//        return _windowPosition;
-//    }
-
     void Window::setWindowPosition(const int &x, const int &y) {
         _windowX = x;
         _windowY = y;
-        if (_window) {
-            glfwSetWindowPos(_window, _windowX, _windowY);
+        if (_glfwWindow) {
+            glfwSetWindowPos(_glfwWindow, _windowX, _windowY);
         }
     }
 
@@ -453,14 +458,10 @@ namespace psychicui {
 
     // region Size
 
-//    const Vector2i &Window::setWindowSize() const {
-//        return setSize();
-//    }
-
     void Window::setWindowSize(const int &width, const int &height) {
         setSize(width, height);
-        if (_window) {
-            glfwSetWindowSize(_window, _width, _height);
+        if (_glfwWindow) {
+            glfwSetWindowSize(_glfwWindow, _width, _height);
         }
     }
 
@@ -469,18 +470,16 @@ namespace psychicui {
     // region Draw
 
     void Window::drawAll() {
-        // TODO: Cache setStyle changes
-        auto s = style();
         glClearColor(
-            SkColorGetR(s->getValue(windowBackgroundColor)),
-            SkColorGetG(s->getValue(windowBackgroundColor)),
-            SkColorGetB(s->getValue(windowBackgroundColor)),
-            SkColorGetA(s->getValue(windowBackgroundColor))
+            SkColorGetR(_computedStyle->getValue(backgroundColor)),
+            SkColorGetG(_computedStyle->getValue(backgroundColor)),
+            SkColorGetB(_computedStyle->getValue(backgroundColor)),
+            SkColorGetA(_computedStyle->getValue(backgroundColor))
         );
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         drawContents();
         drawComponents();
-        glfwSwapBuffers(_window);
+        glfwSwapBuffers(_glfwWindow);
     }
 
     void Window::drawContents() {
@@ -492,9 +491,9 @@ namespace psychicui {
             return;
         }
 
-        glfwMakeContextCurrent(_window);
-        glfwGetFramebufferSize(_window, &_fbWidth, &_fbHeight);
-        glfwGetWindowSize(_window, &_width, &_height);
+        glfwMakeContextCurrent(_glfwWindow);
+        glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
+        glfwGetWindowSize(_glfwWindow, &_width, &_height);
 
         #if defined(_WIN32) || defined(__linux__)
         _width = (int)(_width / _pixelRatio);
@@ -509,19 +508,24 @@ namespace psychicui {
 
         // Do setLayout
         if (YGNodeIsDirty(_yogaNode)) {
+            std::cout << "Layout dirty!" << std::endl;
             YGNodeCalculateLayout(_yogaNode, _width, _width, YGDirectionLTR);
         }
 
         glViewport(0, 0, _fbWidth, _fbHeight);
         glBindSampler(0, 0);
 
-//        nvgBeginFrame(_nvgContext, _size[0], _size[1], _pixelRatio);
-//        draw(_nvgContext);
-//        nvgEndFrame(_nvgContext);
-        _sk_canvas->clear(style()->getValue(windowBackgroundColor));
-//        _sk_canvas->clear(SK_ColorBLACK);
+        _sk_canvas->clear(_computedStyle->getValue(backgroundColor));
         render(_sk_canvas);
         _sk_canvas->flush();
+    }
+
+    // endregion
+
+    // region Style
+
+    StyleManager * Window::styleManager() const {
+        return _styleManager.get();
     }
 
     // endregion
@@ -598,7 +602,7 @@ namespace psychicui {
                 auto component = findComponent(x, y);
                 if (component != nullptr && component->cursor() != _cursor) {
                     _cursor = component->cursor();
-                    glfwSetCursor(_window, _cursors[(int) _cursor]);
+                    glfwSetCursor(_glfwWindow, _cursors[(int) _cursor]);
                 }
             } else {
 //                ret = _dragComponent->mouseDragEvent(
@@ -656,7 +660,7 @@ namespace psychicui {
 
             if (dropComponent != nullptr && dropComponent->cursor() != _cursor) {
                 _cursor = dropComponent->cursor();
-                glfwSetCursor(_window, _cursors[(int) _cursor]);
+                glfwSetCursor(_glfwWindow, _cursors[(int) _cursor]);
             }
 
             if (action == GLFW_PRESS && (button == GLFW_MOUSE_BUTTON_1 || button == GLFW_MOUSE_BUTTON_2)) {
@@ -732,8 +736,8 @@ namespace psychicui {
 
     void Window::resizeEventCallback(int /*setWidth*/, int /*setHeight*/) {
         int fbWidth, fbHeight, width, height;
-        glfwGetFramebufferSize(_window, &fbWidth, &fbHeight);
-        glfwGetWindowSize(_window, &width, &height);
+        glfwGetFramebufferSize(_glfwWindow, &fbWidth, &fbHeight);
+        glfwGetWindowSize(_glfwWindow, &width, &height);
 
         #if defined(_WIN32) || defined(__linux__)
         _width /= _pixelRatio;
@@ -796,7 +800,7 @@ namespace psychicui {
     void Window::closeEventCallback() {
         _lastInteraction = glfwGetTime();
         try {
-            glfwSetWindowShouldClose(_window, windowShouldClose() ? GLFW_TRUE : GLFW_FALSE);
+            glfwSetWindowShouldClose(_glfwWindow, windowShouldClose() ? GLFW_TRUE : GLFW_FALSE);
         } catch (const std::exception &e) {
             std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
         }

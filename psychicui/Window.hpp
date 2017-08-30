@@ -11,7 +11,8 @@
 #include "SkPaint.h"
 #include "opengl.hpp"
 #include "Component.hpp"
-#include "Style.hpp"
+#include "style/StyleManager.hpp"
+#include "style/Style.hpp"
 
 //#define NANOVG_GL3_IMPLEMENTATION
 //#include <nanovg_gl.h>
@@ -21,11 +22,16 @@ namespace psychicui {
     public:
         static std::map<GLFWwindow *, Window *> windows;
 
-        GLFWwindow *window();
-
-
         Window(const std::string &title);
         virtual ~Window();
+
+        /**
+         * GLFW Window
+         * @return GLFWWindow*
+         */
+        GLFWwindow *glfwWindow();
+
+        const Window *window() const override;
 
         const std::string title() const;
         void setTitle(const std::string &title);
@@ -49,13 +55,27 @@ namespace psychicui {
         virtual void drawContents();
         void drawComponents();
 
+        // Style
+        StyleManager *styleManager() const override;
+
+        /**
+         * Load an instance of StyleSheet T
+         * @tparam T :StyleSheet
+         */
+        template <typename T>
+        void loadStyleSheet() {
+            static_assert(std::is_base_of<StyleSheet, T>::value, "T must extend StyleSheet");
+            std::make_unique<T>()->load(styleManager());
+            updateStyle();
+        }
+
         void disposePanel(std::shared_ptr<Panel> panel);
         void centerPanel(std::shared_ptr<Panel> panel);
         void movePanelToFront(std::shared_ptr<Panel> panel);
 
     protected:
-        // GLFW
-        GLFWwindow *_window{nullptr};
+        // GLFW Window
+        GLFWwindow *_glfwWindow{nullptr};
 
         // Rendering
         GrContext *_sk_context{nullptr};
@@ -73,15 +93,15 @@ namespace psychicui {
         bool        _decorated{true};
         GLFWcursor  *_cursors[(int) Cursor::CursorCount];
 
-        int      _fbWidth{0};
-        int      _fbHeight{0};
-        float    _pixelRatio;
-        int      _windowX{0};
-        int      _windowY{0};
-        int      _previousWindowX{0};
-        int      _previousWindowY{0};
-        int      _previousWindowWidth{0};
-        int      _previousWindowHeight{0};
+        int   _fbWidth{0};
+        int   _fbHeight{0};
+        float _pixelRatio;
+        int   _windowX{0};
+        int   _windowY{0};
+        int   _previousWindowX{0};
+        int   _previousWindowY{0};
+        int   _previousWindowWidth{0};
+        int   _previousWindowHeight{0};
 
         double _lastInteraction;
 
@@ -90,6 +110,9 @@ namespace psychicui {
         int  _mouseX{0};
         int  _mouseY{0};
         bool _dragActive{false};
+
+        // Style
+        std::shared_ptr<StyleManager> _styleManager{nullptr};
 
         std::shared_ptr<Component>              _dragComponent = nullptr;
         std::vector<std::shared_ptr<Component>> _focusPath;

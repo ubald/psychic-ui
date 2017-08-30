@@ -5,35 +5,26 @@
 #include <SkCanvas.h>
 #include <SkPaint.h>
 #include "psychicui.hpp"
-#include "Style.hpp"
+#include "psychicui/style/Style.hpp"
+#include "psychicui/style/StyleManager.hpp"
 
 
 namespace psychicui {
-    class Panel;
-    class StyleManager;
+    class Window;
 
-    enum Layout {
-        Horizontal,
-        Vertical
-    };
+    class Panel;
 
     class Component : public std::enable_shared_from_this<Component> {
         friend class StyleManager;
+
     public:
         Component();
         virtual ~Component();
 
-        /**
-         * Set the component type, it wil be appended to _componentType in order to get a type hierarchy for stylinh.
-         * Obviously this should be static and/or use Reflection but in order to progress in other parts of teh library
-         * it will stay local for the time being, until a better technique is implemented.
-         * @param componentName
-         */
-        void setComponentType(std::string componentName);
-
-
         // region Hierarchy
 
+        virtual StyleManager *styleManager() const;
+        virtual const Window *window() const;
         Component *parent();
         const Component *parent() const;
         void setParent(Component *parent);
@@ -89,41 +80,38 @@ namespace psychicui {
         void setWidth(int width);
         int height() const;
         void setHeight(int height);
-        
-        void setMinSize(float minWidth, float minHeight);
-        float minWidth() const;
-        void setMinWidth(float minWidth);
-        float minHeight() const;
-        void setMinHeight(float minHeight);
-        
-        void setMaxSize(float maxWidth, float maxHeight);
-        float maxWidth() const;
-        void setMaxWidth(float maxWidth);
-        float maxHeight() const;
-        void setMaxHeight(float maxHeight);
+
+//        void setMinSize(float minWidth, float minHeight);
+//        float minWidth() const;
+//        void setMinWidth(float minWidth);
+//        float minHeight() const;
+//        void setMinHeight(float minHeight);
+//
+//        void setMaxSize(float maxWidth, float maxHeight);
+//        float maxWidth() const;
+//        void setMaxWidth(float maxWidth);
+//        float maxHeight() const;
+//        void setMaxHeight(float maxHeight);
 
         // endregion
 
         // region Constraints
 
-        void setPadding(int value = 0);
-        void setPadding(int horizontal, int vertical);
-        void setPadding(int left, int right, int top, int bottom);
-        int paddingLeft() const;
-        void setPaddingLeft(int paddingLeft = 0);
-        int paddingRight() const;
-        void setPaddingRight(int paddingRight = 0);
-        int paddingTop() const;
-        void setPaddingTop(int paddingTop = 0);
-        int paddingBottom() const;
-        void setPaddingBottom(int paddingBottom = 0);
+//        void setPadding(int value = 0);
+//        void setPadding(int horizontal, int vertical);
+//        void setPadding(int left, int right, int top, int bottom);
+//        int paddingLeft() const;
+//        void setPaddingLeft(int paddingLeft = 0);
+//        int paddingRight() const;
+//        void setPaddingRight(int paddingRight = 0);
+//        int paddingTop() const;
+//        void setPaddingTop(int paddingTop = 0);
+//        int paddingBottom() const;
+//        void setPaddingBottom(int paddingBottom = 0);
 
         // endregion
 
         // region Layout
-
-        Layout layout() const;
-        void setLayout(Layout layout);
 
         bool wrap() const;
         void setWrap(bool wrap);
@@ -136,7 +124,7 @@ namespace psychicui {
 
         float flexGrow() const;
         void setFlexGrow(float flexGrow);
-        
+
         float flexBasis() const;
         void setFlexBasis(float flexBasis);
 
@@ -145,10 +133,21 @@ namespace psychicui {
         // region Style
 
         YGNodeRef yogaNode();
-        std::shared_ptr<Style> style();
-        void setStyle(std::shared_ptr<Style> style);
-        std::shared_ptr<Style> getComputedStyle();
-        std::vector<std::string> classNames();
+
+        /**
+         * Get the inline style
+         * @return Style*
+         */
+        Style *style() const;
+
+        /**
+         * Get the computed style
+         * @return
+         */
+        const Style *computedStyle() const;
+
+        const std::vector<std::string> &tags() const;
+        const std::vector<std::string> &classNames() const;
         void setClassNames(std::vector<std::string> additionalClassNames);
 
 
@@ -163,8 +162,14 @@ namespace psychicui {
 
         // endregion
 
+        // region Mouse & Cursor
+
         Cursor cursor() const;
         void setCursor(Cursor cursor);
+        bool mouseOver() const;
+        bool mouseDown() const;
+
+        // endregion
 
         std::shared_ptr<Component> findComponent(const int &x, const int &y);
         bool contains(const int &x, const int &y) const;
@@ -179,45 +184,87 @@ namespace psychicui {
 
 
     protected:
+
         // region Style
-        std::vector<std::string> _componentType{};
+
+        /**
+         * Set the component tag, it wil be appended to _componentTag in order to get a type hierarchy for styling.
+         * Obviously this should be static and/or use Reflection but in order to progress in other parts of the library
+         * it will stay local for the time being, until a better technique is implemented.
+         * @param componentName
+         */
+        void setTag(std::string componentName);
+        std::vector<std::string> _tags{};
+
+        /**
+         * Pseudo CSS class names
+         */
         std::vector<std::string> _classNames{};
+
+        /**
+         * Inline Style
+         */
+        std::unique_ptr<Style>                  _style{nullptr};
+
+        /**
+         * Computed Style
+         */
+        std::unique_ptr<Style>                  _computedStyle{nullptr};
+
+        /**
+         * Compute style for this component
+         */
+        void updateStyle();
+
+        /**
+         * Callback for when styles were updated
+         */
+        virtual void styleUpdated();
+
         // endregion
-        bool                                 _enabled{true};
-        bool                                 _visible{true};
-        int                                  _x{0};
-        int                                  _y{0};
-        int                                  _width{0};
-        int                                  _height{0};
-        int _paddingLeft{0};
-        int _paddingRight{0};
-        int _paddingTop{0};
-        int _paddingBottom{0};
-        bool _wrap{false};
-        Layout _layout{Vertical};
+
+        // region Rendering
+
+        SkPaint paint;
+
+        // endregion
+
+        bool   _enabled{true};
+        bool   _visible{true};
+        int    _x{0};
+        int    _y{0};
+        int    _width{0};
+        int    _height{0};
+//        int    _paddingLeft{0};
+//        int    _paddingRight{0};
+//        int    _paddingTop{0};
+//        int    _paddingBottom{0};
+        bool   _wrap{false};
         SkRect _rect;
 
-        bool                                 _focused{false};
-        bool                                 _mouseOver{false};
-        bool                                 _mouseDown{false};
-        std::shared_ptr<Style>               _style{nullptr};
-        Cursor                               _cursor{Cursor::Arrow};
+        bool                                    _focused{false};
+        bool                                    _mouseOver{false};
+        bool                                    _mouseDown{false};
+
+
+
+        Cursor                                  _cursor{Cursor::Arrow};
         Component                               *_parent{nullptr};
         std::vector<std::shared_ptr<Component>> _children;
 
-        YGNodeRef                            _yogaNode{nullptr};
+        YGNodeRef _yogaNode{nullptr};
 
         void focused(bool focused);
         void mouseMovedPropagation(const int &mouseX, const int &mouseY, int button, int modifiers);
         bool mouseScrolledPropagation(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY);
         bool mouseButtonPropagation(const int &mouseX, const int &mouseY, int button, bool down, int modifiers);
         virtual void mouseMoved(const int &mouseX, const int &mouseY, int button, int modifiers);
-        virtual void mouseOver();
-        virtual void mouseOut();
-        virtual void mouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers);
-        virtual void mouseDown();
-        virtual void mouseUp();
-        virtual void mouseScrolled(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY);
+        virtual void onMouseOver();
+        virtual void onMouseOut();
+        virtual void onMouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers);
+        virtual void onMouseDown();
+        virtual void onMouseUp();
+        virtual void onMouseScrolled(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY);
     };
 }
 
