@@ -48,6 +48,7 @@ public:
         window->setValue(backgroundColor, BASE_00);
 
         auto button = manager->getStyle("button");
+        button->setValue(cornerRadius, 6);
         button->setValue(color, BASE_07);
         button->setValue(backgroundColor, BASE_01);
 

@@ -545,7 +545,8 @@ namespace psychicui {
         _y      = (int) top;
         _width  = (int) width;
         _height = (int) height;
-        _rect.set(_x, _y, _x + _width, _y + _height);
+
+        _rect.set(0, 0, _width, _height);
 
         canvas->save();
         canvas->translate(_x, _y);
@@ -642,7 +643,7 @@ namespace psychicui {
     }
 
     void Component::onMouseUp() {
-
+        updateStyle();
     }
 
     bool Component::mouseButtonPropagation(const int &mouseX, const int &mouseY, int button, bool down, int modifiers) {
@@ -682,7 +683,7 @@ namespace psychicui {
     }
 
     void Component::onMouseOut() {
-
+        updateStyle();
     }
 
     void Component::mouseMoved(const int &mouseX, const int &mouseY, int button, int modifiers) {
