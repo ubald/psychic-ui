@@ -4,9 +4,8 @@ project(psychicui)
 set(CMAKE_CXX_STANDARD 17)
 
 include(ExternalProject)
+include(FeatureSummary)
 
-
-option(PSYCHICUI_BUILD_EXAMPLE "Build PsychicUI example application?" ON)
 option(PSYCHICUI_BUILD_SHARED "Build PsychicUI as a shared library?" ON)
 
 set(PSYCHICUI_EXTRA_LIBS "")
@@ -254,7 +253,7 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/style/StyleSheet.cpp
     psychicui/style/StyleSheet.hpp
     psychicui/utils/ColorUtils.hpp
-    )
+    psychicui/utils/YogaUtils.hpp)
 add_library(psychicui SHARED ${SOURCE_FILES})
 target_include_directories(psychicui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${YOGA_INCLUDE_DIRS} ${SKIA_INCLUDE_DIRS})
 target_link_libraries(psychicui ${GLFW_LIBRARIES} ${YOGA_LIBRARIES} ${SKIA_LIBRARIES})
@@ -291,29 +290,8 @@ endif ()
 # RESOURCES
 file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-# TESTS
+# SUBDIRECTORIES
+add_subdirectory(tests)
+add_subdirectory(example)
 
-ExternalProject_Add(catch
-    GIT_REPOSITORY git@github.com:philsquared/Catch.git
-    GIT_TAG master
-    INSTALL_COMMAND ""
-    )
 
-set(CATCH_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/catch-prefix/src/catch/single_include)
-
-add_executable(psychicui_tests
-    tests/main.cpp
-    tests/style_manager_tests.cpp
-    tests/style_tests.cpp
-    tests/style_rule_tests.cpp
-)
-target_include_directories(psychicui_tests PUBLIC ${CATCH_INCLUDE_DIRS})
-target_link_libraries(psychicui_tests psychicui ${PSYCHICUI_EXTRA_LIBS})
-add_dependencies(psychicui_tests  catch)
-
-# SAMPLE
-
-if (PSYCHICUI_BUILD_EXAMPLE)
-    add_executable(psychicui_demo example/demo.cpp example/demo.cpp example/demo-stylesheet.hpp)
-    target_link_libraries(psychicui_demo psychicui ${PSYCHICUI_EXTRA_LIBS})
-endif ()

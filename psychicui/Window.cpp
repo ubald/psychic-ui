@@ -62,9 +62,9 @@ namespace psychicui {
         _styleManager(StyleManager::getInstance()),
         _title(title) {
         setTag("Window");
-        setSize(1440, 900);
-        YGNodeStyleSetOverflow(_yogaNode, YGOverflowHidden);
-        YGNodeStyleSetPositionType(_yogaNode, YGPositionTypeAbsolute);
+        setWindowSize(1440, 900);
+        _style->set(position, "absolute");
+        _style->set(overflow, "hidden");
     }
 
     Window::~Window() {
@@ -78,9 +78,6 @@ namespace psychicui {
         delete _sk_context;
         delete _sk_surface;
 
-//        if (_nvgContext) {
-//            nvgDeleteGL3(_nvgContext);
-//        }
         if (_glfwWindow) {
             glfwDestroyWindow(_glfwWindow);
         }
@@ -122,7 +119,7 @@ namespace psychicui {
             const GLFWvidmode *mode    = glfwGetVideoMode(monitor);
             _glfwWindow = glfwCreateWindow(mode->width, mode->height, _title.c_str(), monitor, nullptr);
         } else {
-            _glfwWindow = glfwCreateWindow(_width, _height, _title.c_str(), nullptr, nullptr);
+            _glfwWindow = glfwCreateWindow(_windowWidth, _windowHeight, _title.c_str(), nullptr, nullptr);
         }
 
         if (!_glfwWindow) {
@@ -140,20 +137,20 @@ namespace psychicui {
         }
         #endif
 
-        glfwGetWindowSize(_glfwWindow, &_width, &_height);
+        glfwGetWindowSize(_glfwWindow, &_windowWidth, &_windowHeight);
         _pixelRatio = get_pixel_ratio(_glfwWindow);
         #if defined(_WIN32) || defined(__linux__)
         if (_pixelRatio != 1 && !_fullscreen)
-            glfwSetWindowSize(_glfwWindow, _width * _pixelRatio, _height * _pixelRatio);
+            glfwSetWindowSize(_glfwWindow, _windowWidth * _pixelRatio, _windowHeight * _pixelRatio);
         #endif
 
         glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
         glViewport(0, 0, _fbWidth, _fbHeight);
         glClearColor(
-            SkColorGetR(_computedStyle->getValue(backgroundColor)),
-            SkColorGetG(_computedStyle->getValue(backgroundColor)),
-            SkColorGetB(_computedStyle->getValue(backgroundColor)),
-            SkColorGetA(_computedStyle->getValue(backgroundColor))
+            SkColorGetR(_computedStyle->get(backgroundColor)),
+            SkColorGetG(_computedStyle->get(backgroundColor)),
+            SkColorGetB(_computedStyle->get(backgroundColor)),
+            SkColorGetA(_computedStyle->get(backgroundColor))
         );
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glfwSwapInterval(0);
@@ -198,8 +195,8 @@ namespace psychicui {
 
     void Window::getSkiaSurface() {
         GrBackendRenderTargetDesc desc;
-        desc.fWidth              = _width;
-        desc.fHeight             = _height;
+        desc.fWidth              = _windowWidth;
+        desc.fHeight             = _windowHeight;
         desc.fConfig             = kSkia8888_GrPixelConfig;
         desc.fOrigin             = kBottomLeft_GrSurfaceOrigin;
         desc.fSampleCnt          = _samples;
@@ -459,9 +456,11 @@ namespace psychicui {
     // region Size
 
     void Window::setWindowSize(const int &width, const int &height) {
-        setSize(width, height);
+        _windowWidth = width;
+        _windowHeight = height;
+        setSize((float) width, (float) height);
         if (_glfwWindow) {
-            glfwSetWindowSize(_glfwWindow, _width, _height);
+            glfwSetWindowSize(_glfwWindow, _windowWidth, _windowHeight);
         }
     }
 
@@ -471,10 +470,10 @@ namespace psychicui {
 
     void Window::drawAll() {
         glClearColor(
-            SkColorGetR(_computedStyle->getValue(backgroundColor)),
-            SkColorGetG(_computedStyle->getValue(backgroundColor)),
-            SkColorGetB(_computedStyle->getValue(backgroundColor)),
-            SkColorGetA(_computedStyle->getValue(backgroundColor))
+            SkColorGetR(_computedStyle->get(backgroundColor)),
+            SkColorGetG(_computedStyle->get(backgroundColor)),
+            SkColorGetB(_computedStyle->get(backgroundColor)),
+            SkColorGetA(_computedStyle->get(backgroundColor))
         );
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         drawContents();
@@ -493,29 +492,31 @@ namespace psychicui {
 
         glfwMakeContextCurrent(_glfwWindow);
         glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
-        glfwGetWindowSize(_glfwWindow, &_width, &_height);
+        glfwGetWindowSize(_glfwWindow, &_windowWidth, &_windowHeight);
 
         #if defined(_WIN32) || defined(__linux__)
-        _width = (int)(_width / _pixelRatio);
-        _height =(int)(_height / _pixelRatio);
+        _windowWidth = (int)(_windowWidth / _pixelRatio);
+        _windowHeight =(int)(_windowHeight / _pixelRatio);
         _fbWidth = (int)(_fbWidth * _pixelRatio);
         _fbHeight = (int)(_fbHeight * _pixelRatio);
         #else
-        if (_width) {
-            _pixelRatio = (float) _fbWidth / (float) _width;
+        if (_windowWidth) {
+            _pixelRatio = (float) _fbWidth / (float) _windowWidth;
         }
         #endif
 
         // Do setLayout
         if (YGNodeIsDirty(_yogaNode)) {
             std::cout << "Layout dirty!" << std::endl;
-            YGNodeCalculateLayout(_yogaNode, _width, _width, YGDirectionLTR);
+            YGNodeCalculateLayout(_yogaNode, _windowWidth, _windowWidth, YGDirectionLTR);
+            layoutUpdated();
+            YGNodePrint(_yogaNode, static_cast<YGPrintOptions>(YGPrintOptionsLayout | YGPrintOptionsStyle | YGPrintOptionsChildren));
         }
 
         glViewport(0, 0, _fbWidth, _fbHeight);
         glBindSampler(0, 0);
 
-        _sk_canvas->clear(_computedStyle->getValue(backgroundColor));
+        _sk_canvas->clear(_computedStyle->get(backgroundColor));
         render(_sk_canvas);
         _sk_canvas->flush();
     }
@@ -524,7 +525,7 @@ namespace psychicui {
 
     // region Style
 
-    StyleManager * Window::styleManager() const {
+    StyleManager *Window::styleManager() const {
         return _styleManager.get();
     }
 
@@ -668,12 +669,12 @@ namespace psychicui {
                 if (_dragComponent.get() == this) {
                     _dragComponent = nullptr;
                 }
-                _dragActive = _dragComponent != nullptr;
+                _dragActive    = _dragComponent != nullptr;
                 if (!_dragActive) {
                     requestFocus(nullptr);
                 }
             } else {
-                _dragActive = false;
+                _dragActive    = false;
                 _dragComponent = nullptr;
             }
 
@@ -740,22 +741,22 @@ namespace psychicui {
         glfwGetWindowSize(_glfwWindow, &width, &height);
 
         #if defined(_WIN32) || defined(__linux__)
-        _width /= _pixelRatio;
-        _height /= _pixelRatio;
+        _windowWidth /= _pixelRatio;
+        _windowHeight /= _pixelRatio;
         #endif
 
         if ((fbWidth == 0 && fbHeight == 0) || (width == 0 && height == 0)) {
             return;
         }
 
-        _fbWidth  = fbWidth;
-        _fbHeight = fbHeight;
-        _width    = width;
-        _height   = height;
+        _fbWidth      = fbWidth;
+        _fbHeight     = fbHeight;
+        _windowWidth  = width;
+        _windowHeight = height;
 
         // Set setLayout setSize
-        YGNodeStyleSetWidth(_yogaNode, _width);
-        YGNodeStyleSetHeight(_yogaNode, _height);
+        YGNodeStyleSetWidth(_yogaNode, _windowWidth);
+        YGNodeStyleSetHeight(_yogaNode, _windowHeight);
 
         // Get a new surface
         getSkiaSurface();
@@ -763,7 +764,7 @@ namespace psychicui {
         _lastInteraction = glfwGetTime();
 
         try {
-            windowResized(_width, _height);
+            windowResized(_windowWidth, _windowHeight);
         } catch (const std::exception &e) {
             std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
         }

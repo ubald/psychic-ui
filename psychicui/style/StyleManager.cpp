@@ -17,12 +17,12 @@ namespace psychicui {
         _fonts[name] = SkTypeface::MakeFromFile(path.c_str());
     }
 
-    sk_sp<SkTypeface> StyleManager::getFont(const std::string &name) const {
+    sk_sp<SkTypeface> StyleManager::font(const std::string &name) const {
         auto font = _fonts.find(name);
         return font != _fonts.end() ? font->second : nullptr;
     }
 
-    Style *StyleManager::getStyle(std::string selector) {
+    Style *StyleManager::style(std::string selector) {
         std::transform(selector.begin(), selector.end(), selector.begin(), ::tolower);
         auto it = _declarations.find(selector);
         if (it != _declarations.end()) {
@@ -35,40 +35,55 @@ namespace psychicui {
             }
 
             _declarations[selector] = std::make_unique<StyleDeclaration>(std::move(rule));
+
+            #ifdef DEBUG_STYLES
+            _declarations[selector]->selector = selector;
+            #endif
+
             return _declarations[selector]->style();
         }
     }
 
     std::unique_ptr<Style> StyleManager::computeStyle(const Component *component) {
-        std::vector<StyleDeclaration*> inheritedMatches;
-        std::vector<StyleDeclaration*> directMatches;
+        std::vector<std::pair<int, StyleDeclaration*>> inheritedMatches;
+        std::vector<std::pair<int, StyleDeclaration*>> directMatches;
+
         for (const auto &declaration: _declarations) {
-            switch (declaration.second->rule()->matches(component)) {
-                case direct:
-                    directMatches.push_back(declaration.second.get());
-                    break;
-                case inherited:
-                    inheritedMatches.push_back(declaration.second.get());
-                    break;
-                default:
-                    break;
+            int match = declaration.second->rule()->matches(component);
+            if (match == 0) {
+                directMatches.emplace_back(declaration.second->weight(), declaration.second.get());
+            } else if (match > 0) {
+                inheritedMatches.emplace_back(match, declaration.second.get());
             }
         }
 
-        // TODO: Somehow sort matching styles
+        // Sort direct matches by weight, heaviest overlaid last
+        std::sort(directMatches.begin(), directMatches.end(), [](const auto &a, const auto &b) {
+            return a.first < b.first;
+        });
 
-        auto style = std::make_unique<Style>();
+        // Sort inherited matches by match depth, closest overlaid last
+        // In case of equal depth, sort using weight
+        std::sort(inheritedMatches.begin(), inheritedMatches.end(), [](const auto &a, const auto &b) {
+            return (a.first != b.first) ? a.first > b.first : a.second->weight() < b.second->weight();
+        });
+
+        auto s = std::make_unique<Style>(style("*"));
         // Computed inherited values
         for (const auto &inheritedMatch: inheritedMatches) {
-            style->overlayInheritable(inheritedMatch->style());
+            s->overlayInheritable(inheritedMatch.second->style());
+            #ifdef DEBUG_STYLES
+            s->declarations.push_back("[inherited, depth: " + std::to_string(inheritedMatch.first) + "] " + inheritedMatch.second->selector);
+            #endif
         }
         for (const auto &directMatch: directMatches) {
-            style->overlay(directMatch->style());
+            s->overlay(directMatch.second->style());
+            #ifdef DEBUG_STYLES
+            s->declarations.push_back("[weight: " + std::to_string(directMatch.first) + "] " + directMatch.second->selector);
+            #endif
         }
-        // Fill holes with default style
-        style->defaults(getStyle("*"));
 
-        return std::move(style);
+        return std::move(s);
     }
 
 }

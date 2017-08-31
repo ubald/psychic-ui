@@ -1,24 +1,30 @@
 #pragma once
 
+#include <cmath>
 #include <map>
 #include <vector>
+#include <string>
 #include <SkTypeface.h>
 #include "../psychicui.hpp"
 
 #define PSYCHIC_STYLE_PROPERTY(type, values, name, defaultValue)                                                       \
 public:                                                                                                                \
-type getValue(values property) const {                                                                                 \
+type get(values property) const {                                                                                      \
     try {                                                                                                              \
         return _##name##Values.at(property);                                                                           \
     } catch (const std::out_of_range &exception){                                                                      \
         return defaultValue;                                                                                           \
     }                                                                                                                  \
 }                                                                                                                      \
-void setValue(values property, type value) {                                                                           \
+Style * set(values property, type value) {                                                                             \
     _##name##Values[property] = value;                                                                                 \
+    return this;                                                                                                       \
+}                                                                                                                      \
+bool has(values property) {                                                                                            \
+    return _##name##Values.find(property) != _##name##Values.end();                                                    \
 }                                                                                                                      \
 protected:                                                                                                             \
-static const std::vector<values> name##Inheritable;                                                              \
+static const std::vector<values> name##Inheritable;                                                                    \
 std::map<values, type> _##name##Values{};                                                                              \
 
 
@@ -27,27 +33,29 @@ namespace psychicui {
     enum ColorProperty {
         color,
         backgroundColor,
-        borderColor, borderLeftColor, borderRightColor, borderTopColor, borderBottomColor
+        borderColor, borderHorizontalColor, borderLeftColor, borderRightColor, borderVerticalColor, borderTopColor, borderBottomColor
     };
 
     enum StringProperty {
         fontFamily, textAlign, textJustify,
-        overflow, overflowX, overflowY,
-        position
+        position,
+        justifyContent, direction, alignContent, alignItems, alignSelf,
+        wrap, overflow
     };
 
     enum FloatProperty {
-        opacity
+        opacity,
+        flex, grow, shrink, basis
     };
 
     enum IntProperty {
         fontSize, letterSpacing, lineHeight,
         width, minWidth, maxWidth,
         height, minHeight, maxHeight,
-        margin, marginLeft, marginRight, marginTop, marginBottom,
-        padding, paddingLeft, paddingRight, paddingTop, paddingBottom,
-        border, borderLeft, borderRight, borderTop, borderBottom,
-        cornerRadius, cornerRadiusLeft, cornerRadiusRight, cornerRadiusTop, cornerRadiusBottom
+        margin, marginHorizontal, marginLeft, marginRight, marginVertical, marginTop, marginBottom,
+        padding, paddingHorizontal, paddingLeft, paddingRight, paddingVertical, paddingTop, paddingBottom,
+        border, borderHorizontal, borderLeft, borderRight, borderVertical, borderTop, borderBottom,
+        cornerRadius, cornerRadiusLeft, cornerRadiusRight, cornerRadiusTop, cornerRadiusBottom,
     };
 
     enum BoolProperty {
@@ -89,12 +97,19 @@ namespace psychicui {
         bool operator==(const Style &other) const;
         bool operator!=(const Style &other) const;
 
+        void trace() const;
+
         // Macro stuff, don't put anything below, it'll end up protected
     PSYCHIC_STYLE_PROPERTY(Color, ColorProperty, color, 0xFF000000);
     PSYCHIC_STYLE_PROPERTY(std::string, StringProperty, string, "");
-    PSYCHIC_STYLE_PROPERTY(float, FloatProperty, float, 0.0f);
-    PSYCHIC_STYLE_PROPERTY(int, IntProperty, int, 0);
+    PSYCHIC_STYLE_PROPERTY(float, FloatProperty, float, nanf("undefined"));
+    PSYCHIC_STYLE_PROPERTY(int, IntProperty, int, -1);
     PSYCHIC_STYLE_PROPERTY(bool, BoolProperty, bool, false);
+
+        #ifdef DEBUG_STYLES
+    public:
+        std::vector<std::string> declarations{};
+        #endif
 
     };
 }

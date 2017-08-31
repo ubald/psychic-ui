@@ -17,30 +17,30 @@ namespace psychicui {
 
     void Label::setText(const std::string &text) {
         _text = text;
-        _textBox.setText(_text.c_str(), _text.length(), _paint);
+        _textBox.setText(_text.c_str(), _text.length(), _textPaint);
         invalidate();
     }
 
     void Label::styleUpdated() {
         Component::styleUpdated();
 
-        _paint.setAntiAlias(_computedStyle->getValue(textAntiAlias));
-        if ( _computedStyle->getValue(textAntiAlias) ) {
-            _paint.setLCDRenderText(true);
-            _paint.setSubpixelText(true);
+        _textPaint.setAntiAlias(_computedStyle->get(textAntiAlias));
+        if ( _computedStyle->get(textAntiAlias) ) {
+            _textPaint.setLCDRenderText(true);
+            _textPaint.setSubpixelText(true);
         }
 
-        _paint.setTypeface(styleManager() ? styleManager()->getFont(_computedStyle->getValue(fontFamily)) : nullptr);
-        _paint.setTextSize(_computedStyle->getValue(fontSize));
-        _paint.setColor(_computedStyle->getValue(color));
+        _textPaint.setTypeface(styleManager() ? styleManager()->font(_computedStyle->get(fontFamily)) : nullptr);
+        _textPaint.setTextSize(_computedStyle->get(fontSize));
+        _textPaint.setColor(_computedStyle->get(color));
 
         // TextBox doesn't measure the same way it draws, we have to set the spacing manually
         _textBox.setSpacing(
-            _computedStyle->getValue(fontSize) / _paint.getFontSpacing(),
-            _computedStyle->getValue(lineHeight) - _computedStyle->getValue(lineHeight)
+            _computedStyle->get(fontSize) / _textPaint.getFontSpacing(),
+            _computedStyle->get(lineHeight) - _computedStyle->get(lineHeight)
         );
 
-        YGNodeStyleSetMinHeight(_yogaNode, std::max(_computedStyle->getValue(minHeight), _computedStyle->getValue(lineHeight)));
+        YGNodeStyleSetMinHeight(_yogaNode, std::max(_computedStyle->get(minHeight), _computedStyle->get(lineHeight)));
     }
 
     YGSize Label::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
@@ -49,20 +49,19 @@ namespace psychicui {
         if (widthMode == YGMeasureModeUndefined) {
             // Don't care about setWidth so do one line
             _textBox.setMode(SkTextBox::kOneLine_Mode);
-            size.width = _paint.measureText(_text.c_str(), _text.length());
+            size.width = _textPaint.measureText(_text.c_str(), _text.length());
         } else {
-            float w = _paint.measureText(_text.c_str(), _text.length());
+            float w = _textPaint.measureText(_text.c_str(), _text.length());
             if (w > width) {
-                Style *s = style();
-
                 _textBox.setMode(SkTextBox::kLineBreak_Mode);
+                // The passed sizes consider padding, which is different than when we draw
                 _textBox.setBox(0, 0, width, height);
                 // size.height = _textBox.getTextHeight();
                 // TextBox doesn't measure the same way it draws, we have to set the spacing manually
-                size.height = _textBox.countLines() * s->getValue(lineHeight);
+                size.height = _textBox.countLines() * _computedStyle->get(lineHeight);
             } else {
                 size.width = w;
-                size.height = _paint.getFontSpacing();
+                size.height = _textPaint.getFontSpacing();
             }
         }
 
@@ -72,12 +71,7 @@ namespace psychicui {
 
     void Label::draw(SkCanvas *canvas) {
         Component::draw(canvas);
-        _textBox.setBox(
-            _computedStyle->getValue(paddingLeft),
-            _computedStyle->getValue(paddingTop),
-            _width - _computedStyle->getValue(paddingRight),
-            _height - _computedStyle->getValue(paddingBottom)
-        );
+        _textBox.setBox(_paddedRect);
         _textBox.draw(canvas);
     }
 }

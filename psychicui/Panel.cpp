@@ -38,13 +38,13 @@ namespace psychicui {
     }
 
     bool Panel::mouseDragEvent(const int &mouseX, const int &mouseY, const int &dragX, const int &dragY, int button, int modifiers) {
-        if (_drag && (button & (1 << GLFW_MOUSE_BUTTON_1)) != 0) {
-            _x += dragX;
-            _x = std::min(std::max(_x, 0), parent()->x() - _x);
-            _y += dragY;
-            _y = std::min(std::max(_y, 0), parent()->y() - _y);
-            return true;
-        }
+//        if (_drag && (button & (1 << GLFW_MOUSE_BUTTON_1)) != 0) {
+//            _x += dragX;
+//            _x = std::min(std::max(_x, 0), parent()->x() - _x);
+//            _y += dragY;
+//            _y = std::min(std::max(_y, 0), parent()->y() - _y);
+//            return true;
+//        }
         return false;
     }
 

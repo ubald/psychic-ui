@@ -5,7 +5,8 @@ namespace psychicui {
     StyleDeclaration::StyleDeclaration(std::unique_ptr<Rule> rule) :
         _rule(std::move(rule)),
         _style(std::make_unique<Style>()) {
-
+        // Compute weight
+        _weight = _rule->weight();
     }
 
     const Rule *StyleDeclaration::rule() const {
@@ -14,5 +15,9 @@ namespace psychicui {
 
     Style *StyleDeclaration::style() const {
         return _style.get();
+    }
+
+    const int StyleDeclaration::weight() const {
+        return _weight;
     }
 }

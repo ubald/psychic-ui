@@ -20,7 +20,7 @@ namespace psychicui {
 
     protected:
         std::string _text;
-        SkPaint _paint;
+        SkPaint _textPaint;
         SkTextBox _textBox;
     };
 }

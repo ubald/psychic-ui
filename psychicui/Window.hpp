@@ -36,6 +36,7 @@ namespace psychicui {
         const std::string title() const;
         void setTitle(const std::string &title);
 
+
         bool minimized() const;
         void setMinimized(bool minimized);
 
@@ -44,11 +45,8 @@ namespace psychicui {
 
         void setVisible(bool value) override;
 
-//        const Vector2i &setWindowPosition() const;
         void setWindowPosition(const int &x, const int &y);
-
-//        const Vector2i &setWindowSize() const;
-        virtual void setWindowSize(const int &width, const int &height);
+        void setWindowSize(const int &width, const int &height);
 
         void open();
         void drawAll();
@@ -62,7 +60,7 @@ namespace psychicui {
          * Load an instance of StyleSheet T
          * @tparam T :StyleSheet
          */
-        template <typename T>
+        template<typename T>
         void loadStyleSheet() {
             static_assert(std::is_base_of<StyleSheet, T>::value, "T must extend StyleSheet");
             std::make_unique<T>()->load(styleManager());
@@ -98,6 +96,8 @@ namespace psychicui {
         float _pixelRatio;
         int   _windowX{0};
         int   _windowY{0};
+        int   _windowWidth{0};
+        int   _windowHeight{0};
         int   _previousWindowX{0};
         int   _previousWindowY{0};
         int   _previousWindowWidth{0};

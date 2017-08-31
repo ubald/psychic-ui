@@ -1,36 +1,15 @@
 #include <psychicui/psychicui.hpp>
-#include <psychicui/Window.hpp>
-#include <psychicui/Button.hpp>
 #include <iostream>
-#include "demo-stylesheet.hpp"
+#include "components/Application.hpp"
 
 using namespace psychicui;
-
-class TitleBar: public Component {
-public:
-    TitleBar() :
-        Component() {
-
-        }
-};
-
-class DemoApplication : public Window {
-public:
-    DemoApplication() :
-        Window("Demo Application") {
-        loadStyleSheet<DemoStyleSheet>();
-
-        addChild(std::make_shared<Label>("Label"));
-        addChild(std::make_shared<Button>("Button"));
-    }
-};
 
 int main(int /* argc */, char ** /* argv */) {
     try {
         psychicui::init();
 
         {
-            std::shared_ptr<DemoApplication> app = std::make_shared<DemoApplication>();
+            std::shared_ptr<Application> app = std::make_shared<Application>();
             app->open();
             psychicui::mainloop();
         }

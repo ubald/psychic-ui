@@ -7,33 +7,33 @@ TEST_CASE( "Style values can be set and retrieved", "[style]" ) {
     auto style = std::make_unique<Style>();
 
     SECTION("with color values") {
-        REQUIRE(style->getValue(color) == 0xFF000000);
-        style->setValue(color, 0xFFFF0000);
-        REQUIRE(style->getValue(color) == 0xFFFF0000);
+        REQUIRE(style->get(color) == 0xFF000000);
+        style->set(color, 0xFFFF0000);
+        REQUIRE(style->get(color) == 0xFFFF0000);
     }
 
     SECTION("with string values") {
-        REQUIRE(style->getValue(fontFamily) == "");
-        style->setValue(fontFamily, "Arial");
-        REQUIRE(style->getValue(fontFamily) == "Arial");
+        REQUIRE(style->get(fontFamily) == "");
+        style->set(fontFamily, "Arial");
+        REQUIRE(style->get(fontFamily) == "Arial");
     }
 
     SECTION("with float values") {
-        REQUIRE(style->getValue(opacity) == 0.0f);
-        style->setValue(opacity, 1.0f);
-        REQUIRE(style->getValue(opacity) == 1.0f);
+        REQUIRE(style->get(opacity) == 0.0f);
+        style->set(opacity, 1.0f);
+        REQUIRE(style->get(opacity) == 1.0f);
     }
 
     SECTION("with int values") {
-        REQUIRE(style->getValue(fontSize) == 0);
-        style->setValue(fontSize, 24);
-        REQUIRE(style->getValue(fontSize) == 24);
+        REQUIRE(style->get(fontSize) == 0);
+        style->set(fontSize, 24);
+        REQUIRE(style->get(fontSize) == 24);
     }
 
     SECTION("with bool values") {
-        REQUIRE(!style->getValue(antiAlias));
-        style->setValue(antiAlias, true);
-        REQUIRE(style->getValue(antiAlias));
+        REQUIRE(!style->get(antiAlias));
+        style->set(antiAlias, true);
+        REQUIRE(style->get(antiAlias));
     }
 }
 
@@ -146,54 +146,54 @@ TEST_CASE( "Styles can have default values", "[style]" ) {
 
 TEST_CASE( "Styles can overlay inheritable values", "[style]" ) {
     auto receiver = std::make_unique<Style>();
-    auto base = std::make_unique<Style>();
+    auto inheritable = std::make_unique<Style>();
 
     SECTION("with color values") {
-        base->setValue(color, 0xFFFF0000);
-        base->setValue(backgroundColor, 0xFFFF0000);
+        inheritable->setValue(color, 0xFFFF0000);
+        inheritable->setValue(backgroundColor, 0xFFFF0000);
         receiver->setValue(color, 0xFF0000FF);
         receiver->setValue(backgroundColor, 0xFF0000FF);
-        receiver->overlayInheritable(base.get());
+        receiver->overlayInheritable(inheritable.get());
         REQUIRE(receiver->getValue(color) == 0xFFFF0000);
         REQUIRE(receiver->getValue(backgroundColor) == 0xFF0000FF);
     }
 
     SECTION("with string values") {
-        base->setValue(fontFamily, "Arial");
-        base->setValue(overflow, "hidden");
+        inheritable->setValue(fontFamily, "Arial");
+        inheritable->setValue(overflow, "hidden");
         receiver->setValue(fontFamily, "Times");
         receiver->setValue(overflow, "scroll");
-        receiver->overlayInheritable(base.get());
+        receiver->overlayInheritable(inheritable.get());
         REQUIRE(receiver->getValue(fontFamily) == "Arial");
         REQUIRE(receiver->getValue(overflow) == "scroll");
     }
 
     SECTION("with float values") {
-        base->setValue(opacity, 0.5f);
-//        base->setValue(opacity, "hidden");
+        inheritable->setValue(opacity, 0.5f);
+//        inheritable->setValue(opacity, "hidden");
         receiver->setValue(opacity, 1.0f);
 //        receiver->setValue(opacity, "scroll");
-        receiver->overlayInheritable(base.get());
+        receiver->overlayInheritable(inheritable.get());
         REQUIRE(receiver->getValue(opacity) == 1.0f);
 //        REQUIRE(receiver->getValue(opacity) == "scroll");
     }
 
     SECTION("with int values") {
-        base->setValue(fontSize, 12);
-        base->setValue(cornerRadius, 12);
+        inheritable->setValue(fontSize, 12);
+        inheritable->setValue(cornerRadius, 12);
         receiver->setValue(fontSize, 24);
         receiver->setValue(cornerRadius, 24);
-        receiver->overlayInheritable(base.get());
+        receiver->overlayInheritable(inheritable.get());
         REQUIRE(receiver->getValue(fontSize) == 12);
         REQUIRE(receiver->getValue(cornerRadius) == 24);
     }
 
     SECTION("with bool values") {
-        base->setValue(antiAlias, false);
-//        base->setValue(antiAlias, false);
+        inheritable->setValue(antiAlias, false);
+//        inheritable->setValue(antiAlias, false);
         receiver->setValue(antiAlias, true);
 //        receiver->setValue(antiAlias, true);
-        receiver->overlayInheritable(base.get());
+        receiver->overlayInheritable(inheritable.get());
         REQUIRE(receiver->getValue(antiAlias) == true);
 //        REQUIRE(receiver->getValue(antiAlias) == false);
     }

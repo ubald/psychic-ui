@@ -1,6 +1,9 @@
 #include <iostream>
+#include "utils/YogaUtils.hpp"
 #include "Component.hpp"
 #include "Window.hpp"
+
+
 
 namespace psychicui {
 
@@ -47,11 +50,12 @@ namespace psychicui {
 
     void Component::setParent(Component *parent) {
         _parent = parent;
+        _depth = parent->depth() + 1;
         updateStyle();
     }
 
-    std::shared_ptr<Panel> Component::panel() {
-        return _parent ? _parent->panel() : nullptr;
+    const int Component::depth() const {
+        return _depth;
     }
 
     std::vector<std::shared_ptr<Component>> Component::path() {
@@ -61,6 +65,10 @@ namespace psychicui {
         }
         path.insert(path.begin(), shared_from_this());
         return path;
+    }
+
+    std::shared_ptr<Panel> Component::panel() {
+        return _parent ? _parent->panel() : nullptr;
     }
 
     // endregion
@@ -178,8 +186,16 @@ namespace psychicui {
         return _mouseOver;
     }
 
+    void Component::setMouseOver(bool over) {
+        _mouseOver = over;
+    }
+
     bool Component::mouseDown() const {
         return _mouseDown;
+    }
+
+    void Component::setMouseDown(bool down) {
+        _mouseDown = down;
     }
 
     // endregion
@@ -205,224 +221,116 @@ namespace psychicui {
 
     // region Position
 
-    void Component::setPosition(int x, int y) {
+    void Component::setPosition(float x, float y) {
         _x = x;
         _y = y;
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, _x >= 0 ? _x : YGUndefined);
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, _y >= 0 ? _y : YGUndefined);
+        YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, _x);
+        YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, _y);
     }
 
-    int Component::x() const {
+    void Component::setPosition(float left, float top, float right, float bottom) {
+        YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, left);
+        YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, top);
+        YGNodeStyleSetPosition(_yogaNode, YGEdgeRight, right);
+        YGNodeStyleSetPosition(_yogaNode, YGEdgeBottom, bottom);
+    }
+
+    float Component::x() const {
         return _x;
     }
 
-    void Component::setX(int x) {
+    void Component::setX(float x) {
         _x = x;
         YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, _x >= 0 ? _x : YGUndefined);
     }
 
-    int Component::y() const {
+    float Component::y() const {
         return _y;
     }
 
-    void Component::setY(int y) {
+    void Component::setY(float y) {
         _y = y;
         YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, _y >= 0 ? _y : YGUndefined);
+    }
+
+    float Component::left() const {
+        return YGNodeStyleGetPosition(_yogaNode, YGEdgeLeft).value;
+    }
+
+    void Component::setLeft(float left) {
+        YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, left);
+    }
+
+    float Component::right() const {
+        return YGNodeStyleGetPosition(_yogaNode, YGEdgeRight).value;
+    }
+
+    void Component::setRight(float right) {
+        YGNodeStyleSetPosition(_yogaNode, YGEdgeRight, right);
+    }
+
+    float Component::top() const {
+        return YGNodeStyleGetPosition(_yogaNode, YGEdgeTop).value;
+    }
+
+    void Component::setTop(float top) {
+        YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, top);
+    }
+
+    float Component::bottom() const {
+        return YGNodeStyleGetPosition(_yogaNode, YGEdgeBottom).value;
+    }
+
+    void Component::setBottom(float bottom) {
+        YGNodeStyleSetPosition(_yogaNode, YGEdgeBottom, bottom);
     }
 
     // endregion
 
     // region Dimensions
 
-    void Component::setSize(int width, int height) {
+    void Component::setSize(float width, float height) {
         _width  = width;
         _height = height;
-        YGNodeStyleSetWidth(_yogaNode, _width >= 0 ? _width : YGUndefined);
-        YGNodeStyleSetHeight(_yogaNode, _height >= 0 ? _height : YGUndefined);
+        YGNodeStyleSetWidth(_yogaNode, _width);
+        YGNodeStyleSetHeight(_yogaNode, _height);
     }
 
-    int Component::width() const {
+    float Component::width() const {
         return _width;
     }
 
-    void Component::setWidth(int width) {
+    void Component::setWidth(float width) {
         _width = width;
-        YGNodeStyleSetWidth(_yogaNode, _width >= 0 ? _width : YGUndefined);
+        YGNodeStyleSetWidth(_yogaNode, _width);
     }
 
-    int Component::height() const {
+    float Component::height() const {
         return _height;
     }
 
-    void Component::setHeight(int height) {
+    void Component::setHeight(float height) {
         _height = height;
-        YGNodeStyleSetHeight(_yogaNode, _height >= 0 ? _height : YGUndefined);
+        YGNodeStyleSetHeight(_yogaNode, _height);
     }
 
-//    void Component::setMinSize(float minWidth, float minHeight) {
-//        YGNodeStyleSetMinWidth(_yogaNode, minWidth >= 0 ? minWidth : YGUndefined);
-//        YGNodeStyleSetMinHeight(_yogaNode, minHeight >= 0 ? minHeight : YGUndefined);
-//    }
-//
-//    float Component::minWidth() const {
-//        return YGNodeStyleGetMinWidth(_yogaNode).value;
-//    }
-//
-//    void Component::setMinWidth(float minWidth) {
-//        YGNodeStyleSetMinWidth(_yogaNode, minWidth >= 0 ? minWidth : YGUndefined);
-//    }
-//
-//    float Component::minHeight() const {
-//        return YGNodeStyleGetMinHeight(_yogaNode).value;
-//    }
-//
-//    void Component::setMinHeight(float minHeight) {
-//        YGNodeStyleSetMinHeight(_yogaNode, minHeight >= 0 ? minHeight : YGUndefined);
-//    }
-//
-//    void Component::setMaxSize(float maxWidth, float maxHeight) {
-//        YGNodeStyleSetMaxWidth(_yogaNode, maxWidth >= 0 ? maxWidth : YGUndefined);
-//        YGNodeStyleSetMaxHeight(_yogaNode, maxHeight >= 0 ? maxHeight : YGUndefined);
-//    }
-//
-//    float Component::maxWidth() const {
-//        return YGNodeStyleGetMaxWidth(_yogaNode).value;
-//    }
-//
-//    void Component::setMaxWidth(float maxWidth) {
-//        YGNodeStyleSetMaxWidth(_yogaNode, maxWidth >= 0 ? maxWidth : YGUndefined);
-//    }
-//
-//    float Component::maxHeight() const {
-//        return YGNodeStyleGetMaxHeight(_yogaNode).value;
-//    }
-//
-//    void Component::setMaxHeight(float maxHeight) {
-//        YGNodeStyleSetMaxHeight(_yogaNode, maxHeight >= 0 ? maxHeight : YGUndefined);
-//    }
-
-    // endregion
-
-    // region Constraints
-
-//    void Component::setPadding(int value) {
-//        setPaddingLeft(value);
-//        setPaddingRight(value);
-//        setPaddingTop(value);
-//        setPaddingBottom(value);
-//    }
-//
-//    void Component::setPadding(int horizontal, int vertical) {
-//        setPaddingLeft(horizontal);
-//        setPaddingRight(horizontal);
-//        setPaddingTop(vertical);
-//        setPaddingBottom(vertical);
-//    }
-//
-//    void Component::setPadding(int left, int right, int top, int bottom) {
-//        setPaddingLeft(left);
-//        setPaddingRight(right);
-//        setPaddingTop(top);
-//        setPaddingBottom(bottom);
-//    }
-//
-//    int Component::paddingLeft() const {
-//        return _paddingLeft;
-//    }
-//
-//    void Component::setPaddingLeft(int paddingLeft) {
-//        _paddingLeft = paddingLeft;
-//        YGNodeStyleSetPadding(_yogaNode, YGEdgeLeft, _paddingLeft);
-//    }
-//
-//    int Component::paddingRight() const {
-//        return _paddingRight;
-//    }
-//
-//    void Component::setPaddingRight(int paddingRight) {
-//        _paddingRight = paddingRight;
-//        YGNodeStyleSetPadding(_yogaNode, YGEdgeRight, _paddingRight);
-//    }
-//
-//    int Component::paddingTop() const {
-//        return _paddingTop;
-//    }
-//
-//    void Component::setPaddingTop(int paddingTop) {
-//        _paddingTop = paddingTop;
-//        YGNodeStyleSetPadding(_yogaNode, YGEdgeTop, _paddingTop);
-//    }
-//
-//    int Component::paddingBottom() const {
-//        return _paddingBottom;
-//    }
-//
-//    void Component::setPaddingBottom(int paddingBottom) {
-//        _paddingBottom = paddingBottom;
-//        YGNodeStyleSetPadding(_yogaNode, YGEdgeBottom, _paddingBottom);
-//    }
-
-    // endregion
-
-    // region Layout
-
-    bool Component::wrap() const {
-        return _wrap;
+    float Component::percentWidth() const {
+        auto size = YGNodeStyleGetWidth(_yogaNode);
+        return size.unit == YGUnitPercent ? size.value : nanf("not a percent");
     }
 
-    void Component::setWrap(bool wrap) {
-        _wrap = wrap;
-        YGNodeStyleSetFlexWrap(_yogaNode, _wrap ? YGWrapWrap : YGWrapNoWrap);
+    void Component::setPercentWidth(float percentWidth) {
+        YGNodeStyleSetWidthPercent(_yogaNode, percentWidth);
     }
 
-    float Component::flex() const {
-        return YGNodeStyleGetFlex(_yogaNode);
+    float Component::percentHeight() const {
+        auto size = YGNodeStyleGetHeight(_yogaNode);
+        return size.unit == YGUnitPercent ? size.value : nanf("not a percent");
     }
 
-    void Component::setFlex(float flex) {
-        YGNodeStyleSetFlex(_yogaNode, flex);
+    void Component::setPercentHeight(float percentHeight) {
+        YGNodeStyleSetHeightPercent(_yogaNode, percentHeight);
     }
-
-    float Component::flexShrink() const {
-        return YGNodeStyleGetFlexShrink(_yogaNode);
-    }
-
-    void Component::setFlexShrink(float flexShrink) {
-        YGNodeStyleSetFlexShrink(_yogaNode, flexShrink);
-    }
-
-    float Component::flexGrow() const {
-        return YGNodeStyleGetFlexGrow(_yogaNode);
-    }
-
-    void Component::setFlexGrow(float flexGrow) {
-        YGNodeStyleSetFlexGrow(_yogaNode, flexGrow);
-    }
-
-    float Component::flexBasis() const {
-        return YGNodeStyleGetFlexBasis(_yogaNode).value;
-    }
-
-    void Component::setFlexBasis(float flexBasis) {
-        YGNodeStyleSetFlexBasis(_yogaNode, flexBasis);
-    }
-
-// TODO: Implement in CSS
-//    Layout Component::layout() const {
-//        return _layout;
-//    }
-//
-//    void Component::setLayout(Layout layout) {
-//        _layout = layout;
-//        switch (_layout) {
-//            case Horizontal:
-//                YGNodeStyleSetFlexDirection(_yogaNode, YGFlexDirectionRow);
-//                break;
-//            case Vertical:
-//                YGNodeStyleSetFlexDirection(_yogaNode, YGFlexDirectionColumn);
-//                break;
-//        }
-//    }
 
     // endregion
 
@@ -447,7 +355,7 @@ namespace psychicui {
     void Component::setClassNames(std::vector<std::string> classNames) {
         _classNames = std::move(classNames);
     }
-    
+
     void Component::updateStyle() {
         if (window()) {
             // Compute if we have access to a style manager
@@ -461,29 +369,70 @@ namespace psychicui {
         _computedStyle->overlay(_style.get());
 
         // Update Yoga
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeLeft, _computedStyle->getValue(marginLeft) || _computedStyle->getValue(margin));
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeRight, _computedStyle->getValue(marginRight) || _computedStyle->getValue(margin));
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeTop, _computedStyle->getValue(marginTop) || _computedStyle->getValue(margin));
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeBottom, _computedStyle->getValue(marginBottom) || _computedStyle->getValue(margin));
 
-        YGNodeStyleSetPadding(_yogaNode, YGEdgeLeft, _computedStyle->getValue(paddingLeft) || _computedStyle->getValue(padding));
-        YGNodeStyleSetPadding(_yogaNode, YGEdgeRight, _computedStyle->getValue(paddingRight) || _computedStyle->getValue(padding));
-        YGNodeStyleSetPadding(_yogaNode, YGEdgeTop, _computedStyle->getValue(paddingTop) || _computedStyle->getValue(padding));
-        YGNodeStyleSetPadding(_yogaNode, YGEdgeBottom, _computedStyle->getValue(paddingBottom) || _computedStyle->getValue(padding));
+        // Flex
+        YGNodeStyleSetFlexDirection(_yogaNode, YogaDirectionFromString(_computedStyle->get(direction), YGFlexDirectionColumn));
+        YGNodeStyleSetJustifyContent(_yogaNode, YogaJustifyFromString(_computedStyle->get(justifyContent), YGJustifyFlexStart));
+        YGNodeStyleSetAlignContent(_yogaNode, YogaAlignFromString(_computedStyle->get(alignContent), YGAlignFlexStart));
+        YGNodeStyleSetAlignItems(_yogaNode, YogaAlignFromString(_computedStyle->get(alignItems), YGAlignStretch));
+        YGNodeStyleSetAlignSelf(_yogaNode, YogaAlignFromString(_computedStyle->get(alignSelf), YGAlignAuto));
+        YGNodeStyleSetPositionType(_yogaNode, YogaPositionFromString(_computedStyle->get(position), YGPositionTypeRelative));
+        YGNodeStyleSetFlexWrap(_yogaNode, YogaWrapFromString(_computedStyle->get(wrap), YGWrapNoWrap));
+        YGNodeStyleSetOverflow(_yogaNode, YogaOverflowFromString(_computedStyle->get(overflow), YGOverflowVisible));
 
-        YGNodeStyleSetBorder(_yogaNode, YGEdgeLeft, _computedStyle->getValue(borderLeft) || _computedStyle->getValue(border));
-        YGNodeStyleSetBorder(_yogaNode, YGEdgeRight, _computedStyle->getValue(borderRight) || _computedStyle->getValue(border));
-        YGNodeStyleSetBorder(_yogaNode, YGEdgeTop, _computedStyle->getValue(borderTop) || _computedStyle->getValue(border));
-        YGNodeStyleSetBorder(_yogaNode, YGEdgeBottom, _computedStyle->getValue(borderBottom) || _computedStyle->getValue(border));
-        
-        YGNodeStyleSetMinWidth(_yogaNode, _computedStyle->getValue(minWidth) >= 0 ? _computedStyle->getValue(minWidth) : YGUndefined);
-        YGNodeStyleSetMinHeight(_yogaNode, _computedStyle->getValue(minHeight) >= 0 ? _computedStyle->getValue(minHeight) : YGUndefined);
-        YGNodeStyleSetMaxWidth(_yogaNode, _computedStyle->getValue(maxWidth) >= 0 ? _computedStyle->getValue(maxWidth) : YGUndefined);
-        YGNodeStyleSetMaxHeight(_yogaNode, _computedStyle->getValue(maxHeight) >= 0 ? _computedStyle->getValue(maxHeight) : YGUndefined);
+        YGNodeStyleSetFlex(_yogaNode, _computedStyle->get(flex));
+//        YGNodeStyleSetFlexFlexAuto(_yogaNode, _computedStyle->get(flex));
+//        YGNodeStyleSetFlexFlexPercent(_yogaNode, _computedStyle->get(flex));
+        YGNodeStyleSetFlexGrow(_yogaNode, _computedStyle->get(grow));
+//        YGNodeStyleSetFlexGrowAuto(_yogaNode, _computedStyle->get(grow));
+//        YGNodeStyleSetFlexGrowPercent(_yogaNode, _computedStyle->get(grow));
+        YGNodeStyleSetFlexShrink(_yogaNode, _computedStyle->get(shrink));
+//        YGNodeStyleSetFlexShrinkAuto(_yogaNode, _computedStyle->get(shrink));
+//        YGNodeStyleSetFlexShrinkPercent(_yogaNode, _computedStyle->get(shrink));
+        YGNodeStyleSetFlexBasis(_yogaNode, _computedStyle->get(basis));
+//        YGNodeStyleSetFlexBasisAuto(_yogaNode, _computedStyle->get(basis));
+//        YGNodeStyleSetFlexBasisPercent(_yogaNode, _computedStyle->get(basis));
 
-        YGNodeStyleSetPositionType(_yogaNode, _computedStyle->getValue(position) == "absolute" ? YGPositionTypeAbsolute : YGPositionTypeRelative);
+        // TODO: Position
 
-        //TODO: Handle percents
+        // Dimensions
+        YGNodeStyleSetMinWidth(_yogaNode, _computedStyle->get(minWidth) >= 0 ? _computedStyle->get(minWidth) : YGUndefined);
+        YGNodeStyleSetMinHeight(_yogaNode, _computedStyle->get(minHeight) >= 0 ? _computedStyle->get(minHeight) : YGUndefined);
+        YGNodeStyleSetMaxWidth(_yogaNode, _computedStyle->get(maxWidth) >= 0 ? _computedStyle->get(maxWidth) : YGUndefined);
+        YGNodeStyleSetMaxHeight(_yogaNode, _computedStyle->get(maxHeight) >= 0 ? _computedStyle->get(maxHeight) : YGUndefined);
+        // TODO: Percent
+        // TODO: Width + Height
+        // TODO AspectRatio
+
+        // Margins
+        YGNodeStyleSetMargin(_yogaNode, YGEdgeAll, _computedStyle->get(margin) >= 0 ? _computedStyle->get(margin) : YGUndefined);
+        YGNodeStyleSetMargin(_yogaNode, YGEdgeHorizontal, _computedStyle->get(marginHorizontal) >= 0 ? _computedStyle->get(marginHorizontal) : YGUndefined);
+        YGNodeStyleSetMargin(_yogaNode, YGEdgeVertical, _computedStyle->get(marginVertical) >= 0 ? _computedStyle->get(marginVertical) : YGUndefined);
+        YGNodeStyleSetMargin(_yogaNode, YGEdgeLeft, _computedStyle->get(marginLeft) >= 0 ? _computedStyle->get(marginLeft) : YGUndefined);
+        YGNodeStyleSetMargin(_yogaNode, YGEdgeRight, _computedStyle->get(marginRight) >= 0 ? _computedStyle->get(marginRight) : YGUndefined);
+        YGNodeStyleSetMargin(_yogaNode, YGEdgeTop, _computedStyle->get(marginTop) >= 0 ? _computedStyle->get(marginTop) : YGUndefined);
+        YGNodeStyleSetMargin(_yogaNode, YGEdgeBottom, _computedStyle->get(marginBottom) >= 0 ? _computedStyle->get(marginBottom) : YGUndefined);
+        // TODO: Auto
+        // TODO: Percent
+
+        // Padding
+        YGNodeStyleSetPadding(_yogaNode, YGEdgeAll, _computedStyle->get(padding) >= 0 ? _computedStyle->get(padding) : YGUndefined);
+        YGNodeStyleSetPadding(_yogaNode, YGEdgeHorizontal, _computedStyle->get(paddingHorizontal) >= 0 ? _computedStyle->get(paddingHorizontal) : YGUndefined);
+        YGNodeStyleSetPadding(_yogaNode, YGEdgeVertical, _computedStyle->get(paddingVertical) >= 0 ? _computedStyle->get(paddingVertical) : YGUndefined);
+        YGNodeStyleSetPadding(_yogaNode, YGEdgeLeft, _computedStyle->get(paddingLeft) >= 0 ? _computedStyle->get(paddingLeft) : YGUndefined);
+        YGNodeStyleSetPadding(_yogaNode, YGEdgeRight, _computedStyle->get(paddingRight) >= 0 ? _computedStyle->get(paddingRight) : YGUndefined);
+        YGNodeStyleSetPadding(_yogaNode, YGEdgeTop, _computedStyle->get(paddingTop) >= 0 ? _computedStyle->get(paddingTop) : YGUndefined);
+        YGNodeStyleSetPadding(_yogaNode, YGEdgeBottom, _computedStyle->get(paddingBottom) >= 0 ? _computedStyle->get(paddingBottom) : YGUndefined);
+        // TODO: Percent
+
+        // Border
+        YGNodeStyleSetBorder(_yogaNode, YGEdgeAll, _computedStyle->get(border) >= 0 ? _computedStyle->get(border) : YGUndefined);
+        YGNodeStyleSetBorder(_yogaNode, YGEdgeHorizontal, _computedStyle->get(borderHorizontal) >= 0 ? _computedStyle->get(borderHorizontal) : YGUndefined);
+        YGNodeStyleSetBorder(_yogaNode, YGEdgeVertical, _computedStyle->get(borderVertical) >= 0 ? _computedStyle->get(borderVertical) : YGUndefined);
+        YGNodeStyleSetBorder(_yogaNode, YGEdgeLeft, _computedStyle->get(borderLeft) >= 0 ? _computedStyle->get(borderLeft) : YGUndefined);
+        YGNodeStyleSetBorder(_yogaNode, YGEdgeRight, _computedStyle->get(borderRight) >= 0 ? _computedStyle->get(borderRight) : YGUndefined);
+        YGNodeStyleSetBorder(_yogaNode, YGEdgeTop, _computedStyle->get(borderTop) >= 0 ? _computedStyle->get(borderTop) : YGUndefined);
+        YGNodeStyleSetBorder(_yogaNode, YGEdgeBottom, _computedStyle->get(borderBottom) >= 0 ? _computedStyle->get(borderBottom) : YGUndefined);
 
         // Children should also update
         for (auto &child: _children) {
@@ -492,9 +441,19 @@ namespace psychicui {
 
         styleUpdated();
     }
-    
+
     void Component::styleUpdated() {
-    
+        // Cache paint stiff for background, might help, even if we draw borders as multiple calls
+        _drawBackground = _computedStyle->has(backgroundColor) && (_computedStyle->get(backgroundColor) != 0x00000000);
+        if (_drawBackground) {
+            _backgroundPaint.setColor(_computedStyle->get(backgroundColor));
+            _backgroundPaint.setStyle(SkPaint::kFill_Style);
+            if (_computedStyle->get(cornerRadius) > 0) {
+                _backgroundPaint.setAntiAlias(true);
+            } else {
+                _backgroundPaint.setAntiAlias(_computedStyle->get(antiAlias));
+            }
+        }
     }
 
     // endregion
@@ -525,15 +484,7 @@ namespace psychicui {
         );
     }
 
-    // endregion
-
-    // region Draw
-
-    YGSize Component::measure(float width, YGMeasureMode /*widthMode*/, float height, YGMeasureMode /*heightMode*/) {
-        return YGSize{width, height};
-    }
-
-    void Component::render(SkCanvas *canvas) {
+    void Component::layoutUpdated() {
         float left   = YGNodeLayoutGetLeft(_yogaNode);
         float top    = YGNodeLayoutGetTop(_yogaNode);
 //        float right  = YGNodeLayoutGetRight(_yogaNode);
@@ -547,7 +498,34 @@ namespace psychicui {
         _height = (int) height;
 
         _rect.set(0, 0, _width, _height);
+        _paddedRect.set(
+            YGNodeLayoutGetPadding(_yogaNode, YGEdgeLeft),
+            YGNodeLayoutGetPadding(_yogaNode, YGEdgeTop),
+            _width - YGNodeLayoutGetPadding(_yogaNode, YGEdgeRight),
+            _height - YGNodeLayoutGetPadding(_yogaNode, YGEdgeBottom)
+        );
+        _borderValues.set(
+            YGNodeLayoutGetBorder(_yogaNode, YGEdgeLeft),
+            YGNodeLayoutGetBorder(_yogaNode, YGEdgeTop),
+            YGNodeLayoutGetBorder(_yogaNode, YGEdgeRight),
+            YGNodeLayoutGetBorder(_yogaNode, YGEdgeBottom)
+        );
 
+        // Children should also update
+        for (auto &child: _children) {
+            child->layoutUpdated();
+        }
+    }
+
+    // endregion
+
+    // region Draw
+
+    YGSize Component::measure(float width, YGMeasureMode /*widthMode*/, float height, YGMeasureMode /*heightMode*/) {
+        return YGSize{width, height};
+    }
+
+    void Component::render(SkCanvas *canvas) {
         canvas->save();
         canvas->translate(_x, _y);
 
@@ -563,23 +541,27 @@ namespace psychicui {
             }
         }
 
-//        #if PSYCHICUI_SHOW_COMPONENT_BOUNDS
+        #ifdef DEBUG_LAYOUT
         SkPaint paint;
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setStrokeWidth(SkIntToScalar(1));
         paint.setColor(0x7FFF0000);
-        canvas->drawRect({0.5f, 0.5f, _width - 0.5f, _height - 0.5f}, paint);
+        canvas->drawRect(_rect, paint);
 
         paint.setColor(0x7F0000FF);
-        canvas->drawRect(
-            {
-                _computedStyle->getValue(paddingLeft) + 0.5f,
-                _computedStyle->getValue(paddingTop) + 0.5f,
-                _width - _computedStyle->getValue(paddingRight) - 0.5f,
-                _height - _computedStyle->getValue(paddingBottom) - 0.5f
-            },
-            paint
-        );
+        canvas->drawRect(_paddedRect, paint);
+
+        if ( _borderValues.left() > 0 || _borderValues.top() > 0 || _borderValues.right() > 0 || _borderValues.bottom() > 0 ) {
+            paint.setColor(0x7F00FF00);
+            canvas->drawRect(
+                SkRect{
+                    _borderValues.left(),
+                    _borderValues.top(),
+                    _rect.width() - _borderValues.right(),
+                    _rect.height() - _borderValues.bottom()
+                }, paint
+            );
+        }
 
         if (_mouseDown) {
             paint.setStyle(SkPaint::kFill_Style);
@@ -590,46 +572,100 @@ namespace psychicui {
             paint.setColor(0x10FFFFFF);
             canvas->drawRect({0.5f, 0.5f, _width - 0.5f, _height - 0.5f}, paint);
         }
-//        #endif
+        #endif
 
         canvas->restore();
     }
 
     void Component::draw(SkCanvas *canvas) {
+        if (_drawBackground) {
+            // TODO: Separate border radius
+            if (_computedStyle->get(cornerRadius) > 0) {
+                canvas->drawRoundRect(
+                    _rect,
+                    _computedStyle->get(cornerRadius),
+                    _computedStyle->get(cornerRadius),
+                    _backgroundPaint
+                );
+            } else {
+                canvas->drawRect(_rect, _backgroundPaint);
+            }
+        }
 
+        // TODO: Only do full borders if we have corner radius
+        if (_borderValues.left() > 0) {
+            bool draw = true;
+            _borderPaint.setStrokeWidth(_borderValues.left());
+            if (_computedStyle->has(borderLeftColor)) {
+                _borderPaint.setColor(_computedStyle->get(borderLeftColor));
+            } else if (_computedStyle->has(borderHorizontalColor)) {
+                _borderPaint.setColor(_computedStyle->get(borderHorizontalColor));
+            } else if (_computedStyle->has(borderColor)) {
+                _borderPaint.setColor(_computedStyle->get(borderColor));
+            } else {
+                draw = false;
+            }
+            if (draw) {
+                float hw =_borderValues.left() / 2;
+                canvas->drawLine(hw, 0, hw, _rect.bottom(), _borderPaint);
+            }
+        }
+        
+        if (_borderValues.right() > 0) {
+            bool draw = true;
+            _borderPaint.setStrokeWidth(_borderValues.right());
+            if (_computedStyle->has(borderRightColor)) {
+                _borderPaint.setColor(_computedStyle->get(borderRightColor));
+            } else if (_computedStyle->has(borderHorizontalColor)) {
+                _borderPaint.setColor(_computedStyle->get(borderHorizontalColor));
+            } else if (_computedStyle->has(borderColor)) {
+                _borderPaint.setColor(_computedStyle->get(borderColor));
+            } else {
+                draw = false;
+            }
+            if (draw) {
+                float hw =_borderValues.right() / 2;
+                canvas->drawLine(_rect.right() - hw, 0, _rect.right() - hw, _rect.bottom(), _borderPaint);
+            }
+        }
+        
+        if (_borderValues.top() > 0) {
+            bool draw = true;
+            _borderPaint.setStrokeWidth(_borderValues.top());
+            if (_computedStyle->has(borderTopColor)) {
+                _borderPaint.setColor(_computedStyle->get(borderTopColor));
+            } else if (_computedStyle->has(borderHorizontalColor)) {
+                _borderPaint.setColor(_computedStyle->get(borderVerticalColor));
+            } else if (_computedStyle->has(borderColor)) {
+                _borderPaint.setColor(_computedStyle->get(borderColor));
+            } else {
+                draw = false;
+            }
+            if (draw) {
+                float hw =_borderValues.top() / 2;
+                canvas->drawLine(0, hw, _rect.right(), hw, _borderPaint);
+            }
+        }
+        
+        if (_borderValues.bottom() > 0) {
+            bool draw = true;
+            _borderPaint.setStrokeWidth(_borderValues.bottom());
+            if (_computedStyle->has(borderBottomColor)) {
+                _borderPaint.setColor(_computedStyle->get(borderBottomColor));
+            } else if (_computedStyle->has(borderHorizontalColor)) {
+                _borderPaint.setColor(_computedStyle->get(borderVerticalColor));
+            } else if (_computedStyle->has(borderColor)) {
+                _borderPaint.setColor(_computedStyle->get(borderColor));
+            } else {
+                draw = false;
+            }
+            if (draw) {
+                float hw =_borderValues.top() / 2;
+                canvas->drawLine(0, _rect.bottom() - hw, _rect.right(), _rect.bottom() - hw, _borderPaint);
+            }
+        }
     }
-
-//    void Component::draw(NVGcontext *ctx) {
-//        #if NANOGUI_SHOW_COMPONENT_BOUNDS
-//        nvgStrokeWidth(ctx, 1.0f);
-//        nvgBeginPath(ctx);
-//        nvgRect(ctx, _position.x() - 0.5f, _position.y() - 0.5f, _size.setX() + 1, _size.setY() + 1);
-//        nvgStrokeColor(ctx, nvgRGBA(255, 0, 0, 255));
-//        nvgStroke(ctx);
-//        #endif
-//
-//        if (_children.empty()) {
-//            return;
-//        }
-//
-//        nvgSave(ctx);
-//        nvgTranslate(ctx, _position.setX(), _position.setY());
-//        for (auto child : _children) {
-//            if (child->setVisible()) {
-//                nvgSave(ctx);
-//                nvgIntersectScissor(
-//                    ctx,
-//                    child->_position.setX(),
-//                    child->_position.setY(),
-//                    child->_size.setX(),
-//                    child->_size.setY());
-//                child->draw(ctx);
-//                nvgRestore(ctx);
-//            }
-//        }
-//        nvgRestore(ctx);
-//    }
-
+    
     // endregion
 
     // region Interaction

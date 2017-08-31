@@ -125,6 +125,36 @@ namespace psychicui {
         }
     }
 
+    void Style::trace() const {
+        #ifdef DEBUG_STYLES
+        for (const auto &declaration: declarations) {
+            std::cout << declaration << std::endl;
+        }
+        #endif
+
+        std::cout << "{" << std::endl;
+        for (auto const &kv : _colorValues) {
+            std::cout << "    " << kv.first << ": " << kv.second << std::endl;
+        }
+
+        for (auto const &kv : _stringValues) {
+            std::cout << "    " << kv.first << ": \"" << kv.second << "\"" << std::endl;
+        }
+
+        for (auto const &kv : _floatValues) {
+            std::cout << "    " << kv.first << ": " << kv.second << std::endl;
+        }
+
+        for (auto const &kv : _intValues) {
+            std::cout << "    " << kv.first << ": " << kv.second << std::endl;
+        }
+
+        for (auto const &kv : _boolValues) {
+            std::cout << "    " << kv.first << ": " << (kv.second ? "true" : "false") << std::endl;
+        }
+        std::cout << "}" << std::endl << std::endl;
+    }
+
     bool Style::operator==(const Style &other) const {
         return _colorValues == other._colorValues
                && _stringValues == other._stringValues

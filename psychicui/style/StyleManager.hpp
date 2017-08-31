@@ -18,9 +18,9 @@ namespace psychicui {
         static std::shared_ptr<StyleManager> getInstance();
 
         void loadFont(const std::string &name, const std::string &path);
-        sk_sp<SkTypeface> getFont(const std::string &name) const;
+        sk_sp<SkTypeface> font(const std::string &name) const;
 
-        Style *getStyle(std::string selector);
+        Style *style(std::string selector);
         std::unique_ptr<Style> computeStyle(const Component *component);
 
 //        /**

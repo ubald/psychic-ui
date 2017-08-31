@@ -11,8 +11,6 @@ namespace psychicui {
         Button(const std::string &label = "Untitled");
         std::string label();
         void setLabel(std::string label);
-        void styleUpdated() override;
-        void draw(SkCanvas *canvas) override;
     protected:
         std::shared_ptr<Label> _label{nullptr};
     };

@@ -19,25 +19,4 @@ namespace psychicui {
         _label->setText(label);
     }
 
-    void Button::styleUpdated() {
-        Component::styleUpdated();
-
-        paint.setColor(_computedStyle->getValue(backgroundColor));
-        paint.setStyle(SkPaint::kFill_Style);
-        if (_computedStyle->getValue(cornerRadius) > 0) {
-            paint.setAntiAlias(true);
-        } else {
-            paint.setAntiAlias(_computedStyle->getValue(antiAlias));
-        }
-    }
-
-    void Button::draw(SkCanvas *canvas) {
-        Component::draw(canvas);
-
-        if (_computedStyle->getValue(cornerRadius) > 0) {
-            canvas->drawRoundRect(_rect, _computedStyle->getValue(cornerRadius), _computedStyle->getValue(cornerRadius), paint);
-        } else {
-            canvas->drawRect(_rect, paint);
-        }
-    }
 }

@@ -224,7 +224,24 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule->next()->next()->next()->pseudo() == none);
 
             REQUIRE(rule->next()->next()->next()->next() == nullptr);
-
         }
+    }
+
+    SECTION("weights") {
+
+        REQUIRE(Rule::fromSelector("div")->weight() == 1);
+        REQUIRE(Rule::fromSelector("div.class")->weight() == 2);
+        REQUIRE(Rule::fromSelector("div.class:hover")->weight() == 3);
+        REQUIRE(Rule::fromSelector(".class:hover")->weight() == 2);
+        REQUIRE(Rule::fromSelector(".class:fake")->weight() == 1);
+        REQUIRE(Rule::fromSelector("div span")->weight() == 2);
+        REQUIRE(Rule::fromSelector("div span.class")->weight() == 3);
+        REQUIRE(Rule::fromSelector("div span.class.second")->weight() == 4);
+        REQUIRE(Rule::fromSelector("div span.class.second:hover")->weight() == 5);
+        REQUIRE(Rule::fromSelector("div.class span.class.second:hover")->weight() == 6);
+        REQUIRE(Rule::fromSelector("div.class:hover span.class.second:hover")->weight() == 7);
+        REQUIRE(Rule::fromSelector("div.class.second:hover span.class.second:hover")->weight() == 8);
+
+
     }
 }

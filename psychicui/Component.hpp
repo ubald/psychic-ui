@@ -28,8 +28,10 @@ namespace psychicui {
         Component *parent();
         const Component *parent() const;
         void setParent(Component *parent);
-        virtual std::shared_ptr<Panel> panel();
+        const int depth() const;
         std::vector<std::shared_ptr<Component>> path();
+
+        virtual std::shared_ptr<Panel> panel();
 
         // endregion
 
@@ -65,68 +67,34 @@ namespace psychicui {
 
         // region Position
 
-        void setPosition(int x, int y);
-        int x() const;
-        void setX(int x);
-        int y() const;
-        void setY(int y);
+        void setPosition(float x, float y);
+        void setPosition(float left, float top, float right, float bottom);
+        float x() const;
+        void setX(float x);
+        float y() const;
+        void setY(float y);
+        float left() const;
+        void setLeft(float left);
+        float right() const;
+        void setRight(float right);
+        float top() const;
+        void setTop(float top);
+        float bottom() const;
+        void setBottom(float bottom);
 
         // endregion
 
         // region Dimensions
 
-        void setSize(int width, int height);
-        int width() const;
-        void setWidth(int width);
-        int height() const;
-        void setHeight(int height);
-
-//        void setMinSize(float minWidth, float minHeight);
-//        float minWidth() const;
-//        void setMinWidth(float minWidth);
-//        float minHeight() const;
-//        void setMinHeight(float minHeight);
-//
-//        void setMaxSize(float maxWidth, float maxHeight);
-//        float maxWidth() const;
-//        void setMaxWidth(float maxWidth);
-//        float maxHeight() const;
-//        void setMaxHeight(float maxHeight);
-
-        // endregion
-
-        // region Constraints
-
-//        void setPadding(int value = 0);
-//        void setPadding(int horizontal, int vertical);
-//        void setPadding(int left, int right, int top, int bottom);
-//        int paddingLeft() const;
-//        void setPaddingLeft(int paddingLeft = 0);
-//        int paddingRight() const;
-//        void setPaddingRight(int paddingRight = 0);
-//        int paddingTop() const;
-//        void setPaddingTop(int paddingTop = 0);
-//        int paddingBottom() const;
-//        void setPaddingBottom(int paddingBottom = 0);
-
-        // endregion
-
-        // region Layout
-
-        bool wrap() const;
-        void setWrap(bool wrap);
-
-        float flex() const;
-        void setFlex(float flex);
-
-        float flexShrink() const;
-        void setFlexShrink(float flexShrink);
-
-        float flexGrow() const;
-        void setFlexGrow(float flexGrow);
-
-        float flexBasis() const;
-        void setFlexBasis(float flexBasis);
+        void setSize(float width, float height);
+        float width() const;
+        void setWidth(float width);
+        float height() const;
+        void setHeight(float height);
+        float percentWidth() const;
+        void setPercentWidth(float percentWidth);
+        float percentHeight() const;
+        void setPercentHeight(float percentHeight);
 
         // endregion
 
@@ -167,7 +135,9 @@ namespace psychicui {
         Cursor cursor() const;
         void setCursor(Cursor cursor);
         bool mouseOver() const;
+        void setMouseOver(bool over); // Mostly for testing
         bool mouseDown() const;
+        void setMouseDown(bool down); // Mostly for testing
 
         // endregion
 
@@ -184,6 +154,12 @@ namespace psychicui {
 
 
     protected:
+
+        // region Hierarchy
+
+        int                      _depth{0};
+
+        // endregion
 
         // region Style
 
@@ -204,12 +180,12 @@ namespace psychicui {
         /**
          * Inline Style
          */
-        std::unique_ptr<Style>                  _style{nullptr};
+        std::unique_ptr<Style> _style{nullptr};
 
         /**
          * Computed Style
          */
-        std::unique_ptr<Style>                  _computedStyle{nullptr};
+        std::unique_ptr<Style> _computedStyle{nullptr};
 
         /**
          * Compute style for this component
@@ -221,31 +197,48 @@ namespace psychicui {
          */
         virtual void styleUpdated();
 
+        /**
+         * Callback for when layout was updated
+         */
+        virtual void layoutUpdated();
+
         // endregion
 
         // region Rendering
 
-        SkPaint paint;
+        bool    _drawBackground{false};
+        SkPaint _backgroundPaint;
+        bool    _drawBorder{false};
+        SkPaint _borderPaint;
 
         // endregion
 
-        bool   _enabled{true};
-        bool   _visible{true};
-        int    _x{0};
-        int    _y{0};
-        int    _width{0};
-        int    _height{0};
-//        int    _paddingLeft{0};
-//        int    _paddingRight{0};
-//        int    _paddingTop{0};
-//        int    _paddingBottom{0};
-        bool   _wrap{false};
+        bool  _enabled{true};
+        bool  _visible{true};
+        float _x{0.0f};
+        float _y{0.0f};
+        float _width{0.0f};
+        float _height{0.0f};
+        bool  _wrap{false};
+
+        /**
+         * Component's rect
+         */
         SkRect _rect;
 
-        bool                                    _focused{false};
-        bool                                    _mouseOver{false};
-        bool                                    _mouseDown{false};
+        /**
+         * Component's padded rect
+         */
+        SkRect _paddedRect;
 
+        /**
+         * Component's border rect
+         */
+        SkRect _borderValues;
+
+        bool _focused{false};
+        bool _mouseOver{false};
+        bool _mouseDown{false};
 
 
         Cursor                                  _cursor{Cursor::Arrow};
