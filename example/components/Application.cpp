@@ -1,8 +1,11 @@
+#include <iostream>
 #include <psychicui/Label.hpp>
 #include <psychicui/Button.hpp>
+#include <psychicui/components/TabbedContainer.hpp>
 #include <psychicui/themes/default.hpp>
 #include "Application.hpp"
 #include "MenuBar.hpp"
+#include "ToolBar.hpp"
 #include "../demo-stylesheet.hpp"
 
 namespace psychicui {
@@ -12,11 +15,23 @@ namespace psychicui {
             loadStyleSheet<PsychicUIStyleSheet>();
             loadStyleSheet<DemoStyleSheet>();
 
-            addChild(std::make_shared<MenuBar>());
+            add(std::make_shared<MenuBar>());
+            add(std::make_shared<ToolBar>());
 
-        _children[0]->children()[0]->computedStyle()->trace();
 
-            addChild(std::make_shared<Label>("Label"));
-            addChild(std::make_shared<Button>("Button"));
+            add(std::make_shared<TabbedContainer<int>>(
+                std::vector<int>({1}),
+                [](const auto &tab) -> std::shared_ptr<Component> {
+//                    std::cout << tab << std::endl;
+                    return std::make_shared<Component>();
+                }
+            ));
+
+            add(std::make_shared<Label>("Label"));
+            add(std::make_shared<Button>("Button"));
+            add(std::make_shared<Button>("Button"));
+            add(std::make_shared<Button>("Button"));
+            add(std::make_shared<Button>("Button"));
+            add(std::make_shared<Button>("Button"));
         }
 }

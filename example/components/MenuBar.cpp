@@ -6,18 +6,14 @@ namespace psychicui {
     MenuBar::MenuBar() :
         Component() {
         setTag("MenuBar");
-        setHeight(24);
-        _style->set(justifyContent, "stretch");
+        //setHeight(24);
+        //_style->set(justifyContent, "stretch");
 
-        addChild(std::make_shared<Button>("File"));
-        addChild(std::make_shared<Button>("Edit"));
-        addChild(std::make_shared<Button>("View"));
-        addChild(std::make_shared<Button>("Window"));
-        addChild(std::make_shared<Button>("Help"));
+        add(std::make_shared<Button>("File"));
+        add(std::make_shared<Button>("Edit"));
+        add(std::make_shared<Button>("View"));
+        add(std::make_shared<Button>("Window"));
+        add(std::make_shared<Button>("Help"));
     }
-
-    void MenuBar::styleUpdated()  {
-        Component::styleUpdated();
-        _parent->computedStyle()->trace();
-    }
+    
 }

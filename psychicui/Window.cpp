@@ -59,8 +59,8 @@ namespace psychicui {
 
     Window::Window(const std::string &title) :
         Component::Component(),
-        _styleManager(StyleManager::getInstance()),
         _title(title) {
+        setStyleManager(StyleManager::getInstance());
         setTag("Window");
         setWindowSize(1440, 900);
         _style->set(position, "absolute");
@@ -146,12 +146,7 @@ namespace psychicui {
 
         glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
         glViewport(0, 0, _fbWidth, _fbHeight);
-        glClearColor(
-            SkColorGetR(_computedStyle->get(backgroundColor)),
-            SkColorGetG(_computedStyle->get(backgroundColor)),
-            SkColorGetB(_computedStyle->get(backgroundColor)),
-            SkColorGetA(_computedStyle->get(backgroundColor))
-        );
+        glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glfwSwapInterval(0);
         glfwSwapBuffers(_glfwWindow);
@@ -469,12 +464,7 @@ namespace psychicui {
     // region Draw
 
     void Window::drawAll() {
-        glClearColor(
-            SkColorGetR(_computedStyle->get(backgroundColor)),
-            SkColorGetG(_computedStyle->get(backgroundColor)),
-            SkColorGetB(_computedStyle->get(backgroundColor)),
-            SkColorGetA(_computedStyle->get(backgroundColor))
-        );
+        glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         drawContents();
         drawComponents();
@@ -507,26 +497,22 @@ namespace psychicui {
 
         // Do setLayout
         if (YGNodeIsDirty(_yogaNode)) {
+            #ifdef DEBUG_LAYOUT
             std::cout << "Layout dirty!" << std::endl;
+            #endif
             YGNodeCalculateLayout(_yogaNode, _windowWidth, _windowWidth, YGDirectionLTR);
             layoutUpdated();
+            #ifdef DEBUG_LAYOUT
             YGNodePrint(_yogaNode, static_cast<YGPrintOptions>(YGPrintOptionsLayout | YGPrintOptionsStyle | YGPrintOptionsChildren));
+            #endif
         }
 
         glViewport(0, 0, _fbWidth, _fbHeight);
         glBindSampler(0, 0);
 
-        _sk_canvas->clear(_computedStyle->get(backgroundColor));
+        _sk_canvas->clear(0x00000000);
         render(_sk_canvas);
         _sk_canvas->flush();
-    }
-
-    // endregion
-
-    // region Style
-
-    StyleManager *Window::styleManager() const {
-        return _styleManager.get();
     }
 
     // endregion
@@ -837,7 +823,7 @@ namespace psychicui {
 //        if (_dragComponent == panel) {
 //            _dragComponent = nullptr;
 //        }
-//        removeChild(panel);
+//        remove(panel);
     }
 
     void Window::centerPanel(std::shared_ptr<Panel> panel) {

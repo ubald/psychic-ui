@@ -175,10 +175,10 @@ elseif (APPLE)
     find_library(opengl_library OpenGL)
     find_library(corevideo_library CoreVideo)
     find_library(iokit_library IOKit)
-#    find_library(coreservices_library CoreServices)
-#    find_library(coregraphics_library CoreGraphics)
-#    find_library(coretext_library CoreText)
-#    find_library(corefoundation_library CoreFoundation)
+    #    find_library(coreservices_library CoreServices)
+    #    find_library(coregraphics_library CoreGraphics)
+    #    find_library(coretext_library CoreText)
+    #    find_library(corefoundation_library CoreFoundation)
     list(APPEND PSYCHICUI_EXTRA_LIBS
         ${cocoa_library}
         ${opengl_library}
@@ -189,11 +189,11 @@ elseif (APPLE)
         jpeg
         turbojpeg
         freetype
-#        ${coreservices_library}
-#        ${coregraphics_library}
-#        ${coretext_library}
-#        ${corefoundation_library}
-    )
+        #        ${coreservices_library}
+        #        ${coregraphics_library}
+        #        ${coretext_library}
+        #        ${corefoundation_library}
+        )
     list(APPEND LIBPSYCHICUI_EXTRA_SOURCE psychicui/darwin.mm)
 elseif (CMAKE_SYSTEM MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
     list(APPEND PSYCHICUI_EXTRA_LIBS
@@ -210,7 +210,7 @@ elseif (CMAKE_SYSTEM MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
         turbojpeg
         freetype
         fontconfig
-    )
+        )
     if (NOT CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
         list(APPEND PSYCHICUI_EXTRA_LIBS rt)
     endif ()
@@ -224,7 +224,7 @@ endif ()
 add_definitions(${PSYCHICUI_EXTRA_DEFS})
 
 set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
-#    ${NANOVG_SOURCES}
+    #    ${NANOVG_SOURCES}
     ${YOGA_SOURCES}
     psychicui/psychicui.cpp
     psychicui/Window.cpp
@@ -235,8 +235,8 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/style/Style.hpp
     psychicui/Panel.cpp
     psychicui/Panel.hpp
-#    psychicui/Popup.cpp
-#    psychicui/Popup.hpp
+    #    psychicui/Popup.cpp
+    #    psychicui/Popup.hpp
     psychicui/Button.cpp
     psychicui/Button.hpp
     psychicui/Label.cpp
@@ -253,7 +253,16 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/style/StyleSheet.cpp
     psychicui/style/StyleSheet.hpp
     psychicui/utils/ColorUtils.hpp
-    psychicui/utils/YogaUtils.hpp)
+    psychicui/utils/YogaUtils.hpp
+    psychicui/components/Spacer.cpp
+    psychicui/components/Spacer.hpp
+    psychicui/components/DataContainer.cpp
+    psychicui/components/DataContainer.hpp
+    psychicui/components/Tabs.cpp
+    psychicui/components/Tabs.hpp
+    psychicui/components/TabbedContainer.cpp
+    psychicui/components/TabbedContainer.hpp
+    )
 add_library(psychicui SHARED ${SOURCE_FILES})
 target_include_directories(psychicui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${YOGA_INCLUDE_DIRS} ${SKIA_INCLUDE_DIRS})
 target_link_libraries(psychicui ${GLFW_LIBRARIES} ${YOGA_LIBRARIES} ${SKIA_LIBRARIES})
@@ -271,10 +280,10 @@ endif ()
 
 if (PSYCHICUI_USE_GLAD)
     add_dependencies(psychicui glad)
-    if(PSYCHICUI_BUILD_SHARED)
+    if (PSYCHICUI_BUILD_SHARED)
         set_property(TARGET psychicui APPEND PROPERTY COMPILE_DEFINITIONS "GLAD_GLAPI_EXPORT;GLAD_GLAPI_EXPORT_BUILD")
     endif ()
-endif()
+endif ()
 
 if (PSYCHICUI_BUILD_SHARED AND NOT ${U_CMAKE_BUILD_TYPE} MATCHES DEB)
     # Platform-specific strip flags for reducing the library setSize.

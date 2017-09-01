@@ -50,12 +50,38 @@ public:
         // region MenuBar
         manager->style("menubar")
                ->set(direction, "row")
-               ->set(backgroundColor, BASE_01);
+               ->set(backgroundColor, BASE_01)
+               ->set(borderBottom, 1)
+               ->set(borderColor, BASE_00);
 
         manager->style("menubar button")
+               ->set(fontSize, 10)
                ->set(paddingHorizontal, 12)
+               ->set(paddingVertical, 6)
                ->set(cornerRadius, 0)
-               ->set(borderRight, 1)
+               ->set(backgroundColor, 0x00000000);
+
+        manager->style("menubar button:hover")
+               ->set(color, 0xFF00FFEC);
+
+       manager->style("menubar button:active")
+               ->set(color, BASE_00)
+               ->set(backgroundColor, 0xFF00FFEC);
+
+        // endregion
+
+        // region ToolBar
+        manager->style("toolbar")
+               ->set(direction, "row")
+               ->set(backgroundColor, BASE_02)
+               ->set(borderBottom, 1)
+               ->set(borderColor, BASE_00);
+
+        manager->style("toolbar button")
+               ->set(marginHorizontal, -1)
+               ->set(paddingHorizontal, 18)
+               ->set(cornerRadius, 0)
+               ->set(borderHorizontal, 1)
                ->set(borderColor, BASE_00);
         // endregion
 
@@ -63,11 +89,12 @@ public:
         manager->style("button")
                ->set(direction, "row")
                ->set(alignItems, "center")
+               ->set(padding, 12)
                ->set(cornerRadius, 6)
                ->set(backgroundColor, BASE_02)
                ->set(color, BASE_07)
-               ->set(fontSize, 12)
-               ->set(lineHeight, 12);
+               ->set(fontSize, 14)
+               ->set(lineHeight, 14);
 
         manager->style("button:hover")
                ->set(color, BASE_00)

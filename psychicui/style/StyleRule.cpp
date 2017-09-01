@@ -49,59 +49,50 @@ namespace psychicui {
         return rule;
     }
 
-    int Rule::matches(const Component *component) const {
-        return matches(component, 0);
+    bool Rule::matches(const Component *component) const {
+        return matches(component, false);
     }
-    int Rule::matches(const Component *component, int depth) const {
+
+    bool Rule::matches(const Component *component, bool expand) const {
         const Component *parent = component->parent();
 
-        if (!_tag.empty()) {
-            // Match tag with all possible parent classes, if we have one
-            if (std::find(component->tags().begin(), component->tags().end(), _tag) == component->tags().end()) {
-                // Slide the rule over to the parent and restart from there
-                return parent ? matches(parent, depth + 1) : -1;
-            }
+        // Match tag
+        if (!_tag.empty()
+            && std::find(component->tags().begin(), component->tags().end(), _tag) == component->tags().end()) {
+            return expand && parent && matches(parent, true);
         }
 
         // Match classes
         if (!std::all_of(
-            _classes.begin(), _classes.end(),
-            [&component](const auto &className) {
+            _classes.begin(), _classes.end(), [&component](const auto &className) {
                 return std::find(component->classNames().begin(), component->classNames().end(), className)
                        != component->classNames().end();
             }
         )) {
-            // Slide the rule over to the parent and restart from there
-            return parent ? matches(parent, depth + 1) : -1;
+            return expand && parent && matches(parent, true);
         }
 
         // Match pseudo
         switch (_pseudo) {
             case hover:
-                if (!component->mouseOver()) { return parent ? matches(parent, depth + 1) : -1; }
+                if (!component->mouseOver()) { return expand && parent && matches(parent, true); }
                 break;
             case active:
-                if (!component->mouseDown()) { return parent ? matches(parent, depth + 1) : -1; }
+                if (!component->mouseDown()) { return expand && parent && matches(parent, true); }
                 break;
             default:
                 break;
         }
 
-        // If we are still here it means the first rule level matched us, we have to check if it hae a parent rule
-        // that matches our parent.
+        // If we are still here it means the first rule level matched us
+        // We have to check if it has a parent rule that matches our parent.
         // TODO: Check rule length from the start
         if (_next) {
-            if (!parent) {
-                // Too bas the rule is longer than our ancestry
-                return -1;
-            }
-
-            // We are still at our level, event if next rule extends for a parent we"re the target, so direct
-            return _next->matches(parent) != -1 ? depth : -1;
+            return parent && _next->matches(parent, true);
         }
 
         // Well it's a success!
-        return depth;
+        return true;
     }
 
     const std::string Rule::tag() const {
@@ -121,6 +112,19 @@ namespace psychicui {
     }
 
     const int Rule::weight() const {
-        return (_tag.empty() ? 0 : 1) + (int)_classes.size() + (_pseudo != none ? 1 : 0) + (_next ? _next->weight() : 0);
+        int w = _tag.empty() ? 0 : 10;
+        w += (int) _classes.size() * 10;
+        switch (_pseudo) {
+            case hover:
+                w += 1;
+                break;
+            case active:
+                w += 2;
+                break;
+            default:
+                break;
+        }
+        w += _next ? _next->weight() : 0;
+        return w;
     }
 }

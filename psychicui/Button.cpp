@@ -5,10 +5,11 @@ namespace psychicui {
     Button::Button(const std::string &label)
         : Component() {
         setTag("Button");
+        setMouseEnabled(true);
         //TODO: Implement a createChildren method that'll be universal, whatever the constructor used
         _label = std::make_shared<Label>(label);
         // TODO: _label->style()->setValue(position, "absolute");
-        addChild(_label);
+        add(_label);
     }
 
     std::string Button::label() {

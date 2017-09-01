@@ -54,7 +54,6 @@ namespace psychicui {
         void drawComponents();
 
         // Style
-        StyleManager *styleManager() const override;
 
         /**
          * Load an instance of StyleSheet T
@@ -64,7 +63,7 @@ namespace psychicui {
         void loadStyleSheet() {
             static_assert(std::is_base_of<StyleSheet, T>::value, "T must extend StyleSheet");
             std::make_unique<T>()->load(styleManager());
-            updateStyle();
+            invalidateStyle();
         }
 
         void disposePanel(std::shared_ptr<Panel> panel);
@@ -110,9 +109,6 @@ namespace psychicui {
         int  _mouseX{0};
         int  _mouseY{0};
         bool _dragActive{false};
-
-        // Style
-        std::shared_ptr<StyleManager> _styleManager{nullptr};
 
         std::shared_ptr<Component>              _dragComponent = nullptr;
         std::vector<std::shared_ptr<Component>> _focusPath;

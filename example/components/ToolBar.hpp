@@ -3,9 +3,9 @@
 #include <psychicui/Component.hpp>
 
 namespace psychicui {
-    class MenuBar : public Component {
+    class ToolBar : public Component {
     public:
-        MenuBar();
+        ToolBar();
     protected:
     };
 }

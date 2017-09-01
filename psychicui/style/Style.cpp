@@ -4,13 +4,13 @@
 namespace psychicui {
 
     // Inheritable properties
-    const std::vector<ColorProperty>   Style::colorInheritable  = {color};
-    const std::vector<StringProperty>  Style::stringInheritable = {fontFamily};
-    const std::vector<FloatProperty>   Style::floatInheritable  = {};
-    const std::vector<IntProperty>     Style::intInheritable    = {fontSize, letterSpacing, lineHeight};
-    const std::vector<BoolProperty>    Style::boolInheritable   = {};
+    const std::vector<ColorProperty>   Style::colorInheritable{color};
+    const std::vector<StringProperty>  Style::stringInheritable{fontFamily};
+    const std::vector<FloatProperty>   Style::floatInheritable{fontSize, letterSpacing, lineHeight};
+    const std::vector<IntProperty>     Style::intInheritable{};
+    const std::vector<BoolProperty>    Style::boolInheritable{};
 
-    std::unique_ptr<Style> Style::dummyStyle = std::make_unique<Style>();
+    std::unique_ptr<Style> Style::dummyStyle{std::make_unique<Style>()};
 
     Style::Style() {
     }
@@ -158,8 +158,9 @@ namespace psychicui {
     bool Style::operator==(const Style &other) const {
         return _colorValues == other._colorValues
                && _stringValues == other._stringValues
-               && _boolValues == other._boolValues
-               && _intValues == other._intValues;
+               && _floatValues == other._floatValues
+               && _intValues == other._intValues
+               && _boolValues == other._boolValues;
     }
 
     bool Style::operator!=(const Style &other) const {

@@ -229,18 +229,18 @@ TEST_CASE("rules from selectors", "[style]") {
 
     SECTION("weights") {
 
-        REQUIRE(Rule::fromSelector("div")->weight() == 1);
-        REQUIRE(Rule::fromSelector("div.class")->weight() == 2);
-        REQUIRE(Rule::fromSelector("div.class:hover")->weight() == 3);
-        REQUIRE(Rule::fromSelector(".class:hover")->weight() == 2);
-        REQUIRE(Rule::fromSelector(".class:fake")->weight() == 1);
-        REQUIRE(Rule::fromSelector("div span")->weight() == 2);
-        REQUIRE(Rule::fromSelector("div span.class")->weight() == 3);
-        REQUIRE(Rule::fromSelector("div span.class.second")->weight() == 4);
-        REQUIRE(Rule::fromSelector("div span.class.second:hover")->weight() == 5);
-        REQUIRE(Rule::fromSelector("div.class span.class.second:hover")->weight() == 6);
-        REQUIRE(Rule::fromSelector("div.class:hover span.class.second:hover")->weight() == 7);
-        REQUIRE(Rule::fromSelector("div.class.second:hover span.class.second:hover")->weight() == 8);
+        REQUIRE(Rule::fromSelector("div")->weight() == 10);
+        REQUIRE(Rule::fromSelector("div.class")->weight() == 20);
+        REQUIRE(Rule::fromSelector("div.class:hover")->weight() == 21);
+        REQUIRE(Rule::fromSelector(".class:hover")->weight() == 11);
+        REQUIRE(Rule::fromSelector(".class:fake")->weight() == 10);
+        REQUIRE(Rule::fromSelector("div span")->weight() == 20);
+        REQUIRE(Rule::fromSelector("div span.class")->weight() == 30);
+        REQUIRE(Rule::fromSelector("div span.class.second")->weight() == 40);
+        REQUIRE(Rule::fromSelector("div span.class.second:active")->weight() == 42);
+        REQUIRE(Rule::fromSelector("div.class span.class.second:hover")->weight() == 51);
+        REQUIRE(Rule::fromSelector("div.class:hover span.class.second:hover")->weight() == 52);
+        REQUIRE(Rule::fromSelector("div.class.second:hover span.class.second:hover")->weight() == 62);
 
 
     }

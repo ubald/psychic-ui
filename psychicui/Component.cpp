@@ -1,8 +1,8 @@
+#include <cmath>
 #include <iostream>
 #include "utils/YogaUtils.hpp"
 #include "Component.hpp"
 #include "Window.hpp"
-
 
 
 namespace psychicui {
@@ -16,7 +16,7 @@ namespace psychicui {
         // We don't like these from the web default
         YGNodeStyleSetFlexDirection(_yogaNode, YGFlexDirectionColumn);
 
-        // Initialize a basic style so that we don't segfault ;)
+        // At least start with something
         updateStyle();
     }
 
@@ -24,17 +24,7 @@ namespace psychicui {
         YGNodeFree(_yogaNode);
     }
 
-    void Component::setTag(std::string componentName) {
-        std::transform(componentName.begin(), componentName.end(), componentName.begin(), ::tolower);
-        _tags.push_back(componentName);
-    }
-
     // region Hierarchy
-
-    StyleManager *Component::styleManager() const {
-        const Window * w = window();
-        return w ? w->styleManager() : nullptr;
-    }
 
     const Window *Component::window() const {
         return _parent ? _parent->window() : nullptr;
@@ -50,8 +40,8 @@ namespace psychicui {
 
     void Component::setParent(Component *parent) {
         _parent = parent;
-        _depth = parent->depth() + 1;
-        updateStyle();
+        _depth  = parent->depth() + 1;
+        invalidateStyle();
     }
 
     const int Component::depth() const {
@@ -83,26 +73,28 @@ namespace psychicui {
         return _children;
     }
 
-    void Component::addChild(unsigned int index, std::shared_ptr<Component> component) {
+    Component *Component::add(unsigned int index, std::shared_ptr<Component> component) {
         assert(index <= childCount());
         assert(component != nullptr);
         _children.insert(_children.begin() + index, component);
         YGNodeInsertChild(_yogaNode, component->yogaNode(), index);
         component->setParent(this);
+        return component.get();
     }
 
-    void Component::addChild(std::shared_ptr<Component> component) {
+    Component *Component::add(std::shared_ptr<Component> component) {
         assert(component != nullptr);
-        addChild(childCount(), component);
+        add(childCount(), component);
+        return component.get();
     }
 
-    void Component::removeChild(const std::shared_ptr<Component> component) {
+    void Component::remove(const std::shared_ptr<Component> component) {
         assert(component != nullptr);
         _children.erase(std::remove(_children.begin(), _children.end(), component), _children.end());
         YGNodeRemoveChild(_yogaNode, component->yogaNode());
     }
 
-    void Component::removeChild(unsigned int index) {
+    void Component::remove(unsigned int index) {
         assert(index <= childCount());
         std::shared_ptr<Component> component = _children[index];
         _children.erase(_children.begin() + index);
@@ -118,14 +110,14 @@ namespace psychicui {
         return it - _children.begin();
     }
 
-    const std::shared_ptr<Component> Component::childAt(unsigned int index) const {
+    const Component *Component::at(unsigned int index) const {
         assert(index <= childCount());
-        return _children[index];
+        return _children[index].get();
     }
 
-    std::shared_ptr<Component> Component::childAt(unsigned int index) {
+    Component *Component::at(unsigned int index) {
         assert(index <= childCount());
-        return _children[index];
+        return _children[index].get();
     }
 
     // endregion
@@ -138,14 +130,8 @@ namespace psychicui {
 
     void Component::setVisible(bool value) {
         _visible = value;
-    }
-
-    bool Component::visibleRecursive() const {
-        bool visible = _visible;
-        if (_parent) {
-            visible &= _parent->visibleRecursive();
-        }
-        return visible;
+        style()->set(BoolProperty::visible, value);
+        invalidateStyle();
     }
 
     // endregion
@@ -158,6 +144,7 @@ namespace psychicui {
 
     void Component::focused(bool focused) {
         _focused = focused;
+        invalidateStyle();
     }
 
     void Component::requestFocus() {
@@ -168,34 +155,6 @@ namespace psychicui {
         if (_parent) {
             _parent->requestFocus(component);
         }
-    }
-
-    // endregion
-
-    // region Mouse & Cursor
-
-    Cursor Component::cursor() const {
-        return _cursor;
-    }
-
-    void Component::setCursor(Cursor cursor) {
-        _cursor = cursor;
-    }
-
-    bool Component::mouseOver() const {
-        return _mouseOver;
-    }
-
-    void Component::setMouseOver(bool over) {
-        _mouseOver = over;
-    }
-
-    bool Component::mouseDown() const {
-        return _mouseDown;
-    }
-
-    void Component::setMouseDown(bool down) {
-        _mouseDown = down;
     }
 
     // endregion
@@ -336,12 +295,32 @@ namespace psychicui {
 
     // region Style
 
+    StyleManager *Component::styleManager() const {
+        return _styleManager
+               ? _styleManager.get()
+               : (_parent ? _parent->styleManager() : StyleManager::getInstance().get());
+    }
+
+    void Component::setStyleManager(std::shared_ptr<StyleManager> styleManager) {
+        _styleManager = styleManager;
+        invalidateStyle();
+    }
+
     Style *Component::style() const {
         return _style.get();
     }
 
-    const Style * Component::computedStyle() const {
+    const Style *Component::computedStyle() const {
+//        if (!_computedStyle) {
+//            updateStyle();
+//        }
         return _computedStyle.get();
+    }
+
+    void Component::setTag(std::string componentName) {
+        std::transform(componentName.begin(), componentName.end(), componentName.begin(), ::tolower);
+        _tags.push_back(componentName);
+        invalidateStyle();
     }
 
     const std::vector<std::string> &Component::tags() const {
@@ -352,18 +331,24 @@ namespace psychicui {
         return _classNames;
     }
 
-    void Component::setClassNames(std::vector<std::string> classNames) {
+    Component *Component::setClassNames(std::vector<std::string> classNames) {
         _classNames = std::move(classNames);
+        invalidateStyle();
+        return this;
+    }
+
+    void Component::invalidateStyle() {
+        if (_styleDirty) {
+            return;
+        }
+        _styleDirty = true;
+        for (const auto &child: _children) {
+            child->invalidateStyle();
+        }
     }
 
     void Component::updateStyle() {
-        if (window()) {
-            // Compute if we have access to a style manager
-            _computedStyle = std::move(window()->styleManager()->computeStyle(this));
-        } else {
-            // Otherwise start with a blank style
-            _computedStyle = std::make_unique<Style>();
-        }
+        _computedStyle = std::move(styleManager()->computeStyle(this));
 
         // Overlay "inline" style
         _computedStyle->overlay(_style.get());
@@ -371,14 +356,38 @@ namespace psychicui {
         // Update Yoga
 
         // Flex
-        YGNodeStyleSetFlexDirection(_yogaNode, YogaDirectionFromString(_computedStyle->get(direction), YGFlexDirectionColumn));
-        YGNodeStyleSetJustifyContent(_yogaNode, YogaJustifyFromString(_computedStyle->get(justifyContent), YGJustifyFlexStart));
-        YGNodeStyleSetAlignContent(_yogaNode, YogaAlignFromString(_computedStyle->get(alignContent), YGAlignFlexStart));
-        YGNodeStyleSetAlignItems(_yogaNode, YogaAlignFromString(_computedStyle->get(alignItems), YGAlignStretch));
-        YGNodeStyleSetAlignSelf(_yogaNode, YogaAlignFromString(_computedStyle->get(alignSelf), YGAlignAuto));
-        YGNodeStyleSetPositionType(_yogaNode, YogaPositionFromString(_computedStyle->get(position), YGPositionTypeRelative));
-        YGNodeStyleSetFlexWrap(_yogaNode, YogaWrapFromString(_computedStyle->get(wrap), YGWrapNoWrap));
-        YGNodeStyleSetOverflow(_yogaNode, YogaOverflowFromString(_computedStyle->get(overflow), YGOverflowVisible));
+        YGNodeStyleSetFlexDirection(
+            _yogaNode,
+            YogaDirectionFromString(_computedStyle->get(direction), YGFlexDirectionColumn)
+        );
+        YGNodeStyleSetJustifyContent(
+            _yogaNode,
+            YogaJustifyFromString(_computedStyle->get(justifyContent), YGJustifyFlexStart)
+        );
+        YGNodeStyleSetAlignContent(
+            _yogaNode,
+            YogaAlignFromString(_computedStyle->get(alignContent), YGAlignFlexStart)
+        );
+        YGNodeStyleSetAlignItems(
+            _yogaNode,
+            YogaAlignFromString(_computedStyle->get(alignItems), YGAlignStretch)
+        );
+        YGNodeStyleSetAlignSelf(
+            _yogaNode,
+            YogaAlignFromString(_computedStyle->get(alignSelf), YGAlignAuto)
+        );
+        YGNodeStyleSetPositionType(
+            _yogaNode,
+            YogaPositionFromString(_computedStyle->get(position), YGPositionTypeRelative)
+        );
+        YGNodeStyleSetFlexWrap(
+            _yogaNode,
+            YogaWrapFromString(_computedStyle->get(wrap), YGWrapNoWrap)
+        );
+        YGNodeStyleSetOverflow(
+            _yogaNode,
+            YogaOverflowFromString(_computedStyle->get(overflow), YGOverflowVisible)
+        );
 
         YGNodeStyleSetFlex(_yogaNode, _computedStyle->get(flex));
 //        YGNodeStyleSetFlexFlexAuto(_yogaNode, _computedStyle->get(flex));
@@ -396,50 +405,155 @@ namespace psychicui {
         // TODO: Position
 
         // Dimensions
-        YGNodeStyleSetMinWidth(_yogaNode, _computedStyle->get(minWidth) >= 0 ? _computedStyle->get(minWidth) : YGUndefined);
-        YGNodeStyleSetMinHeight(_yogaNode, _computedStyle->get(minHeight) >= 0 ? _computedStyle->get(minHeight) : YGUndefined);
-        YGNodeStyleSetMaxWidth(_yogaNode, _computedStyle->get(maxWidth) >= 0 ? _computedStyle->get(maxWidth) : YGUndefined);
-        YGNodeStyleSetMaxHeight(_yogaNode, _computedStyle->get(maxHeight) >= 0 ? _computedStyle->get(maxHeight) : YGUndefined);
+        YGNodeStyleSetMinWidth(
+            _yogaNode,
+            !isnan(_computedStyle->get(minWidth)) ? _computedStyle->get(minWidth) : YGUndefined
+        );
+        YGNodeStyleSetMinHeight(
+            _yogaNode,
+            !isnan(_computedStyle->get(minHeight)) ? _computedStyle->get(minHeight) : YGUndefined
+        );
+        YGNodeStyleSetMaxWidth(
+            _yogaNode,
+            !isnan(_computedStyle->get(maxWidth)) ? _computedStyle->get(maxWidth) : YGUndefined
+        );
+        YGNodeStyleSetMaxHeight(
+            _yogaNode,
+            !isnan(_computedStyle->get(maxHeight)) ? _computedStyle->get(maxHeight) : YGUndefined
+        );
         // TODO: Percent
         // TODO: Width + Height
         // TODO AspectRatio
 
         // Margins
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeAll, _computedStyle->get(margin) >= 0 ? _computedStyle->get(margin) : YGUndefined);
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeHorizontal, _computedStyle->get(marginHorizontal) >= 0 ? _computedStyle->get(marginHorizontal) : YGUndefined);
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeVertical, _computedStyle->get(marginVertical) >= 0 ? _computedStyle->get(marginVertical) : YGUndefined);
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeLeft, _computedStyle->get(marginLeft) >= 0 ? _computedStyle->get(marginLeft) : YGUndefined);
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeRight, _computedStyle->get(marginRight) >= 0 ? _computedStyle->get(marginRight) : YGUndefined);
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeTop, _computedStyle->get(marginTop) >= 0 ? _computedStyle->get(marginTop) : YGUndefined);
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeBottom, _computedStyle->get(marginBottom) >= 0 ? _computedStyle->get(marginBottom) : YGUndefined);
+        YGNodeStyleSetMargin(
+            _yogaNode,
+            YGEdgeAll,
+            !isnan(_computedStyle->get(margin)) ? _computedStyle->get(margin) : YGUndefined
+        );
+        YGNodeStyleSetMargin(
+            _yogaNode,
+            YGEdgeHorizontal,
+            !isnan(_computedStyle->get(marginHorizontal)) ? _computedStyle->get(marginHorizontal) : YGUndefined
+        );
+        YGNodeStyleSetMargin(
+            _yogaNode,
+            YGEdgeVertical,
+            !isnan(_computedStyle->get(marginVertical)) ? _computedStyle->get(marginVertical) : YGUndefined
+        );
+        YGNodeStyleSetMargin(
+            _yogaNode,
+            YGEdgeLeft,
+            !isnan(_computedStyle->get(marginLeft)) ? _computedStyle->get(marginLeft) : YGUndefined
+        );
+        YGNodeStyleSetMargin(
+            _yogaNode,
+            YGEdgeRight,
+            !isnan(_computedStyle->get(marginRight)) ? _computedStyle->get(marginRight) : YGUndefined
+        );
+        YGNodeStyleSetMargin(
+            _yogaNode,
+            YGEdgeTop,
+            !isnan(_computedStyle->get(marginTop)) ? _computedStyle->get(marginTop) : YGUndefined);
+        YGNodeStyleSetMargin(
+            _yogaNode,
+            YGEdgeBottom,
+            !isnan(_computedStyle->get(marginBottom)) ? _computedStyle->get(marginBottom) : YGUndefined
+        );
         // TODO: Auto
         // TODO: Percent
 
         // Padding
-        YGNodeStyleSetPadding(_yogaNode, YGEdgeAll, _computedStyle->get(padding) >= 0 ? _computedStyle->get(padding) : YGUndefined);
-        YGNodeStyleSetPadding(_yogaNode, YGEdgeHorizontal, _computedStyle->get(paddingHorizontal) >= 0 ? _computedStyle->get(paddingHorizontal) : YGUndefined);
-        YGNodeStyleSetPadding(_yogaNode, YGEdgeVertical, _computedStyle->get(paddingVertical) >= 0 ? _computedStyle->get(paddingVertical) : YGUndefined);
-        YGNodeStyleSetPadding(_yogaNode, YGEdgeLeft, _computedStyle->get(paddingLeft) >= 0 ? _computedStyle->get(paddingLeft) : YGUndefined);
-        YGNodeStyleSetPadding(_yogaNode, YGEdgeRight, _computedStyle->get(paddingRight) >= 0 ? _computedStyle->get(paddingRight) : YGUndefined);
-        YGNodeStyleSetPadding(_yogaNode, YGEdgeTop, _computedStyle->get(paddingTop) >= 0 ? _computedStyle->get(paddingTop) : YGUndefined);
-        YGNodeStyleSetPadding(_yogaNode, YGEdgeBottom, _computedStyle->get(paddingBottom) >= 0 ? _computedStyle->get(paddingBottom) : YGUndefined);
+        YGNodeStyleSetPadding(
+            _yogaNode,
+            YGEdgeAll,
+            !isnan(_computedStyle->get(padding)) ? _computedStyle->get(padding) : YGUndefined
+        );
+        YGNodeStyleSetPadding(
+            _yogaNode,
+            YGEdgeHorizontal,
+            !isnan(_computedStyle->get(paddingHorizontal)) ? _computedStyle->get(paddingHorizontal) : YGUndefined
+        );
+        YGNodeStyleSetPadding(
+            _yogaNode,
+            YGEdgeVertical,
+            !isnan(_computedStyle->get(paddingVertical)) ? _computedStyle->get(paddingVertical) : YGUndefined
+        );
+        YGNodeStyleSetPadding(
+            _yogaNode,
+            YGEdgeLeft,
+            !isnan(_computedStyle->get(paddingLeft)) ? _computedStyle->get(paddingLeft) : YGUndefined
+        );
+        YGNodeStyleSetPadding(
+            _yogaNode,
+            YGEdgeRight,
+            !isnan(_computedStyle->get(paddingRight)) ? _computedStyle->get(paddingRight) : YGUndefined
+        );
+        YGNodeStyleSetPadding(
+            _yogaNode,
+            YGEdgeTop,
+            !isnan(_computedStyle->get(paddingTop)) ? _computedStyle->get(paddingTop) : YGUndefined
+        );
+        YGNodeStyleSetPadding(
+            _yogaNode,
+            YGEdgeBottom,
+            !isnan(_computedStyle->get(paddingBottom)) ? _computedStyle->get(paddingBottom) : YGUndefined
+        );
         // TODO: Percent
 
         // Border
-        YGNodeStyleSetBorder(_yogaNode, YGEdgeAll, _computedStyle->get(border) >= 0 ? _computedStyle->get(border) : YGUndefined);
-        YGNodeStyleSetBorder(_yogaNode, YGEdgeHorizontal, _computedStyle->get(borderHorizontal) >= 0 ? _computedStyle->get(borderHorizontal) : YGUndefined);
-        YGNodeStyleSetBorder(_yogaNode, YGEdgeVertical, _computedStyle->get(borderVertical) >= 0 ? _computedStyle->get(borderVertical) : YGUndefined);
-        YGNodeStyleSetBorder(_yogaNode, YGEdgeLeft, _computedStyle->get(borderLeft) >= 0 ? _computedStyle->get(borderLeft) : YGUndefined);
-        YGNodeStyleSetBorder(_yogaNode, YGEdgeRight, _computedStyle->get(borderRight) >= 0 ? _computedStyle->get(borderRight) : YGUndefined);
-        YGNodeStyleSetBorder(_yogaNode, YGEdgeTop, _computedStyle->get(borderTop) >= 0 ? _computedStyle->get(borderTop) : YGUndefined);
-        YGNodeStyleSetBorder(_yogaNode, YGEdgeBottom, _computedStyle->get(borderBottom) >= 0 ? _computedStyle->get(borderBottom) : YGUndefined);
+        YGNodeStyleSetBorder(
+            _yogaNode,
+            YGEdgeAll,
+            !isnan(_computedStyle->get(border)) ? _computedStyle->get(border) : YGUndefined
+        );
+        YGNodeStyleSetBorder(
+            _yogaNode,
+            YGEdgeHorizontal,
+            !isnan(_computedStyle->get(borderHorizontal)) ? _computedStyle->get(borderHorizontal) : YGUndefined
+        );
+        YGNodeStyleSetBorder(
+            _yogaNode,
+            YGEdgeVertical,
+            !isnan(_computedStyle->get(borderVertical)) ? _computedStyle->get(borderVertical) : YGUndefined
+        );
+        YGNodeStyleSetBorder(
+            _yogaNode,
+            YGEdgeLeft,
+            !isnan(_computedStyle->get(borderLeft)) ? _computedStyle->get(borderLeft) : YGUndefined
+        );
+        YGNodeStyleSetBorder(
+            _yogaNode,
+            YGEdgeRight,
+            !isnan(_computedStyle->get(borderRight)) ? _computedStyle->get(borderRight) : YGUndefined
+        );
+        YGNodeStyleSetBorder(
+            _yogaNode,
+            YGEdgeTop,
+            !isnan(_computedStyle->get(borderTop)) ? _computedStyle->get(borderTop) : YGUndefined
+        );
+        YGNodeStyleSetBorder(
+            _yogaNode,
+            YGEdgeBottom,
+            !isnan(_computedStyle->get(borderBottom)) ? _computedStyle->get(borderBottom) : YGUndefined
+        );
 
-        // Children should also update
-        for (auto &child: _children) {
-            child->updateStyle();
+        if ( _computedStyle->has(BoolProperty::visible) ) {
+            _visible = _computedStyle->get(BoolProperty::visible);
         }
 
+        _styleDirty = false;
+
         styleUpdated();
+    }
+
+    void Component::updateStyleRecursive() {
+        updateStyle();
+        if (_visible) {
+            for (auto &child: _children) {
+                child->updateStyleRecursive();
+            }
+        }
     }
 
     void Component::styleUpdated() {
@@ -526,6 +640,10 @@ namespace psychicui {
     }
 
     void Component::render(SkCanvas *canvas) {
+        if (_styleDirty) {
+            updateStyle();
+        }
+
         canvas->save();
         canvas->translate(_x, _y);
 
@@ -606,11 +724,11 @@ namespace psychicui {
                 draw = false;
             }
             if (draw) {
-                float hw =_borderValues.left() / 2;
+                float hw = _borderValues.left() / 2;
                 canvas->drawLine(hw, 0, hw, _rect.bottom(), _borderPaint);
             }
         }
-        
+
         if (_borderValues.right() > 0) {
             bool draw = true;
             _borderPaint.setStrokeWidth(_borderValues.right());
@@ -624,11 +742,11 @@ namespace psychicui {
                 draw = false;
             }
             if (draw) {
-                float hw =_borderValues.right() / 2;
+                float hw = _borderValues.right() / 2;
                 canvas->drawLine(_rect.right() - hw, 0, _rect.right() - hw, _rect.bottom(), _borderPaint);
             }
         }
-        
+
         if (_borderValues.top() > 0) {
             bool draw = true;
             _borderPaint.setStrokeWidth(_borderValues.top());
@@ -642,11 +760,11 @@ namespace psychicui {
                 draw = false;
             }
             if (draw) {
-                float hw =_borderValues.top() / 2;
+                float hw = _borderValues.top() / 2;
                 canvas->drawLine(0, hw, _rect.right(), hw, _borderPaint);
             }
         }
-        
+
         if (_borderValues.bottom() > 0) {
             bool draw = true;
             _borderPaint.setStrokeWidth(_borderValues.bottom());
@@ -660,30 +778,92 @@ namespace psychicui {
                 draw = false;
             }
             if (draw) {
-                float hw =_borderValues.top() / 2;
+                float hw = _borderValues.bottom() / 2;
                 canvas->drawLine(0, _rect.bottom() - hw, _rect.right(), _rect.bottom() - hw, _borderPaint);
             }
         }
     }
-    
+
     // endregion
 
     // region Interaction
+
+    Cursor Component::cursor() const {
+        return _cursor;
+    }
+
+    void Component::setCursor(Cursor cursor) {
+        _cursor = cursor;
+    }
+
+    bool Component::mouseOver() const {
+        return _mouseOver;
+    }
+
+    void Component::setMouseOver(bool over) {
+        _mouseOver = over;
+        invalidateStyle();
+    }
+
+    bool Component::mouseDown() const {
+        return _mouseDown;
+    }
+
+    void Component::setMouseDown(bool down) {
+        _mouseDown = down;
+        invalidateStyle();
+    }
+
+    bool Component::mouseEnabled() const {
+        return _mouseEnabled;
+    }
+
+    void Component::setMouseEnabled(bool enabled) {
+        _mouseEnabled = enabled;
+    }
 
     void Component::onMouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers) {
 
     }
 
     void Component::onMouseDown() {
-        updateStyle();
+        invalidateStyle();
     }
 
     void Component::onMouseUp() {
-        updateStyle();
+        invalidateStyle();
+    }
+
+    void Component::onMouseUpOutside() {
+        std::cout << "outside" << std::endl;
+        invalidateStyle();
     }
 
     bool Component::mouseButtonPropagation(const int &mouseX, const int &mouseY, int button, bool down, int modifiers) {
-        if (!_visible || !contains(mouseX, mouseY)) {
+        if (!_visible) {
+            return false;
+        }
+
+        // First send released outside
+        if (button == GLFW_MOUSE_BUTTON_LEFT && !down && _mouseDown && !contains(mouseX, mouseY)) {
+            _mouseDown = false;
+            onMouseUpOutside();
+            onMouseUp();
+        }
+
+        // Find the deepest child that will handle the request
+        // We still have to go through all the children because of the mouseUpOutside
+        for (const auto &child: _children) {
+            bool handled;
+            if (child->mouseButtonPropagation(mouseX - (int)_x, mouseY - (int)_y, button, down, modifiers)) {
+                handled = true;
+            }
+            if (handled) {
+                return true;
+            }
+        }
+
+        if (!_mouseEnabled || !contains(mouseX, mouseY)) {
             return false;
         }
 
@@ -700,13 +880,6 @@ namespace psychicui {
             }
         }
 
-
-        for (auto child: _children) {
-            if (child->mouseButtonPropagation(mouseX - _x, mouseY - _y, button, down, modifiers)) {
-                break;
-            }
-        }
-
         if (button == GLFW_MOUSE_BUTTON_1 && down && !_focused) {
             requestFocus();
         }
@@ -715,11 +888,11 @@ namespace psychicui {
     }
 
     void Component::onMouseOver() {
-        updateStyle();
+
     }
 
     void Component::onMouseOut() {
-        updateStyle();
+
     }
 
     void Component::mouseMoved(const int &mouseX, const int &mouseY, int button, int modifiers) {
@@ -735,7 +908,7 @@ namespace psychicui {
         bool overBefore = _mouseOver;
 
         if (over != _mouseOver) {
-            _mouseOver = over;
+            setMouseOver(over);
             if (_mouseOver) {
                 onMouseOver();
             } else {

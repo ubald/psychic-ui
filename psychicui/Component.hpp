@@ -23,7 +23,6 @@ namespace psychicui {
 
         // region Hierarchy
 
-        virtual StyleManager *styleManager() const;
         virtual const Window *window() const;
         Component *parent();
         const Component *parent() const;
@@ -39,19 +38,19 @@ namespace psychicui {
 
         unsigned int childCount() const;
         const std::vector<std::shared_ptr<Component>> children() const;
-        void addChild(unsigned int index, std::shared_ptr<Component> component);
-        void addChild(std::shared_ptr<Component> component);
-        void removeChild(unsigned int index);
-        void removeChild(const std::shared_ptr<Component> component);
-        const std::shared_ptr<Component> childAt(unsigned int index) const;
-        std::shared_ptr<Component> childAt(unsigned int index);
+        Component *add(unsigned int index, std::shared_ptr<Component> component);
+        Component *add(std::shared_ptr<Component> component);
+        void remove(unsigned int index);
+        void remove(const std::shared_ptr<Component> component);
+        const Component *at(unsigned int index) const;
+        Component *at(unsigned int index);
         int childIndex(std::shared_ptr<Component> component) const;
 
         // endregion
 
         template<typename ComponentClass, typename... Args>
         std::shared_ptr<ComponentClass> add(const Args &... args) {
-            return std::make_shared<ComponentClass>(this, args...);
+            return add(std::make_shared<ComponentClass>(this, args...));
         }
 
         // region Visibility & Focus
@@ -109,6 +108,24 @@ namespace psychicui {
         Style *style() const;
 
         /**
+         * Get the current style manager
+         * In order of importance, the local override, the parent's (until window) or the singleton
+         * @return StyleManager *
+         */
+        StyleManager *styleManager() const;
+
+        /**
+         * Set the local style manager override
+         */
+        void setStyleManager(std::shared_ptr<StyleManager> styleManager);
+
+        /**
+         * Compute style for this component
+         */
+        void updateStyle();
+        void updateStyleRecursive();
+
+        /**
          * Get the computed style
          * @return
          */
@@ -116,7 +133,7 @@ namespace psychicui {
 
         const std::vector<std::string> &tags() const;
         const std::vector<std::string> &classNames() const;
-        void setClassNames(std::vector<std::string> additionalClassNames);
+        Component *setClassNames(std::vector<std::string> additionalClassNames);
 
 
         // endregion
@@ -134,6 +151,8 @@ namespace psychicui {
 
         Cursor cursor() const;
         void setCursor(Cursor cursor);
+        bool mouseEnabled() const;
+        void setMouseEnabled(bool enabled);
         bool mouseOver() const;
         void setMouseOver(bool over); // Mostly for testing
         bool mouseDown() const;
@@ -183,14 +202,24 @@ namespace psychicui {
         std::unique_ptr<Style> _style{nullptr};
 
         /**
+         * Dirty style flag
+         */
+        bool _styleDirty{true};
+
+        /**
+         * Style Manager Override
+         */
+        std::shared_ptr<StyleManager> _styleManager{nullptr};
+
+        /**
          * Computed Style
          */
         std::unique_ptr<Style> _computedStyle{nullptr};
 
         /**
-         * Compute style for this component
+         * Invalidate the style
          */
-        void updateStyle();
+        void invalidateStyle();
 
         /**
          * Callback for when styles were updated
@@ -237,6 +266,8 @@ namespace psychicui {
         SkRect _borderValues;
 
         bool _focused{false};
+
+        bool _mouseEnabled{false};
         bool _mouseOver{false};
         bool _mouseDown{false};
 
@@ -257,6 +288,7 @@ namespace psychicui {
         virtual void onMouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers);
         virtual void onMouseDown();
         virtual void onMouseUp();
+        virtual void onMouseUpOutside();
         virtual void onMouseScrolled(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY);
     };
 }

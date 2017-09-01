@@ -45,10 +45,7 @@ namespace psychicui {
 
     enum FloatProperty {
         opacity,
-        flex, grow, shrink, basis
-    };
-
-    enum IntProperty {
+        flex, grow, shrink, basis,
         fontSize, letterSpacing, lineHeight,
         width, minWidth, maxWidth,
         height, minHeight, maxHeight,
@@ -58,9 +55,14 @@ namespace psychicui {
         cornerRadius, cornerRadiusLeft, cornerRadiusRight, cornerRadiusTop, cornerRadiusBottom,
     };
 
+    enum IntProperty {
+
+    };
+
     enum BoolProperty {
         antiAlias,
-        textAntiAlias
+        textAntiAlias,
+        visible
     };
 
     class Style {
@@ -103,7 +105,7 @@ namespace psychicui {
     PSYCHIC_STYLE_PROPERTY(Color, ColorProperty, color, 0xFF000000);
     PSYCHIC_STYLE_PROPERTY(std::string, StringProperty, string, "");
     PSYCHIC_STYLE_PROPERTY(float, FloatProperty, float, nanf("undefined"));
-    PSYCHIC_STYLE_PROPERTY(int, IntProperty, int, -1);
+    PSYCHIC_STYLE_PROPERTY(int, IntProperty, int, 0);
     PSYCHIC_STYLE_PROPERTY(bool, BoolProperty, bool, false);
 
         #ifdef DEBUG_STYLES

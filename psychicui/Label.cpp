@@ -30,7 +30,7 @@ namespace psychicui {
             _textPaint.setSubpixelText(true);
         }
 
-        _textPaint.setTypeface(styleManager() ? styleManager()->font(_computedStyle->get(fontFamily)) : nullptr);
+        _textPaint.setTypeface(styleManager()->font(_computedStyle->get(fontFamily)));
         _textPaint.setTextSize(_computedStyle->get(fontSize));
         _textPaint.setColor(_computedStyle->get(color));
 

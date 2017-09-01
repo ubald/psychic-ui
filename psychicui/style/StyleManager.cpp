@@ -1,4 +1,5 @@
 #include <iostream>
+#include "../Component.hpp"
 #include "StyleManager.hpp"
 #include "psychicui/utils/StringUtils.hpp"
 
@@ -11,6 +12,10 @@ namespace psychicui {
             instance = std::make_shared<StyleManager>();
         }
         return instance;
+    }
+
+    StyleManager::StyleManager() {
+
     }
 
     void StyleManager::loadFont(const std::string &name, const std::string &path) {
@@ -45,15 +50,11 @@ namespace psychicui {
     }
 
     std::unique_ptr<Style> StyleManager::computeStyle(const Component *component) {
-        std::vector<std::pair<int, StyleDeclaration*>> inheritedMatches;
         std::vector<std::pair<int, StyleDeclaration*>> directMatches;
 
         for (const auto &declaration: _declarations) {
-            int match = declaration.second->rule()->matches(component);
-            if (match == 0) {
+            if (declaration.second->rule()->matches(component)) {
                 directMatches.emplace_back(declaration.second->weight(), declaration.second.get());
-            } else if (match > 0) {
-                inheritedMatches.emplace_back(match, declaration.second.get());
             }
         }
 
@@ -62,20 +63,19 @@ namespace psychicui {
             return a.first < b.first;
         });
 
-        // Sort inherited matches by match depth, closest overlaid last
-        // In case of equal depth, sort using weight
-        std::sort(inheritedMatches.begin(), inheritedMatches.end(), [](const auto &a, const auto &b) {
-            return (a.first != b.first) ? a.first > b.first : a.second->weight() < b.second->weight();
-        });
-
         auto s = std::make_unique<Style>(style("*"));
         // Computed inherited values
-        for (const auto &inheritedMatch: inheritedMatches) {
-            s->overlayInheritable(inheritedMatch.second->style());
+        if (component->parent()) {
+            s->overlayInheritable(component->parent()->computedStyle());
             #ifdef DEBUG_STYLES
-            s->declarations.push_back("[inherited, depth: " + std::to_string(inheritedMatch.first) + "] " + inheritedMatch.second->selector);
+            s->declarations.insert(
+                s->declarations.end(),
+                component->parent()->computedStyle()->declarations.begin(),
+                component->parent()->computedStyle()->declarations.end()
+            );
             #endif
         }
+
         for (const auto &directMatch: directMatches) {
             s->overlay(directMatch.second->style());
             #ifdef DEBUG_STYLES
