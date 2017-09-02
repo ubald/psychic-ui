@@ -11,6 +11,6 @@ if (PSYCHICUI_BUILD_EXAMPLE)
         components/Application.hpp
         components/ToolBar.cpp
         components/ToolBar.hpp
-        )
+        components/Labels.cpp components/Labels.hpp components/Buttons.cpp components/Buttons.hpp)
     target_link_libraries(psychicui_demo psychicui ${PSYCHICUI_EXTRA_LIBS})
 endif ()

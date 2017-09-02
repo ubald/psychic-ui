@@ -15,11 +15,21 @@ namespace psychicui {
     class Panel;
 
 
-    template<typename T> std::shared_ptr<T> component() {
-        return std::make_shared<T>();
-    }
+    class Hatcher {
+    public:
+        explicit Hatcher(std::function<std::shared_ptr<Component>()> callback) : _callback(callback) {}
+        std::shared_ptr<Component> hatch() {
+            return _callback ? _callback() : nullptr;
+        }
+    protected:
+        std::function<std::shared_ptr<Component>()> _callback{nullptr};
+    };
 
-    using ComponentCreator = std::function<std::shared_ptr<Component>()>;
+//    template<typename T> std::shared_ptr<T> component() {
+//        return std::make_shared<T>();
+//    }
+//
+//    using ComponentCreator = std::function<std::shared_ptr<Component>()>;
 
 
     class Component : public std::enable_shared_from_this<Component> {

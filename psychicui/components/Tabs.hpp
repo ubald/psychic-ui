@@ -19,6 +19,7 @@ namespace psychicui {
 
         void select(const T &item);
     protected:
+        const T *_selected{nullptr};
         std::vector<Button *> _buttons{};
         TabChanged            _tabChanged{nullptr};
     };
@@ -34,9 +35,11 @@ namespace psychicui {
                 this->template add<Button>(
                     this->label(d),
                     [&]() {
-                        select(d);
-                        if (_tabChanged) {
-                            _tabChanged(d);
+                        if (!_selected || d != *_selected) {
+                            select(d);
+                            if (_tabChanged) {
+                                _tabChanged(d);
+                            }
                         }
                     }
                 ).get()
@@ -46,8 +49,9 @@ namespace psychicui {
 
     template<class T>
     void Tabs<T>::select(const T &item) {
+        _selected = &item;
         auto     pos = std::distance(this->_data.begin(), std::find(this->_data.begin(), this->_data.end(), item));
-        for (int i  = 0; i < this->_children.size(); ++i) {
+        for (int i   = 0; i < this->_buttons.size(); ++i) {
             _buttons[i]->setSelected(i == pos);
         }
     }

@@ -19,6 +19,7 @@ namespace psychicui {
     protected:
         void onTabChanged(const T &data);
         ComponentCallback _getTabComponentCallback{nullptr};
+        std::shared_ptr<Component> _panel;
     };
 
     template<class T>
@@ -37,7 +38,13 @@ namespace psychicui {
             return;
         }
 
-        auto component = _getTabComponentCallback(data);
+        if (_panel) {
+            remove(_panel);
+            _panel = nullptr;
+        }
+
+        _panel = _getTabComponentCallback(data);
+        add(_panel);
     }
 }
 

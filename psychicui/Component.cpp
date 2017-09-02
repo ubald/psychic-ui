@@ -45,8 +45,10 @@ namespace psychicui {
     void Component::setParent(Component *parent) {
         if (_parent != parent) {
             _parent = parent;
-            _depth  = parent->depth() + 1;
-            invalidateStyle();
+            _depth = _parent ? _parent->depth() + 1 : 0;
+            if (_parent) {
+                invalidateStyle();
+            }
         }
     }
 

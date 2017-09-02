@@ -7,6 +7,8 @@
 #include "Application.hpp"
 #include "MenuBar.hpp"
 #include "ToolBar.hpp"
+#include "Labels.hpp"
+#include "Buttons.hpp"
 #include "../demo-stylesheet.hpp"
 
 namespace psychicui {
@@ -19,46 +21,21 @@ namespace psychicui {
         add(std::make_shared<MenuBar>());
         add(std::make_shared<ToolBar>());
 
-        add(
-            std::make_shared<Tabs<>>(
-                std::vector<std::string>({"Tab 1", "Tab 2", "Tab 3"})
-            ));
-
-        std::vector<std::pair<std::string, std::string>> panels{
-            {"test1", "component<Button>"},
-            {"test2", "component<Component>"}
+        std::vector<std::pair<std::string, std::shared_ptr<Hatcher>>> panels{
+            {"Labels",  std::make_shared<Hatcher>([]() { return std::make_shared<Labels>(); })},
+            {"Buttons", std::make_shared<Hatcher>([]() { return std::make_shared<Buttons>(); })}
         };
 
         add(
-            std::make_shared<TabbedContainer<std::pair<std::string, std::string>>>(
+            std::make_shared<TabbedContainer<std::pair<std::string, std::shared_ptr<Hatcher>>>>(
                 panels,
                 [](const auto &item) {
-//                    return item.second();
-                    return std::make_shared<Component>();
+                    return item.second->hatch();
                 },
                 [](const auto &item) -> std::string {
-                    return "coucou";
+                    return item.first;
                 }
-            ));
-
-        add(
-            std::make_shared<TabbedContainer<int>>(
-                std::vector<int>({1}),
-                [](const auto &tab) {
-                    std::cout << tab << std::endl;
-                    return std::make_shared<Component>();
-                },
-                [](const auto &tab) {
-                    std::cout << "ICI" << std::endl;
-                    return std::to_string(tab);
-                }
-            ));
-
-        add(std::make_shared<Label>("Label"));
-        add(std::make_shared<Button>("Button"));
-        add(std::make_shared<Button>("Button"));
-        add(std::make_shared<Button>("Button"));
-        add(std::make_shared<Button>("Button"));
-        add(std::make_shared<Button>("Button"));
+            )
+        );
     }
 }
