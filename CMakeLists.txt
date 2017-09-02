@@ -13,157 +13,19 @@ set(PSYCHICUI_EXTRA_DEFS "")
 set(LIBPSYCHICUI_EXTRA_SOURCE "")
 
 # GLAD
-
-if (WIN32)
-    set(PSYCHICUI_USE_GLAD_DEFAULT ON)
-else ()
-    set(PSYCHICUI_USE_GLAD_DEFAULT OFF)
-endif ()
-
-option(PSYCHICUI_USE_GLAD "Use Glad OpenGL loader library?" ${PSYCHICUI_USE_GLAD_DEFAULT})
-
-if (PSYCHICUI_USE_GLAD)
-    # Build and include GLAD
-    ExternalProject_Add(glad
-        GIT_REPOSITORY https://github.com/Dav1dde/glad
-        GIT_TAG master
-        CMAKE_ARGS -DGLAD_API=gl=4.5
-        CMAKE_ARGS -DGLAD_PROFILE=core
-        CMAKE_ARGS -DGLAD_GENERATOR=c
-        CMAKE_ARGS -DGLAD_EXPORT=OFF
-        CMAKE_ARGS -DGLAD_INSTALL=OFF
-        INSTALL_COMMAND ""
-        )
-
-    set(GLAD_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/glad-prefix/src/glad-build/include)
-    set(GLAD_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/glad-prefix/src/glad-build/${CMAKE_STATIC_LIBRARY_PREFIX}glad${CMAKE_STATIC_LIBRARY_SUFFIX})
-
-    include_directories(
-        ${GLAD_INCLUDE_DIRS}
-    )
-
-    link_libraries(
-        ${GLAD_LIBRARIES}
-    )
-
-    list(APPEND PSYCHICUI_EXTRA_DEFS -DPSYCHICUI_GLAD)
-    if (PSYCHICUI_BUILD_SHARED)
-        list(APPEND PSYCHICUI_EXTRA_DEFS -DGLAD_GLAPI_EXPORT)
-    endif ()
-endif ()
-
+add_subdirectory(extlib/glad)
 
 # GLFW
-
-ExternalProject_Add(glfw
-    URL https://github.com/glfw/glfw/archive/3.2.1.tar.gz
-    CMAKE_ARGS -DBUILD_SHARED_LIBS=FALSE
-    CMAKE_ARGS -DGLFW_BUILD_EXAMPLES=FALSE
-    CMAKE_ARGS -DGLFW_BUILD_TESTS=FALSE
-    CMAKE_ARGS -DGLFW_BUILD_DOCS=FALSE
-    CMAKE_ARGS -DGLFW_INSTALL=FALSE
-    CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-    INSTALL_COMMAND ""
-    )
-
-set(GLFW_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/glfw-prefix/src/glfw/include)
-set(GLFW_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/glfw-prefix/src/glfw-build/src/${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX})
-
-include_directories(
-    ${GLFW_INCLUDE_DIRS}
-)
-
-#link_libraries(
-#    ${GLFW_LIBRARIES}
-#)
-
-
-# EIGEN
-
-#ExternalProject_Add(eigen
-#    URL http://bitbucket.org/eigen/eigen/get/3.3.4.tar.gz
-#    UPDATE_DISCONNECTED 1
-#    CONFIGURE_COMMAND ""
-#    BUILD_COMMAND ""
-#    INSTALL_COMMAND ""
-#    )
-#
-#set(EIGEN_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/eigen-prefix/src/eigen)
-#
-#include_directories(
-#    ${EIGEN_INCLUDE_DIRS}
-#)
-
+add_subdirectory(extlib/glfw)
 
 # YOGA
-
-ExternalProject_Add(yoga
-    GIT_REPOSITORY git@github.com:facebook/yoga.git
-    GIT_TAG master
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    )
-
-set(YOGA_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/yoga-prefix/src/yoga)
-file(GLOB YOGA_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/yoga-prefix/src/yoga/yoga/*.c)
-#set(YOGA_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/yoga-prefix/src/yoga-build/${CMAKE_STATIC_LIBRARY_PREFIX}yogacore${CMAKE_STATIC_LIBRARY_SUFFIX})
+add_subdirectory(extlib/yoga)
 
 # SKIA
+add_subdirectory(extlib/skia)
 
-set(SKIA_ARGS_LIST skia_use_dng_sdk=false skia_use_expat=false skia_use_libwebp=false skia_use_piex=false skia_use_freetype=true)
-if (APPLE)
-    list(APPEND SKIA_ARGS_LIST "extra_cflags=[\"-I/usr/local/opt/icu4c/include\", \"-I/usr/local/opt/jpeg-turbo/include\", \"-I/usr/local/opt/freetype/include/freetype2\"]")
-    list(APPEND SKIA_ARGS_LIST "extra_ldflags=[\"-L/usr/local/opt/icu4c/lib\", \"-L/usr/local/opt/jpeg-turbo\", \"-L/usr/local/opt/freetype\"]")
-endif ()
-
-string(REPLACE ";" " " SKIA_ARGS "${SKIA_ARGS_LIST}")
-
-configure_file("tools/skia_patch.sh.in" "skia_patch.sh" @ONLY)
-configure_file("tools/skia_configure.sh.in" "skia_configure.sh" @ONLY)
-configure_file("tools/skia_build.sh.in" "skia_build.sh" @ONLY)
-
-ExternalProject_Add(depot_tools
-    GIT_REPOSITORY https://chromium.googlesource.com/chromium/tools/depot_tools.git
-    GIT_TAG master
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    )
-
-ExternalProject_Add(skia
-    GIT_REPOSITORY https://skia.googlesource.com/skia.git
-    GIT_TAG master
-    DEPENDS depot_tools
-    UPDATE_DISCONNECTED 1
-    PATCH_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_patch.sh
-    CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_configure.sh
-    BUILD_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_build.sh
-    INSTALL_COMMAND ""
-    )
-
-add_dependencies(skia depot_tools)
-file(GLOB SKIA_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/skia-prefix/src/skia/include/*)
-set(SKIA_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/skia-prefix/src/skia/out/Static/${CMAKE_STATIC_LIBRARY_PREFIX}skia${CMAKE_STATIC_LIBRARY_SUFFIX})
-
-# NANOVG
-
-#ExternalProject_Add(nanovg
-#    GIT_REPOSITORY git@github.com:memononen/nanovg.git
-#    GIT_TAG master
-#    UPDATE_DISCONNECTED 1
-#    CONFIGURE_COMMAND ""
-#    BUILD_COMMAND ""
-#    INSTALL_COMMAND ""
-#    )
-#
-#set(NANOVG_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/nanovg-prefix/src/nanovg/src)
-#set(NANOVG_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/nanovg-prefix/src/nanovg/src/nanovg.c)
-#
-#include_directories(
-#    ${NANOVG_INCLUDE_DIRS}
-#)
-
+# RXCPP
+# add_subdirectory(extlib/rxcpp)
 
 # EXTRAS
 
@@ -233,8 +95,8 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/Component.hpp
     psychicui/style/Style.cpp
     psychicui/style/Style.hpp
-    psychicui/Panel.cpp
-    psychicui/Panel.hpp
+#    psychicui/Panel.cpp
+#    psychicui/Panel.hpp
     #    psychicui/Popup.cpp
     #    psychicui/Popup.hpp
     psychicui/Button.cpp
@@ -264,11 +126,22 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/components/TabbedContainer.hpp
     )
 add_library(psychicui SHARED ${SOURCE_FILES})
-target_include_directories(psychicui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${YOGA_INCLUDE_DIRS} ${SKIA_INCLUDE_DIRS})
-target_link_libraries(psychicui ${GLFW_LIBRARIES} ${YOGA_LIBRARIES} ${SKIA_LIBRARIES})
+target_include_directories(psychicui PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${GLFW_INCLUDE_DIRS}
+    ${YOGA_INCLUDE_DIRS}
+    ${SKIA_INCLUDE_DIRS}
+    # ${RXCPP_INCLUDE_DIRS}
+)
+target_link_libraries(psychicui
+    ${GLFW_LIBRARIES}
+    ${YOGA_LIBRARIES}
+    ${SKIA_LIBRARIES}
+)
+message("${SKIA_INCLUDE_DIRS}")
 #add_dependencies(psychicui eigen)
 add_dependencies(psychicui glfw)
-add_dependencies(psychicui yoga)
+#add_dependencies(psychicui yoga)
 #add_dependencies(psychicui nanovg)
 add_dependencies(psychicui skia)
 
@@ -302,5 +175,6 @@ file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 # SUBDIRECTORIES
 add_subdirectory(tests)
 add_subdirectory(example)
+add_subdirectory(playground)
 
 

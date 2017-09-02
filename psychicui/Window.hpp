@@ -14,10 +14,12 @@
 #include "style/StyleManager.hpp"
 #include "style/Style.hpp"
 
-//#define NANOVG_GL3_IMPLEMENTATION
-//#include <nanovg_gl.h>
-
 namespace psychicui {
+
+    struct MouseMessage {
+        int x, y;
+    };
+
     class Window : public Component {
     public:
         static std::map<GLFWwindow *, Window *> windows;
@@ -31,7 +33,7 @@ namespace psychicui {
          */
         GLFWwindow *glfwWindow();
 
-        const Window *window() const override;
+        Window *window() override;
 
         const std::string title() const;
         void setTitle(const std::string &title);
@@ -66,22 +68,22 @@ namespace psychicui {
             invalidateStyle();
         }
 
-        void disposePanel(std::shared_ptr<Panel> panel);
-        void centerPanel(std::shared_ptr<Panel> panel);
-        void movePanelToFront(std::shared_ptr<Panel> panel);
-
     protected:
         // GLFW Window
         GLFWwindow *_glfwWindow{nullptr};
 
-        // Rendering
+        // region Rendering
+
         GrContext *_sk_context{nullptr};
         SkSurface *_sk_surface{nullptr};
         SkCanvas  *_sk_canvas{nullptr};
         int       _stencilBits = 0;
         int       _samples     = 0;
 
-        // Window
+        // endregion
+
+        // region Window
+
         std::string _title;
         bool        _fullscreen{false};
         bool        _minimized{false};
@@ -89,6 +91,8 @@ namespace psychicui {
         bool        _resizable{true};
         bool        _decorated{true};
         GLFWcursor  *_cursors[(int) Cursor::CursorCount];
+
+        // endregion
 
         int   _fbWidth{0};
         int   _fbHeight{0};
@@ -104,11 +108,16 @@ namespace psychicui {
 
         double _lastInteraction;
 
+        // region Mouse
+
+        Cursor _mouseCursor;
         int  _mouseState{0};
         int  _modifiers{0};
         int  _mouseX{0};
         int  _mouseY{0};
         bool _dragActive{false};
+
+        // endregion
 
         std::shared_ptr<Component>              _dragComponent = nullptr;
         std::vector<std::shared_ptr<Component>> _focusPath;
@@ -116,7 +125,6 @@ namespace psychicui {
         void initSkia();
         void getSkiaSurface();
         void attachCallbacks();
-        void requestFocus(Component *component) override;
 
         /* Events */
         virtual bool dropEvent(const std::vector<std::string> & /* filenames */) { return false; /* To be overridden */ }

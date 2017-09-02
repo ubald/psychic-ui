@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-set -e
-
-cd ../skia
-bin/gn gen out/Static --args='is_official_build=true @SKIA_ARGS@'

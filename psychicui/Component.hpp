@@ -8,11 +8,19 @@
 #include "psychicui/style/Style.hpp"
 #include "psychicui/style/StyleManager.hpp"
 
-
 namespace psychicui {
+
     class Window;
 
     class Panel;
+
+
+    template<typename T> std::shared_ptr<T> component() {
+        return std::make_shared<T>();
+    }
+
+    using ComponentCreator = std::function<std::shared_ptr<Component>()>;
+
 
     class Component : public std::enable_shared_from_this<Component> {
         friend class StyleManager;
@@ -23,12 +31,12 @@ namespace psychicui {
 
         // region Hierarchy
 
-        virtual const Window *window() const;
+        virtual Window *window();
         Component *parent();
         const Component *parent() const;
         void setParent(Component *parent);
         const int depth() const;
-        std::vector<std::shared_ptr<Component>> path();
+//        std::vector<std::shared_ptr<Component>> path();
 
         virtual std::shared_ptr<Panel> panel();
 
@@ -38,8 +46,14 @@ namespace psychicui {
 
         unsigned int childCount() const;
         const std::vector<std::shared_ptr<Component>> children() const;
-        Component *add(unsigned int index, std::shared_ptr<Component> component);
-        Component *add(std::shared_ptr<Component> component);
+        std::shared_ptr<Component> add(unsigned int index, std::shared_ptr<Component> component);
+        std::shared_ptr<Component> add(std::shared_ptr<Component> component);
+
+        template<typename WidgetClass, typename... Args>
+        std::shared_ptr<WidgetClass> add(const Args&... args) {
+            return std::static_pointer_cast<WidgetClass>(add(std::make_shared<WidgetClass>(args...)));
+        }
+
         void remove(unsigned int index);
         void remove(const std::shared_ptr<Component> component);
         const Component *at(unsigned int index) const;
@@ -48,19 +62,14 @@ namespace psychicui {
 
         // endregion
 
-        template<typename ComponentClass, typename... Args>
-        std::shared_ptr<ComponentClass> add(const Args &... args) {
-            return add(std::make_shared<ComponentClass>(this, args...));
-        }
-
-        // region Visibility & Focus
+        // region Visibility, Focus & State
 
         bool visible() const;
         virtual void setVisible(bool value);
-        bool visibleRecursive() const;
         bool focused() const;
         void requestFocus();
         virtual void requestFocus(Component *component);
+        virtual bool active() const;
 
         // endregion
 
@@ -94,6 +103,12 @@ namespace psychicui {
         void setPercentWidth(float percentWidth);
         float percentHeight() const;
         void setPercentHeight(float percentHeight);
+
+        // endregion
+
+        // region Layout
+
+        void setMeasurable();
 
         // endregion
 
@@ -135,7 +150,6 @@ namespace psychicui {
         const std::vector<std::string> &classNames() const;
         Component *setClassNames(std::vector<std::string> additionalClassNames);
 
-
         // endregion
 
         // region Rendering
@@ -151,8 +165,6 @@ namespace psychicui {
 
         Cursor cursor() const;
         void setCursor(Cursor cursor);
-        bool mouseEnabled() const;
-        void setMouseEnabled(bool enabled);
         bool mouseOver() const;
         void setMouseOver(bool over); // Mostly for testing
         bool mouseDown() const;
@@ -160,10 +172,9 @@ namespace psychicui {
 
         // endregion
 
-        std::shared_ptr<Component> findComponent(const int &x, const int &y);
-        bool contains(const int &x, const int &y) const;
+//        std::shared_ptr<Component> findComponent(const int &x, const int &y);
+        inline bool contains(const int &x, const int &y) const;
 
-        void setMeasurable();
 
         // Events
         virtual bool mouseDragEvent(const int &mouseX, const int &mouseY, const int &dragX, const int &dragY, int button, int modifiers);
@@ -174,9 +185,15 @@ namespace psychicui {
 
     protected:
 
+        // region Lifecycle
+
+        // endregion
+
         // region Hierarchy
 
-        int                      _depth{0};
+        int                                     _depth{0};
+        Component                               *_parent{nullptr};
+        std::vector<std::shared_ptr<Component>> _children;
 
         // endregion
 
@@ -189,7 +206,7 @@ namespace psychicui {
          * @param componentName
          */
         void setTag(std::string componentName);
-        std::vector<std::string> _tags{};
+        std::vector<std::string>                _tags{};
 
         /**
          * Pseudo CSS class names
@@ -242,13 +259,17 @@ namespace psychicui {
 
         // endregion
 
-        bool  _enabled{true};
-        bool  _visible{true};
-        float _x{0.0f};
-        float _y{0.0f};
-        float _width{0.0f};
-        float _height{0.0f};
-        bool  _wrap{false};
+        bool _enabled{true};
+        bool _visible{true};
+        int  _x{0};
+        int  _y{0};
+        int  _width{0};
+        int  _height{0};
+        bool _wrap{false};
+
+        // region Layout
+
+        YGNodeRef _yogaNode{nullptr};
 
         /**
          * Component's rect
@@ -265,31 +286,40 @@ namespace psychicui {
          */
         SkRect _borderValues;
 
+        // endregion
+
         bool _focused{false};
 
-        bool _mouseEnabled{false};
-        bool _mouseOver{false};
-        bool _mouseDown{false};
+        // region Mouse
+
+        Cursor _cursor{Cursor::Arrow};
+        bool   _mouseOver{false};
+        bool   _mouseDown{false};
+
+        Cursor mouseMoved(const int &mouseX, const int &mouseY, int button, int modifiers);
+        bool mouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers);
+        bool mouseScrolled(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY);
+
+        std::function<void(const int &mouseX, const int &mouseY, int button, int modifiers)> _onMouseMoved{nullptr};
+
+        std::function<void()> _onMouseOver{nullptr};
+        std::function<void()>_onMouseOut{nullptr};
+        std::function<void(const int &mouseX, const int &mouseY, int button, bool down, int modifiers)> _onMouseButton{nullptr};
+        std::function<void()> _onMouseDown{nullptr};
+        std::function<void()> _onClick{nullptr};
+        std::function<void()>_onMouseUp{nullptr};
+        std::function<void()> _onMouseUpOutside{nullptr};
+        std::function<void(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY)> _onMouseScrolled{nullptr};
 
 
-        Cursor                                  _cursor{Cursor::Arrow};
-        Component                               *_parent{nullptr};
-        std::vector<std::shared_ptr<Component>> _children;
+        // endregion
 
-        YGNodeRef _yogaNode{nullptr};
+
+
 
         void focused(bool focused);
-        void mouseMovedPropagation(const int &mouseX, const int &mouseY, int button, int modifiers);
-        bool mouseScrolledPropagation(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY);
-        bool mouseButtonPropagation(const int &mouseX, const int &mouseY, int button, bool down, int modifiers);
-        virtual void mouseMoved(const int &mouseX, const int &mouseY, int button, int modifiers);
-        virtual void onMouseOver();
-        virtual void onMouseOut();
-        virtual void onMouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers);
-        virtual void onMouseDown();
-        virtual void onMouseUp();
-        virtual void onMouseUpOutside();
-        virtual void onMouseScrolled(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY);
+
+
     };
 }
 

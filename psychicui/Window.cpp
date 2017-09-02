@@ -1,4 +1,5 @@
 #include <iostream>
+#include "GrBackendSurface.h"
 #include "Window.hpp"
 
 namespace psychicui {
@@ -89,7 +90,7 @@ namespace psychicui {
 
     // region Hierarchy
 
-    const Window *Window::window() const {
+    Window *Window::window() {
         return this;
     }
 
@@ -146,7 +147,7 @@ namespace psychicui {
 
         glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
         glViewport(0, 0, _fbWidth, _fbHeight);
-        glClearColor(0,0,0,0);
+        glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glfwSwapInterval(0);
         glfwSwapBuffers(_glfwWindow);
@@ -189,15 +190,23 @@ namespace psychicui {
     }
 
     void Window::getSkiaSurface() {
-        GrBackendRenderTargetDesc desc;
-        desc.fWidth              = _windowWidth;
-        desc.fHeight             = _windowHeight;
-        desc.fConfig             = kSkia8888_GrPixelConfig;
-        desc.fOrigin             = kBottomLeft_GrSurfaceOrigin;
-        desc.fSampleCnt          = _samples;
-        desc.fStencilBits        = _stencilBits;
-        desc.fRenderTargetHandle = 0;  // assume default framebuffer
-        _sk_surface = SkSurface::MakeFromBackendRenderTarget(_sk_context, desc, nullptr, nullptr).release();
+        GrGLFramebufferInfo framebufferInfo;
+        framebufferInfo.fFBOID = 0;  // assume default framebuffer
+        GrBackendRenderTarget backendRenderTarget(
+            _windowWidth,
+            _windowHeight,
+            _samples,
+            _stencilBits,
+            kSkia8888_GrPixelConfig,
+            framebufferInfo
+        );
+        _sk_surface = SkSurface::MakeFromBackendRenderTarget(
+            _sk_context,
+            backendRenderTarget,
+            kBottomLeft_GrSurfaceOrigin,
+            nullptr,
+            nullptr
+        ).release();
         if (!_sk_surface) {
             SkDebugf("SkSurface::MakeFromBackendRenderTarget returned null\n");
             return;
@@ -436,6 +445,10 @@ namespace psychicui {
 
     // endregion
 
+    // region Mouse
+
+    // endregion
+
     // region Position
 
     void Window::setWindowPosition(const int &x, const int &y) {
@@ -451,7 +464,7 @@ namespace psychicui {
     // region Size
 
     void Window::setWindowSize(const int &width, const int &height) {
-        _windowWidth = width;
+        _windowWidth  = width;
         _windowHeight = height;
         setSize((float) width, (float) height);
         if (_glfwWindow) {
@@ -464,7 +477,7 @@ namespace psychicui {
     // region Draw
 
     void Window::drawAll() {
-        glClearColor(0,0,0,0);
+        glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         drawContents();
         drawComponents();
@@ -580,32 +593,18 @@ namespace psychicui {
         #endif
 
         _lastInteraction = glfwGetTime();
+
         try {
-            bool ret = false;
-            x -= 1;
-            y -= 2;
+            // Weird but the cursor seem better aligned like this
+            // At least on a mac...
+            _mouseX = (int) x - 1;
+            _mouseY = (int) y - 2;
 
-            if (!_dragActive) {
-                auto component = findComponent(x, y);
-                if (component != nullptr && component->cursor() != _cursor) {
-                    _cursor = component->cursor();
-                    glfwSetCursor(_glfwWindow, _cursors[(int) _cursor]);
-                }
-            } else {
-//                ret = _dragComponent->mouseDragEvent(
-//                    p - _dragComponent->setParent()->absolutePosition(),
-//                    p - _mousePosition,
-//                    _mouseState,
-//                    _modifiers
-//                );
+            Cursor cursor = mouseMoved(_mouseX, _mouseY, _mouseState, _modifiers);
+            if (cursor != _mouseCursor) {
+                _mouseCursor = cursor;
+                glfwSetCursor(_glfwWindow, _cursors[(int) _mouseCursor]);
             }
-
-            if (!ret) {
-                mouseMovedPropagation(x, y, _mouseState, _modifiers);
-            }
-
-            _mouseX = x;
-            _mouseY = y;
 
         } catch (const std::exception &e) {
             std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
@@ -615,56 +614,15 @@ namespace psychicui {
     void Window::mouseButtonEventCallback(int button, int action, int modifiers) {
         _modifiers       = modifiers;
         _lastInteraction = glfwGetTime();
-        try {
-//            if (_focusPath.setSize() > 1) {
-//                const std::shared_ptr<Panel> panel = std::dynamic_pointer_cast<Panel>(
-//                    _focusPath[_focusPath.setSize()
-//                               - 2]
-//                );
-//                if (panel && panel->modal()) {
-//                    if (!panel->contains(_mouseX, _mouseY)) {
-//                        return;
-//                    }
-//                }
-//            }
 
+        try {
             if (action == GLFW_PRESS) {
                 _mouseState |= 1 << button;
             } else {
                 _mouseState &= ~(1 << button);
             }
 
-            auto dropComponent = findComponent(_mouseX, _mouseY);
-            if (_dragActive && action == GLFW_RELEASE && dropComponent != _dragComponent) {
-                // TODO: Actually call a drop event, don't send the mouse event
-//                _dragComponent->mouseButtonPropagation(
-//                    _mousePosition - _dragComponent->setParent()->absolutePosition(),
-//                    button,
-//                    false,
-//                    _modifiers
-//                );
-            }
-
-            if (dropComponent != nullptr && dropComponent->cursor() != _cursor) {
-                _cursor = dropComponent->cursor();
-                glfwSetCursor(_glfwWindow, _cursors[(int) _cursor]);
-            }
-
-            if (action == GLFW_PRESS && (button == GLFW_MOUSE_BUTTON_1 || button == GLFW_MOUSE_BUTTON_2)) {
-                _dragComponent = findComponent(_mouseX, _mouseY);
-                if (_dragComponent.get() == this) {
-                    _dragComponent = nullptr;
-                }
-                _dragActive    = _dragComponent != nullptr;
-                if (!_dragActive) {
-                    requestFocus(nullptr);
-                }
-            } else {
-                _dragActive    = false;
-                _dragComponent = nullptr;
-            }
-
-            mouseButtonPropagation(_mouseX, _mouseY, button, action == GLFW_PRESS, _modifiers);
+            mouseButton(_mouseX, _mouseY, button, action == GLFW_PRESS, _modifiers);
 
         } catch (const std::exception &e) {
             std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
@@ -685,7 +643,7 @@ namespace psychicui {
 //                    }
 //                }
 //            }
-            mouseScrolledPropagation(_mouseX, _mouseY, x, y);
+            mouseScrolled(_mouseX, _mouseY, x, y);
         } catch (const std::exception &e) {
             std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
         }
@@ -794,68 +752,5 @@ namespace psychicui {
     }
 
     // endregion
-
-    // PANELS
-
-    void Window::requestFocus(Component *component) {
-        for (auto w: _focusPath) {
-            if (!w->focused()) {
-                continue;
-            }
-            w->focusEvent(false);
-        }
-        _focusPath.clear();
-        if (component) {
-            _focusPath  = component->path();
-            for (auto w: _focusPath) {
-                w->focusEvent(true);
-            }
-            if (auto  p = component->panel()) {
-                movePanelToFront(p);
-            }
-        }
-    }
-
-    void Window::disposePanel(std::shared_ptr<Panel> panel) {
-//        if (std::find(_focusPath.begin(), _focusPath.end(), panel) != _focusPath.end()) {
-//            _focusPath.clear();
-//        }
-//        if (_dragComponent == panel) {
-//            _dragComponent = nullptr;
-//        }
-//        remove(panel);
-    }
-
-    void Window::centerPanel(std::shared_ptr<Panel> panel) {
-//        if (panel->setSize() == Vector2i::Zero()) {
-//            panel->setSize(panel->preferredSize(_nvgContext));
-//            panel->performLayout(_nvgContext);
-//        }
-//        panel->setPosition((_size - panel->setSize()) / 2);
-    }
-
-    void Window::movePanelToFront(std::shared_ptr<Panel> panel) {
-//        _children.erase(std::remove(_children.begin(), _children.end(), panel), _children.end());
-//        _children.push_back(panel);
-//        /* Brute force topological sort (no problem for a few panels..) */
-//        bool changed = false;
-//        do {
-//            size_t      baseIndex = 0;
-//            for (size_t index     = 0; index < _children.setSize(); ++index) {
-//                if (_children[index] == panel) {
-//                    baseIndex = index;
-//                }
-//            }
-//            changed               = false;
-//            for (size_t index = 0; index < _children.setSize(); ++index) {
-//                auto pw = std::dynamic_pointer_cast<Popup>(_children[index]);
-//                if (pw && pw->parentPanel() == panel && index < baseIndex) {
-//                    movePanelToFront(pw);
-//                    changed = true;
-//                    break;
-//                }
-//            }
-//        } while (changed);
-    }
 
 }

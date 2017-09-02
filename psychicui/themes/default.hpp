@@ -47,6 +47,39 @@ public:
                ->set(backgroundColor, BASE_00);
         // endregion
 
+        // region Buttons
+        manager->style("button")
+               ->set(direction, "row")
+               ->set(alignItems, "center")
+               ->set(padding, 12)
+               ->set(cornerRadius, 6)
+               ->set(backgroundColor, BASE_02)
+               ->set(color, BASE_07)
+               ->set(fontSize, 14)
+               ->set(lineHeight, 14);
+
+        manager->style("button:hover")
+               ->set(backgroundColor, BASE_03);
+
+       manager->style("button:active")
+               ->set(color, BASE_00)
+               ->set(backgroundColor, 0xFF00FFEC);
+        // endregion
+
+        // region Tabs
+        manager->style("tabs")
+               ->set(direction, "row")
+               ->set(borderBottom, 1)
+               ->set(borderColor, BASE_00);
+
+        manager->style("tabs button")
+               ->set(marginHorizontal, -1)
+               ->set(paddingHorizontal, 18)
+               ->set(cornerRadius, 0)
+               ->set(borderHorizontal, 1)
+               ->set(borderColor, BASE_00);
+        // endregion
+
         // region MenuBar
         manager->style("menubar")
                ->set(direction, "row")
@@ -64,7 +97,7 @@ public:
         manager->style("menubar button:hover")
                ->set(color, 0xFF00FFEC);
 
-       manager->style("menubar button:active")
+        manager->style("menubar button:active")
                ->set(color, BASE_00)
                ->set(backgroundColor, 0xFF00FFEC);
 
@@ -83,22 +116,6 @@ public:
                ->set(cornerRadius, 0)
                ->set(borderHorizontal, 1)
                ->set(borderColor, BASE_00);
-        // endregion
-
-        // region Buttons
-        manager->style("button")
-               ->set(direction, "row")
-               ->set(alignItems, "center")
-               ->set(padding, 12)
-               ->set(cornerRadius, 6)
-               ->set(backgroundColor, BASE_02)
-               ->set(color, BASE_07)
-               ->set(fontSize, 14)
-               ->set(lineHeight, 14);
-
-        manager->style("button:hover")
-               ->set(color, BASE_00)
-               ->set(backgroundColor, 0xFF00FFEC);
         // endregion
     }
 };

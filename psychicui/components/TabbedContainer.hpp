@@ -10,22 +10,25 @@ namespace psychicui {
 
     template<class T = std::string>
     class TabbedContainer: public Component {
-        using TabContainerData = std::vector<T>;
-        using GetTabComponentCallback = std::function<std::shared_ptr<Component>(const T &data)>;
-
     public:
-        TabbedContainer(const TabContainerData &data, GetTabComponentCallback getTabComponentCallback);
+        using TabContainerData = typename Tabs<T>::TabData;
+        using LabelCallback = typename Tabs<T>::LabelCallback;
+        using ComponentCallback = std::function<std::shared_ptr<Component>(const T &)>;
+
+        TabbedContainer(const TabContainerData &data, ComponentCallback getComponent, LabelCallback getLabel = nullptr);
     protected:
         void onTabChanged(const T &data);
-        GetTabComponentCallback _getTabComponentCallback{nullptr};
+        ComponentCallback _getTabComponentCallback{nullptr};
     };
 
     template<class T>
-    TabbedContainer<T>::TabbedContainer(const TabbedContainer<T>::TabContainerData &data, TabbedContainer<T>::GetTabComponentCallback getTabComponentCallback) :
+    TabbedContainer<T>::TabbedContainer(const TabContainerData &data, ComponentCallback getComponent, LabelCallback getLabel) :
         Component(),
-        _getTabComponentCallback(getTabComponentCallback) {
+        _getTabComponentCallback(getComponent) {
+        this->setTag("TabbedContainer");
 
-        TabbedContainer<T>::add(std::make_shared<Tabs<T>>(data, [this](const T &data) { onTabChanged(data); }));
+        // Make the tabs component
+        this->add(std::make_shared<Tabs<T>>(data, getLabel, [this](const T &data) { onTabChanged(data); }));
     }
 
     template<class T>

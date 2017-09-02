@@ -24,9 +24,13 @@ namespace psychicui {
         YGNodeFree(_yogaNode);
     }
 
+    // region Lifecycle
+
+    // endregion
+
     // region Hierarchy
 
-    const Window *Component::window() const {
+    Window *Component::window() {
         return _parent ? _parent->window() : nullptr;
     }
 
@@ -39,23 +43,25 @@ namespace psychicui {
     }
 
     void Component::setParent(Component *parent) {
-        _parent = parent;
-        _depth  = parent->depth() + 1;
-        invalidateStyle();
+        if (_parent != parent) {
+            _parent = parent;
+            _depth  = parent->depth() + 1;
+            invalidateStyle();
+        }
     }
 
     const int Component::depth() const {
         return _depth;
     }
 
-    std::vector<std::shared_ptr<Component>> Component::path() {
-        std::vector<std::shared_ptr<Component>> path;
-        if (_parent) {
-            path = _parent->path();
-        }
-        path.insert(path.begin(), shared_from_this());
-        return path;
-    }
+//    std::vector<std::shared_ptr<Component>> Component::path() {
+//        std::vector<std::shared_ptr<Component>> path;
+//        if (_parent) {
+//            path = _parent->path();
+//        }
+//        path.insert(path.begin(), shared_from_this());
+//        return path;
+//    }
 
     std::shared_ptr<Panel> Component::panel() {
         return _parent ? _parent->panel() : nullptr;
@@ -73,25 +79,26 @@ namespace psychicui {
         return _children;
     }
 
-    Component *Component::add(unsigned int index, std::shared_ptr<Component> component) {
+    std::shared_ptr<Component> Component::add(unsigned int index, std::shared_ptr<Component> component) {
         assert(index <= childCount());
         assert(component != nullptr);
+        component->setParent(this);
         _children.insert(_children.begin() + index, component);
         YGNodeInsertChild(_yogaNode, component->yogaNode(), index);
-        component->setParent(this);
-        return component.get();
+        return component;
     }
 
-    Component *Component::add(std::shared_ptr<Component> component) {
+    std::shared_ptr<Component> Component::add(std::shared_ptr<Component> component) {
         assert(component != nullptr);
         add(childCount(), component);
-        return component.get();
+        return component;
     }
 
     void Component::remove(const std::shared_ptr<Component> component) {
         assert(component != nullptr);
         _children.erase(std::remove(_children.begin(), _children.end(), component), _children.end());
         YGNodeRemoveChild(_yogaNode, component->yogaNode());
+        component->setParent(nullptr);
     }
 
     void Component::remove(unsigned int index) {
@@ -159,6 +166,14 @@ namespace psychicui {
 
     // endregion
 
+    // region State
+
+    bool Component::active() const {
+        return _mouseDown;
+    };
+
+    // endregiom
+
     // region Hit Tests
 
     bool Component::contains(const int &x, const int &y) const {
@@ -166,15 +181,15 @@ namespace psychicui {
         return lx >= 0 && lx < _width && ly >= 0 && ly < _height;
     }
 
-    std::shared_ptr<Component> Component::findComponent(const int &x, const int &y) {
-        int             lx = x - _x, ly = y - _y;
-        for (const auto &child: _children) {
-            if (child->visible() && child->contains(lx, ly)) {
-                return child->findComponent(lx, ly);
-            }
-        }
-        return contains(lx, ly) ? shared_from_this() : nullptr;
-    }
+//    std::shared_ptr<Component> Component::findComponent(const int &x, const int &y) {
+//        int             lx = x - _x, ly = y - _y;
+//        for (const auto &child: _children) {
+//            if (child->visible() && child->contains(lx, ly)) {
+//                return child->findComponent(lx, ly);
+//            }
+//        }
+//        return contains(lx, ly) ? shared_from_this() : nullptr;
+//    }
 
     // endregion
 
@@ -538,7 +553,7 @@ namespace psychicui {
             !isnan(_computedStyle->get(borderBottom)) ? _computedStyle->get(borderBottom) : YGUndefined
         );
 
-        if ( _computedStyle->has(BoolProperty::visible) ) {
+        if (_computedStyle->has(BoolProperty::visible)) {
             _visible = _computedStyle->get(BoolProperty::visible);
         }
 
@@ -814,129 +829,119 @@ namespace psychicui {
         invalidateStyle();
     }
 
-    bool Component::mouseEnabled() const {
-        return _mouseEnabled;
-    }
-
-    void Component::setMouseEnabled(bool enabled) {
-        _mouseEnabled = enabled;
-    }
-
-    void Component::onMouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers) {
-
-    }
-
-    void Component::onMouseDown() {
-        invalidateStyle();
-    }
-
-    void Component::onMouseUp() {
-        invalidateStyle();
-    }
-
-    void Component::onMouseUpOutside() {
-        std::cout << "outside" << std::endl;
-        invalidateStyle();
-    }
-
-    bool Component::mouseButtonPropagation(const int &mouseX, const int &mouseY, int button, bool down, int modifiers) {
+    bool Component::mouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers) {
         if (!_visible) {
             return false;
         }
 
-        // First send released outside
+        // First check for released outside
         if (button == GLFW_MOUSE_BUTTON_LEFT && !down && _mouseDown && !contains(mouseX, mouseY)) {
-            _mouseDown = false;
-            onMouseUpOutside();
-            onMouseUp();
+            setMouseDown(false);
+            if (_onMouseUpOutside) {
+                _onMouseUpOutside();
+            }
+            if (_onMouseUp) {
+                _onMouseUp();
+            }
         }
 
         // Find the deepest child that will handle the request
-        // We still have to go through all the children because of the mouseUpOutside
+        // We still have to go through all the children because of the mouseUpOutside handling
         for (const auto &child: _children) {
-            bool handled;
-            if (child->mouseButtonPropagation(mouseX - (int)_x, mouseY - (int)_y, button, down, modifiers)) {
-                handled = true;
-            }
-            if (handled) {
+            if (child->mouseButton(mouseX - _x, mouseY - _y, button, down, modifiers)) {
                 return true;
             }
         }
 
-        if (!_mouseEnabled || !contains(mouseX, mouseY)) {
+        // Now that we checked all the children its time to bail if the mouse is not on us
+        if (!contains(mouseX, mouseY)) {
             return false;
         }
 
-        onMouseButton(mouseX, mouseY, button, down, modifiers);
+        // Generic mouse button handler
+        if (_onMouseButton) {
+            _onMouseButton(mouseX, mouseY, button, down, modifiers);
+        }
 
+        // TODO: All states should have different trees to check for handling
+        //       That or a choice must be made on what can prevent the parent from catching a child click
+        bool handled = false;
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             if (down != _mouseDown) {
-                _mouseDown = down;
-                if (_mouseDown) {
-                    onMouseDown();
-                } else {
-                    onMouseUp();
+                setMouseDown(down);
+                if (_mouseDown && _onMouseDown) {
+                    _onMouseDown();
+                } else if (!_mouseDown) {
+                    if (_onClick) {
+                        _onClick();
+                        handled = true;
+                    }
+                    if (_onMouseUp) {
+                        _onMouseUp();
+                    }
                 }
             }
         }
 
         if (button == GLFW_MOUSE_BUTTON_1 && down && !_focused) {
-            requestFocus();
+            //TODO: requestFocus();
         }
 
-        return true;
+        return handled;
     }
 
-    void Component::onMouseOver() {
-
-    }
-
-    void Component::onMouseOut() {
-
-    }
-
-    void Component::mouseMoved(const int &mouseX, const int &mouseY, int button, int modifiers) {
-
-    }
-
-    void Component::mouseMovedPropagation(const int &mouseX, const int &mouseY, int button, int modifiers) {
+    Cursor Component::mouseMoved(const int &mouseX, const int &mouseY, int button, int modifiers) {
         if (!_visible) {
-            return;
+            return Cursor::Arrow;
         }
 
-        bool over       = contains(mouseX, mouseY);
-        bool overBefore = _mouseOver;
+        bool isOver  = contains(mouseX, mouseY);
+        bool wasOver = _mouseOver;
 
-        if (over != _mouseOver) {
-            setMouseOver(over);
-            if (_mouseOver) {
-                onMouseOver();
-            } else {
-                onMouseOut();
+        // Notify about the change
+        if (isOver != _mouseOver) {
+            setMouseOver(isOver);
+            if (_mouseOver && _onMouseOver) {
+                _onMouseOver();
+            } else if (!_mouseOver && _onMouseOut) {
+                _onMouseOut();
             }
         }
 
-        if (over || overBefore) {
-            mouseMoved(mouseX, mouseY, button, modifiers);
-            for (auto child: _children) {
-                child->mouseMovedPropagation(mouseX - _x, mouseY - _y, button, modifiers);
+        // Notify about movement only if over
+        if (isOver && _onMouseMoved) {
+            _onMouseMoved(mouseX, mouseY, button, modifiers);
+        }
+
+        // Bail if not over and not just out, no work is needed anymore
+        if (!isOver && !wasOver) {
+            return Cursor::Arrow;
+        }
+
+        // Propagate to children (including if we just lost the mouse, a child might be interested)
+        // We pass mouse movement to every children since is doesn't conflict like clicks with depth.
+        Cursor cursor = _cursor;
+        for (const auto &child: _children) {
+            Cursor c = child->mouseMoved(mouseX - _x, mouseY - _y, button, modifiers);
+            if (c != Cursor::Arrow) {
+                cursor = c;
             }
         }
+
+        return cursor;
     }
 
-    void Component::onMouseScrolled(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY) {
-
-    }
-
-    bool Component::mouseScrolledPropagation(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY) {
+    bool Component::mouseScrolled(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY) {
         if (!_visible || !contains(mouseX, mouseY)) {
             return false;
         }
 
-        onMouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        if (_onMouseScrolled) {
+            _onMouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        }
 
         for (auto child: _children) {
-            if (child->mouseScrolledPropagation(mouseX - _x, mouseY - _y, scrollX, scrollY)) {
+            if (child->mouseScrolled(mouseX - _x, mouseY - _y, scrollX, scrollY)) {
                 break;
             }
         }

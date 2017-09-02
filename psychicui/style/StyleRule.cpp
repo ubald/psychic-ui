@@ -78,7 +78,7 @@ namespace psychicui {
                 if (!component->mouseOver()) { return expand && parent && matches(parent, true); }
                 break;
             case active:
-                if (!component->mouseDown()) { return expand && parent && matches(parent, true); }
+                if (!component->active()) { return expand && parent && matches(parent, true); }
                 break;
             default:
                 break;

@@ -3,6 +3,7 @@
 #include <SkColor.h>
 #include <yoga/Yoga.h>
 #include "opengl.hpp"
+//#include <rxcpp/rx.hpp>
 
 // Configuration
 #define DEBUG_STYLES
@@ -16,6 +17,14 @@
 #endif
 
 namespace psychicui {
+    // RXCPP Namespaces are a mess
+//    namespace rx {
+//        using namespace rxcpp;
+//        using namespace rxcpp::sources;
+//        using namespace rxcpp::operators;
+//        using namespace rxcpp::util;
+//    }
+
     enum class Cursor {
         Arrow = 0,
         IBeam,

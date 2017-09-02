@@ -28,6 +28,8 @@ namespace psychicui {
             throw std::runtime_error("Could not initialize GLFW!");
         }
 
+        std::cout << "GLFW Version: " << glfwGetVersionString() << std::endl;
+
         glfwSetTime(0);
 
         // Initialize Yoga

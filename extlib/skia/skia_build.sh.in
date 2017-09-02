@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+
+python tools/git-sync-deps
+
+# It was not building with the skia version
+(cd third_party/externals/sfntly; git checkout master)
+
+bin/gn gen @SKIA_OUTPUT@ --args='is_official_build=true @SKIA_ARGS@'
+@NINJA@ -C @SKIA_OUTPUT@

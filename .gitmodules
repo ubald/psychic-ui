@@ -1,0 +1,15 @@
+[submodule "extlib/external/rxcpp"]
+	path = extlib/external/rxcpp
+	url = git@github.com:Reactive-Extensions/RxCpp.git
+[submodule "extlib/external/glfw"]
+	path = extlib/external/glfw
+	url = git@github.com:glfw/glfw.git
+[submodule "extlib/external/yoga"]
+	path = extlib/external/yoga
+	url = git@github.com:facebook/yoga.git
+[submodule "extlib/external/depot_tools"]
+	path = extlib/external/depot_tools
+	url = https://chromium.googlesource.com/chromium/tools/depot_tools.git
+[submodule "extlib/external/skia"]
+	path = extlib/external/skia
+	url = https://skia.googlesource.com/skia.git

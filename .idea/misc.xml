@@ -11,6 +11,7 @@
       <file path="$PROJECT_DIR$/cmake-build-debug/glfw-prefix/src/glfw/include" />
       <file path="$PROJECT_DIR$/cmake-build-debug/skia-prefix/src/skia/src" />
       <file path="$PROJECT_DIR$/cmake-build-debug/yoga-prefix/src/yoga/yoga" />
+      <file path="$PROJECT_DIR$/extlib/external/rxcpp/Rx/v2/src" />
     </libraryRoots>
   </component>
 </project>
