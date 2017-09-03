@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include "GrContext.h"
 #include "gl/GrGLInterface.h"
 #include "SkData.h"
@@ -22,7 +22,7 @@ namespace psychicui {
 
     class Window : public Component {
     public:
-        static std::map<GLFWwindow *, Window *> windows;
+        static std::unordered_map<GLFWwindow *, Window *> windows;
 
         Window(const std::string &title);
         virtual ~Window();
@@ -47,7 +47,12 @@ namespace psychicui {
 
         void setVisible(bool value) override;
 
+        const int windowX() const;
+        const int windowY() const;
         void setWindowPosition(const int &x, const int &y);
+
+        const int windowWidth() const;
+        const int windowHeight() const;
         void setWindowSize(const int &width, const int &height);
 
         void open();

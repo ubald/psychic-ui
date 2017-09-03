@@ -19,14 +19,14 @@ namespace psychicui {
         bool selected();
         void setSelected(bool selected);
 
-        bool active() const override;
+        const bool active() const override;
 
         void onClick(std::function<void()> callback);
     protected:
         void createChildren();
 
         std::shared_ptr<Label> _label{nullptr};
-        bool _selected;
+        bool _selected{false};
     };
 }
 

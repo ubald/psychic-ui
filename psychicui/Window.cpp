@@ -56,7 +56,7 @@ namespace psychicui {
         #endif
     }
 
-    std::map<GLFWwindow *, Window *> Window::windows;
+    std::unordered_map<GLFWwindow *, Window *> Window::windows;
 
     Window::Window(const std::string &title) :
         Component::Component(),
@@ -451,6 +451,14 @@ namespace psychicui {
 
     // region Position
 
+    const int Window::windowX() const {
+        return _windowX;
+    }
+
+    const int Window::windowY() const {
+        return _windowY;
+    }
+
     void Window::setWindowPosition(const int &x, const int &y) {
         _windowX = x;
         _windowY = y;
@@ -462,6 +470,14 @@ namespace psychicui {
     // endregion
 
     // region Size
+
+    const int Window::windowWidth() const {
+        return _windowWidth;
+    }
+
+    const int Window::windowHeight() const {
+        return _windowHeight;
+    }
 
     void Window::setWindowSize(const int &width, const int &height) {
         _windowWidth  = width;

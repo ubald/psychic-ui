@@ -29,8 +29,8 @@ using namespace psychicui;
 class PsychicUIStyleSheet : public StyleSheet {
 public:
     void load(StyleManager *manager) override {
-        manager->loadFont("stan0755", "res/fonts/stan0755.ttf");
-        manager->loadFont("Ubuntu Light", "res/fonts/Ubuntu/Ubuntu-Light.ttf");
+        manager->loadFont("stan0755", "../res/fonts/stan0755.ttf");
+        manager->loadFont("Ubuntu Light", "../res/fonts/Ubuntu/Ubuntu-Light.ttf");
 
         // region Defaults
         manager->style("*")
@@ -52,7 +52,7 @@ public:
                ->set(direction, "row")
                ->set(alignItems, "center")
                ->set(padding, 12)
-               ->set(cornerRadius, 6)
+               ->set(borderRadius, 6)
                ->set(backgroundColor, BASE_02)
                ->set(color, BASE_07)
                ->set(fontSize, 14)
@@ -75,7 +75,7 @@ public:
         manager->style("tabs button")
                ->set(marginHorizontal, -1)
                ->set(paddingHorizontal, 18)
-               ->set(cornerRadius, 0)
+               ->set(borderRadius, 0)
                ->set(borderHorizontal, 1)
                ->set(borderColor, BASE_00);
         // endregion
@@ -91,7 +91,7 @@ public:
                ->set(fontSize, 10)
                ->set(paddingHorizontal, 12)
                ->set(paddingVertical, 6)
-               ->set(cornerRadius, 0)
+               ->set(borderRadius, 0)
                ->set(backgroundColor, 0x00000000);
 
         manager->style("menubar button:hover")
@@ -113,7 +113,7 @@ public:
         manager->style("toolbar button")
                ->set(marginHorizontal, -1)
                ->set(paddingHorizontal, 18)
-               ->set(cornerRadius, 0)
+               ->set(borderRadius, 0)
                ->set(borderHorizontal, 1)
                ->set(borderColor, BASE_00);
         // endregion

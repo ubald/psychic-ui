@@ -4,6 +4,7 @@
 #include <yoga/Yoga.h>
 #include <SkCanvas.h>
 #include <SkPaint.h>
+#include <SkRRect.h>
 #include "psychicui.hpp"
 #include "psychicui/style/Style.hpp"
 #include "psychicui/style/StyleManager.hpp"
@@ -18,9 +19,11 @@ namespace psychicui {
     class Hatcher {
     public:
         explicit Hatcher(std::function<std::shared_ptr<Component>()> callback) : _callback(callback) {}
+
         std::shared_ptr<Component> hatch() {
             return _callback ? _callback() : nullptr;
         }
+
     protected:
         std::function<std::shared_ptr<Component>()> _callback{nullptr};
     };
@@ -59,9 +62,9 @@ namespace psychicui {
         std::shared_ptr<Component> add(unsigned int index, std::shared_ptr<Component> component);
         std::shared_ptr<Component> add(std::shared_ptr<Component> component);
 
-        template<typename WidgetClass, typename... Args>
-        std::shared_ptr<WidgetClass> add(const Args&... args) {
-            return std::static_pointer_cast<WidgetClass>(add(std::make_shared<WidgetClass>(args...)));
+        template<typename T, typename... Args>
+        std::shared_ptr<T> add(const Args &... args) {
+            return std::static_pointer_cast<T>(add(std::make_shared<T>(args...)));
         }
 
         void remove(unsigned int index);
@@ -79,39 +82,39 @@ namespace psychicui {
         bool focused() const;
         void requestFocus();
         virtual void requestFocus(Component *component);
-        virtual bool active() const;
+        virtual const bool active() const;
 
         // endregion
 
         // region Position
 
-        void setPosition(float x, float y);
-        void setPosition(float left, float top, float right, float bottom);
-        float x() const;
-        void setX(float x);
-        float y() const;
-        void setY(float y);
-        float left() const;
-        void setLeft(float left);
-        float right() const;
-        void setRight(float right);
-        float top() const;
-        void setTop(float top);
-        float bottom() const;
-        void setBottom(float bottom);
+        void setPosition(int x, int y);
+        void setPosition(int left, int top, int right, int bottom);
+        const int x() const;
+        void setX(int x);
+        const int y() const;
+        void setY(int y);
+        const int left() const;
+        void setLeft(int left);
+        const int right() const;
+        void setRight(int right);
+        const int top() const;
+        void setTop(int top);
+        const int bottom() const;
+        void setBottom(int bottom);
 
         // endregion
 
         // region Dimensions
 
-        void setSize(float width, float height);
-        float width() const;
-        void setWidth(float width);
-        float height() const;
-        void setHeight(float height);
-        float percentWidth() const;
+        void setSize(int width, int height);
+        const int width() const;
+        void setWidth(int width);
+        const int height() const;
+        void setHeight(int height);
+        const float percentWidth() const;
         void setPercentWidth(float percentWidth);
-        float percentHeight() const;
+        const float percentHeight() const;
         void setPercentHeight(float percentHeight);
 
         // endregion
@@ -194,6 +197,13 @@ namespace psychicui {
 
 
     protected:
+        bool _enabled{true};
+        bool _visible{true};
+        int  _x{0};
+        int  _y{0};
+        int  _width{0};
+        int  _height{0};
+        bool _wrap{false};
 
         // region Lifecycle
 
@@ -260,23 +270,6 @@ namespace psychicui {
 
         // endregion
 
-        // region Rendering
-
-        bool    _drawBackground{false};
-        SkPaint _backgroundPaint;
-        bool    _drawBorder{false};
-        SkPaint _borderPaint;
-
-        // endregion
-
-        bool _enabled{true};
-        bool _visible{true};
-        int  _x{0};
-        int  _y{0};
-        int  _width{0};
-        int  _height{0};
-        bool _wrap{false};
-
         // region Layout
 
         YGNodeRef _yogaNode{nullptr};
@@ -291,20 +284,38 @@ namespace psychicui {
          */
         SkRect _paddedRect;
 
-        /**
-         * Component's border rect
-         */
-        SkRect _borderValues;
+        // endregion
+
+        // region Rendering
+
+        bool    _drawBackground{false};
+        bool    _drawBorder{false};
+        bool    _drawComplexBorders{false};
+        bool    _drawRoundRect{false};
+        bool    _drawComplexRoundRect{false};
+
+        float _radiusTopLeft{0.0f};
+        float _radiusTopRight{0.0f};
+        float _radiusBottomLeft{0.0f};
+        float _radiusBottomRight{0.0f};
+
+        float _borderLeft{0.0f};
+        float _borderRight{0.0f};
+        float _borderTop{0.0f};
+        float _borderBottom{0.0f};
 
         // endregion
+
+
+
 
         bool _focused{false};
 
         // region Mouse
 
-        Cursor _cursor{Cursor::Arrow};
-        bool   _mouseOver{false};
-        bool   _mouseDown{false};
+        Cursor                                                                               _cursor{Cursor::Arrow};
+        bool                                                                                 _mouseOver{false};
+        bool                                                                                 _mouseDown{false};
 
         Cursor mouseMoved(const int &mouseX, const int &mouseY, int button, int modifiers);
         bool mouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers);
@@ -312,14 +323,30 @@ namespace psychicui {
 
         std::function<void(const int &mouseX, const int &mouseY, int button, int modifiers)> _onMouseMoved{nullptr};
 
-        std::function<void()> _onMouseOver{nullptr};
-        std::function<void()>_onMouseOut{nullptr};
-        std::function<void(const int &mouseX, const int &mouseY, int button, bool down, int modifiers)> _onMouseButton{nullptr};
-        std::function<void()> _onMouseDown{nullptr};
-        std::function<void()> _onClick{nullptr};
-        std::function<void()>_onMouseUp{nullptr};
-        std::function<void()> _onMouseUpOutside{nullptr};
-        std::function<void(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY)> _onMouseScrolled{nullptr};
+        std::function<void()>                                                                             _onMouseOver{
+            nullptr
+        };
+        std::function<void()>                                                                             _onMouseOut{
+            nullptr
+        };
+        std::function<void(const int &mouseX, const int &mouseY, int button, bool down, int modifiers)>   _onMouseButton{
+            nullptr
+        };
+        std::function<void()>                                                                             _onMouseDown{
+            nullptr
+        };
+        std::function<void()>                                                                             _onClick{
+            nullptr
+        };
+        std::function<void()>                                                                             _onMouseUp{
+            nullptr
+        };
+        std::function<void()>                                                                             _onMouseUpOutside{
+            nullptr
+        };
+        std::function<void(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY)> _onMouseScrolled{
+            nullptr
+        };
 
 
         // endregion

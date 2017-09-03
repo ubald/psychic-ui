@@ -1,6 +1,6 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <memory>
 #include "../psychicui.hpp"
@@ -36,7 +36,7 @@ namespace psychicui {
 //        }
 
     protected:
-        std::map<std::string, std::unique_ptr<StyleDeclaration>> _declarations{};
-        std::map<std::string, sk_sp<SkTypeface>>                 _fonts{};
+        std::unordered_map<std::string, std::unique_ptr<StyleDeclaration>> _declarations{};
+        std::unordered_map<std::string, sk_sp<SkTypeface>>                 _fonts{};
     };
 }

@@ -13,5 +13,15 @@ class DemoStyleSheet : public StyleSheet {
 public:
     void load(StyleManager *manager) override {
 
+        manager->style(".demo-panel")
+               ->set(margin, 24)
+               ->set(direction, "row");
+
+        manager->style("buttons button")
+               ->set(margin, 24)
+               // Override the default in order to see the test result
+               ->set(borderRadius, 0)
+               ->set(borderColor, BASE_03);
+
     }
 };

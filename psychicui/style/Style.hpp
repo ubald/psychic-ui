@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cmath>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <string>
 #include <SkTypeface.h>
@@ -25,7 +25,7 @@ bool has(values property) {                                                     
 }                                                                                                                      \
 protected:                                                                                                             \
 static const std::vector<values> name##Inheritable;                                                                    \
-std::map<values, type> _##name##Values{};                                                                              \
+std::unordered_map<values, type> _##name##Values{};                                                                    \
 
 
 namespace psychicui {
@@ -52,7 +52,8 @@ namespace psychicui {
         margin, marginHorizontal, marginLeft, marginRight, marginVertical, marginTop, marginBottom,
         padding, paddingHorizontal, paddingLeft, paddingRight, paddingVertical, paddingTop, paddingBottom,
         border, borderHorizontal, borderLeft, borderRight, borderVertical, borderTop, borderBottom,
-        cornerRadius, cornerRadiusLeft, cornerRadiusRight, cornerRadiusTop, cornerRadiusBottom,
+        borderRadius, borderRadiusTop, borderRadiusBottom, borderRadiusLeft, borderRadiusRight,
+        borderRadiusTopLeft, borderRadiusTopRight, borderRadiusBottomLeft, borderRadiusBottomRight
     };
 
     enum IntProperty {

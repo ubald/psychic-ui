@@ -26,16 +26,14 @@ namespace psychicui {
             {"Buttons", std::make_shared<Hatcher>([]() { return std::make_shared<Buttons>(); })}
         };
 
-        add(
-            std::make_shared<TabbedContainer<std::pair<std::string, std::shared_ptr<Hatcher>>>>(
-                panels,
-                [](const auto &item) {
-                    return item.second->hatch();
-                },
-                [](const auto &item) -> std::string {
-                    return item.first;
-                }
-            )
-        );
+        add<TabbedContainer<std::pair<std::string, std::shared_ptr<Hatcher>>>>(
+            panels,
+            [](const auto &item) {
+                return item.second->hatch();
+            },
+            [](const auto &item) -> std::string {
+                return item.first;
+            }
+        )->select(panels[1]);
     }
 }

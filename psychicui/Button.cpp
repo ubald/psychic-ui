@@ -41,7 +41,7 @@ namespace psychicui {
         invalidateStyle();
     }
 
-    bool Button::active() const {
+    const bool Button::active() const {
         return Component::active() || _selected;
     };
 
