@@ -1,5 +1,5 @@
 #include "ToolBar.hpp"
-#include <psychicui/Button.hpp>
+#include <psychicui/components/Button.hpp>
 #include <psychicui/components/Spacer.hpp>
 
 namespace psychicui {
@@ -8,7 +8,9 @@ namespace psychicui {
         Component() {
         setTag("ToolBar");
         setHeight(48);
-        _style->set(justifyContent, "stretch");
+        _defaults
+            ->set(shrink, 0)
+            ->set(justifyContent, "stretch");
 
         add(std::make_shared<Button>("New"));
         add(std::make_shared<Button>("Start"));
@@ -16,6 +18,11 @@ namespace psychicui {
 
         add(std::make_shared<Spacer>());
 
+        #ifdef DEBUG_LAYOUT
+        auto d = add<Button>("Debug Layout")
+            ->setToggle(true)
+            ->onChange([](bool selected) { Component::debugLayout = selected; });
+        #endif
         add(std::make_shared<Button>("Help"));
     }
 

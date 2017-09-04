@@ -1,5 +1,6 @@
-#include <psychicui/psychicui.hpp>
 #include <iostream>
+#include <psychicui/psychicui.hpp>
+#include "demo.hpp"
 #include "components/Application.hpp"
 
 using namespace psychicui;

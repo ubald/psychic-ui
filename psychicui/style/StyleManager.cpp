@@ -14,54 +14,57 @@ namespace psychicui {
         return instance;
     }
 
-    StyleManager::StyleManager() {
-
-    }
-
-    void StyleManager::loadFont(const std::string &name, const std::string &path) {
+    StyleManager *StyleManager::loadFont(const std::string &name, const std::string &path) {
         _fonts[name] = SkTypeface::MakeFromFile(path.c_str());
+        _valid = false;
+        return this;
     }
 
-    sk_sp<SkTypeface> StyleManager::font(const std::string &name) const {
+    const sk_sp<SkTypeface> StyleManager::font(const std::string &name) const {
         auto font = _fonts.find(name);
         return font != _fonts.end() ? font->second : nullptr;
     }
 
-    Style *StyleManager::style(std::string selector) {
-        std::transform(selector.begin(), selector.end(), selector.begin(), ::tolower);
-        auto it = _declarations.find(selector);
+    Style *StyleManager::style(std::string selectorString) {
+        std::transform(selectorString.begin(), selectorString.end(), selectorString.begin(), ::tolower);
+        auto it = _declarations.find(selectorString);
         if (it != _declarations.end()) {
             return it->second->style();
         } else {
-            auto rule = Rule::fromSelector(selector);
-            if (!rule) {
-                std::cerr << "Invalid selector: \"" << selector << "\", returning dummy style.";
+            auto selector = StyleSelector::fromSelector(selectorString);
+            if (!selector) {
+                std::cerr << "Invalid selector: \"" << selectorString << "\", returning dummy style.";
                 return Style::dummyStyle.get();
             }
 
-            _declarations[selector] = std::make_unique<StyleDeclaration>(std::move(rule));
+            _declarations[selectorString] = std::make_unique<StyleDeclaration>(
+                std::move(selector),
+                [this]() { _valid = false; }
+            );
 
             #ifdef DEBUG_STYLES
-            _declarations[selector]->selector = selector;
+            _declarations[selectorString]->selectorString = selectorString;
             #endif
 
-            return _declarations[selector]->style();
+            return _declarations[selectorString]->style();
         }
     }
 
     std::unique_ptr<Style> StyleManager::computeStyle(const Component *component) {
-        std::vector<std::pair<int, StyleDeclaration*>> directMatches;
+        std::vector<std::pair<int, StyleDeclaration *>> directMatches;
 
         for (const auto &declaration: _declarations) {
-            if (declaration.second->rule()->matches(component)) {
+            if (declaration.second->selector()->matches(component)) {
                 directMatches.emplace_back(declaration.second->weight(), declaration.second.get());
             }
         }
 
         // Sort direct matches by weight, heaviest overlaid last
-        std::sort(directMatches.begin(), directMatches.end(), [](const auto &a, const auto &b) {
-            return a.first < b.first;
-        });
+        std::sort(
+            directMatches.begin(), directMatches.end(), [](const auto &a, const auto &b) {
+                return a.first < b.first;
+            }
+        );
 
         auto s = std::make_unique<Style>(style("*"));
         // Computed inherited values
@@ -79,7 +82,8 @@ namespace psychicui {
         for (const auto &directMatch: directMatches) {
             s->overlay(directMatch.second->style());
             #ifdef DEBUG_STYLES
-            s->declarations.push_back("[weight: " + std::to_string(directMatch.first) + "] " + directMatch.second->selector);
+            s->declarations
+             .push_back("[weight: " + std::to_string(directMatch.first) + "] " + directMatch.second->selectorString);
             #endif
         }
 

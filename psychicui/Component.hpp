@@ -1,6 +1,9 @@
 #pragma once
 
+#include <iostream>
+
 #include <vector>
+#include <unordered_set>
 #include <yoga/Yoga.h>
 #include <SkCanvas.h>
 #include <SkPaint.h>
@@ -34,13 +37,18 @@ namespace psychicui {
 //
 //    using ComponentCreator = std::function<std::shared_ptr<Component>()>;
 
+    using ClickCallback = std::function<void()>;
+    using MouseCallback = std::function<void(const int mouseX, const int mouseY, int button, int modifiers)>;
+    using MouseButtonCallback = std::function<void(const int mouseX, const int mouseY, int button, bool down, int modifiers)>;
+    using MouseScrollCallback = std::function<void(const int mouseX, const int mouseY, const int scrollX, const int scrollY)>;
+
 
     class Component : public std::enable_shared_from_this<Component> {
         friend class StyleManager;
 
     public:
         Component();
-        virtual ~Component();
+        ~Component();
 
         // region Hierarchy
 
@@ -94,34 +102,46 @@ namespace psychicui {
         void setX(int x);
         const int y() const;
         void setY(int y);
-        const int left() const;
+        const int getLeft() const;
         void setLeft(int left);
-        const int right() const;
+        const int getRight() const;
         void setRight(int right);
-        const int top() const;
+        const int getTop() const;
         void setTop(int top);
-        const int bottom() const;
+        const int getBottom() const;
         void setBottom(int bottom);
+        const float getLeftPercent() const;
+        void setLeftPercent(float leftPercent);
+        const float getRightPercent() const;
+        void setRightPercent(float rightPercent);
+        const float getTopPercent() const;
+        void setTopPercent(float topPercent);
+        const float getBottomPercent() const;
+        void setBottomPercent(float bottomPercent);
 
         // endregion
 
         // region Dimensions
 
         void setSize(int width, int height);
-        const int width() const;
+        const int getWidth() const;
         void setWidth(int width);
-        const int height() const;
+        const int getHeight() const;
         void setHeight(int height);
-        const float percentWidth() const;
-        void setPercentWidth(float percentWidth);
-        const float percentHeight() const;
-        void setPercentHeight(float percentHeight);
+        const float getWidthPercent() const;
+        void setWidthPercent(float widthPercent);
+        const float getHeightPercent() const;
+        void setHeightPercent(float heightPercent);
 
         // endregion
 
         // region Layout
 
         void setMeasurable();
+
+        #ifdef DEBUG_LAYOUT
+        static bool debugLayout;
+        #endif
 
         // endregion
 
@@ -160,8 +180,10 @@ namespace psychicui {
         const Style *computedStyle() const;
 
         const std::vector<std::string> &tags() const;
-        const std::vector<std::string> &classNames() const;
-        Component *setClassNames(std::vector<std::string> additionalClassNames);
+        const std::unordered_set<std::string> &classNames() const;
+        Component *setClassNames(std::unordered_set<std::string> additionalClassNames);
+        Component *addClassName(std::string className);
+        Component *removeClassName(std::string className);
 
         // endregion
 
@@ -183,14 +205,59 @@ namespace psychicui {
         bool mouseDown() const;
         void setMouseDown(bool down); // Mostly for testing
 
+        Component *onMouseDown(MouseCallback mouseDown) {
+            _onMouseDown = mouseDown;
+            return this;
+        }
+
+        Component *onMouseUp(MouseCallback mouseUp) {
+            _onMouseUp = mouseUp;
+            return this;
+        }
+
+        Component *onMouseUpOutside(MouseCallback mouseUpOutside) {
+            _onMouseUpOutside = mouseUpOutside;
+            return this;
+        }
+
+        Component *onClick(ClickCallback click) {
+            _onClick = click;
+            return this;
+        }
+
+        Component *onMouseMove(MouseCallback mouseMove) {
+            _onMouseMove = mouseMove;
+            return this;
+        }
+
+        Component *onMouseOver(MouseCallback mouseOver) {
+            _onMouseOver = mouseOver;
+            return this;
+        }
+
+        Component *onMouseOut(MouseCallback mouseOut) {
+            _onMouseOut = mouseOut;
+            return this;
+        }
+
+        Component *onMouseScrolled(MouseScrollCallback mouseScrolled) {
+            _onMouseScroll = mouseScrolled;
+            return this;
+        }
+
+        Component *onMouseButton(MouseButtonCallback mouseButton) {
+            _onMouseButton = mouseButton;
+            return this;
+        }
+
         // endregion
 
-//        std::shared_ptr<Component> findComponent(const int &x, const int &y);
-        inline bool contains(const int &x, const int &y) const;
+//        std::shared_ptr<Component> findComponent(const int x, const int y);
+        inline bool contains(const int x, const int y) const;
 
 
         // Events
-        virtual bool mouseDragEvent(const int &mouseX, const int &mouseY, const int &dragX, const int &dragY, int button, int modifiers);
+        virtual bool mouseDragEvent(const int mouseX, const int mouseY, const int dragX, const int dragY, int button, int modifiers);
         virtual bool focusEvent(bool focused);
         virtual bool keyboardEvent(int key, int scancode, int action, int modifiers);
         virtual bool keyboardCharacterEvent(unsigned int codepoint);
@@ -213,7 +280,7 @@ namespace psychicui {
 
         int                                     _depth{0};
         Component                               *_parent{nullptr};
-        std::vector<std::shared_ptr<Component>> _children;
+        std::vector<std::shared_ptr<Component>> _children{};
 
         // endregion
 
@@ -225,13 +292,20 @@ namespace psychicui {
          * it will stay local for the time being, until a better technique is implemented.
          * @param componentName
          */
-        void setTag(std::string componentName);
+        Component *setTag(std::string componentName);
         std::vector<std::string>                _tags{};
 
         /**
          * Pseudo CSS class names
          */
-        std::vector<std::string> _classNames{};
+        std::unordered_set<std::string> _classNames{};
+
+        /**
+         * Default Style
+         * Use this instead of the inline style when a component needs a specific default for it to work correctly
+         * For example, text components should not grow/shrink as they are inline, but yoga doesn't let us do that.
+         */
+        std::unique_ptr<Style> _defaults{nullptr};
 
         /**
          * Inline Style
@@ -288,11 +362,11 @@ namespace psychicui {
 
         // region Rendering
 
-        bool    _drawBackground{false};
-        bool    _drawBorder{false};
-        bool    _drawComplexBorders{false};
-        bool    _drawRoundRect{false};
-        bool    _drawComplexRoundRect{false};
+        bool _drawBackground{false};
+        bool _drawBorder{false};
+        bool _drawComplexBorders{false};
+        bool _drawRoundRect{false};
+        bool _drawComplexRoundRect{false};
 
         float _radiusTopLeft{0.0f};
         float _radiusTopRight{0.0f};
@@ -313,40 +387,29 @@ namespace psychicui {
 
         // region Mouse
 
-        Cursor                                                                               _cursor{Cursor::Arrow};
-        bool                                                                                 _mouseOver{false};
-        bool                                                                                 _mouseDown{false};
+        Cursor _cursor{Cursor::Arrow};
+        bool   _mouseOver{false};
+        bool   _mouseDown{false};
 
-        Cursor mouseMoved(const int &mouseX, const int &mouseY, int button, int modifiers);
-        bool mouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers);
-        bool mouseScrolled(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY);
+        Cursor mouseMoved(int mouseX, int mouseY, int button, int modifiers);
+        bool mouseButton(int mouseX, int mouseY, int button, bool down, int modifiers);
+        bool mouseScrolled(int mouseX, int mouseY, int scrollX, int scrollY);
 
-        std::function<void(const int &mouseX, const int &mouseY, int button, int modifiers)> _onMouseMoved{nullptr};
+        virtual void onMouseButton(int mouseX, int mouseY, int button, bool down, int modifiers);
+        virtual void onMouseUp(int mouseX, int mouseY, int button, int modifiers);
+        virtual void onMouseUpOutside(int mouseX, int mouseY, int button, int modifiers);
+        virtual void onMouseDown(int mouseX, int mouseY, int button, int modifiers);
+        virtual void onClick();
 
-        std::function<void()>                                                                             _onMouseOver{
-            nullptr
-        };
-        std::function<void()>                                                                             _onMouseOut{
-            nullptr
-        };
-        std::function<void(const int &mouseX, const int &mouseY, int button, bool down, int modifiers)>   _onMouseButton{
-            nullptr
-        };
-        std::function<void()>                                                                             _onMouseDown{
-            nullptr
-        };
-        std::function<void()>                                                                             _onClick{
-            nullptr
-        };
-        std::function<void()>                                                                             _onMouseUp{
-            nullptr
-        };
-        std::function<void()>                                                                             _onMouseUpOutside{
-            nullptr
-        };
-        std::function<void(const int &mouseX, const int &mouseY, const int &scrollX, const int &scrollY)> _onMouseScrolled{
-            nullptr
-        };
+        ClickCallback       _onClick{nullptr};
+        MouseCallback       _onMouseMove{nullptr};
+        MouseCallback       _onMouseOver{nullptr};
+        MouseCallback       _onMouseOut{nullptr};
+        MouseButtonCallback _onMouseButton{nullptr};
+        MouseCallback       _onMouseDown{nullptr};
+        MouseCallback       _onMouseUp{nullptr};
+        MouseCallback       _onMouseUpOutside{nullptr};
+        MouseScrollCallback _onMouseScroll{nullptr};
 
 
         // endregion

@@ -99,10 +99,10 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
 #    psychicui/Panel.hpp
     #    psychicui/Popup.cpp
     #    psychicui/Popup.hpp
-    psychicui/Button.cpp
-    psychicui/Button.hpp
-    psychicui/Label.cpp
-    psychicui/Label.hpp
+    psychicui/components/Button.cpp
+    psychicui/components/Button.hpp
+    psychicui/components/Label.cpp
+    psychicui/components/Label.hpp
     psychicui/Registry.cpp
     psychicui/Registry.hpp
     psychicui/style/StyleManager.cpp
@@ -110,8 +110,8 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/utils/StringUtils.hpp
     psychicui/style/StyleDeclaration.cpp
     psychicui/style/StyleDeclaration.hpp
-    psychicui/style/StyleRule.cpp
-    psychicui/style/StyleRule.hpp
+    psychicui/style/StyleSelector.cpp
+    psychicui/style/StyleSelector.hpp
     psychicui/style/StyleSheet.cpp
     psychicui/style/StyleSheet.hpp
     psychicui/utils/ColorUtils.hpp
@@ -124,7 +124,7 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/components/Tabs.hpp
     psychicui/components/TabbedContainer.cpp
     psychicui/components/TabbedContainer.hpp
-    )
+    psychicui/components/Slider.cpp psychicui/components/Slider.hpp psychicui/Skin.cpp psychicui/Skin.hpp psychicui/skins/SliderSkin.cpp psychicui/skins/SliderSkin.hpp psychicui/SkinnableComponent.hpp)
 add_library(psychicui SHARED ${SOURCE_FILES})
 target_include_directories(psychicui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

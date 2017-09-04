@@ -37,7 +37,7 @@ namespace psychicui {
 //        ((Window *) component)->centerPanel(this);
     }
 
-    bool Panel::mouseDragEvent(const int &mouseX, const int &mouseY, const int &dragX, const int &dragY, int button, int modifiers) {
+    bool Panel::mouseDragEvent(const int mouseX, const int mouseY, const int dragX, const int dragY, int button, int modifiers) {
 //        if (_drag && (button & (1 << GLFW_MOUSE_BUTTON_1)) != 0) {
 //            _x += dragX;
 //            _x = std::min(std::max(_x, 0), parent()->x() - _x);
@@ -48,7 +48,7 @@ namespace psychicui {
         return false;
     }
 
-    void Panel::onMouseButton(const int &mouseX, const int &mouseY, int button, bool down, int modifiers) {
+    void Panel::onMouseButton(const int mouseX, const int mouseY, int button, bool down, int modifiers) {
 //        Component::onMouseButton(mouseX, mouseY, button, down, modifiers);
 //        if (button == GLFW_MOUSE_BUTTON_1) {
 //            _drag = down && (mouseY - _y) < style()->getValue(titleBarHeight);

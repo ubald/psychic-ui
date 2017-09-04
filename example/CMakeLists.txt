@@ -7,10 +7,11 @@ if (PSYCHICUI_BUILD_EXAMPLE)
         demo-stylesheet.hpp
         components/MenuBar.cpp
         components/MenuBar.hpp
-        components/Application.cpp
         components/Application.hpp
         components/ToolBar.cpp
         components/ToolBar.hpp
-        components/Labels.cpp components/Labels.hpp components/Buttons.cpp components/Buttons.hpp)
+        components/Labels.hpp
+        components/Buttons.hpp
+        demo.hpp components/Sliders.hpp)
     target_link_libraries(psychicui_demo psychicui ${PSYCHICUI_EXTRA_LIBS})
 endif ()

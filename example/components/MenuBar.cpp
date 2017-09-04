@@ -1,13 +1,14 @@
 #include "MenuBar.hpp"
-#include <psychicui/Button.hpp>
+#include <psychicui/components/Button.hpp>
 
 namespace psychicui {
 
     MenuBar::MenuBar() :
         Component() {
         setTag("MenuBar");
-        //setHeight(24);
-        //_style->set(justifyContent, "stretch");
+        _defaults
+            ->set(shrink, 0)
+            ->set(justifyContent, "stretch");
 
         add(std::make_shared<Button>("File"));
         add(std::make_shared<Button>("Edit"));
@@ -15,5 +16,5 @@ namespace psychicui {
         add(std::make_shared<Button>("Window"));
         add(std::make_shared<Button>("Help"));
     }
-    
+
 }

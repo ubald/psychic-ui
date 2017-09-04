@@ -548,4 +548,20 @@ TEST_CASE("Regressions") {
 
     }
 
+    SECTION("Should match an added style class") {
+        styleManager->style("component")
+                    ->set(color, 0xFFFF0000);
+
+        styleManager->style("component.class")
+                    ->set(color, 0xFF0000FF);
+
+        auto component = std::make_shared<Component>();
+        component->setStyleManager(styleManager);
+
+        REQUIRE(styleManager->computeStyle(component.get())->get(color) == 0xFFFF0000);
+
+        component->addClassName("class");
+        REQUIRE(styleManager->computeStyle(component.get())->get(color) == 0xFF0000FF);
+    }
+
 }

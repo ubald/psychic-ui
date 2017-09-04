@@ -11,7 +11,7 @@ namespace psychicui {
             Left = 0, Right
         };
         Popup(std::shared_ptr<Panel> parentPanel);
-        void setAnchorPosition(const int &anchorX, const int &anchorY);
+        void setAnchorPosition(const int anchorX, const int anchorY);
         void setAnchorHeight(int anchorHeight);
         int anchorHeight() const;
         void setSide(Side popupSide);

@@ -29,13 +29,20 @@ using namespace psychicui;
 class PsychicUIStyleSheet : public StyleSheet {
 public:
     void load(StyleManager *manager) override {
+        int   text       = 12;
+        int   smallText  = 10;
+        int   mediumText = 14;
+        int   largeText  = 16;
+        int   radius     = 6;
+        Color highlight  = 0xFF00FFEC;
+
         manager->loadFont("stan0755", "../res/fonts/stan0755.ttf");
         manager->loadFont("Ubuntu Light", "../res/fonts/Ubuntu/Ubuntu-Light.ttf");
 
         // region Defaults
         manager->style("*")
                ->set(fontFamily, "Ubuntu Light")
-               ->set(fontSize, 12)
+               ->set(fontSize, text)
                ->set(lineHeight, 16)
                ->set(color, 0xFFFFFFFF)
                ->set(textAntiAlias, true);
@@ -47,23 +54,63 @@ public:
                ->set(backgroundColor, BASE_00);
         // endregion
 
+        // region Labels
+
+        // endregion
+
         // region Buttons
         manager->style("button")
                ->set(direction, "row")
                ->set(alignItems, "center")
                ->set(padding, 12)
-               ->set(borderRadius, 6)
+               ->set(borderRadius, radius)
                ->set(backgroundColor, BASE_02)
                ->set(color, BASE_07)
-               ->set(fontSize, 14)
-               ->set(lineHeight, 14);
+               ->set(fontSize, mediumText)
+               ->set(lineHeight, mediumText);
 
         manager->style("button:hover")
                ->set(backgroundColor, BASE_03);
 
-       manager->style("button:active")
+        manager->style("button:active")
                ->set(color, BASE_00)
-               ->set(backgroundColor, 0xFF00FFEC);
+               ->set(backgroundColor, highlight);
+        // endregion
+
+        // region Sliders
+        manager->style("slider")
+               ->set(height, 24)
+               ->set(borderRadius, radius)
+               ->set(border, 1)
+               ->set(padding, 1)
+               ->set(overflow, "hidden")
+               ->set(borderColor, BASE_02)
+               ->set(backgroundColor, BASE_00)
+               ->set(fontSize, smallText)
+               ->set(color, BASE_04);
+
+        manager->style("slider.inverted:hover")
+               ->set(color, BASE_00);
+
+        manager->style("slider.inverted:active")
+               ->set(color, BASE_00);
+
+        manager->style("slider:hover")
+               ->set(color, BASE_05);
+
+        manager->style("slider .track")
+               ->set(backgroundColor, BASE_01);
+
+        manager->style("slider:hover .track");
+
+        manager->style("slider .range")
+               ->set(backgroundColor, BASE_02);
+
+        manager->style("slider:hover .range")
+               ->set(backgroundColor, BASE_03);
+
+        manager->style("slider:active .range")
+               ->set(backgroundColor, highlight);
         // endregion
 
         // region Tabs
@@ -73,6 +120,8 @@ public:
                ->set(borderColor, BASE_00);
 
         manager->style("tabs button")
+               ->set(fontSize, text)
+               ->set(lineHeight, text)
                ->set(marginHorizontal, -1)
                ->set(paddingHorizontal, 18)
                ->set(borderRadius, 0)
@@ -88,18 +137,19 @@ public:
                ->set(borderColor, BASE_00);
 
         manager->style("menubar button")
-               ->set(fontSize, 10)
+               ->set(fontSize, smallText)
+               ->set(lineHeight, smallText)
                ->set(paddingHorizontal, 12)
                ->set(paddingVertical, 6)
                ->set(borderRadius, 0)
                ->set(backgroundColor, 0x00000000);
 
         manager->style("menubar button:hover")
-               ->set(color, 0xFF00FFEC);
+               ->set(color, highlight);
 
         manager->style("menubar button:active")
                ->set(color, BASE_00)
-               ->set(backgroundColor, 0xFF00FFEC);
+               ->set(backgroundColor, highlight);
 
         // endregion
 

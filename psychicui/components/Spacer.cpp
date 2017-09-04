@@ -4,7 +4,7 @@ namespace psychicui {
 
     Spacer::Spacer() :
         Component() {
-        _style->set(flex, 1);
+        _defaults->set(flex, 1);
     }
 
 }

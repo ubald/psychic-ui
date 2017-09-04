@@ -2,15 +2,20 @@
 
 namespace psychicui {
 
-    StyleDeclaration::StyleDeclaration(std::unique_ptr<Rule> rule) :
-        _rule(std::move(rule)),
-        _style(std::make_unique<Style>()) {
+    StyleDeclaration::StyleDeclaration(std::unique_ptr<StyleSelector> selector) :
+        StyleDeclaration(std::move(selector), nullptr) {}
+
+    StyleDeclaration::StyleDeclaration(std::unique_ptr<StyleSelector> selector, const std::function<void()> &onChanged) :
+        _selector(std::move(selector)),
+        _style(std::make_unique<Style>(onChanged)),
+        _onChanged(onChanged) {
+
         // Compute weight
-        _weight = _rule->weight();
+        _weight = _selector->weight();
     }
 
-    const Rule *StyleDeclaration::rule() const {
-        return _rule.get();
+    const StyleSelector *StyleDeclaration::selector() const {
+        return _selector.get();
     }
 
     Style *StyleDeclaration::style() const {

@@ -62,6 +62,11 @@ namespace psychicui {
                     numScreens++;
                 }
 
+                // Cleanup dirty managers
+                for (auto kv : Window::windows) {
+                    kv.second->styleManager()->setValid();
+                }
+
                 if (numScreens == 0) {
                     mainloop_active = false;
                     break;

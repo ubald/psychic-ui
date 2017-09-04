@@ -1,20 +1,20 @@
 #include <algorithm>
-#include "StyleRule.hpp"
+#include "StyleSelector.hpp"
 #include "../Component.hpp"
 #include "../utils/StringUtils.hpp"
 
 namespace psychicui {
 
-    std::unique_ptr<Rule> Rule::fromSelector(const std::string &selector) {
-        auto                  rule_parts = split(selector, ' ');
-        std::unique_ptr<Rule> rule       = nullptr;
-        for (const auto       &rule_part: rule_parts) {
-            bool hasTag    = rule_part[0] != '.';
-            auto parts     = split(rule_part, '.');
+    std::unique_ptr<StyleSelector> StyleSelector::fromSelector(const std::string &selectorString) {
+        auto                           selector_parts = split(selectorString, ' ');
+        std::unique_ptr<StyleSelector> selector       = nullptr;
+        for (const auto                &selector_part: selector_parts) {
+            bool hasTag    = selector_part[0] != '.';
+            auto parts     = split(selector_part, '.');
             auto partCount = parts.size();
 
             if (partCount > 0) {
-                std::unique_ptr<Rule> r = std::make_unique<Rule>();
+                std::unique_ptr<StyleSelector> r = std::make_unique<StyleSelector>();
                 {
                     // Find pseudp
                     auto pseudoParts = split(parts.back(), ':', false);
@@ -40,20 +40,20 @@ namespace psychicui {
                 r->_classes = std::vector<std::string>(hasTag ? parts.begin() + 1 : parts.begin(), parts.end());
 
 
-                if (rule) {
-                    r->_next = std::move(rule);
+                if (selector) {
+                    r->_next = std::move(selector);
                 }
-                rule = std::move(r);
+                selector = std::move(r);
             }
         }
-        return rule;
+        return selector;
     }
 
-    bool Rule::matches(const Component *component) const {
+    bool StyleSelector::matches(const Component *component) const {
         return matches(component, false);
     }
 
-    bool Rule::matches(const Component *component, bool expand) const {
+    bool StyleSelector::matches(const Component *component, bool expand) const {
         const Component *parent = component->parent();
 
         // Match tag
@@ -84,9 +84,9 @@ namespace psychicui {
                 break;
         }
 
-        // If we are still here it means the first rule level matched us
-        // We have to check if it has a parent rule that matches our parent.
-        // TODO: Check rule length from the start
+        // If we are still here it means the first selector level matched us
+        // We have to check if it has a parent selector that matches our parent.
+        // TODO: Check selector length from the start
         if (_next) {
             return parent && _next->matches(parent, true);
         }
@@ -95,23 +95,23 @@ namespace psychicui {
         return true;
     }
 
-    const std::string Rule::tag() const {
+    const std::string StyleSelector::tag() const {
         return _tag;
     }
 
-    const std::vector<std::string> Rule::classes() const {
+    const std::vector<std::string> StyleSelector::classes() const {
         return _classes;
     }
 
-    const Pseudo Rule::pseudo() const {
+    const Pseudo StyleSelector::pseudo() const {
         return _pseudo;
     }
 
-    const Rule *Rule::next() const {
+    const StyleSelector *StyleSelector::next() const {
         return _next.get();
     }
 
-    const int Rule::weight() const {
+    const int StyleSelector::weight() const {
         int w = _tag.empty() ? 0 : 10;
         w += (int) _classes.size() * 10;
         switch (_pseudo) {

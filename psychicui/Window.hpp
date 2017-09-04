@@ -49,11 +49,11 @@ namespace psychicui {
 
         const int windowX() const;
         const int windowY() const;
-        void setWindowPosition(const int &x, const int &y);
+        void setWindowPosition(const int x, const int y);
 
         const int windowWidth() const;
         const int windowHeight() const;
-        void setWindowSize(const int &width, const int &height);
+        void setWindowSize(const int width, const int height);
 
         void open();
         void drawAll();
@@ -63,14 +63,12 @@ namespace psychicui {
         // Style
 
         /**
-         * Load an instance of StyleSheet T
+         * Helper to forward the stylesheet loading to the style manager
          * @tparam T :StyleSheet
          */
         template<typename T>
         void loadStyleSheet() {
-            static_assert(std::is_base_of<StyleSheet, T>::value, "T must extend StyleSheet");
-            std::make_unique<T>()->load(styleManager());
-            invalidateStyle();
+            styleManager()->loadStyleSheet<T>();
         }
 
     protected:
@@ -138,7 +136,7 @@ namespace psychicui {
         bool keyboardCharacterEvent(unsigned int codepoint) override;
 
         // Window Delegate
-        virtual void windowResized(const int &width, const int &height);
+        virtual void windowResized(const int width, const int height);
         virtual void windowActivated();
         virtual void windowDeactivated();
         virtual void windowMinimized();

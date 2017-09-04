@@ -16,7 +16,7 @@ namespace psychicui {
         using ComponentCallback = std::function<std::shared_ptr<Component>(const T &)>;
 
         TabbedContainer(const TabContainerData &data, ComponentCallback getComponent, LabelCallback getLabel = nullptr);
-        void select(const T &item);
+        TabbedContainer<T> * select(const T &item);
     protected:
         void onTabChanged(const T &item);
         ComponentCallback _getTabComponentCallback{nullptr};
@@ -29,6 +29,7 @@ namespace psychicui {
         Component(),
         _getTabComponentCallback(getComponent) {
         this->setTag("TabbedContainer");
+        _defaults->set(overflow, "hidden");
 
         // Make the tabs component
         _tabs = this->add<Tabs<T>>(data, getLabel, [this](const T &data) { onTabChanged(data); });
@@ -50,9 +51,10 @@ namespace psychicui {
     }
 
     template<class T>
-    void TabbedContainer<T>::select(const T &item) {
+    TabbedContainer<T> * TabbedContainer<T>::select(const T &item) {
         _tabs->select(item);
         onTabChanged(item);
+        return this;
     }
 }
 

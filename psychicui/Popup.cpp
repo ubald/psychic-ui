@@ -9,7 +9,7 @@ namespace psychicui {
         _side(Side::Right) {
     }
 
-    void Popup::setAnchorPosition(const int &anchorX, const int &anchorY) {
+    void Popup::setAnchorPosition(const int anchorX, const int anchorY) {
         _anchorX = anchorX;
         _anchorY = anchorY;
     }

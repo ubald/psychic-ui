@@ -459,7 +459,7 @@ namespace psychicui {
         return _windowY;
     }
 
-    void Window::setWindowPosition(const int &x, const int &y) {
+    void Window::setWindowPosition(const int x, const int y) {
         _windowX = x;
         _windowY = y;
         if (_glfwWindow) {
@@ -479,10 +479,10 @@ namespace psychicui {
         return _windowHeight;
     }
 
-    void Window::setWindowSize(const int &width, const int &height) {
+    void Window::setWindowSize(const int width, const int height) {
         _windowWidth  = width;
         _windowHeight = height;
-        setSize((float) width, (float) height);
+        setSize(_windowWidth, _windowHeight);
         if (_glfwWindow) {
             glfwSetWindowSize(_glfwWindow, _windowWidth, _windowHeight);
         }
@@ -524,15 +524,29 @@ namespace psychicui {
         }
         #endif
 
-        // Do setLayout
+        // Check for dirty style manager
+        // Before layout since it can have an impact on the layout
+        if (!_styleManager->valid()) {
+            updateStyleRecursive();
+            _styleManager->setValid();
+        }
+
+        // Do Layout
         if (YGNodeIsDirty(_yogaNode)) {
             #ifdef DEBUG_LAYOUT
-            std::cout << "Layout dirty!" << std::endl;
+            if (debugLayout) {
+                std::cout << "Layout dirty!" << std::endl;
+            }
             #endif
             YGNodeCalculateLayout(_yogaNode, _windowWidth, _windowWidth, YGDirectionLTR);
             layoutUpdated();
             #ifdef DEBUG_LAYOUT
-            YGNodePrint(_yogaNode, static_cast<YGPrintOptions>(YGPrintOptionsLayout | YGPrintOptionsStyle | YGPrintOptionsChildren));
+            if (debugLayout) {
+                YGNodePrint(_yogaNode,
+                            static_cast<YGPrintOptions>(YGPrintOptionsLayout
+                                                        | YGPrintOptionsStyle
+                                                        | YGPrintOptionsChildren));
+            }
             #endif
         }
 
@@ -574,7 +588,7 @@ namespace psychicui {
 
     // region Callback Delegates
 
-    void Window::windowResized(const int &width, const int &height) {
+    void Window::windowResized(const int width, const int height) {
         // std::cout << "Resized" << std::endl;
     }
 

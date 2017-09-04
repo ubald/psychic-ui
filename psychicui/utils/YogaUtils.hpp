@@ -57,3 +57,7 @@ YGOverflow YogaOverflowFromString(std::string overflow, YGOverflow fallback) {
     else if (overflow == "scroll") { return YGOverflowScroll; }
     else { return fallback; };
 };
+
+float YogaPercent(float value) {
+    return !isnan(value) ? value * 100.f : value;
+}

@@ -11,6 +11,7 @@ namespace psychicui {
     const std::vector<BoolProperty>    Style::boolInheritable{};
 
     std::unique_ptr<Style> Style::dummyStyle{std::make_unique<Style>()};
+    const float Style::Auto = nanf("auto");
 
     Style::Style() {
     }
@@ -19,110 +20,131 @@ namespace psychicui {
         overlay(fromStyle);
     }
 
-    void Style::overlay(const Style *style) {
-        if (!style) {
-            return;
-        }
+    Style::Style(const std::function<void()> &onChanged) :
+        _onChanged(onChanged) {}
 
-        // Unfortunately for now this has to be manual
+    Style * Style::overlay(const Style *style) {
+        if (style) {
 
-        for (auto const &kv : style->_colorValues) {
-            _colorValues[kv.first] = kv.second;
-        }
+            // Unfortunately for now this has to be manual
 
-        for (auto const &kv : style->_stringValues) {
-            _stringValues[kv.first] = kv.second;
-        }
-
-        for (auto const &kv : style->_floatValues) {
-            _floatValues[kv.first] = kv.second;
-        }
-
-        for (auto const &kv : style->_intValues) {
-            _intValues[kv.first] = kv.second;
-        }
-
-        for (auto const &kv : style->_boolValues) {
-            _boolValues[kv.first] = kv.second;
-        }
-
-    }
-
-    void Style::overlayInheritable(const Style *style) {
-        if (!style) {
-            return;
-        }
-
-        // Unfortunately for now this has to be manual
-
-        for (auto const &kv : style->_colorValues) {
-            if (std::find(colorInheritable.begin(), colorInheritable.end(), kv.first) != colorInheritable.end()) {
+            for (auto const &kv : style->_colorValues) {
                 _colorValues[kv.first] = kv.second;
             }
-        }
 
-        for (auto const &kv : style->_stringValues) {
-            if (std::find(stringInheritable.begin(), stringInheritable.end(), kv.first) != stringInheritable.end()) {
+            for (auto const &kv : style->_stringValues) {
                 _stringValues[kv.first] = kv.second;
             }
-        }
 
-        for (auto const &kv : style->_floatValues) {
-            if (std::find(floatInheritable.begin(), floatInheritable.end(), kv.first) != floatInheritable.end()) {
+            for (auto const &kv : style->_floatValues) {
                 _floatValues[kv.first] = kv.second;
             }
-        }
 
-        for (auto const &kv : style->_intValues) {
-            if (std::find(intInheritable.begin(), intInheritable.end(), kv.first) != intInheritable.end()) {
+            for (auto const &kv : style->_intValues) {
                 _intValues[kv.first] = kv.second;
             }
-        }
 
-        for (auto const &kv : style->_boolValues) {
-            if (std::find(boolInheritable.begin(), boolInheritable.end(), kv.first) != boolInheritable.end()) {
+            for (auto const &kv : style->_boolValues) {
                 _boolValues[kv.first] = kv.second;
+            }
+
+            // Just assume something changed
+            if (_onChanged) {
+                _onChanged();
             }
         }
 
+        return this;
     }
 
-    void Style::defaults(const Style *style) {
-        if (!style) {
-            return;
-        }
+    Style * Style::overlayInheritable(const Style *style) {
+        if (style) {
 
-        // Unfortunately for now this has to be manual
+            // Unfortunately for now this has to be manual
 
-        for (auto const &kv : style->_colorValues) {
-            if (_colorValues.find(kv.first) == _colorValues.end()) {
-                _colorValues[kv.first] = kv.second;
+            for (auto const &kv : style->_colorValues) {
+                if (std::find(colorInheritable.begin(), colorInheritable.end(), kv.first) != colorInheritable.end()) {
+                    _colorValues[kv.first] = kv.second;
+                }
+            }
+
+            for (auto const &kv : style->_stringValues) {
+                if (std::find(stringInheritable.begin(), stringInheritable.end(), kv.first)
+                    != stringInheritable.end()) {
+                    _stringValues[kv.first] = kv.second;
+                }
+            }
+
+            for (auto const &kv : style->_floatValues) {
+                if (std::find(floatInheritable.begin(), floatInheritable.end(), kv.first) != floatInheritable.end()) {
+                    _floatValues[kv.first] = kv.second;
+                }
+            }
+
+            for (auto const &kv : style->_intValues) {
+                if (std::find(intInheritable.begin(), intInheritable.end(), kv.first) != intInheritable.end()) {
+                    _intValues[kv.first] = kv.second;
+                }
+            }
+
+            for (auto const &kv : style->_boolValues) {
+                if (std::find(boolInheritable.begin(), boolInheritable.end(), kv.first) != boolInheritable.end()) {
+                    _boolValues[kv.first] = kv.second;
+                }
+            }
+
+
+            // Just assume something changed
+            if (_onChanged) {
+                _onChanged();
             }
         }
 
-        for (auto const &kv : style->_stringValues) {
-            if (_stringValues.find(kv.first) == _stringValues.end()) {
-                _stringValues[kv.first] = kv.second;
+        return this;
+    }
+
+    Style * Style::defaults(const Style *style) {
+        if (style) {
+
+            // Unfortunately for now this has to be manual
+
+            for (auto const &kv : style->_colorValues) {
+                if (_colorValues.find(kv.first) == _colorValues.end()) {
+                    _colorValues[kv.first] = kv.second;
+                }
+            }
+
+            for (auto const &kv : style->_stringValues) {
+                if (_stringValues.find(kv.first) == _stringValues.end()) {
+                    _stringValues[kv.first] = kv.second;
+                }
+            }
+
+            for (auto const &kv : style->_floatValues) {
+                if (_floatValues.find(kv.first) == _floatValues.end()) {
+                    _floatValues[kv.first] = kv.second;
+                }
+            }
+
+            for (auto const &kv : style->_intValues) {
+                if (_intValues.find(kv.first) == _intValues.end()) {
+                    _intValues[kv.first] = kv.second;
+                }
+            }
+
+            for (auto const &kv : style->_boolValues) {
+                if (_boolValues.find(kv.first) == _boolValues.end()) {
+                    _boolValues[kv.first] = kv.second;
+                }
+            }
+
+            // Just assume something changed
+            if (_onChanged) {
+                _onChanged();
             }
         }
 
-        for (auto const &kv : style->_floatValues) {
-            if (_floatValues.find(kv.first) == _floatValues.end()) {
-                _floatValues[kv.first] = kv.second;
-            }
-        }
-
-        for (auto const &kv : style->_intValues) {
-            if (_intValues.find(kv.first) == _intValues.end()) {
-                _intValues[kv.first] = kv.second;
-            }
-        }
-
-        for (auto const &kv : style->_boolValues) {
-            if (_boolValues.find(kv.first) == _boolValues.end()) {
-                _boolValues[kv.first] = kv.second;
-            }
-        }
+        return this;
     }
 
     void Style::trace() const {

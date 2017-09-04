@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include <psychicui/style/StyleRule.hpp>
+#include <psychicui/style/StyleSelector.hpp>
 
 using namespace psychicui;
 
@@ -8,22 +8,22 @@ TEST_CASE("rules from selectors", "[style]") {
     SECTION("invalids") {
 
         SECTION("empty rule") {
-            auto rule = Rule::fromSelector("");
+            auto rule = StyleSelector::fromSelector("");
             REQUIRE(rule == nullptr);
         }
 
         SECTION("space rule") {
-            auto rule = Rule::fromSelector(" ");
+            auto rule = StyleSelector::fromSelector(" ");
             REQUIRE(rule == nullptr);
         }
 
         SECTION("spaces rule") {
-            auto rule = Rule::fromSelector("   ");
+            auto rule = StyleSelector::fromSelector("   ");
             REQUIRE(rule == nullptr);
         }
 
         SECTION("spaces and dots rule") {
-            auto rule = Rule::fromSelector(" . . ");
+            auto rule = StyleSelector::fromSelector(" . . ");
             REQUIRE(rule == nullptr);
         }
 
@@ -32,7 +32,7 @@ TEST_CASE("rules from selectors", "[style]") {
     SECTION("tag rules") {
 
         SECTION("tag") {
-            auto rule = Rule::fromSelector("div");
+            auto rule = StyleSelector::fromSelector("div");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "div");
             REQUIRE(rule->classes().empty());
@@ -41,7 +41,7 @@ TEST_CASE("rules from selectors", "[style]") {
         }
 
         SECTION("tag:pseudo") {
-            auto rule = Rule::fromSelector("div:hover");
+            auto rule = StyleSelector::fromSelector("div:hover");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "div");
             REQUIRE(rule->classes().empty());
@@ -50,7 +50,7 @@ TEST_CASE("rules from selectors", "[style]") {
         }
 
         SECTION("tag.class") {
-            auto rule = Rule::fromSelector("div.styled");
+            auto rule = StyleSelector::fromSelector("div.styled");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "div");
             REQUIRE(rule->classes().size() == 1);
@@ -60,7 +60,7 @@ TEST_CASE("rules from selectors", "[style]") {
         }
 
         SECTION("tag.class:pseudo") {
-            auto rule = Rule::fromSelector("div.styled:hover");
+            auto rule = StyleSelector::fromSelector("div.styled:hover");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "div");
             REQUIRE(rule->classes().size() == 1);
@@ -70,7 +70,7 @@ TEST_CASE("rules from selectors", "[style]") {
         }
 
         SECTION("tag.class.class") {
-            auto rule = Rule::fromSelector("div.styled.more");
+            auto rule = StyleSelector::fromSelector("div.styled.more");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "div");
             REQUIRE(rule->classes().size() == 2);
@@ -81,7 +81,7 @@ TEST_CASE("rules from selectors", "[style]") {
         }
 
         SECTION("tag.class.class:pseudo") {
-            auto rule = Rule::fromSelector("div.styled.more:hover");
+            auto rule = StyleSelector::fromSelector("div.styled.more:hover");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "div");
             REQUIRE(rule->classes().size() == 2);
@@ -96,7 +96,7 @@ TEST_CASE("rules from selectors", "[style]") {
     SECTION("class rules") {
 
         SECTION(".class") {
-            auto rule = Rule::fromSelector(".styled");
+            auto rule = StyleSelector::fromSelector(".styled");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag().empty());
             REQUIRE(rule->classes().size() == 1);
@@ -106,7 +106,7 @@ TEST_CASE("rules from selectors", "[style]") {
         }
 
         SECTION(".class:pseudo") {
-            auto rule = Rule::fromSelector(".styled:hover");
+            auto rule = StyleSelector::fromSelector(".styled:hover");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag().empty());
             REQUIRE(rule->classes().size() == 1);
@@ -116,7 +116,7 @@ TEST_CASE("rules from selectors", "[style]") {
         }
 
         SECTION(".class.class") {
-            auto rule = Rule::fromSelector(".styled.more");
+            auto rule = StyleSelector::fromSelector(".styled.more");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag().empty());
             REQUIRE(rule->classes().size() == 2);
@@ -127,7 +127,7 @@ TEST_CASE("rules from selectors", "[style]") {
         }
 
         SECTION(".class.class:pseudo") {
-            auto rule = Rule::fromSelector(".styled.more:hover");
+            auto rule = StyleSelector::fromSelector(".styled.more:hover");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag().empty());
             REQUIRE(rule->classes().size() == 2);
@@ -142,7 +142,7 @@ TEST_CASE("rules from selectors", "[style]") {
     SECTION("pseudo rules") {
 
         SECTION(":pseudo") {
-            auto rule = Rule::fromSelector(":hover");
+            auto rule = StyleSelector::fromSelector(":hover");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag().empty());
             REQUIRE(rule->classes().empty());
@@ -155,7 +155,7 @@ TEST_CASE("rules from selectors", "[style]") {
     SECTION("nested rules") {
 
         SECTION("tag1 tag2") {
-            auto rule = Rule::fromSelector("tag1 tag2");
+            auto rule = StyleSelector::fromSelector("tag1 tag2");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "tag2");
             REQUIRE(rule->classes().empty());
@@ -168,7 +168,7 @@ TEST_CASE("rules from selectors", "[style]") {
         }
 
         SECTION("tag1.class1 tag2.class2") {
-            auto rule = Rule::fromSelector("tag1.class1 tag2.class2");
+            auto rule = StyleSelector::fromSelector("tag1.class1 tag2.class2");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "tag2");
             REQUIRE(rule->classes().size() == 1);
@@ -183,7 +183,7 @@ TEST_CASE("rules from selectors", "[style]") {
         }
 
         SECTION("tag1.class1:pseudo1 tag2.class2:hover") {
-            auto rule = Rule::fromSelector("tag1.class1:pseudo1 tag2.class2:hover");
+            auto rule = StyleSelector::fromSelector("tag1.class1:pseudo1 tag2.class2:hover");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "tag2");
             REQUIRE(rule->classes().size() == 1);
@@ -198,7 +198,7 @@ TEST_CASE("rules from selectors", "[style]") {
         }
 
         SECTION("just.for:fun .this.one .should not:explode") {
-            auto rule = Rule::fromSelector("just.for:fun .this.one .should not:explode");
+            auto rule = StyleSelector::fromSelector("just.for:fun .this.one .should not:explode");
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "not");
             REQUIRE(rule->classes().empty());
@@ -229,18 +229,18 @@ TEST_CASE("rules from selectors", "[style]") {
 
     SECTION("weights") {
 
-        REQUIRE(Rule::fromSelector("div")->weight() == 10);
-        REQUIRE(Rule::fromSelector("div.class")->weight() == 20);
-        REQUIRE(Rule::fromSelector("div.class:hover")->weight() == 21);
-        REQUIRE(Rule::fromSelector(".class:hover")->weight() == 11);
-        REQUIRE(Rule::fromSelector(".class:fake")->weight() == 10);
-        REQUIRE(Rule::fromSelector("div span")->weight() == 20);
-        REQUIRE(Rule::fromSelector("div span.class")->weight() == 30);
-        REQUIRE(Rule::fromSelector("div span.class.second")->weight() == 40);
-        REQUIRE(Rule::fromSelector("div span.class.second:active")->weight() == 42);
-        REQUIRE(Rule::fromSelector("div.class span.class.second:hover")->weight() == 51);
-        REQUIRE(Rule::fromSelector("div.class:hover span.class.second:hover")->weight() == 52);
-        REQUIRE(Rule::fromSelector("div.class.second:hover span.class.second:hover")->weight() == 62);
+        REQUIRE(StyleSelector::fromSelector("div")->weight() == 10);
+        REQUIRE(StyleSelector::fromSelector("div.class")->weight() == 20);
+        REQUIRE(StyleSelector::fromSelector("div.class:hover")->weight() == 21);
+        REQUIRE(StyleSelector::fromSelector(".class:hover")->weight() == 11);
+        REQUIRE(StyleSelector::fromSelector(".class:fake")->weight() == 10);
+        REQUIRE(StyleSelector::fromSelector("div span")->weight() == 20);
+        REQUIRE(StyleSelector::fromSelector("div span.class")->weight() == 30);
+        REQUIRE(StyleSelector::fromSelector("div span.class.second")->weight() == 40);
+        REQUIRE(StyleSelector::fromSelector("div span.class.second:active")->weight() == 42);
+        REQUIRE(StyleSelector::fromSelector("div.class span.class.second:hover")->weight() == 51);
+        REQUIRE(StyleSelector::fromSelector("div.class:hover span.class.second:hover")->weight() == 52);
+        REQUIRE(StyleSelector::fromSelector("div.class.second:hover span.class.second:hover")->weight() == 62);
 
 
     }

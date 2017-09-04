@@ -14,14 +14,19 @@ public:
     void load(StyleManager *manager) override {
 
         manager->style(".demo-panel")
-               ->set(margin, 24)
-               ->set(direction, "row");
+               ->set(margin, 24);
 
         manager->style("buttons button")
-               ->set(margin, 24)
-               // Override the default in order to see the test result
+               ->set(margin, 12)
+                   // Override the default in order to see the test result
                ->set(borderRadius, 0)
                ->set(borderColor, BASE_03);
+
+        manager->style("labels label")
+               ->set(margin, 12);
+
+        manager->style("sliders slider")
+               ->set(margin, 12);
 
     }
 };

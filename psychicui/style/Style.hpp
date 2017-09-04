@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <functional>
 #include <SkTypeface.h>
 #include "../psychicui.hpp"
 
@@ -16,8 +17,18 @@ type get(values property) const {                                               
         return defaultValue;                                                                                           \
     }                                                                                                                  \
 }                                                                                                                      \
+type get(values property, type fallback) const {                                                                       \
+    try {                                                                                                              \
+        return _##name##Values.at(property);                                                                           \
+    } catch (const std::out_of_range &exception){                                                                      \
+        return fallback;                                                                                               \
+    }                                                                                                                  \
+}                                                                                                                      \
 Style * set(values property, type value) {                                                                             \
     _##name##Values[property] = value;                                                                                 \
+    if (_onChanged) {                                                                                                  \
+        _onChanged();                                                                                                  \
+    }                                                                                                                  \
     return this;                                                                                                       \
 }                                                                                                                      \
 bool has(values property) {                                                                                            \
@@ -33,7 +44,13 @@ namespace psychicui {
     enum ColorProperty {
         color,
         backgroundColor,
-        borderColor, borderHorizontalColor, borderLeftColor, borderRightColor, borderVerticalColor, borderTopColor, borderBottomColor
+        borderColor,
+        borderHorizontalColor,
+        borderLeftColor,
+        borderRightColor,
+        borderVerticalColor,
+        borderTopColor,
+        borderBottomColor
     };
 
     enum StringProperty {
@@ -47,8 +64,9 @@ namespace psychicui {
         opacity,
         flex, grow, shrink, basis,
         fontSize, letterSpacing, lineHeight,
-        width, minWidth, maxWidth,
-        height, minHeight, maxHeight,
+        left, leftPercent, right, rightPercent, top, topPercent, bottom, bottomPercent,
+        width, widthPercent, minWidth, minWidthPercent, maxWidth, maxWidthPercent,
+        height, heightPercent, minHeight, minHeightPercent, maxHeight, maxHeightPercent,
         margin, marginHorizontal, marginLeft, marginRight, marginVertical, marginTop, marginBottom,
         padding, paddingHorizontal, paddingLeft, paddingRight, paddingVertical, paddingTop, paddingBottom,
         border, borderHorizontal, borderLeft, borderRight, borderVertical, borderTop, borderBottom,
@@ -74,8 +92,12 @@ namespace psychicui {
          */
         static std::unique_ptr<Style> dummyStyle;
 
+
+        static const float Auto;
+
         Style();
-        Style(const Style * fromStyle);
+        explicit Style(const Style *fromStyle);
+        explicit Style(const std::function<void()> &onChanged);
 
         sk_sp<SkTypeface> font{nullptr};
 
@@ -83,24 +105,27 @@ namespace psychicui {
          * Add all values from style onto this
          * @param style
          */
-        void overlay(const Style *style);
+        Style * overlay(const Style *style);
 
         /**
          * Add all inheritable values from style onto this
          * @param style
          */
-        void overlayInheritable(const Style *style);
+        Style * overlayInheritable(const Style *style);
 
         /**
          * Fill empty properties in this with values from style
          * @param style
          */
-        void defaults(const Style *style);
+        Style * defaults(const Style *style);
 
         bool operator==(const Style &other) const;
         bool operator!=(const Style &other) const;
 
         void trace() const;
+
+    protected:
+        std::function<void()> _onChanged{nullptr};
 
         // Macro stuff, don't put anything below, it'll end up protected
     PSYCHIC_STYLE_PROPERTY(Color, ColorProperty, color, 0xFF000000);

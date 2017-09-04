@@ -11,8 +11,29 @@
 //}
 //using namespace rx;
 
+class Test {
+public:
+    std::string &text() {
+        return _text;
+    }
+
+    void setText(const std::string &text) {
+        _text = text;
+    }
+
+protected:
+    std::string _text{};
+};
+
 int main() {
     std::cout << "Playground" << std::endl;
 
-    std::cout << (1!=1!=2!=1) << std::endl;
+    Test        t;
+    std::string pouet{"Poupou"};
+    t.setText(pouet);
+    std::cout << t.text() << std::endl;
+    pouet = "coucou";
+    std::cout << t.text() << std::endl;
+    t.text() = "allo";
+    std::cout << t.text() << std::endl;
 }

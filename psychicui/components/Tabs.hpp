@@ -3,7 +3,7 @@
 #include <iostream>
 #include <functional>
 #include <string>
-#include "../Button.hpp"
+#include "Button.hpp"
 #include "DataContainer.hpp"
 
 namespace psychicui {
@@ -19,7 +19,7 @@ namespace psychicui {
 
         void select(const T &item);
     protected:
-        const T *_selected{nullptr};
+        const T               *_selected{nullptr};
         std::vector<Button *> _buttons{};
         TabChanged            _tabChanged{nullptr};
     };
@@ -29,6 +29,7 @@ namespace psychicui {
         DataContainer<T>(data, getLabel),
         _tabChanged(tabChanged) {
         this->setTag("Tabs");
+        this->_defaults->set(shrink, 0);
 
         for (const auto &d: DataContainer<T>::_data) {
             _buttons.push_back(
@@ -42,7 +43,7 @@ namespace psychicui {
                             }
                         }
                     }
-                ).get()
+                )->setToggle(true)
             );
         }
     }

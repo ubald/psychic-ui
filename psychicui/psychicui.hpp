@@ -7,7 +7,7 @@
 
 // Configuration
 #define DEBUG_STYLES
-//#define DEBUG_LAYOUT
+#define DEBUG_LAYOUT
 
 // Define command key for windows/mac/linux
 #ifdef __APPLE__

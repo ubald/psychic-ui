@@ -12,20 +12,20 @@ namespace psychicui {
         active
     };
 
-    class Rule {
+    class StyleSelector {
     public:
-        static std::unique_ptr<Rule> fromSelector(const std::string &selector);
+        static std::unique_ptr<StyleSelector> fromSelector(const std::string &selector);
 
         bool matches(const Component *component) const;
 
         const std::string tag() const;
         const std::vector<std::string> classes() const;
         const Pseudo pseudo() const;
-        const Rule *next() const;
+        const StyleSelector *next() const;
 
         /**
-         * Computes the rule's weight
-         * This is used when trying to figure out rules priority
+         * Computes the selector's weight
+         * This is used when trying to figure out selectors priority
          * @return int
          */
         const int weight() const;
@@ -46,7 +46,7 @@ namespace psychicui {
         std::string              _tag{};
         std::vector<std::string> _classes{};
         Pseudo                   _pseudo{};
-        std::unique_ptr<Rule>    _next{nullptr};
+        std::unique_ptr<StyleSelector>    _next{nullptr};
     };
 }
 
