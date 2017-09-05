@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include "../Component.hpp"
 #include "StyleManager.hpp"
 #include "psychicui/utils/StringUtils.hpp"

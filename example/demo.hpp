@@ -2,7 +2,7 @@
 
 #include <string>
 
-inline std::string lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur et lacus massa. Etiam pulvinar "
+static std::string lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur et lacus massa. Etiam pulvinar "
     "iaculis enim nec aliquam. Cras a convallis metus. Suspendisse nunc metus, ultrices sit amet urna in, euismod "
     "auctor felis. Nullam et dolor at ligula sollicitudin mollis. Donec accumsan vulputate quam et viverra. Mauris "
     "iaculis risus eu consectetur ornare. Phasellus consequat tellus vel vehicula feugiat. Curabitur tortor enim, "

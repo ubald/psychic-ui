@@ -95,8 +95,8 @@ public:
                ->set(borderColor, BASE_00);
 
         manager->style("titlebar label.title")
-                ->set(fontSize, largeText)
-                ->set(grow, 1);
+               ->set(fontSize, largeText)
+               ->set(grow, 1);
 
         manager->style("titlebar button")
                ->set(skin, "title-bar-button")
@@ -154,7 +154,7 @@ public:
         manager->style("range")
                ->set(skin, "slider");
 
-               manager->style("range skin")
+        manager->style("range skin")
                ->set(height, 24)
                ->set(borderRadius, radius)
                ->set(border, 1)

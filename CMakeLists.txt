@@ -138,7 +138,6 @@ target_link_libraries(psychicui
     ${YOGA_LIBRARIES}
     ${SKIA_LIBRARIES}
 )
-message("${SKIA_INCLUDE_DIRS}")
 #add_dependencies(psychicui eigen)
 add_dependencies(psychicui glfw)
 #add_dependencies(psychicui yoga)
@@ -176,5 +175,3 @@ file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 add_subdirectory(tests)
 add_subdirectory(example)
 add_subdirectory(playground)
-
-

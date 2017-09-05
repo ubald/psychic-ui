@@ -13,7 +13,7 @@ namespace psychicui {
      */
     static float get_pixel_ratio(GLFWwindow *window) {
         #if defined(_WIN32)
-        HWND hWnd = glfwGetWin32Window(glfwWindow);
+        HWND hWnd = glfwGetWin32Window(window);
         HMONITOR monitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
         /* The following function only exists on Windows 8.1+, but we don't want to make that a dependency */
         static HRESULT (WINAPI *GetDpiForMonitor_)(HMONITOR, UINT, UINT*, UINT*) = nullptr;
@@ -33,7 +33,7 @@ namespace psychicui {
         }
         return 1.f;
         #elif defined(__linux__)
-        (void) glfwWindow;
+        (void) window;
 
         /* Try to read the pixel ratio from GTK */
         FILE *fp = popen("gsettings get org.gnome.desktop.interface scaling-factor", "r");
@@ -455,7 +455,7 @@ namespace psychicui {
     }
 
     // endregion
-    
+
     // region Maximized
 
     void Window::toggleMaximized() {

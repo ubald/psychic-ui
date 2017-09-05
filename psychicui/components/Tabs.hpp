@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <algorithm>
 #include <functional>
 #include <string>
 #include "Button.hpp"
@@ -58,4 +59,3 @@ namespace psychicui {
     }
 
 }
-

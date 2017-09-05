@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <algorithm>
 #include <yoga/Yoga.h>
 
 YGFlexDirection YogaDirectionFromString(std::string direction, YGFlexDirection fallback) {

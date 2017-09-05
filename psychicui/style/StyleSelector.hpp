@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 #include <string>
 
@@ -54,4 +55,3 @@ namespace psychicui {
         std::unique_ptr<StyleSelector> _next{nullptr};
     };
 }
-
