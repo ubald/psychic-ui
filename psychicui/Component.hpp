@@ -6,7 +6,6 @@
 #include <unordered_set>
 #include <yoga/Yoga.h>
 #include <SkCanvas.h>
-#include <SkPaint.h>
 #include <SkRRect.h>
 #include "psychicui.hpp"
 #include "psychicui/style/Style.hpp"
@@ -18,29 +17,10 @@ namespace psychicui {
 
     class Panel;
 
-
-    class Hatcher {
-    public:
-        explicit Hatcher(std::function<std::shared_ptr<Component>()> callback) : _callback(callback) {}
-
-        std::shared_ptr<Component> hatch() {
-            return _callback ? _callback() : nullptr;
-        }
-
-    protected:
-        std::function<std::shared_ptr<Component>()> _callback{nullptr};
-    };
-
-//    template<typename T> std::shared_ptr<T> component() {
-//        return std::make_shared<T>();
-//    }
-//
-//    using ComponentCreator = std::function<std::shared_ptr<Component>()>;
-
     using ClickCallback = std::function<void()>;
     using MouseCallback = std::function<void(const int mouseX, const int mouseY, int button, int modifiers)>;
     using MouseButtonCallback = std::function<void(const int mouseX, const int mouseY, int button, bool down, int modifiers)>;
-    using MouseScrollCallback = std::function<void(const int mouseX, const int mouseY, const int scrollX, const int scrollY)>;
+    using MouseScrollCallback = std::function<void(const int mouseX, const int mouseY, const double scrollX, const double scrollY)>;
 
 
     class Component : public std::enable_shared_from_this<Component> {
@@ -57,6 +37,7 @@ namespace psychicui {
         const Component *parent() const;
         void setParent(Component *parent);
         const int depth() const;
+
 //        std::vector<std::shared_ptr<Component>> path();
 
         virtual std::shared_ptr<Panel> panel();
@@ -79,7 +60,8 @@ namespace psychicui {
         void remove(const std::shared_ptr<Component> component);
         const Component *at(unsigned int index) const;
         Component *at(unsigned int index);
-        int childIndex(std::shared_ptr<Component> component) const;
+        int childIndex(const std::shared_ptr<Component> component) const;
+        int childIndex(const Component * component) const;
 
         // endregion
 
@@ -87,10 +69,12 @@ namespace psychicui {
 
         bool visible() const;
         virtual void setVisible(bool value);
+        bool enabled() const;
+        virtual void setEnabled(bool value);
+        virtual const bool active() const;
         bool focused() const;
         void requestFocus();
         virtual void requestFocus(Component *component);
-        virtual const bool active() const;
 
         // endregion
 
@@ -200,9 +184,11 @@ namespace psychicui {
 
         Cursor cursor() const;
         void setCursor(Cursor cursor);
+        bool mouseChildren() const;
+        void setMouseChildren(bool mouseChildren);
         bool mouseOver() const;
         void setMouseOver(bool over); // Mostly for testing
-        bool mouseDown() const;
+        bool getMouseDown() const;
         void setMouseDown(bool down); // Mostly for testing
 
         Component *onMouseDown(MouseCallback mouseDown) {
@@ -277,6 +263,11 @@ namespace psychicui {
         // endregion
 
         // region Hierarchy
+
+        virtual void added();
+        virtual void removed();
+        virtual void addedToRender();
+        virtual void removedFromRender();
 
         int                                     _depth{0};
         Component                               *_parent{nullptr};
@@ -380,26 +371,26 @@ namespace psychicui {
 
         // endregion
 
-
-
-
-        bool _focused{false};
-
         // region Mouse
 
         Cursor _cursor{Cursor::Arrow};
+        bool   _mouseChildren{true};
         bool   _mouseOver{false};
         bool   _mouseDown{false};
 
         Cursor mouseMoved(int mouseX, int mouseY, int button, int modifiers);
         bool mouseButton(int mouseX, int mouseY, int button, bool down, int modifiers);
-        bool mouseScrolled(int mouseX, int mouseY, int scrollX, int scrollY);
+        bool mouseDown(int mouseX, int mouseY, int button, int modifiers);
+        bool mouseUp(int mouseX, int mouseY, int button, int modifiers);
+        bool mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
 
         virtual void onMouseButton(int mouseX, int mouseY, int button, bool down, int modifiers);
         virtual void onMouseUp(int mouseX, int mouseY, int button, int modifiers);
         virtual void onMouseUpOutside(int mouseX, int mouseY, int button, int modifiers);
         virtual void onMouseDown(int mouseX, int mouseY, int button, int modifiers);
         virtual void onClick();
+        virtual void onMouseMove(int mouseX, int mouseY, int button, int modifiers);
+        virtual void onMouseScroll(int mouseX, int mouseY, double scrollX, double scrollY);
 
         ClickCallback       _onClick{nullptr};
         MouseCallback       _onMouseMove{nullptr};
@@ -416,10 +407,12 @@ namespace psychicui {
 
 
 
-
+        bool _focused{false};
         void focused(bool focused);
 
-
+    private:
+        void addedToRenderRecursive();
+        void removedFromRenderRecursive();
     };
 }
 

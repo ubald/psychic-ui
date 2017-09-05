@@ -20,10 +20,20 @@ namespace psychicui {
                     auto pseudoParts = split(parts.back(), ':', false);
                     if (pseudoParts.size() > 1) {
                         std::string pseudo = pseudoParts.back();
-                        if (pseudo == "hover") {
+                        if (pseudo == "focus") {
+                            r->_pseudo = focus;
+                        } else if (pseudo == "hover") {
                             r->_pseudo = hover;
                         } else if (pseudo == "active") {
                             r->_pseudo = active;
+                        } else if (pseudo == "disabled") {
+                            r->_pseudo = disabled;
+                        } else if (pseudo == "empty") {
+                            r->_pseudo = empty;
+                        } else if (pseudo == "firstchild") {
+                            r->_pseudo = firstChild;
+                        } else if (pseudo == "lastchild") {
+                            r->_pseudo = lastChild;
                         }
                         parts.back() = pseudoParts.front();
                     }
@@ -73,15 +83,37 @@ namespace psychicui {
         }
 
         // Match pseudo
+        bool matchesPseudo = true;
         switch (_pseudo) {
             case hover:
-                if (!component->mouseOver()) { return expand && parent && matches(parent, true); }
+                matchesPseudo = component->mouseOver();
+                break;
+            case focus:
+                matchesPseudo = component->focused();
                 break;
             case active:
-                if (!component->active()) { return expand && parent && matches(parent, true); }
+                matchesPseudo = component->active();
                 break;
+            case disabled:
+                matchesPseudo = !component->enabled();
+                break;
+            case empty:
+                matchesPseudo = component->childCount() == 0;
+                break;
+            case firstChild:
+                matchesPseudo = component->parent() && component->parent()->childIndex(component) == 0;
+                break;
+            case lastChild:
+                matchesPseudo = component->parent()
+                                && component->parent()->childIndex(component) == component->parent()->childCount() - 1;
+                break;
+
             default:
                 break;
+        }
+
+        if (!matchesPseudo) {
+            return expand && parent && matches(parent, true);
         }
 
         // If we are still here it means the first selector level matched us

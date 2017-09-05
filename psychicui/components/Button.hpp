@@ -3,14 +3,24 @@
 #include <functional>
 #include <utility>
 #include "psychicui/psychicui.hpp"
-#include "psychicui/Component.hpp"
+#include "psychicui/SkinnableComponent.hpp"
+#include "psychicui/Skin.hpp"
 #include "Label.hpp"
 
 namespace psychicui {
-    class Button : public Component {
+    class Button;
+
+    class ButtonSkin : public Skin<Button> {
+    public:
+        virtual void setLabel(const std::string &label) {};
+    };
+
+    class Button : public SkinnableComponent<ButtonSkin> {
     public:
         Button(const std::string &label, ClickCallback onClick);
+
         explicit Button(const std::string &label = "") : Button(label, nullptr) {}
+
         explicit Button(ClickCallback onClick) : Button("", onClick) {}
 
         const std::string &label() const;
@@ -34,11 +44,12 @@ namespace psychicui {
         }
 
     protected:
-        std::shared_ptr<Label>    _label{nullptr};
+        std::string               _label{};
         bool                      _toggle{false};
         bool                      _selected{false};
         std::function<void(bool)> _onChange{nullptr};
 
+        void skinChanged() override;
         void onMouseUp(int mouseX, int mouseY, int button, int modifiers) override;
         void onMouseDown(int mouseX, int mouseY, int button, int modifiers) override;
         void onClick() override;

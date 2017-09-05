@@ -9,14 +9,14 @@
 namespace psychicui {
 
     template<class T = std::string>
-    class TabbedContainer: public Component {
+    class TabContainer: public Component {
     public:
         using TabContainerData = typename Tabs<T>::TabData;
         using LabelCallback = typename Tabs<T>::LabelCallback;
         using ComponentCallback = std::function<std::shared_ptr<Component>(const T &)>;
 
-        TabbedContainer(const TabContainerData &data, ComponentCallback getComponent, LabelCallback getLabel = nullptr);
-        TabbedContainer<T> * select(const T &item);
+        TabContainer(const TabContainerData &data, ComponentCallback getComponent, LabelCallback getLabel = nullptr);
+        TabContainer<T> * select(const T &item);
     protected:
         void onTabChanged(const T &item);
         ComponentCallback _getTabComponentCallback{nullptr};
@@ -25,10 +25,10 @@ namespace psychicui {
     };
 
     template<class T>
-    TabbedContainer<T>::TabbedContainer(const TabContainerData &data, ComponentCallback getComponent, LabelCallback getLabel) :
+    TabContainer<T>::TabContainer(const TabContainerData &data, ComponentCallback getComponent, LabelCallback getLabel) :
         Component(),
         _getTabComponentCallback(getComponent) {
-        this->setTag("TabbedContainer");
+        this->setTag("TabContainer");
         _defaults->set(overflow, "hidden");
 
         // Make the tabs component
@@ -36,7 +36,7 @@ namespace psychicui {
     }
 
     template<class T>
-    void TabbedContainer<T>::onTabChanged(const T &item) {
+    void TabContainer<T>::onTabChanged(const T &item) {
         if (!_getTabComponentCallback) {
             return;
         }
@@ -51,7 +51,7 @@ namespace psychicui {
     }
 
     template<class T>
-    TabbedContainer<T> * TabbedContainer<T>::select(const T &item) {
+    TabContainer<T> * TabContainer<T>::select(const T &item) {
         _tabs->select(item);
         onTabChanged(item);
         return this;

@@ -54,6 +54,7 @@ namespace psychicui {
     };
 
     enum StringProperty {
+        skin,
         fontFamily, textAlign, textJustify,
         position,
         justifyContent, direction, alignContent, alignItems, alignSelf,

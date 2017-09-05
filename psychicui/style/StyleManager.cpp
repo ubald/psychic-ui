@@ -15,7 +15,7 @@ namespace psychicui {
     }
 
     StyleManager *StyleManager::loadFont(const std::string &name, const std::string &path) {
-        _fonts[name] = SkTypeface::MakeFromFile(path.c_str());
+        _fonts.insert({name, SkTypeface::MakeFromFile(path.c_str())});
         _valid = false;
         return this;
     }
@@ -23,6 +23,17 @@ namespace psychicui {
     const sk_sp<SkTypeface> StyleManager::font(const std::string &name) const {
         auto font = _fonts.find(name);
         return font != _fonts.end() ? font->second : nullptr;
+    }
+
+    StyleManager *StyleManager::registerSkin(const std::string &name, SkinMaker hatcher) {
+        _skins.insert(std::make_pair(name, std::move(hatcher)));
+        _valid = false;
+        return this;
+    }
+
+    std::shared_ptr<internal::SkinBase> StyleManager::skin(const std::string &name) {
+        auto skin = _skins.find(name);
+        return skin != _skins.end() ? skin->second->hatch() : nullptr;
     }
 
     Style *StyleManager::style(std::string selectorString) {

@@ -1,9 +1,9 @@
-#include "SliderSkin.hpp"
-#include "../components/Slider.hpp"
+#include "SliderRangeSkin.hpp"
 
 namespace psychicui {
-    SliderSkin::SliderSkin() :
-        Skin() {
+    SliderRangeSkin::SliderRangeSkin() :
+        RangeSkin() {
+            setTag("Slider");
 
         auto container = add<Component>();
         container
@@ -59,22 +59,22 @@ namespace psychicui {
             ;
     }
 
-    void SliderSkin::componentChanged() {
-            setValue(_component ? _component->getValuePercent() : 0.0f);
+    void SliderRangeSkin::added() {
+            setValue(component() ? component()->getLinearPercentage() : 0.0f);
         }
 
-    void SliderSkin::setValue(const float value) {
+    void SliderRangeSkin::setValue(const float value) {
         if (value >= 0.5f) {
-            _component->addClassName("inverted");
+            addClassName("inverted");
         } else {
-            _component->removeClassName("inverted");
+            removeClassName("inverted");
         }
-        _value->setText(_component->valueString());
+        _value->setText(component()->valueString());
         _range->style()->set(widthPercent, value);
     }
 
-    void SliderSkin::sendMouseValue(const int x, const int y) {
-        _component->setValuePercent((float) x / (float) _track->getWidth());
+    void SliderRangeSkin::sendMouseValue(const int x, const int y) {
+        component()->setLinearPercentage((float) x / (float) _track->getWidth());
     }
 
 }

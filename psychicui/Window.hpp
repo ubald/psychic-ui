@@ -38,14 +38,23 @@ namespace psychicui {
         const std::string title() const;
         void setTitle(const std::string &title);
 
-
+        void toggleMinimized();
         bool minimized() const;
         void setMinimized(bool minimized);
 
+        void toggleMaximized();
+        bool maximized() const;
+        void setMaximized(bool minimized);
+
+        void toggleFullscreen();
         bool fullscreen() const;
         void setFullscreen(bool fullscreen);
 
+        bool visible() const;
         void setVisible(bool value) override;
+
+        void startDrag();
+        void stopDrag();
 
         const int windowX() const;
         const int windowY() const;
@@ -56,6 +65,7 @@ namespace psychicui {
         void setWindowSize(const int width, const int height);
 
         void open();
+        void close();
         void drawAll();
         virtual void drawContents();
         void drawComponents();
@@ -90,6 +100,7 @@ namespace psychicui {
         std::string _title;
         bool        _fullscreen{false};
         bool        _minimized{false};
+        bool        _maximized{false};
         bool        _windowFocused{false};
         bool        _resizable{true};
         bool        _decorated{true};
@@ -100,6 +111,11 @@ namespace psychicui {
         int   _fbWidth{0};
         int   _fbHeight{0};
         float _pixelRatio;
+        bool  _dragging{false};
+        int   _windowDragMouseX{0};
+        int   _windowDragMouseY{0};
+        int   _windowDragOffsetX{0};
+        int   _windowDragOffsetY{0};
         int   _windowX{0};
         int   _windowY{0};
         int   _windowWidth{0};
@@ -114,11 +130,11 @@ namespace psychicui {
         // region Mouse
 
         Cursor _mouseCursor;
-        int  _mouseState{0};
-        int  _modifiers{0};
-        int  _mouseX{0};
-        int  _mouseY{0};
-        bool _dragActive{false};
+        int    _mouseState{0};
+        int    _modifiers{0};
+        int    _mouseX{0};
+        int    _mouseY{0};
+        bool   _dragActive{false};
 
         // endregion
 
@@ -136,6 +152,7 @@ namespace psychicui {
         bool keyboardCharacterEvent(unsigned int codepoint) override;
 
         // Window Delegate
+        virtual void windowMoved(const int x, const int y);
         virtual void windowResized(const int width, const int height);
         virtual void windowActivated();
         virtual void windowDeactivated();
@@ -151,6 +168,7 @@ namespace psychicui {
         void dropEventCallback(int count, const char **filenames);
         void scrollEventCallback(double x, double y);
         void resizeEventCallback(int width, int height);
+        void positionEventCallback(int x, int y);
         void focusEventCallback(int focused);
         void iconifyEventCallback(int iconified);
         void closeEventCallback();

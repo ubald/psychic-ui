@@ -25,7 +25,7 @@ public:
         manager->style("labels label")
                ->set(margin, 12);
 
-        manager->style("sliders slider")
+        manager->style("ranges range")
                ->set(margin, 12);
 
     }

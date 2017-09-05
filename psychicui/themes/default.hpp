@@ -2,6 +2,9 @@
 
 #include <psychicui/style/StyleManager.hpp>
 #include <psychicui/style/StyleSheet.hpp>
+#include <psychicui/skins/SliderRangeSkin.hpp>
+#include <psychicui/skins/SimpleButtonSkin.hpp>
+#include <psychicui/skins/TitleBarButtonSkin.hpp>
 
 using namespace psychicui;
 
@@ -23,6 +26,22 @@ using namespace psychicui;
 #define BASE_VIOLET 0xFFAA759F
 #define BASE_BROWN 0xFF8F5536
 
+#define ONE_LIGHT 0xFFABB2BF
+#define ONE_MEDIUM 0xFF828997
+#define ONE_DARK 0xFF5C6370
+#define ONE_CYAN 0xFF56B6C2
+#define ONE_BLUE 0xFF61AFEF
+#define ONE_PURPLE 0xFFC678DD
+#define ONE_GREEN 0xFF98C379
+#define ONE_RED_FADED 0xFFE06C75
+#define ONE_RED 0xFFBE5046
+#define ONE_ORANGE 0xFFD19A66
+#define ONE_YELLOW 0xFFE5C07B
+#define ONE_FOREGROUND 0xFFABB2BF
+#define ONE_BACKGROUND 0xFF282C34
+#define ONE_GUTTER 0xFF636D83
+#define ONE_BLUE_ACCENT 0xFF528BFF
+
 /**
  * PsychicUI Style
  */
@@ -39,6 +58,16 @@ public:
         manager->loadFont("stan0755", "../res/fonts/stan0755.ttf");
         manager->loadFont("Ubuntu Light", "../res/fonts/Ubuntu/Ubuntu-Light.ttf");
 
+        manager->registerSkin(
+            "simple-button-skin",
+            SkinType::make([]() { return std::make_shared<SimpleButtonSkin>(); }));
+        manager->registerSkin(
+            "title-bar-button",
+            SkinType::make([]() { return std::make_shared<TitleBarButtonSkin>(); }));
+        manager->registerSkin(
+            "slider",
+            SkinType::make([]() { return std::make_shared<SliderRangeSkin>(); }));
+
         // region Defaults
         manager->style("*")
                ->set(fontFamily, "Ubuntu Light")
@@ -51,7 +80,50 @@ public:
         // region Window
         manager->style("window")
                ->set(color, 0xFFE0E0E0)
-               ->set(backgroundColor, BASE_00);
+               ->set(backgroundColor, BASE_00)
+               ->set(border, 1)
+               ->set(borderColor, BASE_00);
+        // endregion
+
+        // region Title Bar
+        manager->style("titlebar")
+               ->set(alignItems, "center")
+               ->set(height, 48)
+               ->set(padding, 12)
+               ->set(backgroundColor, BASE_02)
+               ->set(borderBottom, 1)
+               ->set(borderColor, BASE_00);
+
+        manager->style("titlebar label.title")
+                ->set(fontSize, largeText)
+                ->set(grow, 1);
+
+        manager->style("titlebar button")
+               ->set(skin, "title-bar-button")
+               ->set(width, 18)
+               ->set(height, 18)
+               ->set(margin, 3)
+               ->set(padding, 0)
+               ->set(border, 0);
+
+        manager->style("titlebar button.close")
+               ->set(backgroundColor, ONE_RED);
+
+        manager->style("titlebar button.close:hover")
+               ->set(backgroundColor, ONE_RED_FADED);
+
+        manager->style("titlebar button.minimize")
+               ->set(backgroundColor, ONE_ORANGE);
+
+        manager->style("titlebar button.minimize:hover")
+               ->set(backgroundColor, ONE_YELLOW);
+
+        manager->style("titlebar button.maximize")
+               ->set(backgroundColor, BASE_GREEN);
+
+        manager->style("titlebar button.maximize:hover")
+               ->set(backgroundColor, ONE_GREEN);
+
         // endregion
 
         // region Labels
@@ -60,6 +132,7 @@ public:
 
         // region Buttons
         manager->style("button")
+               ->set(skin, "simple-button-skin")
                ->set(direction, "row")
                ->set(alignItems, "center")
                ->set(padding, 12)
@@ -77,8 +150,11 @@ public:
                ->set(backgroundColor, highlight);
         // endregion
 
-        // region Sliders
-        manager->style("slider")
+        // region Ranges
+        manager->style("range")
+               ->set(skin, "slider");
+
+               manager->style("range skin")
                ->set(height, 24)
                ->set(borderRadius, radius)
                ->set(border, 1)
@@ -89,27 +165,27 @@ public:
                ->set(fontSize, smallText)
                ->set(color, BASE_04);
 
-        manager->style("slider.inverted:hover")
+        manager->style("range:hover slider.inverted")
                ->set(color, BASE_00);
 
-        manager->style("slider.inverted:active")
+        manager->style("range:active slider.inverted")
                ->set(color, BASE_00);
 
-        manager->style("slider:hover")
+        manager->style("range:hover slider")
                ->set(color, BASE_05);
 
-        manager->style("slider .track")
+        manager->style("range slider .track")
                ->set(backgroundColor, BASE_01);
 
-        manager->style("slider:hover .track");
+        manager->style("range:hover slider .track");
 
-        manager->style("slider .range")
+        manager->style("range slider .range")
                ->set(backgroundColor, BASE_02);
 
-        manager->style("slider:hover .range")
+        manager->style("range:hover slider .range")
                ->set(backgroundColor, BASE_03);
 
-        manager->style("slider:active .range")
+        manager->style("range:active slider .range")
                ->set(backgroundColor, highlight);
         // endregion
 
@@ -120,13 +196,28 @@ public:
                ->set(borderColor, BASE_00);
 
         manager->style("tabs button")
-               ->set(fontSize, text)
+               ->set(fontSize, smallText)
                ->set(lineHeight, text)
                ->set(marginHorizontal, -1)
-               ->set(paddingHorizontal, 18)
+               ->set(paddingHorizontal, 12)
+               ->set(paddingVertical, 6)
                ->set(borderRadius, 0)
                ->set(borderHorizontal, 1)
                ->set(borderColor, BASE_00);
+
+//        manager->style("tabs button:firstChild")
+//               ->set(borderRadiusLeft, radius);
+//
+//        manager->style("tabs button:lastChild")
+//               ->set(borderRadiusRight, radius);
+
+        // endregion
+
+        // region Tab Container
+
+        manager->style("tabcontainer")
+               ->set(backgroundColor, BASE_01);
+
         // endregion
 
         // region MenuBar

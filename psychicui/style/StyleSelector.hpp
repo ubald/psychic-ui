@@ -8,8 +8,13 @@ namespace psychicui {
 
     enum Pseudo {
         none,
+        focus,
         hover,
-        active
+        active,
+        disabled,
+        empty,
+        firstChild,
+        lastChild
     };
 
     class StyleSelector {
@@ -43,10 +48,10 @@ namespace psychicui {
          * @return
          */
         bool matches(const Component *component, bool expand) const;
-        std::string              _tag{};
-        std::vector<std::string> _classes{};
-        Pseudo                   _pseudo{};
-        std::unique_ptr<StyleSelector>    _next{nullptr};
+        std::string                    _tag{};
+        std::vector<std::string>       _classes{};
+        Pseudo                         _pseudo{none};
+        std::unique_ptr<StyleSelector> _next{nullptr};
     };
 }
 

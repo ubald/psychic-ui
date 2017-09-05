@@ -5,13 +5,14 @@
 #include <psychicui/components/Label.hpp>
 #include <psychicui/components/Button.hpp>
 #include <psychicui/components/Tabs.hpp>
-#include <psychicui/components/TabbedContainer.hpp>
+#include <psychicui/components/TabContainer.hpp>
 #include <psychicui/themes/default.hpp>
+#include <psychicui/components/TitleBar.hpp>
 #include "MenuBar.hpp"
 #include "ToolBar.hpp"
 #include "Labels.hpp"
 #include "Buttons.hpp"
-#include "Sliders.hpp"
+#include "Ranges.hpp"
 #include "../demo-stylesheet.hpp"
 
 namespace psychicui {
@@ -22,20 +23,23 @@ namespace psychicui {
 
     Application::Application() :
         Window("Demo Application") {
+        _decorated = false;
+
         loadStyleSheet<PsychicUIStyleSheet>();
         loadStyleSheet<DemoStyleSheet>();
 
-        add(std::make_shared<MenuBar>());
-        add(std::make_shared<ToolBar>());
+        add<TitleBar>();
 
-        std::vector<std::pair<std::string, std::shared_ptr<Hatcher>>> panels{
-            {"Labels",  std::make_shared<Hatcher>([]() { return std::make_shared<Labels>(); })},
-            {"Buttons", std::make_shared<Hatcher>([]() { return std::make_shared<Buttons>(); })},
-            {"Sliders",   std::make_shared<Hatcher>([]() { return std::make_shared<Sliders>(); })}
-        };
+        add<MenuBar>();
+        add<ToolBar>();
+
+        std::vector<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Component>>>>> panels{};
+        panels.emplace_back(std::make_pair("Labels",  Hatcher<std::shared_ptr<Component>>::make([]() { return std::make_shared<Labels>();  })));
+        panels.emplace_back(std::make_pair("Buttons", Hatcher<std::shared_ptr<Component>>::make([]() { return std::make_shared<Buttons>(); })));
+        panels.emplace_back(std::make_pair("Ranges", Hatcher<std::shared_ptr<Component>>::make([]() { return std::make_shared<Ranges>(); })));
 
 
-        add<TabbedContainer<std::pair<std::string, std::shared_ptr<Hatcher>>>>(
+        add<TabContainer<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Component>>>>>>(
             panels,
             [](const auto &item) {
                 return item.second->hatch();

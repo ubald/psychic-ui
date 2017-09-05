@@ -138,6 +138,7 @@ namespace psychicui {
         }
         #endif
 
+        glfwGetWindowPos(_glfwWindow, &_windowX, &_windowY);
         glfwGetWindowSize(_glfwWindow, &_windowWidth, &_windowHeight);
         _pixelRatio = get_pixel_ratio(_glfwWindow);
         #if defined(_WIN32) || defined(__linux__)
@@ -181,6 +182,11 @@ namespace psychicui {
         }
 
         windows[_glfwWindow] = this;
+    }
+
+    void Window::close() {
+        // TODO: Find a better application-friendly close method
+        _visible = false;
     }
 
     void Window::initSkia() {
@@ -299,6 +305,18 @@ namespace psychicui {
             }
         );
 
+        glfwSetWindowPosCallback(
+            _glfwWindow,
+            [](GLFWwindow *w, int x, int y) {
+                auto it = windows.find(w);
+                if (it == windows.end()) {
+                    return;
+                }
+                Window *s = it->second;
+                s->positionEventCallback(x, y);
+            }
+        );
+
         glfwSetWindowFocusCallback(
             _glfwWindow,
             [](GLFWwindow *w, int focused) {
@@ -370,6 +388,10 @@ namespace psychicui {
 
     // region Fullscreen
 
+    void Window::toggleFullscreen() {
+        setFullscreen(!_fullscreen);
+    }
+
     bool Window::fullscreen() const {
         return _fullscreen;
     }
@@ -411,6 +433,10 @@ namespace psychicui {
 
     // region Minimized
 
+    void Window::toggleMinimized() {
+        setMinimized(!_minimized);
+    }
+
     bool Window::minimized() const {
         return _minimized;
     }
@@ -429,8 +455,37 @@ namespace psychicui {
     }
 
     // endregion
+    
+    // region Maximized
+
+    void Window::toggleMaximized() {
+        setMaximized(!_maximized);
+    }
+
+    bool Window::maximized() const {
+        return _maximized;
+    }
+
+    void Window::setMaximized(bool maximized) {
+        if (_maximized != maximized) {
+            _maximized = maximized;
+            if (_glfwWindow) {
+                if (_maximized) {
+                    glfwMaximizeWindow(_glfwWindow);
+                } else {
+                    glfwRestoreWindow(_glfwWindow);
+                }
+            }
+        }
+    }
+
+    // endregion
 
     // region Visible
+
+    bool Window::visible() const {
+        return _visible;
+    }
 
     void Window::setVisible(bool value) {
         if (_visible != value) {
@@ -450,6 +505,18 @@ namespace psychicui {
     // endregion
 
     // region Position
+
+    void Window::startDrag() {
+        _windowDragMouseX = _mouseX;
+        _windowDragMouseY = _mouseY;
+        _dragging = true;
+    }
+
+    void Window::stopDrag() {
+        _dragging = false;
+        _windowDragMouseX = 0;
+        _windowDragMouseY = 0;
+    }
 
     const int Window::windowX() const {
         return _windowX;
@@ -538,7 +605,7 @@ namespace psychicui {
                 std::cout << "Layout dirty!" << std::endl;
             }
             #endif
-            YGNodeCalculateLayout(_yogaNode, _windowWidth, _windowWidth, YGDirectionLTR);
+            YGNodeCalculateLayout(_yogaNode, _windowWidth, _windowHeight, YGDirectionLTR);
             layoutUpdated();
             #ifdef DEBUG_LAYOUT
             if (debugLayout) {
@@ -588,6 +655,10 @@ namespace psychicui {
 
     // region Callback Delegates
 
+    void Window::windowMoved(const int x, const int y) {
+        // std::cout << "Moved" << std::endl;
+    }
+
     void Window::windowResized(const int width, const int height) {
         // std::cout << "Resized" << std::endl;
     }
@@ -624,12 +695,18 @@ namespace psychicui {
 
         _lastInteraction = glfwGetTime();
 
-        try {
-            // Weird but the cursor seem better aligned like this
-            // At least on a mac...
-            _mouseX = (int) x - 1;
-            _mouseY = (int) y - 2;
+        // Weird but the cursor seem better aligned like this
+        // At least on a mac...
+        _mouseX = (int) x - 1;
+        _mouseY = (int) y - 2;
 
+        if (_dragging) {
+            _windowDragOffsetX = x - _windowDragMouseX;
+            _windowDragOffsetY = y - _windowDragMouseY;
+            setWindowPosition(_windowX + _windowDragOffsetX, _windowY + _windowDragOffsetY);
+        }
+
+        try {
             Cursor cursor = mouseMoved(_mouseX, _mouseY, _mouseState, _modifiers);
             if (cursor != _mouseCursor) {
                 _mouseCursor = cursor;
@@ -653,6 +730,11 @@ namespace psychicui {
             }
 
             mouseButton(_mouseX, _mouseY, button, action == GLFW_PRESS, _modifiers);
+            if (action == GLFW_PRESS) {
+                mouseDown(_mouseX, _mouseY, button, _modifiers);
+            } else {
+                mouseUp(_mouseX, _mouseY, button, _modifiers);
+            }
 
         } catch (const std::exception &e) {
             std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
@@ -739,6 +821,17 @@ namespace psychicui {
 
         try {
             windowResized(_windowWidth, _windowHeight);
+        } catch (const std::exception &e) {
+            std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
+        }
+    }
+
+    void Window::positionEventCallback(int x, int y) {
+        _windowX = x;
+        _windowY = y;
+
+        try {
+            windowMoved(_windowX, _windowY);
         } catch (const std::exception &e) {
             std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
         }

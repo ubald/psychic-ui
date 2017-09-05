@@ -1,6 +1,6 @@
 #include <cmath>
 #include <iostream>
-#include <utility>
+#include <SkPaint.h>
 #include "utils/YogaUtils.hpp"
 #include "Component.hpp"
 #include "Window.hpp"
@@ -55,6 +55,13 @@ namespace psychicui {
                 // because styles control the layout, and we don't want the component
                 // doing a style-less render pass on its first frame alive.
                 updateStyleRecursive();
+                added();
+                if (window()) {
+                    addedToRenderRecursive();
+                }
+            } else {
+                removed();
+                removedFromRenderRecursive();
             }
         }
     }
@@ -62,6 +69,28 @@ namespace psychicui {
     const int Component::depth() const {
         return _depth;
     }
+
+    void Component::added() {}
+
+    void Component::removed() {}
+
+    void Component::addedToRenderRecursive() {
+        addedToRender();
+        for (auto &child: _children) {
+            child->addedToRenderRecursive();
+        }
+    }
+
+    void Component::removedFromRenderRecursive() {
+        removedFromRender();
+        for (auto &child: _children) {
+            child->removedFromRenderRecursive();
+        }
+    }
+
+    void Component::addedToRender() {}
+
+    void Component::removedFromRender() {}
 
     std::shared_ptr<Panel> Component::panel() {
         return _parent ? _parent->panel() : nullptr;
@@ -80,8 +109,8 @@ namespace psychicui {
     }
 
     std::shared_ptr<Component> Component::add(unsigned int index, std::shared_ptr<Component> component) {
-        assert(index <= childCount());
         assert(component != nullptr);
+        assert(index <= childCount());
         component->setParent(this);
         _children.insert(_children.begin() + index, component);
         YGNodeInsertChild(_yogaNode, component->yogaNode(), index);
@@ -90,8 +119,7 @@ namespace psychicui {
 
     std::shared_ptr<Component> Component::add(std::shared_ptr<Component> component) {
         assert(component != nullptr);
-        add(childCount(), component);
-        return component;
+        return add(childCount(), component);
     }
 
     void Component::remove(const std::shared_ptr<Component> component) {
@@ -106,15 +134,30 @@ namespace psychicui {
         std::shared_ptr<Component> component = _children[index];
         _children.erase(_children.begin() + index);
         YGNodeRemoveChild(_yogaNode, component->yogaNode());
+        component->setParent(nullptr);
     }
 
-    int Component::childIndex(std::shared_ptr<Component> component) const {
+    int Component::childIndex(const std::shared_ptr<Component> component) const {
         assert(component != nullptr);
-        auto it = std::find(_children.begin(), _children.end(), component);
-        if (it == _children.end()) {
-            return -1;
-        }
-        return it - _children.begin();
+        auto index = std::distance(
+            _children.begin(),
+            std::find(_children.begin(), _children.end(), component)
+        );
+        return (index >= _children.size()) ? -1 : (int) index;
+    }
+
+    int Component::childIndex(const Component *component) const {
+        assert(component != nullptr);
+        auto index = std::distance(
+            _children.begin(),
+            std::find_if(
+                _children.begin(),
+                _children.end(),
+                [component](const auto &child) {
+                    return child.get() == component;
+                }
+            ));
+        return (index >= _children.size()) ? -1 : (int) index;
     }
 
     const Component *Component::at(unsigned int index) const {
@@ -129,7 +172,7 @@ namespace psychicui {
 
     // endregion
 
-    // region Visibility
+    // region State
 
     bool Component::visible() const {
         return _visible;
@@ -138,6 +181,15 @@ namespace psychicui {
     void Component::setVisible(bool value) {
         _visible = value;
         style()->set(BoolProperty::visible, value);
+    }
+
+    bool Component::enabled() const {
+        return _enabled;
+    }
+
+    void Component::setEnabled(bool value) {
+        _enabled = value;
+        invalidateStyle();
     }
 
     // endregion
@@ -478,8 +530,7 @@ namespace psychicui {
 //        YGNodeStyleSetFlexBasisPercent(_yogaNode, _computedStyle->get(basis));
 
         // endregion
-
-        // TODO: Position
+        // region Position
         if (_computedStyle->has(left)) {
             YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, _computedStyle->get(left, YGUndefined));
         } else {
@@ -503,9 +554,8 @@ namespace psychicui {
                 YGEdgeBottom,
                 YogaPercent(_computedStyle->get(bottomPercent, YGUndefined)));
         }
-
+        // endregion
         // region  Dimensions
-
         if (_computedStyle->has(width)) {
             YGNodeStyleSetWidth(_yogaNode, _computedStyle->get(width, YGUndefined));
         } else {
@@ -537,13 +587,9 @@ namespace psychicui {
         } else {
             YGNodeStyleSetMaxHeightPercent(_yogaNode, YogaPercent(_computedStyle->get(maxHeightPercent, YGUndefined)));
         }
-
         // TODO AspectRatio
-
         // endregion
-
         // region Margins
-
         YGNodeStyleSetMargin(_yogaNode, YGEdgeAll, _computedStyle->get(margin, YGUndefined));
         YGNodeStyleSetMargin(_yogaNode, YGEdgeHorizontal, _computedStyle->get(marginHorizontal, YGUndefined));
         YGNodeStyleSetMargin(_yogaNode, YGEdgeVertical, _computedStyle->get(marginVertical, YGUndefined));
@@ -553,11 +599,8 @@ namespace psychicui {
         YGNodeStyleSetMargin(_yogaNode, YGEdgeBottom, _computedStyle->get(marginBottom, YGUndefined));
         // TODO: Auto
         // TODO: Percent
-
         // endregion
-
         // region Padding
-
         YGNodeStyleSetPadding(_yogaNode, YGEdgeAll, _computedStyle->get(padding, YGUndefined));
         YGNodeStyleSetPadding(_yogaNode, YGEdgeHorizontal, _computedStyle->get(paddingHorizontal, YGUndefined));
         YGNodeStyleSetPadding(_yogaNode, YGEdgeVertical, _computedStyle->get(paddingVertical, YGUndefined));
@@ -566,11 +609,8 @@ namespace psychicui {
         YGNodeStyleSetPadding(_yogaNode, YGEdgeTop, _computedStyle->get(paddingTop, YGUndefined));
         YGNodeStyleSetPadding(_yogaNode, YGEdgeBottom, _computedStyle->get(paddingBottom, YGUndefined));
         // TODO: Percent
-
         // endregion
-
         // region Border
-
         YGNodeStyleSetBorder(_yogaNode, YGEdgeAll, _computedStyle->get(border, YGUndefined));
         YGNodeStyleSetBorder(_yogaNode, YGEdgeHorizontal, _computedStyle->get(borderHorizontal, YGUndefined));
         YGNodeStyleSetBorder(_yogaNode, YGEdgeVertical, _computedStyle->get(borderVertical, YGUndefined));
@@ -578,7 +618,6 @@ namespace psychicui {
         YGNodeStyleSetBorder(_yogaNode, YGEdgeRight, _computedStyle->get(borderRight, YGUndefined));
         YGNodeStyleSetBorder(_yogaNode, YGEdgeTop, _computedStyle->get(borderTop, YGUndefined));
         YGNodeStyleSetBorder(_yogaNode, YGEdgeBottom, _computedStyle->get(borderBottom, YGUndefined));
-
         // endregion
 
         // endregion
@@ -602,8 +641,8 @@ namespace psychicui {
     }
 
     void Component::styleUpdated() {
+        // region Radius
         float tmp;
-
         if (_computedStyle->has(borderRadius)) {
             tmp                = _computedStyle->get(borderRadius);
             _radiusTopLeft     = tmp;
@@ -662,9 +701,11 @@ namespace psychicui {
             && _radiusTopRight == _radiusBottomLeft
             && _radiusBottomLeft == _radiusBottomRight
         );
-
-        _drawBackground = _computedStyle->has(backgroundColor)
-                          && (_computedStyle->get(backgroundColor) != 0x00000000);
+        // endregion
+        // region Background
+        _drawBackground       = _computedStyle->has(backgroundColor)
+                                && (_computedStyle->get(backgroundColor) != 0x00000000);
+        // endregion
     }
 
     // endregion
@@ -996,6 +1037,14 @@ namespace psychicui {
         _cursor = cursor;
     }
 
+    bool Component::mouseChildren() const {
+        return _mouseChildren;
+    }
+
+    void Component::setMouseChildren(bool mouseChildren) {
+        _mouseChildren = mouseChildren;
+    }
+
     bool Component::mouseOver() const {
         return _mouseOver;
     }
@@ -1005,13 +1054,17 @@ namespace psychicui {
         invalidateStyle();
     }
 
-    bool Component::mouseDown() const {
+    // region Buttons
+
+    bool Component::getMouseDown() const {
         return _mouseDown;
     }
 
     void Component::setMouseDown(bool down) {
-        _mouseDown = down;
-        invalidateStyle();
+        if (down != _mouseDown) {
+            _mouseDown = down;
+            invalidateStyle();
+        }
     }
 
     void Component::onMouseButton(const int mouseX, const int mouseY, int button, bool down, int modifiers) {
@@ -1045,61 +1098,105 @@ namespace psychicui {
     }
 
     bool Component::mouseButton(const int mouseX, const int mouseY, int button, bool down, int modifiers) {
+        if (!_visible || !contains(mouseX, mouseY)) {
+            return false;
+        }
+
+        if (_mouseChildren) {
+            for (const auto &child: _children) {
+                if (child->mouseButton(mouseX - _x, mouseY - _y, button, down, modifiers)) {
+                    return true;
+                }
+            }
+        }
+
+        onMouseButton(mouseX, mouseY, button, down, modifiers);
+
+        return true;
+    }
+
+    bool Component::mouseDown(const int mouseX, const int mouseY, int button, int modifiers) {
+        if (!_visible || !contains(mouseX, mouseY)) {
+            return false;
+        }
+
+        if (_mouseChildren) {
+            for (const auto &child: _children) {
+                if (child->mouseDown(mouseX - _x, mouseY - _y, button, modifiers)) {
+                    return true;
+                }
+            }
+        }
+
+        setMouseDown(true);
+        onMouseDown(mouseX, mouseY, button, modifiers);
+
+        return true;
+    }
+
+    bool Component::mouseUp(const int mouseX, const int mouseY, int button, int modifiers) {
         if (!_visible) {
             return false;
         }
 
-        // First check for released outside
-        if (button == GLFW_MOUSE_BUTTON_LEFT && !down && _mouseDown && !contains(mouseX, mouseY)) {
+        // Here we go though all the children before checking collision because we need to find mouse up outside
+        bool handled = false;
+        if (_mouseChildren) {
+            for (const auto &child: _children) {
+                handled |= child->mouseUp(mouseX - _x, mouseY - _y, button, modifiers);
+            }
+        }
+
+        bool inside = contains(mouseX, mouseY);
+        if (!inside && _mouseDown) {
             setMouseDown(false);
             onMouseUpOutside(mouseX, mouseY, button, modifiers);
             onMouseUp(mouseX, mouseY, button, modifiers);
         }
 
-        // Find the deepest child that will handle the request
-        // We still have to go through all the children because of the mouseUpOutside handling
-        for (const auto &child: _children) {
-            if (child->mouseButton(mouseX - _x, mouseY - _y, button, down, modifiers)) {
-                return true;
-            }
-        }
-
-        // Now that we checked all the children its time to bail if the mouse is not on us
-        if (!contains(mouseX, mouseY)) {
+        if (!inside) {
             return false;
         }
 
-        // Generic mouse button handler
-        onMouseButton(mouseX, mouseY, button, down, modifiers);
-
-        // TODO: All states should have different trees to check for handling
-        //       That or a choice must be made on what can prevent the parent from catching a child click
-        bool handled = false;
-        if (button == GLFW_MOUSE_BUTTON_LEFT) {
-            if (down != _mouseDown) {
-                setMouseDown(down);
-                if (_mouseDown) {
-                    onMouseDown(mouseX, mouseY, button, modifiers);
-                } else {
-                    onClick();
-                    if (_onClick) {
-                        handled = true;
-                    }
-                    onMouseUp(mouseX, mouseY, button, modifiers);
-                }
-            }
+        if (handled) {
+            return true;
         }
 
-        if (button == GLFW_MOUSE_BUTTON_1 && down && !_focused) {
-            //TODO: requestFocus();
+        if (_mouseDown) {
+            onClick();
         }
 
-        return handled;
+        setMouseDown(false);
+        onMouseUp(mouseX, mouseY, button, modifiers);
+
+        return true;
+    }
+
+    // endregion
+
+    // region Move
+
+    void Component::onMouseMove(const int mouseX, const int mouseY, const int button, const int modifiers) {
+        if (_onMouseMove) {
+            _onMouseMove(mouseX, mouseY, button, modifiers);
+        }
     }
 
     Cursor Component::mouseMoved(const int mouseX, const int mouseY, int button, int modifiers) {
         if (!_visible) {
             return Cursor::Arrow;
+        }
+
+        Cursor cursor = _cursor;
+        if (_mouseChildren) {
+            // Propagate to children (including if we just lost the mouse, a child might be interested)
+            // We pass mouse movement to every children since is doesn't conflict like clicks with depth.
+            for (const auto &child: _children) {
+                Cursor c = child->mouseMoved(mouseX - _x, mouseY - _y, button, modifiers);
+                if (c != Cursor::Arrow) {
+                    cursor = c;
+                }
+            }
         }
 
         bool isOver  = contains(mouseX, mouseY);
@@ -1115,50 +1212,41 @@ namespace psychicui {
             }
         }
 
-        // Notify about movement only if over
-        // NOTE: Wee need full hierarchy if we want to drag stuff like sliders
-        //       This could be changed if we ever implement events with rxcpp
-        if (/*isOver &&*/ _onMouseMove) {
-            _onMouseMove(mouseX, mouseY, button, modifiers);
-        }
-
-        // Bail if not over and not just out, no work is needed anymore
-        // NOTE: Wee need full hierarchy if we want to drag stuff like sliders
-        //       This could be changed if we ever implement events with rxcpp
-        /*if (!isOver && !wasOver) {
-            return Cursor::Arrow;
-        }*/
-
-        // Propagate to children (including if we just lost the mouse, a child might be interested)
-        // We pass mouse movement to every children since is doesn't conflict like clicks with depth.
-        Cursor          cursor = _cursor;
-        for (const auto &child: _children) {
-            Cursor c = child->mouseMoved(mouseX - _x, mouseY - _y, button, modifiers);
-            if (c != Cursor::Arrow) {
-                cursor = c;
-            }
-        }
+        // NOTE: Wee need full hierarchy if we want to drag stuff like sliders, so not stopping
+        onMouseMove(mouseX, mouseY, button, modifiers);
 
         return (!isOver && !wasOver) ? cursor : Cursor::Arrow;
     }
 
-    bool Component::mouseScrolled(const int mouseX, const int mouseY, const int scrollX, const int scrollY) {
+    // endregion
+
+    // region Scroll
+
+    void Component::onMouseScroll(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
+        if (_onMouseScroll) {
+            _onMouseScroll(mouseX, mouseY, scrollX, scrollY);
+        }
+    }
+
+    bool Component::mouseScrolled(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
         if (!_visible || !contains(mouseX, mouseY)) {
             return false;
         }
 
-        if (_onMouseScroll) {
-            _onMouseScroll(mouseX, mouseY, scrollX, scrollY);
-        }
-
-        for (auto child: _children) {
-            if (child->mouseScrolled(mouseX - _x, mouseY - _y, scrollX, scrollY)) {
-                break;
+        if (_mouseChildren) {
+            for (const auto &child: _children) {
+                if (child->mouseScrolled(mouseX - _x, mouseY - _y, scrollX, scrollY)) {
+                    return true;
+                }
             }
         }
 
+        onMouseScroll(mouseX, mouseY, scrollX, scrollY);
+
         return true;
     }
+
+    // endregion
 
     bool Component::mouseDragEvent(const int mouseX, const int mouseY, const int dragX, const int dragY, int button, int modifiers) {
         return false;
