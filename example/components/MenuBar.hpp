@@ -1,9 +1,9 @@
 #pragma once
 
-#include <psychicui/Component.hpp>
+#include <psychicui/Div.hpp>
 
 namespace psychicui {
-    class MenuBar : public Component {
+    class MenuBar : public Div {
     public:
         MenuBar();
     protected:

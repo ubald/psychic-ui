@@ -1,6 +1,6 @@
 #include <algorithm>
 #include "StyleSelector.hpp"
-#include "../Component.hpp"
+#include "psychicui/Div.hpp"
 #include "../utils/StringUtils.hpp"
 
 namespace psychicui {
@@ -59,12 +59,12 @@ namespace psychicui {
         return selector;
     }
 
-    bool StyleSelector::matches(const Component *component) const {
+    bool StyleSelector::matches(const Div *component) const {
         return matches(component, false);
     }
 
-    bool StyleSelector::matches(const Component *component, bool expand) const {
-        const Component *parent = component->parent();
+    bool StyleSelector::matches(const Div *component, bool expand) const {
+        const Div *parent = component->parent();
 
         // Match tag
         if (!_tag.empty()

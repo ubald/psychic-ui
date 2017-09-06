@@ -2,18 +2,18 @@
 
 #include <memory>
 #include <functional>
-#include "../Component.hpp"
+#include "psychicui/Div.hpp"
 #include "DataContainer.hpp"
 #include "Tabs.hpp"
 
 namespace psychicui {
 
     template<class T = std::string>
-    class TabContainer: public Component {
+    class TabContainer: public Div {
     public:
         using TabContainerData = typename Tabs<T>::TabData;
         using LabelCallback = typename Tabs<T>::LabelCallback;
-        using ComponentCallback = std::function<std::shared_ptr<Component>(const T &)>;
+        using ComponentCallback = std::function<std::shared_ptr<Div>(const T &)>;
 
         TabContainer(const TabContainerData &data, ComponentCallback getComponent, LabelCallback getLabel = nullptr);
         TabContainer<T> * select(const T &item);
@@ -21,15 +21,15 @@ namespace psychicui {
         void onTabChanged(const T &item);
         ComponentCallback _getTabComponentCallback{nullptr};
         std::shared_ptr<Tabs<T>> _tabs;
-        std::shared_ptr<Component> _panel;
+        std::shared_ptr<Div> _panel;
     };
 
     template<class T>
     TabContainer<T>::TabContainer(const TabContainerData &data, ComponentCallback getComponent, LabelCallback getLabel) :
-        Component(),
+        Div(),
         _getTabComponentCallback(getComponent) {
         this->setTag("TabContainer");
-        _defaults->set(overflow, "hidden");
+        _defaultStyle->set(overflow, "hidden");
 
         // Make the tabs component
         _tabs = this->add<Tabs<T>>(data, getLabel, [this](const T &data) { onTabChanged(data); });

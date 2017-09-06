@@ -5,10 +5,10 @@
 namespace psychicui {
 
     Label::Label(const std::string &text) :
-        Component::Component() {
+        Div::Div() {
         setTag("Label");
 
-        _defaults
+        _defaultStyle
             ->set(shrink, 0)
             ->set(grow, 0);
 
@@ -50,7 +50,7 @@ namespace psychicui {
     }
 
     void Label::styleUpdated() {
-        Component::styleUpdated();
+        Div::styleUpdated();
 
         _antiAlias = _computedStyle->get(textAntiAlias);
         float size = _computedStyle->get(fontSize);
@@ -74,7 +74,7 @@ namespace psychicui {
     }
 
     YGSize Label::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
-        YGSize size = Component::measure(width, widthMode, height, heightMode);
+        YGSize size = Div::measure(width, widthMode, height, heightMode);
 
         if (widthMode == YGMeasureModeUndefined) {
             // Don't care about setWidth so do one line
@@ -99,7 +99,7 @@ namespace psychicui {
     }
 
     void Label::draw(SkCanvas *canvas) {
-        Component::draw(canvas);
+        Div::draw(canvas);
         _textBox.setBox(_paddedRect);
         _textBox.draw(canvas);
     }

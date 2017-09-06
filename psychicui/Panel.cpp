@@ -4,7 +4,7 @@
 namespace psychicui {
 
     Panel::Panel(const std::string &title) :
-        Component(),
+        Div(),
         _title(title),
         _buttonPanel(nullptr),
         _modal(false),
@@ -18,11 +18,11 @@ namespace psychicui {
     }
 
     void Panel::draw(SkCanvas *canvas) {
-        Component::draw(canvas);
+        Div::draw(canvas);
     }
 
     void Panel::dispose() {
-//        Component *component = this;
+//        Div *component = this;
 //        while (component->setParent()) {
 //            component = component->setParent();
 //        }
@@ -30,7 +30,7 @@ namespace psychicui {
     }
 
     void Panel::center() {
-//        Component *component = this;
+//        Div *component = this;
 //        while (component->setParent()) {
 //            component = component->setParent();
 //        }
@@ -49,7 +49,7 @@ namespace psychicui {
     }
 
     void Panel::onMouseButton(const int mouseX, const int mouseY, int button, bool down, int modifiers) {
-//        Component::onMouseButton(mouseX, mouseY, button, down, modifiers);
+//        Div::onMouseButton(mouseX, mouseY, button, down, modifiers);
 //        if (button == GLFW_MOUSE_BUTTON_1) {
 //            _drag = down && (mouseY - _y) < style()->getValue(titleBarHeight);
 //        }

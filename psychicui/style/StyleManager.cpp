@@ -1,6 +1,6 @@
 #include <iostream>
 #include <algorithm>
-#include "../Component.hpp"
+#include "psychicui/Div.hpp"
 #include "StyleManager.hpp"
 #include "psychicui/utils/StringUtils.hpp"
 
@@ -62,9 +62,26 @@ namespace psychicui {
         }
     }
 
-    std::unique_ptr<Style> StyleManager::computeStyle(const Component *component) {
+    std::unique_ptr<Style> StyleManager::computeStyle(const Div *component) {
         std::vector<std::pair<int, StyleDeclaration *>> directMatches;
 
+        // Start with global values
+        auto s = std::make_unique<Style>(style("*"));
+
+        // Apply inherited values
+        if (component->_parent) {
+            s->overlayInheritable(component->_parent->_computedStyle.get(), component);
+
+            #ifdef DEBUG_STYLES
+            s->declarations.insert(
+                s->declarations.end(),
+                component->_parent->_computedStyle->declarations.begin(),
+                component->_parent->_computedStyle->declarations.end()
+            );
+            #endif
+        }
+
+        // Get Direct matches
         for (const auto &declaration: _declarations) {
             if (declaration.second->selector()->matches(component)) {
                 directMatches.emplace_back(declaration.second->weight(), declaration.second.get());
@@ -78,28 +95,23 @@ namespace psychicui {
             }
         );
 
-        auto s = std::make_unique<Style>(style("*"));
-        // Computed inherited values
-        if (component->parent()) {
-            s->overlayInheritable(component->parent()->computedStyle());
-            #ifdef DEBUG_STYLES
-            s->declarations.insert(
-                s->declarations.end(),
-                component->parent()->computedStyle()->declarations.begin(),
-                component->parent()->computedStyle()->declarations.end()
-            );
-            #endif
-        }
-
+        // Apply direct matches
         for (const auto &directMatch: directMatches) {
             s->overlay(directMatch.second->style());
+
             #ifdef DEBUG_STYLES
             s->declarations
              .push_back("[weight: " + std::to_string(directMatch.first) + "] " + directMatch.second->selectorString);
             #endif
         }
 
-        return std::move(s);
+        // Overlay "inline" style
+        s->overlay(component->_inlineStyle.get());
+
+        // Set defaults (only after everything else, this way we only fill in the blanks)
+        s->defaults(component->_defaultStyle.get());
+
+        return s;
     }
 
 }

@@ -5,9 +5,9 @@
 namespace psychicui {
 
     TitleBar::TitleBar() :
-        Component() {
+        Div() {
         setTag("TitleBar");
-        _defaults->set(direction, "row");
+        _defaultStyle->set(direction, "row");
 
         add<Button>(
             "Close", [this]() {
@@ -32,19 +32,18 @@ namespace psychicui {
     };
 
     void TitleBar::addedToRender() {
-        Component::addedToRender();
+        Div::addedToRender();
         // TODO: Allow updates to title
         _label->setText(window()->title());
     }
 
     void TitleBar::onMouseDown(int mouseX, int mouseY, int button, int modifiers) {
-        Component::onMouseDown(mouseX, mouseY, button, modifiers);
+        Div::onMouseDown(mouseX, mouseY, button, modifiers);
         window()->startDrag();
-        _children[0]->computedStyle()->trace();
     }
 
     void TitleBar::onMouseUp(int mouseX, int mouseY, int button, int modifiers) {
-        Component::onMouseUp(mouseX, mouseY, button, modifiers);
+        Div::onMouseUp(mouseX, mouseY, button, modifiers);
         window()->stopDrag();
     }
 }

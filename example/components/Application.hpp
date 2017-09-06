@@ -12,6 +12,7 @@
 #include "ToolBar.hpp"
 #include "Labels.hpp"
 #include "Buttons.hpp"
+#include "Divs.hpp"
 #include "Ranges.hpp"
 #include "../demo-stylesheet.hpp"
 
@@ -33,13 +34,14 @@ namespace psychicui {
         add<MenuBar>();
         add<ToolBar>();
 
-        std::vector<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Component>>>>> panels{};
-        panels.emplace_back(std::make_pair("Labels",  Hatcher<std::shared_ptr<Component>>::make([]() { return std::make_shared<Labels>();  })));
-        panels.emplace_back(std::make_pair("Buttons", Hatcher<std::shared_ptr<Component>>::make([]() { return std::make_shared<Buttons>(); })));
-        panels.emplace_back(std::make_pair("Ranges", Hatcher<std::shared_ptr<Component>>::make([]() { return std::make_shared<Ranges>(); })));
+        std::vector<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Div>>>>> panels{};
+        panels.emplace_back(std::make_pair("Divs",  Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Divs>();  })));
+        panels.emplace_back(std::make_pair("Labels",  Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Labels>();  })));
+        panels.emplace_back(std::make_pair("Buttons", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Buttons>(); })));
+        panels.emplace_back(std::make_pair("Ranges", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Ranges>(); })));
 
 
-        add<TabContainer<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Component>>>>>>(
+        add<TabContainer<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Div>>>>>>(
             panels,
             [](const auto &item) {
                 return item.second->hatch();

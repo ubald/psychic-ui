@@ -12,6 +12,6 @@ if (PSYCHICUI_BUILD_EXAMPLE)
         components/ToolBar.hpp
         components/Labels.hpp
         components/Buttons.hpp
-        demo.hpp components/Ranges.hpp)
+        demo.hpp components/Ranges.hpp components/Divs.hpp)
     target_link_libraries(psychicui_demo psychicui ${PSYCHICUI_EXTRA_LIBS})
 endif ()

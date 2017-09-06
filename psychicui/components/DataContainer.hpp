@@ -1,19 +1,19 @@
 #pragma once
 
 #include <typeinfo>
-#include "../Component.hpp"
+#include "psychicui/Div.hpp"
 
 namespace psychicui {
 
     template<class T>
-    class DataContainer : public Component {
+    class DataContainer : public Div {
     public:
 
         using ContainerData = std::vector<T>;
         using LabelCallback = std::function<std::string(const T &)>;
 
         DataContainer(const ContainerData &data, LabelCallback getLabel = nullptr) :
-            Component(),
+            Div(),
             _data(data),
             _getLabel(getLabel) {
             this->setTag("DataContainer");
@@ -43,10 +43,10 @@ namespace psychicui {
     // BASE
 
 //    template<class T>
-//    class DataContainerBase : public Component {
+//    class DataContainerBase : public Div {
 //    public:
 //        DataContainerBase(const ContainerData<T> &data, LabelCallback<T> getLabel) :
-//            Component(),
+//            Div(),
 //            _data(data),
 //            _getLabel(getLabel) {
 //        }

@@ -59,13 +59,13 @@ namespace psychicui {
     std::unordered_map<GLFWwindow *, Window *> Window::windows;
 
     Window::Window(const std::string &title) :
-        Component::Component(),
+        Div::Div(),
         _title(title) {
         setStyleManager(StyleManager::getInstance());
         setTag("Window");
         setWindowSize(1440, 900);
-        _style->set(position, "absolute");
-        _style->set(overflow, "hidden");
+        _inlineStyle->set(position, "absolute");
+        _inlineStyle->set(overflow, "hidden");
     }
 
     Window::~Window() {

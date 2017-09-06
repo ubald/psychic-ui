@@ -1,16 +1,16 @@
 #pragma once
 
-#include <psychicui/Component.hpp>
+#include <psychicui/Div.hpp>
 
 namespace psychicui {
 
-    class Labels : public Component {
+    class Labels : public Div {
     public:
         Labels();
     };
 
 
-    Labels::Labels() : Component() {
+    Labels::Labels() : Div() {
         setTag("Labels");
         setClassNames({"demo-panel"});
 
@@ -44,12 +44,12 @@ namespace psychicui {
             ->style()
             ->set(textAntiAlias, true);
 
-        auto container = add<Component>();
+        auto container = add<Div>();
         container
             ->style()
             ->set(direction, "row");
 
-        auto left = container->add<Component>();
+        auto left = container->add<Div>();
         left
             ->style()
             ->set(grow, 1)
@@ -74,7 +74,7 @@ namespace psychicui {
             ->style()
             ->set(fontSize, 24);
 
-        auto right = container->add<Component>();
+        auto right = container->add<Div>();
         right
             ->style()
             ->set(grow, 1)

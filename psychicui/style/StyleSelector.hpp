@@ -5,7 +5,7 @@
 #include <string>
 
 namespace psychicui {
-    class Component;
+    class Div;
 
     enum Pseudo {
         none,
@@ -22,7 +22,7 @@ namespace psychicui {
     public:
         static std::unique_ptr<StyleSelector> fromSelector(const std::string &selector);
 
-        bool matches(const Component *component) const;
+        bool matches(const Div *component) const;
 
         const std::string tag() const;
         const std::vector<std::string> classes() const;
@@ -48,7 +48,7 @@ namespace psychicui {
          * @param expand bool - Expand the search to the parent
          * @return
          */
-        bool matches(const Component *component, bool expand) const;
+        bool matches(const Div *component, bool expand) const;
         std::string                    _tag{};
         std::vector<std::string>       _classes{};
         Pseudo                         _pseudo{none};

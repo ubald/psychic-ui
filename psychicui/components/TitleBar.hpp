@@ -2,10 +2,10 @@
 
 #include <memory>
 #include "Label.hpp"
-#include "../Component.hpp"
+#include "psychicui/Div.hpp"
 
 namespace psychicui {
-    class TitleBar: public Component {
+    class TitleBar: public Div {
     public:
     TitleBar();
     protected:

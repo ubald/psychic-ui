@@ -4,9 +4,9 @@
 namespace psychicui {
 
     MenuBar::MenuBar() :
-        Component() {
+        Div() {
         setTag("MenuBar");
-        _defaults
+        _defaultStyle
             ->set(shrink, 0)
             ->set(justifyContent, "stretch");
 

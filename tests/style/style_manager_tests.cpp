@@ -2,7 +2,7 @@
 #include "catch.hpp"
 #include <psychicui/style/StyleManager.hpp>
 #include <psychicui/style/Style.hpp>
-#include <psychicui/Component.hpp>
+#include <psychicui/Div.hpp>
 
 using namespace psychicui;
 
@@ -15,217 +15,217 @@ TEST_CASE("basic style getter", "[style]") {
     }
 
     SECTION("returns the same style with same name") {
-        auto style = styleManager->style("component");
-        REQUIRE(style == styleManager->style("component"));
+        auto style = styleManager->style("div");
+        REQUIRE(style == styleManager->style("div"));
     }
 
     SECTION("in a case insensitive manner") {
-        auto style = styleManager->style("component");
-        REQUIRE(style == styleManager->style("Component"));
-        REQUIRE(style == styleManager->style("cOmPoNeNt"));
+        auto style = styleManager->style("div");
+        REQUIRE(style == styleManager->style("Div"));
+        REQUIRE(style == styleManager->style("div"));
     }
 }
 
 SCENARIO("styles can be declared and computed") {
     auto styleManager = std::make_shared<StyleManager>();
 
-    GIVEN("a single component") {
-        auto component = std::make_shared<Component>();
-        component->setStyleManager(styleManager);
+    GIVEN("a single div") {
+        auto div = std::make_shared<Div>();
+        div->setStyleManager(styleManager);
 
-        WHEN("component has no class names") {
+        WHEN("div has no class names") {
 
-            THEN("it should retrieve a \"component\" selector") {
-                auto style = styleManager->style("component");
-                style->set(fontFamily, "component"); // Just easier to check like this
-                component->updateStyle();
-                auto s = styleManager->computeStyle(component.get());
+            THEN("it should retrieve a \"div\" selector") {
+                auto style = styleManager->style("div");
+                style->set(fontFamily, "div"); // Just easier to check like this
+                div->updateStyle();
+                auto s = styleManager->computeStyle(div.get());
                 REQUIRE(*style == *s);
             }
 
-            THEN("it should not retrieve a \"component.class\" selector") {
-                auto style = styleManager->style("component.class");
-                style->set(fontFamily, "component.class"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style != *styleManager->computeStyle(component.get()));
+            THEN("it should not retrieve a \"div.class\" selector") {
+                auto style = styleManager->style("div.class");
+                style->set(fontFamily, "div.class"); // Just easier to check like this
+                div->updateStyle();
+                REQUIRE(*style != *styleManager->computeStyle(div.get()));
             }
 
-            THEN("it should not retrieve a \"component .class\" selector") {
-                auto style = styleManager->style("component .class");
-                style->set(fontFamily, "component .class"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style != *styleManager->computeStyle(component.get()));
+            THEN("it should not retrieve a \"div .class\" selector") {
+                auto style = styleManager->style("div .class");
+                style->set(fontFamily, "div .class"); // Just easier to check like this
+                div->updateStyle();
+                REQUIRE(*style != *styleManager->computeStyle(div.get()));
             }
 
             THEN("it should not retrieve a \".class\" selector") {
                 auto style = styleManager->style(".class");
                 style->set(fontFamily, ".class"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style != *styleManager->computeStyle(component.get()));
+                div->updateStyle();
+                REQUIRE(*style != *styleManager->computeStyle(div.get()));
             }
         }
 
-        WHEN("component has class name") {
-            component->setClassNames({"class"});
+        WHEN("div has class name") {
+            div->setClassNames({"class"});
 
-            THEN("it should retrieve a \"component\" selector") {
-                auto style = styleManager->style("component");
-                style->set(fontFamily, "component"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style == *styleManager->computeStyle(component.get()));
+            THEN("it should retrieve a \"div\" selector") {
+                auto style = styleManager->style("div");
+                style->set(fontFamily, "div"); // Just easier to check like this
+                div->updateStyle();
+                REQUIRE(*style == *styleManager->computeStyle(div.get()));
             }
 
-            THEN("it should retrieve a \"component.class\" selector") {
-                auto style = styleManager->style("component.class");
-                style->set(fontFamily, "component.class"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style == *styleManager->computeStyle(component.get()));
+            THEN("it should retrieve a \"div.class\" selector") {
+                auto style = styleManager->style("div.class");
+                style->set(fontFamily, "div.class"); // Just easier to check like this
+                div->updateStyle();
+                REQUIRE(*style == *styleManager->computeStyle(div.get()));
             }
 
-            THEN("it should not retrieve a \"component .class\" selector") {
-                auto style = styleManager->style("component .class");
-                style->set(fontFamily, "component .class"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style != *styleManager->computeStyle(component.get()));
+            THEN("it should not retrieve a \"div .class\" selector") {
+                auto style = styleManager->style("div .class");
+                style->set(fontFamily, "div .class"); // Just easier to check like this
+                div->updateStyle();
+                REQUIRE(*style != *styleManager->computeStyle(div.get()));
             }
 
             THEN("it should retrieve a \".class\" selector") {
                 auto style = styleManager->style(".class");
                 style->set(fontFamily, ".class"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style == *styleManager->computeStyle(component.get()));
+                div->updateStyle();
+                REQUIRE(*style == *styleManager->computeStyle(div.get()));
             }
 
             THEN("it should not retrieve a \".other\" selector") {
                 auto style = styleManager->style(".other");
                 style->set(fontFamily, ".other"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style != *styleManager->computeStyle(component.get()));
+                div->updateStyle();
+                REQUIRE(*style != *styleManager->computeStyle(div.get()));
             }
 
             THEN("it should not retrieve a \".class.other\" selector") {
                 auto style = styleManager->style(".class.other");
                 style->set(fontFamily, ".class.other"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style != *styleManager->computeStyle(component.get()));
+                div->updateStyle();
+                REQUIRE(*style != *styleManager->computeStyle(div.get()));
             }
         }
 
-        WHEN("component has multiple class names") {
-            component->setClassNames({"class", "other"});
+        WHEN("div has multiple class names") {
+            div->setClassNames({"class", "other"});
 
-            THEN("it should retrieve a \"component\" selector") {
-                auto style = styleManager->style("component");
-                style->set(fontFamily, "component"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style == *styleManager->computeStyle(component.get()));
+            THEN("it should retrieve a \"div\" selector") {
+                auto style = styleManager->style("div");
+                style->set(fontFamily, "div"); // Just easier to check like this
+                div->updateStyle();
+                REQUIRE(*style == *styleManager->computeStyle(div.get()));
             }
 
-            THEN("it should retrieve a \"component.class\" selector") {
-                auto style = styleManager->style("component.class");
-                style->set(fontFamily, "component.class"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style == *styleManager->computeStyle(component.get()));
+            THEN("it should retrieve a \"div.class\" selector") {
+                auto style = styleManager->style("div.class");
+                style->set(fontFamily, "div.class"); // Just easier to check like this
+                div->updateStyle();
+                REQUIRE(*style == *styleManager->computeStyle(div.get()));
             }
 
-            THEN("it should retrieve a \"component.class.other\" selector") {
-                auto style = styleManager->style("component.class.other");
-                style->set(fontFamily, "component.class.other"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style == *styleManager->computeStyle(component.get()));
+            THEN("it should retrieve a \"div.class.other\" selector") {
+                auto style = styleManager->style("div.class.other");
+                style->set(fontFamily, "div.class.other"); // Just easier to check like this
+                div->updateStyle();
+                REQUIRE(*style == *styleManager->computeStyle(div.get()));
             }
 
-            THEN("it should retrieve a \"component.other.class\" selector") {
-                auto style = styleManager->style("component.other.class");
-                style->set(fontFamily, "component.other.class"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style == *styleManager->computeStyle(component.get()));
+            THEN("it should retrieve a \"div.other.class\" selector") {
+                auto style = styleManager->style("div.other.class");
+                style->set(fontFamily, "div.other.class"); // Just easier to check like this
+                div->updateStyle();
+                REQUIRE(*style == *styleManager->computeStyle(div.get()));
             }
 
-            THEN("it should not retrieve a \"component .class\" selector") {
-                auto style = styleManager->style("component .class");
-                style->set(fontFamily, "component .class"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style != *styleManager->computeStyle(component.get()));
+            THEN("it should not retrieve a \"div .class\" selector") {
+                auto style = styleManager->style("div .class");
+                style->set(fontFamily, "div .class"); // Just easier to check like this
+                div->updateStyle();
+                REQUIRE(*style != *styleManager->computeStyle(div.get()));
             }
 
             THEN("it should retrieve a \".class\" selector") {
                 auto style = styleManager->style(".class");
                 style->set(fontFamily, ".class"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style == *styleManager->computeStyle(component.get()));
+                div->updateStyle();
+                REQUIRE(*style == *styleManager->computeStyle(div.get()));
             }
 
             THEN("it should retrieve a \".other\" selector") {
                 auto style = styleManager->style(".other");
                 style->set(fontFamily, ".other"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style == *styleManager->computeStyle(component.get()));
+                div->updateStyle();
+                REQUIRE(*style == *styleManager->computeStyle(div.get()));
             }
 
             THEN("it should retrieve a \".class.other\" selector") {
                 auto style = styleManager->style(".class.other");
                 style->set(fontFamily, ".class.other"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style == *styleManager->computeStyle(component.get()));
+                div->updateStyle();
+                REQUIRE(*style == *styleManager->computeStyle(div.get()));
             }
 
             THEN("it should retrieve a \".other.class\" selector") {
                 auto style = styleManager->style(".other.class");
                 style->set(fontFamily, ".other.class"); // Just easier to check like this
-                component->updateStyle();
-                REQUIRE(*style == *styleManager->computeStyle(component.get()));
+                div->updateStyle();
+                REQUIRE(*style == *styleManager->computeStyle(div.get()));
             }
         }
 
     }
 
-    GIVEN("a parent/child component relationship") {
-        auto parent = std::make_shared<Component>();
+    GIVEN("a parent/child div relationship") {
+        auto parent = std::make_shared<Div>();
         parent->setStyleManager(styleManager);
-        auto child = std::make_shared<Component>();
+        auto child = std::make_shared<Div>();
         parent->add(child);
 
         WHEN("neither have class names") {
 
-            THEN("it should retrieve a \"component\" selector") {
-                auto style = styleManager->style("component");
-                style->set(fontFamily, "component"); // Just easier to check like this
+            THEN("it should retrieve a \"div\" selector") {
+                auto style = styleManager->style("div");
+                style->set(fontFamily, "div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \"component component\" selector") {
-                auto style = styleManager->style("component component");
-                style->set(fontFamily, "component component"); // Just easier to check like this
+            THEN("it should retrieve a \"div div\" selector") {
+                auto style = styleManager->style("div div");
+                style->set(fontFamily, "div div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should not retrieve a \"component.class\" selector") {
-                auto style = styleManager->style("component.class");
-                style->set(fontFamily, "component.class"); // Just easier to check like this
+            THEN("it should not retrieve a \"div.class\" selector") {
+                auto style = styleManager->style("div.class");
+                style->set(fontFamily, "div.class"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style != *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should not retrieve a \"component.class component\" selector") {
-                auto style = styleManager->style("component.class component");
-                style->set(fontFamily, "component.class component"); // Just easier to check like this
+            THEN("it should not retrieve a \"div.class div\" selector") {
+                auto style = styleManager->style("div.class div");
+                style->set(fontFamily, "div.class div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style != *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should not retrieve a \"component .class\" selector") {
-                auto style = styleManager->style("component .class");
-                style->set(fontFamily, "component .class"); // Just easier to check like this
+            THEN("it should not retrieve a \"div .class\" selector") {
+                auto style = styleManager->style("div .class");
+                style->set(fontFamily, "div .class"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style != *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should not retrieve a \"component component.class\" selector") {
-                auto style = styleManager->style("component component.class");
-                style->set(fontFamily, "component component.class"); // Just easier to check like this
+            THEN("it should not retrieve a \"div div.class\" selector") {
+                auto style = styleManager->style("div div.class");
+                style->set(fontFamily, "div div.class"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style != *styleManager->computeStyle(child.get()));
             }
@@ -234,51 +234,51 @@ SCENARIO("styles can be declared and computed") {
         WHEN("parent has a class names") {
             parent->setClassNames({"class"});
 
-            THEN("it should retrieve a \"component\" selector") {
-                auto style = styleManager->style("component");
-                style->set(fontFamily, "component"); // Just easier to check like this
+            THEN("it should retrieve a \"div\" selector") {
+                auto style = styleManager->style("div");
+                style->set(fontFamily, "div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \"component component\" selector") {
-                auto style = styleManager->style("component component");
-                style->set(fontFamily, "component component"); // Just easier to check like this
+            THEN("it should retrieve a \"div div\" selector") {
+                auto style = styleManager->style("div div");
+                style->set(fontFamily, "div div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \"component.class\" selector") {
-                auto style = styleManager->style("component.class");
-                style->set(fontFamily, "component.class"); // Just easier to check like this
+            THEN("it should retrieve a \"div.class\" selector") {
+                auto style = styleManager->style("div.class");
+                style->set(fontFamily, "div.class"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \"component.class component\" selector") {
-                auto style = styleManager->style("component.class component");
-                style->set(fontFamily, "component.class component"); // Just easier to check like this
+            THEN("it should retrieve a \"div.class div\" selector") {
+                auto style = styleManager->style("div.class div");
+                style->set(fontFamily, "div.class div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should not retrieve a \"component .class\" selector") {
-                auto style = styleManager->style("component .class");
-                style->set(fontFamily, "component .class"); // Just easier to check like this
+            THEN("it should not retrieve a \"div .class\" selector") {
+                auto style = styleManager->style("div .class");
+                style->set(fontFamily, "div .class"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style != *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should not retrieve a \"component component.class\" selector") {
-                auto style = styleManager->style("component component.class");
-                style->set(fontFamily, "component component.class"); // Just easier to check like this
+            THEN("it should not retrieve a \"div div.class\" selector") {
+                auto style = styleManager->style("div div.class");
+                style->set(fontFamily, "div div.class"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style != *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \".class component\" selector") {
-                auto style = styleManager->style(".class component");
-                style->set(fontFamily, ".class component"); // Just easier to check like this
+            THEN("it should retrieve a \".class div\" selector") {
+                auto style = styleManager->style(".class div");
+                style->set(fontFamily, ".class div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
@@ -301,51 +301,51 @@ SCENARIO("styles can be declared and computed") {
         WHEN("child has a class names") {
             child->setClassNames({"class"});
 
-            THEN("it should retrieve a \"component\" selector") {
-                auto style = styleManager->style("component");
-                style->set(fontFamily, "component"); // Just easier to check like this
+            THEN("it should retrieve a \"div\" selector") {
+                auto style = styleManager->style("div");
+                style->set(fontFamily, "div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \"component component\" selector") {
-                auto style = styleManager->style("component component");
-                style->set(fontFamily, "component component"); // Just easier to check like this
+            THEN("it should retrieve a \"div div\" selector") {
+                auto style = styleManager->style("div div");
+                style->set(fontFamily, "div div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \"component.class\" selector") {
-                auto style = styleManager->style("component.class");
-                style->set(fontFamily, "component.class"); // Just easier to check like this
+            THEN("it should retrieve a \"div.class\" selector") {
+                auto style = styleManager->style("div.class");
+                style->set(fontFamily, "div.class"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should not retrieve a \"component.class component\" selector") {
-                auto style = styleManager->style("component.class component");
-                style->set(fontFamily, "component.class component"); // Just easier to check like this
+            THEN("it should not retrieve a \"div.class div\" selector") {
+                auto style = styleManager->style("div.class div");
+                style->set(fontFamily, "div.class div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style != *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \"component .class\" selector") {
-                auto style = styleManager->style("component .class");
-                style->set(fontFamily, "component .class"); // Just easier to check like this
+            THEN("it should retrieve a \"div .class\" selector") {
+                auto style = styleManager->style("div .class");
+                style->set(fontFamily, "div .class"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \"component component.class\" selector") {
-                auto style = styleManager->style("component component.class");
-                style->set(fontFamily, "component component.class"); // Just easier to check like this
+            THEN("it should retrieve a \"div div.class\" selector") {
+                auto style = styleManager->style("div div.class");
+                style->set(fontFamily, "div div.class"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should not retrieve a \".class component\" selector") {
-                auto style = styleManager->style(".class component");
-                style->set(fontFamily, ".class component"); // Just easier to check like this
+            THEN("it should not retrieve a \".class div\" selector") {
+                auto style = styleManager->style(".class div");
+                style->set(fontFamily, ".class div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style != *styleManager->computeStyle(child.get()));
             }
@@ -369,51 +369,51 @@ SCENARIO("styles can be declared and computed") {
             parent->setClassNames({"class"});
             child->setClassNames({"other"});
 
-            THEN("it should retrieve a \"component\" selector") {
-                auto style = styleManager->style("component");
-                style->set(fontFamily, "component"); // Just easier to check like this
+            THEN("it should retrieve a \"div\" selector") {
+                auto style = styleManager->style("div");
+                style->set(fontFamily, "div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \"component component\" selector") {
-                auto style = styleManager->style("component component");
-                style->set(fontFamily, "component component"); // Just easier to check like this
+            THEN("it should retrieve a \"div div\" selector") {
+                auto style = styleManager->style("div div");
+                style->set(fontFamily, "div div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \"component.class\" selector") {
-                auto style = styleManager->style("component.class");
-                style->set(fontFamily, "component.class"); // Just easier to check like this
+            THEN("it should retrieve a \"div.class\" selector") {
+                auto style = styleManager->style("div.class");
+                style->set(fontFamily, "div.class"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \"component.class component\" selector") {
-                auto style = styleManager->style("component.class component");
-                style->set(fontFamily, "component.class component"); // Just easier to check like this
+            THEN("it should retrieve a \"div.class div\" selector") {
+                auto style = styleManager->style("div.class div");
+                style->set(fontFamily, "div.class div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should not retrieve a \"component .class\" selector") {
-                auto style = styleManager->style("component .class");
-                style->set(fontFamily, "component .class"); // Just easier to check like this
+            THEN("it should not retrieve a \"div .class\" selector") {
+                auto style = styleManager->style("div .class");
+                style->set(fontFamily, "div .class"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style != *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should not retrieve a \"component component.class\" selector") {
-                auto style = styleManager->style("component component.class");
-                style->set(fontFamily, "component component.class"); // Just easier to check like this
+            THEN("it should not retrieve a \"div div.class\" selector") {
+                auto style = styleManager->style("div div.class");
+                style->set(fontFamily, "div div.class"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style != *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \".class component\" selector") {
-                auto style = styleManager->style(".class component");
-                style->set(fontFamily, ".class component"); // Just easier to check like this
+            THEN("it should retrieve a \".class div\" selector") {
+                auto style = styleManager->style(".class div");
+                style->set(fontFamily, ".class div"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
@@ -432,9 +432,9 @@ SCENARIO("styles can be declared and computed") {
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
 
-            THEN("it should retrieve a \".class component.other\" selector") {
-                auto style = styleManager->style(".class component.other");
-                style->set(fontFamily, ".class component.other"); // Just easier to check like this
+            THEN("it should retrieve a \".class div.other\" selector") {
+                auto style = styleManager->style(".class div.other");
+                style->set(fontFamily, ".class div.other"); // Just easier to check like this
                 parent->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(child.get()));
             }
@@ -442,12 +442,12 @@ SCENARIO("styles can be declared and computed") {
 
     }
 
-    GIVEN("three component") {
-        auto a = std::make_shared<Component>();
+    GIVEN("three div") {
+        auto a = std::make_shared<Div>();
         a->setStyleManager(styleManager);
-        auto b = std::make_shared<Component>();
+        auto b = std::make_shared<Div>();
         a->add(b);
-        auto c = std::make_shared<Component>();
+        auto c = std::make_shared<Div>();
         b->add(c);
 
         WHEN("skipping a node") {
@@ -468,9 +468,9 @@ SCENARIO("styles can be declared and computed") {
                 REQUIRE(*style == *styleManager->computeStyle(c.get()));
             }
 
-            THEN("it should retrieve a \".first component .last\" selector") {
-                auto style = styleManager->style(".first component .last");
-                style->set(fontFamily, ".first component .last"); // Just easier to check like this
+            THEN("it should retrieve a \".first div .last\" selector") {
+                auto style = styleManager->style(".first div .last");
+                style->set(fontFamily, ".first div .last"); // Just easier to check like this
                 a->updateStyleRecursive();
                 REQUIRE(*style == *styleManager->computeStyle(c.get()));
             }
@@ -485,7 +485,7 @@ TEST_CASE("Regressions") {
     auto styleManager = std::make_shared<StyleManager>();
 
     SECTION("Hovered button should transfer color to label") {
-        // We're not testing buttons here, so we're emulating with only components
+        // We're not testing buttons here, so we're emulating with only divs
 
         auto windowStyle = styleManager->style(".window");
         windowStyle->set(color, 0xFF00FF00);
@@ -496,15 +496,15 @@ TEST_CASE("Regressions") {
         auto styleHover = styleManager->style(".button:hover");
         styleHover->set(color, 0xFF0000FF);
 
-        auto window = std::make_shared<Component>();
+        auto window = std::make_shared<Div>();
         window->setStyleManager(styleManager);
         window->setClassNames({"window"});
 
-        auto button = std::make_shared<Component>();
+        auto button = std::make_shared<Div>();
         button->setClassNames({"button"});
         window->add(button);
 
-        auto label = std::make_shared<Component>();
+        auto label = std::make_shared<Div>();
         button->add(label);
 
         window->updateStyleRecursive();
@@ -523,7 +523,7 @@ TEST_CASE("Regressions") {
     }
 
     SECTION("Pseudos should be prioritized") {
-        // We're not testing buttons here, so we're emulating with only components
+        // We're not testing buttons here, so we're emulating with only divs
 
         styleManager->style(".test")
                     ->set(color, 0xFFFF0000);
@@ -534,34 +534,34 @@ TEST_CASE("Regressions") {
         styleManager->style(".test:active")
                     ->set(color, 0xFF00FF00);
 
-        auto component = std::make_shared<Component>();
-        component->setStyleManager(styleManager);
-        component->setClassNames({"test"});
+        auto div = std::make_shared<Div>();
+        div->setStyleManager(styleManager);
+        div->setClassNames({"test"});
 
-        REQUIRE(styleManager->computeStyle(component.get())->get(color) == 0xFFFF0000);
+        REQUIRE(styleManager->computeStyle(div.get())->get(color) == 0xFFFF0000);
 
-        component->setMouseOver(true);
-        REQUIRE(styleManager->computeStyle(component.get())->get(color) == 0xFF0000FF);
+        div->setMouseOver(true);
+        REQUIRE(styleManager->computeStyle(div.get())->get(color) == 0xFF0000FF);
 
-        component->setMouseDown(true);
-        REQUIRE(styleManager->computeStyle(component.get())->get(color) == 0xFF00FF00);
+        div->setMouseDown(true);
+        REQUIRE(styleManager->computeStyle(div.get())->get(color) == 0xFF00FF00);
 
     }
 
     SECTION("Should match an added style class") {
-        styleManager->style("component")
+        styleManager->style("div")
                     ->set(color, 0xFFFF0000);
 
-        styleManager->style("component.class")
+        styleManager->style("div.class")
                     ->set(color, 0xFF0000FF);
 
-        auto component = std::make_shared<Component>();
-        component->setStyleManager(styleManager);
+        auto div = std::make_shared<Div>();
+        div->setStyleManager(styleManager);
 
-        REQUIRE(styleManager->computeStyle(component.get())->get(color) == 0xFFFF0000);
+        REQUIRE(styleManager->computeStyle(div.get())->get(color) == 0xFFFF0000);
 
-        component->addClassName("class");
-        REQUIRE(styleManager->computeStyle(component.get())->get(color) == 0xFF0000FF);
+        div->addClassName("class");
+        REQUIRE(styleManager->computeStyle(div.get())->get(color) == 0xFF0000FF);
     }
 
 }

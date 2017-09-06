@@ -2,10 +2,10 @@
 
 #include <string>
 #include <SkCanvas.h>
-#include "Component.hpp"
+#include "Div.hpp"
 
 namespace psychicui {
-    class Panel : public Component {
+    class Panel : public Div {
     public:
         explicit Panel(const std::string &title = "Untitled");
 
@@ -29,7 +29,7 @@ namespace psychicui {
 
     protected:
         std::string _title;
-        Component      *_buttonPanel;
+        Div      *_buttonPanel;
         bool        _modal;
         bool        _drag;
     };

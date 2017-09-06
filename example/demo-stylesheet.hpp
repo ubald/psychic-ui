@@ -17,10 +17,7 @@ public:
                ->set(margin, 24);
 
         manager->style("buttons button")
-               ->set(margin, 12)
-                   // Override the default in order to see the test result
-               ->set(borderRadius, 0)
-               ->set(borderColor, BASE_03);
+               ->set(margin, 12);
 
         manager->style("labels label")
                ->set(margin, 12);

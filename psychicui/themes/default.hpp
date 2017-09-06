@@ -152,10 +152,7 @@ public:
 
         // region Ranges
         manager->style("range")
-               ->set(skin, "slider");
-
-        manager->style("range skin")
-               ->set(height, 24)
+               ->set(skin, "slider")
                ->set(borderRadius, radius)
                ->set(border, 1)
                ->set(padding, 1)
@@ -164,6 +161,12 @@ public:
                ->set(backgroundColor, BASE_00)
                ->set(fontSize, smallText)
                ->set(color, BASE_04);
+
+        manager->style("range slider.horizontal")
+               ->set(height, 24);
+
+        manager->style("range slider.vertical")
+               ->set(width, 24);
 
         manager->style("range:hover slider.inverted")
                ->set(color, BASE_00);

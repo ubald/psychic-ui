@@ -5,8 +5,8 @@
 #include <iomanip>
 #include <functional>
 #include "../psychicui.hpp"
-#include "../Component.hpp"
-#include "../SkinnableComponent.hpp"
+#include "psychicui/Div.hpp"
+#include "psychicui/Component.hpp"
 #include "../Skin.hpp"
 #include "../utils/StringUtils.hpp"
 #include "Label.hpp"
@@ -29,7 +29,7 @@ namespace psychicui {
         /**
          * Base Range Class
          */
-        class RangeBase : public SkinnableComponent<RangeSkin> {
+        class RangeBase : public Component<RangeSkin> {
         protected:
             RangeBase() = default;
 
@@ -295,7 +295,6 @@ Range <T> *Range<T>::onChange(std::function<void(T)> callback) {
 
 template<class T>
 void Range<T>::onMouseScroll(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
-    std::cout << scrollY << std::endl;
     if ( std::is_floating_point<T>::value) {
         setValue(_value + (scrollY * _step));
     } else {

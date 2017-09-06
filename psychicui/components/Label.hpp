@@ -3,10 +3,10 @@
 #include <string>
 #include <SkPaint.h>
 #include <SkTextBox.h>
-#include "../Component.hpp"
+#include "psychicui/Div.hpp"
 
 namespace psychicui {
-    class Label: public Component {
+    class Label: public Div {
     public:
         explicit Label(const std::string &text = "");
 

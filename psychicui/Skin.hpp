@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Component.hpp"
+#include "Div.hpp"
 
 namespace psychicui {
 
     namespace internal {
-        class SkinBase : public Component {
+        class SkinBase : public Div {
         protected:
-            SkinBase() :
-                Component() {
-                setTag("Skin");
-            }
+            SkinBase();
+            const InheritableValues inheritableValues() const override;
+        private:
+            static const InheritableValues _inheritableValues;
         };
     }
 
@@ -22,5 +22,6 @@ namespace psychicui {
             return dynamic_cast<T *>(_parent);
         }
     };
+
 }
 

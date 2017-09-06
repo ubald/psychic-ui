@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Component.hpp"
+#include "psychicui/Div.hpp"
 
 namespace psychicui {
-    class Spacer: public Component {
+    class Spacer: public Div {
     public:
         Spacer();
     };

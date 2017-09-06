@@ -12,7 +12,7 @@
 #include "StyleDeclaration.hpp"
 
 namespace psychicui {
-    class Component;
+    class Div;
 
     namespace internal {
         class SkinBase;
@@ -39,7 +39,7 @@ namespace psychicui {
 
 
         Style *style(std::string selector);
-        std::unique_ptr<Style> computeStyle(const Component *component);
+        std::unique_ptr<Style> computeStyle(const Div *component);
 
         template<typename T>
         void loadStyleSheet() {

@@ -1,15 +1,9 @@
 #include <algorithm>
 #include <iostream>
 #include "Style.hpp"
+#include "../Div.hpp"
 
 namespace psychicui {
-
-    // Inheritable properties
-    const std::vector<ColorProperty>   Style::colorInheritable{color};
-    const std::vector<StringProperty>  Style::stringInheritable{fontFamily};
-    const std::vector<FloatProperty>   Style::floatInheritable{fontSize, letterSpacing, lineHeight};
-    const std::vector<IntProperty>     Style::intInheritable{};
-    const std::vector<BoolProperty>    Style::boolInheritable{};
 
     std::unique_ptr<Style> Style::dummyStyle{std::make_unique<Style>()};
     const float Style::Auto = nanf("auto");
@@ -24,30 +18,13 @@ namespace psychicui {
     Style::Style(const std::function<void()> &onChanged) :
         _onChanged(onChanged) {}
 
-    Style * Style::overlay(const Style *style) {
+    Style *Style::overlay(const Style *style) {
         if (style) {
-
-            // Unfortunately for now this has to be manual
-
-            for (auto const &kv : style->_colorValues) {
-                _colorValues[kv.first] = kv.second;
-            }
-
-            for (auto const &kv : style->_stringValues) {
-                _stringValues[kv.first] = kv.second;
-            }
-
-            for (auto const &kv : style->_floatValues) {
-                _floatValues[kv.first] = kv.second;
-            }
-
-            for (auto const &kv : style->_intValues) {
-                _intValues[kv.first] = kv.second;
-            }
-
-            for (auto const &kv : style->_boolValues) {
-                _boolValues[kv.first] = kv.second;
-            }
+            doOverlay(style->_colorValues, _colorValues);
+            doOverlay(style->_stringValues, _stringValues);
+            doOverlay(style->_floatValues, _floatValues);
+            doOverlay(style->_intValues, _intValues);
+            doOverlay(style->_boolValues, _boolValues);
 
             // Just assume something changed
             if (_onChanged) {
@@ -58,42 +35,13 @@ namespace psychicui {
         return this;
     }
 
-    Style * Style::overlayInheritable(const Style *style) {
+    Style *Style::overlayInheritable(const Style *style, const Div *div) {
         if (style) {
-
-            // Unfortunately for now this has to be manual
-
-            for (auto const &kv : style->_colorValues) {
-                if (std::find(colorInheritable.begin(), colorInheritable.end(), kv.first) != colorInheritable.end()) {
-                    _colorValues[kv.first] = kv.second;
-                }
-            }
-
-            for (auto const &kv : style->_stringValues) {
-                if (std::find(stringInheritable.begin(), stringInheritable.end(), kv.first)
-                    != stringInheritable.end()) {
-                    _stringValues[kv.first] = kv.second;
-                }
-            }
-
-            for (auto const &kv : style->_floatValues) {
-                if (std::find(floatInheritable.begin(), floatInheritable.end(), kv.first) != floatInheritable.end()) {
-                    _floatValues[kv.first] = kv.second;
-                }
-            }
-
-            for (auto const &kv : style->_intValues) {
-                if (std::find(intInheritable.begin(), intInheritable.end(), kv.first) != intInheritable.end()) {
-                    _intValues[kv.first] = kv.second;
-                }
-            }
-
-            for (auto const &kv : style->_boolValues) {
-                if (std::find(boolInheritable.begin(), boolInheritable.end(), kv.first) != boolInheritable.end()) {
-                    _boolValues[kv.first] = kv.second;
-                }
-            }
-
+            doInheritance(style->_colorValues, _colorValues, div->inheritableValues().colorInheritable);
+            doInheritance(style->_stringValues, _stringValues, div->inheritableValues().stringInheritable);
+            doInheritance(style->_floatValues, _floatValues, div->inheritableValues().floatInheritable);
+            doInheritance(style->_intValues, _intValues, div->inheritableValues().intInheritable);
+            doInheritance(style->_boolValues, _boolValues, div->inheritableValues().boolInheritable);
 
             // Just assume something changed
             if (_onChanged) {
@@ -104,40 +52,13 @@ namespace psychicui {
         return this;
     }
 
-    Style * Style::defaults(const Style *style) {
+    Style *Style::defaults(const Style *style) {
         if (style) {
-
-            // Unfortunately for now this has to be manual
-
-            for (auto const &kv : style->_colorValues) {
-                if (_colorValues.find(kv.first) == _colorValues.end()) {
-                    _colorValues[kv.first] = kv.second;
-                }
-            }
-
-            for (auto const &kv : style->_stringValues) {
-                if (_stringValues.find(kv.first) == _stringValues.end()) {
-                    _stringValues[kv.first] = kv.second;
-                }
-            }
-
-            for (auto const &kv : style->_floatValues) {
-                if (_floatValues.find(kv.first) == _floatValues.end()) {
-                    _floatValues[kv.first] = kv.second;
-                }
-            }
-
-            for (auto const &kv : style->_intValues) {
-                if (_intValues.find(kv.first) == _intValues.end()) {
-                    _intValues[kv.first] = kv.second;
-                }
-            }
-
-            for (auto const &kv : style->_boolValues) {
-                if (_boolValues.find(kv.first) == _boolValues.end()) {
-                    _boolValues[kv.first] = kv.second;
-                }
-            }
+            doDefaults(style->_colorValues, _colorValues);
+            doDefaults(style->_stringValues, _stringValues);
+            doDefaults(style->_floatValues, _floatValues);
+            doDefaults(style->_intValues, _intValues);
+            doDefaults(style->_boolValues, _boolValues);
 
             // Just assume something changed
             if (_onChanged) {

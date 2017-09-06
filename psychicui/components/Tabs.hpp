@@ -30,21 +30,23 @@ namespace psychicui {
         DataContainer<T>(data, getLabel),
         _tabChanged(tabChanged) {
         this->setTag("Tabs");
-        this->_defaults->set(shrink, 0);
+        this->_defaultStyle->set(shrink, 0);
 
         for (const auto &d: DataContainer<T>::_data) {
             _buttons.push_back(
                 this->template add<Button>(
-                    this->label(d),
-                    [&]() {
-                        if (!_selected || d != *_selected) {
-                            select(d);
-                            if (_tabChanged) {
-                                _tabChanged(d);
+                        this->label(d),
+                        [&]() {
+                            if (!_selected || d != *_selected) {
+                                select(d);
+                                if (_tabChanged) {
+                                    _tabChanged(d);
+                                }
                             }
                         }
-                    }
-                )->setToggle(true)
+                    )
+                    ->setToggle(true)
+                    ->setAutoToggle(false)
             );
         }
     }

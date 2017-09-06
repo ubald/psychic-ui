@@ -10,7 +10,7 @@
 #include "SkSurface.h"
 #include "SkPaint.h"
 #include "opengl.hpp"
-#include "Component.hpp"
+#include "Div.hpp"
 #include "style/StyleManager.hpp"
 #include "style/Style.hpp"
 
@@ -20,7 +20,7 @@ namespace psychicui {
         int x, y;
     };
 
-    class Window : public Component {
+    class Window : public Div {
     public:
         static std::unordered_map<GLFWwindow *, Window *> windows;
 
@@ -138,8 +138,8 @@ namespace psychicui {
 
         // endregion
 
-        std::shared_ptr<Component>              _dragComponent = nullptr;
-        std::vector<std::shared_ptr<Component>> _focusPath;
+        std::shared_ptr<Div>              _dragComponent = nullptr;
+        std::vector<std::shared_ptr<Div>> _focusPath;
 
         void initSkia();
         void getSkiaSurface();

@@ -6,6 +6,7 @@
 #include <string>
 #include <functional>
 #include <SkTypeface.h>
+#include <map>
 #include "../psychicui.hpp"
 
 #define PSYCHIC_STYLE_PROPERTY(type, values, name, defaultValue)                                                       \
@@ -35,11 +36,12 @@ bool has(values property) {                                                     
     return _##name##Values.find(property) != _##name##Values.end();                                                    \
 }                                                                                                                      \
 protected:                                                                                                             \
-static const std::vector<values> name##Inheritable;                                                                    \
 std::unordered_map<values, type> _##name##Values{};                                                                    \
 
 
 namespace psychicui {
+
+    class Div;
 
     enum ColorProperty {
         color,
@@ -58,7 +60,8 @@ namespace psychicui {
         fontFamily, textAlign, textJustify,
         position,
         justifyContent, direction, alignContent, alignItems, alignSelf,
-        wrap, overflow
+        wrap, overflow,
+        orientation // For sliders
     };
 
     enum FloatProperty {
@@ -85,6 +88,26 @@ namespace psychicui {
         visible
     };
 
+    struct InheritableValues {
+        const std::vector<ColorProperty>  colorInheritable;
+        const std::vector<StringProperty> stringInheritable;
+        const std::vector<FloatProperty>  floatInheritable;
+        const std::vector<IntProperty>    intInheritable;
+        const std::vector<BoolProperty>   boolInheritable;
+        InheritableValues(
+            std::vector<ColorProperty> colorInherit,
+            std::vector<StringProperty> stringInherit,
+            std::vector<FloatProperty> floatInherit,
+            std::vector<IntProperty> intInherit,
+            std::vector<BoolProperty> boolInherit
+        ) : colorInheritable(colorInherit),
+            stringInheritable(stringInherit),
+            floatInheritable(floatInherit),
+            intInheritable(intInherit),
+            boolInheritable(boolInherit) {}
+
+    };
+
     class Style {
     public:
         /**
@@ -106,19 +129,19 @@ namespace psychicui {
          * Add all values from style onto this
          * @param style
          */
-        Style * overlay(const Style *style);
+        Style *overlay(const Style *style);
 
         /**
          * Add all inheritable values from style onto this
          * @param style
          */
-        Style * overlayInheritable(const Style *style);
+        Style *overlayInheritable(const Style *style, const Div *div);
 
         /**
          * Fill empty properties in this with values from style
          * @param style
          */
-        Style * defaults(const Style *style);
+        Style *defaults(const Style *style);
 
         bool operator==(const Style &other) const;
         bool operator!=(const Style &other) const;
@@ -127,6 +150,31 @@ namespace psychicui {
 
     protected:
         std::function<void()> _onChanged{nullptr};
+
+        template<class T>
+        inline static void doOverlay(const T &from, T &onto) {
+            for (auto const &kv : from) {
+                onto[kv.first] = kv.second;
+            }
+        }
+
+        template<class T>
+        inline static void doInheritance(const T &from, T &onto, const std::vector<typename T::key_type> &inheritable) {
+            for (auto const &kv : from) {
+                if (std::find(inheritable.begin(), inheritable.end(), kv.first) != inheritable.end()) {
+                    onto[kv.first] = kv.second;
+                }
+            }
+        }
+
+        template<class T>
+        inline static void doDefaults(const T &from, T &onto) {
+            for (auto const &kv : from) {
+                if (onto.find(kv.first) == onto.end()) {
+                    onto[kv.first] = kv.second;
+                }
+            }
+        }
 
         // Macro stuff, don't put anything below, it'll end up protected
     PSYCHIC_STYLE_PROPERTY(Color, ColorProperty, color, 0xFF000000);

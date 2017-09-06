@@ -6,7 +6,7 @@ namespace psychicui {
 
 
     Button::Button(const std::string &label, ClickCallback onClick) :
-        SkinnableComponent() {
+        Component() {
         setTag("Button");
         setCursor(Cursor::Hand);
 
@@ -30,36 +30,38 @@ namespace psychicui {
     }
 
     void Button::setSelected(const bool selected) {
-        _selected = selected;
-        invalidateStyle();
-        if (_onChange) {
-            _onChange(_selected);
+        if (_selected != selected) {
+            _selected = selected;
+            invalidateStyle();
+            if (_onChange) {
+                _onChange(_selected);
+            }
         }
     }
 
     const bool Button::active() const {
-        return Component::active() || _selected;
+        return Div::active() || _selected;
     };
 
     void Button::onMouseUp(const int mouseX, const int mouseY, const int button, const int modifiers) {
         if (!_toggle) {
             setSelected(false);
         }
-        Component::onMouseUp(mouseX, mouseY, button, modifiers);
+        Div::onMouseUp(mouseX, mouseY, button, modifiers);
     }
 
     void Button::onMouseDown(const int mouseX, const int mouseY, const int button, const int modifiers) {
         if (!_toggle) {
             setSelected(true);
         }
-        Component::onMouseDown(mouseX, mouseY, button, modifiers);
+        Div::onMouseDown(mouseX, mouseY, button, modifiers);
     }
 
     void Button::onClick() {
-        if (_toggle) {
+        if (_toggle && _autoToggle) {
             setSelected(!_selected);
         }
-        Component::onClick();
+        Div::onClick();
     }
 
     void Button::skinChanged() {

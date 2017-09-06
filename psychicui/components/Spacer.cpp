@@ -3,8 +3,8 @@
 namespace psychicui {
 
     Spacer::Spacer() :
-        Component() {
-        _defaults->set(flex, 1);
+        Div() {
+        _defaultStyle->set(flex, 1);
     }
 
 }
