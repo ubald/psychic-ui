@@ -1,8 +1,8 @@
 #include "Skin.hpp"
 
 namespace psychicui {
-namespace internal {
-const InheritableValues SkinBase::_inheritableValues{
+    namespace internal {
+        const InheritableValues SkinBase::_inheritableValues{
             {
                 color,
                 backgroundColor,
@@ -40,16 +40,13 @@ const InheritableValues SkinBase::_inheritableValues{
             setTag("Skin");
             // But, forget about the margins since they have an external influence
             // We have to be explicit about margins since we want to avoid a fallback to default margins too
-//                _inlineStyle
-//                    ->set(marginLeft, 0)
-//                    ->set(marginTop, 0)
-//                    ->set(marginRight, 0)
-//                    ->set(marginBottom, 0);
-//                _ignoreExternalLayoutContraints = true;
+            _inlineStyle
+                ->set(shrink, 1)
+                ->set(grow, 1);
         }
 
         const InheritableValues SkinBase::inheritableValues() const {
             return _inheritableValues;
         }
-}
+    }
 }

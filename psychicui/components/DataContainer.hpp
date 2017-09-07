@@ -1,6 +1,6 @@
 #pragma once
 
-#include <typeinfo>
+#include <SkCanvas.h>
 #include "psychicui/Div.hpp"
 
 namespace psychicui {
@@ -8,73 +8,66 @@ namespace psychicui {
     template<class T>
     class DataContainer : public Div {
     public:
-
+        DataContainer() = delete;
         using ContainerData = std::vector<T>;
-        using LabelCallback = std::function<std::string(const T &)>;
+        using DivCallback = std::function<std::shared_ptr<Div>(const T &)>;
 
-        DataContainer(const ContainerData &data, LabelCallback getLabel = nullptr) :
-            Div(),
-            _data(data),
-            _getLabel(getLabel) {
-            this->setTag("DataContainer");
-        }
+        explicit DataContainer(const ContainerData &data, DivCallback getDiv);
 
-        std::string label(const T &data) const;
+        ContainerData &data() const;
+        virtual DataContainer<T> *setData(const ContainerData &data);
+
 
     protected:
+        void render(SkCanvas *canvas) override;
         ContainerData _data{};
-        LabelCallback _getLabel{nullptr};
+        DivCallback   _getDiv{nullptr};
+        bool          _dataChanged{true};
+
+        // Make some of div's stuff protected since we manage our content
+        using Div::add;
+        using Div::remove;
+        using Div::removeAll;
     };
 
     template<class T>
-    std::string DataContainer<T>::label(const T &data) const {
-        if (_getLabel) {
-            return _getLabel(data);
-        } else {
-            return typeid(data).name();
+    DataContainer<T>::DataContainer(const typename DataContainer<T>::ContainerData &data, DivCallback getDiv) :
+        Div(),
+        _data(data),
+        _getDiv(getDiv) {
+        setTag("DataContainer");
+    }
+
+    template<class T>
+    typename DataContainer<T>::ContainerData &DataContainer<T>::data() const {
+        return _data;
+    }
+
+    template<class T>
+    DataContainer<T> *DataContainer<T>::setData(const typename DataContainer<T>::ContainerData &data) {
+        if (data != _data) {
+            _data = data;
+            _dataChanged = true;
         }
+        return this;
     }
 
-    template<>
-    inline std::string DataContainer<std::string>::label(const std::string &data) const {
-        return _getLabel ? _getLabel(data) : data;
+    template<class T>
+    void DataContainer<T>::render(SkCanvas *canvas) {
+        if (_dataChanged) {
+            removeAll();
+            for (const auto &item: _data) {
+                auto div = _getDiv(item);
+                if (div) {
+                    add(div);
+                }
+            }
+            _dataChanged = false;
+        }
+
+        Div::render(canvas);
     }
 
-    // BASE
-
-//    template<class T>
-//    class DataContainerBase : public Div {
-//    public:
-//        DataContainerBase(const ContainerData<T> &data, LabelCallback<T> getLabel) :
-//            Div(),
-//            _data(data),
-//            _getLabel(getLabel) {
-//        }
-//
-//    protected:
-//        ContainerData<T> _data{};
-//        LabelCallback<T> _getLabel{};
-//    };
-
-    // GENERIC
-
-//    template<class T>
-//    class DataContainer : public DataContainerBase<T> {
-//    public:
-//        DataContainer(const ContainerData<T> &data, LabelCallback<T> getLabel) :
-//            DataContainerBase<T>(data, getLabel) {
-//        }
-//    };
-
-    // STRING
-
-//    template<>
-//    class DataContainer<std::string> : public DataContainerBase<std::string> {
-//    public:
-//        DataContainer(const std::vector<std::string> &data) :
-//            DataContainerBase<std::string>(data, [](const auto &item) { return item; }) {
-//        }
-//    };
 
 }
 

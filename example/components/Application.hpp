@@ -8,7 +8,7 @@
 #include <psychicui/components/TabContainer.hpp>
 #include <psychicui/themes/default.hpp>
 #include <psychicui/components/TitleBar.hpp>
-#include "MenuBar.hpp"
+#include "psychicui/components/MenuBar.hpp"
 #include "ToolBar.hpp"
 #include "Labels.hpp"
 #include "Buttons.hpp"
@@ -29,25 +29,59 @@ namespace psychicui {
         loadStyleSheet<PsychicUIStyleSheet>();
         loadStyleSheet<DemoStyleSheet>();
 
-        add<TitleBar>();
+        app->add<TitleBar>();
 
-        add<MenuBar>();
-        add<ToolBar>();
+        std::vector<std::shared_ptr<MenuItem>> mainMenuContents{
+            Menu::item(
+                "File", {
+                    Menu::item("New", []() {}),
+                    Menu::item("Open", []() {}),
+                    Menu::item("Save", []() {}),
+                    Menu::item("Save As...", []() {}),
+                    Menu::item("Quit", []() {}),
+                }
+            ),
+            Menu::item("Edit", {
+                    Menu::item("Copy", []() {}),
+                    Menu::item("Cut", []() {}),
+                    Menu::item("Paste", []() {}),
+                }),
+            Menu::item("View", []() {}),
+            Menu::item("Window", []() {}),
+            Menu::item("Help", []() {})
+        };
+
+        app->add<MenuBar>(mainMenuContents);
+
+
+        app->add<ToolBar>();
 
         std::vector<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Div>>>>> panels{};
-        panels.emplace_back(std::make_pair("Divs",  Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Divs>();  })));
-        panels.emplace_back(std::make_pair("Labels",  Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Labels>();  })));
-        panels.emplace_back(std::make_pair("Buttons", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Buttons>(); })));
-        panels.emplace_back(std::make_pair("Ranges", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Ranges>(); })));
+        panels.emplace_back(
+            std::make_pair(
+                "Divs",
+                Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Divs>(); })));
+        panels.emplace_back(
+            std::make_pair(
+                "Labels",
+                Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Labels>(); })));
+        panels.emplace_back(
+            std::make_pair(
+                "Buttons",
+                Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Buttons>(); })));
+        panels.emplace_back(
+            std::make_pair(
+                "Ranges",
+                Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Ranges>(); })));
 
 
-        add<TabContainer<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Div>>>>>>(
+        app->add<TabContainer<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Div>>>>>>(
             panels,
-            [](const auto &item) {
-                return item.second->hatch();
-            },
             [](const auto &item) -> std::string {
                 return item.first;
+            },
+            [](const auto &item) {
+                return item.second->hatch();
             }
         )
             ->select(panels[2])

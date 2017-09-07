@@ -35,7 +35,7 @@ namespace psychicui {
 
         public:
             virtual float getLinearPercentage() const = 0;
-            virtual void setLinearPercentage(const float percent) = 0;
+            virtual void setLinearPercentage(float percent) = 0;
             virtual std::string valueString() const = 0;
         };
     }
@@ -86,7 +86,7 @@ namespace psychicui {
         float getPercentageFor(T value) const;
         float getLinearPercentageFor(T value) const;
         float nearestValidValue(T value, T step) const;
-        void onMouseScroll(int mouseX, int mouseY, double scrollX, double scrollY) override;
+        void onMouseScrollEvent(int mouseX, int mouseY, double scrollX, double scrollY) override;
     };
 
     template<class T>
@@ -94,7 +94,6 @@ namespace psychicui {
         internal::RangeBase(),
         _onChange(onChange) {
         setTag("Range");
-        //_mouseChildren = false; // !important
         _step = std::is_floating_point<T>::value ? 0.01f : 1;
     }
 
@@ -280,28 +279,28 @@ namespace psychicui {
         return (validValue + offset) / scale;
     }
 
-template<class T>
-std::string Range<T>::valueString() const {
-    std::stringstream stream;
-    stream << std::fixed << std::setprecision(3) << _value;
-    return stream.str();
-}
-
-template<class T>
-Range <T> *Range<T>::onChange(std::function<void(T)> callback) {
-    _onChange = callback;
-    return this;
-}
-
-template<class T>
-void Range<T>::onMouseScroll(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
-    if ( std::is_floating_point<T>::value) {
-        setValue(_value + (scrollY * _step));
-    } else {
-        // Event the smalles movement should yield a result
-        setValue(_value + (std::ceil(scrollY) * _step));
+    template<class T>
+    std::string Range<T>::valueString() const {
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(3) << _value;
+        return stream.str();
     }
-}
+
+    template<class T>
+    Range<T> *Range<T>::onChange(std::function<void(T)> callback) {
+        _onChange = callback;
+        return this;
+    }
+
+    template<class T>
+    void Range<T>::onMouseScrollEvent(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
+        if (std::is_floating_point<T>::value) {
+            setValue(_value + (scrollY * _step));
+        } else {
+            // Event the smalles movement should yield a result
+            setValue(_value + (std::ceil(scrollY) * _step));
+        }
+    }
 
 }
 

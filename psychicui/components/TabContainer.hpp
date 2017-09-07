@@ -15,7 +15,7 @@ namespace psychicui {
         using LabelCallback = typename Tabs<T>::LabelCallback;
         using ComponentCallback = std::function<std::shared_ptr<Div>(const T &)>;
 
-        TabContainer(const TabContainerData &data, ComponentCallback getComponent, LabelCallback getLabel = nullptr);
+        TabContainer(const TabContainerData &data, LabelCallback getLabel, ComponentCallback getComponent);
         TabContainer<T> * select(const T &item);
     protected:
         void onTabChanged(const T &item);
@@ -25,7 +25,7 @@ namespace psychicui {
     };
 
     template<class T>
-    TabContainer<T>::TabContainer(const TabContainerData &data, ComponentCallback getComponent, LabelCallback getLabel) :
+    TabContainer<T>::TabContainer(const TabContainerData &data, LabelCallback getLabel, ComponentCallback getComponent) :
         Div(),
         _getTabComponentCallback(getComponent) {
         this->setTag("TabContainer");

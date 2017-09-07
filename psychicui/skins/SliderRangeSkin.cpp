@@ -39,12 +39,14 @@ namespace psychicui {
 
         _range = container->add<Div>();
         _range
+            ->setMouseEnabled(false)
             ->setClassNames({"range"})
             ->style()
             ->set(position, "absolute");
 
         auto label = add<Div>();
         label
+            ->setMouseEnabled(false)
             ->style()
             ->set(position, "absolute")
             ->set(alignItems, "center")

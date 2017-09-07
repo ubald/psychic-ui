@@ -66,6 +66,34 @@ namespace psychicui {
         setWindowSize(1440, 900);
         _inlineStyle->set(position, "absolute");
         _inlineStyle->set(overflow, "hidden");
+
+        app = add<Div>();
+        app->style()
+           ->set(position, "absolute")
+           ->set(widthPercent, 1.0f)
+           ->set(heightPercent, 1.0f)
+           ->set(overflow, "hidden");
+
+        modal = add<Div>();
+        modal->style()
+             ->set(visible, false)
+             ->set(position, "absolute")
+             ->set(widthPercent, 1.0f)
+             ->set(heightPercent, 1.0f)
+             ->set(overflow, "hidden");
+
+        menu = add<Div>();
+        menu->onMouseDown(
+            [this](int mouseX, int mouseY, int button, int modifiers) {
+                closeMenu();
+            }
+        );
+        menu->style()
+            ->set(visible, false)
+            ->set(position, "absolute")
+            ->set(widthPercent, 1.0f)
+            ->set(heightPercent, 1.0f)
+            ->set(overflow, "hidden");
     }
 
     Window::~Window() {
@@ -483,7 +511,7 @@ namespace psychicui {
 
     // region Visible
 
-    bool Window::visible() const {
+    bool Window::getVisible() const {
         return _visible;
     }
 
@@ -509,11 +537,11 @@ namespace psychicui {
     void Window::startDrag() {
         _windowDragMouseX = _mouseX;
         _windowDragMouseY = _mouseY;
-        _dragging = true;
+        _dragging         = true;
     }
 
     void Window::stopDrag() {
-        _dragging = false;
+        _dragging         = false;
         _windowDragMouseX = 0;
         _windowDragMouseY = 0;
     }
@@ -609,10 +637,11 @@ namespace psychicui {
             layoutUpdated();
             #ifdef DEBUG_LAYOUT
             if (debugLayout) {
-                YGNodePrint(_yogaNode,
-                            static_cast<YGPrintOptions>(YGPrintOptionsLayout
-                                                        | YGPrintOptionsStyle
-                                                        | YGPrintOptionsChildren));
+                YGNodePrint(
+                    _yogaNode,
+                    static_cast<YGPrintOptions>(YGPrintOptionsLayout
+                                                | YGPrintOptionsStyle
+                                                | YGPrintOptionsChildren));
             }
             #endif
         }
@@ -627,27 +656,47 @@ namespace psychicui {
 
     // endregion
 
+    // region Modals
+
+    void Window::openMenu(const std::vector<std::shared_ptr<MenuItem>> &items, const int x, const int y) {
+        menu->removeAll();
+        auto m = menu->add<Menu>(items);
+        m->style()
+         ->set(left, x)
+         ->set(top, y);
+        menu->style()
+            ->set(visible, true);
+    }
+
+    void Window::closeMenu() {
+        menu->removeAll();
+        menu->style()
+            ->set(visible, false);
+    }
+
+    // endregion
+
     // region Events???
 
     bool Window::keyboardEvent(int key, int scancode, int action, int modifiers) {
-        if (_focusPath.size() > 0) {
-            for (auto it = _focusPath.rbegin() + 1; it != _focusPath.rend(); ++it) {
-                if ((*it)->focused() && (*it)->keyboardEvent(key, scancode, action, modifiers)) {
-                    return true;
-                }
-            }
-        }
+//        if (_focusPath.size() > 0) {
+//            for (auto it = _focusPath.rbegin() + 1; it != _focusPath.rend(); ++it) {
+//                if ((*it)->focused() && (*it)->keyboardEvent(key, scancode, action, modifiers)) {
+//                    return true;
+//                }
+//            }
+//        }
         return false;
     }
 
     bool Window::keyboardCharacterEvent(unsigned int codepoint) {
-        if (_focusPath.size() > 0) {
-            for (auto it = _focusPath.rbegin() + 1; it != _focusPath.rend(); ++it) {
-                if ((*it)->focused() && (*it)->keyboardCharacterEvent(codepoint)) {
-                    return true;
-                }
-            }
-        }
+//        if (_focusPath.size() > 0) {
+//            for (auto it = _focusPath.rbegin() + 1; it != _focusPath.rend(); ++it) {
+//                if ((*it)->focused() && (*it)->keyboardCharacterEvent(codepoint)) {
+//                    return true;
+//                }
+//            }
+//        }
         return false;
     }
 

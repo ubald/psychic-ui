@@ -43,25 +43,25 @@ namespace psychicui {
         return Div::active() || _selected;
     };
 
-    void Button::onMouseUp(const int mouseX, const int mouseY, const int button, const int modifiers) {
+    void Button::onMouseUpEvent(const int mouseX, const int mouseY, const int button, const int modifiers) {
         if (!_toggle) {
             setSelected(false);
         }
-        Div::onMouseUp(mouseX, mouseY, button, modifiers);
+        Div::onMouseUpEvent(mouseX, mouseY, button, modifiers);
     }
 
-    void Button::onMouseDown(const int mouseX, const int mouseY, const int button, const int modifiers) {
+    void Button::onMouseDownEvent(const int mouseX, const int mouseY, const int button, const int modifiers) {
         if (!_toggle) {
             setSelected(true);
         }
-        Div::onMouseDown(mouseX, mouseY, button, modifiers);
+        Div::onMouseDownEvent(mouseX, mouseY, button, modifiers);
     }
 
-    void Button::onClick() {
+    void Button::onClickEvent() {
         if (_toggle && _autoToggle) {
             setSelected(!_selected);
         }
-        Div::onClick();
+        Div::onClickEvent();
     }
 
     void Button::skinChanged() {

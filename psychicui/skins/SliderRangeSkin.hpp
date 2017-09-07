@@ -19,10 +19,10 @@ namespace psychicui {
         void added() override;
         void sendMouseValue(int x, int y);
 
-        bool                       _dragging{false};
-        std::shared_ptr<Label>     _value{nullptr};
-        std::shared_ptr<Div> _track{nullptr};
-        std::shared_ptr<Div> _range{nullptr};
+        bool                   _dragging{false};
+        std::shared_ptr<Label> _value{nullptr};
+        std::shared_ptr<Div>   _track{nullptr};
+        std::shared_ptr<Div>   _range{nullptr};
     };
 }
 

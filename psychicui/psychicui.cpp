@@ -45,14 +45,14 @@ namespace psychicui {
 
         mainloop_active = true;
 
-        try {
+//        try {
             while (mainloop_active) {
                 glfwPollEvents();
 
                 int       numScreens = 0;
                 for (auto kv : Window::windows) {
                     Window *window = kv.second;
-                    if (!window->visible()) {
+                    if (!window->getVisible()) {
                         continue;
                     } else if (glfwWindowShouldClose(window->glfwWindow())) {
                         window->setVisible(false);
@@ -72,10 +72,10 @@ namespace psychicui {
                     break;
                 }
             }
-        } catch (const std::exception &e) {
-            std::cerr << "Caught exception in main loop: " << e.what() << std::endl;
-            mainloop_active = false;
-        }
+//        } catch (const std::exception &e) {
+//            std::cerr << "Caught exception in main loop: " << e.what() << std::endl;
+//            mainloop_active = false;
+//        }
     }
 
     void shutdown() {

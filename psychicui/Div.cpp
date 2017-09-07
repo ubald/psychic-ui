@@ -116,33 +116,41 @@ namespace psychicui {
         return _children;
     }
 
-    std::shared_ptr<Div> Div::add(unsigned int index, std::shared_ptr<Div> component) {
-        assert(component != nullptr);
+    std::shared_ptr<Div> Div::add(unsigned int index, std::shared_ptr<Div> child) {
+        assert(child != nullptr);
         assert(index <= childCount());
-        component->setParent(this);
-        _children.insert(_children.begin() + index, component);
-        YGNodeInsertChild(_yogaNode, component->_yogaNode, index);
-        return component;
+        child->setParent(this);
+        _children.insert(_children.begin() + index, child);
+        YGNodeInsertChild(_yogaNode, child->_yogaNode, index);
+        return child;
     }
 
-    std::shared_ptr<Div> Div::add(std::shared_ptr<Div> component) {
-        assert(component != nullptr);
-        return add(childCount(), component);
+    std::shared_ptr<Div> Div::add(std::shared_ptr<Div> child) {
+        assert(child != nullptr);
+        return add(childCount(), child);
     }
 
-    void Div::remove(const std::shared_ptr<Div> component) {
-        assert(component != nullptr);
-        _children.erase(std::remove(_children.begin(), _children.end(), component), _children.end());
-        YGNodeRemoveChild(_yogaNode, component->_yogaNode);
-        component->setParent(nullptr);
+    void Div::remove(const std::shared_ptr<Div> child) {
+        assert(child != nullptr);
+        _children.erase(std::remove(_children.begin(), _children.end(), child), _children.end());
+        YGNodeRemoveChild(_yogaNode, child->_yogaNode);
+        child->setParent(nullptr);
     }
 
     void Div::remove(unsigned int index) {
         assert(index <= childCount());
-        std::shared_ptr<Div> component = _children[index];
+        std::shared_ptr<Div> child = _children[index];
         _children.erase(_children.begin() + index);
-        YGNodeRemoveChild(_yogaNode, component->_yogaNode);
-        component->setParent(nullptr);
+        YGNodeRemoveChild(_yogaNode, child->_yogaNode);
+        child->setParent(nullptr);
+    }
+
+    void Div::removeAll() {
+        for (auto &child: _children) {
+            child->setParent(nullptr);
+            YGNodeRemoveChild(_yogaNode, child->_yogaNode);
+        }
+        _children.clear();
     }
 
     int Div::childIndex(const std::shared_ptr<Div> component) const {
@@ -182,13 +190,13 @@ namespace psychicui {
 
     // region State
 
-    bool Div::visible() const {
+    bool Div::getVisible() const {
         return _visible;
     }
 
     void Div::setVisible(bool value) {
         _visible = value;
-        style()->set(BoolProperty::visible, value);
+        style()->set(visible, value);
     }
 
     bool Div::enabled() const {
@@ -253,6 +261,16 @@ namespace psychicui {
     // endregion
 
     // region Position
+
+    void Div::getGlobalPosition(int &x, int &y) const {
+        int gx = 0;
+        int gy = 0;
+        if (_parent) {
+            _parent->getGlobalPosition(gx, gy);
+        }
+        x = gx + _x;
+        y = gy + _y;
+    }
 
     void Div::setPosition(int x, int y) {
         _x = x;
@@ -497,8 +515,8 @@ namespace psychicui {
 
     void Div::styleUpdated() {
         // region Visibility
-        if (_computedStyle->has(BoolProperty::visible)) {
-            _visible = _computedStyle->get(BoolProperty::visible);
+        if (_computedStyle->has(visible)) {
+            _visible = _computedStyle->get(visible);
         }
         // endregion
         // region Radius
@@ -810,16 +828,12 @@ namespace psychicui {
     }
 
     void Div::render(SkCanvas *canvas) {
-        if (!_visible) {
-            return;
-        }
-
+        // Update styles first since it can have an impact on visibility
         if (_styleDirty) {
             updateStyle();
         }
 
-        // Check for clip rejection after layout was processed
-        if (canvas->quickReject(_rect)) {
+        if (!_visible || canvas->quickReject(_rect)) {
             return;
         }
 
@@ -880,6 +894,9 @@ namespace psychicui {
 
             paint.setStyle(SkPaint::kFill_Style);
             paint.setColor(bgColor);
+            if (_computedStyle->has(opacity)) {
+                paint.setAlpha((unsigned int) (_computedStyle->get(opacity) * 255.f));
+            }
             paint.setAntiAlias(_drawRoundRect ? true : _computedStyle->get(antiAlias));
 
             float hb = _computedStyle->get(border) / 2;
@@ -1058,12 +1075,22 @@ namespace psychicui {
         _cursor = cursor;
     }
 
+    bool Div::mouseEnabled() const {
+        return _mouseEnabled;
+    }
+
+    Div *Div::setMouseEnabled(bool mouseEnabled) {
+        _mouseEnabled = mouseEnabled;
+        return this;
+    }
+    
     bool Div::mouseChildren() const {
         return _mouseChildren;
     }
 
-    void Div::setMouseChildren(bool mouseChildren) {
+    Div *Div::setMouseChildren(bool mouseChildren) {
         _mouseChildren = mouseChildren;
+        return this;
     }
 
     bool Div::mouseOver() const {
@@ -1088,95 +1115,104 @@ namespace psychicui {
         }
     }
 
-    void Div::onMouseButton(const int mouseX, const int mouseY, int button, bool down, int modifiers) {
+    void Div::onMouseButtonEvent(const int mouseX, const int mouseY, int button, bool down, int modifiers) {
         //
     }
 
-    void Div::onMouseUp(const int mouseX, const int mouseY, int button, int modifiers) {
+    void Div::onMouseUpEvent(const int mouseX, const int mouseY, int button, int modifiers) {
         //
     }
 
-    void Div::onMouseUpOutside(const int mouseX, const int mouseY, int button, int modifiers) {
+    void Div::onMouseUpOutsideEvent(const int mouseX, const int mouseY, int button, int modifiers) {
         //
     }
 
-    void Div::onMouseDown(const int mouseX, const int mouseY, int button, int modifiers) {
+    void Div::onMouseDownEvent(const int mouseX, const int mouseY, int button, int modifiers) {
         //
     }
 
-    void Div::onClick() {
+    void Div::onClickEvent() {
         //
     }
 
     bool Div::mouseButton(const int mouseX, const int mouseY, int button, bool down, int modifiers) {
-        if (!_visible || !contains(mouseX, mouseY)) {
+        if (!_visible || !_mouseEnabled || !contains(mouseX, mouseY)) {
             return false;
         }
 
         bool handled = false;
         if (_mouseChildren) {
-            for (const auto &child: _children) {
-                if (child->mouseButton(mouseX - _x, mouseY - _y, button, down, modifiers)) {
+            for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
+                if ((*child)->mouseButton(mouseX - _x, mouseY - _y, button, down, modifiers)) {
                     handled = true;
                     break;
                 }
             }
         }
 
-        onMouseButton(mouseX, mouseY, button, down, modifiers);
-        if (_onMouseButton) {
-            _onMouseButton(mouseX, mouseY, button, down, modifiers);
-        }
-        return true;
-    }
-
-    bool Div::mouseDown(const int mouseX, const int mouseY, int button, int modifiers) {
-        if (!_visible || !contains(mouseX, mouseY)) {
-            return false;
-        }
-
-        bool handled = false;
-        if (_mouseChildren) {
-            for (const auto &child: _children) {
-                if (child->mouseDown(mouseX - _x, mouseY - _y, button, modifiers)) {
-                    handled = true;
-                    break;
-                }
+        if (!handled) {
+            onMouseButtonEvent(mouseX, mouseY, button, down, modifiers);
+            if (_onMouseButton) {
+                _onMouseButton(mouseX, mouseY, button, down, modifiers);
             }
-        }
-
-        if (!handled && _onMouseDown) {
-            _onMouseDown(mouseX, mouseY, button, modifiers);
             handled = true;
         }
 
-        setMouseDown(true);
-        onMouseDown(mouseX, mouseY, button, modifiers);
+        return handled;
+    }
+
+    bool Div::mouseDown(const int mouseX, const int mouseY, int button, int modifiers) {
+        if (!_visible || !_mouseEnabled || !contains(mouseX, mouseY)) {
+            return false;
+        }
+
+        bool handled = false;
+        if (_mouseChildren) {
+            // Traverse in reverse, in order to catch top divs first
+            for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
+                if ((*child)->mouseDown(mouseX - _x, mouseY - _y, button, modifiers)) {
+                    handled = true;
+                    break;
+                }
+            }
+        }
+
+        if (!handled) {
+            setMouseDown(true);
+            onMouseDownEvent(mouseX, mouseY, button, modifiers);
+            if (_onMouseDown) {
+                _onMouseDown(mouseX, mouseY, button, modifiers);
+            }
+            handled = true;
+        }
 
         return handled;
     }
 
     bool Div::mouseUp(const int mouseX, const int mouseY, int button, int modifiers) {
-        if (!_visible) {
+        if (!_visible || !_mouseEnabled) {
             return false;
         }
 
         // Here we go though all the children before checking collision because we need to find mouse up outside
         bool handled = false;
         if (_mouseChildren) {
-            for (const auto &child: _children) {
-                handled |= child->mouseUp(mouseX - _x, mouseY - _y, button, modifiers);
+            // Traverse in reverse, in order to catch top divs first
+            for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
+                handled |= (*child)->mouseUp(mouseX - _x, mouseY - _y, button, modifiers);
             }
         }
 
         bool inside = contains(mouseX, mouseY);
+
+        // Special case for items receiving a mouse up outside
         if (!inside && _mouseDown) {
             setMouseDown(false);
-            onMouseUpOutside(mouseX, mouseY, button, modifiers);
+            onMouseUpOutsideEvent(mouseX, mouseY, button, modifiers);
             if (_onMouseUpOutside) {
                 _onMouseUpOutside(mouseX, mouseY, button, modifiers);
             }
-            onMouseUp(mouseX, mouseY, button, modifiers);
+            onMouseUpEvent(mouseX, mouseY, button, modifiers);
             if (_onMouseUp) {
                 _onMouseUp(mouseX, mouseY, button, modifiers);
             }
@@ -1187,37 +1223,33 @@ namespace psychicui {
         }
 
         if (!handled) {
-            if (_mouseDown && _onClick) {
-                _onClick();
-                handled = true;
+            if (_mouseDown) {
+                onClickEvent();
+                if (_onClick) {
+                    _onClick();
+                }
             }
+            setMouseDown(false);
+            onMouseUpEvent(mouseX, mouseY, button, modifiers);
             if (_onMouseUp) {
                 _onMouseUp(mouseX, mouseY, button, modifiers);
-                handled = true;
             }
+            handled = true;
         }
 
-        if (_mouseDown) {
-            onClick();
-        }
-        setMouseDown(false);
-        onMouseUp(mouseX, mouseY, button, modifiers);
-
-
-        return
-            handled;
+        return handled;
     }
 
-// endregion
+    // endregion
 
-// region Move
+    // region Move
 
-    void Div::onMouseMove(const int mouseX, const int mouseY, const int button, const int modifiers) {
+    void Div::onMouseMoveEvent(const int mouseX, const int mouseY, const int button, const int modifiers) {
         //
     }
 
     Cursor Div::mouseMoved(const int mouseX, const int mouseY, int button, int modifiers) {
-        if (!_visible) {
+        if (!_visible || !_mouseEnabled) {
             return Cursor::Arrow;
         }
 
@@ -1225,8 +1257,8 @@ namespace psychicui {
         if (_mouseChildren) {
             // Propagate to children (including if we just lost the mouse, a child might be interested)
             // We pass mouse movement to every children since is doesn't conflict like clicks with depth.
-            for (const auto &child: _children) {
-                Cursor c = child->mouseMoved(mouseX - _x, mouseY - _y, button, modifiers);
+            for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
+                Cursor c = (*child)->mouseMoved(mouseX - _x, mouseY - _y, button, modifiers);
                 if (c != Cursor::Arrow) {
                     cursor = c;
                 }
@@ -1247,7 +1279,7 @@ namespace psychicui {
         }
 
         // NOTE: Wee need full hierarchy if we want to drag stuff like sliders, so not stopping
-        onMouseMove(mouseX, mouseY, button, modifiers);
+        onMouseMoveEvent(mouseX, mouseY, button, modifiers);
         if (_onMouseMove) {
             _onMouseMove(mouseX, mouseY, button, modifiers);
         }
@@ -1259,30 +1291,32 @@ namespace psychicui {
 
 // region Scroll
 
-    void Div::onMouseScroll(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
+    void Div::onMouseScrollEvent(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
 //        if (_onMouseScroll) {
 //            _onMouseScroll(mouseX, mouseY, scrollX, scrollY);
 //        }
     }
 
     bool Div::mouseScrolled(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
-        if (!_visible || !contains(mouseX, mouseY)) {
+        if (!_visible || !_mouseEnabled || !contains(mouseX, mouseY)) {
             return false;
         }
 
         bool handled = false;
         if (_mouseChildren) {
-            for (const auto &child: _children) {
-                if (child->mouseScrolled(mouseX - _x, mouseY - _y, scrollX, scrollY)) {
+            for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
+                if ((*child)->mouseScrolled(mouseX - _x, mouseY - _y, scrollX, scrollY)) {
                     handled = true;
                     break;
                 }
             }
         }
 
-        onMouseScroll(mouseX, mouseY, scrollX, scrollY);
-        if (!handled && _onMouseScroll) {
-            _onMouseScroll(mouseX, mouseY, scrollX, scrollY);
+        if (!handled) {
+            onMouseScrollEvent(mouseX, mouseY, scrollX, scrollY);
+            if (_onMouseScroll) {
+                _onMouseScroll(mouseX, mouseY, scrollX, scrollY);
+            }
             handled = true;
         }
 

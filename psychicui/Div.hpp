@@ -48,7 +48,7 @@ namespace psychicui {
         unsigned int childCount() const;
         const std::vector<std::shared_ptr<Div>> children() const;
         std::shared_ptr<Div> add(unsigned int index, std::shared_ptr<Div> component);
-        std::shared_ptr<Div> add(std::shared_ptr<Div> component);
+        std::shared_ptr<Div> add(std::shared_ptr<Div> child);
 
         template<typename T, typename... Args>
         std::shared_ptr<T> add(const Args &... args) {
@@ -56,17 +56,19 @@ namespace psychicui {
         }
 
         void remove(unsigned int index);
-        void remove(const std::shared_ptr<Div> component);
+        void remove(std::shared_ptr<Div> child);
+        void removeAll();
+
         const Div *at(unsigned int index) const;
         Div *at(unsigned int index);
-        int childIndex(const std::shared_ptr<Div> component) const;
+        int childIndex(std::shared_ptr<Div> component) const;
         int childIndex(const Div *component) const;
 
         // endregion
 
         // region Visibility, Focus & State
 
-        bool visible() const;
+        bool getVisible() const;
         virtual void setVisible(bool value);
         bool enabled() const;
         virtual void setEnabled(bool value);
@@ -81,6 +83,7 @@ namespace psychicui {
 
         void setPosition(int x, int y);
         void setPosition(int left, int top, int right, int bottom);
+        void getGlobalPosition(int &x, int &y) const;
         const int x() const;
         void setX(int x);
         const int y() const;
@@ -181,7 +184,9 @@ namespace psychicui {
         Cursor cursor() const;
         void setCursor(Cursor cursor);
         bool mouseChildren() const;
-        void setMouseChildren(bool mouseChildren);
+        Div *setMouseChildren(bool mouseChildren);
+        bool mouseEnabled() const;
+        Div *setMouseEnabled(bool mouseEnabled);
         bool mouseOver() const;
         void setMouseOver(bool over); // Mostly for testing
         bool getMouseDown() const;
@@ -399,6 +404,7 @@ namespace psychicui {
         // region Mouse
 
         Cursor _cursor{Cursor::Arrow};
+        bool   _mouseEnabled{true};
         bool   _mouseChildren{true};
         bool   _mouseOver{false};
         bool   _mouseDown{false};
@@ -409,13 +415,13 @@ namespace psychicui {
         bool mouseUp(int mouseX, int mouseY, int button, int modifiers);
         bool mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
 
-        virtual void onMouseButton(int mouseX, int mouseY, int button, bool down, int modifiers);
-        virtual void onMouseUp(int mouseX, int mouseY, int button, int modifiers);
-        virtual void onMouseUpOutside(int mouseX, int mouseY, int button, int modifiers);
-        virtual void onMouseDown(int mouseX, int mouseY, int button, int modifiers);
-        virtual void onClick();
-        virtual void onMouseMove(int mouseX, int mouseY, int button, int modifiers);
-        virtual void onMouseScroll(int mouseX, int mouseY, double scrollX, double scrollY);
+        virtual void onMouseButtonEvent(int mouseX, int mouseY, int button, bool down, int modifiers);
+        virtual void onMouseUpEvent(int mouseX, int mouseY, int button, int modifiers);
+        virtual void onMouseUpOutsideEvent(int mouseX, int mouseY, int button, int modifiers);
+        virtual void onMouseDownEvent(int mouseX, int mouseY, int button, int modifiers);
+        virtual void onClickEvent();
+        virtual void onMouseMoveEvent(int mouseX, int mouseY, int button, int modifiers);
+        virtual void onMouseScrollEvent(int mouseX, int mouseY, double scrollX, double scrollY);
 
         ClickCallback       _onClick{nullptr};
         MouseCallback       _onMouseMove{nullptr};

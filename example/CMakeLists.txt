@@ -5,8 +5,6 @@ if (PSYCHICUI_BUILD_EXAMPLE)
     add_executable(psychicui_demo
         demo.cpp demo.cpp
         demo-stylesheet.hpp
-        components/MenuBar.cpp
-        components/MenuBar.hpp
         components/Application.hpp
         components/ToolBar.cpp
         components/ToolBar.hpp

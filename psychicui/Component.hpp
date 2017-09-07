@@ -29,6 +29,7 @@ namespace psychicui {
         // Make some of div's stuff protected since we manage our content
         using Div::add;
         using Div::remove;
+        using Div::removeAll;
     };
 
     template<class T>

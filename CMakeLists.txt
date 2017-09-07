@@ -124,7 +124,25 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/components/Tabs.hpp
     psychicui/components/TabContainer.cpp
     psychicui/components/TabContainer.hpp
-    psychicui/components/Range.cpp psychicui/components/Range.hpp psychicui/Skin.cpp psychicui/Skin.hpp psychicui/skins/SliderRangeSkin.cpp psychicui/skins/SliderRangeSkin.hpp psychicui/Component.hpp psychicui/skins/SimpleButtonSkin.cpp psychicui/skins/SimpleButtonSkin.hpp psychicui/utils/Hatcher.hpp psychicui/components/TitleBar.cpp psychicui/components/TitleBar.hpp psychicui/skins/TitleBarButtonSkin.cpp psychicui/skins/TitleBarButtonSkin.hpp)
+    psychicui/components/Range.cpp
+    psychicui/components/Range.hpp
+    psychicui/Skin.cpp
+    psychicui/Skin.hpp
+    psychicui/skins/SliderRangeSkin.cpp
+    psychicui/skins/SliderRangeSkin.hpp
+    psychicui/Component.hpp
+    psychicui/skins/SimpleButtonSkin.cpp
+    psychicui/skins/SimpleButtonSkin.hpp
+    psychicui/utils/Hatcher.hpp
+    psychicui/components/TitleBar.cpp
+    psychicui/components/TitleBar.hpp
+    psychicui/skins/TitleBarButtonSkin.cpp
+    psychicui/skins/TitleBarButtonSkin.hpp
+    psychicui/components/MenuBar.cpp
+    psychicui/components/MenuBar.hpp
+    psychicui/components/Menu.cpp
+    psychicui/components/Menu.hpp
+    )
 add_library(psychicui SHARED ${SOURCE_FILES})
 target_include_directories(psychicui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

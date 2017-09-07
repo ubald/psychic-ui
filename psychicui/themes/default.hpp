@@ -150,6 +150,29 @@ public:
                ->set(backgroundColor, highlight);
         // endregion
 
+        // region Menus
+
+        manager->style("menu")
+               ->set(backgroundColor, 0xFF000000)
+               ->set(opacity, 0.8f)
+               ->set(minWidth, 200)
+               ->set(alignItems, "stretch");
+
+        manager->style("menu button")
+               ->set(fontSize, smallText)
+               ->set(lineHeight, text)
+               ->set(paddingHorizontal, 6)
+               ->set(paddingVertical, 6)
+               ->set(borderRadius, 0)
+               ->set(backgroundColor, 0x00000000);
+
+        manager->style("menu button:hover")
+               ->set(color, BASE_00)
+               ->set(backgroundColor, highlight);
+
+
+        // endregion
+
         // region Ranges
         manager->style("range")
                ->set(skin, "slider")

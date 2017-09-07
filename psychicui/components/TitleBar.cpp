@@ -37,13 +37,13 @@ namespace psychicui {
         _label->setText(window()->title());
     }
 
-    void TitleBar::onMouseDown(int mouseX, int mouseY, int button, int modifiers) {
-        Div::onMouseDown(mouseX, mouseY, button, modifiers);
+    void TitleBar::onMouseDownEvent(int mouseX, int mouseY, int button, int modifiers) {
+        Div::onMouseDownEvent(mouseX, mouseY, button, modifiers);
         window()->startDrag();
     }
 
-    void TitleBar::onMouseUp(int mouseX, int mouseY, int button, int modifiers) {
-        Div::onMouseUp(mouseX, mouseY, button, modifiers);
+    void TitleBar::onMouseUpEvent(int mouseX, int mouseY, int button, int modifiers) {
+        Div::onMouseUpEvent(mouseX, mouseY, button, modifiers);
         window()->stopDrag();
     }
 }
