@@ -2,6 +2,8 @@
 
 #include <psychicui/Window.hpp>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <psychicui/components/Label.hpp>
 #include <psychicui/components/Button.hpp>
 #include <psychicui/components/Tabs.hpp>
@@ -18,8 +20,15 @@
 
 namespace psychicui {
     class Application : public Window {
+
     public:
         Application();
+
+    protected:
+        void render(SkCanvas *canvas) override;
+
+    private:
+        std::shared_ptr<Label> fpsLabel{};
     };
 
     Application::Application() :
@@ -41,11 +50,13 @@ namespace psychicui {
                     Menu::item("Quit", []() {}),
                 }
             ),
-            Menu::item("Edit", {
+            Menu::item(
+                "Edit", {
                     Menu::item("Copy", []() {}),
                     Menu::item("Cut", []() {}),
                     Menu::item("Paste", []() {}),
-                }),
+                }
+            ),
             Menu::item("View", []() {}),
             Menu::item("Window", []() {}),
             Menu::item("Help", []() {})
@@ -76,16 +87,31 @@ namespace psychicui {
 
 
         app->add<TabContainer<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Div>>>>>>(
-            panels,
-            [](const auto &item) -> std::string {
-                return item.first;
-            },
-            [](const auto &item) {
-                return item.second->hatch();
-            }
-        )
-            ->select(panels[2])
-            ->style()
-            ->set(heightPercent, 1.f);
+               panels,
+               [](const auto &item) -> std::string {
+                   return item.first;
+               },
+               [](const auto &item) {
+                   return item.second->hatch();
+               }
+           )
+           ->select(panels[2])
+           ->style()
+           ->set(heightPercent, 1.f);
+
+        fpsLabel = app->add<Label>();
+        fpsLabel->style()
+                ->set(fontFamily, "stan0755")
+                ->set(fontSize, 8)
+                ->set(textAntiAlias, false)
+                ->set(position, "absolute")
+                ->set(right, 0);
+    }
+
+    void Application::render(SkCanvas *canvas) {
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(3) << fps;
+        fpsLabel->setText("FPS: " + stream.str());
+        Window::render(canvas);
     }
 }

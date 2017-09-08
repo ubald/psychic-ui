@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <chrono>
 #include <unordered_map>
 #include "GrContext.h"
 #include "gl/GrGLInterface.h"
@@ -185,11 +186,19 @@ namespace psychicui {
 
         // endregion
 
+        // Performances
+        double fps{0.0f};
+
     private:
         // Dont allow direct manipulation by others than the window itself
         using Div::add;
         using Div::remove;
         using Div::removeAll;
+
+        // Performance
+        std::chrono::time_point<std::chrono::high_resolution_clock> lastFrame;
+        std::chrono::time_point<std::chrono::high_resolution_clock> lastReport;
+        int frames = 0;
     };
 }
 

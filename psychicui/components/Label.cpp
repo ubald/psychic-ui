@@ -14,6 +14,10 @@ namespace psychicui {
 
         setMeasurable();
         setText(text);
+
+        #ifdef DEBUG_LAYOUT
+        dashed = true;
+        #endif
     }
 
     const std::string &Label::text() const {
@@ -80,6 +84,7 @@ namespace psychicui {
             // Don't care about setWidth so do one line
             _textBox.setMode(SkTextBox::kOneLine_Mode);
             size.width = _textPaint.measureText(_text.c_str(), _text.length());
+            size.height = _lineHeight;
         } else {
             float w = _textPaint.measureText(_text.c_str(), _text.length());
             if (w > width) {
@@ -90,8 +95,9 @@ namespace psychicui {
                 // TextBox doesn't measure the same way it draws, we have to set the spacing manually
                 size.height = _textBox.countLines() * _lineHeight;
             } else {
-                size.width  = w;
-                size.height = _textPaint.getFontSpacing();
+                _textBox.setMode(SkTextBox::kOneLine_Mode);
+                size.width  = std::ceil(w);
+                size.height = _lineHeight;//_textPaint.getFontSpacing();
             }
         }
 

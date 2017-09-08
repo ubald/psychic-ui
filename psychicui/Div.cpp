@@ -1,9 +1,11 @@
 #include <cmath>
 #include <iostream>
 #include <SkPaint.h>
+#include <SkDashPathEffect.h>
 #include "utils/YogaUtils.hpp"
 #include "Div.hpp"
 #include "Window.hpp"
+
 
 
 namespace psychicui {
@@ -849,22 +851,29 @@ namespace psychicui {
         #ifdef DEBUG_LAYOUT
         if (debugLayout) {
             SkPaint paint;
+            paint.setBlendMode(SkBlendMode::kPlus);
             paint.setStyle(SkPaint::kStroke_Style);
+            if (dashed) {
+                const SkScalar intervals[] = { 1.0f, 1.0f };
+                paint.setPathEffect(SkDashPathEffect::Make(intervals, 2, 0));
+            }
             paint.setStrokeWidth(SkIntToScalar(1));
             paint.setColor(0x7FFF0000);
-            canvas->drawRect(_rect, paint);
+            SkRect dRect = _rect.makeInset(0.5f, 0.5f);
+            canvas->drawRect(dRect, paint);
 
             paint.setColor(0x7F0000FF);
-            canvas->drawRect(_paddedRect, paint);
+            SkRect pRect = _paddedRect.makeInset(0.5f, 0.5f);
+            canvas->drawRect(pRect, paint);
 
             if (_borderLeft > 0 || _borderTop > 0 || _borderRight > 0 || _borderBottom > 0) {
                 paint.setColor(0x7F00FF00);
                 canvas->drawRect(
                     SkRect{
-                        _borderLeft,
-                        _borderTop,
-                        _rect.width() - _borderRight,
-                        _rect.height() - _borderBottom
+                        _borderLeft+0.5f,
+                        _borderTop+0.5f,
+                        _rect.width() - _borderRight - 0.5f,
+                        _rect.height() - _borderBottom - 0.5f
                     }, paint
                 );
             }

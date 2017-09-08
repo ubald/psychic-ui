@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <unordered_map>
+#include <map>
 #include <vector>
 #include <string>
 #include <functional>
@@ -12,16 +13,18 @@
 #define PSYCHIC_STYLE_PROPERTY(type, values, name, defaultValue)                                                       \
 public:                                                                                                                \
 type get(values property) const {                                                                                      \
-    try {                                                                                                              \
-        return _##name##Values.at(property);                                                                           \
-    } catch (const std::out_of_range &exception){                                                                      \
+    auto search = _##name##Values.find(property);                                                                      \
+    if (search != _##name##Values.end()) {                                                                             \
+        return search->second;                                                                                         \
+    } else {                                                                                                           \
         return defaultValue;                                                                                           \
     }                                                                                                                  \
 }                                                                                                                      \
 type get(values property, type fallback) const {                                                                       \
-    try {                                                                                                              \
-        return _##name##Values.at(property);                                                                           \
-    } catch (const std::out_of_range &exception){                                                                      \
+    auto search = _##name##Values.find(property);                                                                      \
+    if (search != _##name##Values.end()) {                                                                             \
+        return search->second;                                                                                         \
+    } else {                                                                                                           \
         return fallback;                                                                                               \
     }                                                                                                                  \
 }                                                                                                                      \

@@ -125,6 +125,7 @@ namespace psychicui {
 
         #ifdef DEBUG_LAYOUT
         static bool debugLayout;
+        bool dashed{false};
         #endif
 
         // endregion

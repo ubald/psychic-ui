@@ -210,6 +210,9 @@ namespace psychicui {
         }
 
         windows[_glfwWindow] = this;
+
+        // Performance
+        lastReport = std::chrono::high_resolution_clock::now();
     }
 
     void Window::close() {
@@ -593,6 +596,18 @@ namespace psychicui {
         drawContents();
         drawComponents();
         glfwSwapBuffers(_glfwWindow);
+
+        // Performance
+        ++frames;
+        double delta = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::high_resolution_clock::now()
+            - lastReport
+        ).count();
+        if (delta >= 500) {
+            lastReport = std::chrono::high_resolution_clock::now();
+            fps        = frames / (delta / 1000.0f);
+            frames     = 0;
+        }
     }
 
     void Window::drawContents() {
@@ -642,6 +657,7 @@ namespace psychicui {
                     static_cast<YGPrintOptions>(YGPrintOptionsLayout
                                                 | YGPrintOptionsStyle
                                                 | YGPrintOptionsChildren));
+                std::cout << std::endl;
             }
             #endif
         }
@@ -749,9 +765,10 @@ namespace psychicui {
         _mouseX = (int) x - 1;
         _mouseY = (int) y - 2;
 
+        // Handle window dragging
         if (_dragging) {
-            _windowDragOffsetX = x - _windowDragMouseX;
-            _windowDragOffsetY = y - _windowDragMouseY;
+            _windowDragOffsetX = (int) x - _windowDragMouseX;
+            _windowDragOffsetY = (int) y - _windowDragMouseY;
             setWindowPosition(_windowX + _windowDragOffsetX, _windowY + _windowDragOffsetY);
         }
 
