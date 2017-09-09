@@ -10,6 +10,8 @@
 #include "psychicui.hpp"
 #include "psychicui/style/Style.hpp"
 #include "psychicui/style/StyleManager.hpp"
+#include "psychicui/signals/Signal.hpp"
+#include "psychicui/signals/Observer.hpp"
 
 namespace psychicui {
 
@@ -22,7 +24,7 @@ namespace psychicui {
     using MouseButtonCallback = std::function<void(const int mouseX, const int mouseY, int button, bool down, int modifiers)>;
     using MouseScrollCallback = std::function<void(const int mouseX, const int mouseY, const double scrollX, const double scrollY)>;
 
-    class Div : public std::enable_shared_from_this<Div> {
+    class Div : public Observer, public std::enable_shared_from_this<Div> {
         friend class StyleManager;
 
     public:
@@ -193,50 +195,15 @@ namespace psychicui {
         bool getMouseDown() const;
         void setMouseDown(bool down); // Mostly for testing
 
-        Div *onMouseDown(MouseCallback mouseDown) {
-            _onMouseDown = mouseDown;
-            return this;
-        }
-
-        Div *onMouseUp(MouseCallback mouseUp) {
-            _onMouseUp = mouseUp;
-            return this;
-        }
-
-        Div *onMouseUpOutside(MouseCallback mouseUpOutside) {
-            _onMouseUpOutside = mouseUpOutside;
-            return this;
-        }
-
-        Div *onClick(ClickCallback click) {
-            _onClick = click;
-            return this;
-        }
-
-        Div *onMouseMove(MouseCallback mouseMove) {
-            _onMouseMove = mouseMove;
-            return this;
-        }
-
-        Div *onMouseOver(MouseCallback mouseOver) {
-            _onMouseOver = mouseOver;
-            return this;
-        }
-
-        Div *onMouseOut(MouseCallback mouseOut) {
-            _onMouseOut = mouseOut;
-            return this;
-        }
-
-        Div *onMouseScrolled(MouseScrollCallback mouseScrolled) {
-            _onMouseScroll = mouseScrolled;
-            return this;
-        }
-
-        Div *onMouseButton(MouseButtonCallback mouseButton) {
-            _onMouseButton = mouseButton;
-            return this;
-        }
+        Signal<const int, const int, const int, const bool, const int> onMouseButton{};
+        Signal<const int, const int, const int, const int> onMouseDown{};
+        Signal<const int, const int, const int, const int> onMouseUp{};
+        Signal<const int, const int, const int, const int> onMouseUpOutside{};
+        Signal<const int, const int, const int, const int> onMouseMove{};
+        Signal<> onMouseOver{};
+        Signal<> onMouseOut{};
+        Signal<const int, const int, const double, const double> onMouseScroll{};
+        Signal<> onClick{};
 
         // endregion
 
@@ -245,7 +212,6 @@ namespace psychicui {
 
 
         // Events
-        virtual bool mouseDragEvent(const int mouseX, const int mouseY, const int dragX, const int dragY, int button, int modifiers);
         virtual bool focusEvent(bool focused);
         virtual bool keyboardEvent(int key, int scancode, int action, int modifiers);
         virtual bool keyboardCharacterEvent(unsigned int codepoint);
@@ -404,9 +370,28 @@ namespace psychicui {
 
         // region Mouse
 
+        /**
+         * Cursor to use when this component has the mouse focus
+         */
+        //TODO: Use the stylesheet for this
         Cursor _cursor{Cursor::Arrow};
+
+        /**
+         * Enable the mouse events for this div.
+         * Events will passthrough ig disabled
+         * See mouseChildren for ignoring the children
+         */
         bool   _mouseEnabled{true};
+
+        /**
+         * Enables the mouse events for this div's children
+         * Events will still affect the current div
+         * See mouseEnabled for ignoring events on this div
+         */
         bool   _mouseChildren{true};
+
+
+
         bool   _mouseOver{false};
         bool   _mouseDown{false};
 
@@ -414,26 +399,8 @@ namespace psychicui {
         bool mouseButton(int mouseX, int mouseY, int button, bool down, int modifiers);
         bool mouseDown(int mouseX, int mouseY, int button, int modifiers);
         bool mouseUp(int mouseX, int mouseY, int button, int modifiers);
+        bool click(int mouseX, int mouseY, int button, int modifiers);
         bool mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
-
-        virtual void onMouseButtonEvent(int mouseX, int mouseY, int button, bool down, int modifiers);
-        virtual void onMouseUpEvent(int mouseX, int mouseY, int button, int modifiers);
-        virtual void onMouseUpOutsideEvent(int mouseX, int mouseY, int button, int modifiers);
-        virtual void onMouseDownEvent(int mouseX, int mouseY, int button, int modifiers);
-        virtual void onClickEvent();
-        virtual void onMouseMoveEvent(int mouseX, int mouseY, int button, int modifiers);
-        virtual void onMouseScrollEvent(int mouseX, int mouseY, double scrollX, double scrollY);
-
-        ClickCallback       _onClick{nullptr};
-        MouseCallback       _onMouseMove{nullptr};
-        MouseCallback       _onMouseOver{nullptr};
-        MouseCallback       _onMouseOut{nullptr};
-        MouseButtonCallback _onMouseButton{nullptr};
-        MouseCallback       _onMouseDown{nullptr};
-        MouseCallback       _onMouseUp{nullptr};
-        MouseCallback       _onMouseUpOutside{nullptr};
-        MouseScrollCallback _onMouseScroll{nullptr};
-
 
         // endregion
 

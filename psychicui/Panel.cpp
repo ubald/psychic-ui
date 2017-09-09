@@ -20,43 +20,4 @@ namespace psychicui {
     void Panel::draw(SkCanvas *canvas) {
         Div::draw(canvas);
     }
-
-    void Panel::dispose() {
-//        Div *component = this;
-//        while (component->setParent()) {
-//            component = component->setParent();
-//        }
-//        ((Window *) component)->disposePanel(this);
-    }
-
-    void Panel::center() {
-//        Div *component = this;
-//        while (component->setParent()) {
-//            component = component->setParent();
-//        }
-//        ((Window *) component)->centerPanel(this);
-    }
-
-    bool Panel::mouseDragEvent(const int mouseX, const int mouseY, const int dragX, const int dragY, int button, int modifiers) {
-//        if (_drag && (button & (1 << GLFW_MOUSE_BUTTON_1)) != 0) {
-//            _x += dragX;
-//            _x = std::min(std::max(_x, 0), parent()->x() - _x);
-//            _y += dragY;
-//            _y = std::min(std::max(_y, 0), parent()->y() - _y);
-//            return true;
-//        }
-        return false;
-    }
-
-    void Panel::onMouseButton(const int mouseX, const int mouseY, int button, bool down, int modifiers) {
-//        Div::onMouseButton(mouseX, mouseY, button, down, modifiers);
-//        if (button == GLFW_MOUSE_BUTTON_1) {
-//            _drag = down && (mouseY - _y) < style()->getValue(titleBarHeight);
-//        }
-    }
-
-    void Panel::refreshRelativePlacement() {
-
-    }
-
 }

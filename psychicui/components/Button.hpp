@@ -58,9 +58,6 @@ namespace psychicui {
         std::function<void(bool)> _onChange{nullptr};
 
         void skinChanged() override;
-        void onMouseUpEvent(int mouseX, int mouseY, int button, int modifiers) override;
-        void onMouseDownEvent(int mouseX, int mouseY, int button, int modifiers) override;
-        void onClickEvent() override;
     };
 }
 

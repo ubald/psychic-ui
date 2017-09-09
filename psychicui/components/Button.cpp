@@ -5,7 +5,7 @@
 namespace psychicui {
 
 
-    Button::Button(const std::string &label, ClickCallback onClick) :
+    Button::Button(const std::string &label, ClickCallback onClickCallback) :
         Component() {
         setTag("Button");
         setCursor(Cursor::Hand);
@@ -13,7 +13,34 @@ namespace psychicui {
         _mouseChildren = false; // !important
 
         _label = label;
-        _onClick = std::move(onClick);
+
+        if (onClickCallback) {
+            onClick(std::move(onClickCallback));
+        }
+
+        onMouseUp.subscribe(
+            [this](const int mouseX, const int mouseY, const int button, const int modifiers) {
+                if (!_toggle) {
+                    setSelected(false);
+                }
+            }
+        );
+
+        onMouseDown.subscribe(
+            [this](const int mouseX, const int mouseY, const int button, const int modifiers) {
+                if (!_toggle) {
+                    setSelected(true);
+                }
+            }
+        );
+
+        onClick.subscribe(
+            [this]() {
+                if (_toggle && _autoToggle) {
+                    setSelected(!_selected);
+                }
+            }
+        );
     }
 
     const std::string &Button::label() const {
@@ -43,29 +70,8 @@ namespace psychicui {
         return Div::active() || _selected;
     };
 
-    void Button::onMouseUpEvent(const int mouseX, const int mouseY, const int button, const int modifiers) {
-        if (!_toggle) {
-            setSelected(false);
-        }
-        Div::onMouseUpEvent(mouseX, mouseY, button, modifiers);
-    }
-
-    void Button::onMouseDownEvent(const int mouseX, const int mouseY, const int button, const int modifiers) {
-        if (!_toggle) {
-            setSelected(true);
-        }
-        Div::onMouseDownEvent(mouseX, mouseY, button, modifiers);
-    }
-
-    void Button::onClickEvent() {
-        if (_toggle && _autoToggle) {
-            setSelected(!_selected);
-        }
-        Div::onClickEvent();
-    }
-
     void Button::skinChanged() {
-        if(_skin) {
+        if (_skin) {
             _skin->setLabel(_label);
         }
     }

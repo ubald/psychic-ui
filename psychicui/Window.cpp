@@ -83,8 +83,8 @@ namespace psychicui {
              ->set(overflow, "hidden");
 
         menu = add<Div>();
-        menu->onMouseDown(
-            [this](int mouseX, int mouseY, int button, int modifiers) {
+        menu->onMouseDown.subscribe(
+            [this](const int mouseX, const int mouseY, const int button, const int modifiers) {
                 closeMenu();
             }
         );
@@ -799,6 +799,7 @@ namespace psychicui {
             if (action == GLFW_PRESS) {
                 mouseDown(_mouseX, _mouseY, button, _modifiers);
             } else {
+                click(_mouseX, _mouseY, button, _modifiers);
                 mouseUp(_mouseX, _mouseY, button, _modifiers);
             }
 

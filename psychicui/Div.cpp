@@ -7,7 +7,6 @@
 #include "Window.hpp"
 
 
-
 namespace psychicui {
 
     const InheritableValues Div::_inheritableValues{
@@ -23,6 +22,7 @@ namespace psychicui {
     #endif
 
     Div::Div() :
+        Observer(),
         _defaultStyle(std::make_unique<Style>([this]() { invalidateStyle(); })),
         _inlineStyle(std::make_unique<Style>([this]() { invalidateStyle(); })),
         _computedStyle(std::make_unique<Style>()),
@@ -854,7 +854,7 @@ namespace psychicui {
             paint.setBlendMode(SkBlendMode::kPlus);
             paint.setStyle(SkPaint::kStroke_Style);
             if (dashed) {
-                const SkScalar intervals[] = { 1.0f, 1.0f };
+                const SkScalar intervals[] = {1.0f, 1.0f};
                 paint.setPathEffect(SkDashPathEffect::Make(intervals, 2, 0));
             }
             paint.setStrokeWidth(SkIntToScalar(1));
@@ -870,8 +870,8 @@ namespace psychicui {
                 paint.setColor(0x7F00FF00);
                 canvas->drawRect(
                     SkRect{
-                        _borderLeft+0.5f,
-                        _borderTop+0.5f,
+                        _borderLeft + 0.5f,
+                        _borderTop + 0.5f,
                         _rect.width() - _borderRight - 0.5f,
                         _rect.height() - _borderBottom - 0.5f
                     }, paint
@@ -1092,7 +1092,7 @@ namespace psychicui {
         _mouseEnabled = mouseEnabled;
         return this;
     }
-    
+
     bool Div::mouseChildren() const {
         return _mouseChildren;
     }
@@ -1124,27 +1124,7 @@ namespace psychicui {
         }
     }
 
-    void Div::onMouseButtonEvent(const int mouseX, const int mouseY, int button, bool down, int modifiers) {
-        //
-    }
-
-    void Div::onMouseUpEvent(const int mouseX, const int mouseY, int button, int modifiers) {
-        //
-    }
-
-    void Div::onMouseUpOutsideEvent(const int mouseX, const int mouseY, int button, int modifiers) {
-        //
-    }
-
-    void Div::onMouseDownEvent(const int mouseX, const int mouseY, int button, int modifiers) {
-        //
-    }
-
-    void Div::onClickEvent() {
-        //
-    }
-
-    bool Div::mouseButton(const int mouseX, const int mouseY, int button, bool down, int modifiers) {
+    bool Div::mouseButton(const int mouseX, const int mouseY, const int button, const bool down, const int modifiers) {
         if (!_visible || !_mouseEnabled || !contains(mouseX, mouseY)) {
             return false;
         }
@@ -1159,21 +1139,21 @@ namespace psychicui {
             }
         }
 
-        if (!handled) {
-            onMouseButtonEvent(mouseX, mouseY, button, down, modifiers);
-            if (_onMouseButton) {
-                _onMouseButton(mouseX, mouseY, button, down, modifiers);
-            }
+        if (!handled && onMouseButton.hasSubscriptions()) {
+            onMouseButton(mouseX, mouseY, button, down, modifiers);
             handled = true;
         }
 
         return handled;
     }
 
-    bool Div::mouseDown(const int mouseX, const int mouseY, int button, int modifiers) {
+    bool Div::mouseDown(const int mouseX, const int mouseY, const int button, const int modifiers) {
         if (!_visible || !_mouseEnabled || !contains(mouseX, mouseY)) {
             return false;
         }
+
+        // Set mouse down all the way for the styles
+        setMouseDown(true);
 
         bool handled = false;
         if (_mouseChildren) {
@@ -1186,21 +1166,31 @@ namespace psychicui {
             }
         }
 
-        if (!handled) {
-            setMouseDown(true);
-            onMouseDownEvent(mouseX, mouseY, button, modifiers);
-            if (_onMouseDown) {
-                _onMouseDown(mouseX, mouseY, button, modifiers);
-            }
+        if (!handled && onMouseDown.hasSubscriptions()) {
+            onMouseDown(mouseX, mouseY, button, modifiers);
             handled = true;
         }
 
         return handled;
     }
 
-    bool Div::mouseUp(const int mouseX, const int mouseY, int button, int modifiers) {
+    bool Div::mouseUp(const int mouseX, const int mouseY, const int button, const int modifiers) {
         if (!_visible || !_mouseEnabled) {
             return false;
+        }
+
+        bool inside = contains(mouseX, mouseY);
+
+        // Set mouse up all the way for the styles, but first remember if we were down
+        bool wasDown = _mouseDown;
+        if (inside || wasDown) {
+            setMouseDown(false);
+        }
+
+        if (wasDown) {
+            // Special case for items receiving a mouse up outside
+            onMouseUpOutside(mouseX, mouseY, button, modifiers);
+            onMouseUp(mouseX, mouseY, button, modifiers);
         }
 
         // Here we go though all the children before checking collision because we need to find mouse up outside
@@ -1212,37 +1202,37 @@ namespace psychicui {
             }
         }
 
-        bool inside = contains(mouseX, mouseY);
-
-        // Special case for items receiving a mouse up outside
-        if (!inside && _mouseDown) {
-            setMouseDown(false);
-            onMouseUpOutsideEvent(mouseX, mouseY, button, modifiers);
-            if (_onMouseUpOutside) {
-                _onMouseUpOutside(mouseX, mouseY, button, modifiers);
-            }
-            onMouseUpEvent(mouseX, mouseY, button, modifiers);
-            if (_onMouseUp) {
-                _onMouseUp(mouseX, mouseY, button, modifiers);
-            }
-        }
-
         if (!inside) {
             return false;
         }
 
-        if (!handled) {
-            if (_mouseDown) {
-                onClickEvent();
-                if (_onClick) {
-                    _onClick();
+        if (!handled && onMouseUp.hasSubscriptions()) {
+            onMouseUp(mouseX, mouseY, button, modifiers);
+            handled = true;
+        }
+
+        return handled;
+    }
+
+    bool Div::click(const int mouseX, const int mouseY, const int button, const int modifiers) {
+        if (!_visible || !_mouseEnabled || !_mouseDown || !contains(mouseX, mouseY)) {
+            return false;
+        }
+
+        // Here we go though all the children before checking collision because we need to find mouse up outside
+        bool handled = false;
+        if (_mouseChildren) {
+            // Traverse in reverse, in order to catch top divs first
+            for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
+                if ((*child)->click(mouseX - _x, mouseY - _y, button, modifiers)) {
+                    handled = true;
+                    break;
                 }
             }
-            setMouseDown(false);
-            onMouseUpEvent(mouseX, mouseY, button, modifiers);
-            if (_onMouseUp) {
-                _onMouseUp(mouseX, mouseY, button, modifiers);
-            }
+        }
+
+        if (!handled && onClick.hasSubscriptions()) {
+            onClick();
             handled = true;
         }
 
@@ -1253,14 +1243,14 @@ namespace psychicui {
 
     // region Move
 
-    void Div::onMouseMoveEvent(const int mouseX, const int mouseY, const int button, const int modifiers) {
-        //
-    }
-
-    Cursor Div::mouseMoved(const int mouseX, const int mouseY, int button, int modifiers) {
+    Cursor Div::mouseMoved(const int mouseX, const int mouseY, const int button, const int modifiers) {
         if (!_visible || !_mouseEnabled) {
             return Cursor::Arrow;
         }
+
+        bool isOver  = contains(mouseX, mouseY);
+        bool wasOver = _mouseOver;
+        setMouseOver(isOver);
 
         Cursor cursor = _cursor;
         if (_mouseChildren) {
@@ -1274,24 +1264,17 @@ namespace psychicui {
             }
         }
 
-        bool isOver  = contains(mouseX, mouseY);
-        bool wasOver = _mouseOver;
-
         // Notify about the change
-        if (isOver != _mouseOver) {
-            setMouseOver(isOver);
-            if (_mouseOver && _onMouseOver) {
-                _onMouseOver(mouseX, mouseY, button, modifiers);
-            } else if (!_mouseOver && _onMouseOut) {
-                _onMouseOut(mouseX, mouseY, button, modifiers);
+        if (isOver != wasOver) {
+            if (isOver) {
+                onMouseOver();
+            } else {
+                onMouseOut();
             }
         }
 
         // NOTE: Wee need full hierarchy if we want to drag stuff like sliders, so not stopping
-        onMouseMoveEvent(mouseX, mouseY, button, modifiers);
-        if (_onMouseMove) {
-            _onMouseMove(mouseX, mouseY, button, modifiers);
-        }
+        onMouseMove(mouseX, mouseY, button, modifiers);
 
         return (!isOver && !wasOver) ? cursor : Cursor::Arrow;
     }
@@ -1299,12 +1282,6 @@ namespace psychicui {
 // endregion
 
 // region Scroll
-
-    void Div::onMouseScrollEvent(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
-//        if (_onMouseScroll) {
-//            _onMouseScroll(mouseX, mouseY, scrollX, scrollY);
-//        }
-    }
 
     bool Div::mouseScrolled(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
         if (!_visible || !_mouseEnabled || !contains(mouseX, mouseY)) {
@@ -1321,11 +1298,8 @@ namespace psychicui {
             }
         }
 
-        if (!handled) {
-            onMouseScrollEvent(mouseX, mouseY, scrollX, scrollY);
-            if (_onMouseScroll) {
-                _onMouseScroll(mouseX, mouseY, scrollX, scrollY);
-            }
+        if (!handled && onMouseScroll.hasSubscriptions()) {
+            onMouseScroll(mouseX, mouseY, scrollX, scrollY);
             handled = true;
         }
 
@@ -1333,11 +1307,6 @@ namespace psychicui {
     }
 
 // endregion
-
-    bool Div::mouseDragEvent(const int mouseX, const int mouseY, const int dragX, const int dragY, int button, int modifiers) {
-        return false;
-    }
-
 
 // STUFF>>>>>>>>>>>>
 

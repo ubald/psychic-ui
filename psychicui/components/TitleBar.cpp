@@ -29,6 +29,18 @@ namespace psychicui {
 
         _label = add<Label>();
         _label->addClassName("title");
+
+        onMouseDown.subscribe(
+            [this](int mouseX, int mouseY, int button, int modifiers) {
+                window()->startDrag();
+            }
+        );
+
+        onMouseUp.subscribe(
+            [this](int mouseX, int mouseY, int button, int modifiers) {
+                window()->stopDrag();
+            }
+        );
     };
 
     void TitleBar::addedToRender() {
@@ -37,13 +49,4 @@ namespace psychicui {
         _label->setText(window()->title());
     }
 
-    void TitleBar::onMouseDownEvent(int mouseX, int mouseY, int button, int modifiers) {
-        Div::onMouseDownEvent(mouseX, mouseY, button, modifiers);
-        window()->startDrag();
-    }
-
-    void TitleBar::onMouseUpEvent(int mouseX, int mouseY, int button, int modifiers) {
-        Div::onMouseUpEvent(mouseX, mouseY, button, modifiers);
-        window()->stopDrag();
-    }
 }

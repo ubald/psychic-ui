@@ -135,13 +135,26 @@ namespace psychicui {
 
         // region Mouse
 
+        /**
+         * Mapping of internal cursors enum to gldw int cursor
+         */
         GLFWcursor  *_cursors[(int) Cursor::CursorCount];
+
+        /**
+         * Current cursor
+         */
         Cursor _mouseCursor;
-        int    _mouseState{0};
-        int    _modifiers{0};
+
         int    _mouseX{0};
         int    _mouseY{0};
-        bool   _dragActive{false};
+
+        int    _mouseState{0};
+        int    _modifiers{0};
+
+        /**
+         * Mouse focus path
+         */
+         std::vector<Div *> _focusPath{};
 
         // endregion
 

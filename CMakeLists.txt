@@ -95,10 +95,6 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/Div.hpp
     psychicui/style/Style.cpp
     psychicui/style/Style.hpp
-#    psychicui/Panel.cpp
-#    psychicui/Panel.hpp
-    #    psychicui/Popup.cpp
-    #    psychicui/Popup.hpp
     psychicui/components/Button.cpp
     psychicui/components/Button.hpp
     psychicui/components/Label.cpp
@@ -142,6 +138,9 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/components/MenuBar.hpp
     psychicui/components/Menu.cpp
     psychicui/components/Menu.hpp
+    psychicui/signals/Signal.hpp
+    psychicui/signals/Slot.hpp
+    psychicui/signals/Observer.hpp
     )
 add_library(psychicui SHARED ${SOURCE_FILES})
 target_include_directories(psychicui PUBLIC

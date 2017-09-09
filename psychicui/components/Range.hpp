@@ -10,6 +10,7 @@
 #include "../Skin.hpp"
 #include "../utils/StringUtils.hpp"
 #include "Label.hpp"
+#include "../signals/Signal.hpp"
 
 namespace psychicui {
 
@@ -74,7 +75,7 @@ namespace psychicui {
         float getLinearPercentage() const override;
         void setLinearPercentage(const float percent) override;
 
-        Range<T> *onChange(std::function<void(T)> callback);
+        Signal <T> onChange{};
 
     protected:
         RangeMode              _mode{linear};
@@ -86,7 +87,6 @@ namespace psychicui {
         float getPercentageFor(T value) const;
         float getLinearPercentageFor(T value) const;
         float nearestValidValue(T value, T step) const;
-        void onMouseScrollEvent(int mouseX, int mouseY, double scrollX, double scrollY) override;
     };
 
     template<class T>
@@ -95,6 +95,17 @@ namespace psychicui {
         _onChange(onChange) {
         setTag("Range");
         _step = std::is_floating_point<T>::value ? 0.01f : 1;
+
+        onMouseScroll.subscribe(
+            [this](const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
+                if (std::is_floating_point<T>::value) {
+                    setValue(_value + (scrollY * _step));
+                } else {
+                    // Event the smalles movement should yield a result
+                    setValue(_value + (std::ceil(scrollY) * _step));
+                }
+            }
+        );
     }
 
     template<class T>
@@ -164,9 +175,7 @@ namespace psychicui {
         float v = std::max(_min, std::min(value, _max));
         if (v != _value) {
             _value = v;
-            if (_onChange) {
-                _onChange(_value);
-            }
+            onChange(_value);
             _skin->setValue(getLinearPercentage());
         }
         return this;
@@ -284,22 +293,6 @@ namespace psychicui {
         std::stringstream stream;
         stream << std::fixed << std::setprecision(3) << _value;
         return stream.str();
-    }
-
-    template<class T>
-    Range<T> *Range<T>::onChange(std::function<void(T)> callback) {
-        _onChange = callback;
-        return this;
-    }
-
-    template<class T>
-    void Range<T>::onMouseScrollEvent(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
-        if (std::is_floating_point<T>::value) {
-            setValue(_value + (scrollY * _step));
-        } else {
-            // Event the smalles movement should yield a result
-            setValue(_value + (std::ceil(scrollY) * _step));
-        }
     }
 
 }

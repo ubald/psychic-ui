@@ -11,8 +11,6 @@ namespace psychicui {
     protected:
         std::shared_ptr<Label> _label{};
         void addedToRender() override;
-        void onMouseUpEvent(int mouseX, int mouseY, int button, int modifiers) override;
-        void onMouseDownEvent(int mouseX, int mouseY, int button, int modifiers) override;
     };
 }
 

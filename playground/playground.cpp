@@ -1,39 +1,70 @@
-#include <string>
 #include <iostream>
+#include <Signal.hpp>
+#include <Observer.hpp>
 
-//#include <rxcpp/rx.hpp>
-//
-//namespace rx {
-//    using namespace rxcpp;
-//    using namespace rxcpp::sources;
-//    using namespace rxcpp::operators;
-//    using namespace rxcpp::util;
-//}
-//using namespace rx;
+using namespace psychicui;
 
-class Test {
+class A: public Observer {
 public:
-    std::string &text() {
-        return _text;
-    }
-
-    void setText(const std::string &text) {
-        _text = text;
-    }
-
-protected:
-    std::string _text{};
+    using Observer::subscribeTo;
+    using Observer::slots;
 };
 
 int main() {
     std::cout << "Playground" << std::endl;
 
-    Test        t;
-    std::string pouet{"Poupou"};
-    t.setText(pouet);
-    std::cout << t.text() << std::endl;
-    pouet = "coucou";
-    std::cout << t.text() << std::endl;
-    t.text() = "allo";
-    std::cout << t.text() << std::endl;
+    Signal<> s1{};
+    auto s1s = s1.subscribe([](){
+        std::cout << "No args" << std::endl;
+    });
+    s1.emit();
+    s1.unsubscribe(s1s);
+    s1.emit();
+
+    Signal<> s2{};
+    {
+        auto s2s = s2.subscribe(
+            []() {
+                std::cout << "No args, should die" << std::endl;
+            }
+        );
+        s2.emit();
+    }
+    s2.emit();
+
+    Signal<> s2b{};
+    {
+        s2b.subscribe(
+            []() {
+                std::cout << "No args, not saved, should die" << std::endl;
+            }
+        );
+        s2b.emit();
+    }
+    s2b.emit();
+
+    Signal<> s3{};
+    {
+        A a{};
+        a.subscribeTo(
+            s3, []() {
+                std::cout << "In observer, should die" << std::endl;
+            }
+        );
+        s3.emit();
+    }
+    s3.emit();
+
+    {
+        Signal<>* s4 = new Signal<>();
+        A a{};
+        a.subscribeTo(
+            *s4, []() {
+                std::cout << "In observer, should die" << std::endl;
+            }
+        );
+        s4->emit();
+        delete s4;
+        std::cout << a.slots.size() << std::endl;
+    }
 }

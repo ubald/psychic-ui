@@ -13,29 +13,34 @@ namespace psychicui {
 
         _track = container->add<Div>();
         _track
-            ->onMouseDown(
-                [this](const int mouseX, const int mouseY, int button, int modifiers) {
-                    sendMouseValue(mouseX, mouseY);
-                    _dragging = true;
-                }
-            )
-            ->onMouseUp(
-                [this](const int mouseX, const int mouseY, int button, int modifiers) {
-                    _dragging = false;
-                }
-            )
-            ->onMouseMove(
-                [this](const int mouseX, const int mouseY, int button, int modifiers) {
-                    if (_dragging) {
-                        sendMouseValue(mouseX, mouseY);
-                    }
-                }
-            )
             ->setClassNames({"track"})
             ->style()
             ->set(position, "absolute")
             ->set(widthPercent, 1.0f)
             ->set(heightPercent, 1.0f);
+
+        subscribeTo(
+            _track
+                ->onMouseDown,
+            [this](const int mouseX, const int mouseY, int button, int modifiers) {
+                sendMouseValue(mouseX, mouseY);
+                _dragging = true;
+            }
+        );
+        subscribeTo(
+            _track->onMouseUp,
+            [this](const int mouseX, const int mouseY, int button, int modifiers) {
+                _dragging = false;
+            }
+        );
+        subscribeTo(
+            _track->onMouseMove,
+            [this](const int mouseX, const int mouseY, int button, int modifiers) {
+                if (_dragging) {
+                    sendMouseValue(mouseX, mouseY);
+                }
+            }
+        );
 
         _range = container->add<Div>();
         _range

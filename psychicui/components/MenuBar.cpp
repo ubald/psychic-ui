@@ -24,17 +24,17 @@ namespace psychicui {
 
         auto sub = std::dynamic_pointer_cast<SubMenuItem>(item);
         if (sub) {
-            auto button = std::make_shared<Button>(sub->label);
-            button->onClick(
-                [this, sub, button]() {
+            auto menuItem = std::make_shared<Button>(sub->label);
+            menuItem->onClick(
+                [this, sub, menuItem]() {
                     std::cout << "MNU" << std::endl;
                     int x, y;
-                    button->getGlobalPosition(x, y);
-                    y += button->getHeight();
+                    menuItem->getGlobalPosition(x, y);
+                    y += menuItem->getHeight();
                     window()->openMenu(sub->items, x, y);
                 }
             );
-            return button;
+            return menuItem;
         }
 
         return nullptr;
