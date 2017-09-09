@@ -4,10 +4,11 @@
 namespace psychicui {
     TitleBarButtonSkin::TitleBarButtonSkin() :
         ButtonSkin() {
-            style()
-                ->set(widthPercent, 1.0f)
-                ->set(heightPercent, 1.0f);
-        }
+        setTag("TitleBarButtonSkin");
+        style()
+            ->set(widthPercent, 1.0f)
+            ->set(heightPercent, 1.0f);
+    }
 
     void TitleBarButtonSkin::draw(SkCanvas *canvas) {
         int hw = _width / 2;

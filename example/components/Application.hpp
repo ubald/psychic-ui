@@ -43,11 +43,18 @@ namespace psychicui {
         std::vector<std::shared_ptr<MenuItem>> mainMenuContents{
             Menu::item(
                 "File", {
-                    Menu::item("New", []() {}),
-                    Menu::item("Open", []() {}),
-                    Menu::item("Save", []() {}),
-                    Menu::item("Save As...", []() {}),
-                    Menu::item("Quit", []() {}),
+                    Menu::item("New", []() {}, "Ctrl+N"),
+                    Menu::item("Open", []() {}, "Ctrl+O"),
+                    Menu::item(
+                        "Open Recent...", {
+                            Menu::item("My Resume3.docx", []() {}),
+                            Menu::item("My Resume3.1-Final.docx", []() {}),
+                            Menu::item("My Resume-FINAL-REAL.docx", []() {}),
+                        }
+                    ),
+                    Menu::item("Save", []() {}, "Ctrl+S"),
+                    Menu::item("Save As...", []() {}, "Ctrl+Shift+S"),
+                    Menu::item("Quit", []() {}, "Ctrl+Q"),
                 }
             ),
             Menu::item(
@@ -57,7 +64,22 @@ namespace psychicui {
                     Menu::item("Paste", []() {}),
                 }
             ),
-            Menu::item("View", []() {}),
+            Menu::item(
+                "View", {
+                    Menu::item(
+                        "Toolbar Items", {
+                            Menu::item("Show Debug Layout", []() {}),
+                            Menu::item("Show Help", []() {})
+                        }
+                    ),
+                    Menu::item(
+                        "Panels", {
+                            Menu::item("Show Inspector", []() {}),
+                            Menu::item("Show Status Bar", []() {})
+                        }
+                    ),
+                }
+            ),
             Menu::item("Window", []() {}),
             Menu::item("Help", []() {})
         };

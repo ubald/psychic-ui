@@ -28,7 +28,9 @@ namespace psychicui {
                 borderRadius, borderRadiusTop, borderRadiusBottom, borderRadiusLeft, borderRadiusRight,
                 borderRadiusTopLeft, borderRadiusTopRight, borderRadiusBottomLeft, borderRadiusBottomRight
             },
-            {},
+            {
+                cursor
+            },
             {
                 antiAlias,
                 textAntiAlias

@@ -4,6 +4,7 @@
 #include <psychicui/style/StyleSheet.hpp>
 #include <psychicui/skins/SliderRangeSkin.hpp>
 #include <psychicui/skins/SimpleButtonSkin.hpp>
+#include <psychicui/skins/DefaultMenuButtonSkin.hpp>
 #include <psychicui/skins/TitleBarButtonSkin.hpp>
 
 using namespace psychicui;
@@ -57,10 +58,20 @@ public:
 
         manager->loadFont("stan0755", "../res/fonts/stan0755.ttf");
         manager->loadFont("Ubuntu Light", "../res/fonts/Ubuntu/Ubuntu-Light.ttf");
+        manager->loadFont("Ubuntu Regular", "../res/fonts/Ubuntu/Ubuntu-Regular.ttf");
 
         manager->registerSkin(
             "simple-button-skin",
             SkinType::make([]() { return std::make_shared<SimpleButtonSkin>(); }));
+        manager->registerSkin(
+            "checkbox-button-skin",
+            SkinType::make([]() { return std::make_shared<SimpleButtonSkin>(); }));
+        manager->registerSkin(
+            "menu-button-skin",
+            SkinType::make([]() { return std::make_shared<DefaultMenuButtonSkin>(); }));
+        manager->registerSkin(
+            "sub-menu-button-skin",
+            SkinType::make([]() { return std::make_shared<DefaultSubMenuButtonSkin>(); }));
         manager->registerSkin(
             "title-bar-button",
             SkinType::make([]() { return std::make_shared<TitleBarButtonSkin>(); }));
@@ -133,6 +144,7 @@ public:
         // region Buttons
         manager->style("button")
                ->set(skin, "simple-button-skin")
+               ->set(cursor, Cursor::Hand)
                ->set(direction, "row")
                ->set(alignItems, "center")
                ->set(padding, 12)
@@ -152,23 +164,64 @@ public:
 
         // region Menus
 
-        manager->style("menu")
+        manager->style("Menu")
                ->set(backgroundColor, 0xFF000000)
                ->set(opacity, 0.8f)
                ->set(minWidth, 200)
                ->set(alignItems, "stretch");
 
-        manager->style("menu button")
-               ->set(fontSize, smallText)
-               ->set(lineHeight, text)
+        manager->style("Menu MenuButton")
+               ->set(direction, "row")
                ->set(paddingHorizontal, 6)
                ->set(paddingVertical, 6)
                ->set(borderRadius, 0)
                ->set(backgroundColor, 0x00000000);
 
-        manager->style("menu button:hover")
-               ->set(color, BASE_00)
+        manager->style("Menu MenuButton.simple")
+               ->set(skin, "menu-button-skin");
+
+        manager->style("Menu MenuButton.submenu")
+               ->set(skin, "sub-menu-button-skin");
+
+        manager->style("Menu MenuButton .label")
+               ->set(grow, 1)
+               ->set(fontFamily, "Ubuntu Regular")
+               ->set(fontSize, smallText)
+               ->set(lineHeight, text);
+
+        manager->style("Menu MenuButton .shortcut")
+               ->set(fontSize, smallText)
+               ->set(lineHeight, text)
+               ->set(color, BASE_04);
+
+        manager->style("Menu MenuButton.submenu .arrow")
+               ->set(width, 6);
+
+        manager->style("Menu MenuButton:hover")
                ->set(backgroundColor, highlight);
+
+        manager->style("Menu MenuButton:hover .label")
+               ->set(color, BASE_00);
+
+        manager->style("Menu MenuButton:hover .shortcut")
+               ->set(color, BASE_03);
+
+        manager->style("Menu MenuButton.submenu:hover .arrow")
+               ->set(color, BASE_00);
+
+        manager->style("Menu MenuButton:active")
+               ->set(backgroundColor, highlight);
+
+        manager->style("Menu MenuButton:active .label")
+               ->set(color, BASE_00);
+
+        manager->style("Menu MenuButton:active .shortcut")
+               ->set(color, BASE_03);
+
+        manager->style("Menu MenuButton.submenu:active .arrow")
+               ->set(color, BASE_00);
+
+
 
 
         // endregion
@@ -182,7 +235,9 @@ public:
                ->set(overflow, "hidden")
                ->set(borderColor, BASE_02)
                ->set(backgroundColor, BASE_00)
+               ->set(fontFamily, "Ubuntu Regular")
                ->set(fontSize, smallText)
+               ->set(lineHeight, smallText)
                ->set(color, BASE_04);
 
         manager->style("range slider.horizontal")

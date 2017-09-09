@@ -48,7 +48,6 @@ namespace psychicui {
         bool fullscreen() const;
         void setFullscreen(bool fullscreen);
 
-        bool getVisible() const;
         void setVisible(bool value) override;
 
         void startDrag();
@@ -70,6 +69,9 @@ namespace psychicui {
 
         void openMenu(const std::vector<std::shared_ptr<MenuItem>> &items, const int x, const int y);
         void closeMenu();
+
+        int cursor() const;
+        void setCursor(int cursor);
 
         // Style
 
@@ -136,14 +138,14 @@ namespace psychicui {
         // region Mouse
 
         /**
-         * Mapping of internal cursors enum to gldw int cursor
+         * Mapping of internal cursors enum to glfw int cursor
          */
-        GLFWcursor  *_cursors[(int) Cursor::CursorCount];
+        GLFWcursor  *_cursors[6];
 
         /**
-         * Current cursor
+         * Cursor to use when this component has the mouse focus
          */
-        Cursor _mouseCursor;
+        int _cursor{Cursor::Arrow};
 
         int    _mouseX{0};
         int    _mouseY{0};

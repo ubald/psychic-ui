@@ -46,6 +46,16 @@ namespace psychicui {
 
     class Div;
 
+    class Cursor {
+    public:
+        static const int Arrow = 0;
+        static const int IBeam = 1;
+        static const int Crosshair = 2;
+        static const int Hand = 3;
+        static const int HResize = 4;
+        static const int VResize = 5;
+    };
+
     enum ColorProperty {
         color,
         backgroundColor,
@@ -82,7 +92,7 @@ namespace psychicui {
     };
 
     enum IntProperty {
-
+        cursor
     };
 
     enum BoolProperty {

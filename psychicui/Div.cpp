@@ -13,7 +13,7 @@ namespace psychicui {
         {color},
         {fontFamily},
         {fontSize, letterSpacing, lineHeight},
-        {},
+        {cursor},
         {}
     };
 
@@ -120,9 +120,10 @@ namespace psychicui {
 
     std::shared_ptr<Div> Div::add(unsigned int index, std::shared_ptr<Div> child) {
         assert(child != nullptr);
-        assert(index <= childCount());
+        assert(index >= 0 && index <= childCount());
         child->setParent(this);
-        _children.insert(_children.begin() + index, child);
+        // Insert in "reverse" so that we can iterate front-to-back without using a reverse_iterator
+        _children.insert(_children.end() - index, child);
         YGNodeInsertChild(_yogaNode, child->_yogaNode, index);
         return child;
     }
@@ -142,7 +143,7 @@ namespace psychicui {
     void Div::remove(unsigned int index) {
         assert(index <= childCount());
         std::shared_ptr<Div> child = _children[index];
-        _children.erase(_children.begin() + index);
+        _children.erase(_children.end() - index);
         YGNodeRemoveChild(_yogaNode, child->_yogaNode);
         child->setParent(nullptr);
     }
@@ -272,6 +273,14 @@ namespace psychicui {
         }
         x = gx + _x;
         y = gy + _y;
+    }
+
+    void Div::getLocalPosition(const int x, const int y, int &lx, int &ly) const {
+        int gx = 0;
+        int gy = 0;
+        getGlobalPosition(gx, gy);
+        lx = x - gx;
+        ly = y - gy;
     }
 
     void Div::setPosition(int x, int y) {
@@ -819,6 +828,8 @@ namespace psychicui {
         for (auto &child: _children) {
             child->layoutUpdated();
         }
+
+        layoutReady = true;
     }
 
     // endregion
@@ -835,7 +846,7 @@ namespace psychicui {
             updateStyle();
         }
 
-        if (!_visible || canvas->quickReject(_rect)) {
+        if (!layoutReady || !_visible || canvas->quickReject(_rect)) {
             return;
         }
 
@@ -844,8 +855,10 @@ namespace psychicui {
 
         draw(canvas);
 
-        for (const auto &child : _children) {
-            child->render(canvas);
+        // This is the only place where we iterate in reverse because we order children in reverse in the vector
+        // as to not explode when we modify children in event handlers. We still need to render back-to-front though ;)
+        for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
+            (*child)->render(canvas);
         }
 
         #ifdef DEBUG_LAYOUT
@@ -1076,14 +1089,6 @@ namespace psychicui {
 
     // region Interaction
 
-    Cursor Div::cursor() const {
-        return _cursor;
-    }
-
-    void Div::setCursor(Cursor cursor) {
-        _cursor = cursor;
-    }
-
     bool Div::mouseEnabled() const {
         return _mouseEnabled;
     }
@@ -1131,8 +1136,8 @@ namespace psychicui {
 
         bool handled = false;
         if (_mouseChildren) {
-            for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
-                if ((*child)->mouseButton(mouseX - _x, mouseY - _y, button, down, modifiers)) {
+            for (auto &child: _children) {
+                if (child->mouseButton(mouseX - _x, mouseY - _y, button, down, modifiers)) {
                     handled = true;
                     break;
                 }
@@ -1157,9 +1162,8 @@ namespace psychicui {
 
         bool handled = false;
         if (_mouseChildren) {
-            // Traverse in reverse, in order to catch top divs first
-            for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
-                if ((*child)->mouseDown(mouseX - _x, mouseY - _y, button, modifiers)) {
+            for (auto &child: _children) {
+                if (child->mouseDown(mouseX - _x, mouseY - _y, button, modifiers)) {
                     handled = true;
                     break;
                 }
@@ -1196,9 +1200,8 @@ namespace psychicui {
         // Here we go though all the children before checking collision because we need to find mouse up outside
         bool handled = false;
         if (_mouseChildren) {
-            // Traverse in reverse, in order to catch top divs first
-            for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
-                handled |= (*child)->mouseUp(mouseX - _x, mouseY - _y, button, modifiers);
+            for (auto &child: _children) {
+                handled |= child->mouseUp(mouseX - _x, mouseY - _y, button, modifiers);
             }
         }
 
@@ -1222,9 +1225,8 @@ namespace psychicui {
         // Here we go though all the children before checking collision because we need to find mouse up outside
         bool handled = false;
         if (_mouseChildren) {
-            // Traverse in reverse, in order to catch top divs first
-            for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
-                if ((*child)->click(mouseX - _x, mouseY - _y, button, modifiers)) {
+            for (auto &child: _children) {
+                if (child->click(mouseX - _x, mouseY - _y, button, modifiers)) {
                     handled = true;
                     break;
                 }
@@ -1243,40 +1245,38 @@ namespace psychicui {
 
     // region Move
 
-    Cursor Div::mouseMoved(const int mouseX, const int mouseY, const int button, const int modifiers) {
+    bool Div::mouseMoved(const int mouseX, const int mouseY, const int button, const int modifiers, bool handled) {
         if (!_visible || !_mouseEnabled) {
-            return Cursor::Arrow;
-        }
-
-        bool isOver  = contains(mouseX, mouseY);
-        bool wasOver = _mouseOver;
-        setMouseOver(isOver);
-
-        Cursor cursor = _cursor;
-        if (_mouseChildren) {
-            // Propagate to children (including if we just lost the mouse, a child might be interested)
-            // We pass mouse movement to every children since is doesn't conflict like clicks with depth.
-            for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
-                Cursor c = (*child)->mouseMoved(mouseX - _x, mouseY - _y, button, modifiers);
-                if (c != Cursor::Arrow) {
-                    cursor = c;
-                }
-            }
-        }
-
-        // Notify about the change
-        if (isOver != wasOver) {
-            if (isOver) {
-                onMouseOver();
-            } else {
-                onMouseOut();
-            }
+            return false;
         }
 
         // NOTE: Wee need full hierarchy if we want to drag stuff like sliders, so not stopping
         onMouseMove(mouseX, mouseY, button, modifiers);
 
-        return (!isOver && !wasOver) ? cursor : Cursor::Arrow;
+        bool isOver  = contains(mouseX, mouseY);
+        bool wasOver = _mouseOver;
+
+        setMouseOver(isOver && !handled);
+
+        if (wasOver && !isOver) {
+            onMouseOut();
+        } else if (!wasOver && isOver) {
+            onMouseOver();
+        }
+
+        if (_mouseChildren) {
+            // Propagate to children (including if we just lost the mouse, a child might be interested)
+            // We pass mouse movement to every children since is doesn't conflict like clicks with depth.
+            for (auto &child: _children) {
+                handled |= child->mouseMoved(mouseX - _x, mouseY - _y, button, modifiers, handled);
+            }
+        }
+
+        if (isOver && !handled) {
+            window()->setCursor(_computedStyle->get(cursor));
+        }
+
+        return isOver;
     }
 
 // endregion
@@ -1290,8 +1290,8 @@ namespace psychicui {
 
         bool handled = false;
         if (_mouseChildren) {
-            for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
-                if ((*child)->mouseScrolled(mouseX - _x, mouseY - _y, scrollX, scrollY)) {
+            for (auto &child: _children) {
+                if (child->mouseScrolled(mouseX - _x, mouseY - _y, scrollX, scrollY)) {
                     handled = true;
                     break;
                 }

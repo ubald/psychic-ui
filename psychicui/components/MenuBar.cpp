@@ -27,7 +27,6 @@ namespace psychicui {
             auto menuItem = std::make_shared<Button>(sub->label);
             menuItem->onClick(
                 [this, sub, menuItem]() {
-                    std::cout << "MNU" << std::endl;
                     int x, y;
                     menuItem->getGlobalPosition(x, y);
                     y += menuItem->getHeight();

@@ -3,6 +3,7 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include <utility>
 #include "DataContainer.hpp"
 
 namespace psychicui {
@@ -12,18 +13,18 @@ namespace psychicui {
         std::string label{};
         std::string shortcut{};
 
-        MenuItem(std::string itemLabel, std::string itemShortcut = "") :
-            label(itemLabel),
-            shortcut(itemShortcut) {}
+        explicit MenuItem(const std::string &itemLabel, const std::string &itemShortcut = "") :
+            label(std::move(itemLabel)),
+            shortcut(std::move(itemShortcut)) {}
 
-        virtual void dummy() {};
+        virtual void please_be_polymorphic() {};
     };
 
     class SimpleMenuItem : public MenuItem {
     public:
         std::function<void()> callback{nullptr};
 
-        SimpleMenuItem(std::string itemLabel, std::function<void()> itemCallback, std::string itemShortcut = "") :
+        SimpleMenuItem(const std::string &itemLabel, std::function<void()> itemCallback, const std::string &itemShortcut = "") :
             MenuItem(itemLabel, itemShortcut),
             callback(itemCallback) {}
     };
@@ -32,26 +33,30 @@ namespace psychicui {
     public:
         std::vector<std::shared_ptr<MenuItem>> items{};
 
-        SubMenuItem(std::string itemLabel, const std::vector<std::shared_ptr<MenuItem>> &items, std::string itemShortcut = "") :
+        SubMenuItem(const std::string &itemLabel, const std::vector<std::shared_ptr<MenuItem>> &items, const std::string &itemShortcut = "") :
             MenuItem(itemLabel, itemShortcut),
             items(items) {}
     };
 
     // MENU
 
-    class Menu : public DataContainer<std::shared_ptr<MenuItem>> {
+    class Menu : public Div {
     public:
         explicit Menu(const std::vector<std::shared_ptr<MenuItem>> &items);
 
-        inline static std::shared_ptr<SimpleMenuItem> item(std::string label, std::function<void()> callback, std::string shortcut = "") {
+        inline static std::shared_ptr<SimpleMenuItem>
+        item(const std::string &label, std::function<void()> callback, const std::string &shortcut = "") {
             return std::make_shared<SimpleMenuItem>(label, callback, shortcut);
         }
 
-        inline static std::shared_ptr<SubMenuItem> item(std::string label, const std::vector<std::shared_ptr<MenuItem>> &items, std::string shortcut = "") {
+        inline static std::shared_ptr<SubMenuItem>
+        item(const std::string &label, const std::vector<std::shared_ptr<MenuItem>> &items, const std::string &shortcut = "") {
             return std::make_shared<SubMenuItem>(label, items, shortcut);
         }
 
     protected:
-        std::shared_ptr<Div> getItemDiv(const std::shared_ptr<MenuItem> &item) const;
+        std::shared_ptr<Div> getItemDiv(const std::shared_ptr<MenuItem> &item);
+        std::shared_ptr<DataContainer<std::shared_ptr<MenuItem>>> menuContainer{};
+        std::shared_ptr<Menu> subMenu{};
     };
 }

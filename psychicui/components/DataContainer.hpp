@@ -8,7 +8,6 @@ namespace psychicui {
     template<class T>
     class DataContainer : public Div {
     public:
-        DataContainer() = delete;
         using ContainerData = std::vector<T>;
         using DivCallback = std::function<std::shared_ptr<Div>(const T &)>;
 

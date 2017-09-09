@@ -141,7 +141,7 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/signals/Signal.hpp
     psychicui/signals/Slot.hpp
     psychicui/signals/Observer.hpp
-    )
+    psychicui/skins/DefaultMenuButtonSkin.cpp psychicui/skins/DefaultMenuButtonSkin.hpp psychicui/components/MenuButton.cpp psychicui/components/MenuButton.hpp psychicui/Shape.cpp psychicui/Shape.hpp psychicui/skins/DefaultCheckBoxSkin.cpp psychicui/skins/DefaultCheckBoxSkin.hpp psychicui/components/CheckBox.cpp psychicui/components/CheckBox.hpp)
 add_library(psychicui SHARED ${SOURCE_FILES})
 target_include_directories(psychicui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

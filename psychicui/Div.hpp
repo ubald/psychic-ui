@@ -86,6 +86,7 @@ namespace psychicui {
         void setPosition(int x, int y);
         void setPosition(int left, int top, int right, int bottom);
         void getGlobalPosition(int &x, int &y) const;
+        void getLocalPosition(int x, int y, int &lx, int &ly) const;
         const int x() const;
         void setX(int x);
         const int y() const;
@@ -182,10 +183,8 @@ namespace psychicui {
 
         // endregion
 
-        // region Mouse & Cursor
+        // region Mouse
 
-        Cursor cursor() const;
-        void setCursor(Cursor cursor);
         bool mouseChildren() const;
         Div *setMouseChildren(bool mouseChildren);
         bool mouseEnabled() const;
@@ -346,6 +345,8 @@ namespace psychicui {
          */
         virtual void layoutUpdated();
 
+        bool layoutReady{false};
+
         // endregion
 
         // region Rendering
@@ -371,12 +372,6 @@ namespace psychicui {
         // region Mouse
 
         /**
-         * Cursor to use when this component has the mouse focus
-         */
-        //TODO: Use the stylesheet for this
-        Cursor _cursor{Cursor::Arrow};
-
-        /**
          * Enable the mouse events for this div.
          * Events will passthrough ig disabled
          * See mouseChildren for ignoring the children
@@ -395,7 +390,7 @@ namespace psychicui {
         bool   _mouseOver{false};
         bool   _mouseDown{false};
 
-        Cursor mouseMoved(int mouseX, int mouseY, int button, int modifiers);
+        bool mouseMoved(int mouseX, int mouseY, int button, int modifiers, bool handled = false);
         bool mouseButton(int mouseX, int mouseY, int button, bool down, int modifiers);
         bool mouseDown(int mouseX, int mouseY, int button, int modifiers);
         bool mouseUp(int mouseX, int mouseY, int button, int modifiers);

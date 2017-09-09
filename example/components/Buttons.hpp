@@ -2,6 +2,7 @@
 
 #include <psychicui/Div.hpp>
 #include <psychicui/components/Button.hpp>
+#include <psychicui/components/CheckBox.hpp>
 
 namespace psychicui {
     class Buttons : public Div {
@@ -23,6 +24,9 @@ namespace psychicui {
         // Toggle
         add<Button>("Toggle")
             ->setToggle(true);
+
+        // CheckBox
+        add<CheckBox>("Checkbox");
 
     }
 

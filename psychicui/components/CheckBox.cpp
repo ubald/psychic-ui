@@ -1,13 +1,13 @@
 #include <iostream>
 #include <utility>
-#include "Button.hpp"
+#include "CheckBox.hpp"
 
 namespace psychicui {
 
 
-    Button::Button(const std::string &label, ClickCallback onClickCallback) :
+    CheckBox::CheckBox(const std::string &label, ClickCallback onClickCallback) :
         Component() {
-        setTag("Button");
+        setTag("CheckBox");
 
         _mouseChildren = false; // !important
 
@@ -18,7 +18,7 @@ namespace psychicui {
         }
 
         onMouseUp.subscribe(
-            [this](const int mouseX, const int mouseY, const int button, const int modifiers) {
+            [this](const int mouseX, const int mouseY, const int checkBox, const int modifiers) {
                 if (!_toggle) {
                     setSelected(false);
                 }
@@ -26,7 +26,7 @@ namespace psychicui {
         );
 
         onMouseDown.subscribe(
-            [this](const int mouseX, const int mouseY, const int button, const int modifiers) {
+            [this](const int mouseX, const int mouseY, const int checkBox, const int modifiers) {
                 if (!_toggle) {
                     setSelected(true);
                 }
@@ -42,20 +42,20 @@ namespace psychicui {
         );
     }
 
-    const std::string &Button::label() const {
+    const std::string &CheckBox::label() const {
         return _label;
     }
 
-    void Button::setLabel(const std::string &label) {
+    void CheckBox::setLabel(const std::string &label) {
         _label = label;
         _skin->setLabel(_label);
     }
 
-    const bool Button::selected() const {
+    const bool CheckBox::selected() const {
         return _selected;
     }
 
-    void Button::setSelected(const bool selected) {
+    void CheckBox::setSelected(const bool selected) {
         if (_selected != selected) {
             _selected = selected;
             invalidateStyle();
@@ -65,11 +65,11 @@ namespace psychicui {
         }
     }
 
-    const bool Button::active() const {
+    const bool CheckBox::active() const {
         return Component::active() || _selected;
     };
 
-    void Button::skinChanged() {
+    void CheckBox::skinChanged() {
         if (_skin) {
             _skin->setLabel(_label);
         }

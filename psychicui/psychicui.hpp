@@ -25,17 +25,6 @@ namespace psychicui {
 //        using namespace rxcpp::util;
 //    }
 
-    enum class Cursor {
-        Arrow = 0,
-        IBeam,
-        Crosshair,
-        Hand,
-        HResize,
-        VResize,
-        /// Not a cursor --- should always be last: enables a loop over the cursor types.
-        CursorCount
-    };
-
     typedef SkColor Color;
 
     void init();

@@ -80,6 +80,10 @@ namespace psychicui {
     YGSize Label::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
         YGSize size = Div::measure(width, widthMode, height, heightMode);
 
+        if (_text.empty()) {
+            size;
+        }
+
         if (widthMode == YGMeasureModeUndefined) {
             // Don't care about setWidth so do one line
             _textBox.setMode(SkTextBox::kOneLine_Mode);
@@ -106,7 +110,9 @@ namespace psychicui {
 
     void Label::draw(SkCanvas *canvas) {
         Div::draw(canvas);
-        _textBox.setBox(_paddedRect);
-        _textBox.draw(canvas);
+        if (!_text.empty()) {
+            _textBox.setBox(_paddedRect);
+            _textBox.draw(canvas);
+        }
     }
 }

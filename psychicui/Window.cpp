@@ -98,7 +98,7 @@ namespace psychicui {
 
     Window::~Window() {
         windows.erase(_glfwWindow);
-        for (int i = 0; i < (int) Cursor::CursorCount; ++i) {
+        for (int i = 0; i < 6; ++i) {
             if (_cursors[i]) {
                 glfwDestroyCursor(_cursors[i]);
             }
@@ -205,7 +205,7 @@ namespace psychicui {
         _visible         = glfwGetWindowAttrib(_glfwWindow, GLFW_VISIBLE) != 0;
         _lastInteraction = glfwGetTime();
 
-        for (int i = 0; i < (int) Cursor::CursorCount; ++i) {
+        for (int i = 0; i < 6; ++i) {
             _cursors[i] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR + i);
         }
 
@@ -514,10 +514,6 @@ namespace psychicui {
 
     // region Visible
 
-    bool Window::getVisible() const {
-        return _visible;
-    }
-
     void Window::setVisible(bool value) {
         if (_visible != value) {
             _visible = value;
@@ -532,6 +528,13 @@ namespace psychicui {
     // endregion
 
     // region Mouse
+
+    void Window::setCursor(int cursor) {
+        if (_cursor != cursor) {
+            _cursor = cursor;
+            glfwSetCursor(_glfwWindow, _cursors[_cursor]);
+        }
+    }
 
     // endregion
 
@@ -676,10 +679,12 @@ namespace psychicui {
 
     void Window::openMenu(const std::vector<std::shared_ptr<MenuItem>> &items, const int x, const int y) {
         menu->removeAll();
+        int lx, ly;
+        menu->getLocalPosition(x, y, lx, ly);
         auto m = menu->add<Menu>(items);
         m->style()
-         ->set(left, x)
-         ->set(top, y);
+         ->set(left, lx)
+         ->set(top, ly);
         menu->style()
             ->set(visible, true);
     }
@@ -773,11 +778,7 @@ namespace psychicui {
         }
 
         try {
-            Cursor cursor = mouseMoved(_mouseX, _mouseY, _mouseState, _modifiers);
-            if (cursor != _mouseCursor) {
-                _mouseCursor = cursor;
-                glfwSetCursor(_glfwWindow, _cursors[(int) _mouseCursor]);
-            }
+            mouseMoved(_mouseX, _mouseY, _mouseState, _modifiers);
 
         } catch (const std::exception &e) {
             std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
