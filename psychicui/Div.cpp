@@ -38,6 +38,25 @@ namespace psychicui {
         YGNodeFree(_yogaNode);
     }
 
+    std::string Div::toString() const {
+        std::string str = "";
+        if (_parent) {
+            str = _parent->toString();
+        }
+        if (!_tags.empty()) {
+            str += " " + _tags.back();
+        } else {
+            str += " #ERROR_NO_TAG#";
+        }
+        if (!_id.empty()) {
+            str += "#" + _id;
+        }
+        for (auto className: _classNames) {
+            str += "." + className;
+        }
+        return str;
+    }
+
     // region Lifecycle
 
     // endregion
@@ -58,6 +77,10 @@ namespace psychicui {
 
     void Div::setParent(Div *parent) {
         if (_parent != parent) {
+            if (_parent) {
+                removedFromRenderRecursive();
+                removed();
+            }
             _parent = parent;
             _depth  = _parent ? _parent->depth() + 1 : 0;
             if (_parent) {
@@ -69,9 +92,6 @@ namespace psychicui {
                 if (window()) {
                     addedToRenderRecursive();
                 }
-            } else {
-                removed();
-                removedFromRenderRecursive();
             }
         }
     }
@@ -247,38 +267,45 @@ namespace psychicui {
     // region Hit Tests
 
     bool Div::contains(const int x, const int y) const {
-        int lx = x - _x, ly = y - _y;
-        return lx >= 0 && lx < _width && ly >= 0 && ly < _height;
+        return x >= 0 && x < _width && y >= 0 && y < _height;
+    }
+
+    bool Div::boundsContains(const int x, const int y) const {
+        if (_computedStyle->get(overflow) == "visible") {
+            return x >= _boundsLeft && x < _boundsRight && y >= _boundsTop && y < _boundsBottom;
+        } else {
+            return x >= 0 && x < _width && y >= 0 && y < _height;
+        }
     }
 
 //    std::shared_ptr<Div> Div::findComponent(const int x, const int y) {
 //        int             lx = x - _x, ly = y - _y;
 //        for (const auto &child: _children) {
-//            if (child->visible() && child->contains(lx, ly)) {
+//            if (child->visible() && child->boundsContains(lx, ly)) {
 //                return child->findComponent(lx, ly);
 //            }
 //        }
-//        return contains(lx, ly) ? shared_from_this() : nullptr;
+//        return boundsContains(lx, ly) ? shared_from_this() : nullptr;
 //    }
 
     // endregion
 
     // region Position
 
-    void Div::getGlobalPosition(int &x, int &y) const {
-        int gx = 0;
-        int gy = 0;
+    void Div::getLocalToGlobal(int &gx, int &gy, const int x, const int y) const {
+        int lgx = _x + x;
+        int lgy = _y + y;
         if (_parent) {
-            _parent->getGlobalPosition(gx, gy);
+            _parent->getLocalToGlobal(lgx, lgy, lgx, lgy);
         }
-        x = gx + _x;
-        y = gy + _y;
+        gx = lgx;
+        gy = lgy;
     }
 
-    void Div::getLocalPosition(const int x, const int y, int &lx, int &ly) const {
+    void Div::getGlobalToLocal(int &lx, int &ly, const int x, const int y) const {
         int gx = 0;
         int gy = 0;
-        getGlobalPosition(gx, gy);
+        getLocalToGlobal(gx, gy);
         lx = x - gx;
         ly = y - gy;
     }
@@ -466,6 +493,18 @@ namespace psychicui {
 
     const std::vector<std::string> &Div::tags() const {
         return _tags;
+    }
+
+    const std::string Div::id() const {
+        return _id;
+    }
+
+    Div *Div::setId(std::string id) {
+        if (id != _id) {
+            _id = id;
+            invalidateStyle();
+        }
+        return this;
     }
 
     const std::unordered_set<std::string> &Div::classNames() const {
@@ -799,7 +838,7 @@ namespace psychicui {
         _width  = (int) width;
         _height = (int) height;
 
-        _rect.set(0, 0, _width, _height);
+        _rect.set(_x, _y, _x + _width, _y + _height);
 
         _borderLeft   = YGNodeLayoutGetBorder(_yogaNode, YGEdgeLeft);
         _borderTop    = YGNodeLayoutGetBorder(_yogaNode, YGEdgeTop);
@@ -807,10 +846,10 @@ namespace psychicui {
         _borderBottom = YGNodeLayoutGetBorder(_yogaNode, YGEdgeBottom);
 
         _paddedRect.set(
-            YGNodeLayoutGetPadding(_yogaNode, YGEdgeLeft) + _borderLeft,
-            YGNodeLayoutGetPadding(_yogaNode, YGEdgeTop) + _borderTop,
-            _width - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeRight) + _borderRight),
-            _height - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeBottom) + _borderBottom)
+            _x + YGNodeLayoutGetPadding(_yogaNode, YGEdgeLeft) + _borderLeft,
+            _y + YGNodeLayoutGetPadding(_yogaNode, YGEdgeTop) + _borderTop,
+            _x + _width - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeRight) + _borderRight),
+            _y + _height - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeBottom) + _borderBottom)
         );
 
         _drawBorder = _borderLeft != 0
@@ -825,8 +864,17 @@ namespace psychicui {
         );
 
         // Children should also update
+        _boundsLeft   = 0;
+        _boundsTop    = 0;
+        _boundsRight  = _width;
+        _boundsBottom = _height;
         for (auto &child: _children) {
             child->layoutUpdated();
+
+            _boundsLeft   = std::min(_boundsLeft, child->x() + child->boundsLeft());
+            _boundsTop    = std::min(_boundsTop, child->y() + child->boundsTop());
+            _boundsRight  = std::max(_boundsRight, child->x() + child->boundsRight());
+            _boundsBottom = std::max(_boundsBottom, child->y() + child->boundsBottom());
         }
 
         layoutReady = true;
@@ -846,21 +894,17 @@ namespace psychicui {
             updateStyle();
         }
 
+//        SkRect r{(float)_x, (float)_y, (float)_x + (float)_width, (float)_y + (float)_height};
         if (!layoutReady || !_visible || canvas->quickReject(_rect)) {
             return;
         }
 
         canvas->save();
-        canvas->translate(_x, _y);
+
 
         draw(canvas);
 
-        // This is the only place where we iterate in reverse because we order children in reverse in the vector
-        // as to not explode when we modify children in event handlers. We still need to render back-to-front though ;)
-        for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
-            (*child)->render(canvas);
-        }
-
+        // region Debug
         #ifdef DEBUG_LAYOUT
         if (debugLayout) {
             SkPaint paint;
@@ -871,6 +915,7 @@ namespace psychicui {
                 paint.setPathEffect(SkDashPathEffect::Make(intervals, 2, 0));
             }
             paint.setStrokeWidth(SkIntToScalar(1));
+
             paint.setColor(0x7FFF0000);
             SkRect dRect = _rect.makeInset(0.5f, 0.5f);
             canvas->drawRect(dRect, paint);
@@ -878,6 +923,11 @@ namespace psychicui {
             paint.setColor(0x7F0000FF);
             SkRect pRect = _paddedRect.makeInset(0.5f, 0.5f);
             canvas->drawRect(pRect, paint);
+
+            paint.setColor(0x30FFFF00);
+            SkRect bRect{(float) _boundsLeft, (float) _boundsTop, (float) _boundsRight, (float) _boundsBottom};
+            bRect.inset(0.5f, 0.5f);
+            canvas->drawRect(bRect, paint);
 
             if (_borderLeft > 0 || _borderTop > 0 || _borderRight > 0 || _borderBottom > 0) {
                 paint.setColor(0x7F00FF00);
@@ -902,8 +952,71 @@ namespace psychicui {
             }
         }
         #endif
+        // endregion
+
+        clip(canvas);
+
+        canvas->translate(_x, _y);
+        canvas->translate(_scrollX, _scrollY);
+
+        // This is the only place where we iterate in reverse because we order children in reverse in the vector
+        // as to not explode when we modify children in event handlers. We still need to render back-to-front though ;)
+        for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
+            (*child)->render(canvas);
+        }
 
         canvas->restore();
+    }
+
+    void Div::clip(SkCanvas *canvas) {
+        bool clip = _computedStyle->get(overflow) != "visible";
+        if (!clip) {
+            return;
+        }
+
+        bool  aa = _computedStyle->get(antiAlias);
+        float hb = _computedStyle->get(border) / 2;
+        if (_drawComplexRoundRect) {
+            SkRRect  rrect;
+            SkVector radii[4] = {
+                {_radiusTopLeft,     _radiusTopLeft},
+                {_radiusTopRight,    _radiusTopRight},
+                {_radiusBottomRight, _radiusBottomRight},
+                {_radiusBottomLeft,  _radiusBottomLeft}
+            };
+            rrect.setRectRadii(_rect, radii);
+            if (_drawBackground && _drawBorder) {
+                rrect.inset(hb, hb);
+            }
+
+            float insetH = (_rect.width() - _paddedRect.width()) / 2;
+            float insetV = (_rect.height() - _paddedRect.height()) / 2;
+            rrect.inset(insetH, insetV);
+            rrect.offset(_paddedRect.left() - insetH, _paddedRect.y() - insetV);
+            canvas->clipRRect(rrect, aa);
+
+        } else if (_drawRoundRect) {
+            SkRRect  rrect;
+            SkVector radii[4] = {
+                {_radiusTopLeft,     _radiusTopLeft},
+                {_radiusTopRight,    _radiusTopRight},
+                {_radiusBottomRight, _radiusBottomRight},
+                {_radiusBottomLeft,  _radiusBottomLeft}
+            };
+            rrect.setRectRadii(_rect, radii);
+            float insetH = (_rect.width() - _paddedRect.width()) / 2;
+            float insetV = (_rect.height() - _paddedRect.height()) / 2;
+            rrect.inset(insetH, insetV);
+            rrect.offset(_paddedRect.left() - insetH, _paddedRect.y() - insetV);
+            canvas->clipRRect(rrect, aa);
+
+        } else {
+//            float  insetH = (_rect.width() - _paddedRect.width()) / 2;
+//            float  insetV = (_rect.height() - _paddedRect.height()) / 2;
+//            SkRect inset  = _rect.makeInset(insetH, insetV);
+//            inset.offset(_paddedRect.left() - insetH, _paddedRect.y() - insetV);
+            canvas->clipRect(_paddedRect, aa);
+        }
     }
 
     void Div::draw(SkCanvas *canvas) {
@@ -912,7 +1025,6 @@ namespace psychicui {
             SkPaint paint;
 
             Color bgColor = _computedStyle->get(backgroundColor);
-            bool  clip    = _computedStyle->get(overflow) == "hidden";
 
             paint.setStyle(SkPaint::kFill_Style);
             paint.setColor(bgColor);
@@ -946,14 +1058,6 @@ namespace psychicui {
                     canvas->drawRRect(rrect, paint);
                 }
 
-                if (clip) {
-                    float insetH = (_rect.width() - _paddedRect.width()) / 2;
-                    float insetV = (_rect.height() - _paddedRect.height()) / 2;
-                    rrect.inset(insetH, insetV);
-                    rrect.offset(_paddedRect.left() - insetH, _paddedRect.y() - insetV);
-                    canvas->clipRRect(rrect, paint.isAntiAlias());
-                }
-
             } else if (_drawRoundRect) {
                 if (_drawBackground && !_drawBorder) {
                     canvas->drawRoundRect(_rect, _radiusTopLeft, _radiusTopLeft, paint);
@@ -967,21 +1071,6 @@ namespace psychicui {
                     paint.setStrokeWidth(_computedStyle->get(border));
                     canvas->drawRoundRect(inset, _radiusTopLeft, _radiusTopLeft, paint);
                 }
-                if (clip) {
-                    SkRRect  rrect;
-                    SkVector radii[4] = {
-                        {_radiusTopLeft,     _radiusTopLeft},
-                        {_radiusTopRight,    _radiusTopRight},
-                        {_radiusBottomRight, _radiusBottomRight},
-                        {_radiusBottomLeft,  _radiusBottomLeft}
-                    };
-                    rrect.setRectRadii(_rect, radii);
-                    float insetH = (_rect.width() - _paddedRect.width()) / 2;
-                    float insetV = (_rect.height() - _paddedRect.height()) / 2;
-                    rrect.inset(insetH, insetV);
-                    rrect.offset(_paddedRect.left() - insetH, _paddedRect.y() - insetV);
-                    canvas->clipRRect(rrect, paint.isAntiAlias());
-                }
 
             } else if (_drawBackground) {
                 canvas->drawRect(_rect, paint);
@@ -990,13 +1079,6 @@ namespace psychicui {
                     paint.setColor(_computedStyle->get(borderColor));
                     paint.setStrokeWidth(_computedStyle->get(border));
                     canvas->drawRect(_rect, paint);
-                }
-                if (clip) {
-                    float  insetH = (_rect.width() - _paddedRect.width()) / 2;
-                    float  insetV = (_rect.height() - _paddedRect.height()) / 2;
-                    SkRect inset  = _rect.makeInset(insetH, insetV);
-                    inset.offset(_paddedRect.left() - insetH, _paddedRect.y() - insetV);
-                    canvas->clipRect(inset, paint.isAntiAlias());
                 }
             }
         }
@@ -1129,181 +1211,256 @@ namespace psychicui {
         }
     }
 
-    bool Div::mouseButton(const int mouseX, const int mouseY, const int button, const bool down, const int modifiers) {
-        if (!_visible || !_mouseEnabled || !contains(mouseX, mouseY)) {
-            return false;
+    MouseEventStatus Div::mouseButton(const int mouseX, const int mouseY, const int button, const bool down, const int modifiers) {
+        if (!_visible || !boundsContains(mouseX, mouseY)) {
+            return Out;
         }
 
-        bool handled = false;
+        MouseEventStatus ret = Out;
+
         if (_mouseChildren) {
             for (auto &child: _children) {
-                if (child->mouseButton(mouseX - _x, mouseY - _y, button, down, modifiers)) {
-                    handled = true;
+                auto res = child->mouseButton(mouseX - child->x(), mouseY - child->y(), button, down, modifiers);
+                if (res != Out) {
+                    ret = res;
                     break;
                 }
             }
         }
 
-        if (!handled && onMouseButton.hasSubscriptions()) {
-            onMouseButton(mouseX, mouseY, button, down, modifiers);
-            handled = true;
+        if (_mouseEnabled) {
+            if (ret != Handled && onMouseButton.hasSubscriptions()) {
+                onMouseButton(mouseX, mouseY, button, down, modifiers);
+                ret = Handled;
+            } else {
+                ret = Over;
+            }
         }
 
-        return handled;
+        return ret;
     }
 
-    bool Div::mouseDown(const int mouseX, const int mouseY, const int button, const int modifiers) {
-        if (!_visible || !_mouseEnabled || !contains(mouseX, mouseY)) {
-            return false;
+    MouseEventStatus Div::mouseDown(const int mouseX, const int mouseY, const int button, const int modifiers) {
+        if (!_visible || !boundsContains(mouseX, mouseY)) {
+            return Out;
         }
 
-        // Set mouse down all the way for the styles
         setMouseDown(true);
 
-        bool handled = false;
+        MouseEventStatus ret = Out;
+
         if (_mouseChildren) {
             for (auto &child: _children) {
-                if (child->mouseDown(mouseX - _x, mouseY - _y, button, modifiers)) {
-                    handled = true;
+                auto res = child->mouseDown(mouseX - child->x(), mouseY - child->y(), button, modifiers);
+                if (res != Out) {
+                    ret = res;
                     break;
                 }
             }
         }
 
-        if (!handled && onMouseDown.hasSubscriptions()) {
-            onMouseDown(mouseX, mouseY, button, modifiers);
-            handled = true;
+        if (_mouseEnabled) {
+            if (ret == Out && onMouseDown.hasSubscriptions()) {
+                onMouseDown(mouseX, mouseY, button, modifiers);
+                ret = Handled;
+            } else {
+                ret = Over;
+            }
         }
 
-        return handled;
+        return ret;
     }
 
-    bool Div::mouseUp(const int mouseX, const int mouseY, const int button, const int modifiers) {
-        if (!_visible || !_mouseEnabled) {
-            return false;
+    MouseEventStatus Div::mouseUp(const int mouseX, const int mouseY, const int button, const int modifiers) {
+        if (!_visible) {
+            return Out;
         }
 
-        bool inside = contains(mouseX, mouseY);
-
-        // Set mouse up all the way for the styles, but first remember if we were down
+        bool isOver  = boundsContains(mouseX, mouseY);
         bool wasDown = _mouseDown;
-        if (inside || wasDown) {
+
+        if (isOver || wasDown) {
             setMouseDown(false);
         }
 
-        if (wasDown) {
+        MouseEventStatus ret = Out;
+
+        if (_mouseChildren && (isOver || wasDown)) {
+            for (auto &child: _children) {
+                auto res = child->mouseUp(mouseX - child->x(), mouseY - child->y(), button, modifiers);
+                if (res != Out && ret != Handled) {
+                    ret = res;
+                }
+            }
+        }
+
+        if (_mouseEnabled && wasDown) {
             // Special case for items receiving a mouse up outside
             onMouseUpOutside(mouseX, mouseY, button, modifiers);
             onMouseUp(mouseX, mouseY, button, modifiers);
         }
 
-        // Here we go though all the children before checking collision because we need to find mouse up outside
-        bool handled = false;
-        if (_mouseChildren) {
-            for (auto &child: _children) {
-                handled |= child->mouseUp(mouseX - _x, mouseY - _y, button, modifiers);
+        if (!isOver) {
+            return Out;
+        }
+
+        if (_mouseEnabled) {
+            if (ret != Handled && onMouseUp.hasSubscriptions()) {
+                onMouseUp(mouseX, mouseY, button, modifiers);
+                ret = Handled;
+            } else {
+                ret = Over;
             }
         }
 
-        if (!inside) {
-            return false;
-        }
-
-        if (!handled && onMouseUp.hasSubscriptions()) {
-            onMouseUp(mouseX, mouseY, button, modifiers);
-            handled = true;
-        }
-
-        return handled;
+        return ret;
     }
 
-    bool Div::click(const int mouseX, const int mouseY, const int button, const int modifiers) {
-        if (!_visible || !_mouseEnabled || !_mouseDown || !contains(mouseX, mouseY)) {
-            return false;
+    MouseEventStatus Div::click(const int mouseX, const int mouseY, const int button, const int modifiers) {
+        if (!_visible || !boundsContains(mouseX, mouseY)) {
+            return Out;
         }
 
-        // Here we go though all the children before checking collision because we need to find mouse up outside
-        bool handled = false;
+        if (!_mouseDown) {
+            return Over;
+        }
+
+        MouseEventStatus ret = Out;
+
         if (_mouseChildren) {
             for (auto &child: _children) {
-                if (child->click(mouseX - _x, mouseY - _y, button, modifiers)) {
-                    handled = true;
+                auto res = child->click(mouseX - child->x(), mouseY - child->y(), button, modifiers);
+                if (res != Out) {
+                    ret = res;
                     break;
                 }
             }
         }
 
-        if (!handled && onClick.hasSubscriptions()) {
-            onClick();
-            handled = true;
+        if (_mouseEnabled) {
+            if (ret != Handled && onClick.hasSubscriptions()) {
+                onClick();
+                ret = Handled;
+            } else {
+                ret = Over;
+            }
         }
 
-        return handled;
+        return ret;
     }
 
     // endregion
 
     // region Move
 
-    bool Div::mouseMoved(const int mouseX, const int mouseY, const int button, const int modifiers, bool handled) {
-        if (!_visible || !_mouseEnabled) {
+    bool Div::mouseExited(const int mouseX, const int mouseY, const int button, const int modifiers) {
+        if (!_mouseOver) {
             return false;
         }
 
-        // NOTE: Wee need full hierarchy if we want to drag stuff like sliders, so not stopping
-        onMouseMove(mouseX, mouseY, button, modifiers);
-
-        bool isOver  = contains(mouseX, mouseY);
-        bool wasOver = _mouseOver;
-
-        setMouseOver(isOver && !handled);
-
-        if (wasOver && !isOver) {
-            onMouseOut();
-        } else if (!wasOver && isOver) {
-            onMouseOver();
-        }
+        setMouseOver(false);
 
         if (_mouseChildren) {
-            // Propagate to children (including if we just lost the mouse, a child might be interested)
-            // We pass mouse movement to every children since is doesn't conflict like clicks with depth.
             for (auto &child: _children) {
-                handled |= child->mouseMoved(mouseX - _x, mouseY - _y, button, modifiers, handled);
-            }
-        }
-
-        if (isOver && !handled) {
-            window()->setCursor(_computedStyle->get(cursor));
-        }
-
-        return isOver;
-    }
-
-// endregion
-
-// region Scroll
-
-    bool Div::mouseScrolled(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
-        if (!_visible || !_mouseEnabled || !contains(mouseX, mouseY)) {
-            return false;
-        }
-
-        bool handled = false;
-        if (_mouseChildren) {
-            for (auto &child: _children) {
-                if (child->mouseScrolled(mouseX - _x, mouseY - _y, scrollX, scrollY)) {
-                    handled = true;
+                if (child->mouseExited(mouseX - child->x(), mouseY - child->y(), button, modifiers)) {
                     break;
                 }
             }
         }
 
-        if (!handled && onMouseScroll.hasSubscriptions()) {
-            onMouseScroll(mouseX, mouseY, scrollX, scrollY);
-            handled = true;
+        onMouseOut();
+
+        return true;
+    }
+
+    MouseEventStatus Div::mouseMoved(const int mouseX, const int mouseY, const int button, const int modifiers, bool handled) {
+        if (!_visible) {
+            return Out;
         }
 
-        return handled;
+        bool isOver  = boundsContains(mouseX, mouseY);
+        bool wasOver = _mouseOver;
+
+        if (!isOver && wasOver) {
+            mouseExited(mouseX, mouseY, button, modifiers);
+        }
+
+        if (!isOver) {
+            return Out;
+        }
+
+        // From now on we're over the component
+
+        if (!handled) {
+            setMouseOver(true);
+        }
+
+        MouseEventStatus ret = Out;
+
+        if (_mouseChildren) {
+            for (auto &child: _children) {
+                auto res = child->mouseMoved(mouseX - child->x(), mouseY - child->y(), button, modifiers, handled);
+                if (res != Out) {
+                    handled = true;
+                    if (ret != Handled) {
+                        ret = res;
+                    }
+                }
+            }
+        }
+
+        if (_mouseEnabled) {
+            if (!handled && !wasOver) {
+                onMouseOver();
+            }
+            onMouseMove(mouseX, mouseY, button, modifiers);
+            if (!handled && ret != Handled) {
+                window()->setCursor(_computedStyle->get(cursor));
+                ret = Handled;
+            } else {
+                ret = Over;
+            }
+        }
+
+        return ret;
+    }
+
+    // endregion
+
+    // region Scroll
+
+    MouseEventStatus Div::mouseScrolled(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
+        if (!_visible || !boundsContains(mouseX, mouseY)) {
+            return Out;
+        }
+
+        if (_computedStyle->get(overflow) == "scroll") {
+            _scrollX += scrollX * 2.0f;
+            _scrollY += scrollY * 2.0f;
+        }
+
+        MouseEventStatus ret = Out;
+
+        if (_mouseChildren) {
+            for (auto &child: _children) {
+                auto res = child->mouseScrolled(mouseX - child->x(), mouseY - child->y(), scrollX, scrollY);
+                if (res != Out) {
+                    ret = res;
+                    break;
+                }
+            }
+        }
+
+        if (_mouseEnabled) {
+            if (ret != Handled && onMouseScroll.hasSubscriptions()) {
+                onMouseScroll(mouseX, mouseY, scrollX, scrollY);
+                ret = Handled;
+            } else {
+                ret = Over;
+            }
+        }
+
+        return ret;
     }
 
 // endregion

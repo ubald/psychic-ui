@@ -5,6 +5,7 @@
 #include "psychicui/psychicui.hpp"
 #include "psychicui/Component.hpp"
 #include "psychicui/Skin.hpp"
+#include "psychicui/signals/Signal.hpp"
 #include "Label.hpp"
 
 namespace psychicui {
@@ -17,45 +18,25 @@ namespace psychicui {
 
     class CheckBox : public Component<CheckBoxSkin> {
     public:
-        CheckBox(const std::string &label, ClickCallback onClick);
+        CheckBox(const std::string &label, std::function<void(bool)> onChangeCallback);
 
         explicit CheckBox(const std::string &label = "") : CheckBox(label, nullptr) {}
 
-        explicit CheckBox(const ClickCallback &onClick) : CheckBox("", std::move(onClick)) {}
+        explicit CheckBox(std::function<void(bool)> onChangeCallback) : CheckBox("", std::move(onChangeCallback)) {}
 
         const std::string &label() const;
         void setLabel(const std::string &label);
 
-        const bool toggle() const { return _toggle; }
-
-        CheckBox *setToggle(const bool toggle) {
-            _toggle = toggle;
-            return this;
-        }
-
-        const bool autoToggle() const { return _autoToggle; }
-
-        CheckBox *setAutoToggle(const bool autoToggle) {
-            _autoToggle = autoToggle;
-            return this;
-        }
-
-        const bool selected() const;
-        void setSelected(bool selected);
+        const bool checked() const;
+        void setChecked(bool checked);
 
         const bool active() const override;
 
-        CheckBox *onChange(std::function<void(bool)> onChange) {
-            _onChange = std::move(onChange);
-            return this;
-        }
+        Signal<bool> onChange{};
 
     protected:
         std::string               _label{};
-        bool                      _toggle{false};
-        bool                      _autoToggle{true};
-        bool                      _selected{false};
-        std::function<void(bool)> _onChange{nullptr};
+        bool                      _checked{false};
 
         void skinChanged() override;
     };

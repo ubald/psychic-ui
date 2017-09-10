@@ -81,7 +81,9 @@ namespace psychicui {
         YGSize size = Div::measure(width, widthMode, height, heightMode);
 
         if (_text.empty()) {
-            size;
+            size.width = 0;
+            size.height = _lineHeight;
+            return size;
         }
 
         if (widthMode == YGMeasureModeUndefined) {

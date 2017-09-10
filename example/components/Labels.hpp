@@ -13,6 +13,7 @@ namespace psychicui {
     Labels::Labels() : Div() {
         setTag("Labels");
         setClassNames({"demo-panel"});
+        style()->set(overflow, "scroll");
 
         add<Label>("Default Label");
 

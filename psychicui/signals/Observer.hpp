@@ -39,8 +39,16 @@ namespace psychicui {
          * Use this method when you know the the signal will outlive you.
          */
         template<class... T>
-        void subscribeTo(Signal<T...> &signal, typename Identity<T...>::type &&callback) {
-            slots.push_back(signal.subscribe(std::forward<std::function<void(T...)>>(callback)));
+        std::shared_ptr<Slot<T...>> subscribeTo(Signal<T...> &signal, typename Identity<T...>::type &&callback) {
+            auto slot = signal.subscribe(std::forward<std::function<void(T...)>>(callback));
+            slots.push_back(slot);
+            return slot;
+        }
+
+        template<class... T>
+        void unsunscribeFrom(std::shared_ptr<SlotBase> slot) {
+            slot->disconnect();
+            slots.erase(std::remove(slots.begin(), slots.end(), slot), slots.end());
         }
     };
 

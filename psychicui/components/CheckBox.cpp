@@ -5,7 +5,7 @@
 namespace psychicui {
 
 
-    CheckBox::CheckBox(const std::string &label, ClickCallback onClickCallback) :
+    CheckBox::CheckBox(const std::string &label, std::function<void(bool)> onChangeCallback) :
         Component() {
         setTag("CheckBox");
 
@@ -13,31 +13,13 @@ namespace psychicui {
 
         _label = label;
 
-        if (onClickCallback) {
-            onClick(std::move(onClickCallback));
+        if (onChangeCallback) {
+            onChange(std::move(onChangeCallback));
         }
-
-        onMouseUp.subscribe(
-            [this](const int mouseX, const int mouseY, const int checkBox, const int modifiers) {
-                if (!_toggle) {
-                    setSelected(false);
-                }
-            }
-        );
-
-        onMouseDown.subscribe(
-            [this](const int mouseX, const int mouseY, const int checkBox, const int modifiers) {
-                if (!_toggle) {
-                    setSelected(true);
-                }
-            }
-        );
 
         onClick.subscribe(
             [this]() {
-                if (_toggle && _autoToggle) {
-                    setSelected(!_selected);
-                }
+                setChecked(!_checked);
             }
         );
     }
@@ -51,22 +33,20 @@ namespace psychicui {
         _skin->setLabel(_label);
     }
 
-    const bool CheckBox::selected() const {
-        return _selected;
+    const bool CheckBox::checked() const {
+        return _checked;
     }
 
-    void CheckBox::setSelected(const bool selected) {
-        if (_selected != selected) {
-            _selected = selected;
+    void CheckBox::setChecked(const bool checked) {
+        if (_checked != checked) {
+            _checked = checked;
             invalidateStyle();
-            if (_onChange) {
-                _onChange(_selected);
-            }
+            onChange(_checked);
         }
     }
 
     const bool CheckBox::active() const {
-        return Component::active() || _selected;
+        return Component::active() || _checked;
     };
 
     void CheckBox::skinChanged() {

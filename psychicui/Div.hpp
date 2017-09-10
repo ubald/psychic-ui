@@ -19,6 +19,12 @@ namespace psychicui {
 
     class Panel;
 
+    enum MouseEventStatus {
+        Out,
+        Over,
+        Handled
+    };
+
     using ClickCallback = std::function<void()>;
     using MouseCallback = std::function<void(const int mouseX, const int mouseY, int button, int modifiers)>;
     using MouseButtonCallback = std::function<void(const int mouseX, const int mouseY, int button, bool down, int modifiers)>;
@@ -27,9 +33,13 @@ namespace psychicui {
     class Div : public Observer, public std::enable_shared_from_this<Div> {
         friend class StyleManager;
 
+        friend class Modal;
+
     public:
         Div();
         ~Div();
+
+        std::string toString() const;
 
         // region Hierarchy
 
@@ -85,8 +95,8 @@ namespace psychicui {
 
         void setPosition(int x, int y);
         void setPosition(int left, int top, int right, int bottom);
-        void getGlobalPosition(int &x, int &y) const;
-        void getLocalPosition(int x, int y, int &lx, int &ly) const;
+        void getLocalToGlobal(int &gx, int &gy, const int x = 0, const int y = 0) const;
+        void getGlobalToLocal(int &lx, int &ly, const int x = 0, const int y = 0) const;
         const int x() const;
         void setX(int x);
         const int y() const;
@@ -124,11 +134,31 @@ namespace psychicui {
 
         // endregion
 
+        // region Bounds
+
+        const int boundsLeft() const {
+            return _boundsLeft;
+        }
+
+        const int boundsTop() const {
+            return _boundsTop;
+        }
+
+        const int boundsRight() const {
+            return _boundsRight;
+        }
+
+        const int boundsBottom() const {
+            return _boundsBottom;
+        }
+
+        // endregion
+
         // region Layout
 
         #ifdef DEBUG_LAYOUT
         static bool debugLayout;
-        bool dashed{false};
+        bool        dashed{false};
         #endif
 
         // endregion
@@ -166,6 +196,8 @@ namespace psychicui {
         const Style *computedStyle() const;
 
         const std::vector<std::string> &tags() const;
+        const std::string id() const;
+        Div *setId(std::string id);
         const std::unordered_set<std::string> &classNames() const;
         Div *setClassNames(std::unordered_set<std::string> additionalClassNames);
         Div *addClassName(std::string className);
@@ -179,6 +211,7 @@ namespace psychicui {
         void invalidate();
         virtual YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode);
         virtual void render(SkCanvas *canvas);
+        virtual void clip(SkCanvas *canvas);
         virtual void draw(SkCanvas *canvas);
 
         // endregion
@@ -194,20 +227,27 @@ namespace psychicui {
         bool getMouseDown() const;
         void setMouseDown(bool down); // Mostly for testing
 
+
+        using MouseButtonSlot = std::shared_ptr<Slot<const int, const int, const int, const bool, const int>>;
+        using MouseSlot = std::shared_ptr<Slot<const int, const int, const int, const int>>;
+        using MouseTriggerSlot = std::shared_ptr<Slot<>>;
+        using MouseScrollSlot = std::shared_ptr<Slot<const int, const int, const double, const double>>;
+
         Signal<const int, const int, const int, const bool, const int> onMouseButton{};
-        Signal<const int, const int, const int, const int> onMouseDown{};
-        Signal<const int, const int, const int, const int> onMouseUp{};
-        Signal<const int, const int, const int, const int> onMouseUpOutside{};
-        Signal<const int, const int, const int, const int> onMouseMove{};
-        Signal<> onMouseOver{};
-        Signal<> onMouseOut{};
-        Signal<const int, const int, const double, const double> onMouseScroll{};
-        Signal<> onClick{};
+        Signal<const int, const int, const int, const int>             onMouseDown{};
+        Signal<const int, const int, const int, const int>             onMouseUp{};
+        Signal<const int, const int, const int, const int>             onMouseUpOutside{};
+        Signal<const int, const int, const int, const int>             onMouseMove{};
+        Signal<>                                                       onMouseOver{};
+        Signal<>                                                       onMouseOut{};
+        Signal<const int, const int, const double, const double>       onMouseScroll{};
+        Signal<>                                                       onClick{};
 
         // endregion
 
 //        std::shared_ptr<Div> findComponent(const int x, const int y);
         inline bool contains(const int x, const int y) const;
+        inline bool boundsContains(const int x, const int y) const;
 
 
         // Events
@@ -223,6 +263,11 @@ namespace psychicui {
         int  _y{0};
         int  _width{0};
         int  _height{0};
+        // Bounds, includes absolute positioned children
+        int _boundsLeft{0};
+        int _boundsTop{0};
+        int _boundsRight{0};
+        int _boundsBottom{0};
         bool _wrap{false};
 
         // region Lifecycle
@@ -256,6 +301,11 @@ namespace psychicui {
          * Chain of tags from the inheritance chain
          */
         std::vector<std::string> _tags{};
+
+        /**
+         * Id
+         */
+         std::string _id{};
 
         /**
          * Pseudo CSS class names
@@ -321,6 +371,8 @@ namespace psychicui {
          */
         SkRect _paddedRect;
 
+
+
         /**
          * Ignore internal layout constraints (padding, border)
          * Used by component to forward those to its skin
@@ -367,35 +419,38 @@ namespace psychicui {
         float _borderTop{0.0f};
         float _borderBottom{0.0f};
 
+        float _scrollX{0.0f};
+        float _scrollY{0.0f};
+
         // endregion
 
         // region Mouse
 
         /**
          * Enable the mouse events for this div.
-         * Events will passthrough ig disabled
+         * Events will passthrough if disabled
          * See mouseChildren for ignoring the children
          */
-        bool   _mouseEnabled{true};
+        bool _mouseEnabled{true};
 
         /**
          * Enables the mouse events for this div's children
          * Events will still affect the current div
          * See mouseEnabled for ignoring events on this div
          */
-        bool   _mouseChildren{true};
+        bool _mouseChildren{true};
 
 
+        bool _mouseOver{false};
+        bool _mouseDown{false};
 
-        bool   _mouseOver{false};
-        bool   _mouseDown{false};
-
-        bool mouseMoved(int mouseX, int mouseY, int button, int modifiers, bool handled = false);
-        bool mouseButton(int mouseX, int mouseY, int button, bool down, int modifiers);
-        bool mouseDown(int mouseX, int mouseY, int button, int modifiers);
-        bool mouseUp(int mouseX, int mouseY, int button, int modifiers);
-        bool click(int mouseX, int mouseY, int button, int modifiers);
-        bool mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
+        virtual MouseEventStatus mouseMoved(int mouseX, int mouseY, int button, int modifiers, bool handled);
+        virtual bool mouseExited(int mouseX, int mouseY, int button, int modifiers);
+        virtual MouseEventStatus mouseButton(int mouseX, int mouseY, int button, bool down, int modifiers);
+        virtual MouseEventStatus mouseDown(int mouseX, int mouseY, int button, int modifiers);
+        virtual MouseEventStatus mouseUp(int mouseX, int mouseY, int button, int modifiers);
+        virtual MouseEventStatus click(int mouseX, int mouseY, int button, int modifiers);
+        virtual MouseEventStatus mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
 
         // endregion
 

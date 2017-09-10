@@ -34,12 +34,12 @@ namespace psychicui {
                         remove(subMenu);
                     }
                     int x, y;
-                    subMenuButton->getGlobalPosition(x, y);
+                    subMenuButton->getLocalToGlobal(x, y, subMenuButton->getWidth());
                     int lx, ly;
-                    getLocalPosition(x, y, lx, ly);
+                    getGlobalToLocal(lx, ly, x, y);
                     subMenu = add<Menu>(sub->items);
                     subMenu->style()
-                           ->set(left, lx + subMenuButton->getWidth())
+                           ->set(left, lx)
                            ->set(top, ly);
                     for (auto &child: menuContainer->children()) {
                         auto menuButton = std::dynamic_pointer_cast<MenuButton>(child);

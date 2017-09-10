@@ -12,9 +12,11 @@
 #include "SkPaint.h"
 #include "opengl.hpp"
 #include "Div.hpp"
+#include "Modal.hpp"
 #include "style/StyleManager.hpp"
 #include "style/Style.hpp"
 #include "components/Menu.hpp"
+#include "signals/Signal.hpp"
 
 namespace psychicui {
 
@@ -70,8 +72,28 @@ namespace psychicui {
         void openMenu(const std::vector<std::shared_ptr<MenuItem>> &items, const int x, const int y);
         void closeMenu();
 
+        std::shared_ptr<Div> appContainer() const {
+            return app;
+        };
+        std::shared_ptr<Modal> modalContainer() const {
+            return modal;
+        }
+        std::shared_ptr<Modal> menuContainer() const {
+            return menu;
+        }
+
         int cursor() const;
         void setCursor(int cursor);
+
+        // region Signals
+
+        using MenuOpenedSlot = std::shared_ptr<Slot<>>;
+        using MenuClosedSlot = std::shared_ptr<Slot<>>;
+
+        Signal<> onMenuOpened{};
+        Signal<> onMenuClosed{};
+
+        // endregion
 
         // Style
 
@@ -89,8 +111,8 @@ namespace psychicui {
         // region Default DIVs
 
         std::shared_ptr<Div> app{};
-        std::shared_ptr<Div> modal{};
-        std::shared_ptr<Div> menu{};
+        std::shared_ptr<Modal> modal{};
+        std::shared_ptr<Modal> menu{};
 
         // endregion
 

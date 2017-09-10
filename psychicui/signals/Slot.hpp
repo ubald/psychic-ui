@@ -27,6 +27,7 @@ namespace psychicui {
 
         void disconnect() override {
             _signal->unsubscribe(this);
+            _signal = nullptr;
         }
 
         std::function<void(T...)> notify;

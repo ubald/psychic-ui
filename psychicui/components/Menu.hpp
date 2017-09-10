@@ -14,8 +14,8 @@ namespace psychicui {
         std::string shortcut{};
 
         explicit MenuItem(const std::string &itemLabel, const std::string &itemShortcut = "") :
-            label(std::move(itemLabel)),
-            shortcut(std::move(itemShortcut)) {}
+            label(itemLabel),
+            shortcut(itemShortcut) {}
 
         virtual void please_be_polymorphic() {};
     };
@@ -26,16 +26,16 @@ namespace psychicui {
 
         SimpleMenuItem(const std::string &itemLabel, std::function<void()> itemCallback, const std::string &itemShortcut = "") :
             MenuItem(itemLabel, itemShortcut),
-            callback(itemCallback) {}
+            callback(std::move(itemCallback)) {}
     };
 
     class SubMenuItem : public MenuItem {
     public:
         std::vector<std::shared_ptr<MenuItem>> items{};
 
-        SubMenuItem(const std::string &itemLabel, const std::vector<std::shared_ptr<MenuItem>> &items, const std::string &itemShortcut = "") :
+        SubMenuItem(const std::string &itemLabel, std::vector<std::shared_ptr<MenuItem>> items, const std::string &itemShortcut = "") :
             MenuItem(itemLabel, itemShortcut),
-            items(items) {}
+            items(std::move(items)) {}
     };
 
     // MENU

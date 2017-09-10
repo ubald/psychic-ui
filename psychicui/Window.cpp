@@ -68,32 +68,27 @@ namespace psychicui {
         _inlineStyle->set(overflow, "hidden");
 
         app = add<Div>();
+        app->setId("app");
         app->style()
            ->set(position, "absolute")
            ->set(widthPercent, 1.0f)
            ->set(heightPercent, 1.0f)
            ->set(overflow, "hidden");
 
-        modal = add<Div>();
+        modal = add<Modal>();
+        modal->setId("modal");
         modal->style()
-             ->set(visible, false)
-             ->set(position, "absolute")
-             ->set(widthPercent, 1.0f)
-             ->set(heightPercent, 1.0f)
-             ->set(overflow, "hidden");
+             ->set(visible, false);
 
-        menu = add<Div>();
+        menu = add<Modal>();
+        menu->setId("menu");
         menu->onMouseDown.subscribe(
             [this](const int mouseX, const int mouseY, const int button, const int modifiers) {
                 closeMenu();
             }
         );
         menu->style()
-            ->set(visible, false)
-            ->set(position, "absolute")
-            ->set(widthPercent, 1.0f)
-            ->set(heightPercent, 1.0f)
-            ->set(overflow, "hidden");
+            ->set(visible, false);
     }
 
     Window::~Window() {
@@ -680,19 +675,21 @@ namespace psychicui {
     void Window::openMenu(const std::vector<std::shared_ptr<MenuItem>> &items, const int x, const int y) {
         menu->removeAll();
         int lx, ly;
-        menu->getLocalPosition(x, y, lx, ly);
+        menu->getGlobalToLocal(lx, ly, x, y);
         auto m = menu->add<Menu>(items);
         m->style()
          ->set(left, lx)
          ->set(top, ly);
         menu->style()
             ->set(visible, true);
+        onMenuOpened.emit();
     }
 
     void Window::closeMenu() {
         menu->removeAll();
         menu->style()
             ->set(visible, false);
+        onMenuClosed.emit();
     }
 
     // endregion
@@ -778,7 +775,7 @@ namespace psychicui {
         }
 
         try {
-            mouseMoved(_mouseX, _mouseY, _mouseState, _modifiers);
+            mouseMoved(_mouseX, _mouseY, _mouseState, _modifiers, false);
 
         } catch (const std::exception &e) {
             std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
@@ -818,7 +815,7 @@ namespace psychicui {
 //                               - 2]
 //                );
 //                if (panel && panel->modal()) {
-//                    if (!panel->contains(_mouseX, _mouseY)) {
+//                    if (!panel->boundsContains(_mouseX, _mouseY)) {
 //                        return;
 //                    }
 //                }

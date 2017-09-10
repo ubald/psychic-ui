@@ -1,4 +1,5 @@
 #include "SliderRangeSkin.hpp"
+#include "../Window.hpp"
 
 namespace psychicui {
     SliderRangeSkin::SliderRangeSkin() :
@@ -12,6 +13,7 @@ namespace psychicui {
             ->set(heightPercent, 1.0f);
 
         _track = container->add<Div>();
+        _track->setId("track");
         _track
             ->setClassNames({"track"})
             ->style()
@@ -20,27 +22,38 @@ namespace psychicui {
             ->set(heightPercent, 1.0f);
 
         subscribeTo(
-            _track
-                ->onMouseDown,
+            _track->onMouseDown,
             [this](const int mouseX, const int mouseY, int button, int modifiers) {
                 sendMouseValue(mouseX, mouseY);
-                _dragging = true;
+                _onMouseMove = window()->onMouseMove(
+                    [this](const int mouseX, const int mouseY, int button, int modifiers) {
+                        int lx = 0;
+                        int ly = 0;
+                        _track->getGlobalToLocal(lx, ly, mouseX, mouseY);
+                        sendMouseValue(lx, ly);
+                    }
+                );
+                _dragging    = true;
             }
         );
         subscribeTo(
             _track->onMouseUp,
             [this](const int mouseX, const int mouseY, int button, int modifiers) {
+                if (_onMouseMove) {
+                    _onMouseMove->disconnect();
+                    _onMouseMove = nullptr;
+                }
                 _dragging = false;
             }
         );
-        subscribeTo(
-            _track->onMouseMove,
-            [this](const int mouseX, const int mouseY, int button, int modifiers) {
-                if (_dragging) {
-                    sendMouseValue(mouseX, mouseY);
-                }
-            }
-        );
+//        subscribeTo(
+//            _track->onMouseMove,
+//            [this](const int mouseX, const int mouseY, int button, int modifiers) {
+//                if (_dragging) {
+//                    sendMouseValue(mouseX, mouseY);
+//                }
+//            }
+//        );
 
         _range = container->add<Div>();
         _range
@@ -52,6 +65,7 @@ namespace psychicui {
         auto label = add<Div>();
         label
             ->setMouseEnabled(false)
+            ->setMouseChildren(false)
             ->style()
             ->set(position, "absolute")
             ->set(alignItems, "center")

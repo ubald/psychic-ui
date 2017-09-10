@@ -3,7 +3,8 @@
 #include <psychicui/style/StyleManager.hpp>
 #include <psychicui/style/StyleSheet.hpp>
 #include <psychicui/skins/SliderRangeSkin.hpp>
-#include <psychicui/skins/SimpleButtonSkin.hpp>
+#include <psychicui/skins/DefaultButtonSkin.hpp>
+#include <psychicui/skins/DefaultCheckBoxSkin.hpp>
 #include <psychicui/skins/DefaultMenuButtonSkin.hpp>
 #include <psychicui/skins/TitleBarButtonSkin.hpp>
 
@@ -61,11 +62,11 @@ public:
         manager->loadFont("Ubuntu Regular", "../res/fonts/Ubuntu/Ubuntu-Regular.ttf");
 
         manager->registerSkin(
-            "simple-button-skin",
-            SkinType::make([]() { return std::make_shared<SimpleButtonSkin>(); }));
+            "default-button-skin",
+            SkinType::make([]() { return std::make_shared<DefaultButtonSkin>(); }));
         manager->registerSkin(
-            "checkbox-button-skin",
-            SkinType::make([]() { return std::make_shared<SimpleButtonSkin>(); }));
+            "default-checkbox-skin",
+            SkinType::make([]() { return std::make_shared<DefaultCheckBoxSkin>(); }));
         manager->registerSkin(
             "menu-button-skin",
             SkinType::make([]() { return std::make_shared<DefaultMenuButtonSkin>(); }));
@@ -81,15 +82,17 @@ public:
 
         // region Defaults
         manager->style("*")
+               ->set(overflow, "visible")
                ->set(fontFamily, "Ubuntu Light")
                ->set(fontSize, text)
                ->set(lineHeight, 16)
                ->set(color, 0xFFFFFFFF)
+               ->set(antiAlias, true)
                ->set(textAntiAlias, true);
         // endregion
 
         // region Window
-        manager->style("window")
+        manager->style("Window")
                ->set(color, 0xFFE0E0E0)
                ->set(backgroundColor, BASE_00)
                ->set(border, 1)
@@ -97,7 +100,7 @@ public:
         // endregion
 
         // region Title Bar
-        manager->style("titlebar")
+        manager->style("TitleBar")
                ->set(alignItems, "center")
                ->set(height, 48)
                ->set(padding, 12)
@@ -105,11 +108,11 @@ public:
                ->set(borderBottom, 1)
                ->set(borderColor, BASE_00);
 
-        manager->style("titlebar label.title")
+        manager->style("TitleBar Label.title")
                ->set(fontSize, largeText)
                ->set(grow, 1);
 
-        manager->style("titlebar button")
+        manager->style("TitleBar Button")
                ->set(skin, "title-bar-button")
                ->set(width, 18)
                ->set(height, 18)
@@ -117,22 +120,22 @@ public:
                ->set(padding, 0)
                ->set(border, 0);
 
-        manager->style("titlebar button.close")
+        manager->style("TitleBar Button.close")
                ->set(backgroundColor, ONE_RED);
 
-        manager->style("titlebar button.close:hover")
+        manager->style("TitleBar Button.close:hover")
                ->set(backgroundColor, ONE_RED_FADED);
 
-        manager->style("titlebar button.minimize")
+        manager->style("TitleBar Button.minimize")
                ->set(backgroundColor, ONE_ORANGE);
 
-        manager->style("titlebar button.minimize:hover")
+        manager->style("TitleBar Button.minimize:hover")
                ->set(backgroundColor, ONE_YELLOW);
 
-        manager->style("titlebar button.maximize")
+        manager->style("TitleBar Button.maximize")
                ->set(backgroundColor, BASE_GREEN);
 
-        manager->style("titlebar button.maximize:hover")
+        manager->style("TitleBar Button.maximize:hover")
                ->set(backgroundColor, ONE_GREEN);
 
         // endregion
@@ -142,8 +145,8 @@ public:
         // endregion
 
         // region Buttons
-        manager->style("button")
-               ->set(skin, "simple-button-skin")
+        manager->style("Button")
+               ->set(skin, "default-button-skin")
                ->set(cursor, Cursor::Hand)
                ->set(direction, "row")
                ->set(alignItems, "center")
@@ -154,16 +157,41 @@ public:
                ->set(fontSize, mediumText)
                ->set(lineHeight, mediumText);
 
-        manager->style("button:hover")
+        manager->style("Button:hover")
                ->set(backgroundColor, BASE_03);
 
-        manager->style("button:active")
+        manager->style("Button:active")
                ->set(color, BASE_00)
                ->set(backgroundColor, highlight);
         // endregion
 
-        // region Menus
+        // region CheckBox
+        manager->style("CheckBox")
+               ->set(skin, "default-checkbox-skin")
+               ->set(direction, "row")
+               ->set(alignItems, "center")
+               ->set(padding, 12)
+               ->set(borderRadius, radius)
+               ->set(color, BASE_07)
+               ->set(fontSize, mediumText)
+               ->set(lineHeight, mediumText);
 
+        manager->style("CheckBox Shape")
+               ->set(width, 24)
+               ->set(height, 24)
+               ->set(marginRight, 6)
+               ->set(borderRadius, radius)
+               ->set(borderColor, BASE_02)
+               ->set(backgroundColor, BASE_00);
+
+        manager->style("CheckBox:hover Shape")
+               ->set(color, BASE_03);
+
+        manager->style("CheckBox:active Shape")
+               ->set(color, highlight);
+        // endregion
+
+        // region Menus
         manager->style("Menu")
                ->set(backgroundColor, 0xFF000000)
                ->set(opacity, 0.8f)
@@ -227,7 +255,7 @@ public:
         // endregion
 
         // region Ranges
-        manager->style("range")
+        manager->style("Range")
                ->set(skin, "slider")
                ->set(borderRadius, radius)
                ->set(border, 1)
@@ -240,33 +268,33 @@ public:
                ->set(lineHeight, smallText)
                ->set(color, BASE_04);
 
-        manager->style("range slider.horizontal")
+        manager->style("Range Slider.horizontal")
                ->set(height, 24);
 
-        manager->style("range slider.vertical")
+        manager->style("Range Slider.vertical")
                ->set(width, 24);
 
-        manager->style("range:hover slider.inverted")
+        manager->style("Range:hover Slider.inverted")
                ->set(color, BASE_00);
 
-        manager->style("range:active slider.inverted")
+        manager->style("Range:active Slider.inverted")
                ->set(color, BASE_00);
 
-        manager->style("range:hover slider")
+        manager->style("Range:hover Slider")
                ->set(color, BASE_05);
 
-        manager->style("range slider .track")
+        manager->style("Range Slider .track")
                ->set(backgroundColor, BASE_01);
 
-        manager->style("range:hover slider .track");
+        manager->style("Range:hover Slider .track");
 
-        manager->style("range slider .range")
+        manager->style("Range Slider .range")
                ->set(backgroundColor, BASE_02);
 
-        manager->style("range:hover slider .range")
+        manager->style("Range:hover Slider .range")
                ->set(backgroundColor, BASE_03);
 
-        manager->style("range:active slider .range")
+        manager->style("Range:active Slider .range")
                ->set(backgroundColor, highlight);
         // endregion
 
@@ -302,13 +330,13 @@ public:
         // endregion
 
         // region MenuBar
-        manager->style("menubar")
+        manager->style("MenuBar")
                ->set(direction, "row")
                ->set(backgroundColor, BASE_01)
                ->set(borderBottom, 1)
                ->set(borderColor, BASE_00);
 
-        manager->style("menubar button")
+        manager->style("MenuBar Button")
                ->set(fontSize, smallText)
                ->set(lineHeight, smallText)
                ->set(paddingHorizontal, 12)
@@ -316,10 +344,10 @@ public:
                ->set(borderRadius, 0)
                ->set(backgroundColor, 0x00000000);
 
-        manager->style("menubar button:hover")
+        manager->style("MenuBar Button:hover")
                ->set(color, highlight);
 
-        manager->style("menubar button:active")
+        manager->style("MenuBar Button:active")
                ->set(color, BASE_00)
                ->set(backgroundColor, highlight);
 
