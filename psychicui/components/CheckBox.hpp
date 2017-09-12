@@ -13,6 +13,9 @@ namespace psychicui {
 
     class CheckBoxSkin : public Skin<CheckBox> {
     public:
+        CheckBoxSkin() : Skin<CheckBox>() {
+            setTag("CheckBoxSkin");
+        }
         virtual void setLabel(const std::string &label) {};
     };
 

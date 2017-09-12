@@ -4,6 +4,7 @@
 #include <psychicui/style/StyleSheet.hpp>
 #include <psychicui/skins/SliderRangeSkin.hpp>
 #include <psychicui/skins/DefaultButtonSkin.hpp>
+#include <psychicui/skins/DefaultScrollBarSkin.hpp>
 #include <psychicui/skins/DefaultCheckBoxSkin.hpp>
 #include <psychicui/skins/DefaultMenuButtonSkin.hpp>
 #include <psychicui/skins/TitleBarButtonSkin.hpp>
@@ -67,6 +68,9 @@ public:
         manager->registerSkin(
             "default-checkbox-skin",
             SkinType::make([]() { return std::make_shared<DefaultCheckBoxSkin>(); }));
+        manager->registerSkin(
+            "default-scrollbar-skin",
+            SkinType::make([]() { return std::make_shared<DefaultScrollBarSkin>(); }));
         manager->registerSkin(
             "menu-button-skin",
             SkinType::make([]() { return std::make_shared<DefaultMenuButtonSkin>(); }));
@@ -141,6 +145,29 @@ public:
         // endregion
 
         // region Labels
+
+        // endregion
+
+        // region ScrollBars
+
+        manager->style("ScrollBar")
+               ->set(skin, "default-scrollbar-skin")
+               ->set(width, 12);
+
+        manager->style("ScrollBar .track")
+               ->set(backgroundColor, BASE_00);
+
+        manager->style("ScrollBar .thumb")
+               ->set(backgroundColor, BASE_02)
+               ->set(marginLeft, 1);
+
+
+        manager->style("ScrollBar:hover .thumb")
+               ->set(backgroundColor, BASE_03);
+
+
+        manager->style("ScrollBar:active .thumb")
+               ->set(backgroundColor, highlight);
 
         // endregion
 
@@ -260,7 +287,6 @@ public:
                ->set(borderRadius, radius)
                ->set(border, 1)
                ->set(padding, 1)
-               ->set(overflow, "hidden")
                ->set(borderColor, BASE_02)
                ->set(backgroundColor, BASE_00)
                ->set(fontFamily, "Ubuntu Regular")

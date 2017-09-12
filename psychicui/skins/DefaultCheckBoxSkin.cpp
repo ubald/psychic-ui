@@ -3,17 +3,14 @@
 namespace psychicui {
     DefaultCheckBoxSkin::DefaultCheckBoxSkin() :
         CheckBoxSkin() {
+        setTag("DefaultCheckBoxSkin");
+
         _box   = add<Shape>(
             [this](Shape *shape, SkCanvas *canvas) {
                 float   radius = shape->computedStyle()->get(borderRadius);
                 SkRRect rect;
                 rect.setRectXY(
-                    {
-                        (float) shape->x(),
-                        (float) shape->y(),
-                        shape->x() + shape->computedStyle()->get(width),
-                        shape->y() + shape->computedStyle()->get(height)
-                    },
+                    {0, 0, shape->computedStyle()->get(width), shape->computedStyle()->get(height)},
                     radius, radius
                 );
 

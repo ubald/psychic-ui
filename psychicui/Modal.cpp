@@ -40,7 +40,7 @@ namespace psychicui {
 
         int gx = 0;
         int gy = 0;
-        getLocalToGlobal(gx, gy, mouseX, mouseY);
+        localToGlobal(gx, gy, mouseX, mouseY);
 
         MouseEventStatus ret = Out;
 
@@ -49,7 +49,7 @@ namespace psychicui {
                 int mx = mouseX;
                 int my = mouseY;
                 if (child->parent()) {
-                    child->getGlobalToLocal(mx, my, gx, gy);
+                    child->parent()->globalToLocal(mx, my, gx, gy);
                 }
                 auto res = child->mouseMoved(mx, my, button, modifiers, handled);
                 if (res != Out) {
@@ -76,7 +76,7 @@ namespace psychicui {
 
         int gx = 0;
         int gy = 0;
-        getLocalToGlobal(gx, gy, mouseX, mouseY);
+        localToGlobal(gx, gy, mouseX, mouseY);
 
         MouseEventStatus ret = Out;
 
@@ -85,7 +85,7 @@ namespace psychicui {
                 int mx = mouseX;
                 int my = mouseY;
                 if (child->parent()) {
-                    child->getGlobalToLocal(mx, my, gx, gy);
+                    child->parent()->globalToLocal(mx, my, gx, gy);
                 }
                 auto res = child->mouseButton(mx, my, button, down, modifiers);
                 if (res != Out) {
@@ -109,7 +109,7 @@ namespace psychicui {
 
         int gx = 0;
         int gy = 0;
-        getLocalToGlobal(gx, gy, mouseX, mouseY);
+        localToGlobal(gx, gy, mouseX, mouseY);
 
         MouseEventStatus ret = Out;
 
@@ -118,7 +118,7 @@ namespace psychicui {
                 int mx = mouseX;
                 int my = mouseY;
                 if (child->parent()) {
-                    child->getGlobalToLocal(mx, my, gx, gy);
+                    child->parent()->globalToLocal(mx, my, gx, gy);
                 }
                 auto res = child->mouseDown(mx, my, button, modifiers);
                 if (res != Out) {
@@ -142,7 +142,7 @@ namespace psychicui {
 
         int gx = 0;
         int gy = 0;
-        getLocalToGlobal(gx, gy, mouseX, mouseY);
+        localToGlobal(gx, gy, mouseX, mouseY);
 
         MouseEventStatus ret = Out;
 
@@ -151,7 +151,7 @@ namespace psychicui {
                 int mx = mouseX;
                 int my = mouseY;
                 if (child->parent()) {
-                    child->getGlobalToLocal(mx, my, gx, gy);
+                    child->parent()->globalToLocal(mx, my, gx, gy);
                 }
                 auto res = child->mouseUp(mx, my, button, modifiers);
                 if (res != Out && ret != Handled) {
@@ -174,7 +174,7 @@ namespace psychicui {
 
         int gx = 0;
         int gy = 0;
-        getLocalToGlobal(gx, gy, mouseX, mouseY);
+        localToGlobal(gx, gy, mouseX, mouseY);
 
         MouseEventStatus ret = Out;
 
@@ -183,7 +183,7 @@ namespace psychicui {
                 int mx = mouseX;
                 int my = mouseY;
                 if (child->parent()) {
-                    child->getGlobalToLocal(mx, my, gx, gy);
+                    child->parent()->globalToLocal(mx, my, gx, gy);
                 }
                 auto res = child->click(mx, my, button, modifiers);
                 if (res != Out) {
@@ -207,7 +207,7 @@ namespace psychicui {
 
         int gx = 0;
         int gy = 0;
-        getLocalToGlobal(gx, gy, mouseX, mouseY);
+        localToGlobal(gx, gy, mouseX, mouseY);
 
         MouseEventStatus ret = Out;
 
@@ -216,7 +216,7 @@ namespace psychicui {
                 int mx = mouseX;
                 int my = mouseY;
                 if (child->parent()) {
-                    child->getGlobalToLocal(mx, my, gx, gy);
+                    child->parent()->globalToLocal(mx, my, gx, gy);
                 }
                 auto res = child->mouseScrolled(mx, my, scrollX, scrollX);
                 if (res != Out) {

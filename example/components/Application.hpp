@@ -33,7 +33,7 @@ namespace psychicui {
 
     Application::Application() :
         Window("Demo Application") {
-        _decorated = false;
+        //_decorated = false;
 
         loadStyleSheet<PsychicUIStyleSheet>();
         loadStyleSheet<DemoStyleSheet>();
@@ -114,10 +114,12 @@ namespace psychicui {
                    return item.first;
                },
                [](const auto &item) {
-                   return item.second->hatch();
+                   auto panel = item.second->hatch();
+                   panel->style()->set(heightPercent, 1.0f);
+                   return panel;
                }
            )
-           ->select(panels[2])
+           ->select(panels[1])
            ->style()
            ->set(heightPercent, 1.f);
 

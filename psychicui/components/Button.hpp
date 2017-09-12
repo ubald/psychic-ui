@@ -12,6 +12,10 @@ namespace psychicui {
 
     class ButtonSkin : public Skin<Button> {
     public:
+        ButtonSkin() : Skin<Button>() {
+            setTag("ButtonSkin");
+        }
+
         virtual void setLabel(const std::string &label) {};
     };
 

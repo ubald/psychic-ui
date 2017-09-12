@@ -54,7 +54,7 @@ namespace psychicui {
         }
 
         int x, y;
-        menuItemButton->getLocalToGlobal(x, y);
+        menuItemButton->localToGlobal(x, y);
         y += menuItemButton->getHeight();
         window()->openMenu(sub->items, x, y);
 

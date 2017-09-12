@@ -6,14 +6,14 @@ namespace psychicui {
         RangeSkin() {
         setTag("Slider");
 
-        auto container = add<Div>();
-        container
+        _container = add<Div>();
+        _container
             ->style()
+            ->set(overflow, "hidden")
             ->set(widthPercent, 1.0f)
             ->set(heightPercent, 1.0f);
 
-        _track = container->add<Div>();
-        _track->setId("track");
+        _track = _container->add<Div>();
         _track
             ->setClassNames({"track"})
             ->style()
@@ -29,7 +29,7 @@ namespace psychicui {
                     [this](const int mouseX, const int mouseY, int button, int modifiers) {
                         int lx = 0;
                         int ly = 0;
-                        _track->getGlobalToLocal(lx, ly, mouseX, mouseY);
+                        _track->globalToLocal(lx, ly, mouseX, mouseY);
                         sendMouseValue(lx, ly);
                     }
                 );
@@ -46,16 +46,8 @@ namespace psychicui {
                 _dragging = false;
             }
         );
-//        subscribeTo(
-//            _track->onMouseMove,
-//            [this](const int mouseX, const int mouseY, int button, int modifiers) {
-//                if (_dragging) {
-//                    sendMouseValue(mouseX, mouseY);
-//                }
-//            }
-//        );
 
-        _range = container->add<Div>();
+        _range = _container->add<Div>();
         _range
             ->setMouseEnabled(false)
             ->setClassNames({"range"})
@@ -83,7 +75,8 @@ namespace psychicui {
     }
 
     void SliderRangeSkin::styleUpdated() {
-        Div::styleUpdated();
+        RangeSkin::styleUpdated();
+        _container->style()->set(borderRadius, _computedStyle->get(borderRadius) - 1);
         if (_computedStyle->get(orientation) == "vertical") {
             // TODO: This creates another invalidation cycle, fix
             addClassName("vertical");

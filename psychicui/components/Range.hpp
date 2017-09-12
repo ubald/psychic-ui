@@ -20,7 +20,9 @@ namespace psychicui {
 
     class RangeSkin : public Skin<internal::RangeBase> {
     protected:
-        RangeSkin() : Skin<internal::RangeBase>() {}
+        RangeSkin() : Skin<internal::RangeBase>() {
+            setTag("RangeSkin");
+        }
 
     public:
         virtual void setValue(float value) = 0;

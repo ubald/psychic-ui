@@ -14,7 +14,7 @@ public:
     void load(StyleManager *manager) override {
 
         manager->style(".demo-panel")
-               ->set(margin, 24);
+               ->set(padding, 24);
 
         manager->style("buttons button")
                ->set(margin, 12);

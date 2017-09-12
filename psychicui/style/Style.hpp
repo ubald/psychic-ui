@@ -29,9 +29,12 @@ type get(values property, type fallback) const {                                
     }                                                                                                                  \
 }                                                                                                                      \
 Style * set(values property, type value) {                                                                             \
-    _##name##Values[property] = value;                                                                                 \
-    if (_onChanged) {                                                                                                  \
-        _onChanged();                                                                                                  \
+    auto search = _##name##Values.find(property);                                                                      \
+    if (search == _##name##Values.end() || search->second != value) {                                                  \
+        _##name##Values[property] = value;                                                                             \
+        if (_onChanged) {                                                                                              \
+            _onChanged();                                                                                              \
+        }                                                                                                              \
     }                                                                                                                  \
     return this;                                                                                                       \
 }                                                                                                                      \

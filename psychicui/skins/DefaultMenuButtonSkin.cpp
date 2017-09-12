@@ -6,6 +6,7 @@
 namespace psychicui {
     DefaultMenuButtonSkin::DefaultMenuButtonSkin() :
         MenuButtonSkin() {
+        setTag("DefaultMenuButtonSkin");
 
         label = add<Label>();
         label->addClassName("label");

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <psychicui/Div.hpp>
+#include <psychicui/components/ScrollBar.hpp>
 
 namespace psychicui {
 
@@ -13,41 +14,58 @@ namespace psychicui {
     Labels::Labels() : Div() {
         setTag("Labels");
         setClassNames({"demo-panel"});
-        style()->set(overflow, "scroll");
 
-        add<Label>("Default Label");
+        style()
+            ->set(direction, "row")
+            ->set(padding, 0); // We're using a scroller so no padding
 
-        add<Label>("Simple Label (No AA)")
+        auto scroller = add<Div>();
+        scroller
             ->style()
-            ->set(textAntiAlias, false);
+            ->set(shrink, 1)
+            ->set(heightPercent, 1.0f)
+            ->set(padding, 24)
+            ->set(overflow, "scroll");
 
-        add<Label>("Simple Label (AA)")
-            ->setLcdRender(false)
-            ->setSubpixelText(false)
+        auto scrollbar = add<ScrollBar>(scroller);
+        scrollbar
             ->style()
-            ->set(textAntiAlias, true);
+            ->set(heightPercent, 1.0f);
 
-        add<Label>("Simple Label (AA+LCD)")
-            ->setLcdRender(true)
-            ->setSubpixelText(false)
-            ->style()
-            ->set(textAntiAlias, true);
+        scroller->add<Label>("Default Label");
 
-        add<Label>("Simple Label (AA+SUB)")
-            ->setLcdRender(false)
-            ->setSubpixelText(true)
-            ->style()
-            ->set(textAntiAlias, true);
+        scroller->add<Label>("Simple Label (No AA)")
+                ->style()
+                ->set(textAntiAlias, false);
 
-        add<Label>("Simple Label (AA+LCD+SUB)")
-            ->setLcdRender(true)
-            ->setSubpixelText(true)
-            ->style()
-            ->set(textAntiAlias, true);
+        scroller->add<Label>("Simple Label (AA)")
+                ->setLcdRender(false)
+                ->setSubpixelText(false)
+                ->style()
+                ->set(textAntiAlias, true);
 
-        auto container = add<Div>();
+        scroller->add<Label>("Simple Label (AA+LCD)")
+                ->setLcdRender(true)
+                ->setSubpixelText(false)
+                ->style()
+                ->set(textAntiAlias, true);
+
+        scroller->add<Label>("Simple Label (AA+SUB)")
+                ->setLcdRender(false)
+                ->setSubpixelText(true)
+                ->style()
+                ->set(textAntiAlias, true);
+
+        scroller->add<Label>("Simple Label (AA+LCD+SUB)")
+                ->setLcdRender(true)
+                ->setSubpixelText(true)
+                ->style()
+                ->set(textAntiAlias, true);
+
+        auto container = scroller->add<Div>();
         container
             ->style()
+            ->set(shrink, 0)
             ->set(direction, "row");
 
         auto left = container->add<Div>();

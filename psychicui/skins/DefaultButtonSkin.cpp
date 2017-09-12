@@ -3,6 +3,7 @@
 namespace psychicui {
     DefaultButtonSkin::DefaultButtonSkin() :
         ButtonSkin() {
+        setTag("DefaultButtonSkin");
         _label = add<Label>();
     }
 

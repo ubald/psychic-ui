@@ -675,7 +675,7 @@ namespace psychicui {
     void Window::openMenu(const std::vector<std::shared_ptr<MenuItem>> &items, const int x, const int y) {
         menu->removeAll();
         int lx, ly;
-        menu->getGlobalToLocal(lx, ly, x, y);
+        menu->globalToLocal(lx, ly, x, y);
         auto m = menu->add<Menu>(items);
         m->style()
          ->set(left, lx)

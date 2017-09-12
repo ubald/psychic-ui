@@ -267,14 +267,15 @@ namespace psychicui {
     // region Hit Tests
 
     bool Div::contains(const int x, const int y) const {
-        return x >= 0 && x < _width && y >= 0 && y < _height;
+        return x >= _x && x < _x + _width && y >= _y && y < _y + _height;
     }
 
     bool Div::boundsContains(const int x, const int y) const {
         if (_computedStyle->get(overflow) == "visible") {
             return x >= _boundsLeft && x < _boundsRight && y >= _boundsTop && y < _boundsBottom;
         } else {
-            return x >= 0 && x < _width && y >= 0 && y < _height;
+            // TODO: Keep right and bottom cached
+            return x >= _x && x < _x + _width && y >= _y && y < _y + _height;
         }
     }
 
@@ -292,20 +293,20 @@ namespace psychicui {
 
     // region Position
 
-    void Div::getLocalToGlobal(int &gx, int &gy, const int x, const int y) const {
+    void Div::localToGlobal(int &gx, int &gy, const int x, const int y) const {
         int lgx = _x + x;
         int lgy = _y + y;
         if (_parent) {
-            _parent->getLocalToGlobal(lgx, lgy, lgx, lgy);
+            _parent->localToGlobal(lgx, lgy, lgx, lgy);
         }
-        gx = lgx;
-        gy = lgy;
+        gx = lgx + _scrollX;
+        gy = lgy + _scrollY;
     }
 
-    void Div::getGlobalToLocal(int &lx, int &ly, const int x, const int y) const {
+    void Div::globalToLocal(int &lx, int &ly, const int x, const int y) const {
         int gx = 0;
         int gy = 0;
-        getLocalToGlobal(gx, gy);
+        localToGlobal(gx, gy);
         lx = x - gx;
         ly = y - gy;
     }
@@ -461,6 +462,8 @@ namespace psychicui {
 
     // region Style
 
+    // region Properties
+
     StyleManager *Div::styleManager() const {
         if (_styleManager) {
             return _styleManager.get();
@@ -536,6 +539,8 @@ namespace psychicui {
     const InheritableValues Div::inheritableValues() const {
         return _inheritableValues;
     }
+
+    // endregion
 
     void Div::invalidateStyle() {
         if (_styleDirty) {
@@ -618,6 +623,11 @@ namespace psychicui {
         if (_computedStyle->has(borderRadiusBottomRight)) {
             _radiusBottomRight = _computedStyle->get(borderRadiusBottomRight);;
         }
+
+        _radii[0].set(_radiusTopLeft, _radiusTopLeft);
+        _radii[1].set(_radiusTopRight, _radiusTopRight);
+        _radii[2].set(_radiusBottomRight, _radiusBottomRight);
+        _radii[3].set(_radiusBottomLeft, _radiusBottomLeft);
 
         _drawRoundRect = _radiusTopLeft != 0
                          || _radiusTopRight != 0
@@ -826,19 +836,19 @@ namespace psychicui {
     }
 
     void Div::layoutUpdated() {
-        float left   = YGNodeLayoutGetLeft(_yogaNode);
-        float top    = YGNodeLayoutGetTop(_yogaNode);
-//        float right  = YGNodeLayoutGetRight(_yogaNode);
-//        float bottom = YGNodeLayoutGetBottom(_yogaNode);
-        float width  = YGNodeLayoutGetWidth(_yogaNode);
-        float height = YGNodeLayoutGetHeight(_yogaNode);
+//        int right  = (int) YGNodeLayoutGetRight(_yogaNode);
+//        int bottom = (int) YGNodeLayoutGetBottom(_yogaNode);
 
-        _x      = (int) left;
-        _y      = (int) top;
-        _width  = (int) width;
-        _height = (int) height;
+        _x = (int) YGNodeLayoutGetLeft(_yogaNode);
+        _y = (int) YGNodeLayoutGetTop(_yogaNode);
+
+        int previousWidth  = _width;
+        int previousHeight = _height;
+        _width  = (int) YGNodeLayoutGetWidth(_yogaNode);
+        _height = (int) YGNodeLayoutGetHeight(_yogaNode);
 
         _rect.set(_x, _y, _x + _width, _y + _height);
+        _roundRect.setRectRadii(_rect, _radii);
 
         _borderLeft   = YGNodeLayoutGetBorder(_yogaNode, YGEdgeLeft);
         _borderTop    = YGNodeLayoutGetBorder(_yogaNode, YGEdgeTop);
@@ -852,6 +862,7 @@ namespace psychicui {
             _y + _height - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeBottom) + _borderBottom)
         );
 
+
         _drawBorder = _borderLeft != 0
                       || _borderRight != 0
                       || _borderTop != 0
@@ -864,20 +875,25 @@ namespace psychicui {
         );
 
         // Children should also update
-        _boundsLeft   = 0;
-        _boundsTop    = 0;
-        _boundsRight  = _width;
-        _boundsBottom = _height;
+        _boundsLeft   = _x;
+        _boundsTop    = _y;
+        _boundsRight  = _x + _width;
+        _boundsBottom = _y + _height;
         for (auto &child: _children) {
             child->layoutUpdated();
 
-            _boundsLeft   = std::min(_boundsLeft, child->x() + child->boundsLeft());
-            _boundsTop    = std::min(_boundsTop, child->y() + child->boundsTop());
-            _boundsRight  = std::max(_boundsRight, child->x() + child->boundsRight());
-            _boundsBottom = std::max(_boundsBottom, child->y() + child->boundsBottom());
+            _boundsLeft   = std::min(_boundsLeft, _x + child->boundsLeft());
+            _boundsTop    = std::min(_boundsTop, _y + child->boundsTop());
+            _boundsRight  = std::max(_boundsRight, _x + child->boundsRight());
+            _boundsBottom = std::max(_boundsBottom, _y + child->boundsBottom());
         }
+        _boundsRect.set(_boundsLeft, _boundsTop, _boundsRight, _boundsBottom);
 
         layoutReady = true;
+
+        if (previousWidth != _width || previousHeight != _height) {
+            onResized(_width, _height);
+        }
     }
 
     // endregion
@@ -894,15 +910,17 @@ namespace psychicui {
             updateStyle();
         }
 
-//        SkRect r{(float)_x, (float)_y, (float)_x + (float)_width, (float)_y + (float)_height};
         if (!layoutReady || !_visible || canvas->quickReject(_rect)) {
             return;
         }
 
         canvas->save();
 
-
         draw(canvas);
+
+        clip(canvas);
+
+        canvas->translate(_scrollX, _scrollY);
 
         // region Debug
         #ifdef DEBUG_LAYOUT
@@ -933,10 +951,10 @@ namespace psychicui {
                 paint.setColor(0x7F00FF00);
                 canvas->drawRect(
                     SkRect{
-                        _borderLeft + 0.5f,
-                        _borderTop + 0.5f,
-                        _rect.width() - _borderRight - 0.5f,
-                        _rect.height() - _borderBottom - 0.5f
+                        _x + _borderLeft + 0.5f,
+                        _y + _borderTop + 0.5f,
+                        _x + _rect.width() - _borderRight - 0.5f,
+                        _y + _rect.height() - _borderBottom - 0.5f
                     }, paint
                 );
             }
@@ -944,20 +962,17 @@ namespace psychicui {
             if (_mouseDown) {
                 paint.setColor(0x30FFFFFF);
                 paint.setStrokeWidth(2);
-                canvas->drawRect({1.f, 1.f, _width - 2.f, _height - 2.f}, paint);
+                canvas->drawRect({_x + 1.f, _y + 1.f, _x + _width - 1.f, _y + _height - 1.f}, paint);
             } else if (_mouseOver) {
                 paint.setColor(0x10FFFFFF);
                 paint.setStrokeWidth(2);
-                canvas->drawRect({1.f, 1.f, _width - 2.f, _height - 2.f}, paint);
+                canvas->drawRect({_x + 1.f, _y + 1.f, _x + _width - 1.f, _y + _height - 1.f}, paint);
             }
         }
         #endif
         // endregion
 
-        clip(canvas);
-
         canvas->translate(_x, _y);
-        canvas->translate(_scrollX, _scrollY);
 
         // This is the only place where we iterate in reverse because we order children in reverse in the vector
         // as to not explode when we modify children in event handlers. We still need to render back-to-front though ;)
@@ -974,48 +989,17 @@ namespace psychicui {
             return;
         }
 
-        bool  aa = _computedStyle->get(antiAlias);
-        float hb = _computedStyle->get(border) / 2;
-        if (_drawComplexRoundRect) {
-            SkRRect  rrect;
-            SkVector radii[4] = {
-                {_radiusTopLeft,     _radiusTopLeft},
-                {_radiusTopRight,    _radiusTopRight},
-                {_radiusBottomRight, _radiusBottomRight},
-                {_radiusBottomLeft,  _radiusBottomLeft}
-            };
-            rrect.setRectRadii(_rect, radii);
-            if (_drawBackground && _drawBorder) {
-                rrect.inset(hb, hb);
-            }
-
-            float insetH = (_rect.width() - _paddedRect.width()) / 2;
-            float insetV = (_rect.height() - _paddedRect.height()) / 2;
-            rrect.inset(insetH, insetV);
-            rrect.offset(_paddedRect.left() - insetH, _paddedRect.y() - insetV);
-            canvas->clipRRect(rrect, aa);
-
+        bool aa = _computedStyle->get(antiAlias);
+        if (_drawRoundRect && _drawBorder) {
+            SkRRect roundRect;
+            // TODO: Offset for unequal borders
+            float   hb = _computedStyle->get(border) / 2;
+            _roundRect.inset(hb, hb, &roundRect);
+            canvas->clipRRect(roundRect, aa);
         } else if (_drawRoundRect) {
-            SkRRect  rrect;
-            SkVector radii[4] = {
-                {_radiusTopLeft,     _radiusTopLeft},
-                {_radiusTopRight,    _radiusTopRight},
-                {_radiusBottomRight, _radiusBottomRight},
-                {_radiusBottomLeft,  _radiusBottomLeft}
-            };
-            rrect.setRectRadii(_rect, radii);
-            float insetH = (_rect.width() - _paddedRect.width()) / 2;
-            float insetV = (_rect.height() - _paddedRect.height()) / 2;
-            rrect.inset(insetH, insetV);
-            rrect.offset(_paddedRect.left() - insetH, _paddedRect.y() - insetV);
-            canvas->clipRRect(rrect, aa);
-
+            canvas->clipRRect(_roundRect, aa);
         } else {
-//            float  insetH = (_rect.width() - _paddedRect.width()) / 2;
-//            float  insetV = (_rect.height() - _paddedRect.height()) / 2;
-//            SkRect inset  = _rect.makeInset(insetH, insetV);
-//            inset.offset(_paddedRect.left() - insetH, _paddedRect.y() - insetV);
-            canvas->clipRect(_paddedRect, aa);
+            canvas->clipRect(_rect, aa);
         }
     }
 
@@ -1023,39 +1007,30 @@ namespace psychicui {
         // region Background & Borders
         if (_drawBackground || _drawBorder) {
             SkPaint paint;
-
-            Color bgColor = _computedStyle->get(backgroundColor);
-
             paint.setStyle(SkPaint::kFill_Style);
-            paint.setColor(bgColor);
+            paint.setColor(_computedStyle->get(backgroundColor));
+            paint.setAntiAlias(_computedStyle->get(antiAlias));
             if (_computedStyle->has(opacity)) {
                 paint.setAlpha((unsigned int) (_computedStyle->get(opacity) * 255.f));
             }
-            paint.setAntiAlias(_drawRoundRect ? true : _computedStyle->get(antiAlias));
 
             float hb = _computedStyle->get(border) / 2;
             if (_drawComplexRoundRect) {
-                SkRRect  rrect;
-                SkVector radii[4] = {
-                    {_radiusTopLeft,     _radiusTopLeft},
-                    {_radiusTopRight,    _radiusTopRight},
-                    {_radiusBottomRight, _radiusBottomRight},
-                    {_radiusBottomLeft,  _radiusBottomLeft}
-                };
-                rrect.setRectRadii(_rect, radii);
+                SkRRect roundRect = _roundRect;
                 if (_drawBackground && _drawBorder) {
-                    rrect.inset(hb, hb);
+                    // TODO: Offset for unequal borders
+                    roundRect.inset(hb, hb);
                 }
 
                 if (_drawBackground) {
-                    canvas->drawRRect(rrect, paint);
+                    canvas->drawRRect(roundRect, paint);
                 }
 
                 if (_drawBorder) {
                     paint.setStyle(SkPaint::kStroke_Style);
                     paint.setColor(_computedStyle->get(borderColor));
                     paint.setStrokeWidth(_computedStyle->get(border));
-                    canvas->drawRRect(rrect, paint);
+                    canvas->drawRRect(roundRect, paint);
                 }
 
             } else if (_drawRoundRect) {
@@ -1075,10 +1050,11 @@ namespace psychicui {
             } else if (_drawBackground) {
                 canvas->drawRect(_rect, paint);
                 if (_drawBorder && !_drawComplexBorders) {
+                    SkRect inset = _rect.makeInset(hb, hb);
                     paint.setStyle(SkPaint::kStroke_Style);
                     paint.setColor(_computedStyle->get(borderColor));
                     paint.setStrokeWidth(_computedStyle->get(border));
-                    canvas->drawRect(_rect, paint);
+                    canvas->drawRect(inset, paint);
                 }
             }
         }
@@ -1216,11 +1192,13 @@ namespace psychicui {
             return Out;
         }
 
-        MouseEventStatus ret = Out;
+        int              localMouseX = mouseX - _x - _scrollX;
+        int              localMouseY = mouseY - _y - _scrollY;
+        MouseEventStatus ret         = Out;
 
         if (_mouseChildren) {
             for (auto &child: _children) {
-                auto res = child->mouseButton(mouseX - child->x(), mouseY - child->y(), button, down, modifiers);
+                auto res = child->mouseButton(localMouseX, localMouseY, button, down, modifiers);
                 if (res != Out) {
                     ret = res;
                     break;
@@ -1230,7 +1208,7 @@ namespace psychicui {
 
         if (_mouseEnabled) {
             if (ret != Handled && onMouseButton.hasSubscriptions()) {
-                onMouseButton(mouseX, mouseY, button, down, modifiers);
+                onMouseButton(localMouseX, localMouseY, button, down, modifiers);
                 ret = Handled;
             } else {
                 ret = Over;
@@ -1247,11 +1225,13 @@ namespace psychicui {
 
         setMouseDown(true);
 
-        MouseEventStatus ret = Out;
+        int              localMouseX = mouseX - _x - _scrollX;
+        int              localMouseY = mouseY - _y - _scrollY;
+        MouseEventStatus ret         = Out;
 
         if (_mouseChildren) {
             for (auto &child: _children) {
-                auto res = child->mouseDown(mouseX - child->x(), mouseY - child->y(), button, modifiers);
+                auto res = child->mouseDown(localMouseX, localMouseY, button, modifiers);
                 if (res != Out) {
                     ret = res;
                     break;
@@ -1261,7 +1241,7 @@ namespace psychicui {
 
         if (_mouseEnabled) {
             if (ret == Out && onMouseDown.hasSubscriptions()) {
-                onMouseDown(mouseX, mouseY, button, modifiers);
+                onMouseDown(localMouseX, localMouseY, button, modifiers);
                 ret = Handled;
             } else {
                 ret = Over;
@@ -1283,11 +1263,13 @@ namespace psychicui {
             setMouseDown(false);
         }
 
-        MouseEventStatus ret = Out;
+        int              localMouseX = mouseX - _x - _scrollX;
+        int              localMouseY = mouseY - _y - _scrollY;
+        MouseEventStatus ret         = Out;
 
         if (_mouseChildren && (isOver || wasDown)) {
             for (auto &child: _children) {
-                auto res = child->mouseUp(mouseX - child->x(), mouseY - child->y(), button, modifiers);
+                auto res = child->mouseUp(localMouseX, localMouseY, button, modifiers);
                 if (res != Out && ret != Handled) {
                     ret = res;
                 }
@@ -1296,8 +1278,8 @@ namespace psychicui {
 
         if (_mouseEnabled && wasDown) {
             // Special case for items receiving a mouse up outside
-            onMouseUpOutside(mouseX, mouseY, button, modifiers);
-            onMouseUp(mouseX, mouseY, button, modifiers);
+            onMouseUpOutside(localMouseX, localMouseY, button, modifiers);
+            onMouseUp(localMouseX, localMouseY, button, modifiers);
         }
 
         if (!isOver) {
@@ -1306,7 +1288,7 @@ namespace psychicui {
 
         if (_mouseEnabled) {
             if (ret != Handled && onMouseUp.hasSubscriptions()) {
-                onMouseUp(mouseX, mouseY, button, modifiers);
+                onMouseUp(localMouseX, localMouseY, button, modifiers);
                 ret = Handled;
             } else {
                 ret = Over;
@@ -1325,11 +1307,13 @@ namespace psychicui {
             return Over;
         }
 
-        MouseEventStatus ret = Out;
+        int              localMouseX = mouseX - _x - _scrollX;
+        int              localMouseY = mouseY - _y - _scrollY;
+        MouseEventStatus ret         = Out;
 
         if (_mouseChildren) {
             for (auto &child: _children) {
-                auto res = child->click(mouseX - child->x(), mouseY - child->y(), button, modifiers);
+                auto res = child->click(localMouseX, localMouseY, button, modifiers);
                 if (res != Out) {
                     ret = res;
                     break;
@@ -1360,9 +1344,11 @@ namespace psychicui {
 
         setMouseOver(false);
 
+        int localMouseX = mouseX - _x - _scrollX;
+        int localMouseY = mouseY - _y - _scrollY;
         if (_mouseChildren) {
             for (auto &child: _children) {
-                if (child->mouseExited(mouseX - child->x(), mouseY - child->y(), button, modifiers)) {
+                if (child->mouseExited(localMouseX, localMouseY, button, modifiers)) {
                     break;
                 }
             }
@@ -1395,11 +1381,13 @@ namespace psychicui {
             setMouseOver(true);
         }
 
-        MouseEventStatus ret = Out;
+        int              localMouseX = mouseX - _x - _scrollX;
+        int              localMouseY = mouseY - _y - _scrollY;
+        MouseEventStatus ret         = Out;
 
         if (_mouseChildren) {
             for (auto &child: _children) {
-                auto res = child->mouseMoved(mouseX - child->x(), mouseY - child->y(), button, modifiers, handled);
+                auto res = child->mouseMoved(localMouseX, localMouseY, button, modifiers, handled);
                 if (res != Out) {
                     handled = true;
                     if (ret != Handled) {
@@ -1413,7 +1401,7 @@ namespace psychicui {
             if (!handled && !wasOver) {
                 onMouseOver();
             }
-            onMouseMove(mouseX, mouseY, button, modifiers);
+            onMouseMove(localMouseX, localMouseY, button, modifiers);
             if (!handled && ret != Handled) {
                 window()->setCursor(_computedStyle->get(cursor));
                 ret = Handled;
@@ -1429,21 +1417,52 @@ namespace psychicui {
 
     // region Scroll
 
+    void Div::scroll(const double  scrollX, const double  scrollY) {
+        bool scrolled = false;
+
+        if (_width < _boundsRight - _boundsLeft) {
+            int previousScrollX = _scrollX;
+            _scrollX = std::min(
+                0,
+                std::max(
+                    _width - (_boundsRight - _boundsLeft),
+                    _scrollX + (int) std::ceil(scrollX) * 2
+                ));
+            scrolled = previousScrollX != _scrollX;
+        }
+        if (_height < _boundsBottom - _boundsTop) {
+            int previousScrollY = _scrollY;
+            _scrollX += scrollX * 2.0f;
+            _scrollY            = std::min(
+                0,
+                std::max(
+                    _height - (_boundsBottom - _boundsTop),
+                    _scrollY + (int) std::ceil(scrollY) * 2
+                ));
+            scrolled            = previousScrollY != _scrollY;
+        }
+
+        if (scrolled) {
+            onScrolled(_scrollX, _scrollY);
+        }
+    }
+
     MouseEventStatus Div::mouseScrolled(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
         }
 
         if (_computedStyle->get(overflow) == "scroll") {
-            _scrollX += scrollX * 2.0f;
-            _scrollY += scrollY * 2.0f;
+            scroll(scrollX, scrollY);
         }
 
-        MouseEventStatus ret = Out;
+        int              localMouseX = mouseX - _x - _scrollX;
+        int              localMouseY = mouseY - _y - _scrollY;
+        MouseEventStatus ret         = Out;
 
         if (_mouseChildren) {
             for (auto &child: _children) {
-                auto res = child->mouseScrolled(mouseX - child->x(), mouseY - child->y(), scrollX, scrollY);
+                auto res = child->mouseScrolled(localMouseX, localMouseY, scrollX, scrollY);
                 if (res != Out) {
                     ret = res;
                     break;
@@ -1453,7 +1472,7 @@ namespace psychicui {
 
         if (_mouseEnabled) {
             if (ret != Handled && onMouseScroll.hasSubscriptions()) {
-                onMouseScroll(mouseX, mouseY, scrollX, scrollY);
+                onMouseScroll(localMouseX, localMouseY, scrollX, scrollY);
                 ret = Handled;
             } else {
                 ret = Over;

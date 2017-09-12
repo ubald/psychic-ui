@@ -21,9 +21,10 @@ namespace psychicui {
 
         bool                   _dragging{false};
         std::shared_ptr<Label> _value{nullptr};
+        std::shared_ptr<Div>   _container{nullptr};
         std::shared_ptr<Div>   _track{nullptr};
         std::shared_ptr<Div>   _range{nullptr};
-        Div::MouseSlot _onMouseMove{nullptr};
+        Div::MouseSlot         _onMouseMove{nullptr};
     };
 }
 

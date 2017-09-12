@@ -12,18 +12,21 @@ namespace psychicui {
 
     class MenuButtonSkin : public Skin<MenuButton> {
     public:
+        MenuButtonSkin() : Skin<MenuButton>() {
+            setTag("MenuButtonSkin");
+        }
     };
 
     class MenuButton : public Component<MenuButtonSkin> {
     public:
         MenuButton(const MenuItem *menuItem);
-        const MenuItem * menuItem() const;
+        const MenuItem *menuItem() const;
         const bool selected() const;
         void setSelected(bool selected);
         const bool active() const override;
     protected:
         const MenuItem *_menuItem{};
-        bool     _selected{false};
+        bool           _selected{false};
     };
 }
 

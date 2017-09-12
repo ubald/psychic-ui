@@ -34,9 +34,9 @@ namespace psychicui {
                         remove(subMenu);
                     }
                     int x, y;
-                    subMenuButton->getLocalToGlobal(x, y, subMenuButton->getWidth());
+                    subMenuButton->localToGlobal(x, y, subMenuButton->getWidth());
                     int lx, ly;
-                    getGlobalToLocal(lx, ly, x, y);
+                    globalToLocal(lx, ly, x, y);
                     subMenu = add<Menu>(sub->items);
                     subMenu->style()
                            ->set(left, lx)

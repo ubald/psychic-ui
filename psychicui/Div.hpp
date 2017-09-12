@@ -37,7 +37,10 @@ namespace psychicui {
 
     public:
         Div();
+        Div(const Div &) = delete;
         ~Div();
+
+        Div&operator=(const Div&) = delete;
 
         std::string toString() const;
 
@@ -95,8 +98,8 @@ namespace psychicui {
 
         void setPosition(int x, int y);
         void setPosition(int left, int top, int right, int bottom);
-        void getLocalToGlobal(int &gx, int &gy, const int x = 0, const int y = 0) const;
-        void getGlobalToLocal(int &lx, int &ly, const int x = 0, const int y = 0) const;
+        void localToGlobal(int &gx, int &gy, const int x = 0, const int y = 0) const;
+        void globalToLocal(int &lx, int &ly, const int x = 0, const int y = 0) const;
         const int x() const;
         void setX(int x);
         const int y() const;
@@ -152,9 +155,44 @@ namespace psychicui {
             return _boundsBottom;
         }
 
+        const int contentWidth() const {
+            return _boundsRight - _boundsLeft;
+        }
+
+        const int contentHeight() const {
+            return _boundsBottom - _boundsTop;
+        }
+
+        // endregion
+
+        // region Scroll
+
+        const int scrollX() const {
+            return _scrollX;
+        }
+
+        Div * setScrollX(const int &scrollX) {
+            _scrollX = scrollX;
+            return this;
+        }
+
+        const int scrollY() const {
+            return _scrollY;
+        }
+
+        Div * setScrollY(const int &scrollY) {
+            _scrollY = scrollY;
+            return this;
+        }
+
+        void scroll(double scrollX, double scrollY);
+        Signal<int, int> onScrolled{};
+
         // endregion
 
         // region Layout
+
+        Signal<int, int> onResized{};
 
         #ifdef DEBUG_LAYOUT
         static bool debugLayout;
@@ -264,10 +302,10 @@ namespace psychicui {
         int  _width{0};
         int  _height{0};
         // Bounds, includes absolute positioned children
-        int _boundsLeft{0};
-        int _boundsTop{0};
-        int _boundsRight{0};
-        int _boundsBottom{0};
+        int  _boundsLeft{0};
+        int  _boundsTop{0};
+        int  _boundsRight{0};
+        int  _boundsBottom{0};
         bool _wrap{false};
 
         // region Lifecycle
@@ -305,7 +343,7 @@ namespace psychicui {
         /**
          * Id
          */
-         std::string _id{};
+        std::string _id{};
 
         /**
          * Pseudo CSS class names
@@ -364,13 +402,22 @@ namespace psychicui {
         /**
          * Component's rect
          */
-        SkRect _rect;
+        SkRect _rect{};
 
         /**
          * Component's padded rect
          */
-        SkRect _paddedRect;
+        SkRect _paddedRect{};
 
+        /**
+         * Round rect
+         */
+         SkRRect _roundRect{};
+
+         /**
+          * Bounds rect
+          */
+          SkRect _boundsRect{};
 
 
         /**
@@ -413,14 +460,20 @@ namespace psychicui {
         float _radiusTopRight{0.0f};
         float _radiusBottomLeft{0.0f};
         float _radiusBottomRight{0.0f};
+        SkVector _radii[4]{
+            {0.0f, 0.0f},
+            {0.0f, 0.0f},
+            {0.0f, 0.0f},
+            {0.0f, 0.0f}
+        };
 
         float _borderLeft{0.0f};
         float _borderRight{0.0f};
         float _borderTop{0.0f};
         float _borderBottom{0.0f};
 
-        float _scrollX{0.0f};
-        float _scrollY{0.0f};
+        int _scrollX{0};
+        int _scrollY{0};
 
         // endregion
 
