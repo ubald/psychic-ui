@@ -172,7 +172,10 @@ namespace psychicui {
         }
 
         Div * setScrollX(const int &scrollX) {
-            _scrollX = scrollX;
+            if (scrollX != _scrollX) {
+                _scrollX = scrollX;
+                onScrolled(_scrollX, _scrollY);
+            }
             return this;
         }
 
@@ -181,7 +184,10 @@ namespace psychicui {
         }
 
         Div * setScrollY(const int &scrollY) {
-            _scrollY = scrollY;
+            if (scrollY != _scrollY) {
+                _scrollY = scrollY;
+                onScrolled(_scrollX, _scrollY);
+            }
             return this;
         }
 
@@ -403,6 +409,11 @@ namespace psychicui {
          * Component's rect
          */
         SkRect _rect{};
+
+        /**
+         * Component's margin rect
+         */
+         SkRect _marginRect{};
 
         /**
          * Component's padded rect

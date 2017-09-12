@@ -15,6 +15,7 @@
 #include "Labels.hpp"
 #include "Buttons.hpp"
 #include "Divs.hpp"
+#include "Scroller.hpp"
 #include "Ranges.hpp"
 #include "../demo-stylesheet.hpp"
 
@@ -94,6 +95,10 @@ namespace psychicui {
             std::make_pair(
                 "Divs",
                 Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Divs>(); })));
+                panels.emplace_back(
+            std::make_pair(
+                "Scroller",
+                Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Scrollers>(); })));
         panels.emplace_back(
             std::make_pair(
                 "Labels",
@@ -133,9 +138,9 @@ namespace psychicui {
     }
 
     void Application::render(SkCanvas *canvas) {
-        std::stringstream stream;
-        stream << std::fixed << std::setprecision(3) << fps;
-        fpsLabel->setText("FPS: " + stream.str());
+//        std::stringstream stream;
+//        stream << std::fixed << std::setprecision(3) << fps;
+//        fpsLabel->setText("FPS: " + stream.str());
         Window::render(canvas);
     }
 }

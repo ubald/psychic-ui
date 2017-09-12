@@ -7,7 +7,9 @@ namespace psychicui {
     TitleBar::TitleBar() :
         Div() {
         setTag("TitleBar");
-        _defaultStyle->set(direction, "row");
+        _defaultStyle
+            ->set(direction, "row")
+            ->set(shrink, 0);
 
         add<Button>(
             "Close", [this]() {

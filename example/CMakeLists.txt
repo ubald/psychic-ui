@@ -10,6 +10,6 @@ if (PSYCHICUI_BUILD_EXAMPLE)
         components/ToolBar.hpp
         components/Labels.hpp
         components/Buttons.hpp
-        demo.hpp components/Ranges.hpp components/Divs.hpp)
+        demo.hpp components/Ranges.hpp components/Divs.hpp components/Scroller.hpp)
     target_link_libraries(psychicui_demo psychicui ${PSYCHICUI_EXTRA_LIBS})
 endif ()

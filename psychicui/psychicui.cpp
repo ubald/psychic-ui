@@ -34,6 +34,7 @@ namespace psychicui {
 
         // Initialize Yoga
         YGConfigSetUseWebDefaults(YGConfigGetDefault(), true);
+        YGConfigSetPointScaleFactor(YGConfigGetDefault(), 0.0f); // We'kk round the values ourself, rounding is bugged
     }
 
     static bool mainloop_active = false;

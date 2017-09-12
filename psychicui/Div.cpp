@@ -839,16 +839,24 @@ namespace psychicui {
 //        int right  = (int) YGNodeLayoutGetRight(_yogaNode);
 //        int bottom = (int) YGNodeLayoutGetBottom(_yogaNode);
 
-        _x = (int) YGNodeLayoutGetLeft(_yogaNode);
-        _y = (int) YGNodeLayoutGetTop(_yogaNode);
+        _x = (int) std::ceil(YGNodeLayoutGetLeft(_yogaNode));
+        _y = (int) std::ceil(YGNodeLayoutGetTop(_yogaNode));
 
         int previousWidth  = _width;
         int previousHeight = _height;
-        _width  = (int) YGNodeLayoutGetWidth(_yogaNode);
-        _height = (int) YGNodeLayoutGetHeight(_yogaNode);
+
+        _width  = (int) std::ceil(YGNodeLayoutGetWidth(_yogaNode));
+        _height = (int) std::ceil(YGNodeLayoutGetHeight(_yogaNode));
 
         _rect.set(_x, _y, _x + _width, _y + _height);
         _roundRect.setRectRadii(_rect, _radii);
+
+        _marginRect.set(
+            _x - YGNodeLayoutGetMargin(_yogaNode, YGEdgeLeft),
+            _y - YGNodeLayoutGetMargin(_yogaNode, YGEdgeTop),
+            _x + _width + YGNodeLayoutGetMargin(_yogaNode, YGEdgeRight),
+            _y + _height + YGNodeLayoutGetMargin(_yogaNode, YGEdgeBottom)
+        );
 
         _borderLeft   = YGNodeLayoutGetBorder(_yogaNode, YGEdgeLeft);
         _borderTop    = YGNodeLayoutGetBorder(_yogaNode, YGEdgeTop);
@@ -861,7 +869,6 @@ namespace psychicui {
             _x + _width - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeRight) + _borderRight),
             _y + _height - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeBottom) + _borderBottom)
         );
-
 
         _drawBorder = _borderLeft != 0
                       || _borderRight != 0
@@ -887,11 +894,12 @@ namespace psychicui {
             _boundsRight  = std::max(_boundsRight, _x + child->boundsRight());
             _boundsBottom = std::max(_boundsBottom, _y + child->boundsBottom());
         }
+        SkRect previousBoundsRect = _boundsRect;
         _boundsRect.set(_boundsLeft, _boundsTop, _boundsRight, _boundsBottom);
 
         layoutReady = true;
 
-        if (previousWidth != _width || previousHeight != _height) {
+        if (previousWidth != _width || previousHeight != _height || previousBoundsRect != _boundsRect) {
             onResized(_width, _height);
         }
     }
@@ -935,6 +943,10 @@ namespace psychicui {
             paint.setStrokeWidth(SkIntToScalar(1));
 
             paint.setColor(0x7FFF0000);
+            SkRect mRect = _marginRect.makeInset(0.5f, 0.5f);
+            canvas->drawRect(mRect, paint);
+
+            paint.setColor(0x7F00FF00);
             SkRect dRect = _rect.makeInset(0.5f, 0.5f);
             canvas->drawRect(dRect, paint);
 
@@ -948,7 +960,7 @@ namespace psychicui {
             canvas->drawRect(bRect, paint);
 
             if (_borderLeft > 0 || _borderTop > 0 || _borderRight > 0 || _borderBottom > 0) {
-                paint.setColor(0x7F00FF00);
+                paint.setColor(0x7F00FFFF);
                 canvas->drawRect(
                     SkRect{
                         _x + _borderLeft + 0.5f,
@@ -1047,8 +1059,10 @@ namespace psychicui {
                     canvas->drawRoundRect(inset, _radiusTopLeft, _radiusTopLeft, paint);
                 }
 
-            } else if (_drawBackground) {
-                canvas->drawRect(_rect, paint);
+            } else {
+                if (_drawBackground) {
+                    canvas->drawRect(_rect, paint);
+                }
                 if (_drawBorder && !_drawComplexBorders) {
                     SkRect inset = _rect.makeInset(hb, hb);
                     paint.setStyle(SkPaint::kStroke_Style);
@@ -1080,8 +1094,8 @@ namespace psychicui {
                     draw = false;
                 }
                 if (draw) {
-                    float hw = _borderLeft / 2;
-                    canvas->drawLine(hw, 0, hw, _rect.bottom(), paint);
+                    float hw = _borderLeft / 2.0f;
+                    canvas->drawLine(hw, -0.5f, hw, _rect.bottom() + 0.5f, paint);
                 }
             }
 
@@ -1098,8 +1112,8 @@ namespace psychicui {
                     draw = false;
                 }
                 if (draw) {
-                    float hw = _borderRight / 2;
-                    canvas->drawLine(_rect.right() - hw, 0, _rect.right() - hw, _rect.bottom(), paint);
+                    float hw = _borderRight / 2.0f;
+                    canvas->drawLine(_rect.right() - hw, -0.5f, _rect.right() - hw, _rect.bottom() + 0.5f, paint);
                 }
             }
 
@@ -1116,8 +1130,8 @@ namespace psychicui {
                     draw = false;
                 }
                 if (draw) {
-                    float hw = _borderTop / 2;
-                    canvas->drawLine(0, hw, _rect.right(), hw, paint);
+                    float hw = _borderTop / 2.0f;
+                    canvas->drawLine(-0.5f, hw, _rect.right() + 0.5f, hw, paint);
                 }
             }
 
@@ -1134,8 +1148,8 @@ namespace psychicui {
                     draw = false;
                 }
                 if (draw) {
-                    float hw = _borderBottom / 2;
-                    canvas->drawLine(0, _rect.bottom() - hw, _rect.right(), _rect.bottom() - hw, paint);
+                    float hw = _borderBottom / 2.0f;
+                    canvas->drawLine(-0.5f, _rect.bottom() - hw, _rect.right() + 0.5f, _rect.bottom() - hw, paint);
                 }
             }
         }
@@ -1240,6 +1254,7 @@ namespace psychicui {
         }
 
         if (_mouseEnabled) {
+            // TODO: I don't remember why the == Out condition, only that it allows menus to work over modals
             if (ret == Out && onMouseDown.hasSubscriptions()) {
                 onMouseDown(localMouseX, localMouseY, button, modifiers);
                 ret = Handled;
@@ -1371,41 +1386,45 @@ namespace psychicui {
             mouseExited(mouseX, mouseY, button, modifiers);
         }
 
-        if (!isOver) {
+        bool allowOutsideMovement = this == window();
+
+        if (!isOver && !allowOutsideMovement) {
             return Out;
         }
 
-        // From now on we're over the component
-
-        if (!handled) {
-            setMouseOver(true);
-        }
+        // From now on we're over the component, unless we"re on window, which allow for the mouse to move outside
 
         int              localMouseX = mouseX - _x - _scrollX;
         int              localMouseY = mouseY - _y - _scrollY;
         MouseEventStatus ret         = Out;
 
-        if (_mouseChildren) {
-            for (auto &child: _children) {
-                auto res = child->mouseMoved(localMouseX, localMouseY, button, modifiers, handled);
-                if (res != Out) {
-                    handled = true;
-                    if (ret != Handled) {
-                        ret = res;
+        if (isOver) {
+            if (!handled) {
+                setMouseOver(true);
+            }
+
+            if (_mouseChildren) {
+                for (auto &child: _children) {
+                    auto res = child->mouseMoved(localMouseX, localMouseY, button, modifiers, handled);
+                    if (res != Out) {
+                        handled = true;
+                        if (ret != Handled) {
+                            ret = res;
+                        }
                     }
                 }
             }
         }
 
         if (_mouseEnabled) {
-            if (!handled && !wasOver) {
+            if (!handled && isOver && !wasOver) {
                 onMouseOver();
             }
             onMouseMove(localMouseX, localMouseY, button, modifiers);
-            if (!handled && ret != Handled) {
+            if (!handled && isOver && ret != Handled) {
                 window()->setCursor(_computedStyle->get(cursor));
                 ret = Handled;
-            } else {
+            } else if (isOver) {
                 ret = Over;
             }
         }
@@ -1417,29 +1436,29 @@ namespace psychicui {
 
     // region Scroll
 
-    void Div::scroll(const double  scrollX, const double  scrollY) {
-        bool scrolled = false;
+    void Div::scroll(const double scrollX, const double scrollY) {
+        bool  scrolled = false;
 
         if (_width < _boundsRight - _boundsLeft) {
-            int previousScrollX = _scrollX;
-            _scrollX = std::min(
-                0,
-                std::max(
+            int sx = std::min(
+                0, std::max(
                     _width - (_boundsRight - _boundsLeft),
                     _scrollX + (int) std::ceil(scrollX) * 2
                 ));
-            scrolled = previousScrollX != _scrollX;
+
+            scrolled = _scrollX != sx;
+            _scrollX = sx;
         }
+
         if (_height < _boundsBottom - _boundsTop) {
-            int previousScrollY = _scrollY;
-            _scrollX += scrollX * 2.0f;
-            _scrollY            = std::min(
-                0,
-                std::max(
+            int sy = std::min(
+                0, std::max(
                     _height - (_boundsBottom - _boundsTop),
                     _scrollY + (int) std::ceil(scrollY) * 2
                 ));
-            scrolled            = previousScrollY != _scrollY;
+
+            scrolled = _scrollY != sy;
+            _scrollY = sy;
         }
 
         if (scrolled) {

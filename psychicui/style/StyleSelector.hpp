@@ -3,12 +3,12 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <unordered_set>
 
 namespace psychicui {
     class Div;
 
     enum Pseudo {
-        none,
         focus,
         hover,
         active,
@@ -26,7 +26,7 @@ namespace psychicui {
 
         const std::string tag() const;
         const std::vector<std::string> classes() const;
-        const Pseudo pseudo() const;
+        const std::unordered_set<Pseudo> pseudo() const;
         const StyleSelector *next() const;
 
         /**
@@ -51,7 +51,7 @@ namespace psychicui {
         bool matches(const Div *component, bool expand) const;
         std::string                    _tag{};
         std::vector<std::string>       _classes{};
-        Pseudo                         _pseudo{none};
+        std::unordered_set<Pseudo>     _pseudo{};
         std::unique_ptr<StyleSelector> _next{nullptr};
     };
 }

@@ -51,12 +51,13 @@ using namespace psychicui;
 class PsychicUIStyleSheet : public StyleSheet {
 public:
     void load(StyleManager *manager) override {
-        int   text       = 12;
-        int   smallText  = 10;
-        int   mediumText = 14;
-        int   largeText  = 16;
-        int   radius     = 6;
-        Color highlight  = 0xFF00FFEC;
+        int   text          = 12;
+        int   smallText     = 10;
+        int   mediumText    = 14;
+        int   largeText     = 16;
+        int   radius        = 6;
+        int   scrollBarSize = 12;
+        Color highlight     = 0xFF00FFEC;
 
         manager->loadFont("stan0755", "../res/fonts/stan0755.ttf");
         manager->loadFont("Ubuntu Light", "../res/fonts/Ubuntu/Ubuntu-Light.ttf");
@@ -87,7 +88,7 @@ public:
         // region Defaults
         manager->style("*")
                ->set(overflow, "visible")
-               ->set(fontFamily, "Ubuntu Light")
+               ->set(fontFamily, "Ubuntu Regular")
                ->set(fontSize, text)
                ->set(lineHeight, 16)
                ->set(color, 0xFFFFFFFF)
@@ -113,7 +114,9 @@ public:
                ->set(borderColor, BASE_00);
 
         manager->style("TitleBar Label.title")
+               ->set(fontFamily, "Ubuntu Light")
                ->set(fontSize, largeText)
+               ->set(marginLeft, 12)
                ->set(grow, 1);
 
         manager->style("TitleBar Button")
@@ -151,23 +154,39 @@ public:
         // region ScrollBars
 
         manager->style("ScrollBar")
-               ->set(skin, "default-scrollbar-skin")
-               ->set(width, 12);
+               ->set(skin, "default-scrollbar-skin");
+
+        manager->style("ScrollBar.vertical")
+               ->set(width, scrollBarSize);
+
+        manager->style("ScrollBar.horizontal")
+               ->set(height, scrollBarSize);
 
         manager->style("ScrollBar .track")
                ->set(backgroundColor, BASE_00);
 
         manager->style("ScrollBar .thumb")
-               ->set(backgroundColor, BASE_02)
-               ->set(marginLeft, 1);
+               ->set(backgroundColor, BASE_02);
 
+        manager->style("ScrollBar.vertical .thumb")
+               ->set(marginLeft, 1)
+               ->set(minHeight, 24);
+
+        manager->style("ScrollBar.horizontal .thumb")
+               ->set(marginTop, 1)
+               ->set(minWidth, 24);
 
         manager->style("ScrollBar:hover .thumb")
                ->set(backgroundColor, BASE_03);
 
-
         manager->style("ScrollBar:active .thumb")
                ->set(backgroundColor, highlight);
+
+        manager->style("ScrollBar:disabled .thumb")
+               ->set(backgroundColor, BASE_01);
+
+        manager->style("Scroller ScrollBar.horizontal")
+               ->set(marginRight, scrollBarSize);
 
         // endregion
 

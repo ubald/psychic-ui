@@ -1,4 +1,5 @@
 #include "DefaultScrollBarSkin.hpp"
+#include "psychicui/Window.hpp"
 
 namespace psychicui {
 
@@ -18,25 +19,65 @@ namespace psychicui {
         _thumb->addClassName("thumb")
               ->style()
               ->set(position, "absolute");
+
+        _thumb->onMouseDown(
+            [this](const int mouseX, const int mouseY, int button, int modifiers) {
+                if (_direction == ScrollDirection::Vertical) {
+                    dragOffset = mouseY;
+                } else {
+                    dragOffset = mouseX;
+                }
+                _onMouseMove = window()->onMouseMove(
+                    [this](const int mouseX, const int mouseY, int button, int modifiers) {
+                        int lx = 0;
+                        int ly = 0;
+                        _track->globalToLocal(lx, ly, mouseX, mouseY);
+                        if (_direction == ScrollDirection::Vertical) {
+                            component()->scrollPercentY((float) (ly - dragOffset) / (float) (_track->getHeight() - _thumb->getHeight()));
+                        } else {
+                            component()->scrollPercentX((float) (lx - dragOffset) / (float) (_track->getWidth() - _thumb->getWidth()));
+                        }
+                    }
+                );
+            }
+        );
+
+        _thumb->onMouseUp(
+            [this](const int mouseX, const int mouseY, int button, int modifiers) {
+                if (_onMouseMove) {
+                    _onMouseMove->disconnect();
+                    _onMouseMove = nullptr;
+                }
+            }
+        );
+    }
+
+    void DefaultScrollBarSkin::added() {
+        ScrollBarSkin::added();
+        setupDirection();
     }
 
     void DefaultScrollBarSkin::styleUpdated() {
         ScrollBarSkin::styleUpdated();
+        if (component() && component()->direction() != _direction) {
+            _direction = component()->direction();
+            setupDirection();
+        }
+    }
 
-        if (component()->direction() == Vertical) {
-            // TODO: This creates another invalidation cycle, fix
-            addClassName("vertical");
-            removeClassName("horizontal");
+    void DefaultScrollBarSkin::setupDirection() {
+        if (_direction == Vertical) {
             _thumb
                 ->style()
                 ->set(left, 0.f)
-                ->set(right, 0.f);
+                ->set(right, 0.f)
+                ->set(top, 0)
+                ->set(bottom, NAN);
         } else {
-            // TODO: This creates another invalidation cycle, fix
-            addClassName("horizontal");
-            removeClassName("vertical");
             _thumb
                 ->style()
+                ->set(left, 0)
+                ->set(right, NAN)
                 ->set(top, 0.f)
                 ->set(bottom, 0.f);
         }
@@ -45,13 +86,12 @@ namespace psychicui {
     void DefaultScrollBarSkin::updateScrollBar(bool enabled, float scrollPosition, float contentRatio) {
         setEnabled(enabled);
         if (component()->direction() == Vertical) {
-            std::cout << scrollPosition * (float) (_height - _thumb->getHeight()) << std::endl;
             _thumb->style()
-                  ->set(top, (int)(scrollPosition * (float) (_height - _thumb->getHeight())))
+                  ->set(top, (int) (scrollPosition * (float) (_track->getHeight() - _thumb->getHeight())))
                   ->set(heightPercent, contentRatio);
         } else {
             _thumb->style()
-                  ->set(left, (int)(scrollPosition * (float) (_width - _thumb->getWidth())))
+                  ->set(left, (int) (scrollPosition * (float) (_track->getWidth() - _thumb->getWidth())))
                   ->set(widthPercent, contentRatio);
         }
 

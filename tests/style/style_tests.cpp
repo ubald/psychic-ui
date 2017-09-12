@@ -1,6 +1,7 @@
 #include <cmath>
 #include "catch.hpp"
 #include <psychicui/style/Style.hpp>
+#include <psychicui/Div.hpp>
 
 using namespace psychicui;
 
@@ -148,13 +149,14 @@ TEST_CASE( "Styles can have default values", "[style]" ) {
 TEST_CASE( "Styles can overlay inheritable values", "[style]" ) {
     auto receiver = std::make_unique<Style>();
     auto inheritable = std::make_unique<Style>();
+    auto div = std::make_shared<Div>();
 
     SECTION("with color values") {
         inheritable->set(color, 0xFFFF0000);
         inheritable->set(backgroundColor, 0xFFFF0000);
         receiver->set(color, 0xFF0000FF);
         receiver->set(backgroundColor, 0xFF0000FF);
-        receiver->overlayInheritable(inheritable.get());
+        receiver->overlayInheritable(inheritable.get(), div.get());
         REQUIRE(receiver->get(color) == 0xFFFF0000);
         REQUIRE(receiver->get(backgroundColor) == 0xFF0000FF);
     }
@@ -164,7 +166,7 @@ TEST_CASE( "Styles can overlay inheritable values", "[style]" ) {
         inheritable->set(overflow, "hidden");
         receiver->set(fontFamily, "Times");
         receiver->set(overflow, "scroll");
-        receiver->overlayInheritable(inheritable.get());
+        receiver->overlayInheritable(inheritable.get(), div.get());
         REQUIRE(receiver->get(fontFamily) == "Arial");
         REQUIRE(receiver->get(overflow) == "scroll");
     }
@@ -172,7 +174,7 @@ TEST_CASE( "Styles can overlay inheritable values", "[style]" ) {
     SECTION("with float values") {
         inheritable->set(opacity, 0.5f);
         receiver->set(opacity, 1.0f);
-        receiver->overlayInheritable(inheritable.get());
+        receiver->overlayInheritable(inheritable.get(), div.get());
         REQUIRE(receiver->get(opacity) == 1.0f);
     }
 
@@ -189,7 +191,7 @@ TEST_CASE( "Styles can overlay inheritable values", "[style]" ) {
     SECTION("with bool values") {
         inheritable->set(antiAlias, false);
         receiver->set(antiAlias, true);
-        receiver->overlayInheritable(inheritable.get());
+        receiver->overlayInheritable(inheritable.get(), div.get());
         REQUIRE(receiver->get(antiAlias) == true);
     }
 

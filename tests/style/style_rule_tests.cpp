@@ -36,7 +36,7 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "div");
             REQUIRE(rule->classes().empty());
-            REQUIRE(rule->pseudo() == none);
+            REQUIRE(rule->pseudo().empty());
             REQUIRE(rule->next() == nullptr);
         }
 
@@ -45,7 +45,7 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "div");
             REQUIRE(rule->classes().empty());
-            REQUIRE(rule->pseudo() == hover);
+            REQUIRE(rule->pseudo() == std::unordered_set<Pseudo>{hover});
             REQUIRE(rule->next() == nullptr);
         }
 
@@ -55,7 +55,7 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule->tag() == "div");
             REQUIRE(rule->classes().size() == 1);
             REQUIRE(rule->classes()[0] == "styled");
-            REQUIRE(rule->pseudo() == none);
+            REQUIRE(rule->pseudo().empty());
             REQUIRE(rule->next() == nullptr);
         }
 
@@ -65,7 +65,7 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule->tag() == "div");
             REQUIRE(rule->classes().size() == 1);
             REQUIRE(rule->classes()[0] == "styled");
-            REQUIRE(rule->pseudo() == hover);
+            REQUIRE(rule->pseudo() == std::unordered_set<Pseudo>{hover});
             REQUIRE(rule->next() == nullptr);
         }
 
@@ -76,7 +76,7 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule->classes().size() == 2);
             REQUIRE(rule->classes()[0] == "styled");
             REQUIRE(rule->classes()[1] == "more");
-            REQUIRE(rule->pseudo() == none);
+            REQUIRE(rule->pseudo().empty());
             REQUIRE(rule->next() == nullptr);
         }
 
@@ -87,7 +87,7 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule->classes().size() == 2);
             REQUIRE(rule->classes()[0] == "styled");
             REQUIRE(rule->classes()[1] == "more");
-            REQUIRE(rule->pseudo() == hover);
+            REQUIRE(rule->pseudo() == std::unordered_set<Pseudo>{hover});
             REQUIRE(rule->next() == nullptr);
         }
 
@@ -101,7 +101,7 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule->tag().empty());
             REQUIRE(rule->classes().size() == 1);
             REQUIRE(rule->classes()[0] == "styled");
-            REQUIRE(rule->pseudo() == none);
+            REQUIRE(rule->pseudo().empty());
             REQUIRE(rule->next() == nullptr);
         }
 
@@ -111,7 +111,7 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule->tag().empty());
             REQUIRE(rule->classes().size() == 1);
             REQUIRE(rule->classes()[0] == "styled");
-            REQUIRE(rule->pseudo() == hover);
+            REQUIRE(rule->pseudo() == std::unordered_set<Pseudo>{hover});
             REQUIRE(rule->next() == nullptr);
         }
 
@@ -122,7 +122,7 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule->classes().size() == 2);
             REQUIRE(rule->classes()[0] == "styled");
             REQUIRE(rule->classes()[1] == "more");
-            REQUIRE(rule->pseudo() == none);
+            REQUIRE(rule->pseudo().empty());
             REQUIRE(rule->next() == nullptr);
         }
 
@@ -133,7 +133,7 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule->classes().size() == 2);
             REQUIRE(rule->classes()[0] == "styled");
             REQUIRE(rule->classes()[1] == "more");
-            REQUIRE(rule->pseudo() == hover);
+            REQUIRE(rule->pseudo() == std::unordered_set<Pseudo>{hover});
             REQUIRE(rule->next() == nullptr);
         }
 
@@ -146,7 +146,16 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag().empty());
             REQUIRE(rule->classes().empty());
-            REQUIRE(rule->pseudo() == hover);
+            REQUIRE(rule->pseudo() == std::unordered_set<Pseudo>{hover});
+            REQUIRE(rule->next() == nullptr);
+        }
+
+        SECTION(":pseudo") {
+            auto rule = StyleSelector::fromSelector(":hover:disabled");
+            REQUIRE(rule != nullptr);
+            REQUIRE(rule->tag().empty());
+            REQUIRE(rule->classes().empty());
+            REQUIRE(rule->pseudo() == std::unordered_set<Pseudo>({hover, disabled}));
             REQUIRE(rule->next() == nullptr);
         }
 
@@ -159,11 +168,11 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "tag2");
             REQUIRE(rule->classes().empty());
-            REQUIRE(rule->pseudo() == none);
+            REQUIRE(rule->pseudo().empty());
             REQUIRE(rule->next() != nullptr);
             REQUIRE(rule->next()->tag() == "tag1");
             REQUIRE(rule->next()->classes().empty());
-            REQUIRE(rule->next()->pseudo() == none);
+            REQUIRE(rule->next()->pseudo().empty());
             REQUIRE(rule->next()->next() == nullptr);
         }
 
@@ -173,12 +182,12 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule->tag() == "tag2");
             REQUIRE(rule->classes().size() == 1);
             REQUIRE(rule->classes()[0] == "class2");
-            REQUIRE(rule->pseudo() == none);
+            REQUIRE(rule->pseudo().empty());
             REQUIRE(rule->next() != nullptr);
             REQUIRE(rule->next()->tag() == "tag1");
             REQUIRE(rule->next()->classes().size() == 1);
             REQUIRE(rule->next()->classes()[0] == "class1");
-            REQUIRE(rule->next()->pseudo() == none);
+            REQUIRE(rule->next()->pseudo().empty());
             REQUIRE(rule->next()->next() == nullptr);
         }
 
@@ -188,12 +197,12 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule->tag() == "tag2");
             REQUIRE(rule->classes().size() == 1);
             REQUIRE(rule->classes()[0] == "class2");
-            REQUIRE(rule->pseudo() == hover);
+            REQUIRE(rule->pseudo() == std::unordered_set<Pseudo>{hover});
             REQUIRE(rule->next() != nullptr);
             REQUIRE(rule->next()->tag() == "tag1");
             REQUIRE(rule->next()->classes().size() == 1);
             REQUIRE(rule->next()->classes()[0] == "class1");
-            REQUIRE(rule->next()->pseudo() == none);
+            REQUIRE(rule->next()->pseudo().empty());
             REQUIRE(rule->next()->next() == nullptr);
         }
 
@@ -202,26 +211,26 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule != nullptr);
             REQUIRE(rule->tag() == "not");
             REQUIRE(rule->classes().empty());
-            REQUIRE(rule->pseudo() == none);
+            REQUIRE(rule->pseudo().empty());
 
             REQUIRE(rule->next() != nullptr);
             REQUIRE(rule->next()->tag().empty());
             REQUIRE(rule->next()->classes().size() == 1);
             REQUIRE(rule->next()->classes()[0] == "should");
-            REQUIRE(rule->next()->pseudo() == none);
+            REQUIRE(rule->next()->pseudo().empty());
 
             REQUIRE(rule->next()->next() != nullptr);
             REQUIRE(rule->next()->next()->tag().empty());
             REQUIRE(rule->next()->next()->classes().size() == 2);
             REQUIRE(rule->next()->next()->classes()[0] == "this");
             REQUIRE(rule->next()->next()->classes()[1] == "one");
-            REQUIRE(rule->next()->next()->pseudo() == none);
+            REQUIRE(rule->next()->next()->pseudo().empty());
 
             REQUIRE(rule->next()->next()->next() != nullptr);
             REQUIRE(rule->next()->next()->next()->tag() == "just");
             REQUIRE(rule->next()->next()->next()->classes().size() == 1);
             REQUIRE(rule->next()->next()->next()->classes()[0] == "for");
-            REQUIRE(rule->next()->next()->next()->pseudo() == none);
+            REQUIRE(rule->next()->next()->next()->pseudo().empty());
 
             REQUIRE(rule->next()->next()->next()->next() == nullptr);
         }

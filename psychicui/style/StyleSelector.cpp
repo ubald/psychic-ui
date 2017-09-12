@@ -19,21 +19,24 @@ namespace psychicui {
                     // Find pseudp
                     auto pseudoParts = split(parts.back(), ':', false);
                     if (pseudoParts.size() > 1) {
-                        std::string pseudo = pseudoParts.back();
-                        if (pseudo == "focus") {
-                            r->_pseudo = focus;
-                        } else if (pseudo == "hover") {
-                            r->_pseudo = hover;
-                        } else if (pseudo == "active") {
-                            r->_pseudo = active;
-                        } else if (pseudo == "disabled") {
-                            r->_pseudo = disabled;
-                        } else if (pseudo == "empty") {
-                            r->_pseudo = empty;
-                        } else if (pseudo == "firstchild") {
-                            r->_pseudo = firstChild;
-                        } else if (pseudo == "lastchild") {
-                            r->_pseudo = lastChild;
+//                        std::string pseudo = pseudoParts.back();
+                        for (auto p = pseudoParts.begin() + 1; p != pseudoParts.end(); ++p) {
+                            std::string pseudo = *p;
+                            if (pseudo == "focus") {
+                                r->_pseudo.insert(focus);
+                            } else if (pseudo == "hover") {
+                                r->_pseudo.insert(hover);
+                            } else if (pseudo == "active") {
+                                r->_pseudo.insert(active);
+                            } else if (pseudo == "disabled") {
+                                r->_pseudo.insert(disabled);
+                            } else if (pseudo == "empty") {
+                                r->_pseudo.insert(empty);
+                            } else if (pseudo == "firstchild") {
+                                r->_pseudo.insert(firstChild);
+                            } else if (pseudo == "lastchild") {
+                                r->_pseudo.insert(lastChild);
+                            }
                         }
                         parts.back() = pseudoParts.front();
                     }
@@ -83,36 +86,26 @@ namespace psychicui {
         }
 
         // Match pseudo
-        bool matchesPseudo = true;
-        switch (_pseudo) {
-            case hover:
-                matchesPseudo = component->mouseOver();
-                break;
-            case focus:
-                matchesPseudo = component->focused();
-                break;
-            case active:
-                matchesPseudo = component->active();
-                break;
-            case disabled:
-                matchesPseudo = !component->enabled();
-                break;
-            case empty:
-                matchesPseudo = component->childCount() == 0;
-                break;
-            case firstChild:
-                matchesPseudo = component->parent() && component->parent()->childIndex(component) == 0;
-                break;
-            case lastChild:
-                matchesPseudo = component->parent()
-                                && component->parent()->childIndex(component) == component->parent()->childCount() - 1;
-                break;
-
-            default:
-                break;
-        }
-
-        if (!matchesPseudo) {
+        if (!std::all_of(
+            _pseudo.begin(), _pseudo.end(), [&component](const auto &pseudo) {
+                switch (pseudo) {
+                    case hover:
+                        return component->mouseOver();
+                    case focus:
+                        return component->focused();
+                    case active:
+                        return component->active();
+                    case disabled:
+                        return !component->enabled();
+                    case empty:
+                        return component->childCount() == 0;
+                    case firstChild:
+                        return component->parent() && component->parent()->childIndex(component) == 0;
+                    case lastChild:
+                        return component->parent() && component->parent()->childIndex(component) == component->parent()->childCount() - 1;
+                }
+            }
+        )) {
             return expand && parent && matches(parent, true);
         }
 
@@ -135,7 +128,7 @@ namespace psychicui {
         return _classes;
     }
 
-    const Pseudo StyleSelector::pseudo() const {
+    const std::unordered_set<Pseudo> StyleSelector::pseudo() const {
         return _pseudo;
     }
 
@@ -146,15 +139,30 @@ namespace psychicui {
     const int StyleSelector::weight() const {
         int w = _tag.empty() ? 0 : 10;
         w += (int) _classes.size() * 10;
-        switch (_pseudo) {
-            case hover:
-                w += 1;
-                break;
-            case active:
-                w += 2;
-                break;
-            default:
-                break;
+        for (const auto &pseudo: _pseudo) {
+            switch (pseudo) {
+                case hover:
+                    w += 1;
+                    break;
+                case active:
+                    w += 2;
+                    break;
+                case focus:
+                    w += 1;
+                    break;
+                case disabled:
+                    w += 3;
+                    break;
+                case empty:
+                    w += 1;
+                    break;
+                case firstChild:
+                    w += 1;
+                    break;
+                case lastChild:
+                    w += 1;
+                    break;
+            }
         }
         w += _next ? _next->weight() : 0;
         return w;

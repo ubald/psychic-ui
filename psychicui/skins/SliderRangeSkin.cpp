@@ -21,8 +21,7 @@ namespace psychicui {
             ->set(widthPercent, 1.0f)
             ->set(heightPercent, 1.0f);
 
-        subscribeTo(
-            _track->onMouseDown,
+        _track->onMouseDown(
             [this](const int mouseX, const int mouseY, int button, int modifiers) {
                 sendMouseValue(mouseX, mouseY);
                 _onMouseMove = window()->onMouseMove(
@@ -33,17 +32,15 @@ namespace psychicui {
                         sendMouseValue(lx, ly);
                     }
                 );
-                _dragging    = true;
             }
         );
-        subscribeTo(
-            _track->onMouseUp,
+
+        _track->onMouseUp(
             [this](const int mouseX, const int mouseY, int button, int modifiers) {
                 if (_onMouseMove) {
                     _onMouseMove->disconnect();
                     _onMouseMove = nullptr;
                 }
-                _dragging = false;
             }
         );
 

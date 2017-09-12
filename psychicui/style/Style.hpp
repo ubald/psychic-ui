@@ -8,6 +8,7 @@
 #include <functional>
 #include <SkTypeface.h>
 #include <map>
+#include <iostream>
 #include "../psychicui.hpp"
 
 #define PSYCHIC_STYLE_PROPERTY(type, values, name, defaultValue)                                                       \

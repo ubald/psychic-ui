@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include "psychicui/utils/StringUtils.hpp"
 #include "Label.hpp"
 
 namespace psychicui {
@@ -87,10 +88,21 @@ namespace psychicui {
         }
 
         if (widthMode == YGMeasureModeUndefined) {
-            // Don't care about setWidth so do one line
+            // Don't care about setWidth so do longest line
+            auto lines = split(_text, '\n');
+            unsigned int longestIndex = 0;
+            unsigned long longestLength = 0;
+            for (unsigned int i = 0; i < lines.size(); ++i) {
+                unsigned long len = lines[i].size();
+                if (len > longestLength) {
+                    longestIndex = i;
+                    longestLength = len;
+                }
+            }
             _textBox.setMode(SkTextBox::kOneLine_Mode);
-            size.width = _textPaint.measureText(_text.c_str(), _text.length());
-            size.height = _lineHeight;
+            // TODO: This doesn't seem to take the right padding into account
+            size.width = std::ceil(_textPaint.measureText(lines[longestIndex].c_str(), longestLength));
+            size.height = lines.size() * _lineHeight;
         } else {
             float w = _textPaint.measureText(_text.c_str(), _text.length());
             if (w > width) {

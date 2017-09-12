@@ -1,6 +1,7 @@
 #pragma once
 
 #include <psychicui/Div.hpp>
+#include <psychicui/components/ScrollBar.hpp>
 
 namespace psychicui {
     class Divs : public Div {
@@ -12,26 +13,38 @@ namespace psychicui {
         setTag("Divs");
         setClassNames({"demo-panel"});
 
-        style()
-            ->set(wrap, "wrap")
-            ->set(direction, "row");
-
         styleManager()
-            ->style("divs div")
-            ->set(margin, 12);
-
-        styleManager()
-            ->style("divs div div.demo-div")
+            ->style("divs .demo-div")
+            ->set(margin, 12)
             ->set(width, 128.0f)
             ->set(height, 64.0f)
             ->set(backgroundColor, BASE_03)
             ->set(borderColor, BASE_06);
 
+        style()
+            ->set(direction, "row")
+            ->set(padding, 0); // We're using a scroller so no padding
+
+        auto scroller = add<Div>();
+        scroller
+            ->style()
+            ->set(shrink, 1)
+            ->set(heightPercent, 1.0f)
+            ->set(padding, 24)
+            ->set(overflow, "scroll")
+            ->set(wrap, "wrap")
+            ->set(direction, "row");
+
+        auto scrollbar = add<ScrollBar>(scroller);
+        scrollbar
+            ->style()
+            ->set(heightPercent, 1.0f);
+
         // region No Borders
 
         {
             // Rectangle
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rectangle");
             c->add<Div>()
@@ -41,7 +54,7 @@ namespace psychicui {
         }
         {
             // Rounded
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded 12px");
             c->add<Div>()
@@ -51,7 +64,7 @@ namespace psychicui {
         }
         {
             // Rounded Left
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Left");
             c->add<Div>()
@@ -61,7 +74,7 @@ namespace psychicui {
         }
         {
             // Rounded Right
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Right");
             c->add<Div>()
@@ -71,7 +84,7 @@ namespace psychicui {
         }
         {
             // Rounded Top
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Top");
             c->add<Div>()
@@ -81,7 +94,7 @@ namespace psychicui {
         }
         {
             // Rounded Bottom
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Bottom");
             c->add<Div>()
@@ -91,7 +104,7 @@ namespace psychicui {
         }
         {
             // Rounded Top Left
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Top Left");
             c->add<Div>()
@@ -101,7 +114,7 @@ namespace psychicui {
         }
         {
             // Rounded Top Right
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Top Right");
             c->add<Div>()
@@ -111,7 +124,7 @@ namespace psychicui {
         }
         {
             // Rounded Bottom Left
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Bottom Left");
             c->add<Div>()
@@ -121,7 +134,7 @@ namespace psychicui {
         }
         {
             // Rounded Bottom Right
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Bottom Right");
             c->add<Div>()
@@ -133,7 +146,7 @@ namespace psychicui {
         // region Full Borders
         {
             // Rectangle
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rectangle Border");
             c->add<Div>()
@@ -144,7 +157,7 @@ namespace psychicui {
         }
         {
             // Rounded
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded 12px Border");
             c->add<Div>()
@@ -155,7 +168,7 @@ namespace psychicui {
         }
         {
             // Rounded Left
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Left Border");
             c->add<Div>()
@@ -166,7 +179,7 @@ namespace psychicui {
         }
         {
             // Rounded Right
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Right Border");
             c->add<Div>()
@@ -177,7 +190,7 @@ namespace psychicui {
         }
         {
             // Rounded Top
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Top Border");
             c->add<Div>()
@@ -188,7 +201,7 @@ namespace psychicui {
         }
         {
             // Rounded Bottom
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Bottom Border");
             c->add<Div>()
@@ -199,7 +212,7 @@ namespace psychicui {
         }
         {
             // Rounded Top Left
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Top Left Border");
             c->add<Div>()
@@ -210,7 +223,7 @@ namespace psychicui {
         }
         {
             // Rounded Top Right
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Top Right Border");
             c->add<Div>()
@@ -221,7 +234,7 @@ namespace psychicui {
         }
         {
             // Rounded Bottom Left
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Bottom Left Border");
             c->add<Div>()
@@ -232,7 +245,7 @@ namespace psychicui {
         }
         {
             // Rounded Bottom Right
-            auto c = add<Div>();
+            auto c = scroller->add<Div>();
             c->style()->set(direction, "column");
             c->add<Label>("Rounded Bottom Right Border");
             c->add<Div>()
