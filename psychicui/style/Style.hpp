@@ -102,6 +102,7 @@ namespace psychicui {
     enum BoolProperty {
         antiAlias,
         textAntiAlias,
+        multiline,
         visible
     };
 

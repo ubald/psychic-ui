@@ -27,6 +27,13 @@ add_subdirectory(extlib/skia)
 # RXCPP
 # add_subdirectory(extlib/rxcpp)
 
+# PSYCHIC COLOR
+if (NOT IS_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/lib/psychic-color")
+  message(FATAL_ERROR "PsychicUI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
+endif()
+
+add_subdirectory(lib/psychic-color)
+
 # EXTRAS
 
 # Required core libraries on various platforms
@@ -88,6 +95,7 @@ add_definitions(${PSYCHICUI_EXTRA_DEFS})
 set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     #    ${NANOVG_SOURCES}
     ${YOGA_SOURCES}
+    ${PSYCHIC_COLOR_SOURCES}
     psychicui/psychicui.cpp
     psychicui/Window.cpp
     psychicui/Window.hpp
@@ -99,8 +107,6 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/components/Button.hpp
     psychicui/components/Label.cpp
     psychicui/components/Label.hpp
-    psychicui/Registry.cpp
-    psychicui/Registry.hpp
     psychicui/style/StyleManager.cpp
     psychicui/style/StyleManager.hpp
     psychicui/utils/StringUtils.hpp
@@ -166,6 +172,7 @@ target_include_directories(psychicui PUBLIC
     ${YOGA_INCLUDE_DIRS}
     ${SKIA_INCLUDE_DIRS}
     # ${RXCPP_INCLUDE_DIRS}
+    ${PSYCHIC_COLOR_INCLUDE_DIRS}
 )
 target_link_libraries(psychicui
     ${GLFW_LIBRARIES}

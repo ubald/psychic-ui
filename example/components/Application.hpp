@@ -124,7 +124,7 @@ namespace psychicui {
                    return panel;
                }
            )
-           ->select(panels[1])
+           ->select(panels[2])
            ->style()
            ->set(heightPercent, 1.f);
 

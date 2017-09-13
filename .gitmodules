@@ -13,3 +13,6 @@
 [submodule "extlib/external/skia"]
 	path = extlib/external/skia
 	url = https://skia.googlesource.com/skia.git
+[submodule "lib/psychic-color"]
+	path = lib/psychic-color
+	url = git@github.com:ubald/psychic-color.git

@@ -6,18 +6,18 @@
 namespace psychicui {
 
     std::unique_ptr<StyleSelector> StyleSelector::fromSelector(const std::string &selectorString) {
-        auto                           selector_parts = split(selectorString, ' ');
+        auto                           selector_parts = string_utils::split(selectorString, ' ');
         std::unique_ptr<StyleSelector> selector       = nullptr;
         for (const auto                &selector_part: selector_parts) {
             bool hasTag    = selector_part[0] != '.';
-            auto parts     = split(selector_part, '.');
+            auto parts     = string_utils::split(selector_part, '.');
             auto partCount = parts.size();
 
             if (partCount > 0) {
                 std::unique_ptr<StyleSelector> r = std::make_unique<StyleSelector>();
                 {
                     // Find pseudp
-                    auto pseudoParts = split(parts.back(), ':', false);
+                    auto pseudoParts = string_utils::split(parts.back(), ':', false);
                     if (pseudoParts.size() > 1) {
 //                        std::string pseudo = pseudoParts.back();
                         for (auto p = pseudoParts.begin() + 1; p != pseudoParts.end(); ++p) {

@@ -26,7 +26,9 @@ namespace psychicui {
         container->style()
                  ->set(padding, 12);
 
-        auto contents = container->add<Label>(lorem + '\n' + lorem + '\n' + lorem);
+        auto contents = container->add<Label>(lorem + '\n' + lorem + '\n' + lorem)
+                                 ->style()
+                                 ->set(multiline, true);
 
         auto scroller = add<Scroller>(container);
         scroller->style()
@@ -39,7 +41,9 @@ namespace psychicui {
                   ->set(direction, "row")
                   ->set(padding, 12);
 
-        auto contents2 = container2->add<Label>(lorem + '\n' + lorem + '\n' + lorem);
+        auto contents2 = container2->add<Label>(lorem + '\n' + lorem + '\n' + lorem)
+                                   ->style()
+                                   ->set(multiline, true);
 
         auto scroller2 = add<Scroller>(container2);
         scroller2->style()

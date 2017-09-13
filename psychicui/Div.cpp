@@ -889,8 +889,8 @@ namespace psychicui {
         for (auto &child: _children) {
             child->layoutUpdated();
 
-            _boundsLeft   = std::min(_boundsLeft, _x + child->boundsLeft());
-            _boundsTop    = std::min(_boundsTop, _y + child->boundsTop());
+            _boundsLeft   = std::fmin(_boundsLeft, _x + child->boundsLeft());
+            _boundsTop    = std::fmin(_boundsTop, _y + child->boundsTop());
             _boundsRight  = std::max(_boundsRight, _x + child->boundsRight());
             _boundsBottom = std::max(_boundsBottom, _y + child->boundsBottom());
         }
@@ -1440,7 +1440,7 @@ namespace psychicui {
         bool  scrolled = false;
 
         if (_width < _boundsRight - _boundsLeft) {
-            int sx = std::min(
+            int sx = std::fmin(
                 0, std::max(
                     _width - (_boundsRight - _boundsLeft),
                     _scrollX + (int) std::ceil(scrollX) * 2
@@ -1451,7 +1451,7 @@ namespace psychicui {
         }
 
         if (_height < _boundsBottom - _boundsTop) {
-            int sy = std::min(
+            int sy = std::fmin(
                 0, std::max(
                     _height - (_boundsBottom - _boundsTop),
                     _scrollY + (int) std::ceil(scrollY) * 2

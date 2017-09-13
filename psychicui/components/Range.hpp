@@ -139,7 +139,7 @@ namespace psychicui {
 
     template<class T>
     Range<T> *Range<T>::setMin(const T min) {
-        _min = std::min(min, _max);
+        _min = std::fmin(min, _max);
         setValue(_value); // Clamp to new limit
         return this;
     }
@@ -174,7 +174,7 @@ namespace psychicui {
 
     template<class T>
     Range<T> *Range<T>::setValue(const T value) {
-        float v = std::max(_min, std::min(value, _max));
+        float v = std::max(_min, std::fmin(value, _max));
         if (v != _value) {
             _value = v;
             onChange(_value);
@@ -255,7 +255,7 @@ namespace psychicui {
     template<class T>
     float Range<T>::nearestValidValue(T value, T interval) const {
         if (interval == 0) {
-            return std::max(_min, std::min(_max, value));
+            return std::max(_min, std::fmin(_max, value));
         }
 
         float maxValue = _max - _min;
@@ -273,7 +273,7 @@ namespace psychicui {
 
         if (interval != std::round(interval)) {
             // calculate scale and compute new scaled values.
-            auto parts = split(std::to_string(1 + interval), '.');
+            auto parts = string_utils::split(std::to_string(1 + interval), '.');
             scale    = (float) std::pow(10, parts[1].size());
             maxValue *= scale;
             offset *= scale;
@@ -284,7 +284,7 @@ namespace psychicui {
         }
 
         float lower      = std::max(0, std::floor(value / interval) * interval);
-        float upper      = std::min(maxValue, std::floor((value + interval) / interval) * interval);
+        float upper      = std::fmin(maxValue, std::floor((value + interval) / interval) * interval);
         float validValue = ((value - lower) >= ((upper - lower) / 2)) ? upper : lower;
 
         return (validValue + offset) / scale;

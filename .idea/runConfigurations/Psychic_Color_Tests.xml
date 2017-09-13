@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Psychic Color Tests" type="CMakeCatchTestRunConfigurationType" factoryName="Catch Test" singleton="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="psychicui" TARGET_NAME="psychic_color_tests" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="psychicui" RUN_TARGET_NAME="psychic_color_tests" TEST_MODE="SUITE_TEST">
+    <envs />
+    <method />
+  </configuration>
+</component>

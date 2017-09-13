@@ -54,13 +54,13 @@ namespace psychicui {
 
     void ScrollBar::scrollPercentX(float scrollPercentX) {
         _viewport->setScrollX((int) (
-            -std::max(0.0f, std::min(scrollPercentX, 1.0f))
+            -std::max(0.0f, std::fmin(scrollPercentX, 1.0f))
             * (float) (_viewport->contentWidth() - _viewport->getWidth())));
     }
 
     void ScrollBar::scrollPercentY(float scrollPercentY) {
         _viewport->setScrollY((int) (
-            -std::max(0.0f, std::min(scrollPercentY, 1.0f))
+            -std::max(0.0f, std::fmin(scrollPercentY, 1.0f))
             * (float) (_viewport->contentHeight() - _viewport->getHeight())));
     }
 

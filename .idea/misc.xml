@@ -4,6 +4,9 @@
   <component name="CidrRootsConfiguration">
     <sourceRoots>
       <file path="$PROJECT_DIR$/example" />
+      <file path="$PROJECT_DIR$/lib/psychic-color/psychiccolor/include" />
+      <file path="$PROJECT_DIR$/lib/psychic-color/src" />
+      <file path="$PROJECT_DIR$/lib/psychic-color/tests" />
       <file path="$PROJECT_DIR$/psychicui" />
       <file path="$PROJECT_DIR$/tests" />
     </sourceRoots>
@@ -12,6 +15,7 @@
       <file path="$PROJECT_DIR$/cmake-build-debug/skia-prefix/src/skia/src" />
       <file path="$PROJECT_DIR$/cmake-build-debug/yoga-prefix/src/yoga/yoga" />
       <file path="$PROJECT_DIR$/extlib/external/rxcpp/Rx/v2/src" />
+      <file path="$PROJECT_DIR$/lib/psychic-color" />
     </libraryRoots>
     <excludeRoots>
       <file path="$PROJECT_DIR$/extlib/external" />

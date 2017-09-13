@@ -57,8 +57,8 @@ namespace psychicui {
     void Label::styleUpdated() {
         Div::styleUpdated();
 
-        _antiAlias = _computedStyle->get(textAntiAlias);
         float size = _computedStyle->get(fontSize);
+        _antiAlias  = _computedStyle->get(textAntiAlias);
         _lineHeight = _computedStyle->get(lineHeight);
         if (isnan(_lineHeight)) {
             _lineHeight = size * 1.5f;
@@ -82,40 +82,57 @@ namespace psychicui {
         YGSize size = Div::measure(width, widthMode, height, heightMode);
 
         if (_text.empty()) {
-            size.width = 0;
+            size.width  = 0;
             size.height = _lineHeight;
             return size;
         }
 
-        if (widthMode == YGMeasureModeUndefined) {
-            // Don't care about setWidth so do longest line
-            auto lines = split(_text, '\n');
-            unsigned int longestIndex = 0;
-            unsigned long longestLength = 0;
-            for (unsigned int i = 0; i < lines.size(); ++i) {
-                unsigned long len = lines[i].size();
-                if (len > longestLength) {
-                    longestIndex = i;
-                    longestLength = len;
+        if (_computedStyle->get(multiline)) {
+
+            if (widthMode == YGMeasureModeUndefined) {
+                // Don't care about setWidth so do longest line
+                auto              lines         = string_utils::split(_text, '\n');
+                unsigned int      longestIndex  = 0;
+                unsigned long     longestLength = 0;
+                for (unsigned int i             = 0; i < lines.size(); ++i) {
+                    unsigned long len = lines[i].size();
+                    if (len > longestLength) {
+                        longestIndex  = i;
+                        longestLength = len;
+                    }
+                }
+                _textBox.setMode(SkTextBox::kOneLine_Mode);
+                // TODO: This doesn't seem to take the right padding into account
+                size.width  = std::ceil(_textPaint.measureText(lines[longestIndex].c_str(), longestLength));
+                size.height = lines.size() * _lineHeight;
+            } else {
+                float w = _textPaint.measureText(_text.c_str(), _text.length());
+                if (w > width) {
+                    _textBox.setMode(SkTextBox::kLineBreak_Mode);
+                    // The passed sizes consider padding, which is different than when we draw
+                    _textBox.setBox(0, 0, width, height);
+                    // size.getHeight = _textBox.getTextHeight();
+                    // TextBox doesn't measure the same way it draws, we have to set the spacing manually
+                    size.height = _textBox.countLines() * _lineHeight;
+                } else {
+                    _textBox.setMode(SkTextBox::kOneLine_Mode);
+                    size.width  = std::ceil(w);
+                    size.height = _lineHeight;//_textPaint.getFontSpacing();
                 }
             }
-            _textBox.setMode(SkTextBox::kOneLine_Mode);
-            // TODO: This doesn't seem to take the right padding into account
-            size.width = std::ceil(_textPaint.measureText(lines[longestIndex].c_str(), longestLength));
-            size.height = lines.size() * _lineHeight;
+
         } else {
-            float w = _textPaint.measureText(_text.c_str(), _text.length());
-            if (w > width) {
-                _textBox.setMode(SkTextBox::kLineBreak_Mode);
-                // The passed sizes consider padding, which is different than when we draw
-                _textBox.setBox(0, 0, width, height);
-                // size.getHeight = _textBox.getTextHeight();
-                // TextBox doesn't measure the same way it draws, we have to set the spacing manually
-                size.height = _textBox.countLines() * _lineHeight;
+            // We're not multiline, so remove line returns
+            std::replace(_text.begin(), _text.end(), '\n', ' ');
+
+            _textBox.setMode(SkTextBox::kOneLine_Mode);
+            size.width  = std::ceil(_textPaint.measureText(_text.c_str(), _text.size()));
+            size.height = _lineHeight;
+
+            if (widthMode == YGMeasureModeUndefined) {
+                std::cout << "???" << std::endl;
             } else {
-                _textBox.setMode(SkTextBox::kOneLine_Mode);
-                size.width  = std::ceil(w);
-                size.height = _lineHeight;//_textPaint.getFontSpacing();
+                size.width = std::fmin(size.width, width);
             }
         }
 

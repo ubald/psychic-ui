@@ -8,6 +8,7 @@
 #include <psychicui/skins/DefaultCheckBoxSkin.hpp>
 #include <psychicui/skins/DefaultMenuButtonSkin.hpp>
 #include <psychicui/skins/TitleBarButtonSkin.hpp>
+#include <psychiccolor/spaces/RGB.hpp>
 
 using namespace psychicui;
 
@@ -51,13 +52,17 @@ using namespace psychicui;
 class PsychicUIStyleSheet : public StyleSheet {
 public:
     void load(StyleManager *manager) override {
-        int   text          = 12;
         int   smallText     = 10;
+        int   text          = 12;
         int   mediumText    = 14;
-        int   largeText     = 16;
+        int   largeText     = 18;
+        int   bigText       = 24;
+        int   hugeText      = 36;
         int   radius        = 6;
         int   scrollBarSize = 12;
         Color highlight     = 0xFF00FFEC;
+
+        psychic_color::RGB c{};
 
         manager->loadFont("stan0755", "../res/fonts/stan0755.ttf");
         manager->loadFont("Ubuntu Light", "../res/fonts/Ubuntu/Ubuntu-Light.ttf");
@@ -93,7 +98,42 @@ public:
                ->set(lineHeight, 16)
                ->set(color, 0xFFFFFFFF)
                ->set(antiAlias, true)
-               ->set(textAntiAlias, true);
+               ->set(textAntiAlias, true)
+               ->set(multiline, false);
+        // endregion
+
+        // region Typography
+
+        manager->style(".h1")
+               ->set(fontFamily, "Ubuntu Light")
+               ->set(fontSize, hugeText)
+               ->set(lineHeight, hugeText);
+
+        manager->style(".h2")
+               ->set(fontFamily, "Ubuntu Light")
+               ->set(fontSize, bigText)
+               ->set(lineHeight, bigText);
+
+        manager->style(".h3")
+               ->set(fontFamily, "Ubuntu Light")
+               ->set(fontSize, largeText)
+               ->set(lineHeight, largeText);
+
+        manager->style(".h4")
+               ->set(fontFamily, "Ubuntu Regular")
+               ->set(fontSize, mediumText)
+               ->set(lineHeight, mediumText);
+
+        manager->style(".h5")
+               ->set(fontFamily, "Ubuntu Regular")
+               ->set(fontSize, text)
+               ->set(lineHeight, text);
+
+        manager->style(".h6")
+               ->set(fontFamily, "Ubuntu Regular")
+               ->set(fontSize, smallText)
+               ->set(lineHeight, smallText);
+
         // endregion
 
         // region Window

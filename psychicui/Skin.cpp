@@ -33,7 +33,8 @@ namespace psychicui {
             },
             {
                 antiAlias,
-                textAntiAlias
+                textAntiAlias,
+                multiline
             }
         };
 
