@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.8)
-project(psychicui)
+cmake_minimum_required(VERSION 3.4)
+project(psychic-ui)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 
 include(ExternalProject)
 include(FeatureSummary)
@@ -95,7 +95,6 @@ add_definitions(${PSYCHICUI_EXTRA_DEFS})
 set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     #    ${NANOVG_SOURCES}
     ${YOGA_SOURCES}
-    ${PSYCHIC_COLOR_SOURCES}
     psychicui/psychicui.cpp
     psychicui/Window.cpp
     psychicui/Window.hpp
@@ -165,8 +164,8 @@ set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
     psychicui/components/ScrollBar.hpp
     psychicui/skins/DefaultScrollBarSkin.cpp
     psychicui/skins/DefaultScrollBarSkin.hpp)
-add_library(psychicui SHARED ${SOURCE_FILES})
-target_include_directories(psychicui PUBLIC
+add_library(psychic-ui SHARED ${SOURCE_FILES})
+target_include_directories(psychic-ui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${GLFW_INCLUDE_DIRS}
     ${YOGA_INCLUDE_DIRS}
@@ -174,27 +173,29 @@ target_include_directories(psychicui PUBLIC
     # ${RXCPP_INCLUDE_DIRS}
     ${PSYCHIC_COLOR_INCLUDE_DIRS}
 )
-target_link_libraries(psychicui
+target_link_libraries(psychic-ui
     ${GLFW_LIBRARIES}
     ${YOGA_LIBRARIES}
     ${SKIA_LIBRARIES}
+    ${PSYCHIC_COLOR_LIBRARIES}
 )
 #add_dependencies(psychicui eigen)
-add_dependencies(psychicui glfw)
+add_dependencies(psychic-ui psychic-color)
+add_dependencies(psychic-ui glfw)
 #add_dependencies(psychicui yoga)
 #add_dependencies(psychicui nanovg)
-add_dependencies(psychicui skia)
+add_dependencies(psychic-ui skia)
 
 if (PSYCHICUI_BUILD_SHARED)
-    set_property(TARGET psychicui PROPERTY POSITION_INDEPENDENT_CODE ON)
-    set_property(TARGET psychicui APPEND PROPERTY COMPILE_DEFINITIONS "_GLFW_BUILD_DLL")
-    target_link_libraries(psychicui ${PSYCHICUI_EXTRA_LIBS})
+    set_property(TARGET psychic-ui PROPERTY POSITION_INDEPENDENT_CODE ON)
+    set_property(TARGET psychic-ui APPEND PROPERTY COMPILE_DEFINITIONS "_GLFW_BUILD_DLL")
+    target_link_libraries(psychic-ui ${PSYCHICUI_EXTRA_LIBS})
 endif ()
 
 if (PSYCHICUI_USE_GLAD)
-    add_dependencies(psychicui glad)
+    add_dependencies(psychic-ui glad)
     if (PSYCHICUI_BUILD_SHARED)
-        set_property(TARGET psychicui APPEND PROPERTY COMPILE_DEFINITIONS "GLAD_GLAPI_EXPORT;GLAD_GLAPI_EXPORT_BUILD")
+        set_property(TARGET psychic-ui APPEND PROPERTY COMPILE_DEFINITIONS "GLAD_GLAPI_EXPORT;GLAD_GLAPI_EXPORT_BUILD")
     endif ()
 endif ()
 
@@ -202,10 +203,10 @@ if (PSYCHICUI_BUILD_SHARED AND NOT ${U_CMAKE_BUILD_TYPE} MATCHES DEB)
     # Platform-specific strip flags for reducing the library setSize.
     if (APPLE)
         # Strip .dylib library on OSX
-        add_custom_command(TARGET psychicui POST_BUILD COMMAND strip -u -r "$<TARGET_FILE_DIR:nanogui>/$<TARGET_FILE_NAME:nanogui>")
+        add_custom_command(TARGET psychic-ui POST_BUILD COMMAND strip -u -r "$<TARGET_FILE_DIR:nanogui>/$<TARGET_FILE_NAME:nanogui>")
     elseif (UNIX)
         # Strip .so library on Linux
-        add_custom_command(TARGET psychicui POST_BUILD COMMAND strip "$<TARGET_FILE_DIR:nanogui>/$<TARGET_FILE_NAME:nanogui>")
+        add_custom_command(TARGET psychic-ui POST_BUILD COMMAND strip "$<TARGET_FILE_DIR:nanogui>/$<TARGET_FILE_NAME:nanogui>")
     endif ()
 endif ()
 

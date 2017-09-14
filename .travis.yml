@@ -1,0 +1,81 @@
+sudo: required
+dist: trusty
+
+language: cpp
+
+compiler:
+  - clang
+  - gcc
+
+os:
+  - linux
+
+branches:
+  only:
+    - master
+
+env:
+  global:
+    - DEPS_DIR=${TRAVIS_BUILD_DIR}/deps
+    - CMAKE_VERSION="3.8"
+    - CMAKE_VERSION_FULL="3.8.2"
+
+cache:
+  ccache: true
+  directories:
+    - ${DEPS_DIR}/cmake-${CMAKE_VERSION_FULL}-Linux-x86_64/bin
+    - ${DEPS_DIR}/cmake-${CMAKE_VERSION_FULL}-Linux-x86_64/plugins
+    - ${DEPS_DIR}/cmake-${CMAKE_VERSION_FULL}-Linux-x86_64/share
+
+install:
+- |
+  if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
+    CMAKE_URL="http://www.cmake.org/files/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION_FULL}-Linux-x86_64.tar.gz"
+    mkdir -p ${DEPS_DIR}/cmake
+    travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR}/cmake
+    export PATH=${DEPS_DIR}/cmake/bin:${PATH}
+  fi
+- git submodule update --init --recursive
+
+script:
+  - mkdir build
+  - cd build
+  - cmake .. && make
+  - ./tests/psychic_ui_tests
+
+matrix:
+  include:
+#    - compiler: gcc
+#      addons:
+#        apt:
+#          sources:
+#            - ubuntu-toolchain-r-test
+#          packages:
+#            - g++-4.9
+#      env: COMPILER=g++-4.9
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env: COMPILER=g++-5
+#    - compiler: clang
+#      addons:
+#        apt:
+#          sources:
+#            - ubuntu-toolchain-r-test
+#            - llvm-toolchain-precise-3.6
+#          packages:
+#            - clang-3.6
+#      env: COMPILER=clang++-3.6
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.7
+          packages:
+            - clang-3.7
+      env: COMPILER=clang++-3.7

@@ -174,7 +174,7 @@ namespace psychicui {
 
     template<class T>
     Range<T> *Range<T>::setValue(const T value) {
-        float v = std::max(_min, std::fmin(value, _max));
+        float v = std::fmax(_min, std::fmin(value, _max));
         if (v != _value) {
             _value = v;
             onChange(_value);

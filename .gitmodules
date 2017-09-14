@@ -15,4 +15,4 @@
 	url = https://skia.googlesource.com/skia.git
 [submodule "lib/psychic-color"]
 	path = lib/psychic-color
-	url = git@github.com:ubald/psychic-color.git
+	url = https://github.com/ubald/psychic-color.git
