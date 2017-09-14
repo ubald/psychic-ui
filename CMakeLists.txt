@@ -156,6 +156,7 @@ set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     psychic-ui/skins/DefaultScrollBarSkin.hpp)
 
 add_library(psychic-ui SHARED ${SOURCE_FILES})
+set_property(TARGET psychic-ui PROPERTY C_STANDARD 11)
 
 target_include_directories(psychic-ui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
