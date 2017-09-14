@@ -21,7 +21,7 @@ TEST_CASE( "Style values can be set and retrieved", "[style]" ) {
     }
 
     SECTION("with float values") {
-        REQUIRE(isnan(style->get(opacity)));
+        REQUIRE(std::isnan(style->get(opacity)));
         style->set(opacity, 1.0f);
         REQUIRE(style->get(opacity) == 1.0f);
     }

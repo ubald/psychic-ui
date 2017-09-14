@@ -43,7 +43,7 @@ bool has(values property) {                                                     
     return _##name##Values.find(property) != _##name##Values.end();                                                    \
 }                                                                                                                      \
 protected:                                                                                                             \
-std::unordered_map<values, type> _##name##Values{};                                                                    \
+std::unordered_map<values, type, std::hash<int>> _##name##Values{};                                                    \
 
 
 namespace psychic_ui {

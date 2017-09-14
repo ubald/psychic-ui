@@ -2,6 +2,7 @@
 
 #include <string>
 #include <algorithm>
+#include <cmath>
 #include <yoga/Yoga.h>
 
 YGFlexDirection YogaDirectionFromString(std::string direction, YGFlexDirection fallback) {
@@ -60,5 +61,5 @@ YGOverflow YogaOverflowFromString(std::string overflow, YGOverflow fallback) {
 };
 
 float YogaPercent(float value) {
-    return !isnan(value) ? value * 100.f : value;
+    return !std::isnan(value) ? value * 100.f : value;
 }

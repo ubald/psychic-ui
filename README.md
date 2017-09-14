@@ -14,7 +14,7 @@ sources available as much as possible for all of the project's parts in the form
 
 ## Linux
 
-    sudo apt install xorg-dev libjpeg-dev libturbojpeg libpng12-dev libgl1-mesa-dev libfreetype6-dev
+    sudo apt install xorg-dev libjpeg-dev libturbojpeg libpng12-dev libgl1-mesa-dev libfreetype6-dev fontconfig
     
 ## Mac
 

@@ -128,7 +128,7 @@ namespace psychic_ui {
         return _classes;
     }
 
-    const std::unordered_set<Pseudo> StyleSelector::pseudo() const {
+    const std::unordered_set<Pseudo, std::hash<int>> StyleSelector::pseudo() const {
         return _pseudo;
     }
 

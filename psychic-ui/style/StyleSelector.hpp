@@ -26,7 +26,7 @@ namespace psychic_ui {
 
         const std::string tag() const;
         const std::vector<std::string> classes() const;
-        const std::unordered_set<Pseudo> pseudo() const;
+        const std::unordered_set<Pseudo, std::hash<int>> pseudo() const;
         const StyleSelector *next() const;
 
         /**
@@ -49,9 +49,9 @@ namespace psychic_ui {
          * @return
          */
         bool matches(const Div *component, bool expand) const;
-        std::string                    _tag{};
-        std::vector<std::string>       _classes{};
-        std::unordered_set<Pseudo>     _pseudo{};
-        std::unique_ptr<StyleSelector> _next{nullptr};
+        std::string                                _tag{};
+        std::vector<std::string>                   _classes{};
+        std::unordered_set<Pseudo, std::hash<int>> _pseudo{};
+        std::unique_ptr<StyleSelector>             _next{nullptr};
     };
 }

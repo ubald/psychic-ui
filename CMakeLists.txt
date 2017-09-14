@@ -15,6 +15,7 @@ find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
 find_package(JPEGTURBO REQUIRED)
 find_package(Freetype REQUIRED)
+#find_package(ICU REQUIRED)
 
 set(PSYCHIC_UI_EXTRA_LIBS "")
 set(PSYCHIC_UI_EXTRA_DEFS "")
@@ -59,7 +60,8 @@ elseif (APPLE)
 #        ${iokit_library}
         )
     list(APPEND LIBPSYCHIC_UI_EXTRA_SOURCE psychic-ui/darwin.mm)
-elseif (CMAKE_SYSTEM MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
+elseif (CMAKE_SYSTEM MATCHES "Linux")
+    find_package(Fontconfig REQUIRED)
     list(APPEND PSYCHIC_UI_EXTRA_LIBS
 #        GL
 #        Xxf86vm
@@ -69,11 +71,8 @@ elseif (CMAKE_SYSTEM MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
 #        Xi
 #        X11
 #        pthread
-#        fontconfig
+        fontconfig
         )
-    if (NOT CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
-#        list(APPEND PSYCHIC_UI_EXTRA_LIBS rt)
-    endif ()
     if (CMAKE_SYSTEM MATCHES "Linux")
 #        list(APPEND PSYCHIC_UI_EXTRA_LIBS dl)
     endif ()

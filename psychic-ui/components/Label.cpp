@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <cmath>
 #include "psychic-ui/utils/StringUtils.hpp"
 #include "Label.hpp"
 
@@ -60,7 +61,7 @@ namespace psychic_ui {
         float size = _computedStyle->get(fontSize);
         _antiAlias  = _computedStyle->get(textAntiAlias);
         _lineHeight = _computedStyle->get(lineHeight);
-        if (isnan(_lineHeight)) {
+        if (std::isnan(_lineHeight)) {
             _lineHeight = size * 1.5f;
         }
 
