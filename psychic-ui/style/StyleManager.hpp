@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <functional>
+#include <type_traits>
 #include "psychic-ui/psychic-ui.hpp"
 #include "../utils/Hatcher.hpp"
 #include "Style.hpp"
