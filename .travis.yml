@@ -46,19 +46,19 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.6
+            - llvm-toolchain-trusty-3.9
           packages:
-            - clang-3.6
-      env: COMPILER=clang++-3.6
+            - clang-3.9
+      env: COMPILER=clang++-3.9
     - compiler: clang
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
+            - llvm-toolchain-trusty-4.0
           packages:
-            - clang-3.7
-      env: COMPILER=clang++-3.7
+            - clang-4.0
+      env: COMPILER=clang++-4.0
 
 install:
   - |
