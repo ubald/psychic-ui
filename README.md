@@ -9,6 +9,17 @@
 
 This is intended to be part of a future larger project so it is named according to that projet's name. I intend to make
 sources available as much as possible for all of the project's parts in the form of libraries like this.
+
+# Dependencies
+
+## Linux
+
+    sudo apt install xorg-dev libjpeg-dev libturbojpeg libpng12-dev libgl1-mesa-dev libfreetype6-dev
+    
+## Mac
+
+    brew install libpng jpeg jpeg-turbo icu4c freetype
+
 # Roadmap
 
 https://trello.com/b/XYz6BS9v

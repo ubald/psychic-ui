@@ -1,5 +1,5 @@
-if (NOT IS_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../external/rxcpp")
-  message(FATAL_ERROR "PsychicUI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
+if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/../external/rxcpp/.git")
+  message(FATAL_ERROR "Psychic UI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
 endif()
 
 # There is no need building it

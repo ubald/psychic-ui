@@ -7,7 +7,7 @@ using namespace psychic_ui;
 
 /**
  * Demo Style
- * This style is loaded on top of the default PsychicUI stylesheet
+ * This style is loaded on top of the default Psychic UI stylesheet
  */
 class DemoStyleSheet : public StyleSheet {
 public:

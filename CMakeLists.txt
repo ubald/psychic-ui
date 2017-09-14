@@ -2,11 +2,19 @@ cmake_minimum_required(VERSION 3.4)
 project(psychic-ui)
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 include(ExternalProject)
 include(FeatureSummary)
 
-option(PSYCHIC_UI_BUILD_SHARED "Build PsychicUI as a shared library?" ON)
+option(PSYCHIC_UI_BUILD_SHARED "Build Psychic UI as a shared library?" ON)
+add_feature_info("psychic-ui-shared" PSYCHIC_UI_BUILD_SHARED "Build shared library")
+
+find_package(OpenGL REQUIRED)
+find_package(PNG REQUIRED)
+find_package(JPEG REQUIRED)
+find_package(JPEGTURBO REQUIRED)
+find_package(Freetype REQUIRED)
 
 set(PSYCHIC_UI_EXTRA_LIBS "")
 set(PSYCHIC_UI_EXTRA_DEFS "")
@@ -22,18 +30,18 @@ add_subdirectory(extlib/glfw)
 add_subdirectory(extlib/yoga)
 
 # SKIA
+
 add_subdirectory(extlib/skia)
 
 # RXCPP
 # add_subdirectory(extlib/rxcpp)
 
 # PSYCHIC COLOR
-if (NOT IS_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/lib/psychic-color")
-  message(FATAL_ERROR "PsychicUI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
+if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/lib/psychic-color/.git")
+  message(FATAL_ERROR "Psychic UI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
 endif()
 
 add_subdirectory(lib/psychic-color)
-
 # EXTRAS
 
 # Required core libraries on various platforms
@@ -44,47 +52,30 @@ elseif (APPLE)
     find_library(opengl_library OpenGL)
     find_library(corevideo_library CoreVideo)
     find_library(iokit_library IOKit)
-    #    find_library(coreservices_library CoreServices)
-    #    find_library(coregraphics_library CoreGraphics)
-    #    find_library(coretext_library CoreText)
-    #    find_library(corefoundation_library CoreFoundation)
     list(APPEND PSYCHIC_UI_EXTRA_LIBS
-        ${cocoa_library}
-        ${opengl_library}
-        ${corevideo_library}
-        ${iokit_library}
-        png
-        -L/usr/local/opt/jpeg-turbo/lib
-        jpeg
-        turbojpeg
-        freetype
-        #        ${coreservices_library}
-        #        ${coregraphics_library}
-        #        ${coretext_library}
-        #        ${corefoundation_library}
+#        ${cocoa_library}
+#        ${opengl_library}
+#        ${corevideo_library}
+#        ${iokit_library}
         )
     list(APPEND LIBPSYCHIC_UI_EXTRA_SOURCE psychic-ui/darwin.mm)
 elseif (CMAKE_SYSTEM MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
     list(APPEND PSYCHIC_UI_EXTRA_LIBS
-        GL
-        Xxf86vm
-        Xrandr
-        Xinerama
-        Xcursor
-        Xi
-        X11
-        pthread
-        png
-        jpeg
-        turbojpeg
-        freetype
-        fontconfig
+#        GL
+#        Xxf86vm
+#        Xrandr
+#        Xinerama
+#        Xcursor
+#        Xi
+#        X11
+#        pthread
+#        fontconfig
         )
     if (NOT CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
-        list(APPEND PSYCHIC_UI_EXTRA_LIBS rt)
+#        list(APPEND PSYCHIC_UI_EXTRA_LIBS rt)
     endif ()
     if (CMAKE_SYSTEM MATCHES "Linux")
-        list(APPEND PSYCHIC_UI_EXTRA_LIBS dl)
+#        list(APPEND PSYCHIC_UI_EXTRA_LIBS dl)
     endif ()
 endif ()
 
@@ -164,19 +155,34 @@ set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     psychic-ui/components/ScrollBar.hpp
     psychic-ui/skins/DefaultScrollBarSkin.cpp
     psychic-ui/skins/DefaultScrollBarSkin.hpp)
+
 add_library(psychic-ui SHARED ${SOURCE_FILES})
+
 target_include_directories(psychic-ui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${OPENGL_INCLUDE_DIR}
     ${GLFW_INCLUDE_DIRS}
     ${YOGA_INCLUDE_DIRS}
     ${SKIA_INCLUDE_DIRS}
     # ${RXCPP_INCLUDE_DIRS}
     ${PSYCHIC_COLOR_INCLUDE_DIRS}
 )
+
 target_link_libraries(psychic-ui
-    ${GLFW_LIBRARIES}
-    ${YOGA_LIBRARIES}
+    # OPENGL
+    ${OPENGL_LIBRARY}
+    # GLFW
+    glfw
+#    ${GLFW_LIBRARIES}
+    # Skia
+    ${PNG_LIBRARIES}
+    ${JPEG_LIBRARY}
+    ${TURBOJPEG_LIBRARY}
+    ${FREETYPE_LIBRARIES}
     ${SKIA_LIBRARIES}
+    # Yoga
+    ${YOGA_LIBRARIES}
+    # PSYCHIC COLOR
     ${PSYCHIC_COLOR_LIBRARIES}
 )
 #add_dependencies(psychic-ui eigen)
@@ -185,8 +191,6 @@ add_dependencies(psychic-ui glfw)
 #add_dependencies(psychic-ui yoga)
 #add_dependencies(psychic-ui nanovg)
 add_dependencies(psychic-ui skia)
-
-message("${PSYCHIC_COLOR_INCLUDE_DIRS}")
 
 if (PSYCHIC_UI_BUILD_SHARED)
     set_property(TARGET psychic-ui PROPERTY POSITION_INDEPENDENT_CODE ON)

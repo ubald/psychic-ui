@@ -1,15 +1,20 @@
-if (NOT IS_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../external/skia")
-  message(FATAL_ERROR "PsychicUI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
+if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/../external/skia/.git")
+  message(FATAL_ERROR "Psychic UI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
 endif()
 
-if (NOT IS_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../external/depot_tools")
-  message(FATAL_ERROR "PsychicUI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
+if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/../external/depot_tools/.git")
+  message(FATAL_ERROR "Psychic UI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
 endif()
 
 set(SKIA_ARGS_LIST skia_use_dng_sdk=false skia_use_expat=false skia_use_libwebp=false skia_use_piex=false skia_use_freetype=true)
+
 if (APPLE)
     list(APPEND SKIA_ARGS_LIST "extra_cflags=[\"-I/usr/local/opt/icu4c/include\", \"-I/usr/local/opt/jpeg-turbo/include\", \"-I/usr/local/opt/freetype/include/freetype2\"]")
     list(APPEND SKIA_ARGS_LIST "extra_ldflags=[\"-L/usr/local/opt/icu4c/lib\", \"-L/usr/local/opt/jpeg-turbo\", \"-L/usr/local/opt/freetype\"]")
+elseif (CMAKE_SYSTEM MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
+    list(APPEND SKIA_ARGS_LIST "extra_cflags=[\"-I${JPEGTURBO_INCLUDE_DIR}\"]")
+    list(APPEND SKIA_ARGS_LIST "extra_ldflags=[\"-L${TURBOJPEG_LIBRARY}\"]")
+    list(APPEND SKIA_ARGS_LIST "skia_use_system_libjpeg_turbo=false")  # Unfortunately Ubuntu 16.04 does't have this one at the right version
 endif ()
 
 string(REPLACE ";" " " SKIA_ARGS "${SKIA_ARGS_LIST}")

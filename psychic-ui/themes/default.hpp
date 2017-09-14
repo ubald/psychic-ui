@@ -8,7 +8,7 @@
 #include <psychic-ui/skins/DefaultCheckBoxSkin.hpp>
 #include <psychic-ui/skins/DefaultMenuButtonSkin.hpp>
 #include <psychic-ui/skins/TitleBarButtonSkin.hpp>
-#include <psychiccolor/spaces/RGB.hpp>
+#include <psychic-color/spaces/RGB.hpp>
 
 using namespace psychic_ui;
 
@@ -47,7 +47,7 @@ using namespace psychic_ui;
 #define ONE_BLUE_ACCENT 0xFF528BFF
 
 /**
- * PsychicUI Style
+ * Psychic UI Style
  */
 class PsychicUIStyleSheet : public StyleSheet {
 public:

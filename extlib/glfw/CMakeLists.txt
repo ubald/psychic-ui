@@ -1,5 +1,5 @@
-if (NOT IS_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../external/glfw")
-  message(FATAL_ERROR "PsychicUI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
+if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/../external/glfw/.git")
+  message(FATAL_ERROR "Psychic UI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
 endif()
 
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL " " FORCE)
@@ -14,3 +14,5 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../external/glfw" "${CMAKE_CURRENT_B
 
 set(GLFW_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/../external/glfw/include PARENT_SCOPE)
 set(GLFW_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/build/src/${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX} PARENT_SCOPE)
+
+message("${GLFW_LIBRARY}")
