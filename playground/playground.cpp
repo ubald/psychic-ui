@@ -39,7 +39,7 @@ int main() {
 //#include <Signal.hpp>
 //#include <Observer.hpp>
 //
-//using namespace psychicui;
+//using namespace psychic_ui;
 //
 //class A: public Observer {
 //public:

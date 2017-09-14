@@ -1,7 +1,7 @@
 #include "catch.hpp"
-#include <psychicui/style/StyleSelector.hpp>
+#include <psychic-ui/style/StyleSelector.hpp>
 
-using namespace psychicui;
+using namespace psychic_ui;
 
 TEST_CASE("rules from selectors", "[style]") {
 

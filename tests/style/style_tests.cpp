@@ -1,9 +1,9 @@
 #include <cmath>
 #include "catch.hpp"
-#include <psychicui/style/Style.hpp>
-#include <psychicui/Div.hpp>
+#include <psychic-ui/style/Style.hpp>
+#include <psychic-ui/Div.hpp>
 
-using namespace psychicui;
+using namespace psychic_ui;
 
 TEST_CASE( "Style values can be set and retrieved", "[style]" ) {
     auto style = std::make_unique<Style>();

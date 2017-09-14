@@ -1,23 +1,24 @@
-option(PSYCHICUI_BUILD_TESTS "Build PsychicUI tests?" ON)
-add_feature_info("tests" PSYCHICUI_BUILD_TESTS "Test Suite")
+option(PSYCHIC_UI_BUILD_TESTS "Build Psychic UI tests?" ON)
+add_feature_info("tests" PSYCHIC_UI_BUILD_TESTS "Test Suite")
 
-if (PSYCHICUI_BUILD_TESTS)
+if (PSYCHIC_UI_BUILD_TESTS)
     ExternalProject_Add(psychic-ui-catch
-        GIT_REPOSITORY git@github.com:philsquared/Catch.git
+        GIT_REPOSITORY https://github.com/philsquared/Catch.git
         GIT_TAG master
         CMAKE_ARGS "-DNO_SELFTEST=YES"
         INSTALL_COMMAND ""
         )
 
-    set(CATCH_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/catch-prefix/src/catch/single_include)
+    set(CATCH_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/psychic-ui-catch-prefix/src/psychic-ui-catch/single_include)
 
-    add_executable(psychic_ui_tests
+    add_executable(psychic-ui-tests
         main.cpp
         style/style_manager_tests.cpp
         style/style_tests.cpp
         style/style_rule_tests.cpp
         style/yoga_tests.cpp)
-    target_include_directories(psychic_ui_tests PUBLIC ${CATCH_INCLUDE_DIRS})
-    target_link_libraries(psychic_ui_tests psychicui ${PSYCHICUI_EXTRA_LIBS})
-    add_dependencies(psychic_ui_tests psychic-ui-catch)
+
+    target_include_directories(psychic-ui-tests PUBLIC ${CATCH_INCLUDE_DIRS})
+    target_link_libraries(psychic-ui-tests psychic-ui ${PSYCHIC_UI_EXTRA_LIBS})
+    add_dependencies(psychic-ui-tests psychic-ui-catch)
 endif()

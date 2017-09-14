@@ -6,11 +6,11 @@ set(CMAKE_CXX_STANDARD 14)
 include(ExternalProject)
 include(FeatureSummary)
 
-option(PSYCHICUI_BUILD_SHARED "Build PsychicUI as a shared library?" ON)
+option(PSYCHIC_UI_BUILD_SHARED "Build PsychicUI as a shared library?" ON)
 
-set(PSYCHICUI_EXTRA_LIBS "")
-set(PSYCHICUI_EXTRA_DEFS "")
-set(LIBPSYCHICUI_EXTRA_SOURCE "")
+set(PSYCHIC_UI_EXTRA_LIBS "")
+set(PSYCHIC_UI_EXTRA_DEFS "")
+set(LIBPSYCHIC_UI_EXTRA_SOURCE "")
 
 # GLAD
 add_subdirectory(extlib/glad)
@@ -38,7 +38,7 @@ add_subdirectory(lib/psychic-color)
 
 # Required core libraries on various platforms
 if (WIN32)
-    list(APPEND PSYCHICUI_EXTRA_LIBS opengl32)
+    list(APPEND PSYCHIC_UI_EXTRA_LIBS opengl32)
 elseif (APPLE)
     find_library(cocoa_library Cocoa)
     find_library(opengl_library OpenGL)
@@ -48,7 +48,7 @@ elseif (APPLE)
     #    find_library(coregraphics_library CoreGraphics)
     #    find_library(coretext_library CoreText)
     #    find_library(corefoundation_library CoreFoundation)
-    list(APPEND PSYCHICUI_EXTRA_LIBS
+    list(APPEND PSYCHIC_UI_EXTRA_LIBS
         ${cocoa_library}
         ${opengl_library}
         ${corevideo_library}
@@ -63,9 +63,9 @@ elseif (APPLE)
         #        ${coretext_library}
         #        ${corefoundation_library}
         )
-    list(APPEND LIBPSYCHICUI_EXTRA_SOURCE psychicui/darwin.mm)
+    list(APPEND LIBPSYCHIC_UI_EXTRA_SOURCE psychic-ui/darwin.mm)
 elseif (CMAKE_SYSTEM MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
-    list(APPEND PSYCHICUI_EXTRA_LIBS
+    list(APPEND PSYCHIC_UI_EXTRA_LIBS
         GL
         Xxf86vm
         Xrandr
@@ -81,89 +81,89 @@ elseif (CMAKE_SYSTEM MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
         fontconfig
         )
     if (NOT CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
-        list(APPEND PSYCHICUI_EXTRA_LIBS rt)
+        list(APPEND PSYCHIC_UI_EXTRA_LIBS rt)
     endif ()
     if (CMAKE_SYSTEM MATCHES "Linux")
-        list(APPEND PSYCHICUI_EXTRA_LIBS dl)
+        list(APPEND PSYCHIC_UI_EXTRA_LIBS dl)
     endif ()
 endif ()
 
 # LIBRARY
 
-add_definitions(${PSYCHICUI_EXTRA_DEFS})
+add_definitions(${PSYCHIC_UI_EXTRA_DEFS})
 
-set(SOURCE_FILES ${LIBPSYCHICUI_EXTRA_SOURCE}
+set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     #    ${NANOVG_SOURCES}
     ${YOGA_SOURCES}
-    psychicui/psychicui.cpp
-    psychicui/Window.cpp
-    psychicui/Window.hpp
-    psychicui/Div.cpp
-    psychicui/Div.hpp
-    psychicui/style/Style.cpp
-    psychicui/style/Style.hpp
-    psychicui/components/Button.cpp
-    psychicui/components/Button.hpp
-    psychicui/components/Label.cpp
-    psychicui/components/Label.hpp
-    psychicui/style/StyleManager.cpp
-    psychicui/style/StyleManager.hpp
-    psychicui/utils/StringUtils.hpp
-    psychicui/style/StyleDeclaration.cpp
-    psychicui/style/StyleDeclaration.hpp
-    psychicui/style/StyleSelector.cpp
-    psychicui/style/StyleSelector.hpp
-    psychicui/style/StyleSheet.cpp
-    psychicui/style/StyleSheet.hpp
-    psychicui/utils/ColorUtils.hpp
-    psychicui/utils/YogaUtils.hpp
-    psychicui/components/Spacer.cpp
-    psychicui/components/Spacer.hpp
-    psychicui/components/DataContainer.cpp
-    psychicui/components/DataContainer.hpp
-    psychicui/components/Tabs.cpp
-    psychicui/components/Tabs.hpp
-    psychicui/components/TabContainer.cpp
-    psychicui/components/TabContainer.hpp
-    psychicui/components/Range.cpp
-    psychicui/components/Range.hpp
-    psychicui/Skin.cpp
-    psychicui/Skin.hpp
-    psychicui/skins/SliderRangeSkin.cpp
-    psychicui/skins/SliderRangeSkin.hpp
-    psychicui/Component.hpp
-    psychicui/skins/DefaultButtonSkin.cpp
-    psychicui/skins/DefaultButtonSkin.hpp
-    psychicui/utils/Hatcher.hpp
-    psychicui/components/TitleBar.cpp
-    psychicui/components/TitleBar.hpp
-    psychicui/skins/TitleBarButtonSkin.cpp
-    psychicui/skins/TitleBarButtonSkin.hpp
-    psychicui/components/MenuBar.cpp
-    psychicui/components/MenuBar.hpp
-    psychicui/components/Menu.cpp
-    psychicui/components/Menu.hpp
-    psychicui/signals/Signal.hpp
-    psychicui/signals/Slot.hpp
-    psychicui/signals/Observer.hpp
-    psychicui/skins/DefaultMenuButtonSkin.cpp
-    psychicui/skins/DefaultMenuButtonSkin.hpp
-    psychicui/components/MenuButton.cpp
-    psychicui/components/MenuButton.hpp
-    psychicui/Shape.cpp
-    psychicui/Shape.hpp
-    psychicui/skins/DefaultCheckBoxSkin.cpp
-    psychicui/skins/DefaultCheckBoxSkin.hpp
-    psychicui/components/CheckBox.cpp
-    psychicui/components/CheckBox.hpp
-    psychicui/Modal.cpp
-    psychicui/Modal.hpp
-    psychicui/components/Scroller.cpp
-    psychicui/components/Scroller.hpp
-    psychicui/components/ScrollBar.cpp
-    psychicui/components/ScrollBar.hpp
-    psychicui/skins/DefaultScrollBarSkin.cpp
-    psychicui/skins/DefaultScrollBarSkin.hpp)
+    psychic-ui/psychic-ui.cpp
+    psychic-ui/Window.cpp
+    psychic-ui/Window.hpp
+    psychic-ui/Div.cpp
+    psychic-ui/Div.hpp
+    psychic-ui/style/Style.cpp
+    psychic-ui/style/Style.hpp
+    psychic-ui/components/Button.cpp
+    psychic-ui/components/Button.hpp
+    psychic-ui/components/Label.cpp
+    psychic-ui/components/Label.hpp
+    psychic-ui/style/StyleManager.cpp
+    psychic-ui/style/StyleManager.hpp
+    psychic-ui/utils/StringUtils.hpp
+    psychic-ui/style/StyleDeclaration.cpp
+    psychic-ui/style/StyleDeclaration.hpp
+    psychic-ui/style/StyleSelector.cpp
+    psychic-ui/style/StyleSelector.hpp
+    psychic-ui/style/StyleSheet.cpp
+    psychic-ui/style/StyleSheet.hpp
+    psychic-ui/utils/ColorUtils.hpp
+    psychic-ui/utils/YogaUtils.hpp
+    psychic-ui/components/Spacer.cpp
+    psychic-ui/components/Spacer.hpp
+    psychic-ui/components/DataContainer.cpp
+    psychic-ui/components/DataContainer.hpp
+    psychic-ui/components/Tabs.cpp
+    psychic-ui/components/Tabs.hpp
+    psychic-ui/components/TabContainer.cpp
+    psychic-ui/components/TabContainer.hpp
+    psychic-ui/components/Range.cpp
+    psychic-ui/components/Range.hpp
+    psychic-ui/Skin.cpp
+    psychic-ui/Skin.hpp
+    psychic-ui/skins/SliderRangeSkin.cpp
+    psychic-ui/skins/SliderRangeSkin.hpp
+    psychic-ui/Component.hpp
+    psychic-ui/skins/DefaultButtonSkin.cpp
+    psychic-ui/skins/DefaultButtonSkin.hpp
+    psychic-ui/utils/Hatcher.hpp
+    psychic-ui/components/TitleBar.cpp
+    psychic-ui/components/TitleBar.hpp
+    psychic-ui/skins/TitleBarButtonSkin.cpp
+    psychic-ui/skins/TitleBarButtonSkin.hpp
+    psychic-ui/components/MenuBar.cpp
+    psychic-ui/components/MenuBar.hpp
+    psychic-ui/components/Menu.cpp
+    psychic-ui/components/Menu.hpp
+    psychic-ui/signals/Signal.hpp
+    psychic-ui/signals/Slot.hpp
+    psychic-ui/signals/Observer.hpp
+    psychic-ui/skins/DefaultMenuButtonSkin.cpp
+    psychic-ui/skins/DefaultMenuButtonSkin.hpp
+    psychic-ui/components/MenuButton.cpp
+    psychic-ui/components/MenuButton.hpp
+    psychic-ui/Shape.cpp
+    psychic-ui/Shape.hpp
+    psychic-ui/skins/DefaultCheckBoxSkin.cpp
+    psychic-ui/skins/DefaultCheckBoxSkin.hpp
+    psychic-ui/components/CheckBox.cpp
+    psychic-ui/components/CheckBox.hpp
+    psychic-ui/Modal.cpp
+    psychic-ui/Modal.hpp
+    psychic-ui/components/Scroller.cpp
+    psychic-ui/components/Scroller.hpp
+    psychic-ui/components/ScrollBar.cpp
+    psychic-ui/components/ScrollBar.hpp
+    psychic-ui/skins/DefaultScrollBarSkin.cpp
+    psychic-ui/skins/DefaultScrollBarSkin.hpp)
 add_library(psychic-ui SHARED ${SOURCE_FILES})
 target_include_directories(psychic-ui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -179,27 +179,29 @@ target_link_libraries(psychic-ui
     ${SKIA_LIBRARIES}
     ${PSYCHIC_COLOR_LIBRARIES}
 )
-#add_dependencies(psychicui eigen)
+#add_dependencies(psychic-ui eigen)
 add_dependencies(psychic-ui psychic-color)
 add_dependencies(psychic-ui glfw)
-#add_dependencies(psychicui yoga)
-#add_dependencies(psychicui nanovg)
+#add_dependencies(psychic-ui yoga)
+#add_dependencies(psychic-ui nanovg)
 add_dependencies(psychic-ui skia)
 
-if (PSYCHICUI_BUILD_SHARED)
+message("${PSYCHIC_COLOR_INCLUDE_DIRS}")
+
+if (PSYCHIC_UI_BUILD_SHARED)
     set_property(TARGET psychic-ui PROPERTY POSITION_INDEPENDENT_CODE ON)
     set_property(TARGET psychic-ui APPEND PROPERTY COMPILE_DEFINITIONS "_GLFW_BUILD_DLL")
-    target_link_libraries(psychic-ui ${PSYCHICUI_EXTRA_LIBS})
+    target_link_libraries(psychic-ui ${PSYCHIC_UI_EXTRA_LIBS})
 endif ()
 
-if (PSYCHICUI_USE_GLAD)
+if (PSYCHIC_UI_USE_GLAD)
     add_dependencies(psychic-ui glad)
-    if (PSYCHICUI_BUILD_SHARED)
+    if (PSYCHIC_UI_BUILD_SHARED)
         set_property(TARGET psychic-ui APPEND PROPERTY COMPILE_DEFINITIONS "GLAD_GLAPI_EXPORT;GLAD_GLAPI_EXPORT_BUILD")
     endif ()
 endif ()
 
-if (PSYCHICUI_BUILD_SHARED AND NOT ${U_CMAKE_BUILD_TYPE} MATCHES DEB)
+if (PSYCHIC_UI_BUILD_SHARED AND NOT ${U_CMAKE_BUILD_TYPE} MATCHES DEB)
     # Platform-specific strip flags for reducing the library setSize.
     if (APPLE)
         # Strip .dylib library on OSX

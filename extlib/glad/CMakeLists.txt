@@ -1,12 +1,12 @@
 if (WIN32)
-    set(PSYCHICUI_USE_GLAD_DEFAULT ON)
+    set(PSYCHIC_UI_USE_GLAD_DEFAULT ON)
 else ()
-    set(PSYCHICUI_USE_GLAD_DEFAULT OFF)
+    set(PSYCHIC_UI_USE_GLAD_DEFAULT OFF)
 endif ()
 
-option(PSYCHICUI_USE_GLAD "Use Glad OpenGL loader library?" ${PSYCHICUI_USE_GLAD_DEFAULT})
+option(PSYCHIC_UI_USE_GLAD "Use Glad OpenGL loader library?" ${PSYCHIC_UI_USE_GLAD_DEFAULT})
 
-if (PSYCHICUI_USE_GLAD)
+if (PSYCHIC_UI_USE_GLAD)
     # Build and include GLAD
     ExternalProject_Add(glad
         GIT_REPOSITORY https://github.com/Dav1dde/glad
@@ -30,8 +30,8 @@ if (PSYCHICUI_USE_GLAD)
         ${GLAD_LIBRARIES}
     )
 
-    list(APPEND PSYCHICUI_EXTRA_DEFS -DPSYCHICUI_GLAD)
-    if (PSYCHICUI_BUILD_SHARED)
-        list(APPEND PSYCHICUI_EXTRA_DEFS -DGLAD_GLAPI_EXPORT)
+    list(APPEND PSYCHIC_UI_EXTRA_DEFS -DPSYCHIC_UI_GLAD)
+    if (PSYCHIC_UI_BUILD_SHARED)
+        list(APPEND PSYCHIC_UI_EXTRA_DEFS -DGLAD_GLAPI_EXPORT)
     endif ()
 endif ()

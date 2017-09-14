@@ -1,8 +1,8 @@
 #pragma once
 
-#include <psychicui/Div.hpp>
+#include <psychic-ui/Div.hpp>
 
-namespace psychicui {
+namespace psychic_ui {
     class ToolBar : public Div {
     public:
         ToolBar();

@@ -1,8 +1,8 @@
 #include "ToolBar.hpp"
-#include <psychicui/components/Button.hpp>
-#include <psychicui/components/Spacer.hpp>
+#include <psychic-ui/components/Button.hpp>
+#include <psychic-ui/components/Spacer.hpp>
 
-namespace psychicui {
+namespace psychic_ui {
 
     ToolBar::ToolBar() :
         Div() {

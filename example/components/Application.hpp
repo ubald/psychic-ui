@@ -1,16 +1,16 @@
 #pragma once
 
-#include <psychicui/Window.hpp>
+#include <psychic-ui/Window.hpp>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include <psychicui/components/Label.hpp>
-#include <psychicui/components/Button.hpp>
-#include <psychicui/components/Tabs.hpp>
-#include <psychicui/components/TabContainer.hpp>
-#include <psychicui/themes/default.hpp>
-#include <psychicui/components/TitleBar.hpp>
-#include "psychicui/components/MenuBar.hpp"
+#include <psychic-ui/components/Label.hpp>
+#include <psychic-ui/components/Button.hpp>
+#include <psychic-ui/components/Tabs.hpp>
+#include <psychic-ui/components/TabContainer.hpp>
+#include <psychic-ui/themes/default.hpp>
+#include <psychic-ui/components/TitleBar.hpp>
+#include "psychic-ui/components/MenuBar.hpp"
 #include "ToolBar.hpp"
 #include "Labels.hpp"
 #include "Buttons.hpp"
@@ -19,7 +19,7 @@
 #include "Ranges.hpp"
 #include "../demo-stylesheet.hpp"
 
-namespace psychicui {
+namespace psychic_ui {
     class Application : public Window {
 
     public:

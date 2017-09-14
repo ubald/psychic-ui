@@ -1,9 +1,9 @@
 #pragma once
 
-#include <psychicui/Div.hpp>
-#include <psychicui/components/ScrollBar.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/components/ScrollBar.hpp>
 
-namespace psychicui {
+namespace psychic_ui {
     class Divs : public Div {
     public:
         Divs();

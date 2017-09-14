@@ -1,10 +1,10 @@
 #include <memory>
 #include "catch.hpp"
-#include <psychicui/style/StyleManager.hpp>
-#include <psychicui/style/Style.hpp>
-#include <psychicui/Div.hpp>
+#include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/style/Style.hpp>
+#include <psychic-ui/Div.hpp>
 
-using namespace psychicui;
+using namespace psychic_ui;
 
 TEST_CASE("basic style getter", "[style]") {
     auto styleManager = std::make_shared<StyleManager>();

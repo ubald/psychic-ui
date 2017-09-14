@@ -1,21 +1,21 @@
 #include <iostream>
-#include <psychicui/psychicui.hpp>
+#include <psychic-ui/psychic-ui.hpp>
 #include "demo.hpp"
 #include "components/Application.hpp"
 
-using namespace psychicui;
+using namespace psychic_ui;
 
 int main(int /* argc */, char ** /* argv */) {
     try {
-        psychicui::init();
+        psychic_ui::init();
 
         {
             std::shared_ptr<Application> app = std::make_shared<Application>();
             app->open();
-            psychicui::mainloop();
+            psychic_ui::mainloop();
         }
 
-        psychicui::shutdown();
+        psychic_ui::shutdown();
     } catch (const std::runtime_error &e) {
         std::string error_msg = std::string("Caught a fatal error: ") + std::string(e.what());
         #if defined(_WIN32)

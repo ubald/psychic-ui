@@ -1,9 +1,9 @@
 #pragma once
 
-#include <psychicui/style/StyleManager.hpp>
-#include <psychicui/style/StyleSheet.hpp>
+#include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/style/StyleSheet.hpp>
 
-using namespace psychicui;
+using namespace psychic_ui;
 
 /**
  * Demo Style

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <psychicui/Div.hpp>
-#include <psychicui/components/Button.hpp>
-#include <psychicui/components/CheckBox.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/components/Button.hpp>
+#include <psychic-ui/components/CheckBox.hpp>
 
-namespace psychicui {
+namespace psychic_ui {
     class Buttons : public Div {
     public:
         Buttons();

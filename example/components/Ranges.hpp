@@ -1,10 +1,10 @@
 #pragma once
 
 #include <string>
-#include <psychicui/Div.hpp>
-#include <psychicui/components/Range.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/components/Range.hpp>
 
-namespace psychicui {
+namespace psychic_ui {
 
     class Ranges : public Div {
     public:

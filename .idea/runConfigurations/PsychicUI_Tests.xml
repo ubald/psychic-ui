@@ -1,6 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="PsychicUI Tests" type="CMakeCatchTestRunConfigurationType" factoryName="Catch Test" singleton="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="psychic-ui" TARGET_NAME="psychicui_tests" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="psychic-ui" RUN_TARGET_NAME="psychicui_tests" TEST_MODE="SUITE_TEST">
-    <envs />
-    <method />
-  </configuration>
-</component>

@@ -1,6 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="psychicui_demo" type="CMakeRunConfiguration" factoryName="Application" singleton="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="psychic-ui" TARGET_NAME="psychicui_demo" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="psychic-ui" RUN_TARGET_NAME="psychicui_demo">
-    <envs />
-    <method />
-  </configuration>
-</component>
