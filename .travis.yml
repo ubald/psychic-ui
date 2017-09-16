@@ -120,5 +120,5 @@ install:
 script:
   - mkdir build
   - cd build
-  - then cmake .. && make
+  - cmake .. && make
   - ./tests/psychic-ui-tests
