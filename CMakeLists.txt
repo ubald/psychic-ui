@@ -4,6 +4,10 @@ project(psychic-ui)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -stdlib=libc++")
+endif()
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 include(ExternalProject)
@@ -158,6 +162,8 @@ set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     psychic-ui/skins/DefaultScrollBarSkin.hpp)
 
 add_library(psychic-ui SHARED ${SOURCE_FILES})
+
+# On Travis' GCC 4.9 it defaults to old C standards, required for Yoga
 set_property(TARGET psychic-ui PROPERTY C_STANDARD 11)
 
 target_include_directories(psychic-ui PUBLIC
@@ -187,6 +193,11 @@ target_link_libraries(psychic-ui
     # PSYCHIC COLOR
     ${PSYCHIC_COLOR_LIBRARIES}
 )
+
+if (CMAKE_SYSTEM MATCHES "Linux" AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_link_libraries(psychic-ui c++abi)  # Necessary for Travis Clang builds
+endif()
+
 #add_dependencies(psychic-ui eigen)
 add_dependencies(psychic-ui psychic-color)
 add_dependencies(psychic-ui glfw)
