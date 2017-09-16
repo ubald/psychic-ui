@@ -17,6 +17,7 @@ env:
 cache:
   ccache: true
   directories:
+    - ${TRAVIS_BUILD_DIR}/extlib/external
     - ${DEPS_DIR}/cmake-${CMAKE_VERSION_FULL}-Linux-x86_64/bin
     - ${DEPS_DIR}/cmake-${CMAKE_VERSION_FULL}-Linux-x86_64/plugins
     - ${DEPS_DIR}/cmake-${CMAKE_VERSION_FULL}-Linux-x86_64/share
@@ -112,13 +113,13 @@ install:
       export PATH=${DEPS_DIR}/cmake/bin:${PATH}
     fi
   - if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then sudo apt update ; fi
-  - if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then sudo apt install libc++-dev xorg-dev libjpeg-dev libturbojpeg libpng12-dev libgl1-mesa-dev libfreetype6-dev fontconfig ; fi
+  - if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then sudo apt install libc++-dev libc++abi-dev xorg-dev libjpeg-dev libturbojpeg libpng12-dev libgl1-mesa-dev libfreetype6-dev fontconfig ; fi
   - if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then brew update ; fi
-  - if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then brew install jpeg-turbo freetype ; fi
+  - if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then brew install ccache jpeg-turbo freetype ; fi
   - git submodule update --init --recursive
 
 script:
   - mkdir build
   - cd build
-  - cmake .. && make
+  - cmake .. && ccache make
   - ./tests/psychic-ui-tests
