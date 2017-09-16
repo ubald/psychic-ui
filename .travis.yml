@@ -5,6 +5,7 @@ language: cpp
 
 os:
   - linux
+  - osx
 
 branches:
   only:
@@ -25,6 +26,7 @@ cache:
 
 matrix:
   include:
+
     - compiler: gcc
       addons:
         apt:
@@ -68,11 +70,15 @@ install:
       travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR}/cmake
       export PATH=${DEPS_DIR}/cmake/bin:${PATH}
     fi
-  - sudo apt install xorg-dev libjpeg-dev libturbojpeg libpng12-dev libgl1-mesa-dev libfreetype6-dev fontconfig
+  - if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then sudo apt update ; fi
+  - if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then sudo apt install xorg-dev libjpeg-dev libturbojpeg libpng12-dev libgl1-mesa-dev libfreetype6-dev fontconfig ; fi
+  - if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then brew update ; fi
+  - if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then brew install libpng jpeg jpeg-turbo icu4c freetype ; fi
   - git submodule update --init --recursive
 
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_CXX_COMPILER=$COMPILER .. && make
+  - if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then cmake -DCMAKE_CXX_COMPILER=$COMPILER .. && make ; fi
+  - if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then cmake .. && make ; fi
   - ./tests/psychic-ui-tests

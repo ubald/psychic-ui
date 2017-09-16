@@ -17,6 +17,7 @@
 #include "Divs.hpp"
 #include "Scroller.hpp"
 #include "Ranges.hpp"
+#include "Colors.hpp"
 #include "../demo-stylesheet.hpp"
 
 namespace psychic_ui {
@@ -111,6 +112,10 @@ namespace psychic_ui {
             std::make_pair(
                 "Ranges",
                 Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Ranges>(); })));
+        panels.emplace_back(
+            std::make_pair(
+                "Colors",
+                Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Colors>(); })));
 
 
         app->add<TabContainer<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Div>>>>>>(
@@ -124,7 +129,7 @@ namespace psychic_ui {
                    return panel;
                }
            )
-           ->select(panels[2])
+           ->select(panels[5])
            ->style()
            ->set(heightPercent, 1.f);
 

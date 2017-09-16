@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <array>
 
 class A{
 public:
@@ -9,31 +10,14 @@ public:
 };
 
 int main() {
-    std::vector<std::shared_ptr<A>> vec{};
-    vec.push_back(std::make_shared<A>());
-    vec.push_back(std::make_shared<A>());
-    vec.push_back(std::make_shared<A>());
+    std::array<A,2> as;
+    A a;
+    a.a = "coucou";
+    as[0] = a;
+    a.a = "prout";
+    as[1] = a;
 
-    int i = 0;
-    for (auto &item: vec) {
-        ++i;
-        if (i == 2) {
-            vec.push_back(std::make_shared<A>());
-        }
-        std::cout << i << " " << item->a << std::endl;
-    }
-
-    i = 0;
-    bool added = false;
-    for (auto item = vec.rbegin(); item != vec.rend(); ++item) {
-        ++i;
-        std::cout << i << " " << added << std::endl;
-        if (i == 2 && !added) {
-            added = true;
-            vec.push_back(std::make_shared<A>());
-        }
-        //std::cout << i << " " << (*item)->a << std::endl;
-    }
+    std::cout << as[0].a << " " << as[1].a << std::endl;
 }
 //#include <iostream>
 //#include <Signal.hpp>

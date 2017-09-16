@@ -53,7 +53,8 @@ namespace psychic_ui {
     class Range : public internal::RangeBase {
         static_assert(std::is_arithmetic<T>::value, "Ranges can only use numeric types.");
     public:
-        explicit Range(std::function<void(T)> onChange);
+        explicit Range(T min, T max, std::function<void(T)> onChangeCallback);
+        explicit Range(std::function<void(T)> onChangeCallback);
         Range();
 
         // region Range & Value
@@ -77,25 +78,24 @@ namespace psychic_ui {
         float getLinearPercentage() const override;
         void setLinearPercentage(const float percent) override;
 
-        Signal <T> onChange{};
+        Signal<T> onChange{};
 
     protected:
-        RangeMode              _mode{linear};
-        T                      _min{0};
-        T                      _max{1};
-        T                      _step{0};
-        T                      _value{0};
-        std::function<void(T)> _onChange{nullptr};
+        RangeMode _mode{linear};
+        T         _min{0};
+        T         _max{1};
+        T         _step{0};
+        T         _value{0};
         float getPercentageFor(T value) const;
         float getLinearPercentageFor(T value) const;
         float nearestValidValue(T value, T step) const;
     };
 
     template<class T>
-    Range<T>::Range(std::function<void(T)> onChange) :
-        internal::RangeBase(),
-        _onChange(onChange) {
+    Range<T>::Range(T min, T max, std::function<void(T)> onChangeCallback) :
+        internal::RangeBase(), _min(min), _max(max) {
         setTag("Range");
+        onChange.subscribe(std::forward<std::function<void(T)>>(onChangeCallback));
         _step = std::is_floating_point<T>::value ? 0.01f : 1;
 
         onMouseScroll.subscribe(
@@ -103,12 +103,16 @@ namespace psychic_ui {
                 if (std::is_floating_point<T>::value) {
                     setValue(_value + (scrollY * _step));
                 } else {
-                    // Event the smalles movement should yield a result
+                    // Event the smallest movement should yield a result
                     setValue(_value + (std::ceil(scrollY) * _step));
                 }
             }
         );
     }
+
+    template<class T>
+    Range<T>::Range(std::function<void(T)> onChangeCallback) :
+        Range(0, 1, onChangeCallback) {}
 
     template<class T>
     Range<T>::Range() :
