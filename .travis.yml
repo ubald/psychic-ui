@@ -17,10 +17,8 @@ env:
 cache:
   ccache: true
   directories:
-    - ${TRAVIS_BUILD_DIR}/extlib/external
-    - ${DEPS_DIR}/cmake-${CMAKE_VERSION_FULL}-Linux-x86_64/bin
-    - ${DEPS_DIR}/cmake-${CMAKE_VERSION_FULL}-Linux-x86_64/plugins
-    - ${DEPS_DIR}/cmake-${CMAKE_VERSION_FULL}-Linux-x86_64/share
+    - ${TRAVIS_BUILD_DIR}/extlib/external/skia/third_party/externals
+    - ${DEPS_DIR}/cmake-${CMAKE_VERSION_FULL}-Linux-x86_64
 
 matrix:
   include:
