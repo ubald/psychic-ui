@@ -41,7 +41,7 @@ namespace psychic_ui {
         setTag("HBox");
 
         _inlineStyle
-            ->set(direction, "row");
+            ->set(flexDirection, "row");
     }
 
     void HBox::updateRules() {
@@ -66,7 +66,7 @@ namespace psychic_ui {
         setTag("VBox");
 
         _inlineStyle
-            ->set(direction, "column");
+            ->set(flexDirection, "column");
     }
 
     void VBox::updateRules() {

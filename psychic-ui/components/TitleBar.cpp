@@ -8,7 +8,7 @@ namespace psychic_ui {
         Div() {
         setTag("TitleBar");
         _defaultStyle
-            ->set(direction, "row")
+            ->set(flexDirection, "row")
             ->set(shrink, 0);
 
         add<Button>(

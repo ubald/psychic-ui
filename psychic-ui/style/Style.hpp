@@ -52,66 +52,76 @@ namespace psychic_ui {
 
     class Cursor {
     public:
-        static const int Arrow = 0;
-        static const int IBeam = 1;
+        static const int Arrow     = 0;
+        static const int IBeam     = 1;
         static const int Crosshair = 2;
-        static const int Hand = 3;
-        static const int HResize = 4;
-        static const int VResize = 5;
+        static const int Hand      = 3;
+        static const int HResize   = 4;
+        static const int VResize   = 5;
     };
 
     enum ColorProperty {
         // Custom
-        color,
-        backgroundColor,
-        borderColor,
-        borderHorizontalColor,
-        borderLeftColor,
-        borderRightColor,
-        borderVerticalColor,
-        borderTopColor,
-        borderBottomColor
+            color,
+            backgroundColor,
+            borderColor,
+            borderHorizontalColor,
+            borderLeftColor,
+            borderRightColor,
+            borderVerticalColor,
+            borderTopColor,
+            borderBottomColor
     };
 
     enum StringProperty {
         // Yoga/Flex
-        fontFamily, textAlign, textJustify,
-        position,
-        justifyContent, direction, alignContent, alignItems, alignSelf,
-        wrap, overflow,
+            fontFamily, textAlign, textJustify,
+            position, direction, display,
+            justifyContent, flexDirection, alignContent, alignItems, alignSelf,
+            wrap, overflow,
         // Custom
-        skin,
-        orientation // For sliders
+            skin,
+            orientation // For sliders
     };
 
     enum FloatProperty {
         // Yoga/Flex
-        flex, grow, shrink, basis,
-        left, leftPercent, right, rightPercent, top, topPercent, bottom, bottomPercent,
-        width, widthPercent, minWidth, minWidthPercent, maxWidth, maxWidthPercent,
-        height, heightPercent, minHeight, minHeightPercent, maxHeight, maxHeightPercent,
-        margin, marginHorizontal, marginLeft, marginRight, marginVertical, marginTop, marginBottom,
-        padding, paddingHorizontal, paddingLeft, paddingRight, paddingVertical, paddingTop, paddingBottom,
-        border, borderHorizontal, borderLeft, borderRight, borderVertical, borderTop, borderBottom,
+            flex, grow, shrink, basis, basisPercent,
+            left, leftPercent, right, rightPercent, top, topPercent, bottom, bottomPercent,
+            width, widthPercent, minWidth, minWidthPercent, maxWidth, maxWidthPercent,
+            height, heightPercent, minHeight, minHeightPercent, maxHeight, maxHeightPercent,
+            margin,
+            marginHorizontal, marginLeft, marginRight,
+            marginVertical, marginTop, marginBottom,
+            marginPercent,
+            marginHorizontalPercent, marginLeftPercent, marginRightPercent,
+            marginVerticalPercent, marginTopPercent, marginBottomPercent,
+            padding,
+            paddingHorizontal, paddingLeft, paddingRight,
+            paddingVertical, paddingTop, paddingBottom,
+            paddingPercent,
+            paddingHorizontalPercent, paddingLeftPercent, paddingRightPercent,
+            paddingVerticalPercent, paddingTopPercent, paddingBottomPercent,
+            border, borderHorizontal, borderLeft, borderRight, borderVertical, borderTop, borderBottom,
         // Custom
-        opacity,
-        fontSize, letterSpacing, lineHeight,
-        borderRadius, borderRadiusTop, borderRadiusBottom, borderRadiusLeft, borderRadiusRight,
-        borderRadiusTopLeft, borderRadiusTopRight, borderRadiusBottomLeft, borderRadiusBottomRight,
+            opacity,
+            fontSize, letterSpacing, lineHeight,
+            borderRadius, borderRadiusTop, borderRadiusBottom, borderRadiusLeft, borderRadiusRight,
+            borderRadiusTopLeft, borderRadiusTopRight, borderRadiusBottomLeft, borderRadiusBottomRight,
     };
 
     enum IntProperty {
         // Custom
-        cursor,
-        gap
+            cursor,
+            gap
     };
 
     enum BoolProperty {
         // Custom
-        antiAlias,
-        textAntiAlias,
-        multiline,
-        visible
+            antiAlias,
+            textAntiAlias,
+            multiline,
+            visible
     };
 
     struct InheritableValues {
@@ -120,6 +130,7 @@ namespace psychic_ui {
         const std::vector<FloatProperty>  floatInheritable;
         const std::vector<IntProperty>    intInheritable;
         const std::vector<BoolProperty>   boolInheritable;
+
         InheritableValues(
             std::vector<ColorProperty> colorInherit,
             std::vector<StringProperty> stringInherit,

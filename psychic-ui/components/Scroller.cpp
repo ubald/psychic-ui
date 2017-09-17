@@ -16,7 +16,7 @@ namespace psychic_ui {
 
         auto container = add<Div>();
         container->style()
-                 ->set(direction, "row")
+                 ->set(flexDirection, "row")
                  ->set(widthPercent, 1.0f)
                  ->set(heightPercent, 1.0f);
         container->add(_viewport);

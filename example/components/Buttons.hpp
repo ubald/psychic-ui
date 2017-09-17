@@ -16,7 +16,7 @@ namespace psychic_ui {
 
         style()
             ->set(wrap, "wrap")
-            ->set(direction, "row");
+            ->set(flexDirection, "row");
 
         // Push
         add<Button>("Push");

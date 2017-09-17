@@ -72,12 +72,12 @@ namespace psychic_ui {
                 ->set(left, 0.f)
                 ->set(right, 0.f)
                 ->set(top, 0)
-                /*->set(bottom, NAN)*/;
+                ->set(bottom, Style::Auto);
         } else {
             _thumb
                 ->style()
                 ->set(left, 0)
-                //->set(right, NAN)
+                ->set(right, Style::Auto)
                 ->set(top, 0.f)
                 ->set(bottom, 0.f);
         }
@@ -111,7 +111,7 @@ namespace psychic_ui {
 //
 //        int minSize = 24;
 //        SkRect rect;
-//        if (component()->direction() == Horizontal) {
+//        if (component()->flexDirection() == Horizontal) {
 //            int avail = _width - minSize;
 //            int w = ( component()->div()->getHeight() * avail ) / (component()->div()->boundsBottom() - component()->div()->boundsTop());
 //            int p = component()->div()->scro

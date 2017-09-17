@@ -241,7 +241,7 @@ public:
         manager->style("Button")
                ->set(skin, "default-button-skin")
                ->set(cursor, Cursor::Hand)
-               ->set(direction, "row")
+               ->set(flexDirection, "row")
                ->set(alignItems, "center")
                ->set(padding, 12)
                ->set(borderRadius, radius)
@@ -261,7 +261,7 @@ public:
         // region CheckBox
         manager->style("CheckBox")
                ->set(skin, "default-checkbox-skin")
-               ->set(direction, "row")
+               ->set(flexDirection, "row")
                ->set(alignItems, "center")
                ->set(padding, 12)
                ->set(borderRadius, radius)
@@ -292,7 +292,7 @@ public:
                ->set(alignItems, "stretch");
 
         manager->style("Menu MenuButton")
-               ->set(direction, "row")
+               ->set(flexDirection, "row")
                ->set(paddingHorizontal, 6)
                ->set(paddingVertical, 6)
                ->set(borderRadius, 0)
@@ -392,7 +392,7 @@ public:
 
         // region Tabs
         manager->style("tabs")
-               ->set(direction, "row")
+               ->set(flexDirection, "row")
                ->set(borderBottom, 1)
                ->set(borderColor, BASE_00);
 
@@ -423,7 +423,7 @@ public:
 
         // region MenuBar
         manager->style("MenuBar")
-               ->set(direction, "row")
+               ->set(flexDirection, "row")
                ->set(backgroundColor, BASE_01)
                ->set(borderBottom, 1)
                ->set(borderColor, BASE_00);
@@ -447,7 +447,7 @@ public:
 
         // region ToolBar
         manager->style("toolbar")
-               ->set(direction, "row")
+               ->set(flexDirection, "row")
                ->set(backgroundColor, BASE_02)
                ->set(borderBottom, 1)
                ->set(borderColor, BASE_00);

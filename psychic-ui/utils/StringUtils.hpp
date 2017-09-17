@@ -14,8 +14,8 @@ namespace psychic_ui {
         // trim from start (in place)
         static inline void ltrim(std::string &s) {
             s.erase(
-                s.cbegin(), std::find_if(
-                    s.cbegin(), s.cend(), [](int ch) {
+                s.begin(), std::find_if(
+                    s.begin(), s.end(), [](int ch) {
                         return !std::isspace(ch);
                     }
                 ));

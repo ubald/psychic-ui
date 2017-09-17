@@ -13,7 +13,7 @@ namespace psychic_ui {
             setClassNames({"demo-panel"});
 
             auto container = add<Div>();
-            container->style()->set(direction, "row");
+            container->style()->set(flexDirection, "row");
 
             auto left = container->add<Div>();
             left
@@ -42,7 +42,7 @@ namespace psychic_ui {
             auto rcont = right->add<Div>();
             rcont
                 ->style()
-                ->set(direction, "row");
+                ->set(flexDirection, "row");
 
             rcont->add<Range<int>>()
                  ->setRange(0, 10)

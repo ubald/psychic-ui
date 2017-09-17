@@ -16,7 +16,7 @@ namespace psychic_ui {
         setClassNames({"demo-panel"});
 
         style()
-            ->set(direction, "row")
+            ->set(flexDirection, "row")
             ->set(padding, 0); // We're using a scroller so no padding
 
         auto scroller = add<Div>();
@@ -37,7 +37,7 @@ namespace psychic_ui {
             container
                 ->style()
                 ->set(shrink, 0)
-                ->set(direction, "row");
+                ->set(flexDirection, "row");
 
             // Anti Aliasing
 
@@ -105,14 +105,14 @@ namespace psychic_ui {
             container
                 ->style()
                 ->set(shrink, 0)
-                ->set(direction, "row");
+                ->set(flexDirection, "row");
 
             auto left = container->add<Div>();
             left
                 ->style()
                 ->set(grow, 1)
                 ->set(shrink, 1)
-                /*->set(lineHeight, Style::Auto)*/;
+                ->set(lineHeight, Style::Auto);
 
             left->add<Label>("Automatic Line Height");
 

@@ -17,14 +17,19 @@ namespace psychic_ui {
             },
             {
                 fontFamily, textAlign, textJustify,
-                justifyContent, direction, alignContent, alignItems,
+                direction, justifyContent, flexDirection, alignContent, alignItems,
                 wrap, overflow,
                 orientation
             },
             {
                 opacity,
                 fontSize,  letterSpacing, lineHeight,
-                padding,   paddingHorizontal, paddingLeft, paddingRight, paddingVertical, paddingTop, paddingBottom,
+                padding,
+                paddingHorizontal, paddingLeft, paddingRight,
+                paddingVertical, paddingTop, paddingBottom,
+                paddingPercent,
+                paddingHorizontalPercent, paddingLeftPercent, paddingRightPercent,
+                paddingVerticalPercent, paddingTopPercent, paddingBottomPercent,
                 border, borderHorizontal, borderLeft, borderRight, borderVertical, borderTop, borderBottom,
                 borderRadius, borderRadiusTop, borderRadiusBottom, borderRadiusLeft, borderRadiusRight,
                 borderRadiusTopLeft, borderRadiusTopRight, borderRadiusBottomLeft, borderRadiusBottomRight

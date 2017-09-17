@@ -38,7 +38,7 @@ namespace psychic_ui {
 
         auto container2 = std::make_shared<Div>();
         container2->style()
-                  ->set(direction, "row")
+                  ->set(flexDirection, "row")
                   ->set(padding, 12);
 
         auto contents2 = container2->add<Label>(lorem + '\n' + lorem + '\n' + lorem)

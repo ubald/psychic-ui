@@ -36,7 +36,7 @@ namespace psychic_ui {
         setClassNames({"demo-panel"});
 
         style()
-            ->set(direction, "row")
+            ->set(flexDirection, "row")
             ->set(padding, 0); // We're using a scroller so no padding
 
         auto scroller = add<Div>();
@@ -353,7 +353,7 @@ namespace psychic_ui {
 
         styleManager()
             ->style(".swatches")
-            ->set(direction, "row");
+            ->set(flexDirection, "row");
 
         styleManager()
             ->style(".swatches .swatch")

@@ -6,7 +6,7 @@
 namespace psychic_ui {
 
     std::unique_ptr<Style> Style::dummyStyle{std::make_unique<Style>()};
-    //const float Style::Auto = nanf("auto");
+    const float Style::Auto = nanf("auto");
 
     Style::Style() {
     }
