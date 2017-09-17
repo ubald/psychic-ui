@@ -1,6 +1,3 @@
-[submodule "extlib/external/rxcpp"]
-	path = extlib/external/rxcpp
-	url = https://github.com/Reactive-Extensions/RxCpp.git
 [submodule "extlib/external/glfw"]
 	path = extlib/external/glfw
 	url = https://github.com/glfw/glfw.git

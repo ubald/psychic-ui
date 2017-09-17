@@ -21,10 +21,8 @@ find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
 find_package(JPEGTURBO REQUIRED)
 find_package(Freetype REQUIRED)
-#find_package(ICU REQUIRED)
 
 set(PSYCHIC_UI_EXTRA_LIBS "")
-set(PSYCHIC_UI_EXTRA_DEFS "")
 set(LIBPSYCHIC_UI_EXTRA_SOURCE "")
 
 # GLAD
@@ -37,11 +35,8 @@ add_subdirectory(extlib/glfw)
 add_subdirectory(extlib/yoga)
 
 # SKIA
-
 add_subdirectory(extlib/skia)
 
-# RXCPP
-# add_subdirectory(extlib/rxcpp)
 
 # PSYCHIC COLOR
 if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/lib/psychic-color/.git")
@@ -49,47 +44,24 @@ if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/lib/psychic-color/.git")
 endif()
 
 add_subdirectory(lib/psychic-color)
+
 # EXTRAS
 
 # Required core libraries on various platforms
 if (WIN32)
     list(APPEND PSYCHIC_UI_EXTRA_LIBS opengl32)
 elseif (APPLE)
-    find_library(cocoa_library Cocoa)
-    find_library(opengl_library OpenGL)
-    find_library(corevideo_library CoreVideo)
-    find_library(iokit_library IOKit)
-    list(APPEND PSYCHIC_UI_EXTRA_LIBS
-#        ${cocoa_library}
-#        ${opengl_library}
-#        ${corevideo_library}
-#        ${iokit_library}
-        )
     list(APPEND LIBPSYCHIC_UI_EXTRA_SOURCE psychic-ui/darwin.mm)
 elseif (CMAKE_SYSTEM MATCHES "Linux")
     find_package(Fontconfig REQUIRED)
     list(APPEND PSYCHIC_UI_EXTRA_LIBS
-#        GL
-#        Xxf86vm
-#        Xrandr
-#        Xinerama
-#        Xcursor
-#        Xi
-#        X11
-#        pthread
         fontconfig
-        )
-    if (CMAKE_SYSTEM MATCHES "Linux")
-#        list(APPEND PSYCHIC_UI_EXTRA_LIBS dl)
-    endif ()
+    )
 endif ()
 
 # LIBRARY
 
-add_definitions(${PSYCHIC_UI_EXTRA_DEFS})
-
 set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
-    #    ${NANOVG_SOURCES}
     ${YOGA_SOURCES}
     psychic-ui/psychic-ui.cpp
     psychic-ui/Window.cpp
@@ -172,7 +144,6 @@ target_include_directories(psychic-ui PUBLIC
     ${GLFW_INCLUDE_DIRS}
     ${YOGA_INCLUDE_DIRS}
     ${SKIA_INCLUDE_DIRS}
-    # ${RXCPP_INCLUDE_DIRS}
     ${PSYCHIC_COLOR_INCLUDE_DIRS}
 )
 
@@ -198,11 +169,8 @@ if (CMAKE_SYSTEM MATCHES "Linux" AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     target_link_libraries(psychic-ui c++abi)  # Necessary for Travis Clang builds
 endif()
 
-#add_dependencies(psychic-ui eigen)
 add_dependencies(psychic-ui psychic-color)
 add_dependencies(psychic-ui glfw)
-#add_dependencies(psychic-ui yoga)
-#add_dependencies(psychic-ui nanovg)
 add_dependencies(psychic-ui skia)
 
 if (PSYCHIC_UI_BUILD_SHARED)
@@ -218,14 +186,11 @@ if (PSYCHIC_UI_USE_GLAD)
     endif ()
 endif ()
 
-if (PSYCHIC_UI_BUILD_SHARED AND NOT ${U_CMAKE_BUILD_TYPE} MATCHES DEB)
-    # Platform-specific strip flags for reducing the library setSize.
+if (PSYCHIC_UI_BUILD_SHARED AND NOT ${CMAKE_BUILD_TYPE} MATCHES "Deb")
     if (APPLE)
-        # Strip .dylib library on OSX
-        add_custom_command(TARGET psychic-ui POST_BUILD COMMAND strip -u -r "$<TARGET_FILE_DIR:nanogui>/$<TARGET_FILE_NAME:nanogui>")
+        add_custom_command(TARGET psychic-ui POST_BUILD COMMAND strip -u -r "$<TARGET_FILE_DIR:psychic-ui>/$<TARGET_FILE_NAME:psychic-ui>")
     elseif (UNIX)
-        # Strip .so library on Linux
-        add_custom_command(TARGET psychic-ui POST_BUILD COMMAND strip "$<TARGET_FILE_DIR:nanogui>/$<TARGET_FILE_NAME:nanogui>")
+        add_custom_command(TARGET psychic-ui POST_BUILD COMMAND strip "$<TARGET_FILE_DIR:psychic-ui>/$<TARGET_FILE_NAME:psychic-ui>")
     endif ()
 endif ()
 
