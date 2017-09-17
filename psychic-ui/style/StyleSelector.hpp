@@ -18,6 +18,13 @@ namespace psychic_ui {
         lastChild
     };
 
+    enum class Token {
+        Tag,
+        Id,
+        Class,
+        Pseudo
+    };
+
     class StyleSelector {
     public:
         static std::unique_ptr<StyleSelector> fromSelector(const std::string &selector);
@@ -26,6 +33,7 @@ namespace psychic_ui {
 
         const bool direct() const;
         const std::string tag() const;
+        const std::string id() const;
         const std::vector<std::string> classes() const;
         const std::unordered_set<Pseudo, std::hash<int>> pseudo() const;
         const StyleSelector *next() const;
@@ -52,6 +60,7 @@ namespace psychic_ui {
         bool matches(const Div *component, bool expand) const;
         bool                                       _direct{false};
         std::string                                _tag{};
+        std::string                                _id{};
         std::vector<std::string>                   _classes{};
         std::unordered_set<Pseudo, std::hash<int>> _pseudo{};
         std::unique_ptr<StyleSelector>             _next{nullptr};

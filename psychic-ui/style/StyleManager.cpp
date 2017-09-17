@@ -23,7 +23,7 @@ namespace psychic_ui {
 
     const sk_sp<SkTypeface> StyleManager::font(const std::string &name) const {
         auto font = _fonts.find(name);
-        return font != _fonts.end() ? font->second : nullptr;
+        return font != _fonts.cend() ? font->second : nullptr;
     }
 
     StyleManager *StyleManager::registerSkin(const std::string &name, SkinMaker hatcher) {
@@ -34,13 +34,13 @@ namespace psychic_ui {
 
     std::shared_ptr<internal::SkinBase> StyleManager::skin(const std::string &name) {
         auto skin = _skins.find(name);
-        return skin != _skins.end() ? skin->second->hatch() : nullptr;
+        return skin != _skins.cend() ? skin->second->hatch() : nullptr;
     }
 
     Style *StyleManager::style(std::string selectorString) {
         std::transform(selectorString.begin(), selectorString.end(), selectorString.begin(), ::tolower);
         auto it = _declarations.find(selectorString);
-        if (it != _declarations.end()) {
+        if (it != _declarations.cend()) {
             return it->second->style();
         } else {
             auto selector = StyleSelector::fromSelector(selectorString);
@@ -74,9 +74,9 @@ namespace psychic_ui {
 
             #ifdef DEBUG_STYLES
             s->declarations.insert(
-                s->declarations.end(),
-                component->_parent->_computedStyle->declarations.begin(),
-                component->_parent->_computedStyle->declarations.end()
+                s->declarations.cend(),
+                component->_parent->_computedStyle->declarations.cbegin(),
+                component->_parent->_computedStyle->declarations.cend()
             );
             #endif
         }

@@ -112,7 +112,7 @@ namespace psychic_ui {
                 ->style()
                 ->set(grow, 1)
                 ->set(shrink, 1)
-                ->set(lineHeight, Style::Auto);
+                /*->set(lineHeight, Style::Auto)*/;
 
             left->add<Label>("Automatic Line Height");
 

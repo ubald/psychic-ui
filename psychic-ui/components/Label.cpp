@@ -76,7 +76,8 @@ namespace psychic_ui {
         // TextBox doesn't measure the same way it draws, we have to set the spacing manually
         _textBox.setSpacing(size / _textPaint.getFontSpacing(), _lineHeight - size);
 
-        YGNodeStyleSetMinHeight(_yogaNode, std::max(_computedStyle->get(minHeight), _lineHeight));
+        //float mh = _computedStyle->get(minHeight);
+        //YGNodeStyleSetMinHeight(_yogaNode, isnan(mh) ? _lineHeight : std::max(mh, _lineHeight));
     }
 
     YGSize Label::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {

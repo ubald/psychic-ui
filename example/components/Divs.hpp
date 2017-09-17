@@ -7,19 +7,13 @@ namespace psychic_ui {
     class Divs : public Div {
     public:
         Divs();
+    protected:
+        void addedToRender() override;
     };
 
     Divs::Divs() : Div() {
         setTag("Divs");
         setClassNames({"demo-panel"});
-
-        styleManager()
-            ->style("divs .demo-div")
-            ->set(margin, 12)
-            ->set(width, 128.0f)
-            ->set(height, 64.0f)
-            ->set(backgroundColor, BASE_03)
-            ->set(borderColor, BASE_06);
 
         style()
             ->set(direction, "row")
@@ -256,6 +250,18 @@ namespace psychic_ui {
 
         }
         // endregion
+    }
+
+    void Divs::addedToRender() {
+        Div::addedToRender();
+
+        styleManager()
+            ->style("divs .demo-div")
+            ->set(margin, 12)
+            ->set(width, 128.0f)
+            ->set(height, 64.0f)
+            ->set(backgroundColor, BASE_03)
+            ->set(borderColor, BASE_06);
     }
 
 }

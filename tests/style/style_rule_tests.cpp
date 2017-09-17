@@ -27,6 +27,21 @@ TEST_CASE("rules from selectors", "[style]") {
             REQUIRE(rule == nullptr);
         }
 
+        SECTION("spaces and hashtags rule") {
+            auto rule = StyleSelector::fromSelector(" # # ");
+            REQUIRE(rule == nullptr);
+        }
+
+        SECTION("spaces and colons rule") {
+            auto rule = StyleSelector::fromSelector(" : : ");
+            REQUIRE(rule == nullptr);
+        }
+
+        SECTION("spaces and all of the above rule") {
+            auto rule = StyleSelector::fromSelector(" # . : ");
+            REQUIRE(rule == nullptr);
+        }
+
     }
 
     SECTION("tag rules") {
@@ -312,14 +327,31 @@ TEST_CASE("rules from selectors", "[style]") {
 
     }
 
+    SECTION("ids") {
+
+        SECTION("simple") {
+            auto rule = StyleSelector::fromSelector("#id");
+            REQUIRE(rule != nullptr);
+            REQUIRE(rule->id() == "id");
+        }
+
+    }
+
     SECTION("weights") {
         REQUIRE(StyleSelector::fromSelector("div")->weight() == 10);
+        REQUIRE(StyleSelector::fromSelector("div#id")->weight() == 25);
         REQUIRE(StyleSelector::fromSelector("div.class")->weight() == 20);
+        REQUIRE(StyleSelector::fromSelector("div#id.class")->weight() == 35);
         REQUIRE(StyleSelector::fromSelector("div.class:hover")->weight() == 21);
+        REQUIRE(StyleSelector::fromSelector("div#id.class:hover")->weight() == 36);
         REQUIRE(StyleSelector::fromSelector(".class:hover")->weight() == 11);
+        REQUIRE(StyleSelector::fromSelector("#id.class:hover")->weight() == 26);
         REQUIRE(StyleSelector::fromSelector(".class:fake")->weight() == 10);
+        REQUIRE(StyleSelector::fromSelector("#id.class:fake")->weight() == 25);
         REQUIRE(StyleSelector::fromSelector("div span")->weight() == 20);
+        REQUIRE(StyleSelector::fromSelector("div#id span#id")->weight() == 50);
         REQUIRE(StyleSelector::fromSelector("div span.class")->weight() == 30);
+        REQUIRE(StyleSelector::fromSelector("div#id span.class")->weight() == 45);
         REQUIRE(StyleSelector::fromSelector("div span.class.second")->weight() == 40);
         REQUIRE(StyleSelector::fromSelector("div span.class.second:active")->weight() == 42);
         REQUIRE(StyleSelector::fromSelector("div.class span.class.second:hover")->weight() == 51);

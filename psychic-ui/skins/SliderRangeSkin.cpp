@@ -82,7 +82,7 @@ namespace psychic_ui {
                 ->style()
                 ->set(left, 0.f)
                 ->set(right, 0.f)
-                ->set(top, NAN)
+                //->set(top, NAN)
                 ->set(bottom, 0.f);
             _value->setVisible(false);
         } else {
@@ -92,7 +92,7 @@ namespace psychic_ui {
             _range
                 ->style()
                 ->set(left, 0.f)
-                ->set(right, NAN)
+                //->set(right, NAN)
                 ->set(top, 0.f)
                 ->set(bottom, 0.f);
             _value->setVisible(true);

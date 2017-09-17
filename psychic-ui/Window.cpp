@@ -251,7 +251,7 @@ namespace psychic_ui {
             _glfwWindow,
             [](GLFWwindow *w, double x, double y) {
                 auto it = windows.find(w);
-                if (it == windows.end()) {
+                if (it == windows.cend()) {
                     return;
                 }
                 Window *s = it->second;
@@ -263,7 +263,7 @@ namespace psychic_ui {
             _glfwWindow,
             [](GLFWwindow *w, int button, int action, int modifiers) {
                 auto it = windows.find(w);
-                if (it == windows.end()) {
+                if (it == windows.cend()) {
                     return;
                 }
                 Window *s = it->second;
@@ -275,7 +275,7 @@ namespace psychic_ui {
             _glfwWindow,
             [](GLFWwindow *w, double x, double y) {
                 auto it = windows.find(w);
-                if (it == windows.end()) {
+                if (it == windows.cend()) {
                     return;
                 }
                 Window *s = it->second;
@@ -287,7 +287,7 @@ namespace psychic_ui {
             _glfwWindow,
             [](GLFWwindow *w, int key, int scancode, int action, int mods) {
                 auto it = windows.find(w);
-                if (it == windows.end()) {
+                if (it == windows.cend()) {
                     return;
                 }
                 Window *s = it->second;
@@ -299,7 +299,7 @@ namespace psychic_ui {
             _glfwWindow,
             [](GLFWwindow *w, unsigned int codepoint) {
                 auto it = windows.find(w);
-                if (it == windows.end()) {
+                if (it == windows.cend()) {
                     return;
                 }
                 Window *s = it->second;
@@ -311,7 +311,7 @@ namespace psychic_ui {
             _glfwWindow,
             [](GLFWwindow *w, int count, const char **filenames) {
                 auto it = windows.find(w);
-                if (it == windows.end()) {
+                if (it == windows.cend()) {
                     return;
                 }
                 Window *s = it->second;
@@ -323,7 +323,7 @@ namespace psychic_ui {
             _glfwWindow,
             [](GLFWwindow *w, int width, int height) {
                 auto it = windows.find(w);
-                if (it == windows.end()) {
+                if (it == windows.cend()) {
                     return;
                 }
                 Window *s = it->second;
@@ -335,7 +335,7 @@ namespace psychic_ui {
             _glfwWindow,
             [](GLFWwindow *w, int x, int y) {
                 auto it = windows.find(w);
-                if (it == windows.end()) {
+                if (it == windows.cend()) {
                     return;
                 }
                 Window *s = it->second;
@@ -347,7 +347,7 @@ namespace psychic_ui {
             _glfwWindow,
             [](GLFWwindow *w, int focused) {
                 auto it = windows.find(w);
-                if (it == windows.end()) {
+                if (it == windows.cend()) {
                     return;
                 }
                 Window *s = it->second;
@@ -359,7 +359,7 @@ namespace psychic_ui {
             _glfwWindow,
             [](GLFWwindow *w, int iconified) {
                 auto it = windows.find(w);
-                if (it == windows.end()) {
+                if (it == windows.cend()) {
                     return;
                 }
                 Window *s = it->second;
@@ -371,7 +371,7 @@ namespace psychic_ui {
             _glfwWindow,
             [](GLFWwindow *w) {
                 auto it = windows.find(w);
-                if (it == windows.end()) {
+                if (it == windows.cend()) {
                     return;
                 }
                 Window *s = it->second;
@@ -384,7 +384,7 @@ namespace psychic_ui {
             _glfwWindow,
             [](GLFWwindow *w) {
                 auto it = windows.find(w);
-                if (it == windows.end()) {
+                if (it == windows.cend()) {
                     return;
                 }
                 Window *s = it->second;

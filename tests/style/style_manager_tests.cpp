@@ -65,6 +65,24 @@ SCENARIO("styles can be declared and computed") {
             }
         }
 
+        WHEN("div has id") {
+            div->setId("myDiv");
+
+            THEN("it should retrieve a \"#myDiv\" selector") {
+                auto style = styleManager->style("#myDiv");
+                style->set(fontFamily, "div"); // Just easier to check like this
+                div->updateStyle();
+                REQUIRE(*style == *styleManager->computeStyle(div.get()));
+            }
+
+            THEN("it should retrieve a \"#__internal_id__\" selector") {
+                auto style = styleManager->style("#" + div->internalId());
+                style->set(fontFamily, "div by internal id"); // Just easier to check like this
+                div->updateStyle();
+                REQUIRE(*style == *styleManager->computeStyle(div.get()));
+            }
+        }
+
         WHEN("div has class name") {
             div->setClassNames({"class"});
 

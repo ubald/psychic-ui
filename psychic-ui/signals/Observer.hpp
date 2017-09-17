@@ -24,7 +24,7 @@ namespace psychic_ui {
     public:
         Observer() = default;
 
-        ~Observer() {
+        virtual ~Observer() {
             for (auto &slot: slots) {
                 slot->disconnect();
             }

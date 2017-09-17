@@ -1,11 +1,9 @@
-add_executable(psychic-ui-playground
-    playground.cpp
-)
-target_include_directories(psychic-ui-playground PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${GLFW_INCLUDE_DIRS}
-    ${YOGA_INCLUDE_DIRS}
-    ${SKIA_INCLUDE_DIRS}
-    ${RXCPP_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../psychic-ui/signals/
-)
+option(PSYCHIC_UI_BUILD_PLAYGROUND "Build Psychic UI playground?" ON)
+add_feature_info("playground" PSYCHIC_UI_BUILD_PLAYGROUND "Test scratch pad")
+
+if (PSYCHIC_UI_BUILD_PLAYGROUND)
+    add_executable(psychic-ui-playground
+        playground.cpp
+    )
+    target_link_libraries(psychic-ui-playground psychic-ui ${PSYCHIC_UI_EXTRA_LIBS})
+endif()

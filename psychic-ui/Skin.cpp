@@ -2,6 +2,7 @@
 
 namespace psychic_ui {
     namespace internal {
+        // TODO: This is getting out of hand, maybe just an exclusion list would be better
         const InheritableValues SkinBase::_inheritableValues{
             {
                 color,
@@ -29,7 +30,8 @@ namespace psychic_ui {
                 borderRadiusTopLeft, borderRadiusTopRight, borderRadiusBottomLeft, borderRadiusBottomRight
             },
             {
-                cursor
+                cursor,
+                gap
             },
             {
                 antiAlias,

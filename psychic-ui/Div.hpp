@@ -52,10 +52,6 @@ namespace psychic_ui {
         void setParent(Div *parent);
         const int depth() const;
 
-//        std::vector<std::shared_ptr<Div>> path();
-
-        virtual std::shared_ptr<Panel> panel();
-
         // endregion
 
         // region Children
@@ -240,6 +236,7 @@ namespace psychic_ui {
         const Style *computedStyle() const;
 
         const std::vector<std::string> &tags() const;
+        const std::string internalId() const;
         const std::string id() const;
         Div *setId(std::string id);
         const std::unordered_set<std::string> &classNames() const;
@@ -345,6 +342,12 @@ namespace psychic_ui {
          * Chain of tags from the inheritance chain
          */
         std::vector<std::string> _tags{};
+
+        /**
+         * Internal Id
+         */
+         static int idCounter;
+         std::string _internalId{};
 
         /**
          * Id

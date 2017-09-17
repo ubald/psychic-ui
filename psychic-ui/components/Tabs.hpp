@@ -73,8 +73,8 @@ namespace psychic_ui {
     void Tabs<T>::select(const T &item) {
         // Find item in data since (pardon my C++ knowledge at this time) when initializing with a temporary data source
         // and selecting from this data source, the pointer becomes invalid once the original data source expired.
-        auto res = std::find(this->_data.begin(), this->_data.end(), item);
-        if (res != this->_data.end()) {
+        auto res = std::find(this->_data.cbegin(), this->_data.cend(), item);
+        if (res != this->_data.cend()) {
             _selected = &(*res);
         } else {
             _selected = nullptr;
@@ -84,7 +84,7 @@ namespace psychic_ui {
 
     template<class T>
     void Tabs<T>::updateSelection() {
-        auto     pos = std::distance(this->_data.begin(), std::find(this->_data.begin(), this->_data.end(), *_selected));
+        auto     pos = std::distance(this->_data.cbegin(), std::find(this->_data.cbegin(), this->_data.cend(), *_selected));
         for (int i   = 0; i < _buttons.size(); ++i) {
             _buttons[i]->setSelected(i == pos);
         }

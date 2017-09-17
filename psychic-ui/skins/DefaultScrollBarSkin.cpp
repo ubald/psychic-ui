@@ -72,12 +72,12 @@ namespace psychic_ui {
                 ->set(left, 0.f)
                 ->set(right, 0.f)
                 ->set(top, 0)
-                ->set(bottom, NAN);
+                /*->set(bottom, NAN)*/;
         } else {
             _thumb
                 ->style()
                 ->set(left, 0)
-                ->set(right, NAN)
+                //->set(right, NAN)
                 ->set(top, 0.f)
                 ->set(bottom, 0.f);
         }

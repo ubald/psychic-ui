@@ -6,8 +6,9 @@
 namespace psychic_ui {
 
     std::unique_ptr<StyleSelector> StyleSelector::fromSelector(const std::string &selectorString) {
-        auto                           selectorItems = string_utils::split(selectorString, ' ');
-        std::unique_ptr<StyleSelector> selector      = nullptr;
+        auto selectorItems = string_utils::split(selectorString, ' ');
+
+        std::unique_ptr<StyleSelector> selector = nullptr;
 
         for (const auto &selectorItem: selectorItems) {
             if (selectorItem == ">" && selector) {
@@ -15,58 +16,86 @@ namespace psychic_ui {
                 continue;
             }
 
-            bool hasTag    = selectorItem[0] != '.';
-            auto parts     = string_utils::split(selectorItem, '.');
-            auto partCount = parts.size();
-
-            if (partCount == 0) {
-                // Probably multiple spaces instead of one
-                continue;
-            }
-
+            // Create the selector
             std::unique_ptr<StyleSelector> r = std::make_unique<StyleSelector>();
 
-            { // Find pseudos
-                auto pseudoParts = string_utils::split(parts.back(), ':', false);
-                if (pseudoParts.size() > 1) {
-                    for (auto p = pseudoParts.begin() + 1; p != pseudoParts.end(); ++p) {
-                        std::string pseudo = *p;
-                        if (pseudo == "focus") {
-                            r->_pseudo.insert(focus);
-                        } else if (pseudo == "hover") {
-                            r->_pseudo.insert(hover);
-                        } else if (pseudo == "active") {
-                            r->_pseudo.insert(active);
-                        } else if (pseudo == "disabled") {
-                            r->_pseudo.insert(disabled);
-                        } else if (pseudo == "empty") {
-                            r->_pseudo.insert(empty);
-                        } else if (pseudo == "firstchild") {
-                            r->_pseudo.insert(firstChild);
-                        } else if (pseudo == "lastchild") {
-                            r->_pseudo.insert(lastChild);
+            Token token{Token::Tag};
+            Token nextToken{};
+            bool  parsedAtLeastOneToken      = false;
+
+            std::size_t lastTokenPos = 0;
+
+            for (auto it = selectorItem.cbegin(); it < selectorItem.cend(); ++it) {
+                const char   c        = (*it);
+                unsigned int offset   = 0;
+                bool         newToken = false;
+
+                if (c == '#') {
+                    nextToken = Token::Id;
+                    newToken  = true;
+                } else if (c == '.') {
+                    nextToken = Token::Class;
+                    newToken  = true;
+                } else if (c == ':') {
+                    nextToken = Token::Pseudo;
+                    newToken  = true;
+                } else if (it == selectorItem.cend() - 1) {
+                    newToken = true;
+                    offset   = 1;
+                }
+
+                if (newToken) {
+                    std::size_t pos = static_cast<std::size_t >(std::distance(selectorItem.cbegin(), it)) + offset;
+                    if (pos - lastTokenPos != 0) {
+                        switch (token) {
+                            case Token::Tag:
+                                r->_tag = selectorItem.substr(lastTokenPos, pos - lastTokenPos);
+                                break;
+                            case Token::Id:
+                                r->_id             = selectorItem.substr(lastTokenPos, pos - lastTokenPos);
+                                break;
+                            case Token::Class:
+                                r->_classes.push_back(selectorItem.substr(lastTokenPos, pos - lastTokenPos));
+                                break;
+                            case Token::Pseudo:
+                                std::string pseudo = selectorItem.substr(lastTokenPos, pos - lastTokenPos);
+                                if (pseudo == "focus") {
+                                    r->_pseudo.insert(focus);
+                                } else if (pseudo == "hover") {
+                                    r->_pseudo.insert(hover);
+                                } else if (pseudo == "active") {
+                                    r->_pseudo.insert(active);
+                                } else if (pseudo == "disabled") {
+                                    r->_pseudo.insert(disabled);
+                                } else if (pseudo == "empty") {
+                                    r->_pseudo.insert(empty);
+                                } else if (pseudo == "firstchild" || pseudo == "first-child") {
+                                    r->_pseudo.insert(firstChild);
+                                } else if (pseudo == "lastchild" || pseudo == "last-child") {
+                                    r->_pseudo.insert(lastChild);
+                                }
+                                break;
                         }
+
+                        parsedAtLeastOneToken = true;
                     }
-                    parts.back() = pseudoParts.front();
+
+                    lastTokenPos = pos + 1;
+                    token        = nextToken;
                 }
             }
 
-            // Might be empty but we don't care
-            // It also can just hold garbage if the styleName is not properly formatted
-            // but we don't care about it for now
-            if (hasTag) {
-                r->_tag = parts[0];
+            if (!parsedAtLeastOneToken) {
+                continue;
             }
-
-            // Get classes
-            r->_classes = std::vector<std::string>(hasTag ? parts.begin() + 1 : parts.begin(), parts.end());
-
 
             if (selector) {
                 r->_next = std::move(selector);
             }
+
             selector = std::move(r);
         }
+
         return selector;
     }
 
@@ -79,22 +108,27 @@ namespace psychic_ui {
     bool StyleSelector::matches(const Div *component, bool expand) const {
         const Div *parent = component->parent();
 
+        // Match id
+        if ((!_id.empty() && component->id() != _id) && (component->internalId() != _id)) {
+            return parentMatches;
+        }
+
         // Match tag
         if (!_tag.empty()
-            && std::find(component->tags().begin(), component->tags().end(), _tag) == component->tags().end()) {
+            && std::find(component->tags().cbegin(), component->tags().cend(), _tag) == component->tags().cend()) {
             return parentMatches;
         }
 
         // Match classes
         if (!std::all_of(
-            _classes.begin(),
-            _classes.end(),
+            _classes.cbegin(),
+            _classes.cend(),
             [&component](const auto &className) {
                 return std::find(
-                    component->classNames().begin(),
-                    component->classNames().end(),
+                    component->classNames().cbegin(),
+                    component->classNames().cend(),
                     className
-                ) != component->classNames().end();
+                ) != component->classNames().cend();
             }
         )) {
             return parentMatches;
@@ -102,8 +136,8 @@ namespace psychic_ui {
 
         // Match pseudo
         if (!std::all_of(
-            _pseudo.begin(),
-            _pseudo.end(),
+            _pseudo.cbegin(),
+            _pseudo.cend(),
             [&component](const auto &pseudo) {
                 switch (pseudo) {
                     case hover:
@@ -117,10 +151,13 @@ namespace psychic_ui {
                     case empty:
                         return component->childCount() == 0;
                     case firstChild:
-                        return component->parent() && component->parent()->childIndex(component) == 0;
-                    case lastChild:
+                        // NOTE: Children are stored in reverse order
                         return component->parent()
                                && component->parent()->childIndex(component) == component->parent()->childCount() - 1;
+                        return component->parent() && component->parent()->childIndex(component) == 0;
+                    case lastChild:
+                        // NOTE: Children are stored in reverse order
+                        return component->parent() && component->parent()->childIndex(component) == 0;
                 }
                 return false; // Just to remove the warning...
             }
@@ -147,6 +184,10 @@ namespace psychic_ui {
         return _tag;
     }
 
+    const std::string StyleSelector::id() const {
+        return _id;
+    }
+
     const std::vector<std::string> StyleSelector::classes() const {
         return _classes;
     }
@@ -160,7 +201,8 @@ namespace psychic_ui {
     }
 
     const int StyleSelector::weight() const {
-        int w = _tag.empty() ? 0 : 10;
+        int w = _id.empty() ? 0 : 15; // ??? Is 15 too much?
+        w += _tag.empty() ? 0 : 10;
         w += (int) _classes.size() * 10;
         for (const auto &pseudo: _pseudo) {
             switch (pseudo) {

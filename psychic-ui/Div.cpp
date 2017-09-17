@@ -21,8 +21,11 @@ namespace psychic_ui {
     bool Div::debugLayout{false};
     #endif
 
+    int Div::idCounter = 0;
+
     Div::Div() :
         Observer(),
+        _internalId(std::to_string(idCounter++)),
         _defaultStyle(std::make_unique<Style>([this]() { invalidateStyle(); })),
         _inlineStyle(std::make_unique<Style>([this]() { invalidateStyle(); })),
         _computedStyle(std::make_unique<Style>()),
@@ -122,10 +125,6 @@ namespace psychic_ui {
 
     void Div::removedFromRender() {}
 
-    std::shared_ptr<Panel> Div::panel() {
-        return _parent ? _parent->panel() : nullptr;
-    }
-
     // endregion
 
     // region Children
@@ -143,7 +142,7 @@ namespace psychic_ui {
         assert(index >= 0 && index <= childCount());
         child->setParent(this);
         // Insert in "reverse" so that we can iterate front-to-back without using a reverse_iterator
-        _children.insert(_children.end() - index, child);
+        _children.insert(_children.cend() - index, child);
         YGNodeInsertChild(_yogaNode, child->_yogaNode, index);
         return child;
     }
@@ -163,7 +162,7 @@ namespace psychic_ui {
     void Div::remove(unsigned int index) {
         assert(index <= childCount());
         std::shared_ptr<Div> child = _children[index];
-        _children.erase(_children.end() - index);
+        _children.erase(_children.cend() - index);
         YGNodeRemoveChild(_yogaNode, child->_yogaNode);
         child->setParent(nullptr);
     }
@@ -179,8 +178,8 @@ namespace psychic_ui {
     int Div::childIndex(const std::shared_ptr<Div> component) const {
         assert(component != nullptr);
         auto index = std::distance(
-            _children.begin(),
-            std::find(_children.begin(), _children.end(), component)
+            _children.cbegin(),
+            std::find(_children.cbegin(), _children.cend(), component)
         );
         return (index >= _children.size()) ? -1 : (int) index;
     }
@@ -188,10 +187,10 @@ namespace psychic_ui {
     int Div::childIndex(const Div *component) const {
         assert(component != nullptr);
         auto index = std::distance(
-            _children.begin(),
+            _children.cbegin(),
             std::find_if(
-                _children.begin(),
-                _children.end(),
+                _children.cbegin(),
+                _children.cend(),
                 [component](const auto &child) {
                     return child.get() == component;
                 }
@@ -470,7 +469,7 @@ namespace psychic_ui {
         } else if (_parent) {
             return _parent->styleManager();
         } else {
-            return StyleManager::getInstance().get();
+            return nullptr;//StyleManager::getInstance().get();
         }
     }
 
@@ -498,11 +497,16 @@ namespace psychic_ui {
         return _tags;
     }
 
+    const std::string Div::internalId() const {
+        return _internalId;
+    }
+
     const std::string Div::id() const {
         return _id;
     }
 
     Div *Div::setId(std::string id) {
+        std::transform(id.begin(), id.end(), id.begin(), ::tolower);
         if (id != _id) {
             _id = id;
             invalidateStyle();
@@ -515,12 +519,22 @@ namespace psychic_ui {
     }
 
     Div *Div::setClassNames(std::unordered_set<std::string> classNames) {
+        std::unordered_set<std::string> lcClassNames;
+        std::transform(
+            classNames.begin(), classNames.end(), std::inserter(lcClassNames, std::end(lcClassNames)),
+            [](auto className) {
+                std::string c = className;
+                std::transform(c.begin(), c.end(), c.begin(), ::tolower);
+                return c;
+            }
+        );
         _classNames = std::move(classNames);
         invalidateStyle();
         return this;
     }
 
-    Div *Div::addClassName(const std::string className) {
+    Div *Div::addClassName(std::string className) {
+        std::transform(className.begin(), className.end(), className.begin(), ::tolower);
         auto res = _classNames.insert(className);
         if (res.second) {
             invalidateStyle();
@@ -528,7 +542,8 @@ namespace psychic_ui {
         return this;
     }
 
-    Div *Div::removeClassName(const std::string className) {
+    Div *Div::removeClassName(std::string className) {
+        std::transform(className.begin(), className.end(), className.begin(), ::tolower);
         auto res = _classNames.erase(className);
         if (res) {
             invalidateStyle();
@@ -553,10 +568,12 @@ namespace psychic_ui {
     }
 
     void Div::updateStyle() {
-        _computedStyle = styleManager()->computeStyle(this);
-        updateLayout();
-        _styleDirty = false;
-        styleUpdated();
+        if (auto sm = styleManager()) {
+            _computedStyle = sm->computeStyle(this);
+            updateLayout();
+            _styleDirty = false;
+            styleUpdated();
+        }
     }
 
     void Div::updateStyleRecursive() {
@@ -672,7 +689,6 @@ namespace psychic_ui {
 
     void Div::updateLayout() {
         // region Flex
-
         YGNodeStyleSetFlexDirection(
             _yogaNode,
             YogaDirectionFromString(_computedStyle->get(direction), YGFlexDirectionColumn)
@@ -706,131 +722,245 @@ namespace psychic_ui {
             YogaOverflowFromString(_computedStyle->get(overflow), YGOverflowVisible)
         );
 
-//        YGNodeStyleSetFlex(_yogaNode, _computedStyle->get(flex, YGNodeStyleGetFlex(_yogaNode)));
-        YGNodeStyleSetFlex(_yogaNode, _computedStyle->get(flex));
-//        YGNodeStyleSetFlexFlexAuto(_yogaNode, _computedStyle->get(flex));
-//        YGNodeStyleSetFlexFlexPercent(_yogaNode, _computedStyle->get(flex));
+        if (_computedStyle->has(flex) || !isnan(YGNodeStyleGetFlex(_yogaNode))) {
+            YGNodeStyleSetFlex(_yogaNode, _computedStyle->get(flex));
+        }
 
-//        YGNodeStyleSetFlexGrow(_yogaNode, _computedStyle->get(grow, YGNodeStyleGetFlexGrow(_yogaNode)));
-        YGNodeStyleSetFlexGrow(_yogaNode, _computedStyle->get(grow));
-//        YGNodeStyleSetFlexGrowAuto(_yogaNode, _computedStyle->get(grow));
-//        YGNodeStyleSetFlexGrowPercent(_yogaNode, _computedStyle->get(grow));
+        if (_computedStyle->has(grow) || !isnan(YGNodeStyleGetFlexGrow(_yogaNode))) {
+            YGNodeStyleSetFlexGrow(_yogaNode, _computedStyle->get(grow, 0));
+        }
 
-//        YGNodeStyleSetFlexShrink(_yogaNode, _computedStyle->get(shrink, YGNodeStyleGetFlexShrink(_yogaNode)));
-        YGNodeStyleSetFlexShrink(_yogaNode, _computedStyle->get(shrink));
-//        YGNodeStyleSetFlexShrinkAuto(_yogaNode, _computedStyle->get(shrink));
-//        YGNodeStyleSetFlexShrinkPercent(_yogaNode, _computedStyle->get(shrink));
+        if (_computedStyle->has(shrink) || !isnan(YGNodeStyleGetFlexShrink(_yogaNode))) {
+            YGNodeStyleSetFlexShrink(_yogaNode, _computedStyle->get(shrink, 0));
+        }
 
-//        YGNodeStyleSetFlexBasis(_yogaNode, _computedStyle->get(basis, YGNodeStyleGetFlexBasis(_yogaNode).value));
-        YGNodeStyleSetFlexBasis(_yogaNode, _computedStyle->get(basis));
-//        YGNodeStyleSetFlexBasisAuto(_yogaNode, _computedStyle->get(basis));
-//        YGNodeStyleSetFlexBasisPercent(_yogaNode, _computedStyle->get(basis));
+        if (_computedStyle->has(basis)) {
+            YGNodeStyleSetFlexBasis(_yogaNode, _computedStyle->get(basis));
+        } else {
+            YGNodeStyleSetFlexBasisAuto(_yogaNode);
+        }
         // endregion
         // region Position
         if (_computedStyle->has(left)) {
-            YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, _computedStyle->get(left, YGUndefined));
-        } else {
-            YGNodeStyleSetPosition(
-                _yogaNode,
-                YGEdgeLeft,
-                YogaPercent(_computedStyle->get(leftPercent, YGUndefined)));
+            YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, _computedStyle->get(left));
+        } else if (_computedStyle->has(leftPercent)) {
+            YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, YogaPercent(_computedStyle->get(leftPercent)));
+        } else if (YGNodeStyleGetPosition(_yogaNode, YGEdgeLeft).unit != YGUnitUndefined) {
+            YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, YGUndefined);
         }
-        if (_computedStyle->has(right)) {
-            YGNodeStyleSetPosition(_yogaNode, YGEdgeRight, _computedStyle->get(right, YGUndefined));
-        } else {
-            YGNodeStyleSetPosition(
-                _yogaNode,
-                YGEdgeRight,
-                YogaPercent(_computedStyle->get(rightPercent, YGUndefined)));
-        }
+
         if (_computedStyle->has(top)) {
-            YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, _computedStyle->get(top, YGUndefined));
-        } else {
-            YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, YogaPercent(_computedStyle->get(topPercent, YGUndefined)));
+            YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, _computedStyle->get(top));
+        } else if (_computedStyle->has(topPercent)) {
+            YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, YogaPercent(_computedStyle->get(topPercent)));
+        } else if (YGNodeStyleGetPosition(_yogaNode, YGEdgeTop).unit != YGUnitUndefined) {
+            YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, YGUndefined);
         }
+
+        if (_computedStyle->has(right)) {
+            std::cout << _computedStyle->get(right) << " " << YGNodeStyleGetPosition(_yogaNode, YGEdgeRight).unit << YGNodeStyleGetPosition(_yogaNode, YGEdgeRight).value << std::endl;
+            YGNodeStyleSetPosition(_yogaNode, YGEdgeRight, _computedStyle->get(right));
+        } else if (_computedStyle->has(rightPercent)) {
+            YGNodeStyleSetPosition(_yogaNode, YGEdgeRight, YogaPercent(_computedStyle->get(rightPercent)));
+        } else if (YGNodeStyleGetPosition(_yogaNode, YGEdgeRight).unit != YGUnitUndefined) {
+            YGNodeStyleSetPosition(_yogaNode, YGEdgeRight, YGUndefined);
+        }
+
         if (_computedStyle->has(bottom)) {
-            YGNodeStyleSetPosition(_yogaNode, YGEdgeBottom, _computedStyle->get(bottom, YGUndefined));
-        } else {
-            YGNodeStyleSetPosition(
-                _yogaNode,
-                YGEdgeBottom,
-                YogaPercent(_computedStyle->get(bottomPercent, YGUndefined)));
+            YGNodeStyleSetPosition(_yogaNode, YGEdgeBottom, _computedStyle->get(bottom));
+        } else if (_computedStyle->has(bottomPercent)) {
+            YGNodeStyleSetPosition(_yogaNode, YGEdgeBottom, YogaPercent(_computedStyle->get(bottomPercent)));
+        } else if (YGNodeStyleGetPosition(_yogaNode, YGEdgeBottom).unit != YGUnitUndefined) {
+            YGNodeStyleSetPosition(_yogaNode, YGEdgeBottom, YGUndefined);
         }
+
+
         // endregion
         // region  Dimensions
         if (_computedStyle->has(width)) {
-            YGNodeStyleSetWidth(_yogaNode, _computedStyle->get(width, YGUndefined));
-        } else {
-            YGNodeStyleSetWidthPercent(_yogaNode, YogaPercent(_computedStyle->get(widthPercent, YGUndefined)));
+            YGNodeStyleSetWidth(_yogaNode, _computedStyle->get(width));
+        } else if (_computedStyle->has(widthPercent)) {
+            YGNodeStyleSetWidthPercent(_yogaNode, YogaPercent(_computedStyle->get(widthPercent)));
+        } else if (YGNodeStyleGetWidth(_yogaNode).unit != YGUnitAuto) {
+            YGNodeStyleSetWidthAuto(_yogaNode);
         }
+
         if (_computedStyle->has(minWidth)) {
-            YGNodeStyleSetMinWidth(_yogaNode, _computedStyle->get(minWidth, YGUndefined));
-        } else {
-            YGNodeStyleSetMinWidthPercent(
-                _yogaNode,
-                YogaPercent(_computedStyle->get(minWidthPercent, YGUndefined)));
+            YGNodeStyleSetMinWidth(_yogaNode, _computedStyle->get(minWidth));
+        } else if (_computedStyle->has(minWidthPercent)) {
+            YGNodeStyleSetMinWidthPercent(_yogaNode, YogaPercent(_computedStyle->get(minWidthPercent)));
+        } else if (YGNodeStyleGetMinWidth(_yogaNode).unit != YGUnitAuto) {
+            YGNodeStyleSetMinWidth(_yogaNode, YGUndefined);
         }
+
         if (_computedStyle->has(maxWidth)) {
-            YGNodeStyleSetMaxWidth(_yogaNode, _computedStyle->get(maxWidth, YGUndefined));
-        } else {
-            YGNodeStyleSetMaxWidthPercent(
-                _yogaNode,
-                YogaPercent(_computedStyle->get(maxWidthPercent, YGUndefined)));
+            YGNodeStyleSetMaxWidth(_yogaNode, _computedStyle->get(maxWidth));
+        } else if (_computedStyle->has(maxWidthPercent)) {
+            YGNodeStyleSetMaxWidthPercent(_yogaNode, YogaPercent(_computedStyle->get(maxWidthPercent)));
+        } else if (YGNodeStyleGetMaxWidth(_yogaNode).unit != YGUnitAuto) {
+            YGNodeStyleSetMaxWidth(_yogaNode, YGUndefined);
         }
 
         if (_computedStyle->has(height)) {
-            YGNodeStyleSetHeight(_yogaNode, _computedStyle->get(height, YGUndefined));
-        } else {
-            YGNodeStyleSetHeightPercent(_yogaNode, YogaPercent(_computedStyle->get(heightPercent, YGUndefined)));
+            YGNodeStyleSetHeight(_yogaNode, _computedStyle->get(height));
+        } else if (_computedStyle->has(heightPercent)) {
+            YGNodeStyleSetHeightPercent(_yogaNode, YogaPercent(_computedStyle->get(heightPercent)));
+        } else if (YGNodeStyleGetHeight(_yogaNode).unit != YGUnitAuto) {
+            YGNodeStyleSetHeightAuto(_yogaNode);
         }
+
         if (_computedStyle->has(minHeight)) {
-            YGNodeStyleSetMinHeight(_yogaNode, _computedStyle->get(minHeight, YGUndefined));
-        } else {
-            YGNodeStyleSetMinHeightPercent(
-                _yogaNode,
-                YogaPercent(_computedStyle->get(minHeightPercent, YGUndefined)));
+            YGNodeStyleSetMinHeight(_yogaNode, _computedStyle->get(minHeight));
+        } else if (_computedStyle->has(minHeightPercent)) {
+            YGNodeStyleSetMinHeightPercent(_yogaNode, YogaPercent(_computedStyle->get(minHeightPercent)));
+        } else if (YGNodeStyleGetMinHeight(_yogaNode).unit != YGUnitAuto) {
+            std::cout << YGNodeStyleGetMinHeight(_yogaNode).unit << std::endl;
+            YGNodeStyleSetMinHeight(_yogaNode, YGUndefined);
         }
+
         if (_computedStyle->has(maxHeight)) {
-            YGNodeStyleSetMaxHeight(_yogaNode, _computedStyle->get(maxHeight, YGUndefined));
-        } else {
-            YGNodeStyleSetMaxHeightPercent(
-                _yogaNode,
-                YogaPercent(_computedStyle->get(maxHeightPercent, YGUndefined)));
+            YGNodeStyleSetMaxHeight(_yogaNode, _computedStyle->get(maxHeight));
+        } else if (_computedStyle->has(maxHeightPercent)) {
+            YGNodeStyleSetMaxHeightPercent(_yogaNode, YogaPercent(_computedStyle->get(maxHeightPercent)));
+        } else if (YGNodeStyleGetMaxHeight(_yogaNode).unit != YGUnitAuto) {
+            YGNodeStyleSetMaxHeight(_yogaNode, YGUndefined);
         }
         // TODO AspectRatio
         // endregion
         // region Margins
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeAll, _computedStyle->get(margin, YGUndefined));
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeHorizontal, _computedStyle->get(marginHorizontal, YGUndefined));
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeVertical, _computedStyle->get(marginVertical, YGUndefined));
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeLeft, _computedStyle->get(marginLeft, YGUndefined));
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeRight, _computedStyle->get(marginRight, YGUndefined));
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeTop, _computedStyle->get(marginTop, YGUndefined));
-        YGNodeStyleSetMargin(_yogaNode, YGEdgeBottom, _computedStyle->get(marginBottom, YGUndefined));
+        if (_computedStyle->has(margin)) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeAll, _computedStyle->get(margin));
+        } else if (YGNodeStyleGetMargin(_yogaNode, YGEdgeAll).unit != YGUnitUndefined) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeAll, YGUnitUndefined);
+        }
+
+        if (_computedStyle->has(marginHorizontal)) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeHorizontal, _computedStyle->get(marginHorizontal));
+        } else if (YGNodeStyleGetMargin(_yogaNode, YGEdgeHorizontal).unit != YGUnitUndefined) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeHorizontal, YGUnitUndefined);
+        }
+
+        if (_computedStyle->has(marginVertical)) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeVertical, _computedStyle->get(marginVertical));
+        } else if (YGNodeStyleGetMargin(_yogaNode, YGEdgeVertical).unit != YGUnitUndefined) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeVertical, YGUnitUndefined);
+        }
+
+        if (_computedStyle->has(marginLeft)) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeLeft, _computedStyle->get(marginLeft));
+        } else if (YGNodeStyleGetMargin(_yogaNode, YGEdgeLeft).unit != YGUnitUndefined) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeLeft, YGUnitUndefined);
+        }
+
+        if (_computedStyle->has(marginTop)) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeTop, _computedStyle->get(marginTop));
+        } else if (YGNodeStyleGetMargin(_yogaNode, YGEdgeTop).unit != YGUnitUndefined) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeTop, YGUnitUndefined);
+        }
+
+        if (_computedStyle->has(marginRight)) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeRight, _computedStyle->get(marginRight));
+        } else if (YGNodeStyleGetMargin(_yogaNode, YGEdgeRight).unit != YGUnitUndefined) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeRight, YGUnitUndefined);
+        }
+
+        if (_computedStyle->has(marginBottom)) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeBottom, _computedStyle->get(marginBottom));
+        } else if (YGNodeStyleGetMargin(_yogaNode, YGEdgeBottom).unit != YGUnitUndefined) {
+            YGNodeStyleSetMargin(_yogaNode, YGEdgeBottom, YGUnitUndefined);
+        }
         // TODO: Auto
         // TODO: Percent
         // endregion
         // region Padding
         if (!_ignoreInternalLayoutContraints) {
-            YGNodeStyleSetPadding(_yogaNode, YGEdgeAll, _computedStyle->get(padding, YGUndefined));
-            YGNodeStyleSetPadding(_yogaNode, YGEdgeHorizontal, _computedStyle->get(paddingHorizontal, YGUndefined));
-            YGNodeStyleSetPadding(_yogaNode, YGEdgeVertical, _computedStyle->get(paddingVertical, YGUndefined));
-            YGNodeStyleSetPadding(_yogaNode, YGEdgeLeft, _computedStyle->get(paddingLeft, YGUndefined));
-            YGNodeStyleSetPadding(_yogaNode, YGEdgeRight, _computedStyle->get(paddingRight, YGUndefined));
-            YGNodeStyleSetPadding(_yogaNode, YGEdgeTop, _computedStyle->get(paddingTop, YGUndefined));
-            YGNodeStyleSetPadding(_yogaNode, YGEdgeBottom, _computedStyle->get(paddingBottom, YGUndefined));
+            if (_computedStyle->has(padding)) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeAll, _computedStyle->get(padding));
+            } else if (YGNodeStyleGetPadding(_yogaNode, YGEdgeAll).unit != YGUnitUndefined) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeAll, YGUnitUndefined);
+            }
+
+            if (_computedStyle->has(paddingHorizontal)) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeHorizontal, _computedStyle->get(paddingHorizontal));
+            } else if (YGNodeStyleGetPadding(_yogaNode, YGEdgeHorizontal).unit != YGUnitUndefined) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeHorizontal, YGUnitUndefined);
+            }
+
+            if (_computedStyle->has(paddingVertical)) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeVertical, _computedStyle->get(paddingVertical));
+            } else if (YGNodeStyleGetPadding(_yogaNode, YGEdgeVertical).unit != YGUnitUndefined) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeVertical, YGUnitUndefined);
+            }
+
+            if (_computedStyle->has(paddingLeft)) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeLeft, _computedStyle->get(paddingLeft));
+            } else if (YGNodeStyleGetPadding(_yogaNode, YGEdgeLeft).unit != YGUnitUndefined) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeLeft, YGUnitUndefined);
+            }
+
+            if (_computedStyle->has(paddingTop)) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeTop, _computedStyle->get(paddingTop));
+            } else if (YGNodeStyleGetPadding(_yogaNode, YGEdgeTop).unit != YGUnitUndefined) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeTop, YGUnitUndefined);
+            }
+
+            if (_computedStyle->has(paddingRight)) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeRight, _computedStyle->get(paddingRight));
+            } else if (YGNodeStyleGetPadding(_yogaNode, YGEdgeRight).unit != YGUnitUndefined) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeRight, YGUnitUndefined);
+            }
+
+            if (_computedStyle->has(paddingBottom)) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeBottom, _computedStyle->get(paddingBottom));
+            } else if (YGNodeStyleGetPadding(_yogaNode, YGEdgeBottom).unit != YGUnitUndefined) {
+                YGNodeStyleSetPadding(_yogaNode, YGEdgeBottom, YGUnitUndefined);
+            }
         }
         // TODO: Percent
         // endregion
         // region Border
         if (!_ignoreInternalLayoutContraints) {
-            YGNodeStyleSetBorder(_yogaNode, YGEdgeAll, _computedStyle->get(border, YGUndefined));
-            YGNodeStyleSetBorder(_yogaNode, YGEdgeHorizontal, _computedStyle->get(borderHorizontal, YGUndefined));
-            YGNodeStyleSetBorder(_yogaNode, YGEdgeVertical, _computedStyle->get(borderVertical, YGUndefined));
-            YGNodeStyleSetBorder(_yogaNode, YGEdgeLeft, _computedStyle->get(borderLeft, YGUndefined));
-            YGNodeStyleSetBorder(_yogaNode, YGEdgeRight, _computedStyle->get(borderRight, YGUndefined));
-            YGNodeStyleSetBorder(_yogaNode, YGEdgeTop, _computedStyle->get(borderTop, YGUndefined));
-            YGNodeStyleSetBorder(_yogaNode, YGEdgeBottom, _computedStyle->get(borderBottom, YGUndefined));
+            if (_computedStyle->has(border)) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeAll, _computedStyle->get(border));
+            } else if (!isnan(YGNodeStyleGetBorder(_yogaNode, YGEdgeAll))) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeAll, YGUnitUndefined);
+            }
+
+            if (_computedStyle->has(borderHorizontal)) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeHorizontal, _computedStyle->get(borderHorizontal));
+            } else if (!isnan(YGNodeStyleGetBorder(_yogaNode, YGEdgeHorizontal))) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeHorizontal, YGUnitUndefined);
+            }
+
+            if (_computedStyle->has(borderVertical)) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeVertical, _computedStyle->get(borderVertical));
+            } else if (!isnan(YGNodeStyleGetBorder(_yogaNode, YGEdgeVertical))) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeVertical, YGUnitUndefined);
+            }
+
+            if (_computedStyle->has(borderLeft)) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeLeft, _computedStyle->get(borderLeft));
+            } else if (!isnan(YGNodeStyleGetBorder(_yogaNode, YGEdgeLeft))) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeLeft, YGUnitUndefined);
+            }
+
+            if (_computedStyle->has(borderTop)) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeTop, _computedStyle->get(borderTop));
+            } else if (!isnan(YGNodeStyleGetBorder(_yogaNode, YGEdgeTop))) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeTop, YGUnitUndefined);
+            }
+
+            if (_computedStyle->has(borderRight)) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeRight, _computedStyle->get(borderRight));
+            } else if (!isnan(YGNodeStyleGetBorder(_yogaNode, YGEdgeRight))) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeRight, YGUnitUndefined);
+            }
+
+            if (_computedStyle->has(borderBottom)) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeBottom, _computedStyle->get(borderBottom));
+            } else if (!isnan(YGNodeStyleGetBorder(_yogaNode, YGEdgeBottom))) {
+                YGNodeStyleSetBorder(_yogaNode, YGEdgeBottom, YGUnitUndefined);
+            }
         }
         // endregion
     }
@@ -889,8 +1019,8 @@ namespace psychic_ui {
         for (auto &child: _children) {
             child->layoutUpdated();
 
-            _boundsLeft   = std::fmin(_boundsLeft, _x + child->boundsLeft());
-            _boundsTop    = std::fmin(_boundsTop, _y + child->boundsTop());
+            _boundsLeft   = std::min(_boundsLeft, _x + child->boundsLeft());
+            _boundsTop    = std::min(_boundsTop, _y + child->boundsTop());
             _boundsRight  = std::max(_boundsRight, _x + child->boundsRight());
             _boundsBottom = std::max(_boundsBottom, _y + child->boundsBottom());
         }
@@ -1437,7 +1567,7 @@ namespace psychic_ui {
     // region Scroll
 
     void Div::scroll(const double scrollX, const double scrollY) {
-        bool  scrolled = false;
+        bool scrolled = false;
 
         if (_width < _boundsRight - _boundsLeft) {
             int sx = std::fmin(

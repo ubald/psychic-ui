@@ -81,7 +81,7 @@ namespace psychic_ui {
 
     template<class... T>
     void Signal<T...>::unsubscribe(std::shared_ptr<Slot<T...>> slot) {
-        slots.erase(std::remove(slots.begin(), slots.end(), slot), slots.end());
+        slots.erase(std::remove(slots.cbegin(), slots.cend(), slot), slots.cend());
     }
 
     template<class... T>

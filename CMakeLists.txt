@@ -63,75 +63,79 @@ endif ()
 
 set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     ${YOGA_SOURCES}
-    psychic-ui/psychic-ui.cpp
-    psychic-ui/Window.cpp
-    psychic-ui/Window.hpp
-    psychic-ui/Div.cpp
-    psychic-ui/Div.hpp
-    psychic-ui/style/Style.cpp
-    psychic-ui/style/Style.hpp
     psychic-ui/components/Button.cpp
     psychic-ui/components/Button.hpp
+    psychic-ui/components/CheckBox.cpp
+    psychic-ui/components/CheckBox.hpp
+    psychic-ui/components/DataContainer.cpp
+    psychic-ui/components/DataContainer.hpp
     psychic-ui/components/Label.cpp
     psychic-ui/components/Label.hpp
-    psychic-ui/style/StyleManager.cpp
-    psychic-ui/style/StyleManager.hpp
-    psychic-ui/utils/StringUtils.hpp
+    psychic-ui/components/Menu.cpp
+    psychic-ui/components/Menu.hpp
+    psychic-ui/components/MenuBar.cpp
+    psychic-ui/components/MenuBar.hpp
+    psychic-ui/components/MenuButton.cpp
+    psychic-ui/components/MenuButton.hpp
+    psychic-ui/components/Range.cpp
+    psychic-ui/components/Range.hpp
+    psychic-ui/components/ScrollBar.cpp
+    psychic-ui/components/ScrollBar.hpp
+    psychic-ui/components/Scroller.cpp
+    psychic-ui/components/Scroller.hpp
+    psychic-ui/components/Spacer.cpp
+    psychic-ui/components/Spacer.hpp
+    psychic-ui/components/TabContainer.cpp
+    psychic-ui/components/TabContainer.hpp
+    psychic-ui/components/Tabs.cpp
+    psychic-ui/components/Tabs.hpp
+    psychic-ui/components/TitleBar.cpp
+    psychic-ui/components/TitleBar.hpp
+    psychic-ui/signals/Observer.hpp
+    psychic-ui/signals/Signal.hpp
+    psychic-ui/signals/Slot.hpp
+    psychic-ui/skins/DefaultButtonSkin.cpp
+    psychic-ui/skins/DefaultButtonSkin.hpp
+    psychic-ui/skins/DefaultCheckBoxSkin.cpp
+    psychic-ui/skins/DefaultCheckBoxSkin.hpp
+    psychic-ui/skins/DefaultMenuButtonSkin.cpp
+    psychic-ui/skins/DefaultMenuButtonSkin.hpp
+    psychic-ui/skins/DefaultScrollBarSkin.cpp
+    psychic-ui/skins/DefaultScrollBarSkin.hpp
+    psychic-ui/skins/SliderRangeSkin.cpp
+    psychic-ui/skins/SliderRangeSkin.hpp
+    psychic-ui/skins/TitleBarButtonSkin.cpp
+    psychic-ui/skins/TitleBarButtonSkin.hpp
+    psychic-ui/style/Style.cpp
+    psychic-ui/style/Style.hpp
     psychic-ui/style/StyleDeclaration.cpp
     psychic-ui/style/StyleDeclaration.hpp
+    psychic-ui/style/StyleManager.cpp
+    psychic-ui/style/StyleManager.hpp
     psychic-ui/style/StyleSelector.cpp
     psychic-ui/style/StyleSelector.hpp
     psychic-ui/style/StyleSheet.cpp
     psychic-ui/style/StyleSheet.hpp
     psychic-ui/utils/ColorUtils.hpp
-    psychic-ui/utils/YogaUtils.hpp
-    psychic-ui/components/Spacer.cpp
-    psychic-ui/components/Spacer.hpp
-    psychic-ui/components/DataContainer.cpp
-    psychic-ui/components/DataContainer.hpp
-    psychic-ui/components/Tabs.cpp
-    psychic-ui/components/Tabs.hpp
-    psychic-ui/components/TabContainer.cpp
-    psychic-ui/components/TabContainer.hpp
-    psychic-ui/components/Range.cpp
-    psychic-ui/components/Range.hpp
-    psychic-ui/Skin.cpp
-    psychic-ui/Skin.hpp
-    psychic-ui/skins/SliderRangeSkin.cpp
-    psychic-ui/skins/SliderRangeSkin.hpp
-    psychic-ui/Component.hpp
-    psychic-ui/skins/DefaultButtonSkin.cpp
-    psychic-ui/skins/DefaultButtonSkin.hpp
     psychic-ui/utils/Hatcher.hpp
-    psychic-ui/components/TitleBar.cpp
-    psychic-ui/components/TitleBar.hpp
-    psychic-ui/skins/TitleBarButtonSkin.cpp
-    psychic-ui/skins/TitleBarButtonSkin.hpp
-    psychic-ui/components/MenuBar.cpp
-    psychic-ui/components/MenuBar.hpp
-    psychic-ui/components/Menu.cpp
-    psychic-ui/components/Menu.hpp
-    psychic-ui/signals/Signal.hpp
-    psychic-ui/signals/Slot.hpp
-    psychic-ui/signals/Observer.hpp
-    psychic-ui/skins/DefaultMenuButtonSkin.cpp
-    psychic-ui/skins/DefaultMenuButtonSkin.hpp
-    psychic-ui/components/MenuButton.cpp
-    psychic-ui/components/MenuButton.hpp
-    psychic-ui/Shape.cpp
-    psychic-ui/Shape.hpp
-    psychic-ui/skins/DefaultCheckBoxSkin.cpp
-    psychic-ui/skins/DefaultCheckBoxSkin.hpp
-    psychic-ui/components/CheckBox.cpp
-    psychic-ui/components/CheckBox.hpp
+    psychic-ui/utils/StringUtils.hpp
+    psychic-ui/utils/YogaUtils.hpp
+    psychic-ui/Component.hpp
+    psychic-ui/Div.cpp
+    psychic-ui/Div.hpp
     psychic-ui/Modal.cpp
     psychic-ui/Modal.hpp
-    psychic-ui/components/Scroller.cpp
-    psychic-ui/components/Scroller.hpp
-    psychic-ui/components/ScrollBar.cpp
-    psychic-ui/components/ScrollBar.hpp
-    psychic-ui/skins/DefaultScrollBarSkin.cpp
-    psychic-ui/skins/DefaultScrollBarSkin.hpp)
+    psychic-ui/opengl.hpp
+    psychic-ui/psychic-ui.cpp
+    psychic-ui/Shape.cpp
+    psychic-ui/Shape.hpp
+    psychic-ui/Skin.cpp
+    psychic-ui/Skin.hpp
+    psychic-ui/Window.cpp
+    psychic-ui/Window.hpp
+    psychic-ui/components/Box.cpp
+    psychic-ui/components/Box.hpp
+    )
 
 add_library(psychic-ui SHARED ${SOURCE_FILES})
 

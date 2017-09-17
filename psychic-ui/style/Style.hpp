@@ -15,7 +15,7 @@
 public:                                                                                                                \
 type get(values property) const {                                                                                      \
     auto search = _##name##Values.find(property);                                                                      \
-    if (search != _##name##Values.end()) {                                                                             \
+    if (search != _##name##Values.cend()) {                                                                             \
         return search->second;                                                                                         \
     } else {                                                                                                           \
         return defaultValue;                                                                                           \
@@ -23,7 +23,7 @@ type get(values property) const {                                               
 }                                                                                                                      \
 type get(values property, type fallback) const {                                                                       \
     auto search = _##name##Values.find(property);                                                                      \
-    if (search != _##name##Values.end()) {                                                                             \
+    if (search != _##name##Values.cend()) {                                                                             \
         return search->second;                                                                                         \
     } else {                                                                                                           \
         return fallback;                                                                                               \
@@ -31,7 +31,7 @@ type get(values property, type fallback) const {                                
 }                                                                                                                      \
 Style * set(values property, type value) {                                                                             \
     auto search = _##name##Values.find(property);                                                                      \
-    if (search == _##name##Values.end() || search->second != value) {                                                  \
+    if (search == _##name##Values.cend() || search->second != value) {                                                  \
         _##name##Values[property] = value;                                                                             \
         if (_onChanged) {                                                                                              \
             _onChanged();                                                                                              \
@@ -40,7 +40,7 @@ Style * set(values property, type value) {                                      
     return this;                                                                                                       \
 }                                                                                                                      \
 bool has(values property) {                                                                                            \
-    return _##name##Values.find(property) != _##name##Values.end();                                                    \
+    return _##name##Values.find(property) != _##name##Values.cend();                                                    \
 }                                                                                                                      \
 protected:                                                                                                             \
 std::unordered_map<values, type, std::hash<int>> _##name##Values{};                                                    \
@@ -61,6 +61,7 @@ namespace psychic_ui {
     };
 
     enum ColorProperty {
+        // Custom
         color,
         backgroundColor,
         borderColor,
@@ -73,33 +74,40 @@ namespace psychic_ui {
     };
 
     enum StringProperty {
-        skin,
+        // Yoga/Flex
         fontFamily, textAlign, textJustify,
         position,
         justifyContent, direction, alignContent, alignItems, alignSelf,
         wrap, overflow,
+        // Custom
+        skin,
         orientation // For sliders
     };
 
     enum FloatProperty {
-        opacity,
+        // Yoga/Flex
         flex, grow, shrink, basis,
-        fontSize, letterSpacing, lineHeight,
         left, leftPercent, right, rightPercent, top, topPercent, bottom, bottomPercent,
         width, widthPercent, minWidth, minWidthPercent, maxWidth, maxWidthPercent,
         height, heightPercent, minHeight, minHeightPercent, maxHeight, maxHeightPercent,
         margin, marginHorizontal, marginLeft, marginRight, marginVertical, marginTop, marginBottom,
         padding, paddingHorizontal, paddingLeft, paddingRight, paddingVertical, paddingTop, paddingBottom,
         border, borderHorizontal, borderLeft, borderRight, borderVertical, borderTop, borderBottom,
+        // Custom
+        opacity,
+        fontSize, letterSpacing, lineHeight,
         borderRadius, borderRadiusTop, borderRadiusBottom, borderRadiusLeft, borderRadiusRight,
-        borderRadiusTopLeft, borderRadiusTopRight, borderRadiusBottomLeft, borderRadiusBottomRight
+        borderRadiusTopLeft, borderRadiusTopRight, borderRadiusBottomLeft, borderRadiusBottomRight,
     };
 
     enum IntProperty {
-        cursor
+        // Custom
+        cursor,
+        gap
     };
 
     enum BoolProperty {
+        // Custom
         antiAlias,
         textAntiAlias,
         multiline,
@@ -179,7 +187,7 @@ namespace psychic_ui {
         template<class T>
         inline static void doInheritance(const T &from, T &onto, const std::vector<typename T::key_type> &inheritable) {
             for (auto const &kv : from) {
-                if (std::find(inheritable.begin(), inheritable.end(), kv.first) != inheritable.end()) {
+                if (std::find(inheritable.cbegin(), inheritable.cend(), kv.first) != inheritable.cend()) {
                     onto[kv.first] = kv.second;
                 }
             }
@@ -188,7 +196,7 @@ namespace psychic_ui {
         template<class T>
         inline static void doDefaults(const T &from, T &onto) {
             for (auto const &kv : from) {
-                if (onto.find(kv.first) == onto.end()) {
+                if (onto.find(kv.first) == onto.cend()) {
                     onto[kv.first] = kv.second;
                 }
             }
