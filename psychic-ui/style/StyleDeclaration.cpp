@@ -7,9 +7,7 @@ namespace psychic_ui {
 
     StyleDeclaration::StyleDeclaration(std::unique_ptr<StyleSelector> selector, const std::function<void()> &onChanged) :
         _selector(std::move(selector)),
-        _style(std::make_unique<Style>(onChanged))
-        /*_onChanged(onChanged)*/ {
-
+        _style(std::make_unique<Style>(onChanged)) {
         // Compute weight
         _weight = _selector->weight();
     }

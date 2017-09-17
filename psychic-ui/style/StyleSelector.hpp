@@ -24,6 +24,7 @@ namespace psychic_ui {
 
         bool matches(const Div *component) const;
 
+        const bool direct() const;
         const std::string tag() const;
         const std::vector<std::string> classes() const;
         const std::unordered_set<Pseudo, std::hash<int>> pseudo() const;
@@ -49,6 +50,7 @@ namespace psychic_ui {
          * @return
          */
         bool matches(const Div *component, bool expand) const;
+        bool                                       _direct{false};
         std::string                                _tag{};
         std::vector<std::string>                   _classes{};
         std::unordered_set<Pseudo, std::hash<int>> _pseudo{};

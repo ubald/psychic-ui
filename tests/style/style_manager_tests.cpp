@@ -477,6 +477,18 @@ SCENARIO("styles can be declared and computed") {
 
         }
 
+        WHEN("targeting a direct descendant") {
+            a->setClassNames({"a"});
+            b->setClassNames({"b"});
+            c->setClassNames({"c"});
+            auto style = styleManager->style(".a > div");
+                style->set(width, 123);
+            a->updateStyleRecursive();
+            REQUIRE(std::isnan(a->computedStyle()->get(width)));
+            REQUIRE(b->computedStyle()->get(width) == 123);
+            REQUIRE(std::isnan(c->computedStyle()->get(width)));
+        }
+
     }
 
 }
