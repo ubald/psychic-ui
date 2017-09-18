@@ -26,7 +26,7 @@ namespace psychic_ui {
             ->set(heightPercent, 1.0f)
             ->set(padding, 24)
             ->set(overflow, "scroll")
-            ->set(wrap, "wrap")
+            ->set(flexWrap, "wrap")
             ->set(flexDirection, "row");
 
         auto scrollbar = add<ScrollBar>(scroller);

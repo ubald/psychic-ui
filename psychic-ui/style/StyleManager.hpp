@@ -24,9 +24,10 @@ namespace psychic_ui {
 
     class StyleManager {
     public:
-
         static std::shared_ptr<StyleManager> instance;
         static std::shared_ptr<StyleManager> getInstance();
+
+        StyleManager();
 
         const bool valid() const { return _valid; };
 
@@ -38,19 +39,34 @@ namespace psychic_ui {
         StyleManager *registerSkin(const std::string &name, SkinMaker hatcher);
         std::shared_ptr<internal::SkinBase> skin(const std::string &name);
 
-
         Style *style(std::string selector);
         std::unique_ptr<Style> computeStyle(const Div *component);
 
+        void setRestorePoint();
+
         template<typename T>
-        void loadStyleSheet() {
+        void loadStyleSheet(bool reset = false) {
             static_assert(std::is_base_of<StyleSheet, T>::value, "T must extend StyleSheet");
+            if (reset) {
+                _fonts.clear();
+                _skins.clear();
+                _styleSheetDeclarations.clear();
+                _declarations = &_styleSheetDeclarations;
+            }
             std::make_unique<T>()->load(this);
+            if (reset) {
+                _defaultStyle = style("*");
+                _declarations = &_runtimeDeclarations;
+            }
             _valid = false;
         }
 
     protected:
-        std::unordered_map<std::string, std::unique_ptr<StyleDeclaration>> _declarations{};
+        unsigned int                                                       _restorePoint{0};
+        std::unordered_map<std::string, std::unique_ptr<StyleDeclaration>> _styleSheetDeclarations{};
+        std::unordered_map<std::string, std::unique_ptr<StyleDeclaration>> _runtimeDeclarations{};
+        std::unordered_map<std::string, std::unique_ptr<StyleDeclaration>> *_declarations{};
+        Style                                                              *_defaultStyle;
         std::unordered_map<std::string, sk_sp<SkTypeface>>                 _fonts{};
         std::unordered_map<std::string, SkinMaker>                         _skins{};
         bool                                                               _valid{false};

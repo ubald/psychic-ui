@@ -53,7 +53,9 @@ namespace psychic_ui {
     class Range : public internal::RangeBase {
         static_assert(std::is_arithmetic<T>::value, "Ranges can only use numeric types.");
     public:
-        explicit Range(T min, T max, std::function<void(T)> onChangeCallback);
+        Range(T min, T max, std::function<void(T)> onChangeCallback);
+        Range(T min, T max, T value, std::function<void(T)> onChangeCallback);
+        Range(T value, std::function<void(T)> onChangeCallback);
         explicit Range(std::function<void(T)> onChangeCallback);
         Range();
 
@@ -76,7 +78,7 @@ namespace psychic_ui {
         std::string valueString() const override;
 
         float getLinearPercentage() const override;
-        void setLinearPercentage(const float percent) override;
+        void setLinearPercentage(float percent) override;
 
         Signal<T> onChange{};
 
@@ -92,8 +94,8 @@ namespace psychic_ui {
     };
 
     template<class T>
-    Range<T>::Range(T min, T max, std::function<void(T)> onChangeCallback) :
-        internal::RangeBase(), _min(min), _max(max) {
+    Range<T>::Range(T min, T max, T value, std::function<void(T)> onChangeCallback) :
+        internal::RangeBase(), _min(min), _max(max), _value(value) {
         setTag("Range");
         onChange.subscribe(std::forward<std::function<void(T)>>(onChangeCallback));
         _step = std::is_floating_point<T>::value ? 0.01f : 1;
@@ -111,8 +113,16 @@ namespace psychic_ui {
     }
 
     template<class T>
+    Range<T>::Range(T min, T max, std::function<void(T)> onChangeCallback) :
+        Range(min, max, static_cast<T>(0), onChangeCallback) {}
+
+    template<class T>
+    Range<T>::Range(T value, std::function<void(T)> onChangeCallback) :
+        Range(static_cast<T>(0), static_cast<T>(1), value, onChangeCallback) {}
+
+    template<class T>
     Range<T>::Range(std::function<void(T)> onChangeCallback) :
-        Range(0, 1, onChangeCallback) {}
+        Range(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0), onChangeCallback) {}
 
     template<class T>
     Range<T>::Range() :

@@ -19,9 +19,6 @@ public:
         manager->style("buttons button")
                ->set(margin, 12);
 
-        manager->style("labels label")
-               ->set(margin, 12);
-
         manager->style("ranges range")
                ->set(margin, 12);
 

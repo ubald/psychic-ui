@@ -19,7 +19,7 @@ namespace psychic_ui {
 
     class MenuButton : public Component<MenuButtonSkin> {
     public:
-        MenuButton(const MenuItem *menuItem);
+        explicit MenuButton(const MenuItem *menuItem);
         const MenuItem *menuItem() const;
         const bool selected() const;
         void setSelected(bool selected);

@@ -128,13 +128,18 @@ namespace psychic_ui {
             std::replace(_text.begin(), _text.end(), '\n', ' ');
 
             _textBox.setMode(SkTextBox::kOneLine_Mode);
-            size.width  = std::ceil(_textPaint.measureText(_text.c_str(), _text.size()));
-            size.height = _lineHeight;
 
-            if (widthMode == YGMeasureModeUndefined) {
-                std::cout << "???" << std::endl;
+            size.height = _lineHeight;
+            if (widthMode == YGMeasureModeExactly) {
+                size.width = width;
             } else {
-                size.width = std::fmin(size.width, width);
+                size.width  = std::ceil(_textPaint.measureText(_text.c_str(), _text.size()));
+
+                if (widthMode == YGMeasureModeUndefined) {
+                    size.width = size.width;
+                } else if (widthMode == YGMeasureModeAtMost) {
+                    size.width = std::min(size.width, width);
+                }
             }
         }
 

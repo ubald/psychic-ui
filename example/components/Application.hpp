@@ -37,8 +37,9 @@ namespace psychic_ui {
         Window("Demo Application") {
         //_decorated = false;
 
-        loadStyleSheet<PsychicUIStyleSheet>();
-        loadStyleSheet<DemoStyleSheet>();
+        styleManager()->loadStyleSheet<PsychicUIDarkStyleSheet>();
+        styleManager()->setRestorePoint();
+        styleManager()->loadStyleSheet<DemoStyleSheet>();
 
         app->add<TitleBar>();
 
@@ -69,6 +70,20 @@ namespace psychic_ui {
             Menu::item(
                 "View", {
                     Menu::item(
+                        "Theme", {
+                            Menu::item(
+                                "Dark", [this]() {
+                                    loadStyleSheet<PsychicUIDarkStyleSheet>(true);
+                                }
+                            ),
+                            Menu::item(
+                                "Light", [this]() {
+                                    loadStyleSheet<PsychicUILightStyleSheet>(true);
+                                }
+                            )
+                        }
+                    ),
+                    Menu::item(
                         "Toolbar Items", {
                             Menu::item("Show Debug Layout", []() {}),
                             Menu::item("Show Help", []() {})
@@ -96,7 +111,7 @@ namespace psychic_ui {
             std::make_pair(
                 "Divs",
                 Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Divs>(); })));
-                panels.emplace_back(
+        panels.emplace_back(
             std::make_pair(
                 "Scroller",
                 Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Scrollers>(); })));

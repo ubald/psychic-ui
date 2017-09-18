@@ -5,7 +5,6 @@
 
 namespace psychic_ui {
 
-
     MenuButton::MenuButton(const MenuItem *menuItem) :
         Component(),
         _menuItem(menuItem) {

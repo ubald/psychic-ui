@@ -9,8 +9,10 @@
 #include <psychic-ui/skins/DefaultMenuButtonSkin.hpp>
 #include <psychic-ui/skins/TitleBarButtonSkin.hpp>
 #include <psychic-color/spaces/RGB.hpp>
+#include <psychic-color/spaces/HSB.hpp>
 
 using namespace psychic_ui;
+using namespace psychic_color;
 
 #define BASE_00 0xFF151515
 #define BASE_01 0xFF202020
@@ -50,45 +52,44 @@ using namespace psychic_ui;
  * Psychic UI Style
  */
 class PsychicUIStyleSheet : public StyleSheet {
+protected:
+    HSB themeBackgroundColor{};
+    HSB themeForegroundColor{};
+    HSB themeLowContrastColor{};
+    HSB themeMediumContrastColor{};
+    HSB themeHighContrastColor{};
+    HSB themeHighlightColor{};
+    HSB themeCyanColor{};
+    HSB themeBlueColor{};
+    HSB themePurpleColor{};
+    HSB themeGreenColor{};
+    HSB themeRedColor{};
+    HSB themeRedOrangeColor{};
+    HSB themeOrangeColor{};
+    HSB themeYellowColor{};
 public:
+    PsychicUIStyleSheet() = default;
     void load(StyleManager *manager) override {
-        int   smallText     = 10;
-        int   text          = 12;
-        int   mediumText    = 14;
-        int   largeText     = 18;
-        int   bigText       = 24;
-        int   hugeText      = 36;
-        int   radius        = 6;
-        int   scrollBarSize = 12;
-        Color highlight     = 0xFF00FFEC;
-
-        psychic_color::RGB c{};
+        int smallText     = 10;
+        int text          = 12;
+        int mediumText    = 14;
+        int largeText     = 18;
+        int bigText       = 24;
+        int hugeText      = 36;
+        int radius        = 6;
+        int scrollBarSize = 12;
 
         manager->loadFont("stan0755", "../res/fonts/stan0755.ttf");
         manager->loadFont("Ubuntu Light", "../res/fonts/Ubuntu/Ubuntu-Light.ttf");
         manager->loadFont("Ubuntu Regular", "../res/fonts/Ubuntu/Ubuntu-Regular.ttf");
 
-        manager->registerSkin(
-            "default-button-skin",
-            SkinType::make([]() { return std::make_shared<DefaultButtonSkin>(); }));
-        manager->registerSkin(
-            "default-checkbox-skin",
-            SkinType::make([]() { return std::make_shared<DefaultCheckBoxSkin>(); }));
-        manager->registerSkin(
-            "default-scrollbar-skin",
-            SkinType::make([]() { return std::make_shared<DefaultScrollBarSkin>(); }));
-        manager->registerSkin(
-            "menu-button-skin",
-            SkinType::make([]() { return std::make_shared<DefaultMenuButtonSkin>(); }));
-        manager->registerSkin(
-            "sub-menu-button-skin",
-            SkinType::make([]() { return std::make_shared<DefaultSubMenuButtonSkin>(); }));
-        manager->registerSkin(
-            "title-bar-button",
-            SkinType::make([]() { return std::make_shared<TitleBarButtonSkin>(); }));
-        manager->registerSkin(
-            "slider",
-            SkinType::make([]() { return std::make_shared<SliderRangeSkin>(); }));
+        manager->registerSkin("default-button-skin", SkinType::make([]() { return std::make_shared<DefaultButtonSkin>(); }));
+        manager->registerSkin("default-checkbox-skin", SkinType::make([]() { return std::make_shared<DefaultCheckBoxSkin>(); }));
+        manager->registerSkin("default-scrollbar-skin", SkinType::make([]() { return std::make_shared<DefaultScrollBarSkin>(); }));
+        manager->registerSkin("menu-button-skin", SkinType::make([]() { return std::make_shared<DefaultMenuButtonSkin>(); }));
+        manager->registerSkin("sub-menu-button-skin", SkinType::make([]() { return std::make_shared<DefaultSubMenuButtonSkin>(); }));
+        manager->registerSkin("title-bar-button", SkinType::make([]() { return std::make_shared<TitleBarButtonSkin>(); }));
+        manager->registerSkin("slider", SkinType::make([]() { return std::make_shared<SliderRangeSkin>(); }));
 
         // region Defaults
         manager->style("*")
@@ -96,7 +97,7 @@ public:
                ->set(fontFamily, "Ubuntu Regular")
                ->set(fontSize, text)
                ->set(lineHeight, 16)
-               ->set(color, 0xFFFFFFFF)
+               ->set(color, themeForegroundColor.getColorAlpha())
                ->set(antiAlias, true)
                ->set(textAntiAlias, true)
                ->set(multiline, false);
@@ -138,10 +139,10 @@ public:
 
         // region Window
         manager->style("Window")
-               ->set(color, 0xFFE0E0E0)
-               ->set(backgroundColor, BASE_00)
+               ->set(color, themeForegroundColor.getColorAlpha())
+               ->set(backgroundColor, themeBackgroundColor.getColorAlpha())
                ->set(border, 1)
-               ->set(borderColor, BASE_00);
+               ->set(borderColor, themeBackgroundColor.getColorAlpha());
         // endregion
 
         // region Title Bar
@@ -149,9 +150,9 @@ public:
                ->set(alignItems, "center")
                ->set(height, 48)
                ->set(padding, 12)
-               ->set(backgroundColor, BASE_02)
+               ->set(backgroundColor, themeLowContrastColor.getColorAlpha())
                ->set(borderBottom, 1)
-               ->set(borderColor, BASE_00);
+               ->set(borderColor, themeBackgroundColor.getColorAlpha());
 
         manager->style("TitleBar Label.title")
                ->set(fontFamily, "Ubuntu Light")
@@ -168,29 +169,26 @@ public:
                ->set(border, 0);
 
         manager->style("TitleBar Button.close")
-               ->set(backgroundColor, ONE_RED);
+               ->set(backgroundColor, themeRedColor.getColorAlpha());
 
         manager->style("TitleBar Button.close:hover")
-               ->set(backgroundColor, ONE_RED_FADED);
+               ->set(backgroundColor, themeRedOrangeColor.getColorAlpha());
 
         manager->style("TitleBar Button.minimize")
-               ->set(backgroundColor, ONE_ORANGE);
+               ->set(backgroundColor, themeOrangeColor.getColorAlpha());
 
         manager->style("TitleBar Button.minimize:hover")
-               ->set(backgroundColor, ONE_YELLOW);
+               ->set(backgroundColor, themeYellowColor.getColorAlpha());
 
         manager->style("TitleBar Button.maximize")
-               ->set(backgroundColor, BASE_GREEN);
+               ->set(backgroundColor, themeGreenColor.getColorAlpha());
 
         manager->style("TitleBar Button.maximize:hover")
-               ->set(backgroundColor, ONE_GREEN);
+               ->set(backgroundColor, themeGreenColor.getColorAlpha());
 
         // endregion
 
         // region Boxes
-
-        //manager->style("HBox > Div:last-child")
-        //       ->set(margin, 0);
 
         // endregion
 
@@ -210,10 +208,10 @@ public:
                ->set(height, scrollBarSize);
 
         manager->style("ScrollBar .track")
-               ->set(backgroundColor, BASE_00);
+               ->set(backgroundColor, themeBackgroundColor.getColorAlpha());
 
         manager->style("ScrollBar .thumb")
-               ->set(backgroundColor, BASE_02);
+               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
 
         manager->style("ScrollBar.vertical .thumb")
                ->set(marginLeft, 1)
@@ -224,13 +222,13 @@ public:
                ->set(minWidth, 24);
 
         manager->style("ScrollBar:hover .thumb")
-               ->set(backgroundColor, BASE_03);
+               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha());
 
         manager->style("ScrollBar:active .thumb")
-               ->set(backgroundColor, highlight);
+               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
 
         manager->style("ScrollBar:disabled .thumb")
-               ->set(backgroundColor, BASE_01);
+               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
 
         manager->style("Scroller ScrollBar.horizontal")
                ->set(marginRight, scrollBarSize);
@@ -245,17 +243,17 @@ public:
                ->set(alignItems, "center")
                ->set(padding, 12)
                ->set(borderRadius, radius)
-               ->set(backgroundColor, BASE_02)
-               ->set(color, BASE_07)
+               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha())
+               ->set(color, themeForegroundColor.getColorAlpha())
                ->set(fontSize, mediumText)
                ->set(lineHeight, mediumText);
 
         manager->style("Button:hover")
-               ->set(backgroundColor, BASE_03);
+               ->set(backgroundColor, themeHighContrastColor.getColorAlpha());
 
         manager->style("Button:active")
                ->set(color, BASE_00)
-               ->set(backgroundColor, highlight);
+               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
         // endregion
 
         // region CheckBox
@@ -274,19 +272,19 @@ public:
                ->set(height, 24)
                ->set(marginRight, 6)
                ->set(borderRadius, radius)
-               ->set(borderColor, BASE_02)
-               ->set(backgroundColor, BASE_00);
+               ->set(borderColor, themeForegroundColor.getColorAlpha())
+               ->set(backgroundColor, themeBackgroundColor.getColorAlpha());
 
         manager->style("CheckBox:hover Shape")
-               ->set(color, BASE_03);
+               ->set(color, themeMediumContrastColor.getColorAlpha());
 
         manager->style("CheckBox:active Shape")
-               ->set(color, highlight);
+               ->set(color, themeHighlightColor.getColorAlpha());
         // endregion
 
         // region Menus
         manager->style("Menu")
-               ->set(backgroundColor, 0xFF000000)
+               ->set(backgroundColor, themeBackgroundColor.getColorAlpha())
                ->set(opacity, 0.8f)
                ->set(minWidth, 200)
                ->set(alignItems, "stretch");
@@ -296,7 +294,7 @@ public:
                ->set(paddingHorizontal, 6)
                ->set(paddingVertical, 6)
                ->set(borderRadius, 0)
-               ->set(backgroundColor, 0x00000000);
+               ->set(backgroundColor, themeBackgroundColor.getColorAlpha());
 
         manager->style("Menu MenuButton.simple")
                ->set(skin, "menu-button-skin");
@@ -319,7 +317,7 @@ public:
                ->set(width, 6);
 
         manager->style("Menu MenuButton:hover")
-               ->set(backgroundColor, highlight);
+               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
 
         manager->style("Menu MenuButton:hover .label")
                ->set(color, BASE_00);
@@ -331,7 +329,7 @@ public:
                ->set(color, BASE_00);
 
         manager->style("Menu MenuButton:active")
-               ->set(backgroundColor, highlight);
+               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
 
         manager->style("Menu MenuButton:active .label")
                ->set(color, BASE_00);
@@ -342,23 +340,21 @@ public:
         manager->style("Menu MenuButton.submenu:active .arrow")
                ->set(color, BASE_00);
 
-
-
-
         // endregion
 
         // region Ranges
+
         manager->style("Range")
                ->set(skin, "slider")
                ->set(borderRadius, radius)
                ->set(border, 1)
                ->set(padding, 1)
-               ->set(borderColor, BASE_02)
-               ->set(backgroundColor, BASE_00)
+               ->set(borderColor, themeForegroundColor.getColorAlpha())
+               ->set(backgroundColor, themeBackgroundColor.getColorAlpha())
                ->set(fontFamily, "Ubuntu Regular")
                ->set(fontSize, smallText)
                ->set(lineHeight, smallText)
-               ->set(color, BASE_04);
+               ->set(color, themeForegroundColor.getColorAlpha());
 
         manager->style("Range Slider.horizontal")
                ->set(height, 24);
@@ -373,28 +369,28 @@ public:
                ->set(color, BASE_00);
 
         manager->style("Range:hover Slider")
-               ->set(color, BASE_05);
+               ->set(color, themeHighContrastColor.getColorAlpha());
 
         manager->style("Range Slider .track")
-               ->set(backgroundColor, BASE_01);
+               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
 
         manager->style("Range:hover Slider .track");
 
         manager->style("Range Slider .range")
-               ->set(backgroundColor, BASE_02);
+               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha());
 
         manager->style("Range:hover Slider .range")
-               ->set(backgroundColor, BASE_03);
+               ->set(backgroundColor, themeHighContrastColor.getColorAlpha());
 
         manager->style("Range:active Slider .range")
-               ->set(backgroundColor, highlight);
+               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
         // endregion
 
         // region Tabs
         manager->style("tabs")
                ->set(flexDirection, "row")
                ->set(borderBottom, 1)
-               ->set(borderColor, BASE_00);
+               ->set(borderColor, themeBackgroundColor.getColorAlpha());
 
         manager->style("tabs button")
                ->set(fontSize, smallText)
@@ -404,7 +400,7 @@ public:
                ->set(paddingVertical, 6)
                ->set(borderRadius, 0)
                ->set(borderHorizontal, 1)
-               ->set(borderColor, BASE_00);
+               ->set(borderColor, themeBackgroundColor.getColorAlpha());
 
 //        manager->style("tabs button:firstChild")
 //               ->set(borderRadiusLeft, radius);
@@ -417,16 +413,16 @@ public:
         // region Tab Container
 
         manager->style("tabcontainer")
-               ->set(backgroundColor, BASE_01);
+               ->set(backgroundColor, themeBackgroundColor.getColorAlpha());
 
         // endregion
 
         // region MenuBar
         manager->style("MenuBar")
                ->set(flexDirection, "row")
-               ->set(backgroundColor, BASE_01)
+               ->set(backgroundColor, themeBackgroundColor.getColorAlpha())
                ->set(borderBottom, 1)
-               ->set(borderColor, BASE_00);
+               ->set(borderColor, themeBackgroundColor.getColorAlpha());
 
         manager->style("MenuBar Button")
                ->set(fontSize, smallText)
@@ -434,30 +430,80 @@ public:
                ->set(paddingHorizontal, 12)
                ->set(paddingVertical, 6)
                ->set(borderRadius, 0)
-               ->set(backgroundColor, 0x00000000);
+               ->set(backgroundColor, themeBackgroundColor.getColorAlpha());
 
         manager->style("MenuBar Button:hover")
-               ->set(color, highlight);
+               ->set(color, themeHighlightColor.getColorAlpha());
 
         manager->style("MenuBar Button:active")
                ->set(color, BASE_00)
-               ->set(backgroundColor, highlight);
+               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
 
         // endregion
 
         // region ToolBar
         manager->style("toolbar")
                ->set(flexDirection, "row")
-               ->set(backgroundColor, BASE_02)
+               ->set(backgroundColor, themeLowContrastColor.getColorAlpha())
                ->set(borderBottom, 1)
-               ->set(borderColor, BASE_00);
+               ->set(borderColor, themeBackgroundColor.getColorAlpha());
 
         manager->style("toolbar button")
                ->set(marginHorizontal, -1)
                ->set(paddingHorizontal, 18)
                ->set(borderRadius, 0)
                ->set(borderHorizontal, 1)
-               ->set(borderColor, BASE_00);
+               ->set(borderColor, themeBackgroundColor.getColorAlpha());
         // endregion
     }
+};
+
+/**
+ * Psychic UI Style
+ */
+class PsychicUIDarkStyleSheet : public PsychicUIStyleSheet {
+public:
+    PsychicUIDarkStyleSheet() :
+        PsychicUIStyleSheet() {
+        themeBackgroundColor = HSB{0x282C34};
+        themeForegroundColor = HSB{0xABB2BF};
+        themeLowContrastColor = HSB{0x5C6370};
+        themeMediumContrastColor = HSB{0x828997};
+        themeHighContrastColor = HSB{0xABB2BF};
+        themeHighlightColor = HSB{0x528BFF}; //{0xFF00FFEC}
+
+        themeCyanColor = HSB{0x56B6C2};
+        themeBlueColor = HSB{0x61AFEF};
+        themePurpleColor = HSB{0xC678DD};
+        themeGreenColor = HSB{0x98C379};
+        themeRedColor = HSB{0xBE5046};
+        themeRedOrangeColor = HSB{0xE06C75};
+        themeOrangeColor = HSB{0xD19A66};
+        themeYellowColor = HSB{0xE5C07B};
+    }
+};
+
+/**
+ * Psychic UI Style
+ */
+class PsychicUILightStyleSheet : public PsychicUIStyleSheet {
+public:
+    PsychicUILightStyleSheet() :
+        PsychicUIStyleSheet() {
+        themeBackgroundColor = HSB{0xF9F9F9};
+        themeForegroundColor = HSB{0x2A2C33};
+        themeLowContrastColor = HSB{0xE5E5E6};
+        themeMediumContrastColor = HSB{0x8F9097};
+        themeHighContrastColor = HSB{0x565964};
+        themeHighlightColor = HSB{0x528BFF};
+
+        themeCyanColor = HSB{0x56B6C2};
+        themeBlueColor = HSB{0x61AFEF};
+        themePurpleColor = HSB{0xC678DD};
+        themeGreenColor = HSB{0x98C379};
+        themeRedColor = HSB{0xBE5046};
+        themeRedOrangeColor = HSB{0xE06C75};
+        themeOrangeColor = HSB{0xD19A66};
+        themeYellowColor = HSB{0xE5C07B};
+        }
 };

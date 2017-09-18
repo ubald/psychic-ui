@@ -15,6 +15,13 @@ namespace psychic_ui {
         return instance;
     }
 
+    StyleManager::StyleManager() :
+        _declarations{&_styleSheetDeclarations} {}
+
+    void StyleManager::setRestorePoint() {
+        _declarations = &_runtimeDeclarations;
+    }
+
     StyleManager *StyleManager::loadFont(const std::string &name, const std::string &path) {
         _fonts.insert({name, SkTypeface::MakeFromFile(path.c_str())});
         _valid = false;
@@ -39,8 +46,8 @@ namespace psychic_ui {
 
     Style *StyleManager::style(std::string selectorString) {
         std::transform(selectorString.begin(), selectorString.end(), selectorString.begin(), ::tolower);
-        auto it = _declarations.find(selectorString);
-        if (it != _declarations.cend()) {
+        auto it = _declarations->find(selectorString);
+        if (it != _declarations->cend()) {
             return it->second->style();
         } else {
             auto selector = StyleSelector::fromSelector(selectorString);
@@ -49,16 +56,16 @@ namespace psychic_ui {
                 return Style::dummyStyle.get();
             }
 
-            _declarations[selectorString] = std::make_unique<StyleDeclaration>(
+            (*_declarations)[selectorString] = std::make_unique<StyleDeclaration>(
                 std::move(selector),
                 [this]() { _valid = false; }
             );
 
             #ifdef DEBUG_STYLES
-            _declarations[selectorString]->selectorString = selectorString;
+            (*_declarations)[selectorString]->selectorString = selectorString;
             #endif
 
-            return _declarations[selectorString]->style();
+            return (*_declarations)[selectorString]->style();
         }
     }
 
@@ -82,11 +89,17 @@ namespace psychic_ui {
         }
 
         // Get Direct matches
-        for (const auto &declaration: _declarations) {
+        for (const auto &declaration: _styleSheetDeclarations) {
             if (declaration.second->selector()->matches(component)) {
                 directMatches.emplace_back(declaration.second->weight(), declaration.second.get());
             }
         }
+
+        //for (const auto &declaration: _runtimeDeclarations) {
+        //    if (declaration.second->selector()->matches(component)) {
+        //        directMatches.emplace_back(declaration.second->weight(), declaration.second.get());
+        //    }
+        //}
 
         // Sort direct matches by weight, heaviest overlaid last
         std::sort(

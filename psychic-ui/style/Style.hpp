@@ -78,7 +78,7 @@ namespace psychic_ui {
             fontFamily, textAlign, textJustify,
             position, direction, display,
             justifyContent, flexDirection, alignContent, alignItems, alignSelf,
-            wrap, overflow,
+            flexWrap, overflow,
         // Custom
             skin,
             orientation // For sliders

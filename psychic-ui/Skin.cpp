@@ -18,7 +18,7 @@ namespace psychic_ui {
             {
                 fontFamily, textAlign, textJustify,
                 direction, justifyContent, flexDirection, alignContent, alignItems,
-                wrap, overflow,
+                flexWrap, overflow,
                 orientation
             },
             {
@@ -48,8 +48,6 @@ namespace psychic_ui {
         SkinBase::SkinBase() :
             Div() {
             setTag("Skin");
-            // But, forget about the margins since they have an external influence
-            // We have to be explicit about margins since we want to avoid a fallback to default margins too
             _inlineStyle
                 ->set(shrink, 1)
                 ->set(grow, 1);

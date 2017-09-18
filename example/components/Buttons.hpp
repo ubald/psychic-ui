@@ -15,7 +15,7 @@ namespace psychic_ui {
         setClassNames({"demo-panel"});
 
         style()
-            ->set(wrap, "wrap")
+            ->set(flexWrap, "wrap")
             ->set(flexDirection, "row");
 
         // Push

@@ -2,6 +2,7 @@
 
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/components/ScrollBar.hpp>
+#include <psychic-ui/components/Box.hpp>
 
 namespace psychic_ui {
 
@@ -22,7 +23,7 @@ namespace psychic_ui {
         auto scroller = add<Div>();
         scroller
             ->style()
-            ->set(shrink, 1)
+            ->set(widthPercent, 1.0f)
             ->set(heightPercent, 1.0f)
             ->set(padding, 24)
             ->set(overflow, "scroll");
@@ -33,20 +34,20 @@ namespace psychic_ui {
             ->set(heightPercent, 1.0f);
 
         {
-            auto container = scroller->add<Div>();
+            auto container = scroller->add<HBox>();
             container
                 ->style()
                 ->set(shrink, 0)
-                ->set(flexDirection, "row");
+                ->set(gap, 12);
 
             // Anti Aliasing
 
-            auto left = container->add<Div>();
+            auto left = container->add<VBox>();
             left
                 ->style()
                 ->set(grow, 1)
-                ->set(shrink, 1)
-                ->set(widthPercent, 0.5f);
+                ->set(basis, 0) // Both columns needs to be considered the same size
+                ->set(gap, 6);
 
             left->add<Label>("Anti Aliasing")
                 ->addClassName("h1");
@@ -83,12 +84,12 @@ namespace psychic_ui {
 
             // Ellipsis
 
-            auto right = container->add<Div>();
+            auto right = container->add<VBox>();
             right
                 ->style()
                 ->set(grow, 1)
-                ->set(shrink, 1)
-                ->set(widthPercent, 0.5f);
+                ->set(basis, 0) // Both columns needs to be considered the same size
+                ->set(gap, 6);
 
             right->add<Label>("Ellipsis")
                  ->addClassName("h1");
@@ -101,18 +102,18 @@ namespace psychic_ui {
             scroller->add<Label>("Blocks")
                     ->addClassName("h1");
 
-            auto container = scroller->add<Div>();
+            auto container = scroller->add<HBox>();
             container
                 ->style()
                 ->set(shrink, 0)
-                ->set(flexDirection, "row");
+                ->set(gap, 12);
 
-            auto left = container->add<Div>();
+            auto left = container->add<VBox>();
             left
                 ->style()
                 ->set(grow, 1)
-                ->set(shrink, 1)
-                ->set(lineHeight, Style::Auto);
+                ->set(basis, 0) // Both columns needs to be considered the same size
+                ->set(gap, 6);
 
             left->add<Label>("Automatic Line Height");
 
@@ -136,11 +137,12 @@ namespace psychic_ui {
                 ->set(multiline, true)
                 ->set(fontSize, 24);
 
-            auto right = container->add<Div>();
+            auto right = container->add<VBox>();
             right
                 ->style()
                 ->set(grow, 1)
-                ->set(shrink, 1);
+                ->set(basis, 0) // Both columns needs to be considered the same size
+                ->set(gap, 6);
 
             right->add<Label>("Manual Line Height");
 

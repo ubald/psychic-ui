@@ -102,8 +102,8 @@ namespace psychic_ui {
          * @tparam T :StyleSheet
          */
         template<typename T>
-        void loadStyleSheet() {
-            styleManager()->loadStyleSheet<T>();
+        void loadStyleSheet(bool reset = false) {
+            styleManager()->loadStyleSheet<T>(reset);
         }
 
     protected:

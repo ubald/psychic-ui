@@ -73,7 +73,7 @@ namespace psychic_ui {
         // Once we have access to a style manager add a custom rule targeting us by internal id
         if (auto sm = styleManager()) {
             sm->style("#" + _internalId + " > div")
-              ->set(marginBottom, 36); // This is our gap, we'll need to cancel it for the last child
+              ->set(marginBottom, _gap); // This is our gap, we'll need to cancel it for the last child
             sm->style("#" + _internalId + " > div:last-child")
               ->set(marginBottom, 0); // Last child gap cancellation
         }

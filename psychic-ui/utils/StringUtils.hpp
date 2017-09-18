@@ -28,7 +28,7 @@ namespace psychic_ui {
                     s.rbegin(), s.rend(), [](int ch) {
                         return !std::isspace(ch);
                     }
-                ).base(), s.cend());
+                ).base(), s.end());
         }
 
         // trim from both ends (in place)

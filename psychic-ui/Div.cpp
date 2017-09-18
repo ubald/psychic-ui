@@ -705,6 +705,7 @@ namespace psychic_ui {
             YGNodeStyleSet##prop(_yogaNode, _computedStyle->get(style)); \
         } else if (YGNodeStyleGet##prop(_yogaNode) != (fallback)) { \
             /*Yoga returns the default value when it is set as undefined*/ \
+            std::cout << YGNodeStyleGet##prop(_yogaNode) << std::endl; \
             YGNodeStyleSet##prop(_yogaNode, YGUndefined); \
         } \
 
@@ -727,7 +728,7 @@ namespace psychic_ui {
         } else if (_computedStyle->has(style##Percent)) { \
             YGNodeStyleSet##prop##Percent(_yogaNode, YogaPercent(_computedStyle->get(style##Percent))); \
         } else if (YGNodeStyleGet##prop(_yogaNode).unit != YGUnitAuto) { \
-            YGNodeStyleSet##prop(_yogaNode, YGUndefined); \
+            YGNodeStyleSet##prop##Auto(_yogaNode); \
         } \
 
     #define YOGA_STYLE_EDGE_FLOAT(prop, edge, style) \
@@ -767,13 +768,13 @@ namespace psychic_ui {
         YOGA_STYLE_SET(AlignItems, Align, alignItems, YGAlignStretch)
         YOGA_STYLE_SET(AlignSelf, Align, alignSelf, YGAlignAuto)
         YOGA_STYLE_SET(PositionType, Position, position, YGPositionTypeRelative)
-        YOGA_STYLE_SET(FlexWrap, Wrap, wrap, YGWrapNoWrap)
+        YOGA_STYLE_SET(FlexWrap, Wrap, flexWrap, YGWrapNoWrap)
         YOGA_STYLE_SET(Overflow, Overflow, overflow, YGOverflowVisible)
         YOGA_STYLE_SET(Display, Display, display, YGDisplayFlex)
 
         YOGA_STYLE_SET_FLOAT_UNDEFINED(Flex, flex)
         YOGA_STYLE_SET_FLOAT(FlexGrow, grow, /*kDefaultFlexGrow*/ 0.0f)
-        YOGA_STYLE_SET_FLOAT(FlexShrink, shrink, /*kWebDefaultFlexShrink*/ 1.0f)
+        YOGA_STYLE_SET_FLOAT(FlexShrink, shrink, /*kWebDefaultFlexShrink*/ 1.0f) // NOTE: Not the default actually
         YOGA_STYLE_SET_PERCENT_AUTO(FlexBasis, basis)
 
         YOGA_STYLE_EDGE_PERCENT(Position, Left, left)
@@ -817,9 +818,6 @@ namespace psychic_ui {
     }
 
     void Div::layoutUpdated() {
-//        int right  = (int) YGNodeLayoutGetRight(_yogaNode);
-//        int bottom = (int) YGNodeLayoutGetBottom(_yogaNode);
-
         _x = (int) std::ceil(YGNodeLayoutGetLeft(_yogaNode));
         _y = (int) std::ceil(YGNodeLayoutGetTop(_yogaNode));
 
@@ -832,11 +830,16 @@ namespace psychic_ui {
         _rect.set(_x, _y, _x + _width, _y + _height);
         _roundRect.setRectRadii(_rect, _radii);
 
+        _marginLeft   = YGNodeLayoutGetMargin(_yogaNode, YGEdgeLeft);
+        _marginTop    = YGNodeLayoutGetMargin(_yogaNode, YGEdgeTop);
+        _marginRight  = YGNodeLayoutGetMargin(_yogaNode, YGEdgeRight);
+        _marginBottom = YGNodeLayoutGetMargin(_yogaNode, YGEdgeBottom);
+
         _marginRect.set(
-            _x - YGNodeLayoutGetMargin(_yogaNode, YGEdgeLeft),
-            _y - YGNodeLayoutGetMargin(_yogaNode, YGEdgeTop),
-            _x + _width + YGNodeLayoutGetMargin(_yogaNode, YGEdgeRight),
-            _y + _height + YGNodeLayoutGetMargin(_yogaNode, YGEdgeBottom)
+            _x - _marginLeft,
+            _y - _marginTop,
+            _x + _width + _marginRight,
+            _y + _height + _marginBottom
         );
 
         _borderLeft   = YGNodeLayoutGetBorder(_yogaNode, YGEdgeLeft);

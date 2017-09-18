@@ -40,7 +40,7 @@ namespace psychic_ui {
         Div(const Div &) = delete;
         ~Div();
 
-        Div&operator=(const Div&) = delete;
+        Div &operator=(const Div &) = delete;
 
         std::string toString() const;
 
@@ -167,7 +167,7 @@ namespace psychic_ui {
             return _scrollX;
         }
 
-        Div * setScrollX(const int &scrollX) {
+        Div *setScrollX(const int &scrollX) {
             if (scrollX != _scrollX) {
                 _scrollX = scrollX;
                 onScrolled(_scrollX, _scrollY);
@@ -179,7 +179,7 @@ namespace psychic_ui {
             return _scrollY;
         }
 
-        Div * setScrollY(const int &scrollY) {
+        Div *setScrollY(const int &scrollY) {
             if (scrollY != _scrollY) {
                 _scrollY = scrollY;
                 onScrolled(_scrollX, _scrollY);
@@ -346,8 +346,8 @@ namespace psychic_ui {
         /**
          * Internal Id
          */
-         static int idCounter;
-         std::string _internalId{};
+        static int  idCounter;
+        std::string _internalId{};
 
         /**
          * Id
@@ -416,7 +416,11 @@ namespace psychic_ui {
         /**
          * Component's margin rect
          */
-         SkRect _marginRect{};
+        SkRect _marginRect{};
+        float  _marginLeft{0.0f};
+        float  _marginRight{0.0f};
+        float  _marginTop{0.0f};
+        float  _marginBottom{0.0f};
 
         /**
          * Component's padded rect
@@ -426,12 +430,12 @@ namespace psychic_ui {
         /**
          * Round rect
          */
-         SkRRect _roundRect{};
+        SkRRect _roundRect{};
 
-         /**
-          * Bounds rect
-          */
-          SkRect _boundsRect{};
+        /**
+         * Bounds rect
+         */
+        SkRect _boundsRect{};
 
 
         /**
@@ -470,10 +474,10 @@ namespace psychic_ui {
         bool _drawRoundRect{false};
         bool _drawComplexRoundRect{false};
 
-        float _radiusTopLeft{0.0f};
-        float _radiusTopRight{0.0f};
-        float _radiusBottomLeft{0.0f};
-        float _radiusBottomRight{0.0f};
+        float    _radiusTopLeft{0.0f};
+        float    _radiusTopRight{0.0f};
+        float    _radiusBottomLeft{0.0f};
+        float    _radiusBottomRight{0.0f};
         SkVector _radii[4]{
             {0.0f, 0.0f},
             {0.0f, 0.0f},
