@@ -9,15 +9,15 @@
 #include <psychic-color/schemes/Analogous.hpp>
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/components/ScrollBar.hpp>
-#include <lib/psychic-color/psychic-color/PsychicColor.hpp>
+#include <psychic-color/PsychicColor.hpp>
 #include <psychic-ui/components/Box.hpp>
-#include <lib/psychic-color/psychic-color/schemes/Complementary.hpp>
-#include <lib/psychic-color/psychic-color/schemes/Compound.hpp>
-#include <lib/psychic-color/psychic-color/schemes/FlippedCompound.hpp>
-#include <lib/psychic-color/psychic-color/schemes/Monochrome.hpp>
-#include <lib/psychic-color/psychic-color/schemes/SplitComplementary.hpp>
-#include <lib/psychic-color/psychic-color/schemes/Triad.hpp>
-#include <lib/psychic-color/psychic-color/schemes/Tetrad.hpp>
+#include <psychic-color/schemes/Complementary.hpp>
+#include <psychic-color/schemes/Compound.hpp>
+#include <psychic-color/schemes/FlippedCompound.hpp>
+#include <psychic-color/schemes/Monochrome.hpp>
+#include <psychic-color/schemes/SplitComplementary.hpp>
+#include <psychic-color/schemes/Triad.hpp>
+#include <psychic-color/schemes/Tetrad.hpp>
 
 namespace psychic_ui {
 

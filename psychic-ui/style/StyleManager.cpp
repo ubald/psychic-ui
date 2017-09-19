@@ -80,7 +80,7 @@ namespace psychic_ui {
 
             #ifdef DEBUG_STYLES
             s->declarations.insert(
-                s->declarations.cend(),
+                s->declarations.end(),
                 component->_parent->_computedStyle->declarations.cbegin(),
                 component->_parent->_computedStyle->declarations.cend()
             );

@@ -93,14 +93,15 @@ namespace psychic_ui {
 
     Window::~Window() {
         windows.erase(_glfwWindow);
+
         for (int i = 0; i < 6; ++i) {
             if (_cursors[i]) {
                 glfwDestroyCursor(_cursors[i]);
             }
         }
 
-        delete _sk_context;
         delete _sk_surface;
+        delete _sk_context;
 
         if (_glfwWindow) {
             glfwDestroyWindow(_glfwWindow);

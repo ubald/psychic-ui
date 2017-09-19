@@ -156,11 +156,9 @@ namespace psychic_ui {
 
         static const float Auto;
 
-        Style();
+        Style() = default;
         explicit Style(const Style *fromStyle);
         explicit Style(const std::function<void()> &onChanged);
-
-        sk_sp<SkTypeface> font{nullptr};
 
         /**
          * Add all values from style onto this
