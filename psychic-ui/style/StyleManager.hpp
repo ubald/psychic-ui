@@ -6,7 +6,7 @@
 #include <functional>
 #include <type_traits>
 #include "psychic-ui/psychic-ui.hpp"
-#include "../utils/Hatcher.hpp"
+#include "psychic-ui/utils/Hatcher.hpp"
 #include "Style.hpp"
 #include "StyleSelector.hpp"
 #include "StyleSheet.hpp"
@@ -27,7 +27,19 @@ namespace psychic_ui {
         static std::shared_ptr<StyleManager> instance;
         static std::shared_ptr<StyleManager> getInstance();
 
-        StyleManager();
+        StyleManager() = default;
+
+        void reset();
+
+        template<typename T>
+        void loadStyleSheet(bool reset = false) {
+            static_assert(std::is_base_of<StyleSheet, T>::value, "T must extend StyleSheet");
+            if (reset) {
+                this->reset();
+            }
+            std::make_unique<T>()->load(this);
+            _valid = false;
+        }
 
         const bool valid() const { return _valid; };
 
@@ -42,31 +54,8 @@ namespace psychic_ui {
         Style *style(std::string selector);
         std::unique_ptr<Style> computeStyle(const Div *component);
 
-        void setRestorePoint();
-
-        template<typename T>
-        void loadStyleSheet(bool reset = false) {
-            static_assert(std::is_base_of<StyleSheet, T>::value, "T must extend StyleSheet");
-            if (reset) {
-                _fonts.clear();
-                _skins.clear();
-                _styleSheetDeclarations.clear();
-                _declarations = &_styleSheetDeclarations;
-            }
-            std::make_unique<T>()->load(this);
-            if (reset) {
-                _defaultStyle = style("*");
-                _declarations = &_runtimeDeclarations;
-            }
-            _valid = false;
-        }
-
     protected:
-        unsigned int                                                       _restorePoint{0};
-        std::unordered_map<std::string, std::unique_ptr<StyleDeclaration>> _styleSheetDeclarations{};
-        std::unordered_map<std::string, std::unique_ptr<StyleDeclaration>> _runtimeDeclarations{};
-        std::unordered_map<std::string, std::unique_ptr<StyleDeclaration>> *_declarations{};
-        Style                                                              *_defaultStyle;
+        std::unordered_map<std::string, std::unique_ptr<StyleDeclaration>> _declarations{};
         std::unordered_map<std::string, sk_sp<SkTypeface>>                 _fonts{};
         std::unordered_map<std::string, SkinMaker>                         _skins{};
         bool                                                               _valid{false};

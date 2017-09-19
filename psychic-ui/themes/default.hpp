@@ -53,12 +53,14 @@ using namespace psychic_color;
  */
 class PsychicUIStyleSheet : public StyleSheet {
 protected:
-    HSB themeBackgroundColor{};
-    HSB themeForegroundColor{};
+    HSB themeSeparatorColor{}; // Deepest level
+    HSB themeBackgroundColor{}; // Inputs & content backgrounds
+    HSB themeBaseColor{}; // Base color, panel backgrounds
     HSB themeLowContrastColor{};
     HSB themeMediumContrastColor{};
     HSB themeHighContrastColor{};
-    HSB themeHighlightColor{};
+    HSB themeForegroundColor{}; // Base foreground color
+    HSB themeHighlightColor{}; // Color used for active statuses
     HSB themeCyanColor{};
     HSB themeBlueColor{};
     HSB themePurpleColor{};
@@ -69,6 +71,7 @@ protected:
     HSB themeYellowColor{};
 public:
     PsychicUIStyleSheet() = default;
+
     void load(StyleManager *manager) override {
         int smallText     = 10;
         int text          = 12;
@@ -142,7 +145,7 @@ public:
                ->set(color, themeForegroundColor.getColorAlpha())
                ->set(backgroundColor, themeBackgroundColor.getColorAlpha())
                ->set(border, 1)
-               ->set(borderColor, themeBackgroundColor.getColorAlpha());
+               ->set(borderColor, themeSeparatorColor.getColorAlpha());
         // endregion
 
         // region Title Bar
@@ -150,9 +153,9 @@ public:
                ->set(alignItems, "center")
                ->set(height, 48)
                ->set(padding, 12)
-               ->set(backgroundColor, themeLowContrastColor.getColorAlpha())
+               ->set(backgroundColor, themeBaseColor.getColorAlpha())
                ->set(borderBottom, 1)
-               ->set(borderColor, themeBackgroundColor.getColorAlpha());
+               ->set(borderColor, themeSeparatorColor.getColorAlpha());
 
         manager->style("TitleBar Label.title")
                ->set(fontFamily, "Ubuntu Light")
@@ -169,22 +172,22 @@ public:
                ->set(border, 0);
 
         manager->style("TitleBar Button.close")
-               ->set(backgroundColor, themeRedColor.getColorAlpha());
+               ->set(backgroundColor, 0xffff5f57);
 
         manager->style("TitleBar Button.close:hover")
-               ->set(backgroundColor, themeRedOrangeColor.getColorAlpha());
+               ->set(backgroundColor, 0xffff5f57);
 
         manager->style("TitleBar Button.minimize")
-               ->set(backgroundColor, themeOrangeColor.getColorAlpha());
+               ->set(backgroundColor, 0xffffbd2f);
 
         manager->style("TitleBar Button.minimize:hover")
-               ->set(backgroundColor, themeYellowColor.getColorAlpha());
+               ->set(backgroundColor, 0xffffbd2f);
 
         manager->style("TitleBar Button.maximize")
-               ->set(backgroundColor, themeGreenColor.getColorAlpha());
+               ->set(backgroundColor, 0xff28c940);
 
         manager->style("TitleBar Button.maximize:hover")
-               ->set(backgroundColor, themeGreenColor.getColorAlpha());
+               ->set(backgroundColor, 0xff28c940);
 
         // endregion
 
@@ -228,7 +231,7 @@ public:
                ->set(backgroundColor, themeHighlightColor.getColorAlpha());
 
         manager->style("ScrollBar:disabled .thumb")
-               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
+               ->set(backgroundColor, themeBaseColor.getColorAlpha());
 
         manager->style("Scroller ScrollBar.horizontal")
                ->set(marginRight, scrollBarSize);
@@ -254,6 +257,17 @@ public:
         manager->style("Button:active")
                ->set(color, BASE_00)
                ->set(backgroundColor, themeHighlightColor.getColorAlpha());
+
+        manager->style("Button:disabled")
+               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
+
+        manager->style("Button:disabled:hover")
+               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
+
+        manager->style("Button:disabled:active")
+               ->set(color, BASE_00)
+               ->set(backgroundColor, themeHighlightColor.getColorAlpha()); // TODO: Fade
+
         // endregion
 
         // region CheckBox
@@ -263,7 +277,7 @@ public:
                ->set(alignItems, "center")
                ->set(padding, 12)
                ->set(borderRadius, radius)
-               ->set(color, BASE_07)
+               ->set(color, themeForegroundColor.getColorAlpha())
                ->set(fontSize, mediumText)
                ->set(lineHeight, mediumText);
 
@@ -272,7 +286,7 @@ public:
                ->set(height, 24)
                ->set(marginRight, 6)
                ->set(borderRadius, radius)
-               ->set(borderColor, themeForegroundColor.getColorAlpha())
+               ->set(borderColor, themeLowContrastColor.getColorAlpha()) // TODO: Should be contrasting with alpha
                ->set(backgroundColor, themeBackgroundColor.getColorAlpha());
 
         manager->style("CheckBox:hover Shape")
@@ -311,7 +325,7 @@ public:
         manager->style("Menu MenuButton .shortcut")
                ->set(fontSize, smallText)
                ->set(lineHeight, text)
-               ->set(color, BASE_04);
+               ->set(color, themeForegroundColor.getColorAlpha());
 
         manager->style("Menu MenuButton.submenu .arrow")
                ->set(width, 6);
@@ -320,25 +334,25 @@ public:
                ->set(backgroundColor, themeHighlightColor.getColorAlpha());
 
         manager->style("Menu MenuButton:hover .label")
-               ->set(color, BASE_00);
+               ->set(color, BASE_00); // TODO: Contrasting text
 
         manager->style("Menu MenuButton:hover .shortcut")
-               ->set(color, BASE_03);
+               ->set(color, BASE_03); // TODO: Contrasting text
 
         manager->style("Menu MenuButton.submenu:hover .arrow")
-               ->set(color, BASE_00);
+               ->set(color, BASE_00); // TODO: Contrasting text
 
         manager->style("Menu MenuButton:active")
                ->set(backgroundColor, themeHighlightColor.getColorAlpha());
 
         manager->style("Menu MenuButton:active .label")
-               ->set(color, BASE_00);
+               ->set(color, BASE_00); // TODO: Contrasting text
 
         manager->style("Menu MenuButton:active .shortcut")
-               ->set(color, BASE_03);
+               ->set(color, BASE_03); // TODO: Contrasting text
 
         manager->style("Menu MenuButton.submenu:active .arrow")
-               ->set(color, BASE_00);
+               ->set(color, BASE_00); // TODO: Contrasting text
 
         // endregion
 
@@ -349,7 +363,7 @@ public:
                ->set(borderRadius, radius)
                ->set(border, 1)
                ->set(padding, 1)
-               ->set(borderColor, themeForegroundColor.getColorAlpha())
+               ->set(borderColor, themeLowContrastColor.getColorAlpha()) // TODO: Should be contrasting with alpha
                ->set(backgroundColor, themeBackgroundColor.getColorAlpha())
                ->set(fontFamily, "Ubuntu Regular")
                ->set(fontSize, smallText)
@@ -363,16 +377,16 @@ public:
                ->set(width, 24);
 
         manager->style("Range:hover Slider.inverted")
-               ->set(color, BASE_00);
+               ->set(color, BASE_00); // TODO: Contrasting text
 
         manager->style("Range:active Slider.inverted")
-               ->set(color, BASE_00);
+               ->set(color, BASE_00); // TODO: Contrasting text
 
         manager->style("Range:hover Slider")
-               ->set(color, themeHighContrastColor.getColorAlpha());
+               ->set(color, themeForegroundColor.getColorAlpha());
 
         manager->style("Range Slider .track")
-               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
+               ->set(backgroundColor, themeBackgroundColor.getColorAlpha());
 
         manager->style("Range:hover Slider .track");
 
@@ -390,7 +404,8 @@ public:
         manager->style("tabs")
                ->set(flexDirection, "row")
                ->set(borderBottom, 1)
-               ->set(borderColor, themeBackgroundColor.getColorAlpha());
+               ->set(borderColor, themeSeparatorColor.getColorAlpha())
+               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
 
         manager->style("tabs button")
                ->set(fontSize, smallText)
@@ -400,7 +415,7 @@ public:
                ->set(paddingVertical, 6)
                ->set(borderRadius, 0)
                ->set(borderHorizontal, 1)
-               ->set(borderColor, themeBackgroundColor.getColorAlpha());
+               ->set(borderColor, themeSeparatorColor.getColorAlpha());
 
 //        manager->style("tabs button:firstChild")
 //               ->set(borderRadiusLeft, radius);
@@ -413,7 +428,7 @@ public:
         // region Tab Container
 
         manager->style("tabcontainer")
-               ->set(backgroundColor, themeBackgroundColor.getColorAlpha());
+               ->set(backgroundColor, themeBaseColor.getColorAlpha());
 
         // endregion
 
@@ -422,7 +437,7 @@ public:
                ->set(flexDirection, "row")
                ->set(backgroundColor, themeBackgroundColor.getColorAlpha())
                ->set(borderBottom, 1)
-               ->set(borderColor, themeBackgroundColor.getColorAlpha());
+               ->set(borderColor, themeSeparatorColor.getColorAlpha());
 
         manager->style("MenuBar Button")
                ->set(fontSize, smallText)
@@ -436,7 +451,7 @@ public:
                ->set(color, themeHighlightColor.getColorAlpha());
 
         manager->style("MenuBar Button:active")
-               ->set(color, BASE_00)
+               ->set(color, BASE_00) // TODO: Contrasting text
                ->set(backgroundColor, themeHighlightColor.getColorAlpha());
 
         // endregion
@@ -446,14 +461,14 @@ public:
                ->set(flexDirection, "row")
                ->set(backgroundColor, themeLowContrastColor.getColorAlpha())
                ->set(borderBottom, 1)
-               ->set(borderColor, themeBackgroundColor.getColorAlpha());
+               ->set(borderColor, themeSeparatorColor.getColorAlpha());
 
         manager->style("toolbar button")
                ->set(marginHorizontal, -1)
                ->set(paddingHorizontal, 18)
                ->set(borderRadius, 0)
                ->set(borderHorizontal, 1)
-               ->set(borderColor, themeBackgroundColor.getColorAlpha());
+               ->set(borderColor, themeSeparatorColor.getColorAlpha());
         // endregion
     }
 };
@@ -461,49 +476,86 @@ public:
 /**
  * Psychic UI Style
  */
-class PsychicUIDarkStyleSheet : public PsychicUIStyleSheet {
+class PsychicStyleSheet : public PsychicUIStyleSheet {
 public:
-    PsychicUIDarkStyleSheet() :
+    PsychicStyleSheet() :
         PsychicUIStyleSheet() {
-        themeBackgroundColor = HSB{0x282C34};
-        themeForegroundColor = HSB{0xABB2BF};
-        themeLowContrastColor = HSB{0x5C6370};
-        themeMediumContrastColor = HSB{0x828997};
-        themeHighContrastColor = HSB{0xABB2BF};
-        themeHighlightColor = HSB{0x528BFF}; //{0xFF00FFEC}
+        themeSeparatorColor  = HSB{0x181A1F};
+        themeBackgroundColor = HSB{0x1B1D23};
+        themeBaseColor       = HSB{0x21252B};
 
-        themeCyanColor = HSB{0x56B6C2};
-        themeBlueColor = HSB{0x61AFEF};
-        themePurpleColor = HSB{0xC678DD};
-        themeGreenColor = HSB{0x98C379};
-        themeRedColor = HSB{0xBE5046};
+        themeLowContrastColor    = HSB{0x282C34};
+        themeMediumContrastColor = HSB{0x383D48};
+        themeHighContrastColor   = HSB{0x3C414F};
+
+        themeForegroundColor = HSB{0x9DA5B5};
+        themeHighlightColor  = HSB{0x00FFEC};
+
+        themeCyanColor      = HSB{0x56B6C2};
+        themeBlueColor      = HSB{0x61AFEF};
+        themePurpleColor    = HSB{0xC678DD};
+        themeGreenColor     = HSB{0x98C379};
+        themeRedColor       = HSB{0xBE5046};
         themeRedOrangeColor = HSB{0xE06C75};
-        themeOrangeColor = HSB{0xD19A66};
-        themeYellowColor = HSB{0xE5C07B};
+        themeOrangeColor    = HSB{0xD19A66};
+        themeYellowColor    = HSB{0xE5C07B};
     }
 };
 
 /**
- * Psychic UI Style
+ * One Dark UI Style
  */
-class PsychicUILightStyleSheet : public PsychicUIStyleSheet {
+class OneDarkStyleSheet : public PsychicUIStyleSheet {
 public:
-    PsychicUILightStyleSheet() :
+    OneDarkStyleSheet() :
         PsychicUIStyleSheet() {
-        themeBackgroundColor = HSB{0xF9F9F9};
-        themeForegroundColor = HSB{0x2A2C33};
-        themeLowContrastColor = HSB{0xE5E5E6};
-        themeMediumContrastColor = HSB{0x8F9097};
-        themeHighContrastColor = HSB{0x565964};
-        themeHighlightColor = HSB{0x528BFF};
+        themeSeparatorColor  = HSB{0x181A1F};
+        themeBackgroundColor = HSB{0x1B1D23};
+        themeBaseColor       = HSB{0x21252B};
 
-        themeCyanColor = HSB{0x56B6C2};
-        themeBlueColor = HSB{0x61AFEF};
-        themePurpleColor = HSB{0xC678DD};
-        themeGreenColor = HSB{0x98C379};
-        themeRedColor = HSB{0xBE5046};
+        themeLowContrastColor    = HSB{0x282C34};
+        themeMediumContrastColor = HSB{0x383D48};
+        themeHighContrastColor   = HSB{0x3C414F};
+
+        themeForegroundColor = HSB{0x9DA5B5};
+        themeHighlightColor  = HSB{0x0C83EB}; //{0xFF00FFEC}
+
+        themeCyanColor      = HSB{0x56B6C2};
+        themeBlueColor      = HSB{0x61AFEF};
+        themePurpleColor    = HSB{0xC678DD};
+        themeGreenColor     = HSB{0x98C379};
+        themeRedColor       = HSB{0xBE5046};
         themeRedOrangeColor = HSB{0xE06C75};
-        themeOrangeColor = HSB{0xD19A66};
-        themeYellowColor = HSB{0xE5C07B};
-        }
+        themeOrangeColor    = HSB{0xD19A66};
+        themeYellowColor    = HSB{0xE5C07B};
+    }
+};
+
+/**
+ * One Light UI Style
+ */
+class OneLightStyleSheet : public PsychicUIStyleSheet {
+public:
+    OneLightStyleSheet() :
+        PsychicUIStyleSheet() {
+        themeSeparatorColor  = HSB{0xc5cad3};
+        themeBackgroundColor = HSB{0xf3f4f6};
+        themeBaseColor       = HSB{0xd7dae1};
+
+        themeLowContrastColor    = HSB{0xe8eaed};
+        themeMediumContrastColor = HSB{0xebecef};
+        themeHighContrastColor   = HSB{0xf6f7f8};
+
+        themeForegroundColor = HSB{0x2c313b};
+        themeHighlightColor  = HSB{0x5a8aed};
+
+        themeCyanColor      = HSB{0x56B6C2};
+        themeBlueColor      = HSB{0x61AFEF};
+        themePurpleColor    = HSB{0xC678DD};
+        themeGreenColor     = HSB{0x98C379};
+        themeRedColor       = HSB{0xBE5046};
+        themeRedOrangeColor = HSB{0xE06C75};
+        themeOrangeColor    = HSB{0xD19A66};
+        themeYellowColor    = HSB{0xE5C07B};
+    }
 };

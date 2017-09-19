@@ -16,6 +16,7 @@ namespace psychic_ui {
         CheckBoxSkin() : Skin<CheckBox>() {
             setTag("CheckBoxSkin");
         }
+
         virtual void setLabel(const std::string &label) {};
     };
 
@@ -31,15 +32,15 @@ namespace psychic_ui {
         void setLabel(const std::string &label);
 
         const bool checked() const;
-        void setChecked(bool checked);
+        CheckBox *setChecked(bool checked);
 
         const bool active() const override;
 
         Signal<bool> onChange{};
 
     protected:
-        std::string               _label{};
-        bool                      _checked{false};
+        std::string _label{};
+        bool        _checked{false};
 
         void skinChanged() override;
     };

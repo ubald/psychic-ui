@@ -14,7 +14,7 @@ namespace psychic_ui {
         int _gap{0};
         virtual void updateRules() = 0;
         void styleUpdated() override;
-        void addedToRender() override;
+        void createStyles() override;
     };
 
     /**

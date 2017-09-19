@@ -99,11 +99,13 @@ namespace psychic_ui {
 
         /**
          * Helper to forward the stylesheet loading to the style manager
+         * and refresh our children's runtime styles
          * @tparam T :StyleSheet
          */
         template<typename T>
         void loadStyleSheet(bool reset = false) {
             styleManager()->loadStyleSheet<T>(reset);
+            updateRuntimeStyles();
         }
 
     protected:

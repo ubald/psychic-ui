@@ -26,8 +26,8 @@ namespace psychic_ui {
         setGap(_computedStyle->get(gap));
     }
 
-    void Box::addedToRender() {
-        Div::addedToRender();
+    void Box::createStyles() {
+        Div::createStyles();
         updateRules();
     }
 

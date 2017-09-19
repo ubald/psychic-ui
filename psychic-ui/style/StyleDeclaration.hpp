@@ -24,7 +24,6 @@ namespace psychic_ui {
         const std::unique_ptr<StyleSelector> _selector{nullptr};
         std::unique_ptr<Style>               _style{nullptr};
         int                                  _weight{0};
-//        std::function<void()>                _onChanged{nullptr};
 
         #ifdef DEBUG_STYLES
     public:

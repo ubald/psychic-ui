@@ -45,7 +45,7 @@ namespace psychic_ui {
         }
 
         const bool selected() const;
-        void setSelected(bool selected);
+        Button *setSelected(bool selected);
 
         const bool active() const override;
 

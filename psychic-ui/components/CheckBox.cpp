@@ -19,7 +19,9 @@ namespace psychic_ui {
 
         onClick.subscribe(
             [this]() {
-                setChecked(!_checked);
+                if (_enabled) {
+                    setChecked(!_checked);
+                }
             }
         );
     }
@@ -37,12 +39,13 @@ namespace psychic_ui {
         return _checked;
     }
 
-    void CheckBox::setChecked(const bool checked) {
+    CheckBox *CheckBox::setChecked(const bool checked) {
         if (_checked != checked) {
             _checked = checked;
             invalidateStyle();
             onChange(_checked);
         }
+        return this;
     }
 
     const bool CheckBox::active() const {

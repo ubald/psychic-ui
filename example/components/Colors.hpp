@@ -131,11 +131,10 @@ namespace psychic_ui {
         std::shared_ptr<Div>    rybTetradSwatch3{};
 
         void updateSwatches();
-        void addedToRender() override;
     };
 
     Colors::Colors() : Div() {
-        setTag("Divs");
+        setTag("Colors");
         setClassNames({"demo-panel"});
 
         style()
@@ -789,31 +788,5 @@ namespace psychic_ui {
         tetradSwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(tetrad.getColor(2).getColor(), 255));
         tetradSwatch3->style()->set(backgroundColor, PsychicColor::setColorAlpha(tetrad.getColor(3).getColor(), 255));
     }
-
-    void Colors::addedToRender() {
-        Div::addedToRender();
-
-        styleManager()
-            ->style(".swatch")
-            ->set(height, 32.0f);
-
-        styleManager()
-            ->style(".swatches")
-            ->set(flexDirection, "row");
-
-        styleManager()
-            ->style(".color-schemes .title")
-            ->set(marginTop, 12);
-
-        styleManager()
-            ->style(".swatches .swatch")
-            ->set(grow, 1);
-
-        styleManager()
-            ->style(".column Range")
-            ->set(shrink, 0);
-    }
-
-
 }
 

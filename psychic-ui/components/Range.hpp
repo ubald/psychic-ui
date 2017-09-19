@@ -97,7 +97,9 @@ namespace psychic_ui {
     Range<T>::Range(T min, T max, T value, std::function<void(T)> onChangeCallback) :
         internal::RangeBase(), _min(min), _max(max), _value(value) {
         setTag("Range");
-        onChange.subscribe(std::forward<std::function<void(T)>>(onChangeCallback));
+        if (onChangeCallback) {
+            onChange.subscribe(std::forward<std::function<void(T)>>(onChangeCallback));
+        }
         _step = std::is_floating_point<T>::value ? 0.01f : 1;
 
         onMouseScroll.subscribe(
@@ -188,7 +190,7 @@ namespace psychic_ui {
 
     template<class T>
     Range<T> *Range<T>::setValue(const T value) {
-        float v = std::fmax(_min, std::fmin(value, _max));
+        float v = std::max(_min, std::min(value, _max));
         if (v != _value) {
             _value = v;
             onChange(_value);
@@ -216,7 +218,8 @@ namespace psychic_ui {
                 v = percent;
                 break;
         }
-        setValue((T) ((v * ((float) _max - (float) _min)) + (float) _min));
+        v = (v * (static_cast<float>(_max) - static_cast<float >(_min))) + static_cast<float >(_min);
+        setValue(static_cast<T>(std::is_floating_point<T>::value ? v : std::round(v)));
     }
 
     template<class T>
@@ -273,7 +276,7 @@ namespace psychic_ui {
         }
 
         float maxValue = _max - _min;
-        float scale    = 1;
+        float scale    = 1.0f;
         float offset   = _min; // the offset_from 0.
 
         // If interval isn't an integer, there's a possibility that the floating point

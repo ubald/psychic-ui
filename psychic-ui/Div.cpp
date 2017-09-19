@@ -109,6 +109,7 @@ namespace psychic_ui {
     void Div::removed() {}
 
     void Div::addedToRenderRecursive() {
+        createStyles();
         addedToRender();
         for (auto &child: _children) {
             child->addedToRenderRecursive();
@@ -226,9 +227,10 @@ namespace psychic_ui {
         return _enabled;
     }
 
-    void Div::setEnabled(bool value) {
+    Div *Div::setEnabled(bool value) {
         _enabled = value;
         invalidateStyle();
+        return this;
     }
 
     // endregion
@@ -259,7 +261,7 @@ namespace psychic_ui {
     // region State
 
     const bool Div::active() const {
-        return _mouseDown;
+        return _enabled && _mouseDown;
     };
 
     // endregion
@@ -470,7 +472,7 @@ namespace psychic_ui {
         } else if (_parent) {
             return _parent->styleManager();
         } else {
-            return nullptr;//StyleManager::getInstance().get();
+            return nullptr;
         }
     }
 
@@ -557,6 +559,13 @@ namespace psychic_ui {
     }
 
     // endregion
+
+    void Div::updateRuntimeStyles() {
+        createStyles();
+        for (auto &child: _children) {
+            child->updateRuntimeStyles();
+        }
+    }
 
     void Div::invalidateStyle() {
         if (_styleDirty) {
@@ -705,7 +714,6 @@ namespace psychic_ui {
             YGNodeStyleSet##prop(_yogaNode, _computedStyle->get(style)); \
         } else if (YGNodeStyleGet##prop(_yogaNode) != (fallback)) { \
             /*Yoga returns the default value when it is set as undefined*/ \
-            std::cout << YGNodeStyleGet##prop(_yogaNode) << std::endl; \
             YGNodeStyleSet##prop(_yogaNode, YGUndefined); \
         } \
 

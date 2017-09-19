@@ -82,7 +82,7 @@ namespace psychic_ui {
         bool getVisible() const;
         virtual void setVisible(bool value);
         bool enabled() const;
-        virtual void setEnabled(bool value);
+        virtual Div *setEnabled(bool value);
         virtual const bool active() const;
         bool focused() const;
         void requestFocus();
@@ -393,6 +393,19 @@ namespace psychic_ui {
          * Invalidate the style
          */
         void invalidateStyle();
+
+        /**
+         * Update the runtime style rules
+         */
+        void updateRuntimeStyles();
+
+        /**
+         * Create runtime styles
+         * This is called by updateRuntimeStyles and has to be overridden by div's
+         * that want to add rules to the stylesheet. It will be called during the app's
+         * lifetime when adding to render list or if a stylesheet is loaded.
+         */
+        virtual void createStyles() {};
 
         /**
          * Callback for when styles were updated

@@ -37,9 +37,8 @@ namespace psychic_ui {
         Window("Demo Application") {
         //_decorated = false;
 
-        styleManager()->loadStyleSheet<PsychicUIDarkStyleSheet>();
-        styleManager()->setRestorePoint();
-        styleManager()->loadStyleSheet<DemoStyleSheet>();
+        loadStyleSheet<OneDarkStyleSheet>();
+        loadStyleSheet<DemoStyleSheet>();
 
         app->add<TitleBar>();
 
@@ -72,13 +71,21 @@ namespace psychic_ui {
                     Menu::item(
                         "Theme", {
                             Menu::item(
+                                "Psychic", [this]() {
+                                    loadStyleSheet<PsychicStyleSheet>(true);
+                                    loadStyleSheet<DemoStyleSheet>();
+                                }
+                            ),
+                            Menu::item(
                                 "Dark", [this]() {
-                                    loadStyleSheet<PsychicUIDarkStyleSheet>(true);
+                                    loadStyleSheet<OneDarkStyleSheet>(true);
+                                    loadStyleSheet<DemoStyleSheet>();
                                 }
                             ),
                             Menu::item(
                                 "Light", [this]() {
-                                    loadStyleSheet<PsychicUILightStyleSheet>(true);
+                                    loadStyleSheet<OneLightStyleSheet>(true);
+                                    loadStyleSheet<DemoStyleSheet>();
                                 }
                             )
                         }
