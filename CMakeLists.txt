@@ -16,6 +16,12 @@ include(FeatureSummary)
 option(PSYCHIC_UI_BUILD_SHARED "Build Psychic UI as a shared library?" ON)
 add_feature_info("psychic-ui-shared" PSYCHIC_UI_BUILD_SHARED "Build shared library")
 
+option(PSYCHIC_UI_BUILD_SDL2 "SDL2 Support" ON)
+add_feature_info("psychic-ui-sdl2" PSYCHIC_UI_BUILD_SDL2 "Build with support for SDL2")
+
+option(PSYCHIC_UI_BUILD_GLFW "GLFW Support" ON)
+add_feature_info("psychic-ui-glfw" PSYCHIC_UI_BUILD_GLFW "Build with support for GLFW")
+
 find_package(OpenGL REQUIRED)
 find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
@@ -29,7 +35,18 @@ set(LIBPSYCHIC_UI_EXTRA_SOURCE "")
 add_subdirectory(extlib/glad)
 
 # GLFW
-add_subdirectory(extlib/glfw)
+if (PSYCHIC_UI_BUILD_GLFW)
+    add_subdirectory(extlib/glfw)
+    add_definitions(-DWITH_GLFW)
+endif()
+
+# SDL
+if(PSYCHIC_UI_BUILD_SDL2)
+    find_package(SDL2 REQUIRED)
+    if (SDL2_FOUND)
+        add_definitions(-DWITH_SDL2)
+    endif()
+endif()
 
 # YOGA
 add_subdirectory(extlib/yoga)
@@ -126,7 +143,7 @@ set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     psychic-ui/Modal.cpp
     psychic-ui/Modal.hpp
     psychic-ui/opengl.hpp
-    psychic-ui/psychic-ui.cpp
+    psychic-ui/psychic-ui.hpp
     psychic-ui/Shape.cpp
     psychic-ui/Shape.hpp
     psychic-ui/Skin.cpp
@@ -135,7 +152,11 @@ set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     psychic-ui/Window.hpp
     psychic-ui/components/Box.cpp
     psychic-ui/components/Box.hpp
-    )
+    psychic-ui/Application.cpp
+    psychic-ui/Application.hpp
+    psychic-ui/applications/GLFWApplication.cpp
+    psychic-ui/applications/GLFWApplication.hpp
+    psychic-ui/applications/SDL2Application.cpp psychic-ui/applications/SDL2Application.hpp)
 
 add_library(psychic-ui SHARED ${SOURCE_FILES})
 
@@ -145,7 +166,6 @@ set_property(TARGET psychic-ui PROPERTY C_STANDARD 11)
 target_include_directories(psychic-ui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${OPENGL_INCLUDE_DIR}
-    ${GLFW_INCLUDE_DIRS}
     ${YOGA_INCLUDE_DIRS}
     ${SKIA_INCLUDE_DIRS}
     ${PSYCHIC_COLOR_INCLUDE_DIRS}
@@ -154,9 +174,6 @@ target_include_directories(psychic-ui PUBLIC
 target_link_libraries(psychic-ui
     # OPENGL
     ${OPENGL_LIBRARY}
-    # GLFW
-    glfw
-#    ${GLFW_LIBRARIES}
     # Skia
     ${PNG_LIBRARIES}
     ${JPEG_LIBRARY}
@@ -168,6 +185,16 @@ target_link_libraries(psychic-ui
     # PSYCHIC COLOR
     ${PSYCHIC_COLOR_LIBRARIES}
 )
+
+if (PSYCHIC_UI_BUILD_GLFW)
+    target_include_directories(psychic-ui PUBLIC ${GLFW_INCLUDE_DIRS})
+    target_link_libraries(psychic-ui glfw)
+endif()
+
+if (PSYCHIC_UI_BUILD_SDL2)
+    target_include_directories(psychic-ui PUBLIC ${SDL2_INCLUDE_DIR})
+    target_link_libraries(psychic-ui ${SDL2_LIBRARY})
+endif()
 
 if (CMAKE_SYSTEM MATCHES "Linux" AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     target_link_libraries(psychic-ui c++abi)  # Necessary for Travis Clang builds

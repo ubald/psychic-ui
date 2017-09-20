@@ -10,33 +10,31 @@
 #include "SkStream.h"
 #include "SkSurface.h"
 #include "SkPaint.h"
-#include "opengl.hpp"
 #include "Div.hpp"
 #include "Modal.hpp"
 #include "style/StyleManager.hpp"
 #include "style/Style.hpp"
 #include "components/Menu.hpp"
 #include "signals/Signal.hpp"
+#include "Application.hpp"
 
 namespace psychic_ui {
 
     class Window : public Div {
     public:
-        static std::unordered_map<GLFWwindow *, Window *> windows;
-
-        Window(const std::string &title);
+        explicit Window(const std::string &title);
         virtual ~Window();
-
-        /**
-         * GLFW Window
-         * @return GLFWWindow*
-         */
-        GLFWwindow *glfwWindow();
 
         Window *window() override;
 
-        const std::string title() const;
+        const std::string getTitle() const;
         void setTitle(const std::string &title);
+
+        bool getResizable() const;
+        void setResizable(bool resizable);
+
+        bool getDecorated() const;
+        void setDecorated(bool decorated);
 
         void toggleMinimized();
         bool minimized() const;
@@ -47,7 +45,7 @@ namespace psychic_ui {
         void setMaximized(bool minimized);
 
         void toggleFullscreen();
-        bool fullscreen() const;
+        bool getFullscreen() const;
         void setFullscreen(bool fullscreen);
 
         void setVisible(bool value) override;
@@ -63,7 +61,7 @@ namespace psychic_ui {
         const int windowHeight() const;
         void setWindowSize(const int width, const int height);
 
-        void open();
+        void open(SystemWindow *systemWindow);
         void close();
         void drawAll();
         virtual void drawContents();
@@ -75,9 +73,11 @@ namespace psychic_ui {
         std::shared_ptr<Div> appContainer() const {
             return app;
         };
+
         std::shared_ptr<Modal> modalContainer() const {
             return modal;
         }
+
         std::shared_ptr<Modal> menuContainer() const {
             return menu;
         }
@@ -108,98 +108,6 @@ namespace psychic_ui {
             updateRuntimeStyles();
         }
 
-    protected:
-
-        // region Default DIVs
-
-        std::shared_ptr<Div> app{};
-        std::shared_ptr<Modal> modal{};
-        std::shared_ptr<Modal> menu{};
-
-        // endregion
-
-        // region Rendering
-
-        GrContext *_sk_context{nullptr};
-        SkSurface *_sk_surface{nullptr};
-        SkCanvas  *_sk_canvas{nullptr};
-        int       _stencilBits = 0;
-        int       _samples     = 0;
-
-        // endregion
-
-        // region Window
-
-        GLFWwindow *_glfwWindow{nullptr};
-
-        std::string _title;
-        bool        _fullscreen{false};
-        bool        _minimized{false};
-        bool        _maximized{false};
-        bool        _windowFocused{false};
-        bool        _resizable{true};
-        bool        _decorated{true};
-
-        int   _fbWidth{0};
-        int   _fbHeight{0};
-        float _pixelRatio;
-        bool  _dragging{false};
-        int   _windowDragMouseX{0};
-        int   _windowDragMouseY{0};
-        int   _windowDragOffsetX{0};
-        int   _windowDragOffsetY{0};
-        int   _windowX{0};
-        int   _windowY{0};
-        int   _windowWidth{0};
-        int   _windowHeight{0};
-        int   _previousWindowX{0};
-        int   _previousWindowY{0};
-        int   _previousWindowWidth{0};
-        int   _previousWindowHeight{0};
-
-        // endregion
-
-        // region Mouse
-
-        /**
-         * Mapping of internal cursors enum to glfw int cursor
-         */
-        GLFWcursor  *_cursors[6];
-
-        /**
-         * Cursor to use when this component has the mouse focus
-         */
-        int _cursor{Cursor::Arrow};
-
-        int    _mouseX{0};
-        int    _mouseY{0};
-
-        int    _mouseState{0};
-        int    _modifiers{0};
-
-        /**
-         * Mouse focus path
-         */
-         std::vector<Div *> _focusPath{};
-
-        // endregion
-
-        // region Initialization
-
-        void initSkia();
-        void getSkiaSurface();
-        void attachCallbacks();
-
-        // endregion
-
-        // region Events
-
-        double _lastInteraction{0};
-
-        virtual bool dropEvent(const std::vector<std::string> & /* filenames */) { return false; /* To be overridden */ }
-
-        bool keyboardEvent(int key, int scancode, int action, int modifiers) override;
-        bool keyboardCharacterEvent(unsigned int codepoint) override;
 
         // Window Delegate
         virtual void windowMoved(const int x, const int y);
@@ -210,18 +118,79 @@ namespace psychic_ui {
         virtual void windowRestored();
         virtual bool windowShouldClose();
 
+
+        virtual bool dropEvent(const std::vector<std::string> & /* filenames */) { return false; /* To be overridden */ }
+        bool keyboardEvent(int key, int scancode, int action, int modifiers) override;
+        bool keyboardCharacterEvent(unsigned int codepoint) override;
+
+
+    protected:
+
+        // region Default DIVs
+
+        std::shared_ptr<Div>   app{};
+        std::shared_ptr<Modal> modal{};
+        std::shared_ptr<Modal> menu{};
+
+        // endregion
+
+        // region Rendering
+
+        SystemWindow *_systemWindow{nullptr};
+        GrContext   *_sk_context{nullptr};
+        SkSurface   *_sk_surface{nullptr};
+        SkCanvas    *_sk_canvas{nullptr};
+        //int       _stencilBits = 0;
+        //int       _samples     = 0;
+
+        // endregion
+
+        // region Window
+
+        std::string _title;
+        bool        _fullscreen{false};
+        bool        _resizable{true};
+        bool        _decorated{true};
+
+        int   _fbWidth{0};
+        int   _fbHeight{0};
+        float _pixelRatio;
+
+        // endregion
+
+        // region Mouse
+
+        /**
+         * Cursor to use when this component has the mouse focus
+         */
+        int _cursor{Cursor::Arrow};
+
+        int _mouseX{0};
+        int _mouseY{0};
+
+
+        /**
+         * Mouse focus path
+         */
+        std::vector<Div *> _focusPath{};
+
+        // endregion
+
+        // region Initialization
+
+        void initSkia();
+        void getSkiaSurface();
+
+        // endregion
+
+        // region Events
+
+        double _lastInteraction{0};
+
+
+
         // Event handlers
-        void cursorPosEventCallback(double x, double y);
-        void mouseButtonEventCallback(int button, int action, int modifiers);
-        void keyEventCallback(int key, int scancode, int action, int mods);
-        void charEventCallback(unsigned int codepoint);
-        void dropEventCallback(int count, const char **filenames);
-        void scrollEventCallback(double x, double y);
-        void resizeEventCallback(int width, int height);
-        void positionEventCallback(int x, int y);
-        void focusEventCallback(int focused);
-        void iconifyEventCallback(int iconified);
-        void closeEventCallback();
+
 
         // endregion
 
@@ -237,7 +206,7 @@ namespace psychic_ui {
         // Performance
         std::chrono::time_point<std::chrono::high_resolution_clock> lastFrame;
         std::chrono::time_point<std::chrono::high_resolution_clock> lastReport;
-        int frames = 0;
+        int                                                         frames = 0;
     };
 }
 

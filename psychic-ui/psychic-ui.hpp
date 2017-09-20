@@ -2,7 +2,6 @@
 
 #include <SkColor.h>
 #include <yoga/Yoga.h>
-#include "opengl.hpp"
 //#include <rxcpp/rx.hpp>
 
 // Configuration
@@ -26,9 +25,4 @@ namespace psychic_ui {
 //    }
 
     typedef SkColor Color;
-
-    void init();
-    void mainloop();
-    void shutdown();
-
 }
