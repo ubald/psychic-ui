@@ -118,7 +118,7 @@ namespace psychic_ui {
     }
 
     void GLFWApplication::close(std::shared_ptr<Window> window) {
-        // TODO: Use erease delete
+        // TODO: Use erase delete
         auto res = std::find_if(glfwWindows.cbegin(), glfwWindows.cend(), [&window](auto &it) { return it.second->_window == window; });
         if (res != glfwWindows.cend()) {
             glfwWindows.erase(res->first);
@@ -134,21 +134,30 @@ namespace psychic_ui {
     GLFWSystemWindow::GLFWSystemWindow(GLFWApplication *application, std::shared_ptr<Window> window) :
         SystemWindow(application, window), _glfwApplication(application) {
 
+        // OPENGL INIT
+
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-        glfwWindowHint(GLFW_SAMPLES, 0);
-        glfwWindowHint(GLFW_RED_BITS, _samples);
+        glfwWindowHint(GLFW_SRGB_CAPABLE, GL_TRUE);
+        glfwWindowHint(GLFW_RED_BITS, 8);
         glfwWindowHint(GLFW_GREEN_BITS, 8);
         glfwWindowHint(GLFW_BLUE_BITS, 8);
         glfwWindowHint(GLFW_ALPHA_BITS, 8);
+        glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+        glfwWindowHint(GLFW_DEPTH_BITS, 0);
         glfwWindowHint(GLFW_STENCIL_BITS, _stencilBits);
-        glfwWindowHint(GLFW_DEPTH_BITS, 24);
+        glfwWindowHint(GLFW_SAMPLES, _samples);
+
+        // WINDOW FLAGS
+
         glfwWindowHint(GLFW_VISIBLE, window->getVisible() ? GL_TRUE : GL_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, window->getResizable() ? GL_TRUE : GL_FALSE);
         glfwWindowHint(GLFW_DECORATED, window->getDecorated() ? GL_TRUE : GL_FALSE);
+
+        // CREATE WINDOW
 
         if (window->getFullscreen()) {
             GLFWmonitor       *monitor = glfwGetPrimaryMonitor();
@@ -162,6 +171,18 @@ namespace psychic_ui {
             throw std::runtime_error("Could not create an OpenGL context!");
         }
 
+        // GATHER INFORMATION
+
+        glfwGetWindowPos(_glfwWindow, &_x, &_y);
+        glfwGetWindowSize(_glfwWindow, &_width, &_height);
+        _pixelRatio = get_pixel_ratio(_glfwWindow);
+        #if defined(_WIN32) || defined(__linux__)
+        if (_pixelRatio != 1 && !_fullscreen)
+            glfwSetWindowSize(_glfwWindow, _width * _pixelRatio, _height * _pixelRatio);
+        #endif
+
+        // GL CONTEXT
+
         glfwMakeContextCurrent(_glfwWindow);
 
         #if defined(PSYCHIC_UI_GLAD)
@@ -173,16 +194,9 @@ namespace psychic_ui {
         }
         #endif
 
-        glfwGetWindowPos(_glfwWindow, &_x, &_y);
-        glfwGetWindowSize(_glfwWindow, &_width, &_height);
-        _pixelRatio = get_pixel_ratio(_glfwWindow);
-        #if defined(_WIN32) || defined(__linux__)
-        if (_pixelRatio != 1 && !_fullscreen)
-            glfwSetWindowSize(_glfwWindow, _width * _pixelRatio, _height * _pixelRatio);
-        #endif
+        //glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
+        //glViewport(0, 0, _fbWidth, _fbHeight);
 
-        glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
-        glViewport(0, 0, _fbWidth, _fbHeight);
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glfwSwapInterval(0);
@@ -193,7 +207,7 @@ namespace psychic_ui {
         glfwPollEvents();
         #endif
 
-        // Get Some info about the framebuffer
+        // Get Some info back about the framebuffer (in case its different from what we set?)
         glGetFramebufferAttachmentParameteriv(
             GL_DRAW_FRAMEBUFFER,
             GL_STENCIL,
@@ -209,6 +223,7 @@ namespace psychic_ui {
         window->setVisible(glfwGetWindowAttrib(_glfwWindow, GLFW_VISIBLE) != 0);
         _lastInteraction = glfwGetTime();
 
+        // Create system cursors
         for (int i = 0; i < 6; ++i) {
             _cursors[i] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR + i);
         }
@@ -217,9 +232,9 @@ namespace psychic_ui {
     }
 
     GLFWSystemWindow::~GLFWSystemWindow() {
-        for (int i = 0; i < 6; ++i) {
-            if (_cursors[i]) {
-                glfwDestroyCursor(_cursors[i]);
+        for (auto &_cursor : _cursors) {
+            if (_cursor) {
+                glfwDestroyCursor(_cursor);
             }
         }
 
@@ -238,25 +253,24 @@ namespace psychic_ui {
             return false;
         }
 
-        glClearColor(0, 0, 0, 0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        //glfwMakeContextCurrent(_glfwWindow);
+        //glClearColor(0, 0, 0, 0);
+        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        //glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
+        //glfwGetWindowSize(_glfwWindow, &_width, &_height);
+        //glViewport(0, 0, _fbWidth, _fbHeight);
+        //glBindSampler(0, 0);
 
-        glfwMakeContextCurrent(_glfwWindow);
-        glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
-        glfwGetWindowSize(_glfwWindow, &_width, &_height);
-        glViewport(0, 0, _fbWidth, _fbHeight);
-        glBindSampler(0, 0);
-
-        #if defined(_WIN32) || defined(__linux__)
-        _width = (int)(_width / _pixelRatio);
-        _height =(int)(_height / _pixelRatio);
-        _fbWidth = (int)(_fbWidth * _pixelRatio);
-        _fbHeight = (int)(_fbHeight * _pixelRatio);
-        #else
-        if (_width) {
-            _pixelRatio = (float) _fbWidth / (float) _width;
-        }
-        #endif
+        //#if defined(_WIN32) || defined(__linux__)
+        //_width = (int)(_width / _pixelRatio);
+        //_height =(int)(_height / _pixelRatio);
+        //_fbWidth = (int)(_fbWidth * _pixelRatio);
+        //_fbHeight = (int)(_fbHeight * _pixelRatio);
+        //#else
+        //if (_width) {
+        //    _pixelRatio = (float) _fbWidth / (float) _width;
+        //}
+        //#endif
 
         _window->drawAll();
 
@@ -268,7 +282,7 @@ namespace psychic_ui {
     void GLFWSystemWindow::setSize(int width, int height) {
         _width  = width;
         _height = height;
-        glfwSetWindowSize(_glfwWindow, width, height);
+        glfwSetWindowSize(_glfwWindow, _width, _height);
     }
 
     void GLFWSystemWindow::setTitle(const std::string &title) {
@@ -310,12 +324,10 @@ namespace psychic_ui {
     void GLFWSystemWindow::setMinimized(bool minimized) {
         if (_minimized != minimized) {
             _minimized = minimized;
-            if (_glfwWindow) {
-                if (_minimized) {
-                    glfwIconifyWindow(_glfwWindow);
-                } else {
-                    glfwRestoreWindow(_glfwWindow);
-                }
+            if (_minimized) {
+                glfwIconifyWindow(_glfwWindow);
+            } else {
+                glfwRestoreWindow(_glfwWindow);
             }
         }
     }
@@ -327,23 +339,19 @@ namespace psychic_ui {
     void GLFWSystemWindow::setMaximized(bool maximized) {
         if (_maximized != maximized) {
             _maximized = maximized;
-            if (_glfwWindow) {
-                if (_maximized) {
-                    glfwMaximizeWindow(_glfwWindow);
-                } else {
-                    glfwRestoreWindow(_glfwWindow);
-                }
+            if (_maximized) {
+                glfwMaximizeWindow(_glfwWindow);
+            } else {
+                glfwRestoreWindow(_glfwWindow);
             }
         }
     }
 
     void GLFWSystemWindow::setVisible(bool visible) {
-        if (_glfwWindow) {
-            if (visible) {
-                glfwMaximizeWindow(_glfwWindow);
-            } else {
-                glfwRestoreWindow(_glfwWindow);
-            }
+        if (visible) {
+            glfwHideWindow(_glfwWindow);
+        } else {
+            glfwShowWindow(_glfwWindow);
         }
     }
 
@@ -457,7 +465,7 @@ namespace psychic_ui {
             _glfwWindow, [](GLFWwindow *w) {
                 auto it = GLFWApplication::glfwWindows.find(w);
                 if (it == GLFWApplication::glfwWindows.cend()) { return; }
-                it->second->_window->drawAll();
+                it->second->render();
             }
         );
     }
@@ -472,72 +480,63 @@ namespace psychic_ui {
 
         // Weird but the cursor seem better aligned like this
         // At least on a mac...
-        _mouseX = (int) x - 1;
-        _mouseY = (int) y - 2;
+        _mouseX = static_cast<int>(x) - 1;
+        _mouseY = static_cast<int>(y) - 2;
 
         // Handle window dragging
         if (_dragging) {
-            _windowDragOffsetX = (int) x - _windowDragMouseX;
-            _windowDragOffsetY = (int) y - _windowDragMouseY;
+            _windowDragOffsetX = _mouseX - _windowDragMouseX;
+            _windowDragOffsetY = _mouseY - _windowDragMouseY;
             glfwSetWindowPos(_glfwWindow, _x + _windowDragOffsetX, _y + _windowDragOffsetY);
         }
 
-        try {
-            _window->mouseMoved(_mouseX, _mouseY, _mouseState, _modifiers, false);
-        } catch (const std::exception &e) {
-            std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
-        }
+        _window->mouseMoved(_mouseX, _mouseY, _mouseState, _modifiers, false);
     }
 
     void GLFWSystemWindow::mouseButtonEventCallback(int button, int action, int modifiers) {
         _modifiers       = modifiers;
         _lastInteraction = glfwGetTime();
 
-        try {
-            if (action == GLFW_PRESS) {
-                _mouseState |= 1 << button;
-            } else {
-                _mouseState &= ~(1 << button);
-            }
+        int btn = 0;
+        if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            btn = 1;
+        } else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+            btn = 2;
+        } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+            btn = 3;
+        } else {
+            return;
+        }
 
-            _window->mouseButton(_mouseX, _mouseY, button, action == GLFW_PRESS, _modifiers);
-            if (action == GLFW_PRESS) {
-                _window->mouseDown(_mouseX, _mouseY, button, _modifiers);
-            } else {
-                _window->click(_mouseX, _mouseY, button, _modifiers);
-                _window->mouseUp(_mouseX, _mouseY, button, _modifiers);
-            }
+        if (action == GLFW_PRESS) {
+            _mouseState |= 1 << btn;
+        } else {
+            _mouseState &= ~(1 << btn);
+        }
 
-        } catch (const std::exception &e) {
-            std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
+        _window->mouseButton(_mouseX, _mouseY, btn, action == GLFW_PRESS, _modifiers);
+        if (action == GLFW_PRESS) {
+            _window->mouseDown(_mouseX, _mouseY, btn, _modifiers);
+        } else {
+            _window->click(_mouseX, _mouseY, btn, _modifiers);
+            _window->mouseUp(_mouseX, _mouseY, btn, _modifiers);
         }
     }
 
     void GLFWSystemWindow::scrollEventCallback(double x, double y) {
         _lastInteraction = glfwGetTime();
-        try {
-            _window->mouseScrolled(_mouseX, _mouseY, x, y);
-        } catch (const std::exception &e) {
-            std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
-        }
+        _window->mouseScrolled(_mouseX, _mouseY, x, y);
     }
 
     void GLFWSystemWindow::keyEventCallback(int key, int scancode, int action, int mods) {
         _lastInteraction = glfwGetTime();
-        try {
-            _window->keyboardEvent(key, scancode, action, mods);
-        } catch (const std::exception &e) {
-            std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
-        }
+                // TODO: Key mods map
+        _window->keyboardEvent(key, scancode, action, mods);
     }
 
     void GLFWSystemWindow::charEventCallback(unsigned int codepoint) {
         _lastInteraction = glfwGetTime();
-        try {
-            _window->keyboardCharacterEvent(codepoint);
-        } catch (const std::exception &e) {
-            std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
-        }
+        _window->keyboardCharacterEvent(codepoint);
     }
 
     void GLFWSystemWindow::dropEventCallback(int count, const char **filenames) {
@@ -545,15 +544,11 @@ namespace psychic_ui {
         for (int                 i = 0; i < count; ++i) {
             arg[i] = filenames[i];
         }
-        try {
-            _window->dropEvent(arg);
-        } catch (const std::exception &e) {
-            std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
-        }
+        _window->dropEvent(arg);
     }
 
     void GLFWSystemWindow::resizeEventCallback(int /*setWidth*/, int /*setHeight*/) {
-        glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
+        //glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
         glfwGetWindowSize(_glfwWindow, &_width, &_height);
 
         #if defined(_WIN32) || defined(__linux__)
@@ -561,67 +556,45 @@ namespace psychic_ui {
         _height /= _pixelRatio;
         #endif
 
-        if ((_fbWidth == 0 && _fbHeight == 0) || (_width == 0 && _height == 0)) {
+        if (/*(_fbWidth == 0 && _fbHeight == 0) ||*/ (_width == 0 && _height == 0)) {
             return;
         }
 
         _lastInteraction = glfwGetTime();
 
-        try {
-            _window->windowResized(_width, _height);
-        } catch (const std::exception &e) {
-            std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
-        }
+        _window->windowResized(_width, _height);
     }
 
     void GLFWSystemWindow::positionEventCallback(int x, int y) {
-        _x = x;
-        _y = y;
-
+        _x               = x;
+        _y               = y;
         _lastInteraction = glfwGetTime();
-
-        try {
-            _window->windowMoved(_x, _y);
-        } catch (const std::exception &e) {
-            std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
-        }
+        _window->windowMoved(_x, _y);
     }
 
     void GLFWSystemWindow::focusEventCallback(int focused) {
         _lastInteraction = glfwGetTime();
-        try {
-            _focused = focused == 1;
-            if (_focused) {
-                _window->windowActivated();
-            } else {
-                _window->windowDeactivated();
-            }
-        } catch (const std::exception &e) {
-            std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
+        _focused         = focused == 1;
+        if (_focused) {
+            _window->windowActivated();
+        } else {
+            _window->windowDeactivated();
         }
     }
 
     void GLFWSystemWindow::iconifyEventCallback(int iconified) {
         _lastInteraction = glfwGetTime();
-        try {
-            _minimized = iconified == 1;
-            if (_minimized) {
-                _window->windowMinimized();
-            } else {
-                _window->windowRestored();
-            }
-        } catch (const std::exception &e) {
-            std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
+        _minimized       = iconified == 1;
+        if (_minimized) {
+            _window->windowMinimized();
+        } else {
+            _window->windowRestored();
         }
     }
 
     void GLFWSystemWindow::closeEventCallback() {
         _lastInteraction = glfwGetTime();
-        try {
-            glfwSetWindowShouldClose(_glfwWindow, _window->windowShouldClose() ? GLFW_TRUE : GLFW_FALSE);
-        } catch (const std::exception &e) {
-            std::cerr << "Caught exception in event handler: " << e.what() << std::endl;
-        }
+        glfwSetWindowShouldClose(_glfwWindow, _window->windowShouldClose() ? GLFW_TRUE : GLFW_FALSE);
     }
 
 }

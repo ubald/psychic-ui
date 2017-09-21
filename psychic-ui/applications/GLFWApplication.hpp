@@ -66,14 +66,7 @@ namespace psychic_ui {
     protected:
         GLFWApplication *_glfwApplication{nullptr};
         GLFWwindow      *_glfwWindow{nullptr};
-        double          _lastInteraction{0};
-
-
-        bool _dragging{false};
-        int  _windowDragMouseX{0};
-        int  _windowDragMouseY{0};
-        int  _windowDragOffsetX{0};
-        int  _windowDragOffsetY{0};
+        
         int  _previousWindowX{0};
         int  _previousWindowY{0};
         int  _previousWindowWidth{0};

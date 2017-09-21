@@ -31,6 +31,15 @@ find_package(Freetype REQUIRED)
 set(PSYCHIC_UI_EXTRA_LIBS "")
 set(LIBPSYCHIC_UI_EXTRA_SOURCE "")
 
+if (WIN32)
+    add_definitions(-DWIN)
+elseif (APPLE)
+    add_definitions(-DAPPLE)
+elseif (UNIX)
+    add_definitions(-DUNIX)
+endif()
+
+
 # GLAD
 add_subdirectory(extlib/glad)
 
@@ -156,7 +165,9 @@ set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     psychic-ui/Application.hpp
     psychic-ui/applications/GLFWApplication.cpp
     psychic-ui/applications/GLFWApplication.hpp
-    psychic-ui/applications/SDL2Application.cpp psychic-ui/applications/SDL2Application.hpp)
+    psychic-ui/applications/SDL2Application.cpp
+    psychic-ui/applications/SDL2Application.hpp
+    psychic-ui/skins/DefaultSkin.hpp)
 
 add_library(psychic-ui SHARED ${SOURCE_FILES})
 

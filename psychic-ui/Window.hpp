@@ -4,12 +4,8 @@
 #include <chrono>
 #include <unordered_map>
 #include "GrContext.h"
-#include "gl/GrGLInterface.h"
-#include "SkData.h"
-#include "SkImage.h"
-#include "SkStream.h"
 #include "SkSurface.h"
-#include "SkPaint.h"
+#include "SkCanvas.h"
 #include "Div.hpp"
 #include "Modal.hpp"
 #include "style/StyleManager.hpp"
@@ -140,8 +136,6 @@ namespace psychic_ui {
         GrContext   *_sk_context{nullptr};
         SkSurface   *_sk_surface{nullptr};
         SkCanvas    *_sk_canvas{nullptr};
-        //int       _stencilBits = 0;
-        //int       _samples     = 0;
 
         // endregion
 
@@ -152,8 +146,8 @@ namespace psychic_ui {
         bool        _resizable{true};
         bool        _decorated{true};
 
-        int   _fbWidth{0};
-        int   _fbHeight{0};
+        //int   _fbWidth{0};
+        //int   _fbHeight{0};
         float _pixelRatio;
 
         // endregion
@@ -204,7 +198,6 @@ namespace psychic_ui {
         using Div::removeAll;
 
         // Performance
-        std::chrono::time_point<std::chrono::high_resolution_clock> lastFrame;
         std::chrono::time_point<std::chrono::high_resolution_clock> lastReport;
         int                                                         frames = 0;
     };

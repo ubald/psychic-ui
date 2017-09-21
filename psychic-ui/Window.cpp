@@ -76,8 +76,7 @@ namespace psychic_ui {
     }
 
     void Window::initSkia() {
-        const GrGLInterface *interface = nullptr;
-        _sk_context = GrContext::MakeGL(interface).release();
+        _sk_context = GrContext::MakeGL(nullptr).release();
         getSkiaSurface();
     }
 
@@ -86,7 +85,7 @@ namespace psychic_ui {
             throw std::runtime_error("Skia surface requested without a context");
         }
 
-        GrGLFramebufferInfo framebufferInfo;
+        GrGLFramebufferInfo framebufferInfo{};
         framebufferInfo.fFBOID = 0;  // assume default framebuffer
         GrBackendRenderTarget backendRenderTarget(
             _systemWindow->getWidth(),
@@ -274,6 +273,21 @@ namespace psychic_ui {
             return;
         }
 
+        //glfwMakeContextCurrent(_glfwWindow);
+        //glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
+        //glfwGetWindowSize(_glfwWindow, &_windowWidth, &_windowHeight);
+        //
+        //#if defined(_WIN32) || defined(__linux__)
+        //_windowWidth = (int)(_windowWidth / _pixelRatio);
+        //_windowHeight =(int)(_windowHeight / _pixelRatio);
+        //_fbWidth = (int)(_fbWidth * _pixelRatio);
+        //_fbHeight = (int)(_fbHeight * _pixelRatio);
+        //#else
+        //if (_windowWidth) {
+        //    _pixelRatio = (float) _fbWidth / (float) _windowWidth;
+        //}
+        //#endif
+
         // Check for dirty style manager
         // Before layout since it can have an impact on the layout
         if (!_styleManager->valid()) {
@@ -301,6 +315,9 @@ namespace psychic_ui {
             }
             #endif
         }
+
+        //glViewport(0, 0, _fbWidth, _fbHeight);
+        //glBindSampler(0, 0);
 
         _sk_canvas->clear(0x00000000);
         render(_sk_canvas);

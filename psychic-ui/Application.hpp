@@ -19,6 +19,7 @@ namespace psychic_ui {
 
     public:
         SystemWindow(Application *application, std::shared_ptr<Window> window);
+
         std::shared_ptr<Window> window() const;
 
         virtual bool render() = 0;
@@ -46,21 +47,28 @@ namespace psychic_ui {
         Application             *_application;
         std::shared_ptr<Window> _window;
 
-        int   _stencilBits{8};
-        int   _samples{8};
-        int   _mouseX{0};
-        int   _mouseY{0};
-        int   _mouseState{0};
-        int   _modifiers{0};
-        int   _x{0};
-        int   _y{0};
-        int   _width{0};
-        int   _height{0};
-        int   _fbWidth{0};
-        int   _fbHeight{0};
-        float _pixelRatio = 0.f;
-        bool  _focused{false};
-        bool  _minimized{false};
-        bool  _maximized{false};
+        bool _dragging{false};
+        int  _windowDragMouseX{0};
+        int  _windowDragMouseY{0};
+        int  _windowDragOffsetX{0};
+        int  _windowDragOffsetY{0};
+        
+        double _lastInteraction{0};
+        int    _stencilBits{8};
+        int    _samples{4};
+        int    _mouseX{0};
+        int    _mouseY{0};
+        int    _mouseState{0};
+        int    _modifiers{0};
+        int    _x{0};
+        int    _y{0};
+        int    _width{0};
+        int    _height{0};
+        //int    _fbWidth{0};
+        //int    _fbHeight{0};
+        float  _pixelRatio = 0.f;
+        bool   _focused{false};
+        bool   _minimized{false};
+        bool   _maximized{false};
     };
 }
