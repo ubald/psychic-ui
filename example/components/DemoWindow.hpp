@@ -10,8 +10,9 @@
 #include <psychic-ui/components/TabContainer.hpp>
 #include <psychic-ui/themes/default.hpp>
 #include <psychic-ui/components/TitleBar.hpp>
-#include "psychic-ui/components/MenuBar.hpp"
-#include "ToolBar.hpp"
+#include <psychic-ui/components/ToolBar.hpp>
+#include <psychic-ui/components/MenuBar.hpp>
+#include <psychic-ui/components/Spacer.hpp>
 #include "Labels.hpp"
 #include "Buttons.hpp"
 #include "Divs.hpp"
