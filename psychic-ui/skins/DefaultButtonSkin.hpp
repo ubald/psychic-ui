@@ -1,15 +1,13 @@
 #pragma once
 
-#include "../Skin.hpp"
-#include "../components/Button.hpp"
+#include "DefaultBasicButtonSkin.hpp"
 
 namespace psychic_ui {
-    class DefaultButtonSkin : public ButtonSkin {
+    class DefaultButtonSkin : public DefaultBasicButtonSkin {
     public:
         DefaultButtonSkin();
-        void setLabel(const std::string &label) override;
     protected:
-        std::shared_ptr<Label> _label{nullptr};
+        void draw(SkCanvas *canvas) override;
     };
 }
 

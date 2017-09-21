@@ -110,8 +110,19 @@ namespace psychic_ui {
 
         app->add<MenuBar>(mainMenuContents);
 
+        auto toolBar = app->add<ToolBar>();
+        toolBar->add<Button>("New");
+        toolBar->add<Button>("Start");
+        toolBar->add<Button>("Stop");
 
-        app->add<ToolBar>();
+        toolBar->add<Spacer>();
+
+        #ifdef DEBUG_LAYOUT
+        auto d = toolBar->add<Button>("Debug Layout")
+            ->setToggle(true)
+            ->onChange([](bool selected) { Div::debugLayout = selected; });
+        #endif
+        toolBar->add<Button>("Help");
 
         std::vector<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Div>>>>> panels{};
         panels.emplace_back(

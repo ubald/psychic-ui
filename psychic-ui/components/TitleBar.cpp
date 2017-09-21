@@ -32,13 +32,13 @@ namespace psychic_ui {
         _label = add<Label>();
         _label->addClassName("title");
 
-        onMouseDown.subscribe(
+        onMouseDown(
             [this](int mouseX, int mouseY, int button, int modifiers) {
                 window()->startDrag();
             }
         );
 
-        onMouseUp.subscribe(
+        onMouseUp(
             [this](int mouseX, int mouseY, int button, int modifiers) {
                 window()->stopDrag();
             }

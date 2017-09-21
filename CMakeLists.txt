@@ -117,9 +117,13 @@ set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     psychic-ui/components/Tabs.hpp
     psychic-ui/components/TitleBar.cpp
     psychic-ui/components/TitleBar.hpp
+    psychic-ui/components/ToolBar.cpp
+    psychic-ui/components/ToolBar.hpp
     psychic-ui/signals/Observer.hpp
     psychic-ui/signals/Signal.hpp
     psychic-ui/signals/Slot.hpp
+    psychic-ui/skins/DefaultBasicButtonSkin.cpp
+    psychic-ui/skins/DefaultBasicButtonSkin.hpp
     psychic-ui/skins/DefaultButtonSkin.cpp
     psychic-ui/skins/DefaultButtonSkin.hpp
     psychic-ui/skins/DefaultCheckBoxSkin.cpp

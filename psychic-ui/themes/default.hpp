@@ -10,6 +10,7 @@
 #include <psychic-ui/skins/TitleBarButtonSkin.hpp>
 #include <psychic-color/spaces/RGB.hpp>
 #include <psychic-color/spaces/HSB.hpp>
+#include <psychic-ui/skins/DefaultBasicButtonSkin.hpp>
 
 using namespace psychic_ui;
 using namespace psychic_color;
@@ -79,13 +80,14 @@ public:
         int largeText     = 18;
         int bigText       = 24;
         int hugeText      = 36;
-        int radius        = 6;
+        int radius        = 7;
         int scrollBarSize = 12;
 
         manager->loadFont("stan0755", "../res/fonts/stan0755.ttf");
         manager->loadFont("Ubuntu Light", "../res/fonts/Ubuntu/Ubuntu-Light.ttf");
         manager->loadFont("Ubuntu Regular", "../res/fonts/Ubuntu/Ubuntu-Regular.ttf");
 
+        manager->registerSkin("default-basic-button-skin", SkinType::make([]() { return std::make_shared<DefaultBasicButtonSkin>(); }));
         manager->registerSkin("default-button-skin", SkinType::make([]() { return std::make_shared<DefaultButtonSkin>(); }));
         manager->registerSkin("default-checkbox-skin", SkinType::make([]() { return std::make_shared<DefaultCheckBoxSkin>(); }));
         manager->registerSkin("default-scrollbar-skin", SkinType::make([]() { return std::make_shared<DefaultScrollBarSkin>(); }));
@@ -246,7 +248,9 @@ public:
                ->set(alignItems, "center")
                ->set(padding, 12)
                ->set(borderRadius, radius)
+               ->set(borderColor, themeLowContrastColor.getColorAlpha()) // TODO: Should be contrasting with alpha
                ->set(backgroundColor, themeMediumContrastColor.getColorAlpha())
+               ->set(contentBackgroundColor, themeBackgroundColor.getColorAlpha())
                ->set(color, themeForegroundColor.getColorAlpha())
                ->set(fontSize, mediumText)
                ->set(lineHeight, mediumText);
@@ -276,7 +280,7 @@ public:
                ->set(flexDirection, "row")
                ->set(alignItems, "center")
                ->set(padding, 12)
-               ->set(borderRadius, radius)
+                   //->set(borderRadius, radius)
                ->set(color, themeForegroundColor.getColorAlpha())
                ->set(fontSize, mediumText)
                ->set(lineHeight, mediumText);
@@ -287,13 +291,14 @@ public:
                ->set(marginRight, 6)
                ->set(borderRadius, radius)
                ->set(borderColor, themeLowContrastColor.getColorAlpha()) // TODO: Should be contrasting with alpha
-               ->set(backgroundColor, themeBackgroundColor.getColorAlpha());
+               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha(0))
+               ->set(contentBackgroundColor, themeBackgroundColor.getColorAlpha());
 
         manager->style("CheckBox:hover Shape")
-               ->set(color, themeMediumContrastColor.getColorAlpha());
+               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha());
 
         manager->style("CheckBox:active Shape")
-               ->set(color, themeHighlightColor.getColorAlpha());
+               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
         // endregion
 
         // region Menus
@@ -361,10 +366,10 @@ public:
         manager->style("Range")
                ->set(skin, "slider")
                ->set(borderRadius, radius)
-               ->set(border, 1)
+               ->set(border, 0)
                ->set(padding, 1)
                ->set(borderColor, themeLowContrastColor.getColorAlpha()) // TODO: Should be contrasting with alpha
-               ->set(backgroundColor, themeBackgroundColor.getColorAlpha())
+               ->set(backgroundColor, themeSeparatorColor.getColorAlpha())
                ->set(fontFamily, "Ubuntu Regular")
                ->set(fontSize, smallText)
                ->set(lineHeight, smallText)
@@ -401,13 +406,14 @@ public:
         // endregion
 
         // region Tabs
-        manager->style("tabs")
+        manager->style("Tabs")
                ->set(flexDirection, "row")
                ->set(borderBottom, 1)
                ->set(borderColor, themeSeparatorColor.getColorAlpha())
                ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
 
-        manager->style("tabs button")
+        manager->style("Tabs button")
+               ->set(skin, "default-basic-button-skin")
                ->set(fontSize, smallText)
                ->set(lineHeight, text)
                ->set(marginHorizontal, -1)
@@ -427,7 +433,7 @@ public:
 
         // region Tab Container
 
-        manager->style("tabcontainer")
+        manager->style("TabContainer")
                ->set(backgroundColor, themeBaseColor.getColorAlpha());
 
         // endregion
@@ -440,6 +446,7 @@ public:
                ->set(borderColor, themeSeparatorColor.getColorAlpha());
 
         manager->style("MenuBar Button")
+               ->set(skin, "default-basic-button-skin")
                ->set(fontSize, smallText)
                ->set(lineHeight, smallText)
                ->set(paddingHorizontal, 12)
@@ -457,13 +464,14 @@ public:
         // endregion
 
         // region ToolBar
-        manager->style("toolbar")
+        manager->style("ToolBar")
                ->set(flexDirection, "row")
                ->set(backgroundColor, themeLowContrastColor.getColorAlpha())
                ->set(borderBottom, 1)
                ->set(borderColor, themeSeparatorColor.getColorAlpha());
 
-        manager->style("toolbar button")
+        manager->style("ToolBar Button")
+               ->set(skin, "default-basic-button-skin")
                ->set(marginHorizontal, -1)
                ->set(paddingHorizontal, 18)
                ->set(borderRadius, 0)
@@ -480,25 +488,22 @@ class PsychicStyleSheet : public PsychicUIStyleSheet {
 public:
     PsychicStyleSheet() :
         PsychicUIStyleSheet() {
-        themeSeparatorColor  = HSB{0x181A1F};
-        themeBackgroundColor = HSB{0x1B1D23};
-        themeBaseColor       = HSB{0x21252B};
-
+        themeSeparatorColor      = HSB{0x181A1F};
+        themeBackgroundColor     = HSB{0x1B1D23};
+        themeBaseColor           = HSB{0x21252B};
         themeLowContrastColor    = HSB{0x282C34};
         themeMediumContrastColor = HSB{0x383D48};
         themeHighContrastColor   = HSB{0x3C414F};
-
-        themeForegroundColor = HSB{0x9DA5B5};
-        themeHighlightColor  = HSB{0x00FFEC};
-
-        themeCyanColor      = HSB{0x56B6C2};
-        themeBlueColor      = HSB{0x61AFEF};
-        themePurpleColor    = HSB{0xC678DD};
-        themeGreenColor     = HSB{0x98C379};
-        themeRedColor       = HSB{0xBE5046};
-        themeRedOrangeColor = HSB{0xE06C75};
-        themeOrangeColor    = HSB{0xD19A66};
-        themeYellowColor    = HSB{0xE5C07B};
+        themeForegroundColor     = HSB{0x9DA5B5};
+        themeHighlightColor      = HSB{0x00FFEC};
+        themeCyanColor           = HSB{0x56B6C2};
+        themeBlueColor           = HSB{0x61AFEF};
+        themePurpleColor         = HSB{0xC678DD};
+        themeGreenColor          = HSB{0x98C379};
+        themeRedColor            = HSB{0xBE5046};
+        themeRedOrangeColor      = HSB{0xE06C75};
+        themeOrangeColor         = HSB{0xD19A66};
+        themeYellowColor         = HSB{0xE5C07B};
     }
 };
 
@@ -509,25 +514,22 @@ class OneDarkStyleSheet : public PsychicUIStyleSheet {
 public:
     OneDarkStyleSheet() :
         PsychicUIStyleSheet() {
-        themeSeparatorColor  = HSB{0x181A1F};
-        themeBackgroundColor = HSB{0x1B1D23};
-        themeBaseColor       = HSB{0x21252B};
-
+        themeSeparatorColor      = HSB{0x181A1F};
+        themeBackgroundColor     = HSB{0x1B1D23};
+        themeBaseColor           = HSB{0x21252B};
         themeLowContrastColor    = HSB{0x282C34};
         themeMediumContrastColor = HSB{0x383D48};
         themeHighContrastColor   = HSB{0x3C414F};
-
-        themeForegroundColor = HSB{0x9DA5B5};
-        themeHighlightColor  = HSB{0x0C83EB}; //{0xFF00FFEC}
-
-        themeCyanColor      = HSB{0x56B6C2};
-        themeBlueColor      = HSB{0x61AFEF};
-        themePurpleColor    = HSB{0xC678DD};
-        themeGreenColor     = HSB{0x98C379};
-        themeRedColor       = HSB{0xBE5046};
-        themeRedOrangeColor = HSB{0xE06C75};
-        themeOrangeColor    = HSB{0xD19A66};
-        themeYellowColor    = HSB{0xE5C07B};
+        themeForegroundColor     = HSB{0x9DA5B5};
+        themeHighlightColor      = HSB{0x0C83EB}; //{0xFF00FFEC}
+        themeCyanColor           = HSB{0x56B6C2};
+        themeBlueColor           = HSB{0x61AFEF};
+        themePurpleColor         = HSB{0xC678DD};
+        themeGreenColor          = HSB{0x98C379};
+        themeRedColor            = HSB{0xBE5046};
+        themeRedOrangeColor      = HSB{0xE06C75};
+        themeOrangeColor         = HSB{0xD19A66};
+        themeYellowColor         = HSB{0xE5C07B};
     }
 };
 
@@ -538,24 +540,21 @@ class OneLightStyleSheet : public PsychicUIStyleSheet {
 public:
     OneLightStyleSheet() :
         PsychicUIStyleSheet() {
-        themeSeparatorColor  = HSB{0xc5cad3};
-        themeBackgroundColor = HSB{0xf3f4f6};
-        themeBaseColor       = HSB{0xd7dae1};
-
+        themeSeparatorColor      = HSB{0xc5cad3};
+        themeBackgroundColor     = HSB{0xc5cad3};//0xf3f4f6};
+        themeBaseColor           = HSB{0xd7dae1};
         themeLowContrastColor    = HSB{0xe8eaed};
         themeMediumContrastColor = HSB{0xebecef};
         themeHighContrastColor   = HSB{0xf6f7f8};
-
-        themeForegroundColor = HSB{0x2c313b};
-        themeHighlightColor  = HSB{0x5a8aed};
-
-        themeCyanColor      = HSB{0x56B6C2};
-        themeBlueColor      = HSB{0x61AFEF};
-        themePurpleColor    = HSB{0xC678DD};
-        themeGreenColor     = HSB{0x98C379};
-        themeRedColor       = HSB{0xBE5046};
-        themeRedOrangeColor = HSB{0xE06C75};
-        themeOrangeColor    = HSB{0xD19A66};
-        themeYellowColor    = HSB{0xE5C07B};
+        themeForegroundColor     = HSB{0x2c313b};
+        themeHighlightColor      = HSB{0x5a8aed};
+        themeCyanColor           = HSB{0x56B6C2};
+        themeBlueColor           = HSB{0x61AFEF};
+        themePurpleColor         = HSB{0xC678DD};
+        themeGreenColor          = HSB{0x98C379};
+        themeRedColor            = HSB{0xBE5046};
+        themeRedOrangeColor      = HSB{0xE06C75};
+        themeOrangeColor         = HSB{0xD19A66};
+        themeYellowColor         = HSB{0xE5C07B};
     }
 };

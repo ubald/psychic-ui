@@ -12,7 +12,7 @@ namespace psychic_ui {
     protected:
         std::shared_ptr<Shape> _box{nullptr};
         std::shared_ptr<Label> _label{nullptr};
-        void draw(SkCanvas *canvas) override ;
+        void draw(SkCanvas *canvas) override;
     };
 }
 

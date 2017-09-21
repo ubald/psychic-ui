@@ -13,7 +13,8 @@ namespace psychic_ui {
                 borderRightColor,
                 borderVerticalColor,
                 borderTopColor,
-                borderBottomColor
+                borderBottomColor,
+                contentBackgroundColor
             },
             {
                 fontFamily, textAlign, textJustify,

@@ -1251,11 +1251,12 @@ namespace psychic_ui {
 
         if (_mouseEnabled) {
             // TODO: I don't remember why the == Out condition, only that it allows menus to work over modals
-            if (ret == Out && onMouseDown.hasSubscriptions()) {
+            if (ret != Handled && onMouseDown.hasSubscriptions()) {
                 onMouseDown(localMouseX, localMouseY, button, modifiers);
                 ret = Handled;
             } else {
-                ret = Over;
+                // onClick swallows mouse down events, otherwise a parent might hijack it
+                ret = ret == Handled || onClick.hasSubscriptions() ? Handled : Over;
             }
         }
 
@@ -1281,7 +1282,7 @@ namespace psychic_ui {
         if (_mouseChildren && (isOver || wasDown)) {
             for (auto &child: _children) {
                 auto res = child->mouseUp(localMouseX, localMouseY, button, modifiers);
-                if (res != Out && ret != Handled) {
+                if (res == Over) {
                     ret = res;
                 }
             }

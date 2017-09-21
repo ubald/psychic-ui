@@ -5,7 +5,6 @@ if (PSYCHIC_UI_BUILD_EXAMPLE)
     set(DEMO_SOURCES
         demo.cpp
         demo.cpp
-        components/ToolBar.cpp
     )
 
     add_executable(psychic-ui-demo-glfw ${DEMO_SOURCES})

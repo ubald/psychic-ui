@@ -21,10 +21,11 @@ namespace psychic_ui {
         if (simple) {
             auto simpleMenuButton = std::make_shared<MenuButton>(simple.get());
             simpleMenuButton->addClassName("simple");
-            simpleMenuButton->onClick([simple](){
-                if (simple.get()->callback) {
-                    simple.get()->callback();
+            simpleMenuButton->onClick([this, simple](){
+                if (simple->callback) {
+                    simple->callback();
                 }
+                window()->closeMenu();
             });
             return simpleMenuButton;
         }

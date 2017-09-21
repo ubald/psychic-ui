@@ -15,7 +15,7 @@
 public:                                                                                                                \
 type get(values property) const {                                                                                      \
     auto search = _##name##Values.find(property);                                                                      \
-    if (search != _##name##Values.cend()) {                                                                             \
+    if (search != _##name##Values.cend()) {                                                                            \
         return search->second;                                                                                         \
     } else {                                                                                                           \
         return defaultValue;                                                                                           \
@@ -23,7 +23,7 @@ type get(values property) const {                                               
 }                                                                                                                      \
 type get(values property, type fallback) const {                                                                       \
     auto search = _##name##Values.find(property);                                                                      \
-    if (search != _##name##Values.cend()) {                                                                             \
+    if (search != _##name##Values.cend()) {                                                                            \
         return search->second;                                                                                         \
     } else {                                                                                                           \
         return fallback;                                                                                               \
@@ -31,7 +31,7 @@ type get(values property, type fallback) const {                                
 }                                                                                                                      \
 Style * set(values property, type value) {                                                                             \
     auto search = _##name##Values.find(property);                                                                      \
-    if (search == _##name##Values.cend() || search->second != value) {                                                  \
+    if (search == _##name##Values.cend() || search->second != value) {                                                 \
         _##name##Values[property] = value;                                                                             \
         if (_onChanged) {                                                                                              \
             _onChanged();                                                                                              \
@@ -39,8 +39,8 @@ Style * set(values property, type value) {                                      
     }                                                                                                                  \
     return this;                                                                                                       \
 }                                                                                                                      \
-bool has(values property) {                                                                                            \
-    return _##name##Values.find(property) != _##name##Values.cend();                                                    \
+bool has(values property) const {                                                                                      \
+    return _##name##Values.find(property) != _##name##Values.cend();                                                   \
 }                                                                                                                      \
 protected:                                                                                                             \
 std::unordered_map<values, type, std::hash<int>> _##name##Values{};                                                    \
@@ -61,7 +61,7 @@ namespace psychic_ui {
     };
 
     enum ColorProperty {
-        // Custom
+        // CSS-Compatible
             color,
             backgroundColor,
             borderColor,
@@ -70,7 +70,9 @@ namespace psychic_ui {
             borderRightColor,
             borderVerticalColor,
             borderTopColor,
-            borderBottomColor
+            borderBottomColor,
+        // Custom
+        contentBackgroundColor // Background color for components that display with an inset "well" (text input, combo boxes, some buttons)
     };
 
     enum StringProperty {

@@ -1,14 +1,24 @@
 #include "DefaultButtonSkin.hpp"
+#include "DefaultSkin.hpp"
 
 namespace psychic_ui {
     DefaultButtonSkin::DefaultButtonSkin() :
-        ButtonSkin() {
+        DefaultBasicButtonSkin() {
         setTag("DefaultButtonSkin");
-        _label = add<Label>();
     }
 
-    void DefaultButtonSkin::setLabel(const std::string &label) {
-        _label->setText(label);
-    }
+    void DefaultButtonSkin::draw(SkCanvas *canvas) {
+        SkRRect inner = drawDefaultSkinChrome(
+            _width,
+            _height,
+            _computedStyle.get(),
+            canvas
+        );
 
+        SkPaint paint{};
+        paint.setStyle(SkPaint::kFill_Style);
+        paint.setColor(_computedStyle->get(backgroundColor));
+        paint.setAntiAlias(_computedStyle->get(antiAlias));
+        canvas->drawRRect(inner, paint);
+    }
 }
