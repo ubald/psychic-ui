@@ -48,7 +48,7 @@ namespace psychic_ui {
     void TitleBar::addedToRender() {
         Div::addedToRender();
         // TODO: Allow updates to title
-        _label->setText(window()->title());
+        _label->setText(window()->getTitle());
     }
 
 }

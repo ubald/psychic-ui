@@ -21,10 +21,10 @@
 #include "../demo-stylesheet.hpp"
 
 namespace psychic_ui {
-    class Application : public Window {
+    class DemoWindow : public Window {
 
     public:
-        Application();
+        DemoWindow();
 
     protected:
         void render(SkCanvas *canvas) override;
@@ -33,7 +33,7 @@ namespace psychic_ui {
         std::shared_ptr<Label> fpsLabel{};
     };
 
-    Application::Application() :
+    DemoWindow::DemoWindow() :
         Window("Demo Application") {
         //_decorated = false;
 
@@ -164,7 +164,7 @@ namespace psychic_ui {
                 ->set(right, 0);
     }
 
-    void Application::render(SkCanvas *canvas) {
+    void DemoWindow::render(SkCanvas *canvas) {
 //        std::stringstream stream;
 //        stream << std::fixed << std::setprecision(3) << fps;
 //        fpsLabel->setText("FPS: " + stream.str());

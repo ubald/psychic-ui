@@ -33,6 +33,10 @@ namespace psychic_ui {
         _yogaNode(YGNodeNew()) {
         setTag("div");
 
+        YGNodeSetPrintFunc(_yogaNode, [](YGNodeRef node) {
+
+        });
+
         YGNodeSetContext(_yogaNode, this);
         // We don't like these from the web default
         YGNodeStyleSetFlexDirection(_yogaNode, YGFlexDirectionColumn);
@@ -1432,7 +1436,7 @@ namespace psychic_ui {
         bool scrolled = false;
 
         if (_width < _boundsRight - _boundsLeft) {
-            int sx = std::fmin(
+            int sx = std::min(
                 0, std::max(
                     _width - (_boundsRight - _boundsLeft),
                     _scrollX + (int) std::ceil(scrollX) * 2
@@ -1443,7 +1447,7 @@ namespace psychic_ui {
         }
 
         if (_height < _boundsBottom - _boundsTop) {
-            int sy = std::fmin(
+            int sy = std::min(
                 0, std::max(
                     _height - (_boundsBottom - _boundsTop),
                     _scrollY + (int) std::ceil(scrollY) * 2

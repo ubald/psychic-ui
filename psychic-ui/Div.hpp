@@ -290,6 +290,17 @@ namespace psychic_ui {
         inline bool contains(const int x, const int y) const;
         inline bool boundsContains(const int x, const int y) const;
 
+        // region External Event Triggers
+
+        virtual MouseEventStatus mouseMoved(int mouseX, int mouseY, int button, int modifiers, bool handled);
+        virtual bool mouseExited(int mouseX, int mouseY, int button, int modifiers);
+        virtual MouseEventStatus mouseButton(int mouseX, int mouseY, int button, bool down, int modifiers);
+        virtual MouseEventStatus mouseDown(int mouseX, int mouseY, int button, int modifiers);
+        virtual MouseEventStatus mouseUp(int mouseX, int mouseY, int button, int modifiers);
+        virtual MouseEventStatus click(int mouseX, int mouseY, int button, int modifiers);
+        virtual MouseEventStatus mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
+
+        // endregion
 
         // Events
         virtual bool focusEvent(bool focused);
@@ -528,13 +539,6 @@ namespace psychic_ui {
         bool _mouseOver{false};
         bool _mouseDown{false};
 
-        virtual MouseEventStatus mouseMoved(int mouseX, int mouseY, int button, int modifiers, bool handled);
-        virtual bool mouseExited(int mouseX, int mouseY, int button, int modifiers);
-        virtual MouseEventStatus mouseButton(int mouseX, int mouseY, int button, bool down, int modifiers);
-        virtual MouseEventStatus mouseDown(int mouseX, int mouseY, int button, int modifiers);
-        virtual MouseEventStatus mouseUp(int mouseX, int mouseY, int button, int modifiers);
-        virtual MouseEventStatus click(int mouseX, int mouseY, int button, int modifiers);
-        virtual MouseEventStatus mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
 
         // endregion
 
