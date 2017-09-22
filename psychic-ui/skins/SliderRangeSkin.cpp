@@ -1,41 +1,28 @@
 #include "SliderRangeSkin.hpp"
+#include "DefaultSkin.hpp"
 #include "../Window.hpp"
 
 namespace psychic_ui {
     SliderRangeSkin::SliderRangeSkin() :
         RangeSkin() {
         setTag("Slider");
+        addClassName("defaultSkinChrome");
 
-        _container = add<Div>();
-        _container
-            ->style()
-            ->set(overflow, "hidden")
-            ->set(widthPercent, 1.0f)
-            ->set(heightPercent, 1.0f);
-
-        _track = _container->add<Div>();
-        _track
-            ->setClassNames({"track"})
-            ->style()
-            ->set(position, "absolute")
-            ->set(widthPercent, 1.0f)
-            ->set(heightPercent, 1.0f);
-
-        _track->onMouseDown(
+        onMouseDown(
             [this](const int mouseX, const int mouseY, int button, int modifiers) {
                 sendMouseValue(mouseX, mouseY);
                 _onMouseMove = window()->onMouseMove(
                     [this](const int mouseX, const int mouseY, int button, int modifiers) {
                         int lx = 0;
                         int ly = 0;
-                        _track->globalToLocal(lx, ly, mouseX, mouseY);
+                        globalToLocal(lx, ly, mouseX, mouseY);
                         sendMouseValue(lx, ly);
                     }
                 );
             }
         );
 
-        _track->onMouseUp(
+        onMouseUp(
             [this](const int mouseX, const int mouseY, int button, int modifiers) {
                 if (_onMouseMove) {
                     _onMouseMove->disconnect();
@@ -43,13 +30,6 @@ namespace psychic_ui {
                 }
             }
         );
-
-        _range = _container->add<Div>();
-        _range
-            ->setMouseEnabled(false)
-            ->setClassNames({"range"})
-            ->style()
-            ->set(position, "absolute");
 
         auto label = add<Div>();
         label
@@ -62,9 +42,45 @@ namespace psychic_ui {
             ->set(widthPercent, 1.0f)
             ->set(heightPercent, 1.0f);
 
-        _value = label->add<Label>();
-        _value
+        _valueLabel = label->add<Label>();
+        _valueLabel
             ->style();
+    }
+
+    void SliderRangeSkin::draw(SkCanvas *canvas) {
+        // Don't use default rendering, render out custom component chrome
+        SkRRect inner = default_skin::draw(this, canvas);
+
+        bool aa = _computedStyle->get(antiAlias);
+        canvas->clipRRect(inner, aa);
+
+        SkPaint paint{};
+        paint.setStyle(SkPaint::kFill_Style);
+        paint.setColor(_computedStyle->get(backgroundColor));
+        paint.setAntiAlias(aa);
+
+        if (_computedStyle->get(orientation) == "vertical") {
+            float h = std::round((_height - 2 * default_skin::padding) * _value);
+            canvas->drawRect(
+                SkRect{
+                    default_skin::padding,
+                    (_height - h - default_skin::padding),
+                    static_cast<float>(_width) - default_skin::padding,
+                    _height - default_skin::padding
+                },
+                paint
+            );
+        } else {
+            canvas->drawRect(
+                SkRect{
+                    default_skin::padding,
+                    default_skin::padding,
+                    default_skin::padding + std::round((_width - 2 * default_skin::padding) * _value),
+                    static_cast<float>(_height) - default_skin::padding
+                },
+                paint
+            );
+        }
     }
 
     void SliderRangeSkin::added() {
@@ -73,56 +89,41 @@ namespace psychic_ui {
 
     void SliderRangeSkin::styleUpdated() {
         RangeSkin::styleUpdated();
-        _container->style()->set(borderRadius, _computedStyle->get(borderRadius) - 1);
         if (_computedStyle->get(orientation) == "vertical") {
-            // TODO: This creates another invalidation cycle, fix
             addClassName("vertical");
             removeClassName("horizontal");
-            _range
-                ->style()
-                ->set(left, 0.f)
-                ->set(right, 0.f)
-                ->set(top, Style::Auto)
-                ->set(bottom, 0.f);
-            _value->setVisible(false);
+            _valueLabel->setVisible(false);
         } else {
-            // TODO: This creates another invalidation cycle, fix
             addClassName("horizontal");
             removeClassName("vertical");
-            _range
-                ->style()
-                ->set(left, 0.f)
-                ->set(right, Style::Auto)
-                ->set(top, 0.f)
-                ->set(bottom, 0.f);
-            _value->setVisible(true);
+            _valueLabel->setVisible(true);
         }
     }
 
     void SliderRangeSkin::setValue(const float value) {
-        if (value >= 0.5f) {
+        _value = value;
+        if (_value >= 0.5f) {
             addClassName("inverted");
+            removeClassName("normal");
         } else {
+            addClassName("normal");
             removeClassName("inverted");
         }
-
-        _value->setText(component()->valueString());
-
-        if (_computedStyle->get(orientation) == "vertical") {
-            _range->style()->set(widthPercent, 1.0f);
-            _range->style()->set(heightPercent, value);
-        } else {
-            _range->style()->set(widthPercent, value);
-            _range->style()->set(heightPercent, 1.0f);
-        }
+        _valueLabel->setText(component()->valueString());
     }
 
     void SliderRangeSkin::sendMouseValue(const int x, const int y) {
         if (_computedStyle->get(orientation) == "vertical") {
-            component()->setLinearPercentage(1.0f - ((float) y / (float) _track->getHeight()));
+            component()->setLinearPercentage(
+                1.0f - (
+                    (static_cast<float>(y) - default_skin::padding) /
+                    (static_cast<float>(_height) - 2 * default_skin::padding)
+                ));
         } else {
-            component()->setLinearPercentage((float) x / (float) _track->getWidth());
+            component()->setLinearPercentage(
+                (static_cast<float>(x) - default_skin::padding) /
+                (static_cast<float>(_width) - 2 * default_skin::padding)
+            );
         }
     }
-
 }

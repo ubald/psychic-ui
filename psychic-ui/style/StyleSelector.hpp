@@ -32,6 +32,7 @@ namespace psychic_ui {
         bool matches(const Div *component) const;
 
         const bool direct() const;
+        const int depth() const;
         const std::string tag() const;
         const std::string id() const;
         const std::vector<std::string> classes() const;
@@ -59,6 +60,7 @@ namespace psychic_ui {
          */
         bool matches(const Div *component, bool expand) const;
         bool                                       _direct{false};
+        int                                        _depth{0};
         std::string                                _tag{};
         std::string                                _id{};
         std::vector<std::string>                   _classes{};

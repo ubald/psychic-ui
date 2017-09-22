@@ -2,6 +2,7 @@
 
 #include <string>
 #include <psychic-ui/Div.hpp>
+#include <psychic-ui/components/Box.hpp>
 #include <psychic-ui/components/Range.hpp>
 
 namespace psychic_ui {
@@ -12,8 +13,7 @@ namespace psychic_ui {
             setTag("Ranges");
             setClassNames({"demo-panel"});
 
-            auto container = add<Div>();
-            container->style()->set(flexDirection, "row");
+            auto container = add<HBox>();
 
             auto left = container->add<Div>();
             left
@@ -39,10 +39,10 @@ namespace psychic_ui {
 
             right->add<Label>("Vertical");
 
-            auto rcont = right->add<Div>();
+            auto rcont = right->add<HBox>();
             rcont
                 ->style()
-                ->set(flexDirection, "row");
+                ->set(grow, 1);
 
             rcont->add<Range<int>>()
                  ->setRange(0, 10)

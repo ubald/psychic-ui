@@ -88,6 +88,7 @@ namespace psychic_ui {
         T         _max{1};
         T         _step{0};
         T         _value{0};
+        void checkRange();
         float getPercentageFor(T value) const;
         float getLinearPercentageFor(T value) const;
         float nearestValidValue(T value, T step) const;
@@ -100,7 +101,10 @@ namespace psychic_ui {
         if (onChangeCallback) {
             onChange.subscribe(std::forward<std::function<void(T)>>(onChangeCallback));
         }
+
         _step = std::is_floating_point<T>::value ? 0.01f : 1;
+
+        checkRange();
 
         onMouseScroll.subscribe(
             [this](const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
@@ -142,9 +146,20 @@ namespace psychic_ui {
     }
 
     template<class T>
+    void Range<T>::checkRange() {
+        if (_min > _max) {
+            std::swap(_min, _max);
+        } else if (_min == _max) {
+            _max += _step;
+        }
+        setValue(_value); // Clamp to new limit
+    }
+
+    template<class T>
     Range<T> *Range<T>::setRange(const T min, const T max) {
         _min = min;
         _max = max;
+        checkRange();
         return this;
     }
 
@@ -155,7 +170,7 @@ namespace psychic_ui {
 
     template<class T>
     Range<T> *Range<T>::setMin(const T min) {
-        _min = std::fmin(min, _max);
+        _min = std::fmin(min, _max - _step);
         setValue(_value); // Clamp to new limit
         return this;
     }
@@ -167,7 +182,7 @@ namespace psychic_ui {
 
     template<class T>
     Range<T> *Range<T>::setMax(const T max) {
-        _max = std::max(_min, max);
+        _max = std::max(_min + _step, max);
         setValue(_value); // Clamp to new limit
         return this;
     }
@@ -194,7 +209,9 @@ namespace psychic_ui {
         if (v != _value) {
             _value = v;
             onChange(_value);
-            _skin->setValue(getLinearPercentage());
+            if (_skin) {
+                _skin->setValue(getLinearPercentage());
+            }
         }
         return this;
     }

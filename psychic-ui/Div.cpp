@@ -33,11 +33,25 @@ namespace psychic_ui {
         _yogaNode(YGNodeNew()) {
         setTag("div");
 
-        YGNodeSetPrintFunc(_yogaNode, [](YGNodeRef node) {
-
-        });
 
         YGNodeSetContext(_yogaNode, this);
+        YGNodeSetPrintFunc(
+            _yogaNode, [](YGNodeRef node) {
+                auto div = static_cast<Div*>(YGNodeGetContext(node));
+                std::cout << "type=\"" << div->tags().back() << "\" ";
+                if (!div->id().empty()) {
+                    std::cout << "id=\"" << div->id() << "\" ";
+                }
+                if (!div->classNames().empty()) {
+                    std::cout << "class=\"";
+                    for (auto &className: div->classNames()) {
+                        std::cout << className << " ";
+                    }
+                    std::cout << "\" ";
+                }
+            }
+        );
+
         // We don't like these from the web default
         YGNodeStyleSetFlexDirection(_yogaNode, YGFlexDirectionColumn);
     }
@@ -59,7 +73,7 @@ namespace psychic_ui {
         if (!_id.empty()) {
             str += "#" + _id;
         }
-        for (auto className: _classNames) {
+        for (auto &className: _classNames) {
             str += "." + className;
         }
         return str;
@@ -1216,16 +1230,12 @@ namespace psychic_ui {
             }
         }
 
-        if (_mouseEnabled) {
-            if (ret != Handled && onMouseButton.hasSubscriptions()) {
-                onMouseButton(localMouseX, localMouseY, button, down, modifiers);
-                ret = Handled;
-            } else {
-                ret = Over;
-            }
+        if (_mouseEnabled && ret != Handled && onMouseButton.hasSubscriptions()) {
+            onMouseButton(localMouseX, localMouseY, button, down, modifiers);
+            ret = Handled;
         }
 
-        return ret;
+        return ret == Out ? Over : ret;
     }
 
     MouseEventStatus Div::mouseDown(const int mouseX, const int mouseY, const int button, const int modifiers) {
@@ -1249,18 +1259,13 @@ namespace psychic_ui {
             }
         }
 
-        if (_mouseEnabled) {
-            // TODO: I don't remember why the == Out condition, only that it allows menus to work over modals
-            if (ret != Handled && onMouseDown.hasSubscriptions()) {
-                onMouseDown(localMouseX, localMouseY, button, modifiers);
-                ret = Handled;
-            } else {
-                // onClick swallows mouse down events, otherwise a parent might hijack it
-                ret = ret == Handled || onClick.hasSubscriptions() ? Handled : Over;
-            }
+        if (_mouseEnabled && ret != Handled && onMouseDown.hasSubscriptions()) {
+            onMouseDown(localMouseX, localMouseY, button, modifiers);
+            ret = Handled;
         }
 
-        return ret;
+        // onClick swallows mouse down events, otherwise a parent might hijack it
+        return ret == Handled || onClick.hasSubscriptions() ? Handled : Over;
     }
 
     MouseEventStatus Div::mouseUp(const int mouseX, const int mouseY, const int button, const int modifiers) {
@@ -1298,16 +1303,12 @@ namespace psychic_ui {
             return Out;
         }
 
-        if (_mouseEnabled) {
-            if (ret != Handled && onMouseUp.hasSubscriptions()) {
-                onMouseUp(localMouseX, localMouseY, button, modifiers);
-                ret = Handled;
-            } else {
-                ret = Over;
-            }
+        if (_mouseEnabled && ret != Handled && onMouseUp.hasSubscriptions()) {
+            onMouseUp(localMouseX, localMouseY, button, modifiers);
+            ret = Handled;
         }
 
-        return ret;
+        return ret == Out ? Over : ret;
     }
 
     MouseEventStatus Div::click(const int mouseX, const int mouseY, const int button, const int modifiers) {
@@ -1333,16 +1334,12 @@ namespace psychic_ui {
             }
         }
 
-        if (_mouseEnabled) {
-            if (ret != Handled && onClick.hasSubscriptions()) {
-                onClick();
-                ret = Handled;
-            } else {
-                ret = Over;
-            }
+        if (_mouseEnabled && ret != Handled && onClick.hasSubscriptions()) {
+            onClick();
+            ret = Handled;
         }
 
-        return ret;
+        return ret == Out ? Over : ret;
     }
 
     // endregion
@@ -1468,10 +1465,6 @@ namespace psychic_ui {
             return Out;
         }
 
-        if (_computedStyle->get(overflow) == "scroll") {
-            scroll(scrollX, scrollY);
-        }
-
         int              localMouseX = mouseX - _x - _scrollX;
         int              localMouseY = mouseY - _y - _scrollY;
         MouseEventStatus ret         = Out;
@@ -1486,16 +1479,17 @@ namespace psychic_ui {
             }
         }
 
-        if (_mouseEnabled) {
-            if (ret != Handled && onMouseScroll.hasSubscriptions()) {
-                onMouseScroll(localMouseX, localMouseY, scrollX, scrollY);
-                ret = Handled;
-            } else {
-                ret = Over;
-            }
+        if (_mouseEnabled && ret != Handled && onMouseScroll.hasSubscriptions()) {
+            onMouseScroll(localMouseX, localMouseY, scrollX, scrollY);
+            ret = Handled;
         }
 
-        return ret;
+        std::cout << toString() << " " << ret << std::endl;
+        if (ret != Handled && _computedStyle->get(overflow) == "scroll") {
+            scroll(scrollX, scrollY);
+        }
+
+        return ret == Out ? Over : ret;
     }
 
 // endregion

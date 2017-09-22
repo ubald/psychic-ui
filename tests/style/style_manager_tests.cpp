@@ -3,6 +3,7 @@
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/style/Style.hpp>
 #include <psychic-ui/Div.hpp>
+#include <psychic-ui/components/Button.hpp>
 
 using namespace psychic_ui;
 
@@ -592,6 +593,16 @@ TEST_CASE("Regressions") {
 
         div->addClassName("class");
         REQUIRE(styleManager->computeStyle(div.get())->get(color) == 0xFF0000FF);
+    }
+
+    SECTION("Should match a parent tag") {
+        styleManager->style("Component")
+                    ->set(color, 0xFFFF0000);
+
+        auto btn = std::make_shared<Button>();
+        btn->setStyleManager(styleManager);
+
+        REQUIRE(styleManager->computeStyle(btn.get())->get(color) == 0xFFFF0000);
     }
 
 }

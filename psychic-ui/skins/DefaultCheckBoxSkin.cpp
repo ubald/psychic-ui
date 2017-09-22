@@ -8,20 +8,18 @@ namespace psychic_ui {
 
         _box   = add<Shape>(
             [this](Shape *shape, SkCanvas *canvas) {
-                SkRRect inner = drawDefaultSkinChrome(
-                    shape->computedStyle()->get(width),
-                    shape->computedStyle()->get(height),
-                    shape->computedStyle(),
-                    canvas
-                );
+                SkRRect inner = default_skin::draw(shape, canvas);
 
-                SkPaint paint{};
-                paint.setStyle(SkPaint::kFill_Style);
-                paint.setColor(shape->computedStyle()->get(backgroundColor));
-                paint.setAntiAlias(shape->computedStyle()->get(antiAlias));
-                canvas->drawRRect(inner, paint);
+                if (component()->mouseOver() || component()->checked() ) {
+                    SkPaint paint{};
+                    paint.setStyle(SkPaint::kFill_Style);
+                    paint.setColor(shape->computedStyle()->get(backgroundColor));
+                    paint.setAntiAlias(shape->computedStyle()->get(antiAlias));
+                    canvas->drawRRect(inner, paint);
+                }
             }
         );
+        _box->addClassName("defaultSkinChrome");
         _label = add<Label>();
     }
 
@@ -30,7 +28,9 @@ namespace psychic_ui {
     }
 
     void DefaultCheckBoxSkin::draw(SkCanvas *canvas) {
-        // noop
+        // Don't use default rendering, render out custom component chrome
+        // in this case, the chrome is drawn in the shape child because it
+        // has a different size than the component.
     }
 
 }

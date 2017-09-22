@@ -106,6 +106,31 @@ public:
                ->set(antiAlias, true)
                ->set(textAntiAlias, true)
                ->set(multiline, false);
+
+        manager->style("Component .defaultSkinChrome")
+               ->set(borderRadius, radius)
+               ->set(color, themeForegroundColor.getColorAlpha())
+               ->set(borderColor, themeLowContrastColor.getColorAlpha()) // TODO: Should be contrasting with alpha
+               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha())
+               ->set(contentBackgroundColor, themeBackgroundColor.getColorAlpha());
+
+        manager->style("Component:hover .defaultSkinChrome")
+               ->set(backgroundColor, themeHighContrastColor.getColorAlpha());
+
+        manager->style("Component:active .defaultSkinChrome")
+               ->set(color, BASE_00)
+               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
+
+        manager->style("Component:disabled .defaultSkinChrome")
+               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
+
+        manager->style("Component:disabled:hover .defaultSkinChrome")
+               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
+
+        manager->style("Component:disabled:active .defaultSkinChrome")
+               ->set(color, BASE_00)
+               ->set(backgroundColor, themeHighlightColor.getColorAlpha()); // TODO: Fade
+
         // endregion
 
         // region Typography
@@ -247,13 +272,10 @@ public:
                ->set(flexDirection, "row")
                ->set(alignItems, "center")
                ->set(padding, 12)
-               ->set(borderRadius, radius)
-               ->set(borderColor, themeLowContrastColor.getColorAlpha()) // TODO: Should be contrasting with alpha
-               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha())
-               ->set(contentBackgroundColor, themeBackgroundColor.getColorAlpha())
-               ->set(color, themeForegroundColor.getColorAlpha())
                ->set(fontSize, mediumText)
-               ->set(lineHeight, mediumText);
+               ->set(lineHeight, mediumText)
+               ->set(color, themeForegroundColor.getColorAlpha())
+               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha());
 
         manager->style("Button:hover")
                ->set(backgroundColor, themeHighContrastColor.getColorAlpha());
@@ -280,7 +302,6 @@ public:
                ->set(flexDirection, "row")
                ->set(alignItems, "center")
                ->set(padding, 12)
-                   //->set(borderRadius, radius)
                ->set(color, themeForegroundColor.getColorAlpha())
                ->set(fontSize, mediumText)
                ->set(lineHeight, mediumText);
@@ -288,17 +309,8 @@ public:
         manager->style("CheckBox Shape")
                ->set(width, 24)
                ->set(height, 24)
-               ->set(marginRight, 6)
-               ->set(borderRadius, radius)
-               ->set(borderColor, themeLowContrastColor.getColorAlpha()) // TODO: Should be contrasting with alpha
-               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha(0))
-               ->set(contentBackgroundColor, themeBackgroundColor.getColorAlpha());
+               ->set(marginRight, 6);
 
-        manager->style("CheckBox:hover Shape")
-               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha());
-
-        manager->style("CheckBox:active Shape")
-               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
         // endregion
 
         // region Menus
@@ -364,12 +376,10 @@ public:
         // region Ranges
 
         manager->style("Range")
-               ->set(skin, "slider")
+               ->set(skin, "slider");
+
+        manager->style("Range Slider")
                ->set(borderRadius, radius)
-               ->set(border, 0)
-               ->set(padding, 1)
-               ->set(borderColor, themeLowContrastColor.getColorAlpha()) // TODO: Should be contrasting with alpha
-               ->set(backgroundColor, themeSeparatorColor.getColorAlpha())
                ->set(fontFamily, "Ubuntu Regular")
                ->set(fontSize, smallText)
                ->set(lineHeight, smallText)
@@ -384,25 +394,15 @@ public:
         manager->style("Range:hover Slider.inverted")
                ->set(color, BASE_00); // TODO: Contrasting text
 
+        manager->style("Range:hover Slider.normal")
+               ->set(color, themeForegroundColor.getColorAlpha()); // TODO: Contrasting text
+
+        manager->style("Range:active Slider.normal")
+               ->set(color, themeForegroundColor.getColorAlpha()); // TODO: Contrasting text
+
         manager->style("Range:active Slider.inverted")
                ->set(color, BASE_00); // TODO: Contrasting text
 
-        manager->style("Range:hover Slider")
-               ->set(color, themeForegroundColor.getColorAlpha());
-
-        manager->style("Range Slider .track")
-               ->set(backgroundColor, themeBackgroundColor.getColorAlpha());
-
-        manager->style("Range:hover Slider .track");
-
-        manager->style("Range Slider .range")
-               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha());
-
-        manager->style("Range:hover Slider .range")
-               ->set(backgroundColor, themeHighContrastColor.getColorAlpha());
-
-        manager->style("Range:active Slider .range")
-               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
         // endregion
 
         // region Tabs

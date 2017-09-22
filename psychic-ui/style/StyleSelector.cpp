@@ -90,6 +90,7 @@ namespace psychic_ui {
             }
 
             if (selector) {
+                r->_depth = selector->_depth + 1;
                 r->_next = std::move(selector);
             }
 
@@ -106,6 +107,11 @@ namespace psychic_ui {
     #define parentMatches expand && parent && !_direct && matches(parent, true)
 
     bool StyleSelector::matches(const Div *component, bool expand) const {
+        // Exclude rules that go deeper than us from the start
+        if (component->depth() < _depth) {
+            return false;
+        }
+
         const Div *parent = component->parent();
 
         // Match id
@@ -114,8 +120,7 @@ namespace psychic_ui {
         }
 
         // Match tag
-        if (!_tag.empty()
-            && std::find(component->tags().cbegin(), component->tags().cend(), _tag) == component->tags().cend()) {
+        if (!_tag.empty() && std::find(component->tags().cbegin(), component->tags().cend(), _tag) == component->tags().cend()) {
             return parentMatches;
         }
 
@@ -152,9 +157,7 @@ namespace psychic_ui {
                         return component->childCount() == 0;
                     case firstChild:
                         // NOTE: Children are stored in reverse order
-                        return component->parent()
-                               && component->parent()->childIndex(component) == component->parent()->childCount() - 1;
-                        return component->parent() && component->parent()->childIndex(component) == 0;
+                        return component->parent() && component->parent()->childIndex(component) == component->parent()->childCount() - 1;
                     case lastChild:
                         // NOTE: Children are stored in reverse order
                         return component->parent() && component->parent()->childIndex(component) == 0;
@@ -167,7 +170,6 @@ namespace psychic_ui {
 
         // If we are still here it means the first selector level matched us
         // We have to check if it has a parent selector that matches our parent.
-        // TODO: Check selector length from the start
         if (_next) {
             return parent && _next->matches(parent, true);
         }
@@ -178,6 +180,10 @@ namespace psychic_ui {
 
     const bool StyleSelector::direct() const {
         return _direct;
+    }
+
+    const int StyleSelector::depth() const {
+        return _depth;
     }
 
     const std::string StyleSelector::tag() const {
