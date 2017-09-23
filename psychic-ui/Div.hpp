@@ -84,9 +84,10 @@ namespace psychic_ui {
         bool enabled() const;
         virtual Div *setEnabled(bool value);
         virtual const bool active() const;
+        bool focusEnabled() const;
+        Div *setFocusEnabled(bool focusEnabled);
         bool focused() const;
-        void requestFocus();
-        virtual void requestFocus(Div *component);
+        void setFocused(bool focused);
 
         // endregion
 
@@ -268,7 +269,6 @@ namespace psychic_ui {
         bool getMouseDown() const;
         void setMouseDown(bool down); // Mostly for testing
 
-
         using MouseButtonSlot = std::shared_ptr<Slot<const int, const int, const int, const bool, const int>>;
         using MouseSlot = std::shared_ptr<Slot<const int, const int, const int, const int>>;
         using MouseTriggerSlot = std::shared_ptr<Slot<>>;
@@ -286,9 +286,8 @@ namespace psychic_ui {
 
         // endregion
 
-//        std::shared_ptr<Div> findComponent(const int x, const int y);
-        inline bool contains(const int x, const int y) const;
-        inline bool boundsContains(const int x, const int y) const;
+        inline bool contains(int x, int y) const;
+        inline bool boundsContains(int x, int y) const;
 
         // region External Event Triggers
 
@@ -299,14 +298,14 @@ namespace psychic_ui {
         virtual MouseEventStatus mouseUp(int mouseX, int mouseY, int button, int modifiers);
         virtual MouseEventStatus click(int mouseX, int mouseY, int button, int modifiers);
         virtual MouseEventStatus mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
-
-        // endregion
-
-        // Events
-        virtual bool focusEvent(bool focused);
         virtual bool keyboardEvent(int key, int scancode, int action, int modifiers);
         virtual bool keyboardCharacterEvent(unsigned int codepoint);
 
+        Signal<int, int, int, int> onKeyDown{};
+        Signal<int, int, int, int> onKeyUp{};
+        Signal<unsigned int> onCharacter{};
+
+        // endregion
 
     protected:
         bool _enabled{true};
@@ -320,11 +319,9 @@ namespace psychic_ui {
         int  _boundsTop{0};
         int  _boundsRight{0};
         int  _boundsBottom{0};
-        bool _wrap{false};
 
-        // region Lifecycle
-
-        // endregion
+        bool _focusEnabled{false};
+        bool _focused{false};
 
         // region Hierarchy
 
@@ -535,17 +532,11 @@ namespace psychic_ui {
          */
         bool _mouseChildren{true};
 
-
         bool _mouseOver{false};
         bool _mouseDown{false};
 
 
         // endregion
-
-
-
-        bool _focused{false};
-        void focused(bool focused);
 
     private:
         static const InheritableValues _inheritableValues;

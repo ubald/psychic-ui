@@ -21,7 +21,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         style/style_tests.cpp
         style/style_rule_tests.cpp
         style/yoga_tests.cpp
-    )
+        keyboard/keycodes.cpp)
 
     target_include_directories(psychic-ui-tests PUBLIC ${CATCH_INCLUDE_DIRS})
     target_link_libraries(psychic-ui-tests psychic-ui ${PSYCHIC_UI_EXTRA_LIBS})

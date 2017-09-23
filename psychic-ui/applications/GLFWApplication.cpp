@@ -1,5 +1,6 @@
 #ifdef WITH_GLFW
 
+#include <SDL_keycode.h>
 #include "GLFWApplication.hpp"
 
 namespace psychic_ui {
@@ -285,6 +286,12 @@ namespace psychic_ui {
         glfwSetWindowSize(_glfwWindow, _width, _height);
     }
 
+    void GLFWSystemWindow::setPosition(int x, int y) {
+        _x = x;
+        _y = y;
+        glfwSetWindowPos(_glfwWindow, _x, _y);
+    }
+
     void GLFWSystemWindow::setTitle(const std::string &title) {
         glfwSetWindowTitle(_glfwWindow, title.c_str());
     }
@@ -528,12 +535,41 @@ namespace psychic_ui {
         _window->mouseScrolled(_mouseX, _mouseY, x, y);
     }
 
+    /**
+     *
+     * @param key GLFW_KEY_*
+     * @param scancode Unique per platform, safe to save but different across platforms
+     * @param action GLFW_PRESS, GLFW_REPEAT or GLFW_RELEASE
+     * @param mods
+     */
     void GLFWSystemWindow::keyEventCallback(int key, int scancode, int action, int mods) {
         _lastInteraction = glfwGetTime();
-                // TODO: Key mods map
+        // TODO: Key mods map
+        switch (action) {
+            case GLFW_PRESS:
+            std::cout << "press" << std::endl;
+                break;
+
+            case GLFW_REPEAT:
+            std::cout << "repeat" << std::endl;
+                break;
+
+            case GLFW_RELEASE:
+            std::cout << "release" << std::endl;
+                break;
+
+            default:
+                break;
+        }
+
+        // TODO: This won't do it, it should behave like mouse input and ignore focus
         _window->keyboardEvent(key, scancode, action, mods);
     }
 
+    /**
+     *
+     * @param codepoint Unicode code points
+     */
     void GLFWSystemWindow::charEventCallback(unsigned int codepoint) {
         _lastInteraction = glfwGetTime();
         _window->keyboardCharacterEvent(codepoint);
@@ -541,6 +577,7 @@ namespace psychic_ui {
 
     void GLFWSystemWindow::dropEventCallback(int count, const char **filenames) {
         std::vector<std::string> arg(count);
+
         for (int                 i = 0; i < count; ++i) {
             arg[i] = filenames[i];
         }

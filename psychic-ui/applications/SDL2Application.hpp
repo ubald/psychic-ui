@@ -65,6 +65,7 @@ namespace psychic_ui {
         void startDrag() override;
         void stopDrag() override;
         void setSize(int width, int height) override;
+        void setPosition(int x, int y) override ;
     };
 }
 

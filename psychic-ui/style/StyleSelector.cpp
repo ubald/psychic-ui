@@ -219,10 +219,10 @@ namespace psychic_ui {
                     w += 2;
                     break;
                 case focus:
-                    w += 1;
+                    w += 3;
                     break;
                 case disabled:
-                    w += 3;
+                    w += 4;
                     break;
                 case empty:
                     w += 1;

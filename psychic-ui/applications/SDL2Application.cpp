@@ -274,6 +274,12 @@ namespace psychic_ui {
         SDL_SetWindowSize(_sdl2Window, _width, _height);
     }
 
+    void SDL2SystemWindow::setPosition(int x, int y) {
+        _x = x;
+        _y = y;
+        SDL_SetWindowPosition(_sdl2Window, _x, _y);
+    }
+
     void SDL2SystemWindow::setTitle(const std::string &title) {
         SDL_SetWindowTitle(_sdl2Window, title.c_str());
     }

@@ -27,6 +27,13 @@ find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
 find_package(JPEGTURBO REQUIRED)
 find_package(Freetype REQUIRED)
+if(APPLE)
+    # Use brew's version, FindICU can't find it
+    file(GLOB ICU_LIBRARIES /usr/local/opt/icu4c/lib/*.a)
+    set(ICU_INCLUDE_DIRS /usr/local/opt/icu4c/include)
+else()
+    find_package(ICU REQUIRED)
+endif()
 
 set(PSYCHIC_UI_EXTRA_LIBS "")
 set(LIBPSYCHIC_UI_EXTRA_SOURCE "")
@@ -171,7 +178,7 @@ set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     psychic-ui/applications/GLFWApplication.hpp
     psychic-ui/applications/SDL2Application.cpp
     psychic-ui/applications/SDL2Application.hpp
-    psychic-ui/skins/DefaultSkin.hpp)
+    psychic-ui/skins/DefaultSkin.hpp psychic-ui/components/TextInput.cpp psychic-ui/components/TextInput.hpp psychic-ui/skins/DefaultTextInputSkin.cpp psychic-ui/skins/DefaultTextInputSkin.hpp)
 
 add_library(psychic-ui SHARED ${SOURCE_FILES})
 
@@ -183,6 +190,7 @@ target_include_directories(psychic-ui PUBLIC
     ${OPENGL_INCLUDE_DIR}
     ${YOGA_INCLUDE_DIRS}
     ${SKIA_INCLUDE_DIRS}
+    ${ICU_INCLUDE_DIRS}
     ${PSYCHIC_COLOR_INCLUDE_DIRS}
 )
 
@@ -197,6 +205,8 @@ target_link_libraries(psychic-ui
     ${SKIA_LIBRARIES}
     # Yoga
     ${YOGA_LIBRARIES}
+    # ICU
+    ${ICU_LIBRARIES}
     # PSYCHIC COLOR
     ${PSYCHIC_COLOR_LIBRARIES}
 )

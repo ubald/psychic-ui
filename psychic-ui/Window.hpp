@@ -51,11 +51,11 @@ namespace psychic_ui {
 
         const int windowX() const;
         const int windowY() const;
-        void setWindowPosition(const int x, const int y);
+        void setWindowPosition(int x, int y);
 
         const int windowWidth() const;
         const int windowHeight() const;
-        void setWindowSize(const int width, const int height);
+        void setWindowSize(int width, int height);
 
         void open(SystemWindow *systemWindow);
         void close();
@@ -78,7 +78,6 @@ namespace psychic_ui {
             return menu;
         }
 
-        int cursor() const;
         void setCursor(int cursor);
 
         // region Signals
@@ -91,7 +90,7 @@ namespace psychic_ui {
 
         // endregion
 
-        // Style
+        // region Style
 
         /**
          * Helper to forward the stylesheet loading to the style manager
@@ -104,10 +103,17 @@ namespace psychic_ui {
             updateRuntimeStyles();
         }
 
+        // endregion
 
-        // Window Delegate
-        virtual void windowMoved(const int x, const int y);
-        virtual void windowResized(const int width, const int height);
+        // region Focus
+
+        void requestFocus(Div *component);
+
+        // endregion
+
+        // region Window Delegate
+        virtual void windowMoved(int x, int y);
+        virtual void windowResized(int width, int height);
         virtual void windowActivated();
         virtual void windowDeactivated();
         virtual void windowMinimized();
@@ -118,6 +124,8 @@ namespace psychic_ui {
         virtual bool dropEvent(const std::vector<std::string> & /* filenames */) { return false; /* To be overridden */ }
         bool keyboardEvent(int key, int scancode, int action, int modifiers) override;
         bool keyboardCharacterEvent(unsigned int codepoint) override;
+
+        // endregion
 
 
     protected:
@@ -159,14 +167,8 @@ namespace psychic_ui {
          */
         int _cursor{Cursor::Arrow};
 
-        int _mouseX{0};
-        int _mouseY{0};
-
-
-        /**
-         * Mouse focus path
-         */
-        std::vector<Div *> _focusPath{};
+        //int _mouseX{0};
+        //int _mouseY{0};
 
         // endregion
 
@@ -177,14 +179,13 @@ namespace psychic_ui {
 
         // endregion
 
+        // region Focus
+
+        std::vector<Div*> _focusPath{};
+
+        // endregion
+
         // region Events
-
-        double _lastInteraction{0};
-
-
-
-        // Event handlers
-
 
         // endregion
 

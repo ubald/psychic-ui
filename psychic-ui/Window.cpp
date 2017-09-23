@@ -227,6 +227,12 @@ namespace psychic_ui {
         return _systemWindow ? _systemWindow->getY() : 0;
     }
 
+    void Window::setWindowPosition(const int x, const int y) {
+        if (_systemWindow) {
+            _systemWindow->setPosition(x, y);
+        }
+    }
+
     const int Window::windowWidth() const {
         return _systemWindow ? _systemWindow->getWidth() : _width;
     }
@@ -350,28 +356,63 @@ namespace psychic_ui {
 
     // endregion
 
-    // region Events???
+    // region Focus
 
-    bool Window::keyboardEvent(int key, int scancode, int action, int modifiers) {
-//        if (_focusPath.size() > 0) {
-//            for (auto it = _focusPath.rbegin() + 1; it != _focusPath.rend(); ++it) {
-//                if ((*it)->focused() && (*it)->keyboardEvent(key, scancode, action, modifiers)) {
-//                    return true;
-//                }
-//            }
-//        }
-        return false;
+    void Window::requestFocus(Div *component) {
+        // Build the path
+        std::vector<Div*> path{};
+        Div * c = component;
+        while (c != nullptr) {
+            if (c->focusEnabled()) {
+                path.insert(path.begin(), c);
+            }
+            c = c->parent();
+        }
+
+        // Compare with current and unfocus
+        for (auto focused: _focusPath) {
+            auto it = std::find(path.cbegin(), path.cend(), focused);
+            if (it == path.cend()) {
+                focused->setFocused(false);
+            }
+        }
+
+        // Set new focus path
+        _focusPath = std::move(path);
+        for (auto focused: _focusPath) {
+            if (!focused->focused()) {
+                focused->setFocused(true);
+            }
+        }
+    }
+
+    // endregion
+
+    // region Keyboard Events
+
+    bool Window::keyboardEvent(const int key, const int scancode, const int action, const int modifiers) {
+        // TODO: This won't do it, it should behave like mouse input and ignore focus
+        // Go backwards since we want to cancel as soon as possible when a child handles it
+        bool handled = false;
+        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
+            handled = (*focused)->keyboardEvent(key, scancode, action, modifiers);
+            if (handled) {
+                break;
+            }
+        }
+        return handled;
     }
 
     bool Window::keyboardCharacterEvent(unsigned int codepoint) {
-//        if (_focusPath.size() > 0) {
-//            for (auto it = _focusPath.rbegin() + 1; it != _focusPath.rend(); ++it) {
-//                if ((*it)->focused() && (*it)->keyboardCharacterEvent(codepoint)) {
-//                    return true;
-//                }
-//            }
-//        }
-        return false;
+        // Go backwards since we want to cancel as soon as possible when a child handles it
+        bool handled = false;
+        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
+            handled = (*focused)->keyboardCharacterEvent(codepoint);
+            if (handled) {
+                break;
+            }
+        }
+        return handled;
     }
 
     // endregion
@@ -416,8 +457,6 @@ namespace psychic_ui {
     // endregion
 
     // region Event Callbacks
-
-
 
     // endregion
 

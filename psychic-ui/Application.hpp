@@ -42,6 +42,7 @@ namespace psychic_ui {
         virtual void startDrag() = 0;
         virtual void stopDrag() = 0;
         virtual void setSize(int width, int height) = 0;
+        virtual void setPosition(int x, int y) = 0;
 
     protected:
         Application             *_application;

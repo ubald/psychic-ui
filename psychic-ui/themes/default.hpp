@@ -8,9 +8,10 @@
 #include <psychic-ui/skins/DefaultCheckBoxSkin.hpp>
 #include <psychic-ui/skins/DefaultMenuButtonSkin.hpp>
 #include <psychic-ui/skins/TitleBarButtonSkin.hpp>
+#include <psychic-ui/skins/DefaultBasicButtonSkin.hpp>
+#include <psychic-ui/skins/DefaultTextInputSkin.hpp>
 #include <psychic-color/spaces/RGB.hpp>
 #include <psychic-color/spaces/HSB.hpp>
-#include <psychic-ui/skins/DefaultBasicButtonSkin.hpp>
 
 using namespace psychic_ui;
 using namespace psychic_color;
@@ -87,6 +88,7 @@ public:
         manager->loadFont("Ubuntu Light", "../res/fonts/Ubuntu/Ubuntu-Light.ttf");
         manager->loadFont("Ubuntu Regular", "../res/fonts/Ubuntu/Ubuntu-Regular.ttf");
 
+        manager->registerSkin("default-text-input-skin", SkinType::make([]() { return std::make_shared<DefaultTextInputSkin>(); }));
         manager->registerSkin("default-basic-button-skin", SkinType::make([]() { return std::make_shared<DefaultBasicButtonSkin>(); }));
         manager->registerSkin("default-button-skin", SkinType::make([]() { return std::make_shared<DefaultButtonSkin>(); }));
         manager->registerSkin("default-checkbox-skin", SkinType::make([]() { return std::make_shared<DefaultCheckBoxSkin>(); }));
@@ -109,17 +111,27 @@ public:
 
         manager->style("Component .defaultSkinChrome")
                ->set(borderRadius, radius)
-               ->set(color, themeForegroundColor.getColorAlpha())
-               ->set(borderColor, themeLowContrastColor.getColorAlpha()) // TODO: Should be contrasting with alpha
+               ->set(border, 1)
+                   //->set(color, themeForegroundColor.getColorAlpha())
+               ->set(borderColor, themeLowContrastColor.getColorAlpha(0x40)) // TODO: Should be contrasting with alpha
                ->set(backgroundColor, themeMediumContrastColor.getColorAlpha())
                ->set(contentBackgroundColor, themeBackgroundColor.getColorAlpha());
 
         manager->style("Component:hover .defaultSkinChrome")
+               ->set(borderColor, themeLowContrastColor.getColorAlpha(0x80)) // TODO: Should be contrasting with alpha
                ->set(backgroundColor, themeHighContrastColor.getColorAlpha());
 
         manager->style("Component:active .defaultSkinChrome")
-               ->set(color, BASE_00)
+               ->set(borderColor, themeLowContrastColor.getColorAlpha(0xC0)) // TODO: Should be contrasting with alpha
                ->set(backgroundColor, themeHighlightColor.getColorAlpha());
+
+        manager->style("Component:focus .defaultSkinChrome")
+               ->set(border, 2)
+               ->set(borderColor, themeHighlightColor.getColorAlpha());
+
+       //manager->style("Component:focus .defaultSkinChrome")
+       //        ->set(border, 2)
+       //        ->set(borderColor, themeHighlightColor.getColorAlpha());
 
         manager->style("Component:disabled .defaultSkinChrome")
                ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
@@ -128,7 +140,6 @@ public:
                ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
 
         manager->style("Component:disabled:active .defaultSkinChrome")
-               ->set(color, BASE_00)
                ->set(backgroundColor, themeHighlightColor.getColorAlpha()); // TODO: Fade
 
         // endregion
@@ -223,6 +234,14 @@ public:
         // endregion
 
         // region Labels
+
+        // endregion
+
+        // region Text Input
+
+        manager->style("TextInput")
+               ->set(skin, "default-text-input-skin")
+               ->set(padding, 6);
 
         // endregion
 

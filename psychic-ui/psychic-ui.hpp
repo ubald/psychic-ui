@@ -16,13 +16,15 @@
 #endif
 
 namespace psychic_ui {
-    // RXCPP Namespaces are a mess
-//    namespace rx {
-//        using namespace rxcpp;
-//        using namespace rxcpp::sources;
-//        using namespace rxcpp::operators;
-//        using namespace rxcpp::util;
-//    }
 
+    /**
+     * Since we support either SDL2 or GLFW, we habe to map keyboard keys
+     * to something we can use (they don't use the same values)
+     */
+    enum class PsyKey {
+
+    };
+
+    // TODO: Get rid of this and use psychic-color
     typedef SkColor Color;
 }

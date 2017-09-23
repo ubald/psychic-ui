@@ -49,7 +49,9 @@ namespace psychic_ui {
             }
             _skin = skin;
             if (_skin) {
-                this->add(_skin);
+                // Skin is always in the back so the component can add more
+                // children if need be (ie: TextInput overlays its text)
+                this->add(0, _skin);
             }
             skinChanged();
         }

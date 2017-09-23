@@ -14,6 +14,7 @@
 #include <psychic-ui/components/MenuBar.hpp>
 #include <psychic-ui/components/Spacer.hpp>
 #include "Labels.hpp"
+#include "TextInputs.hpp"
 #include "Buttons.hpp"
 #include "Divs.hpp"
 #include "Scroller.hpp"
@@ -126,31 +127,13 @@ namespace psychic_ui {
         toolBar->add<Button>("Help");
 
         std::vector<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Div>>>>> panels{};
-        panels.emplace_back(
-            std::make_pair(
-                "Divs",
-                Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Divs>(); })));
-        panels.emplace_back(
-            std::make_pair(
-                "Scroller",
-                Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Scrollers>(); })));
-        panels.emplace_back(
-            std::make_pair(
-                "Labels",
-                Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Labels>(); })));
-        panels.emplace_back(
-            std::make_pair(
-                "Buttons",
-                Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Buttons>(); })));
-        panels.emplace_back(
-            std::make_pair(
-                "Ranges",
-                Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Ranges>(); })));
-        panels.emplace_back(
-            std::make_pair(
-                "Colors",
-                Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Colors>(); })));
-
+        panels.emplace_back(std::make_pair("Divs", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Divs>(); })));
+        panels.emplace_back(std::make_pair("Scroller", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Scrollers>(); })));
+        panels.emplace_back(std::make_pair("Labels", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Labels>(); })));
+        panels.emplace_back(std::make_pair("Text Input", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<TextInputs>(); })));
+        panels.emplace_back(std::make_pair("Buttons", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Buttons>(); })));
+        panels.emplace_back(std::make_pair("Ranges", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Ranges>(); })));
+        panels.emplace_back(std::make_pair("Colors", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Colors>(); })));
 
         app->add<TabContainer<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Div>>>>>>(
                panels,
@@ -163,7 +146,7 @@ namespace psychic_ui {
                    return panel;
                }
            )
-           ->select(panels[5])
+           ->select(panels[3])
            ->style()
            ->set(heightPercent, 1.f);
 

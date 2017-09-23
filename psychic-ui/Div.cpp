@@ -104,16 +104,19 @@ namespace psychic_ui {
                 removed();
             }
             _parent = parent;
+            // Temporary, will be updated once we're on the render list
             _depth  = _parent ? _parent->depth() + 1 : 0;
             if (_parent) {
-                // Here we force update the style instead of relying on the invalidation
-                // because styles control the layout, and we don't want the component
-                // doing a style-less render pass on its first frame alive.
-                updateStyleRecursive();
                 added();
                 if (window()) {
                     addedToRenderRecursive();
                 }
+                // Here we force update the style instead of relying on the invalidation
+                // because styles control the layout, and we don't want the component
+                // doing a style-less render pass on its first frame alive. Only after
+                // `addedToRenderRecursive` since it can make calls that would change
+                // the styling.
+                updateStyleRecursive();
             }
         }
     }
@@ -127,6 +130,8 @@ namespace psychic_ui {
     void Div::removed() {}
 
     void Div::addedToRenderRecursive() {
+        // Update the depth first so that styles have access to it
+        _depth  = _parent ? _parent->depth() + 1 : 0;
         createStyles();
         addedToRender();
         for (auto &child: _children) {
@@ -255,23 +260,22 @@ namespace psychic_ui {
 
     // region Focus
 
+    bool Div::focusEnabled() const {
+        return _focusEnabled;
+    }
+
+    Div *Div::setFocusEnabled(bool focusEnabled) {
+        _focusEnabled = true;
+        return this;
+    }
+
     bool Div::focused() const {
         return _focused;
     }
 
-    void Div::focused(bool focused) {
+    void Div::setFocused(bool focused) {
         _focused = focused;
         invalidateStyle();
-    }
-
-    void Div::requestFocus() {
-        requestFocus(this);
-    }
-
-    void Div::requestFocus(Div *component) {
-        if (_parent) {
-            _parent->requestFocus(component);
-        }
     }
 
     // endregion
@@ -1171,6 +1175,8 @@ namespace psychic_ui {
 
     // region Interaction
 
+    // region Properties
+
     bool Div::mouseEnabled() const {
         return _mouseEnabled;
     }
@@ -1198,8 +1204,6 @@ namespace psychic_ui {
         invalidateStyle();
     }
 
-    // region Buttons
-
     bool Div::getMouseDown() const {
         return _mouseDown;
     }
@@ -1210,6 +1214,10 @@ namespace psychic_ui {
             invalidateStyle();
         }
     }
+
+    // endregion
+
+    // region Buttons
 
     MouseEventStatus Div::mouseButton(const int mouseX, const int mouseY, const int button, const bool down, const int modifiers) {
         if (!_visible || !boundsContains(mouseX, mouseY)) {
@@ -1257,6 +1265,11 @@ namespace psychic_ui {
                     break;
                 }
             }
+        }
+
+        if (ret == Out) {
+            // We're the deepest we're gonna get, do a focus request
+            window()->requestFocus(this);
         }
 
         if (_mouseEnabled && ret != Handled && onMouseDown.hasSubscriptions()) {
@@ -1484,7 +1497,6 @@ namespace psychic_ui {
             ret = Handled;
         }
 
-        std::cout << toString() << " " << ret << std::endl;
         if (ret != Handled && _computedStyle->get(overflow) == "scroll") {
             scroll(scrollX, scrollY);
         }
@@ -1494,21 +1506,18 @@ namespace psychic_ui {
 
 // endregion
 
-// STUFF>>>>>>>>>>>>
+    // region Keyboard
 
-    bool Div::focusEvent(bool focused) {
-        _focused = focused;
+    bool Div::keyboardEvent(const int key, const int scancode, const int action, const int modifiers) {
         return false;
     }
 
-    bool Div::keyboardEvent(int, int, int, int) {
+    bool Div::keyboardCharacterEvent(unsigned int codepoint) {
         return false;
     }
 
-    bool Div::keyboardCharacterEvent(unsigned int) {
-        return false;
-    }
+    // endregion
 
-// endregion
+    // endregion
 
 }
