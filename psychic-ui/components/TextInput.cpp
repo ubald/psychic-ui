@@ -10,6 +10,9 @@ namespace psychic_ui {
         setWidth(200);
         style()->set(height, 48);
         _focusEnabled = true;
+
+        onKeyDown([this](Key key) { handleKey(key); });
+        onKeyRepeat([this](Key key) { handleKey(key); });
     }
 
 
@@ -24,11 +27,47 @@ namespace psychic_ui {
         return this;
     }
 
+    void TextInput::handleKey(Key key) {
+        switch (key) {
+            case Key::LEFT:
+                if (_caretPos > 0) {
+                    --_caretPos;
+                }
+                break;
+
+            case Key::RIGHT:
+                if (_caretPos < _text.size()) {
+                    ++_caretPos;
+                }
+                break;
+
+            case Key::BACKSPACE:
+                if (_caretPos > 0) {
+                    _text.erase(_caretPos - 1, 1);
+                    --_caretPos;
+                }
+                break;
+
+            case Key::DELETE:
+                if (_caretPos < _text.size()) {
+                    _text.erase(_caretPos, 1);
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
     bool TextInput::keyboardCharacterEvent(unsigned int codepoint) {
-        icu::UnicodeString uni_str((UChar32)codepoint);
-        std::string str;
+        icu::UnicodeString uni_str(static_cast<UChar32>(codepoint));
+        std::string        str;
         uni_str.toUTF8String(str);
-        std::cout << str << std::endl;
+        _text.insert(_caretPos, str);
+        ++_caretPos;
+
+        std::cout << _text << std::endl;
+
         return true;
     }
 }

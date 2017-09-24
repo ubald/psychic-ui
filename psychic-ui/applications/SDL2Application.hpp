@@ -11,7 +11,9 @@
 #elif defined(UNIX)
 #include <GL/gl.h>
 #elif defined(APPLE)
+
 #include <OpenGL/gl.h>
+
 #elif defined(IOS)
 #include <OpenGLES/ES2/gl.h>
 #endif
@@ -65,7 +67,9 @@ namespace psychic_ui {
         void startDrag() override;
         void stopDrag() override;
         void setSize(int width, int height) override;
-        void setPosition(int x, int y) override ;
+        void setPosition(int x, int y) override;
+
+        static Key mapKey(int keycode);
     };
 }
 

@@ -37,7 +37,7 @@ namespace psychic_ui {
         YGNodeSetContext(_yogaNode, this);
         YGNodeSetPrintFunc(
             _yogaNode, [](YGNodeRef node) {
-                auto div = static_cast<Div*>(YGNodeGetContext(node));
+                auto div = static_cast<Div *>(YGNodeGetContext(node));
                 std::cout << "type=\"" << div->tags().back() << "\" ";
                 if (!div->id().empty()) {
                     std::cout << "id=\"" << div->id() << "\" ";
@@ -131,7 +131,7 @@ namespace psychic_ui {
 
     void Div::addedToRenderRecursive() {
         // Update the depth first so that styles have access to it
-        _depth  = _parent ? _parent->depth() + 1 : 0;
+        _depth = _parent ? _parent->depth() + 1 : 0;
         createStyles();
         addedToRender();
         for (auto &child: _children) {
@@ -1507,10 +1507,6 @@ namespace psychic_ui {
 // endregion
 
     // region Keyboard
-
-    bool Div::keyboardEvent(const int key, const int scancode, const int action, const int modifiers) {
-        return false;
-    }
 
     bool Div::keyboardCharacterEvent(unsigned int codepoint) {
         return false;

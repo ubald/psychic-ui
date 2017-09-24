@@ -360,12 +360,10 @@ namespace psychic_ui {
 
     void Window::requestFocus(Div *component) {
         // Build the path
-        std::vector<Div*> path{};
-        Div * c = component;
+        std::vector<Div *> path{};
+        Div                *c = component;
         while (c != nullptr) {
-            if (c->focusEnabled()) {
-                path.insert(path.begin(), c);
-            }
+            path.insert(path.begin(), c);
             c = c->parent();
         }
 
@@ -373,14 +371,16 @@ namespace psychic_ui {
         for (auto focused: _focusPath) {
             auto it = std::find(path.cbegin(), path.cend(), focused);
             if (it == path.cend()) {
-                focused->setFocused(false);
+                if (focused->focusEnabled()) {
+                    focused->setFocused(false);
+                }
             }
         }
 
         // Set new focus path
         _focusPath = std::move(path);
         for (auto focused: _focusPath) {
-            if (!focused->focused()) {
+            if (focused->focusEnabled() && !focused->focused()) {
                 focused->setFocused(true);
             }
         }
@@ -390,29 +390,54 @@ namespace psychic_ui {
 
     // region Keyboard Events
 
-    bool Window::keyboardEvent(const int key, const int scancode, const int action, const int modifiers) {
-        // TODO: This won't do it, it should behave like mouse input and ignore focus
+    bool Window::keyDown(Key key) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        bool handled = false;
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
-            handled = (*focused)->keyboardEvent(key, scancode, action, modifiers);
-            if (handled) {
-                break;
+            // Everyone in the focus path gets the key events, focusEnabled or not
+            Div *component = (*focused);
+            if (component->onKeyDown.hasSubscriptions()) {
+                component->onKeyDown(key);
+                return true;
             }
         }
-        return handled;
+        return false;
+    }
+
+    bool Window::keyRepeat(Key key) {
+        // Go backwards since we want to cancel as soon as possible when a child handles it
+        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
+            // Everyone in the focus path gets the key events, focusEnabled or not
+            Div *component = (*focused);
+            if (component->onKeyRepeat.hasSubscriptions()) {
+                component->onKeyRepeat(key);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool Window::keyUp(Key key) {
+        // Go backwards since we want to cancel as soon as possible when a child handles it
+        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
+            // Everyone in the focus path gets the key events, focusEnabled or not
+            Div *component = (*focused);
+            if (component->onKeyUp.hasSubscriptions()) {
+                component->onKeyUp(key);
+                return true;
+            }
+        }
+        return false;
     }
 
     bool Window::keyboardCharacterEvent(unsigned int codepoint) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        bool handled = false;
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
-            handled = (*focused)->keyboardCharacterEvent(codepoint);
-            if (handled) {
-                break;
+            // Only the focusEnabled divs get the character events
+            if ((*focused)->focusEnabled() && (*focused)->keyboardCharacterEvent(codepoint)) {
+                return true;
             }
         }
-        return handled;
+        return false;
     }
 
     // endregion

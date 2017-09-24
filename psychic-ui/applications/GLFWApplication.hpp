@@ -104,6 +104,7 @@ namespace psychic_ui {
         void iconifyEventCallback(int iconified);
         void closeEventCallback();
 
+        static Key mapKey(int keycode);
     };
 }
 

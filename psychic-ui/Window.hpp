@@ -122,7 +122,11 @@ namespace psychic_ui {
 
 
         virtual bool dropEvent(const std::vector<std::string> & /* filenames */) { return false; /* To be overridden */ }
-        bool keyboardEvent(int key, int scancode, int action, int modifiers) override;
+
+
+        bool keyDown(Key key);
+        bool keyRepeat(Key key);
+        bool keyUp(Key key);
         bool keyboardCharacterEvent(unsigned int codepoint) override;
 
         // endregion

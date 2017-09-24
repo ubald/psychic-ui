@@ -24,6 +24,8 @@ namespace psychic_ui {
         TextInput *setText(const std::string &text);
     protected:
         std::string _text{};
+        unsigned int _caretPos{0};
+        void handleKey(Key key);
         bool keyboardCharacterEvent(unsigned int codepoint) override;
     };
 

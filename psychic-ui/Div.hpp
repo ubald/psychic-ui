@@ -298,11 +298,11 @@ namespace psychic_ui {
         virtual MouseEventStatus mouseUp(int mouseX, int mouseY, int button, int modifiers);
         virtual MouseEventStatus click(int mouseX, int mouseY, int button, int modifiers);
         virtual MouseEventStatus mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
-        virtual bool keyboardEvent(int key, int scancode, int action, int modifiers);
         virtual bool keyboardCharacterEvent(unsigned int codepoint);
 
-        Signal<int, int, int, int> onKeyDown{};
-        Signal<int, int, int, int> onKeyUp{};
+        Signal<Key > onKeyDown{};
+        Signal<Key > onKeyRepeat{};
+        Signal<Key > onKeyUp{};
         Signal<unsigned int> onCharacter{};
 
         // endregion

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "psychic-ui.hpp"
 
 namespace psychic_ui {
     class Window;
