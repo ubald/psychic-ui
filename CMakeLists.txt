@@ -32,7 +32,7 @@ if(APPLE)
     file(GLOB ICU_LIBRARIES /usr/local/opt/icu4c/lib/*.a)
     set(ICU_INCLUDE_DIRS /usr/local/opt/icu4c/include)
 else()
-    find_package(ICU REQUIRED)
+    find_package(ICU REQUIRED COMPONENTS uc)
 endif()
 
 set(PSYCHIC_UI_EXTRA_LIBS "")
