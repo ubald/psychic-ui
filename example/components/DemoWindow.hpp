@@ -146,7 +146,7 @@ namespace psychic_ui {
                    return panel;
                }
            )
-           ->select(panels[3])
+           ->select(panels[2])
            ->style()
            ->set(heightPercent, 1.f);
 
@@ -160,9 +160,9 @@ namespace psychic_ui {
     }
 
     void DemoWindow::render(SkCanvas *canvas) {
-//        std::stringstream stream;
-//        stream << std::fixed << std::setprecision(3) << fps;
-//        fpsLabel->setText("FPS: " + stream.str());
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(3) << fps;
+        fpsLabel->setText("FPS: " + stream.str());
         Window::render(canvas);
     }
 }

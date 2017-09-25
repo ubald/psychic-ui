@@ -85,6 +85,10 @@ namespace psychic_ui {
             throw std::runtime_error("Skia surface requested without a context");
         }
 
+        if (_sk_surface) {
+            delete _sk_surface;
+        }
+
         GrGLFramebufferInfo framebufferInfo{};
         framebufferInfo.fFBOID = 0;  // assume default framebuffer
         GrBackendRenderTarget backendRenderTarget(

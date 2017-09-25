@@ -14,6 +14,8 @@ namespace psychic_ui {
             ->set(shrink, 0)
             ->set(grow, 0);
 
+        _textBox.setPaint(_textPaint);
+
         setMeasurable();
         setText(text);
 
@@ -27,12 +29,11 @@ namespace psychic_ui {
     }
 
     void Label::setText(const std::string &text) {
-        if (text == _text) {
-            return;
+        if (text != _text) {
+            _text = text;
+            _textBox.setText(_text);
+            invalidate();
         }
-        _text = text;
-        _textBox.setText(_text.c_str(), _text.length(), _textPaint);
-        invalidate();
     }
 
     const bool Label::lcdRender() const {
@@ -40,34 +41,38 @@ namespace psychic_ui {
     }
 
     Label *Label::setLcdRender(const bool lcdRender) {
-        _lcdRender = lcdRender;
-        invalidateStyle();
+        if (_lcdRender != lcdRender) {
+            _lcdRender = lcdRender;
+            invalidateStyle();
+        }
         return this;
     }
 
     const bool Label::subpixelText() const {
-        return _subpixelText;
+        return _subPixelText;
     }
 
-    Label *Label::setSubpixelText(const bool subpixelText) {
-        _subpixelText = subpixelText;
-        invalidateStyle();
+    Label *Label::setSubPixelText(const bool subPixelText) {
+        if (_subPixelText != subPixelText) {
+            _subPixelText = subPixelText;
+            invalidateStyle();
+        }
         return this;
     }
 
     void Label::styleUpdated() {
         Div::styleUpdated();
 
-        float size = _computedStyle->get(fontSize);
-        _antiAlias  = _computedStyle->get(textAntiAlias);
-        _lineHeight = _computedStyle->get(lineHeight);
+        float size      = _computedStyle->get(fontSize);
+        bool  antiAlias = _computedStyle->get(textAntiAlias);
+        _lineHeight   = _computedStyle->get(lineHeight);
         if (std::isnan(_lineHeight)) {
             _lineHeight = size * 1.5f;
         }
 
-        _textPaint.setAntiAlias(_antiAlias);
-        _textPaint.setLCDRenderText(_antiAlias && _lcdRender);
-        _textPaint.setSubpixelText(_antiAlias && _subpixelText);
+        _textPaint.setAntiAlias(antiAlias);
+        _textPaint.setLCDRenderText(antiAlias && _lcdRender);
+        _textPaint.setSubpixelText(antiAlias && _subPixelText);
 
         _textPaint.setTypeface(styleManager()->font(_computedStyle->get(fontFamily)));
         _textPaint.setTextSize(size);
@@ -81,7 +86,7 @@ namespace psychic_ui {
     }
 
     YGSize Label::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
-        YGSize size = Div::measure(width, widthMode, height, heightMode);
+        YGSize size{};
 
         if (_text.empty()) {
             size.width  = 0;
@@ -103,21 +108,21 @@ namespace psychic_ui {
                         longestLength = len;
                     }
                 }
-                _textBox.setMode(SkTextBox::kOneLine_Mode);
+                _textBox.setMode(TextBoxMode::OneLine);
                 // TODO: This doesn't seem to take the right padding into account
                 size.width  = std::ceil(_textPaint.measureText(lines[longestIndex].c_str(), longestLength));
                 size.height = lines.size() * _lineHeight;
             } else {
                 float w = _textPaint.measureText(_text.c_str(), _text.length());
                 if (w > width) {
-                    _textBox.setMode(SkTextBox::kLineBreak_Mode);
+                    _textBox.setMode(TextBoxMode::LineBreak);
                     // The passed sizes consider padding, which is different than when we draw
                     _textBox.setBox(0, 0, width, height);
                     // size.getHeight = _textBox.getTextHeight();
                     // TextBox doesn't measure the same way it draws, we have to set the spacing manually
                     size.height = _textBox.countLines() * _lineHeight;
                 } else {
-                    _textBox.setMode(SkTextBox::kOneLine_Mode);
+                    _textBox.setMode(TextBoxMode::OneLine);
                     size.width  = std::ceil(w);
                     size.height = _lineHeight;//_textPaint.getFontSpacing();
                 }
@@ -127,13 +132,13 @@ namespace psychic_ui {
             // We're not multiline, so remove line returns
             std::replace(_text.begin(), _text.end(), '\n', ' ');
 
-            _textBox.setMode(SkTextBox::kOneLine_Mode);
+            _textBox.setMode(TextBoxMode::OneLine);
 
             size.height = _lineHeight;
             if (widthMode == YGMeasureModeExactly) {
                 size.width = width;
             } else {
-                size.width  = std::ceil(_textPaint.measureText(_text.c_str(), _text.size()));
+                size.width = std::ceil(_textPaint.measureText(_text.c_str(), _text.size()));
 
                 if (widthMode == YGMeasureModeUndefined) {
                     size.width = size.width;
@@ -146,11 +151,16 @@ namespace psychic_ui {
         return size;
     }
 
+    void Label::layoutUpdated() {
+        Div::layoutUpdated();
+        _textBox.setBox(_paddedRect);
+        _blob = _textBox.snapshotTextBlob();
+    }
+
     void Label::draw(SkCanvas *canvas) {
         Div::draw(canvas);
-        if (!_text.empty()) {
-            _textBox.setBox(_paddedRect);
-            _textBox.draw(canvas);
+        if (!_text.empty() && _blob) {
+            canvas->drawTextBlob(_blob.get(), 0, 0, _textPaint);
         }
     }
 }

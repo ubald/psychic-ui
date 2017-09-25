@@ -9,10 +9,14 @@ namespace psychic_ui {
         setTag("TextInput");
         setWidth(200);
         style()->set(height, 48);
+
         _focusEnabled = true;
 
         onKeyDown([this](Key key) { handleKey(key); });
         onKeyRepeat([this](Key key) { handleKey(key); });
+
+        // Add text display on top of the skin
+        _textDisplay = add<Text>(_text);
     }
 
 
@@ -23,8 +27,14 @@ namespace psychic_ui {
     TextInput *TextInput::setText(const std::string &text) {
         if (_text != text) {
             _text = text;
+            _textDisplay->setText(_text);
+            updateDisplay();
         }
         return this;
+    }
+
+    void TextInput::updateDisplay() {
+        _textDisplay->reflow();
     }
 
     void TextInput::handleKey(Key key) {
@@ -51,6 +61,7 @@ namespace psychic_ui {
             case Key::DELETE:
                 if (_caretPos < _text.size()) {
                     _text.erase(_caretPos, 1);
+                    updateDisplay();
                 }
                 break;
 

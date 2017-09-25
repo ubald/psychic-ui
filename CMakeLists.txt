@@ -178,7 +178,14 @@ set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     psychic-ui/applications/GLFWApplication.hpp
     psychic-ui/applications/SDL2Application.cpp
     psychic-ui/applications/SDL2Application.hpp
-    psychic-ui/skins/DefaultSkin.hpp psychic-ui/components/TextInput.cpp psychic-ui/components/TextInput.hpp psychic-ui/skins/DefaultTextInputSkin.cpp psychic-ui/skins/DefaultTextInputSkin.hpp)
+    psychic-ui/skins/DefaultSkin.hpp
+    psychic-ui/components/TextInput.cpp
+    psychic-ui/components/TextInput.hpp
+    psychic-ui/skins/DefaultTextInputSkin.cpp
+    psychic-ui/skins/DefaultTextInputSkin.hpp
+    psychic-ui/utils/TextBox.cpp
+    psychic-ui/utils/TextBox.hpp
+    psychic-ui/components/Text.cpp psychic-ui/components/Text.hpp)
 
 add_library(psychic-ui SHARED ${SOURCE_FILES})
 

@@ -60,25 +60,25 @@ namespace psychic_ui {
 
             left->add<Label>("Simple Label (AA)")
                 ->setLcdRender(false)
-                ->setSubpixelText(false)
+                ->setSubPixelText(false)
                 ->style()
                 ->set(textAntiAlias, true);
 
             left->add<Label>("Simple Label (AA+LCD)")
                 ->setLcdRender(true)
-                ->setSubpixelText(false)
+                ->setSubPixelText(false)
                 ->style()
                 ->set(textAntiAlias, true);
 
             left->add<Label>("Simple Label (AA+SUB)")
                 ->setLcdRender(false)
-                ->setSubpixelText(true)
+                ->setSubPixelText(true)
                 ->style()
                 ->set(textAntiAlias, true);
 
             left->add<Label>("Simple Label (AA+LCD+SUB)")
                 ->setLcdRender(true)
-                ->setSubpixelText(true)
+                ->setSubPixelText(true)
                 ->style()
                 ->set(textAntiAlias, true);
 

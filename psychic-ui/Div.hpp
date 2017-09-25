@@ -82,7 +82,7 @@ namespace psychic_ui {
         bool getVisible() const;
         virtual void setVisible(bool value);
         bool enabled() const;
-        virtual Div *setEnabled(bool value);
+        virtual Div *setEnabled(bool enabled);
         virtual const bool active() const;
         bool focusEnabled() const;
         Div *setFocusEnabled(bool focusEnabled);

@@ -8,9 +8,9 @@ namespace psychic_ui {
         addClassName("defaultSkinChrome");
     }
 
-    void DefaultTextInputSkin::setText(const std::string &text) {
-
-    }
+    //void DefaultTextInputSkin::setText(const std::string &text) {
+    //
+    //}
 
     void DefaultTextInputSkin::draw(SkCanvas *canvas) {
         // Don't use default rendering, render out custom component chrome

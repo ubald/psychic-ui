@@ -2,6 +2,7 @@
 
 #include <string>
 #include "psychic-ui/Component.hpp"
+#include "psychic-ui/components/Text.hpp"
 
 namespace psychic_ui {
     class TextInput;
@@ -19,17 +20,14 @@ namespace psychic_ui {
     public:
         //TextInput() = delete;
         explicit TextInput(const std::string &text = "");
-
         const std::string &getText() const;
         TextInput *setText(const std::string &text);
     protected:
         std::string _text{};
+        std::shared_ptr<Text> _textDisplay{};
         unsigned int _caretPos{0};
+        void updateDisplay();
         void handleKey(Key key);
         bool keyboardCharacterEvent(unsigned int codepoint) override;
-    };
-
-    class EditableText: public Div {
-
     };
 }

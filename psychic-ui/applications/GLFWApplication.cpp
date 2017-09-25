@@ -178,7 +178,7 @@ namespace psychic_ui {
         glfwGetWindowSize(_glfwWindow, &_width, &_height);
         _pixelRatio = get_pixel_ratio(_glfwWindow);
         #if defined(_WIN32) || defined(__linux__)
-        if (_pixelRatio != 1 && !_fullscreen)
+        if (_pixelRatio != 1 && !window->getFullscreen())
             glfwSetWindowSize(_glfwWindow, _width * _pixelRatio, _height * _pixelRatio);
         #endif
 

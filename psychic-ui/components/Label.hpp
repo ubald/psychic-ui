@@ -3,7 +3,9 @@
 #include <string>
 #include <SkPaint.h>
 #include <SkTextBox.h>
+#include <SkTextBlob.h>
 #include "psychic-ui/Div.hpp"
+#include "psychic-ui/utils/TextBox.hpp"
 
 namespace psychic_ui {
     class Label: public Div {
@@ -14,23 +16,24 @@ namespace psychic_ui {
         void setText(const std::string &text);
 
         const bool lcdRender() const;
-        Label * setLcdRender(const bool lcdRender);
+        Label * setLcdRender( bool lcdRender);
 
         const bool subpixelText() const;
-        Label * setSubpixelText(const bool subpixelText);
+        Label * setSubPixelText(bool subPixelText);
 
         void styleUpdated() override;
+        void layoutUpdated() override;
 
         YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) override;
         void draw(SkCanvas *canvas) override;
 
     protected:
         std::string _text;
-        bool _antiAlias{true};
         bool _lcdRender{true};
-        bool _subpixelText{true};
+        bool _subPixelText{true};
         float _lineHeight{0.0f};
-        SkPaint _textPaint;
-        SkTextBox _textBox;
+        SkPaint _textPaint{};
+        TextBox _textBox{};
+        std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob*)>> _blob{nullptr};
     };
 }

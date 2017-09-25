@@ -250,9 +250,11 @@ namespace psychic_ui {
         return _enabled;
     }
 
-    Div *Div::setEnabled(bool value) {
-        _enabled = value;
-        invalidateStyle();
+    Div *Div::setEnabled(bool enabled) {
+        if (_enabled != enabled) {
+            _enabled = enabled;
+            invalidateStyle();
+        }
         return this;
     }
 
@@ -274,8 +276,10 @@ namespace psychic_ui {
     }
 
     void Div::setFocused(bool focused) {
-        _focused = focused;
-        invalidateStyle();
+        if (_focused != focused) {
+            _focused = focused;
+            invalidateStyle();
+        }
     }
 
     // endregion
@@ -848,6 +852,12 @@ namespace psychic_ui {
     }
 
     void Div::layoutUpdated() {
+        if (!YGNodeGetHasNewLayout(_yogaNode)) {
+            return;
+        }
+
+        YGNodeSetHasNewLayout(_yogaNode, false);
+
         _x = (int) std::ceil(YGNodeLayoutGetLeft(_yogaNode));
         _y = (int) std::ceil(YGNodeLayoutGetTop(_yogaNode));
 
@@ -894,6 +904,7 @@ namespace psychic_ui {
             && _borderRight == _borderTop
             && _borderTop == _borderBottom
         );
+
 
         // Children should also update
         _boundsLeft   = _x;
@@ -1200,8 +1211,10 @@ namespace psychic_ui {
     }
 
     void Div::setMouseOver(bool over) {
-        _mouseOver = over;
-        invalidateStyle();
+        if (_mouseOver != over) {
+            _mouseOver = over;
+            invalidateStyle();
+        }
     }
 
     bool Div::getMouseDown() const {
