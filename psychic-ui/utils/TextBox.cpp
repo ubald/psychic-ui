@@ -4,9 +4,8 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include <unicode/unistr.h>
 #include <iostream>
-#include <SkTextBlob.h>
+#include <cmath>
 #include "TextBox.hpp"
 
 namespace psychic_ui {
@@ -40,41 +39,48 @@ namespace psychic_ui {
         _spacingAdd  = add;
     }
 
-    // endregion
-
     void TextBox::setPaint(const SkPaint &paint) {
         _paint = &paint;
     }
 
+    // endregion
+
     void TextBox::setText(const std::string &text) {
         _text = UnicodeString::fromUTF8(text);
         breakIterator->setText(_text);
-        _breakPositions.clear();
+        _possibleBreakPositions.clear();
         int b = breakIterator->first();
         while (b != BreakIterator::DONE) {
             if (b != 0) {
-                _breakPositions.push_back(b);
+                _possibleBreakPositions.push_back(b);
             }
             b = breakIterator->next();
         }
         // We always "break" at the end
-        _breakPositions.push_back(_text.length());
+        _possibleBreakPositions.push_back(_text.length());
     }
 
     int TextBox::countLines() const {
-        int pos   = 0;
         int count = 0;
         if (_box.width() > 0) {
+            int pos = 0;
             do {
                 count += 1;
                 pos = nextLineBreak(pos);
+                if (pos == 0) {
+                    // Skia's breakText broke down, we're probably narrower than a character
+                    // Just assume we're one character wide so that our height is equal to the
+                    // length of the text
+                    count = _text.length();
+                    break;
+                }
             } while (pos < _text.length());
         }
         return count;
     }
 
     float TextBox::getTextHeight() const {
-        float spacing = _paint->getTextSize() * _spacingMult + _spacingAdd;
+        float spacing = _paint->getFontSpacing() * _spacingMult + _spacingAdd;
         return countLines() * spacing;
     }
 
@@ -84,13 +90,17 @@ namespace psychic_ui {
         remaining.toUTF8String(str);
 
         // Start by find where the text would cut
-        std::size_t maxBreak = start + _paint->breakText(str.c_str(), str.size(), _box.width());
+        auto advance = static_cast<int>(_paint->breakText(str.c_str(), str.size(), _box.width()));
+        if (advance == 0) {
+            return 0;
+        }
+
+        int maxBreak = start + advance;
 
         // Get the break just before where it would cut
-        int lastBreakPosition = 0;
-
-        for (const int _breakPosition : _breakPositions) {
-            if (_breakPosition <= maxBreak) {
+        int            lastBreakPosition = maxBreak;
+        for (const int _breakPosition : _possibleBreakPositions) {
+            if (_breakPosition > start && _breakPosition <= maxBreak) {
                 lastBreakPosition = _breakPosition;
             } else {
                 break;
@@ -100,11 +110,13 @@ namespace psychic_ui {
         return lastBreakPosition;
     }
 
-    float TextBox::visit(TextBoxVisitor visitor) const {
-        float maxWidth = _box.width();
+    std::vector<int> TextBox::visit(TextBoxVisitor visitor) const {
+        std::vector<int> lines{};
+        float            maxWidth = _box.width();
 
         if (maxWidth <= 0 || _text.length() == 0) {
-            return _box.top();
+            //return _box.top();
+            return lines;
         }
 
         float                x = 0.0f;
@@ -158,6 +170,8 @@ namespace psychic_ui {
                 _text.tempSubStringBetween(lastBreak, nextBreak).toUTF8String(str);
                 visitor(str.c_str(), str.size(), x, y);
             }
+            // We actually want the lines to start at 0 and skip the last break
+            lines.push_back(lastBreak);
             lastBreak = nextBreak;
             if (lastBreak >= _text.length()) {
                 break;
@@ -167,13 +181,64 @@ namespace psychic_ui {
                 break;
             }
         }
-        return y + metrics.fDescent + metrics.fLeading;
+        //return y + metrics.fDescent + metrics.fLeading;
+        return lines;
+    }
+
+    int TextBox::indexFromPos(int x, int y) const {
+        float lineHeight = _paint->getFontSpacing() * _spacingMult + _spacingAdd;
+        auto  line       = static_cast<int>(std::floor((static_cast<float>(y) - _box.fTop) / lineHeight));
+
+        if (line < 0) {
+            line = 0;
+        } else if (line >= _lineStarts.size()) {
+            line = static_cast<int>(_lineStarts.size()) - 1;
+        }
+
+        int lineStart = _lineStarts[line];
+
+        std::string str{};
+        _text.tempSubStringBetween(lineStart, _text.length()).toUTF8String(str);
+
+        std::vector<SkScalar> widths(str.size());
+        _paint->getTextWidths(str.c_str(), str.size(), &widths.front());
+        int pos = 0;
+        float xCheck = x + _box.fLeft;
+        float acc = 0.0f;
+        for (pos = 0; pos < widths.size(); ++pos) {
+            float width = widths[pos];
+            float halfWidth = width * 0.5f;
+            if (xCheck < acc + halfWidth) {
+                break;
+            }
+            acc += width;
+        }
+
+        return lineStart + pos;
+    }
+
+    std::pair<int, int> TextBox::posFromIndex(int index) const {
+        int line = 0;
+        int lineStart = 0;
+        for (unsigned int i = 0; i < _lineStarts.size(); ++i ) {
+            if (index < _lineStarts[i]) {
+                break;
+            }
+            line = i;
+            lineStart = _lineStarts[i];
+        }
+
+        std::string str{};
+        _text.tempSubStringBetween(lineStart, index).toUTF8String(str);
+        auto x = static_cast<int>(std::round(_paint->measureText(str.c_str(), str.size())));
+
+        return std::make_pair(line, x);
     }
 
     /// CANVAS VISITOR
 
     void TextBox::draw(SkCanvas *canvas) {
-        visit(
+        _lineStarts = visit(
             [this, canvas](const char text[], size_t len, float x, float y) {
                 canvas->drawText(text, len, x, y, *_paint);
             }
@@ -182,19 +247,15 @@ namespace psychic_ui {
 
     /// TEXT BLOB VISITOR
 
-    std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob*)>> TextBox::snapshotTextBlob() const {
+    std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>> TextBox::snapshotTextBlob() {
         SkTextBlobBuilder builder{};
         SkPaint           p(*_paint);
         p.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
-        visit(
+        _lineStarts = visit(
             [this, &builder, &p](const char text[], size_t len, float x, float y) {
                 _paint->textToGlyphs(text, len, builder.allocRun(p, _paint->countText(text, len), x, y).glyphs);
             }
         );
-        return std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob*)>>(builder.make().release(), [](SkTextBlob* ptr)
-        {
-            //std::cout << "destroying from a custom deleter...\n";
-            ptr->unref();
-        });
+        return std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>>(builder.make().release(), [](SkTextBlob *ptr) { ptr->unref(); });
     }
 }

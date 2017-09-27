@@ -100,13 +100,8 @@ namespace psychic_ui {
 
     template<class... T>
     void Signal<T...>::emit(T &... args) {
-        try {
-            for (auto &slot: slots) {
-//                slot->notify(std::forward<T...>(args)...);
-                slot->notify(args...);
-            }
-        } catch (const std::exception &e) {
-            std::cerr << "Caught exception in signal subscriber: " << e.what() << std::endl;
+        for (auto &slot: slots) {
+            slot->notify(args...);
         }
     }
 

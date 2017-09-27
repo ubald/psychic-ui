@@ -14,6 +14,8 @@ namespace psychic_ui {
                 borderVerticalColor,
                 borderTopColor,
                 borderBottomColor,
+                selectionColor,
+                selectionBackgroundColor,
                 contentBackgroundColor
             },
             {
@@ -41,8 +43,7 @@ namespace psychic_ui {
             },
             {
                 antiAlias,
-                textAntiAlias,
-                multiline
+                textAntiAlias
             }
         };
 

@@ -378,6 +378,7 @@ namespace psychic_ui {
                 if (focused->focusEnabled()) {
                     focused->setFocused(false);
                 }
+                focused->onBlur();
             }
         }
 
@@ -387,6 +388,7 @@ namespace psychic_ui {
             if (focused->focusEnabled() && !focused->focused()) {
                 focused->setFocused(true);
             }
+            focused->onFocus();
         }
     }
 

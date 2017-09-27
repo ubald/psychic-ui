@@ -11,9 +11,7 @@
 #elif defined(UNIX)
 #include <GL/gl.h>
 #elif defined(APPLE)
-
 #include <OpenGL/gl.h>
-
 #elif defined(IOS)
 #include <OpenGLES/ES2/gl.h>
 #endif

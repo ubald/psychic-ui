@@ -19,6 +19,7 @@
     </libraryRoots>
     <excludeRoots>
       <file path="$PROJECT_DIR$/build" />
+      <file path="$PROJECT_DIR$/docs" />
       <file path="$PROJECT_DIR$/extlib/external" />
       <file path="$PROJECT_DIR$/lib/psychic-color/build" />
     </excludeRoots>

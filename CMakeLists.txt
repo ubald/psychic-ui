@@ -185,7 +185,11 @@ set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     psychic-ui/skins/DefaultTextInputSkin.hpp
     psychic-ui/utils/TextBox.cpp
     psychic-ui/utils/TextBox.hpp
-    psychic-ui/components/Text.cpp psychic-ui/components/Text.hpp)
+    psychic-ui/components/Text.cpp
+    psychic-ui/components/Text.hpp
+    psychic-ui/TextBase.cpp
+    psychic-ui/TextBase.hpp
+)
 
 add_library(psychic-ui SHARED ${SOURCE_FILES})
 

@@ -34,7 +34,7 @@ namespace psychic_ui {
     }
 
     void TextInput::updateDisplay() {
-        _textDisplay->reflow();
+        _textDisplay->invalidate();
     }
 
     void TextInput::handleKey(Key key) {

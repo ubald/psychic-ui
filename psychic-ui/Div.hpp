@@ -300,10 +300,12 @@ namespace psychic_ui {
         virtual MouseEventStatus mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
         virtual bool keyboardCharacterEvent(unsigned int codepoint);
 
-        Signal<Key > onKeyDown{};
-        Signal<Key > onKeyRepeat{};
-        Signal<Key > onKeyUp{};
+        Signal<Key>          onKeyDown{};
+        Signal<Key>          onKeyRepeat{};
+        Signal<Key>          onKeyUp{};
         Signal<unsigned int> onCharacter{};
+        Signal<>             onFocus{};
+        Signal<>             onBlur{};
 
         // endregion
 
@@ -320,8 +322,12 @@ namespace psychic_ui {
         int  _boundsRight{0};
         int  _boundsBottom{0};
 
+        // region Focus
+
         bool _focusEnabled{false};
         bool _focused{false};
+
+        // endregion
 
         // region Hierarchy
 

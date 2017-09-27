@@ -105,9 +105,10 @@ public:
                ->set(fontSize, text)
                ->set(lineHeight, 16)
                ->set(color, themeForegroundColor.getColorAlpha())
+               ->set(selectionColor, BASE_00)
+               ->set(selectionBackgroundColor, themeHighlightColor.getColorAlpha())
                ->set(antiAlias, true)
-               ->set(textAntiAlias, true)
-               ->set(multiline, false);
+               ->set(textAntiAlias, true);
 
         manager->style("Component .defaultSkinChrome")
                ->set(borderRadius, radius)
@@ -233,7 +234,7 @@ public:
 
         // endregion
 
-        // region Labels
+        // region Typography
 
         // endregion
 

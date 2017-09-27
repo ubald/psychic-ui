@@ -72,6 +72,8 @@ namespace psychic_ui {
             borderTopColor,
             borderBottomColor,
         // Custom
+        selectionColor,
+        selectionBackgroundColor,
         contentBackgroundColor // Background color for components that display with an inset "well" (text input, combo boxes, some buttons)
     };
 
@@ -122,7 +124,6 @@ namespace psychic_ui {
         // Custom
             antiAlias,
             textAntiAlias,
-            multiline,
             visible
     };
 

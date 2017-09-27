@@ -3,17 +3,19 @@
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/components/ScrollBar.hpp>
 #include <psychic-ui/components/Box.hpp>
+#include <psychic-ui/components/Label.hpp>
+#include <psychic-ui/components/Text.hpp>
 
 namespace psychic_ui {
 
-    class Labels : public Div {
+    class Typography : public Div {
     public:
-        Labels();
+        Typography();
     };
 
 
-    Labels::Labels() : Div() {
-        setTag("Labels");
+    Typography::Typography() : Div() {
+        setTag("Typography");
         setClassNames({"demo-panel"});
 
         style()
@@ -117,24 +119,24 @@ namespace psychic_ui {
 
             left->add<Label>("Automatic Line Height");
 
-            left->add<Label>(lorem)
+            left->add<Text>(lorem)
                 ->style()
-                ->set(multiline, true)
+                ->set(lineHeight, Style::Auto)
                 ->set(fontSize, 10);
 
-            left->add<Label>(lorem)
+            left->add<Text>(lorem)
                 ->style()
-                ->set(multiline, true)
+                ->set(lineHeight, Style::Auto)
                 ->set(fontSize, 12);
 
-            left->add<Label>(lorem)
+            left->add<Text>(lorem)
                 ->style()
-                ->set(multiline, true)
+                ->set(lineHeight, Style::Auto)
                 ->set(fontSize, 16);
 
-            left->add<Label>(lorem)
+            left->add<Text>(lorem)
                 ->style()
-                ->set(multiline, true)
+                ->set(lineHeight, Style::Auto)
                 ->set(fontSize, 24);
 
             auto right = container->add<VBox>();
@@ -146,27 +148,23 @@ namespace psychic_ui {
 
             right->add<Label>("Manual Line Height");
 
-            right->add<Label>(lorem)
+            right->add<Text>(lorem)
                  ->style()
-                 ->set(multiline, true)
                  ->set(fontSize, 10)
                  ->set(lineHeight, 12);
 
-            right->add<Label>(lorem)
+            right->add<Text>(lorem)
                  ->style()
-                 ->set(multiline, true)
                  ->set(fontSize, 12)
                  ->set(lineHeight, 14);
 
-            right->add<Label>(lorem)
+            right->add<Text>(lorem)
                  ->style()
-                 ->set(multiline, true)
                  ->set(fontSize, 16)
                  ->set(lineHeight, 18);
 
-            right->add<Label>(lorem)
+            right->add<Text>(lorem)
                  ->style()
-                 ->set(multiline, true)
                  ->set(fontSize, 24)
                  ->set(lineHeight, 28);
         }

@@ -11,8 +11,11 @@
 
 #include <memory>
 #include <vector>
+#include <unicode/unistr.h>
 #include <unicode/brkiter.h>
 #include <SkCanvas.h>
+#include <SkPaint.h>
+#include <SkTextBlob.h>
 
 namespace psychic_ui {
 
@@ -44,9 +47,13 @@ namespace psychic_ui {
     class TextBox {
     public:
         TextBox();
+
         TextBoxMode getMode() const { return _mode; }
+
         void setMode(TextBoxMode);
+
         TextBoxAlign getAlign() const { return _align; }
+
         void setAlign(TextBoxAlign);
         void setBox(const SkRect &);
         void setBox(float left, float top, float right, float bottom);
@@ -56,24 +63,27 @@ namespace psychic_ui {
         void draw(SkCanvas *);
         int countLines() const;
         float getTextHeight() const;
-        std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob*)>> snapshotTextBlob() const;
+        std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>> snapshotTextBlob();
+
+        int indexFromPos(int x, int y) const;
+        std::pair<int, int> posFromIndex(int index) const;
 
     protected:
         int nextLineBreak(int start) const;
         std::unique_ptr<BreakIterator> breakIterator{nullptr};
 
     private:
-        SkRect       _box{};
-        float        _spacingMult{1.0f};
-        float        _spacingAdd{0.0f};
-        TextBoxAlign _align{TextBoxAlign::Start};
-        TextBoxMode  _mode{TextBoxMode::LineBreak};
-
+        SkRect           _box{};
+        float            _spacingMult{1.0f};
+        float            _spacingAdd{0.0f};
+        TextBoxAlign     _align{TextBoxAlign::Start};
+        TextBoxMode      _mode{TextBoxMode::LineBreak};
         UnicodeString    _text{};
-        std::vector<int> _breakPositions{};
+        std::vector<int> _possibleBreakPositions{};
+        const SkPaint    *_paint{nullptr};
+        std::vector<int> visit(TextBoxVisitor visitor) const;
 
-        const SkPaint *_paint{nullptr};
-
-        float visit(TextBoxVisitor visitor) const;
+        // Calculated values
+        std::vector<int> _lineStarts{};
     };
 }
