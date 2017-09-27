@@ -6,7 +6,7 @@
 #include "../Window.hpp"
 #include "../Application.hpp"
 
-#if defined(PSYCHIC_UI_GLAD)
+#if defined(PSYCHIC_UI_WITH_GLAD)
 #if defined(PSYCHIC_UI_SHARED) && !defined(GLAD_GLAPI_EXPORT)
 #define GLAD_GLAPI_EXPORT
 #endif
