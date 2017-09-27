@@ -1,6 +1,5 @@
 #ifdef WITH_GLFW
 
-#include <SDL_keycode.h>
 #include "GLFWApplication.hpp"
 
 namespace psychic_ui {
