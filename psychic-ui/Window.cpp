@@ -372,22 +372,18 @@ namespace psychic_ui {
         }
 
         // Compare with current and unfocus
-        for (auto focused: _focusPath) {
+        for (const auto &focused: _focusPath) {
             auto it = std::find(path.cbegin(), path.cend(), focused);
             if (it == path.cend()) {
-                if (focused->focusEnabled()) {
-                    focused->setFocused(false);
-                }
+                focused->setFocused(false);
                 focused->onBlur();
             }
         }
 
         // Set new focus path
         _focusPath = std::move(path);
-        for (auto focused: _focusPath) {
-            if (focused->focusEnabled() && !focused->focused()) {
-                focused->setFocused(true);
-            }
+        for (const auto &focused: _focusPath) {
+            focused->setFocused(true);
             focused->onFocus();
         }
     }
@@ -439,7 +435,9 @@ namespace psychic_ui {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
             // Only the focusEnabled divs get the character events
-            if ((*focused)->focusEnabled() && (*focused)->keyboardCharacterEvent(codepoint)) {
+            Div *component = (*focused);
+            if (component->onCharacter.hasSubscriptions()) {
+                component->onCharacter(codepoint);
                 return true;
             }
         }

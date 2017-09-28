@@ -113,6 +113,7 @@ public:
         manager->style("Component .defaultSkinChrome")
                ->set(borderRadius, radius)
                ->set(border, 1)
+               ->set(margin, 1)
                    //->set(color, themeForegroundColor.getColorAlpha())
                ->set(borderColor, themeLowContrastColor.getColorAlpha(0x40)) // TODO: Should be contrasting with alpha
                ->set(backgroundColor, themeMediumContrastColor.getColorAlpha())
@@ -128,6 +129,7 @@ public:
 
         manager->style("Component:focus .defaultSkinChrome")
                ->set(border, 2)
+               ->set(margin, 0)
                ->set(borderColor, themeHighlightColor.getColorAlpha());
 
        //manager->style("Component:focus .defaultSkinChrome")
@@ -508,13 +510,13 @@ class PsychicStyleSheet : public PsychicUIStyleSheet {
 public:
     PsychicStyleSheet() :
         PsychicUIStyleSheet() {
-        themeSeparatorColor      = HSB{0x181A1F};
-        themeBackgroundColor     = HSB{0x1B1D23};
-        themeBaseColor           = HSB{0x21252B};
-        themeLowContrastColor    = HSB{0x282C34};
-        themeMediumContrastColor = HSB{0x383D48};
-        themeHighContrastColor   = HSB{0x3C414F};
-        themeForegroundColor     = HSB{0x9DA5B5};
+        themeSeparatorColor      = HSB{0x19181a};
+        themeBackgroundColor     = HSB{0x19181a};
+        themeBaseColor           = HSB{0x252426};
+        themeLowContrastColor    = HSB{0x313033};
+        themeMediumContrastColor = HSB{0x3d3c40};
+        themeHighContrastColor   = HSB{0x595959};
+        themeForegroundColor     = HSB{0xa4a1aa};
         themeHighlightColor      = HSB{0x00FFEC};
         themeCyanColor           = HSB{0x56B6C2};
         themeBlueColor           = HSB{0x61AFEF};

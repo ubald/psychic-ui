@@ -45,19 +45,23 @@ namespace psychic_ui {
 
     // endregion
 
-    void TextBox::setText(const std::string &text) {
-        _text = UnicodeString::fromUTF8(text);
-        breakIterator->setText(_text);
+    void TextBox::setText(const UnicodeString &text) {
+        _text = &text;
+        recalculate();
+    }
+
+    void TextBox::recalculate() {
+        breakIterator->setText(*_text);
         _possibleBreakPositions.clear();
         int b = breakIterator->first();
         while (b != BreakIterator::DONE) {
             if (b != 0) {
-                _possibleBreakPositions.push_back(b);
+                _possibleBreakPositions.push_back(static_cast<unsigned int>(b));
             }
             b = breakIterator->next();
         }
         // We always "break" at the end
-        _possibleBreakPositions.push_back(_text.length());
+        _possibleBreakPositions.push_back(static_cast<unsigned int>(_text->length()));
     }
 
     int TextBox::countLines() const {
@@ -71,12 +75,16 @@ namespace psychic_ui {
                     // Skia's breakText broke down, we're probably narrower than a character
                     // Just assume we're one character wide so that our height is equal to the
                     // length of the text
-                    count = _text.length();
+                    count = _text->length();
                     break;
                 }
-            } while (pos < _text.length());
+            } while (pos < _text->length());
         }
         return count;
+    }
+
+    unsigned int TextBox::lineCount() const {
+        return static_cast<unsigned int>(_lineStarts.size());
     }
 
     float TextBox::getTextHeight() const {
@@ -84,25 +92,37 @@ namespace psychic_ui {
         return countLines() * spacing;
     }
 
-    int TextBox::nextLineBreak(int start) const {
-        UnicodeString remaining = _text.tempSubStringBetween(start, _text.length());
+    unsigned int TextBox::nextLineBreak(int start) const {
+        UnicodeString remaining = _text->tempSubStringBetween(start, _text->length());
         std::string   str;
         remaining.toUTF8String(str);
 
-        // Start by find where the text would cut
-        auto advance = static_cast<int>(_paint->breakText(str.c_str(), str.size(), _box.width()));
+        // Start by find where the text would cut at max if we were not to use UnicodeString
+        auto advance = static_cast<unsigned int>(_paint->breakText(str.c_str(), str.size(), _box.width()));
         if (advance == 0) {
             return 0;
         }
 
-        int maxBreak = start + advance;
+        // Check if a line return exists before that
+        auto lineBreak = _text->indexOf('\n', start, advance);
+        if (lineBreak != -1) {
+            return static_cast<unsigned int>(lineBreak) + 1;
+        }
+
+        unsigned int maxBreak = start + advance;
 
         // Get the break just before where it would cut
-        int            lastBreakPosition = maxBreak;
-        for (const int _breakPosition : _possibleBreakPositions) {
-            if (_breakPosition > start && _breakPosition <= maxBreak) {
+        unsigned int lastBreakPosition = maxBreak;
+
+        for (const unsigned int _breakPosition : _possibleBreakPositions) {
+            if (_breakPosition <= start) {
+                // Can't consider this one, continue searching
+                continue;
+            } else if (_breakPosition > start && _breakPosition <= maxBreak) {
+                // Consider this one but keep going until another one matches
                 lastBreakPosition = _breakPosition;
             } else {
+                // We're all out of options
                 break;
             }
         }
@@ -110,12 +130,12 @@ namespace psychic_ui {
         return lastBreakPosition;
     }
 
-    std::vector<int> TextBox::visit(TextBoxVisitor visitor) const {
-        std::vector<int> lines{};
-        float            maxWidth = _box.width();
+    std::vector<unsigned int> TextBox::visit(TextBoxVisitor visitor) const {
+        std::vector<unsigned int> lines{};
 
-        if (maxWidth <= 0 || _text.length() == 0) {
-            //return _box.top();
+        float maxWidth = _box.width();
+
+        if (maxWidth <= 0 || _text->length() == 0) {
             return lines;
         }
 
@@ -162,18 +182,18 @@ namespace psychic_ui {
         y += _box.fTop - metrics.fAscent;
 
         // Break lines
-        int lastBreak = 0;
+        unsigned int lastBreak = 0;
         for (;;) {
-            int nextBreak = nextLineBreak(lastBreak);
+            unsigned int nextBreak = nextLineBreak(lastBreak);
             if (y + metrics.fDescent + metrics.fLeading > 0) {
                 std::string str{};
-                _text.tempSubStringBetween(lastBreak, nextBreak).toUTF8String(str);
+                _text->tempSubStringBetween(lastBreak, nextBreak).toUTF8String(str);
                 visitor(str.c_str(), str.size(), x, y);
             }
             // We actually want the lines to start at 0 and skip the last break
             lines.push_back(lastBreak);
             lastBreak = nextBreak;
-            if (lastBreak >= _text.length()) {
+            if (lastBreak >= _text->length()) {
                 break;
             }
             y += scaledSpacing;
@@ -185,7 +205,11 @@ namespace psychic_ui {
         return lines;
     }
 
-    int TextBox::indexFromPos(int x, int y) const {
+    unsigned int TextBox::indexFromPos(int x, int y) const {
+        if (_lineStarts.empty()) {
+            return 0;
+        }
+
         float lineHeight = _paint->getFontSpacing() * _spacingMult + _spacingAdd;
         auto  line       = static_cast<int>(std::floor((static_cast<float>(y) - _box.fTop) / lineHeight));
 
@@ -198,15 +222,17 @@ namespace psychic_ui {
         int lineStart = _lineStarts[line];
 
         std::string str{};
-        _text.tempSubStringBetween(lineStart, _text.length()).toUTF8String(str);
+        // TODO: This assumes the text runs all the way to the end and does not account for a possible line break
+        //       If not at the last line it should check between lineStart and lineStart of the next line
+        _text->tempSubStringBetween(lineStart, _text->length()).toUTF8String(str);
 
         std::vector<SkScalar> widths(str.size());
         _paint->getTextWidths(str.c_str(), str.size(), &widths.front());
-        int pos = 0;
-        float xCheck = x + _box.fLeft;
-        float acc = 0.0f;
+        unsigned int pos    = 0;
+        float        xCheck = x + _box.fLeft;
+        float        acc    = 0.0f;
         for (pos = 0; pos < widths.size(); ++pos) {
-            float width = widths[pos];
+            float width     = widths[pos];
             float halfWidth = width * 0.5f;
             if (xCheck < acc + halfWidth) {
                 break;
@@ -218,18 +244,18 @@ namespace psychic_ui {
     }
 
     std::pair<int, int> TextBox::posFromIndex(int index) const {
-        int line = 0;
-        int lineStart = 0;
-        for (unsigned int i = 0; i < _lineStarts.size(); ++i ) {
+        int               line      = 0;
+        int               lineStart = 0;
+        for (unsigned int i         = 0; i < _lineStarts.size(); ++i) {
             if (index < _lineStarts[i]) {
                 break;
             }
-            line = i;
+            line      = i;
             lineStart = _lineStarts[i];
         }
 
         std::string str{};
-        _text.tempSubStringBetween(lineStart, index).toUTF8String(str);
+        _text->tempSubStringBetween(lineStart, index).toUTF8String(str);
         auto x = static_cast<int>(std::round(_paint->measureText(str.c_str(), str.size())));
 
         return std::make_pair(line, x);

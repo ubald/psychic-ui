@@ -14,20 +14,18 @@ namespace psychic_ui {
         }
 
         virtual void setText(const std::string &text) {};
+        std::shared_ptr<Text> textDisplay{nullptr};
     };
 
     class TextInput : public Component<TextInputSkin> {
     public:
-        //TextInput() = delete;
         explicit TextInput(const std::string &text = "");
         const std::string &getText() const;
         TextInput *setText(const std::string &text);
+        Signal<std::string> onChange{};
     protected:
-        std::string _text{};
-        std::shared_ptr<Text> _textDisplay{};
-        unsigned int _caretPos{0};
-        void updateDisplay();
-        void handleKey(Key key);
-        bool keyboardCharacterEvent(unsigned int codepoint) override;
+        std::string                        _text{};
+        std::shared_ptr<Slot<std::string>> _onChange{nullptr};
+        void skinChanged() override;
     };
 }

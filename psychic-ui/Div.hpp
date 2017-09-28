@@ -298,7 +298,10 @@ namespace psychic_ui {
         virtual MouseEventStatus mouseUp(int mouseX, int mouseY, int button, int modifiers);
         virtual MouseEventStatus click(int mouseX, int mouseY, int button, int modifiers);
         virtual MouseEventStatus mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
-        virtual bool keyboardCharacterEvent(unsigned int codepoint);
+
+        using KeySlot = std::shared_ptr<Slot<Key>>;
+        using CharSlot = std::shared_ptr<Slot<unsigned int>>;
+        using FocusSlot = std::shared_ptr<Slot<>>;
 
         Signal<Key>          onKeyDown{};
         Signal<Key>          onKeyRepeat{};

@@ -46,7 +46,7 @@ namespace psychic_ui {
         }
 
         template<class... T>
-        void unsunscribeFrom(std::shared_ptr<SlotBase> slot) {
+        void unsubscribeFrom(std::shared_ptr<SlotBase> slot) {
             slot->disconnect();
             slots.erase(std::remove(slots.begin(), slots.end(), slot), slots.end());
         }

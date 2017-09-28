@@ -12,22 +12,10 @@ namespace psychic_ui {
             ->set(grow, 0);
 
         setMeasurable();
-        setText(text);
 
         #ifdef DEBUG_LAYOUT
         dashed = true;
         #endif
-    }
-
-    const std::string &TextBase::text() const {
-        return _text;
-    }
-
-    void TextBase::setText(const std::string &text) {
-        if (text != _text) {
-            _text = text;
-            invalidate();
-        }
     }
 
     const bool TextBase::lcdRender() const {

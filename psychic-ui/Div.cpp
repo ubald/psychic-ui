@@ -102,6 +102,9 @@ namespace psychic_ui {
             if (_parent) {
                 removedFromRenderRecursive();
                 removed();
+                if (_focused) {
+                    window()->requestFocus(_parent);
+                }
             }
             _parent = parent;
             // Temporary, will be updated once we're on the render list
@@ -1515,14 +1518,6 @@ namespace psychic_ui {
         }
 
         return ret == Out ? Over : ret;
-    }
-
-// endregion
-
-    // region Keyboard
-
-    bool Div::keyboardCharacterEvent(unsigned int codepoint) {
-        return false;
     }
 
     // endregion

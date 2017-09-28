@@ -59,31 +59,33 @@ namespace psychic_ui {
         void setBox(float left, float top, float right, float bottom);
         void setSpacing(float mul, float add);
         void setPaint(const SkPaint &);
-        void setText(const std::string &text);
+        void setText(const UnicodeString &text);
         void draw(SkCanvas *);
+        void recalculate();
         int countLines() const;
+        unsigned int lineCount() const;
         float getTextHeight() const;
         std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>> snapshotTextBlob();
 
-        int indexFromPos(int x, int y) const;
+        unsigned int indexFromPos(int x, int y) const;
         std::pair<int, int> posFromIndex(int index) const;
 
     protected:
-        int nextLineBreak(int start) const;
+        unsigned int nextLineBreak(int start) const;
         std::unique_ptr<BreakIterator> breakIterator{nullptr};
 
     private:
-        SkRect           _box{};
-        float            _spacingMult{1.0f};
-        float            _spacingAdd{0.0f};
-        TextBoxAlign     _align{TextBoxAlign::Start};
-        TextBoxMode      _mode{TextBoxMode::LineBreak};
-        UnicodeString    _text{};
-        std::vector<int> _possibleBreakPositions{};
-        const SkPaint    *_paint{nullptr};
-        std::vector<int> visit(TextBoxVisitor visitor) const;
+        SkRect                    _box{};
+        float                     _spacingMult{1.0f};
+        float                     _spacingAdd{0.0f};
+        TextBoxAlign              _align{TextBoxAlign::Start};
+        TextBoxMode               _mode{TextBoxMode::LineBreak};
+        const UnicodeString       *_text{nullptr};
+        std::vector<unsigned int> _possibleBreakPositions{};
+        const SkPaint             *_paint{nullptr};
+        std::vector<unsigned int> visit(TextBoxVisitor visitor) const;
 
         // Calculated values
-        std::vector<int> _lineStarts{};
+        std::vector<unsigned int> _lineStarts{};
     };
 }

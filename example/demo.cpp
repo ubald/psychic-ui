@@ -2,12 +2,12 @@
 #include "demo.hpp"
 #include "example/components/DemoWindow.hpp"
 
-#ifdef WITH_GLFW
+#ifdef USE_GLFW
 #include <psychic-ui/applications/GLFWApplication.hpp>
 using AppImpl = GLFWApplication;
 #endif
 
-#ifdef WITH_SDL2
+#ifdef USE_SDL2
 #include <psychic-ui/applications/SDL2Application.hpp>
 using AppImpl = SDL2Application;
 #endif

@@ -97,6 +97,19 @@ namespace psychic_ui {
                  ->addClassName("h1");
 
             right->add<Label>(lorem);
+
+            right->add<Label>("International")
+                 ->addClassName("h1");
+
+            right->add<Label>("French: Brébœuf");
+            right->add<Label>("Japanese: ありがとうございました");
+            right->add<Label>("Simplified Chinese: 谢谢");
+            right->add<Label>("Traditional Chinese: 謝謝");
+            right->add<Label>("Greek: ευχαριστώ");
+            right->add<Label>("תודה :Hebrew");
+            right->add<Label>("Indi: धन्यवाद");
+            right->add<Label>("Korean: 고맙습니다");
+            right->add<Label>("شكرا :Arabic");
         }
 
         // BLOCKS
@@ -120,21 +133,25 @@ namespace psychic_ui {
             left->add<Label>("Automatic Line Height");
 
             left->add<Text>(lorem)
+                ->setEditable(true)
                 ->style()
                 ->set(lineHeight, Style::Auto)
                 ->set(fontSize, 10);
 
             left->add<Text>(lorem)
+                ->setEditable(true)
                 ->style()
                 ->set(lineHeight, Style::Auto)
                 ->set(fontSize, 12);
 
             left->add<Text>(lorem)
+                ->setEditable(true)
                 ->style()
                 ->set(lineHeight, Style::Auto)
                 ->set(fontSize, 16);
 
             left->add<Text>(lorem)
+                ->setEditable(true)
                 ->style()
                 ->set(lineHeight, Style::Auto)
                 ->set(fontSize, 24);
@@ -148,22 +165,26 @@ namespace psychic_ui {
 
             right->add<Label>("Manual Line Height");
 
-            right->add<Text>(lorem)
+            right->add<Text>(lorem + "\n" + lorem)
+                 ->setEditable(true)
                  ->style()
                  ->set(fontSize, 10)
                  ->set(lineHeight, 12);
 
             right->add<Text>(lorem)
+                 ->setEditable(true)
                  ->style()
                  ->set(fontSize, 12)
                  ->set(lineHeight, 14);
 
             right->add<Text>(lorem)
+                 ->setEditable(true)
                  ->style()
                  ->set(fontSize, 16)
                  ->set(lineHeight, 18);
 
             right->add<Text>(lorem)
+                 ->setEditable(true)
                  ->style()
                  ->set(fontSize, 24)
                  ->set(lineHeight, 28);

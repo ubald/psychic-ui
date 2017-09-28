@@ -146,7 +146,7 @@ namespace psychic_ui {
                    return panel;
                }
            )
-           ->select(panels[2])
+           ->select(panels[3])
            ->style()
            ->set(heightPercent, 1.f);
 

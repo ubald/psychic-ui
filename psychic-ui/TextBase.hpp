@@ -13,8 +13,8 @@ namespace psychic_ui {
     class TextBase : public Div {
     public:
         explicit TextBase(const std::string &text = "");
-        const std::string &text() const;
-        virtual void setText(const std::string &text);
+        //virtual std::string text() const = 0;
+        virtual void setText(const std::string &text) = 0;
         const bool lcdRender() const;
         TextBase *setLcdRender(bool lcdRender);
         const bool subpixelText() const;
@@ -22,7 +22,6 @@ namespace psychic_ui {
         void styleUpdated() override;
 
     protected:
-        std::string _text;
         bool        _lcdRender{true};
         bool        _subPixelText{true};
         float       _fontSize{0.0f};

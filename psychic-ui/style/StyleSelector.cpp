@@ -148,7 +148,7 @@ namespace psychic_ui {
                     case hover:
                         return component->mouseOver();
                     case focus:
-                        return component->focused();
+                        return component->focusEnabled() && component->focused();
                     case active:
                         return component->active();
                     case disabled:

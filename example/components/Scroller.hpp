@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma once
-
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/Text.hpp>
@@ -27,8 +25,7 @@ namespace psychic_ui {
         container->style()
                  ->set(padding, 12);
 
-        auto contents = container->add<Text>(lorem + '\n' + lorem + '\n' + lorem)
-                                 ->style();
+        auto contents = container->add<Text>(lorem + '\n' + lorem + '\n' + lorem);
 
         auto scroller = add<Scroller>(container);
         scroller->style()
@@ -41,7 +38,7 @@ namespace psychic_ui {
                   ->set(flexDirection, "row")
                   ->set(padding, 12);
 
-        auto contents2 = container2->add<Text>(lorem + '\n' + lorem + '\n' + lorem);
+        auto contents2 = container2->add<Text>(lorem + "\n" + lorem + "\n" + lorem);
 
         auto scroller2 = add<Scroller>(container2);
         scroller2->style()

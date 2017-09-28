@@ -122,14 +122,14 @@ namespace psychic_ui {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-        SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, GL_TRUE);
-        SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, GL_TRUE);
+        SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, SDL_TRUE);
+        SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, SDL_TRUE);
 
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, GL_TRUE);
+        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, SDL_TRUE);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, _stencilBits);
         if (_samples > 0) {
@@ -213,7 +213,7 @@ namespace psychic_ui {
         glGetIntegerv(GL_SAMPLES, &_samples);
 
         glViewport(0, 0, _width, _height);
-        glClearColor(0, 0, 0, 0);
+        glClearColor(1, 1, 1, 1);
         glClearStencil(0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 

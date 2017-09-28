@@ -6,13 +6,19 @@ namespace psychic_ui {
     Label::Label(const std::string &text) :
         TextBase::TextBase(text) {
         setTag("Label");
+        setText(text);
+    }
+
+    const std::string &Label::text() const {
+        return _text;
     }
 
     void Label::setText(const std::string &text) {
         if (_text != text) {
-            TextBase::setText(text);
+            _text = text;
             // We're not multi-line, so remove line returns
             std::replace(_text.begin(), _text.end(), '\n', ' ');
+            invalidate();
         }
     }
 

@@ -3,11 +3,10 @@
 #include <iostream>
 #include <string>
 #include <array>
-#include <psychic-ui/utils/StringUtils.hpp>
+#include <unicode/unistr.h>
 #include <cmath>
 
-using namespace psychic_ui;
-
 int main() {
-    std::cout << NAN << " " << (NAN == NAN) << std::endl;
+    std::string s1{"Brébœuf"};
+    std::cout << s1.size() << " " << strlen(s1.c_str()) << std::endl;
 }

@@ -24,10 +24,10 @@ public:
             ->set(backgroundColor, BASE_03)
             ->set(borderColor, BASE_06);
 
-        manager->style("buttons button")
+        manager->style("Buttons Button")
                ->set(margin, 12);
 
-        manager->style("ranges range")
+        manager->style("Ranges Range")
                ->set(margin, 12);
 
         manager

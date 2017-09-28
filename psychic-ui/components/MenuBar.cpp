@@ -96,7 +96,7 @@ namespace psychic_ui {
 
     void MenuBar::removedFromRender() {
         DataContainer<std::shared_ptr<MenuItem>>::removedFromRender();
-        unsunscribeFrom(menuClosed);
+        unsubscribeFrom(menuClosed);
         menuClosed = nullptr;
     }
 

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <chrono>
+#include <memory>
 #include <unordered_map>
 #include "GrContext.h"
 #include "SkSurface.h"
@@ -127,7 +128,7 @@ namespace psychic_ui {
         bool keyDown(Key key);
         bool keyRepeat(Key key);
         bool keyUp(Key key);
-        bool keyboardCharacterEvent(unsigned int codepoint) override;
+        bool keyboardCharacterEvent(unsigned int codepoint);
 
         // endregion
 
