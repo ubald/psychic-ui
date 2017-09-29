@@ -17,7 +17,7 @@ namespace psychic_ui {
         Component<T> *setSkin(std::shared_ptr<T> skin);
 
     protected:
-        void draw(SkCanvas *canvas) override {/*Skin Manages drawing*/}
+        void draw(SkCanvas */*canvas*/) override {/*Skin Manages drawing*/}
 
         virtual void skinChanged() {}
 

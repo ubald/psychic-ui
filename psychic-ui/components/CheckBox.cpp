@@ -34,7 +34,7 @@ namespace psychic_ui {
         _skin->setLabel(_label);
     }
 
-    const bool CheckBox::checked() const {
+    bool CheckBox::checked() const {
         return _checked;
     }
 
@@ -47,7 +47,7 @@ namespace psychic_ui {
         return this;
     }
 
-    const bool CheckBox::active() const {
+    bool CheckBox::active() const {
         return Component::active() || _checked;
     };
 

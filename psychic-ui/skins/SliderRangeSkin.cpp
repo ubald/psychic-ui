@@ -9,10 +9,10 @@ namespace psychic_ui {
         addClassName("defaultSkinChrome");
 
         onMouseDown(
-            [this](const int mouseX, const int mouseY, int button, int modifiers) {
+            [this](const int mouseX, const int mouseY, int /*button*/, int /*modifiers*/) {
                 sendMouseValue(mouseX, mouseY);
                 _onMouseMove = window()->onMouseMove(
-                    [this](const int mouseX, const int mouseY, int button, int modifiers) {
+                    [this](const int mouseX, const int mouseY, int /*button*/, int /*modifiers*/) {
                         int lx = 0;
                         int ly = 0;
                         globalToLocal(lx, ly, mouseX, mouseY);
@@ -23,7 +23,7 @@ namespace psychic_ui {
         );
 
         onMouseUp(
-            [this](const int mouseX, const int mouseY, int button, int modifiers) {
+            [this](const int /*mouseX*/, const int /*mouseY*/, int /*button*/, int /*modifiers*/) {
                 if (_onMouseMove) {
                     _onMouseMove->disconnect();
                     _onMouseMove = nullptr;

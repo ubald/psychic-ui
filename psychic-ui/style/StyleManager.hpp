@@ -41,7 +41,7 @@ namespace psychic_ui {
             _valid = false;
         }
 
-        const bool valid() const { return _valid; };
+        bool valid() const { return _valid; };
 
         void setValid() { _valid = true; }
 

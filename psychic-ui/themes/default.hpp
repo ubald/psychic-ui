@@ -84,7 +84,6 @@ public:
         int radius        = 7;
         int scrollBarSize = 12;
 
-        manager->loadFont("stan0755", "../res/fonts/stan0755.ttf");
         manager->loadFont("Ubuntu Light", "../res/fonts/Ubuntu/Ubuntu-Light.ttf");
         manager->loadFont("Ubuntu Regular", "../res/fonts/Ubuntu/Ubuntu-Regular.ttf");
 

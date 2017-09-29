@@ -120,7 +120,7 @@ namespace psychic_ui {
         toolBar->add<Spacer>();
 
         #ifdef DEBUG_LAYOUT
-        auto d = toolBar->add<Button>("Debug Layout")
+        toolBar->add<Button>("Debug Layout")
             ->setToggle(true)
             ->onChange([](bool selected) { Div::debugLayout = selected; });
         #endif

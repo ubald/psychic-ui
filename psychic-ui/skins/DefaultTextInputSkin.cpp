@@ -18,6 +18,6 @@ namespace psychic_ui {
 
     void DefaultTextInputSkin::draw(SkCanvas *canvas) {
         // Don't use default rendering, render out custom component chrome
-        SkRRect inner = default_skin::draw(this, canvas);
+        default_skin::draw(this, canvas);
     }
 }

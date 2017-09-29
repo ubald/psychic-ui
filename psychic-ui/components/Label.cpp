@@ -29,7 +29,7 @@ namespace psychic_ui {
         _yOffset = -metrics.fAscent;
     }
 
-    YGSize Label::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+    YGSize Label::measure(float width, YGMeasureMode widthMode, float /*height*/, YGMeasureMode /*heightMode*/) {
         YGSize size{0.0f, _lineHeight};
 
         if (_text.empty()) {

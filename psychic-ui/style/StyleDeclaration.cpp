@@ -20,7 +20,7 @@ namespace psychic_ui {
         return _style.get();
     }
 
-    const int StyleDeclaration::weight() const {
+    int StyleDeclaration::weight() const {
         return _weight;
     }
 }

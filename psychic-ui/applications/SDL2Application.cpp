@@ -204,13 +204,13 @@ namespace psychic_ui {
         }
 
         // Get Some info back about the framebuffer (in case its different from what we set?)
-        glGetFramebufferAttachmentParameteriv(
-            GL_DRAW_FRAMEBUFFER,
-            GL_STENCIL,
-            GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE,
-            &_stencilBits
-        );
-        glGetIntegerv(GL_SAMPLES, &_samples);
+        //glGetFramebufferAttachmentParameteriv(
+        //    GL_DRAW_FRAMEBUFFER,
+        //    GL_STENCIL,
+        //    GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE,
+        //    &_stencilBits
+        //);
+        //glGetIntegerv(GL_SAMPLES, &_samples);
 
         glViewport(0, 0, _width, _height);
         glClearColor(1, 1, 1, 1);
@@ -403,11 +403,13 @@ namespace psychic_ui {
                         std::cerr << "No way to close?" << std::endl;
                         break;
 
-                    case SDL_WINDOWEVENT_TAKE_FOCUS:
-                        break;
+                    //(>= SDL 2.0.5)
+                    //case SDL_WINDOWEVENT_TAKE_FOCUS:
+                    //    break;
 
-                    case SDL_WINDOWEVENT_HIT_TEST:
-                        break;
+                    //(>= SDL 2.0.5)
+                    //case SDL_WINDOWEVENT_HIT_TEST:
+                    //    break;
 
                     default:
                         break;

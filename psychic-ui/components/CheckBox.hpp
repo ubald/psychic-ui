@@ -17,7 +17,7 @@ namespace psychic_ui {
             setTag("CheckBoxSkin");
         }
 
-        virtual void setLabel(const std::string &label) {};
+        virtual void setLabel(const std::string &/*label*/) {};
     };
 
     class CheckBox : public Component<CheckBoxSkin> {
@@ -31,10 +31,10 @@ namespace psychic_ui {
         const std::string &label() const;
         void setLabel(const std::string &label);
 
-        const bool checked() const;
+        bool checked() const;
         CheckBox *setChecked(bool checked);
 
-        const bool active() const override;
+        bool active() const override;
 
         Signal<bool> onChange{};
 

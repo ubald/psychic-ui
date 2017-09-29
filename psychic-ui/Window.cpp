@@ -223,11 +223,11 @@ namespace psychic_ui {
         }
     }
 
-    const int Window::windowX() const {
+    int Window::windowX() const {
         return _systemWindow ? _systemWindow->getX() : 0;
     }
 
-    const int Window::windowY() const {
+    int Window::windowY() const {
         return _systemWindow ? _systemWindow->getY() : 0;
     }
 
@@ -237,11 +237,11 @@ namespace psychic_ui {
         }
     }
 
-    const int Window::windowWidth() const {
+    int Window::windowWidth() const {
         return _systemWindow ? _systemWindow->getWidth() : _width;
     }
 
-    const int Window::windowHeight() const {
+    int Window::windowHeight() const {
         return _systemWindow ? _systemWindow->getHeight() : _height;
     }
 

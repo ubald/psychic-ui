@@ -50,12 +50,12 @@ namespace psychic_ui {
         void startDrag();
         void stopDrag();
 
-        const int windowX() const;
-        const int windowY() const;
+        int windowX() const;
+        int windowY() const;
         void setWindowPosition(int x, int y);
 
-        const int windowWidth() const;
-        const int windowHeight() const;
+        int windowWidth() const;
+        int windowHeight() const;
         void setWindowSize(int width, int height);
 
         void open(SystemWindow *systemWindow);

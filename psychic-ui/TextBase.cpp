@@ -18,7 +18,7 @@ namespace psychic_ui {
         #endif
     }
 
-    const bool TextBase::lcdRender() const {
+    bool TextBase::lcdRender() const {
         return _lcdRender;
     }
 
@@ -30,7 +30,7 @@ namespace psychic_ui {
         return this;
     }
 
-    const bool TextBase::subpixelText() const {
+    bool TextBase::subpixelText() const {
         return _subPixelText;
     }
 

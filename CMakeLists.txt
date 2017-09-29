@@ -1,16 +1,75 @@
 cmake_minimum_required(VERSION 3.4)
 project(psychic-ui)
 
+#
+# CONFIGURATION
+#
+
+# Project Variables
+set(PSYCHIC_UI_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(PSYCHIC_UI_VERSION_MAJOR 0)
+set(PSYCHIC_UI_VERSION_MINOR 0)
+set(PSYCHIC_UI_VERSION_PATCH 0)
+set(PSYCHIC_UI_VERSION_STRING ${PSYCHIC_UI_VERSION_MAJOR}.${PSYCHIC_UI_VERSION_MINOR}.${PSYCHIC_UI_VERSION_PATCH})
+set(PSYCHIC_UI_API_VERSION ${PSYCHIC_UI_VERSION_MAJOR}.${PSYCHIC_UI_VERSION_MINOR})
+
+# Package (pkg-config) Information
+set(PACKAGE_NAME psychic-ui)
+set(PACKAGE_DESCRIPTION "Psychic UI C++/OpenGL UI Library")
+set(PACKAGE_URL "https://github.com/ubald/psychic-ui")
+set(PACKAGE_VERSION ${PSYCHIC_UI_VERSION_STRING})
+
+# CPack - General
+set(CPACK_PACKAGE_NAME ${PACKAGE_NAME})
+set(CPACK_PACKAGE_VENDOR "Ubald Design")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PACKAGE_DESCRIPTION}")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+SET(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_VERSION_MAJOR "${PSYCHIC_UI_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${PSYCHIC_UI_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${PSYCHIC_UI_VERSION_PATCH}")
+set(CPACK_GENERATOR TGZ)
+set(CPACK_SOURCE_GENERATOR TGZ)
+set(CPACK_COMPONENTS_ALL applications libraries headers)
+
+# CPack - Applications
+set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "Psychic UI")
+set(CPACK_COMPONENT_APPLICATIONS_DESCRIPTION "C++/OpenGL UI Library")
+set(CPACK_COMPONENT_APPLICATIONS_DEPENDS libraries)
+
+# CPack - Libraries
+set(CPACK_COMPONENT_LIBRARIES_DISPLAY_NAME "Libraries")
+set(CPACK_COMPONENT_LIBRARIES_DESCRIPTION "Libraries used to build programs with Psychic UI")
+
+# CPack - Includes
+set(CPACK_COMPONENT_HEADERS_DISPLAY_NAME "C++ Headers")
+set(CPACK_COMPONENT_HEADERS_DESCRIPTION "C/C++ header used to build programs with Psychic UI")
+set(CPACK_COMPONENT_HEADERS_DEPENDS libraries)
+
+# CPack - Source
+set(CPACK_SOURCE_IGNORE_FILES "/\.idea/;/build/;/cmake-build-debug/;${CPACK_SOURCE_IGNORE_FILES}")
+
+#
+# BUILDING
+#
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -stdlib=libc++")
-endif()
+endif ()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
+if (APPLE)
+    list(APPEND CMAKE_PREFIX_PATH /usr/local/opt)
+    list(APPEND CMAKE_LIBRARY_PATH /usr/local/opt)
+endif ()
+
 include(ExternalProject)
+include(CPack)
 include(FeatureSummary)
 
 option(PSYCHIC_UI_BUILD_SHARED "Build Psychic UI as a shared library?" ON)
@@ -27,9 +86,10 @@ find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
 find_package(JPEGTURBO REQUIRED)
 find_package(Freetype REQUIRED)
+
 if(APPLE)
     # Use brew's version, FindICU can't find it
-    file(GLOB ICU_LIBRARIES /usr/local/opt/icu4c/lib/*.a)
+    set(ICU_LIBRARIES /usr/local/opt/icu4c/lib/libicuuc.a /usr/local/opt/icu4c/lib/libicudata.a)
     set(ICU_INCLUDE_DIRS /usr/local/opt/icu4c/include)
 else()
     find_package(ICU REQUIRED COMPONENTS uc)
@@ -44,7 +104,7 @@ elseif (APPLE)
     add_definitions(-DAPPLE)
 elseif (UNIX)
     add_definitions(-DUNIX)
-endif()
+endif ()
 
 
 # GLAD
@@ -54,15 +114,15 @@ add_subdirectory(extlib/glad)
 if (PSYCHIC_UI_BUILD_GLFW)
     add_subdirectory(extlib/glfw)
     add_definitions(-DWITH_GLFW)
-endif()
+endif ()
 
 # SDL
-if(PSYCHIC_UI_BUILD_SDL2)
+if (PSYCHIC_UI_BUILD_SDL2)
     find_package(SDL2 REQUIRED)
     if (SDL2_FOUND)
         add_definitions(-DWITH_SDL2)
-    endif()
-endif()
+    endif ()
+endif ()
 
 # YOGA
 add_subdirectory(extlib/yoga)
@@ -73,8 +133,8 @@ add_subdirectory(extlib/skia)
 
 # PSYCHIC COLOR
 if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/lib/psychic-color/.git")
-  message(FATAL_ERROR "Psychic UI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
-endif()
+    message(FATAL_ERROR "Psychic UI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
+endif ()
 
 add_subdirectory(lib/psychic-color)
 
@@ -89,7 +149,7 @@ elseif (CMAKE_SYSTEM MATCHES "Linux")
     find_package(Fontconfig REQUIRED)
     list(APPEND PSYCHIC_UI_EXTRA_LIBS
         fontconfig
-    )
+        )
 endif ()
 
 # LIBRARY
@@ -189,9 +249,14 @@ set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     psychic-ui/components/Text.hpp
     psychic-ui/TextBase.cpp
     psychic-ui/TextBase.hpp
-)
+    )
 
 add_library(psychic-ui SHARED ${SOURCE_FILES})
+
+# WARNINGS
+add_definitions(-Wall)
+add_definitions(-Wextra)
+#add_definitions(-Werror)
 
 # On Travis' GCC 4.9 it defaults to old C standards, required for Yoga
 set_property(TARGET psychic-ui PROPERTY C_STANDARD 11)
@@ -203,7 +268,7 @@ target_include_directories(psychic-ui PUBLIC
     ${SKIA_INCLUDE_DIRS}
     ${ICU_INCLUDE_DIRS}
     ${PSYCHIC_COLOR_INCLUDE_DIRS}
-)
+    )
 
 target_link_libraries(psychic-ui
     # OPENGL
@@ -220,21 +285,21 @@ target_link_libraries(psychic-ui
     ${ICU_LIBRARIES}
     # PSYCHIC COLOR
     ${PSYCHIC_COLOR_LIBRARIES}
-)
+    )
 
 if (PSYCHIC_UI_BUILD_GLFW)
     target_include_directories(psychic-ui PUBLIC ${GLFW_INCLUDE_DIRS})
     target_link_libraries(psychic-ui glfw)
-endif()
+endif ()
 
 if (PSYCHIC_UI_BUILD_SDL2)
     target_include_directories(psychic-ui PUBLIC ${SDL2_INCLUDE_DIR})
     target_link_libraries(psychic-ui ${SDL2_LIBRARY})
-endif()
+endif ()
 
 if (CMAKE_SYSTEM MATCHES "Linux" AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     target_link_libraries(psychic-ui c++abi)  # Necessary for Travis Clang builds
-endif()
+endif ()
 
 add_dependencies(psychic-ui psychic-color)
 add_dependencies(psychic-ui glfw)
@@ -270,4 +335,25 @@ file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 # SUBDIRECTORIES
 add_subdirectory(tests)
 add_subdirectory(example)
-add_subdirectory(playground)
+
+#
+# OTHER TARGETS
+#
+
+# Documentation
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+    set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+    set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+    configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+    add_custom_target(doc
+        COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif ()
+
+#
+# POST
+#
+
+# Report
+feature_summary(WHAT ALL)

@@ -178,11 +178,11 @@ namespace psychic_ui {
         return true;
     }
 
-    const bool StyleSelector::direct() const {
+    bool StyleSelector::direct() const {
         return _direct;
     }
 
-    const int StyleSelector::depth() const {
+    int StyleSelector::depth() const {
         return _depth;
     }
 
@@ -206,7 +206,7 @@ namespace psychic_ui {
         return _next.get();
     }
 
-    const int StyleSelector::weight() const {
+    int StyleSelector::weight() const {
         int w = _id.empty() ? 0 : 15; // ??? Is 15 too much?
         w += _tag.empty() ? 0 : 10;
         w += (int) _classes.size() * 10;

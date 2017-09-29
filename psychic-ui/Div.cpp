@@ -115,7 +115,7 @@ namespace psychic_ui {
                     addedToRenderRecursive();
                 }
                 // Here we force update the style instead of relying on the invalidation
-                // because styles control the layout, and we don't want the component
+                // because styles control the layout, and we don't want the div
                 // doing a style-less render pass on its first frame alive. Only after
                 // `addedToRenderRecursive` since it can make calls that would change
                 // the styling.
@@ -124,7 +124,7 @@ namespace psychic_ui {
         }
     }
 
-    const int Div::depth() const {
+    int Div::depth() const {
         return _depth;
     }
 
@@ -203,24 +203,24 @@ namespace psychic_ui {
         _children.clear();
     }
 
-    int Div::childIndex(const std::shared_ptr<Div> component) const {
-        assert(component != nullptr);
+    int Div::childIndex(const std::shared_ptr<Div> child) const {
+        assert(child != nullptr);
         auto index = std::distance(
             _children.cbegin(),
-            std::find(_children.cbegin(), _children.cend(), component)
+            std::find(_children.cbegin(), _children.cend(), child)
         );
         return (index >= _children.size()) ? -1 : (int) index;
     }
 
-    int Div::childIndex(const Div *component) const {
-        assert(component != nullptr);
+    int Div::childIndex(const Div *child) const {
+        assert(child != nullptr);
         auto index = std::distance(
             _children.cbegin(),
             std::find_if(
                 _children.cbegin(),
                 _children.cend(),
-                [component](const auto &child) {
-                    return child.get() == component;
+                [child](const auto &c) {
+                    return c.get() == child;
                 }
             ));
         return (index >= _children.size()) ? -1 : (int) index;
@@ -289,7 +289,7 @@ namespace psychic_ui {
 
     // region State
 
-    const bool Div::active() const {
+    bool Div::active() const {
         return _enabled && _mouseDown;
     };
 
@@ -310,11 +310,11 @@ namespace psychic_ui {
         }
     }
 
-//    std::shared_ptr<Div> Div::findComponent(const int x, const int y) {
+//    std::shared_ptr<Div> Div::findDiv(const int x, const int y) {
 //        int             lx = x - _x, ly = y - _y;
 //        for (const auto &child: _children) {
 //            if (child->visible() && child->boundsContains(lx, ly)) {
-//                return child->findComponent(lx, ly);
+//                return child->findDiv(lx, ly);
 //            }
 //        }
 //        return boundsContains(lx, ly) ? shared_from_this() : nullptr;
@@ -356,7 +356,7 @@ namespace psychic_ui {
         YGNodeStyleSetPosition(_yogaNode, YGEdgeBottom, bottom);
     }
 
-    const int Div::x() const {
+    int Div::x() const {
         return _x;
     }
 
@@ -365,7 +365,7 @@ namespace psychic_ui {
         YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, _x >= 0 ? _x : YGUndefined);
     }
 
-    const int Div::y() const {
+    int Div::y() const {
         return _y;
     }
 
@@ -374,7 +374,7 @@ namespace psychic_ui {
         YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, _y >= 0 ? _y : YGUndefined);
     }
 
-    const int Div::getLeft() const {
+    int Div::getLeft() const {
         return (int) YGNodeStyleGetPosition(_yogaNode, YGEdgeLeft).value;
     }
 
@@ -382,7 +382,7 @@ namespace psychic_ui {
         YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, left);
     }
 
-    const float Div::getLeftPercent() const {
+    float Div::getLeftPercent() const {
         auto size = YGNodeStyleGetPosition(_yogaNode, YGEdgeLeft);
         return size.unit == YGUnitPercent ? size.value / 100.f : nanf("not a percent");
     }
@@ -391,7 +391,7 @@ namespace psychic_ui {
         YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, YogaPercent(leftPercent));
     }
 
-    const int Div::getRight() const {
+    int Div::getRight() const {
         return (int) YGNodeStyleGetPosition(_yogaNode, YGEdgeRight).value;
     }
 
@@ -399,7 +399,7 @@ namespace psychic_ui {
         YGNodeStyleSetPosition(_yogaNode, YGEdgeRight, right);
     }
 
-    const float Div::getRightPercent() const {
+    float Div::getRightPercent() const {
         auto size = YGNodeStyleGetPosition(_yogaNode, YGEdgeRight);
         return size.unit == YGUnitPercent ? size.value / 100.f : nanf("not a percent");
     }
@@ -408,7 +408,7 @@ namespace psychic_ui {
         YGNodeStyleSetPosition(_yogaNode, YGEdgeRight, YogaPercent(rightPercent));
     }
 
-    const int Div::getTop() const {
+    int Div::getTop() const {
         return (int) YGNodeStyleGetPosition(_yogaNode, YGEdgeTop).value;
     }
 
@@ -416,7 +416,7 @@ namespace psychic_ui {
         YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, top);
     }
 
-    const float Div::getTopPercent() const {
+    float Div::getTopPercent() const {
         auto size = YGNodeStyleGetPosition(_yogaNode, YGEdgeTop);
         return size.unit == YGUnitPercent ? size.value / 100.f : nanf("not a percent");
     }
@@ -425,7 +425,7 @@ namespace psychic_ui {
         YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, YogaPercent(topPercent));
     }
 
-    const int Div::getBottom() const {
+    int Div::getBottom() const {
         return (int) YGNodeStyleGetPosition(_yogaNode, YGEdgeBottom).value;
     }
 
@@ -433,7 +433,7 @@ namespace psychic_ui {
         YGNodeStyleSetPosition(_yogaNode, YGEdgeBottom, bottom);
     }
 
-    const float Div::getBottomPercent() const {
+    float Div::getBottomPercent() const {
         auto size = YGNodeStyleGetPosition(_yogaNode, YGEdgeBottom);
         return size.unit == YGUnitPercent ? size.value / 100.f : nanf("not a percent");
     }
@@ -453,7 +453,7 @@ namespace psychic_ui {
         YGNodeStyleSetHeight(_yogaNode, _height);
     }
 
-    const int Div::getWidth() const {
+    int Div::getWidth() const {
         return _width;
     }
 
@@ -462,7 +462,7 @@ namespace psychic_ui {
         YGNodeStyleSetWidth(_yogaNode, _width);
     }
 
-    const int Div::getHeight() const {
+    int Div::getHeight() const {
         return _height;
     }
 
@@ -471,7 +471,7 @@ namespace psychic_ui {
         YGNodeStyleSetHeight(_yogaNode, _height);
     }
 
-    const float Div::getWidthPercent() const {
+    float Div::getWidthPercent() const {
         auto size = YGNodeStyleGetWidth(_yogaNode);
         return size.unit == YGUnitPercent ? size.value / 100.f : nanf("not a percent");
     }
@@ -480,7 +480,7 @@ namespace psychic_ui {
         YGNodeStyleSetWidthPercent(_yogaNode, YogaPercent(widthPercent));
     }
 
-    const float Div::getHeightPercent() const {
+    float Div::getHeightPercent() const {
         auto size = YGNodeStyleGetHeight(_yogaNode);
         return size.unit == YGUnitPercent ? size.value / 100.f : nanf("not a percent");
     }
@@ -518,9 +518,9 @@ namespace psychic_ui {
         return _computedStyle.get();
     }
 
-    Div *Div::setTag(std::string componentName) {
-        std::transform(componentName.begin(), componentName.end(), componentName.begin(), ::tolower);
-        _tags.push_back(componentName);
+    Div *Div::setTag(std::string divName) {
+        std::transform(divName.begin(), divName.end(), divName.begin(), ::tolower);
+        _tags.push_back(divName);
         invalidateStyle();
         return this;
     }
@@ -715,12 +715,12 @@ namespace psychic_ui {
             _yogaNode,
             [](YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
                 YGSize size{};
-                auto   component = static_cast<Div *>(YGNodeGetContext(node));
-                if (!component) {
-                    std::cerr << "Could not find component to measure" << std::endl;
+                auto   div = static_cast<Div *>(YGNodeGetContext(node));
+                if (!div) {
+                    std::cerr << "Could not find div to measure" << std::endl;
                     return size;
                 }
-                size = component->measure(width, widthMode, height, heightMode);
+                size = div->measure(width, widthMode, height, heightMode);
                 return size;
             }
         );
@@ -1415,7 +1415,7 @@ namespace psychic_ui {
             return Out;
         }
 
-        // From now on we're over the component, unless we"re on window, which allow for the mouse to move outside
+        // From now on we're over the div, unless we"re on window, which allow for the mouse to move outside
 
         int              localMouseX = mouseX - _x - _scrollX;
         int              localMouseY = mouseY - _y - _scrollY;

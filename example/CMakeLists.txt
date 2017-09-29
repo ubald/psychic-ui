@@ -19,4 +19,8 @@ if (PSYCHIC_UI_BUILD_EXAMPLE)
         target_link_libraries(psychic-ui-demo-sdl2 psychic-ui ${PSYCHIC_UI_EXTRA_LIBS})
     endif ()
 
+
+    # RESOURCES
+    file(COPY fonts DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 endif ()

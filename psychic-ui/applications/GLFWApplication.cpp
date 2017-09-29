@@ -208,13 +208,13 @@ namespace psychic_ui {
         #endif
 
         // Get Some info back about the framebuffer (in case its different from what we set?)
-        glGetFramebufferAttachmentParameteriv(
-            GL_DRAW_FRAMEBUFFER,
-            GL_STENCIL,
-            GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE,
-            &_stencilBits
-        );
-        glGetIntegerv(GL_SAMPLES, &_samples);
+        //glGetFramebufferAttachmentParameteriv(
+        //    GL_DRAW_FRAMEBUFFER,
+        //    GL_STENCIL,
+        //    GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE,
+        //    &_stencilBits
+        //);
+        //glGetIntegerv(GL_SAMPLES, &_samples);
 
         // Setup Callbacks
         attachCallbacks();

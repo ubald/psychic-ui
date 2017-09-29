@@ -19,21 +19,60 @@ namespace psychic_ui {
 
     class Panel;
 
+    /**
+     * Return status of the mouse event methods
+     */
     enum MouseEventStatus {
+        /**
+         * Mouse was outside the component
+         */
         Out,
+
+        /**
+         * Mouse was over the component but no event was handled
+         */
         Over,
+
+        /**
+         * Mouse is over the component and an event was handled
+         */
         Handled
     };
 
+    /**
+     * Shortcut type for click signal slot
+     */
     using ClickCallback = std::function<void()>;
+
+    /**
+     * Shortcut type for mouse signal slot
+     */
     using MouseCallback = std::function<void(const int mouseX, const int mouseY, int button, int modifiers)>;
+
+    /**
+     * Shortcut type for mouse button signal slot
+     */
     using MouseButtonCallback = std::function<void(const int mouseX, const int mouseY, int button, bool down, int modifiers)>;
+
+    /**
+     * Shortcut type for mouse scroll signal slot
+     */
     using MouseScrollCallback = std::function<void(const int mouseX, const int mouseY, const double scrollX, const double scrollY)>;
 
+    /**
+     * @class Div
+     *
+     * The Div class is the main object used to display content in Psychic UI.
+     * It has a similar role as a `div` in html: its purpose is to offer a rectangular container
+     * than can be used in a layout and styled using a stylesheet.
+     */
     class Div : public Observer, public std::enable_shared_from_this<Div> {
         friend class StyleManager;
 
         friend class Modal;
+
+    protected:
+
 
     public:
         Div();
@@ -42,38 +81,125 @@ namespace psychic_ui {
 
         Div &operator=(const Div &) = delete;
 
+        /**
+         * Get a string representing this Div for debug purposes
+         * @return String used to identify a component in a log
+         */
         std::string toString() const;
 
         // region Hierarchy
 
+        /**
+         * If the div is included in a window, returns a pointer to that window
+         * @return Pointer to owning window, if any
+         */
         virtual Window *window();
+
+        /**
+         * If the div is included in a parent, returns a pointer to that parent
+         * @return Pointer to parent Div, if any
+         */
         Div *parent();
+
+        /**
+         * If the div is included in a parent, returns a const pointer to that parent
+         * @return Const pointer to parent Div, if any
+         */
         const Div *parent() const;
-        void setParent(Div *parent);
-        const int depth() const;
+
+        /**
+         * Get the depth of this Div in the display hiarchy.
+         * @return Depth of the Div
+         */
+        int depth() const;
 
         // endregion
 
         // region Children
 
+        /**
+         * Get the Div's number of children
+         * @return NUmber of children
+         */
         unsigned int childCount() const;
+
+        /**
+         * Get the children of this Div
+         * @return Vector of child Divs
+         */
         const std::vector<std::shared_ptr<Div>> children() const;
-        std::shared_ptr<Div> add(unsigned int index, std::shared_ptr<Div> component);
+
+        /**
+         * Add a child at index
+         * @param index Index where to add the child
+         * @param child Child to add
+         * @return Pointer to this, used for chaining multiple calls
+         */
+        std::shared_ptr<Div> add(unsigned int index, std::shared_ptr<Div> child);
+
+        /**
+         * Add a child
+         * @param child Child to add
+         * @return Pointer to this, used for chaining multiple calls
+         */
         std::shared_ptr<Div> add(std::shared_ptr<Div> child);
 
+        /**
+         * Construct a child from type T and add it at the same time
+         * @tparam T Type of the child to add
+         * @tparam Args
+         * @param args Arguments to pass to the child's constructor
+         * @return
+         */
         template<typename T, typename... Args>
-        std::shared_ptr<T> add(const Args &... args) {
-            return std::static_pointer_cast<T>(add(std::make_shared<T>(args...)));
+        std::shared_ptr<T> add(Args &&... args) {
+            return std::static_pointer_cast<T>(add(std::make_shared<T>(std::forward<Args>(args)...)));
         }
 
+        /**
+         * Remove a child by index
+         * @param index Index of the child to remove
+         */
         void remove(unsigned int index);
+
+        /**
+         * Remove a child by shared pointer
+         * @param child Child to remove
+         */
         void remove(std::shared_ptr<Div> child);
+
+        /**
+         * Remove all children
+         */
         void removeAll();
 
+        /**
+         * Get the childat index
+         * @param index Index of the child to retreive
+         * @return Const pointer to the Div at index
+         */
         const Div *at(unsigned int index) const;
+
+        /**
+         * Get the childat index
+         * @param index Index of the child to retreive
+         * @return Pointer to the Div at index
+         */
         Div *at(unsigned int index);
-        int childIndex(std::shared_ptr<Div> component) const;
-        int childIndex(const Div *component) const;
+
+        /**
+         * Get the index of a child by shared pointer
+         * @param child Shared pointer to a child
+         * @return Index of the child
+         */
+        int childIndex(const std::shared_ptr<Div> child) const;
+
+        /**
+         * Get the index of a child by pointer
+         * @param child Pointer to a child
+         * @return Index of the child
+         */
+        int childIndex(const Div *child) const;
 
         // endregion
 
@@ -83,7 +209,7 @@ namespace psychic_ui {
         virtual void setVisible(bool value);
         bool enabled() const;
         virtual Div *setEnabled(bool enabled);
-        virtual const bool active() const;
+        virtual bool active() const;
         bool focusEnabled() const;
         Div *setFocusEnabled(bool focusEnabled);
         bool focused() const;
@@ -95,27 +221,27 @@ namespace psychic_ui {
 
         void setPosition(int x, int y);
         void setPosition(int left, int top, int right, int bottom);
-        void localToGlobal(int &gx, int &gy, const int x = 0, const int y = 0) const;
-        void globalToLocal(int &lx, int &ly, const int x = 0, const int y = 0) const;
-        const int x() const;
+        void localToGlobal(int &gx, int &gy, int x = 0, int y = 0) const;
+        void globalToLocal(int &lx, int &ly, int x = 0, int y = 0) const;
+        int x() const;
         void setX(int x);
-        const int y() const;
+        int y() const;
         void setY(int y);
-        const int getLeft() const;
+        int getLeft() const;
         void setLeft(int left);
-        const int getRight() const;
+        int getRight() const;
         void setRight(int right);
-        const int getTop() const;
+        int getTop() const;
         void setTop(int top);
-        const int getBottom() const;
+        int getBottom() const;
         void setBottom(int bottom);
-        const float getLeftPercent() const;
+        float getLeftPercent() const;
         void setLeftPercent(float leftPercent);
-        const float getRightPercent() const;
+        float getRightPercent() const;
         void setRightPercent(float rightPercent);
-        const float getTopPercent() const;
+        float getTopPercent() const;
         void setTopPercent(float topPercent);
-        const float getBottomPercent() const;
+        float getBottomPercent() const;
         void setBottomPercent(float bottomPercent);
 
         // endregion
@@ -123,40 +249,40 @@ namespace psychic_ui {
         // region Dimensions
 
         void setSize(int width, int height);
-        const int getWidth() const;
+        int getWidth() const;
         void setWidth(int width);
-        const int getHeight() const;
+        int getHeight() const;
         void setHeight(int height);
-        const float getWidthPercent() const;
+        float getWidthPercent() const;
         void setWidthPercent(float widthPercent);
-        const float getHeightPercent() const;
+        float getHeightPercent() const;
         void setHeightPercent(float heightPercent);
 
         // endregion
 
         // region Bounds
 
-        const int boundsLeft() const {
+        int boundsLeft() const {
             return _boundsLeft;
         }
 
-        const int boundsTop() const {
+        int boundsTop() const {
             return _boundsTop;
         }
 
-        const int boundsRight() const {
+        int boundsRight() const {
             return _boundsRight;
         }
 
-        const int boundsBottom() const {
+        int boundsBottom() const {
             return _boundsBottom;
         }
 
-        const int contentWidth() const {
+        int contentWidth() const {
             return _boundsRight - _boundsLeft;
         }
 
-        const int contentHeight() const {
+        int contentHeight() const {
             return _boundsBottom - _boundsTop;
         }
 
@@ -164,7 +290,7 @@ namespace psychic_ui {
 
         // region Scroll
 
-        const int scrollX() const {
+        int scrollX() const {
             return _scrollX;
         }
 
@@ -176,7 +302,7 @@ namespace psychic_ui {
             return this;
         }
 
-        const int scrollY() const {
+        int scrollY() const {
             return _scrollY;
         }
 
@@ -333,6 +459,14 @@ namespace psychic_ui {
         // endregion
 
         // region Hierarchy
+
+
+        /**
+         * Set the parent of that div
+         * Used internally when adding/removing a child to/from a parent
+         * @param Div* parent
+         */
+        void setParent(Div *parent);
 
         virtual void added();
         virtual void removed();

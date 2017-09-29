@@ -1,1 +1,3 @@
 # PsychicUI
+
+[API Documentation](html/)

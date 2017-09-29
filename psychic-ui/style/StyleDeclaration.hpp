@@ -19,7 +19,7 @@ namespace psychic_ui {
          * Returns the cached weight computed from the selector chain
          * @return int
          */
-        const int weight() const;
+        int weight() const;
     protected:
         const std::unique_ptr<StyleSelector> _selector{nullptr};
         std::unique_ptr<Style>               _style{nullptr};

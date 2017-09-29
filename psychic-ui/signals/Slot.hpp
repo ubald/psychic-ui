@@ -22,8 +22,8 @@ namespace psychic_ui {
     class Slot : public SlotBase {
     public:
         explicit Slot(Signal<T...> *signal, std::function<void(T...)> callback) :
-            _signal(signal),
-            notify(callback) {}
+            notify(callback),
+            _signal(signal) {}
 
         void disconnect() override {
             _signal->unsubscribe(this);

@@ -13,7 +13,7 @@ namespace psychic_ui {
             setTag("TextInputSkin");
         }
 
-        virtual void setText(const std::string &text) {};
+        virtual void setText(const std::string &/*text*/) {};
         std::shared_ptr<Text> textDisplay{nullptr};
     };
 

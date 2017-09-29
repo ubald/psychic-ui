@@ -13,6 +13,8 @@ class DemoStyleSheet : public StyleSheet {
 public:
     void load(StyleManager *manager) override {
 
+        manager->loadFont("stan0755", "fonts/stan0755.ttf");
+
         manager->style(".demo-panel")
                ->set(padding, 24);
 

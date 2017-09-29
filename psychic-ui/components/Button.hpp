@@ -16,7 +16,7 @@ namespace psychic_ui {
             setTag("ButtonSkin");
         }
 
-        virtual void setLabel(const std::string &label) {};
+        virtual void setLabel(const std::string &/*label*/) {};
     };
 
     class Button : public Component<ButtonSkin> {
@@ -30,24 +30,24 @@ namespace psychic_ui {
         const std::string &label() const;
         void setLabel(const std::string &label);
 
-        const bool toggle() const { return _toggle; }
+        bool toggle() const { return _toggle; }
 
         Button *setToggle(const bool toggle) {
             _toggle = toggle;
             return this;
         }
 
-        const bool autoToggle() const { return _autoToggle; }
+        bool autoToggle() const { return _autoToggle; }
 
         Button *setAutoToggle(const bool autoToggle) {
             _autoToggle = autoToggle;
             return this;
         }
 
-        const bool selected() const;
+        bool selected() const;
         Button *setSelected(bool selected);
 
-        const bool active() const override;
+        bool active() const override;
 
         Button *onChange(std::function<void(bool)> onChange) {
             _onChange = std::move(onChange);

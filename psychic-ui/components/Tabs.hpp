@@ -85,7 +85,7 @@ namespace psychic_ui {
     template<class T>
     void Tabs<T>::updateSelection() {
         auto     pos = std::distance(this->_data.cbegin(), std::find(this->_data.cbegin(), this->_data.cend(), *_selected));
-        for (int i   = 0; i < _buttons.size(); ++i) {
+        for (unsigned int i   = 0; i < _buttons.size(); ++i) {
             _buttons[i]->setSelected(i == pos);
         }
     }

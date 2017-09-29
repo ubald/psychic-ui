@@ -17,7 +17,7 @@ namespace psychic_ui {
         return _menuItem;
     }
 
-    const bool MenuButton::selected() const {
+    bool MenuButton::selected() const {
         return _selected;
     }
 
@@ -28,7 +28,7 @@ namespace psychic_ui {
         }
     }
 
-    const bool MenuButton::active() const {
+    bool MenuButton::active() const {
         return Component::active() || _selected;
     };
 }

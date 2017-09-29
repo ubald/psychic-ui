@@ -61,7 +61,7 @@ namespace psychic_ui {
 
         // region Range & Value
 
-        const RangeMode mode() const;
+        RangeMode mode() const;
         Range<T> *setMode(RangeMode mode);
         Range<T> *setRange(T min, T max);
         const T min() const;
@@ -107,7 +107,7 @@ namespace psychic_ui {
         checkRange();
 
         onMouseScroll.subscribe(
-            [this](const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
+            [this](const int /*mouseX*/, const int /*mouseY*/, const double /*scrollX*/, const double scrollY) {
                 if (std::is_floating_point<T>::value) {
                     setValue(_value + (scrollY * _step));
                 } else {
@@ -135,7 +135,7 @@ namespace psychic_ui {
         Range(nullptr) {}
 
     template<class T>
-    const RangeMode Range<T>::mode() const {
+    RangeMode Range<T>::mode() const {
         return _mode;
     }
 

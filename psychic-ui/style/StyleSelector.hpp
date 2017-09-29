@@ -31,8 +31,8 @@ namespace psychic_ui {
 
         bool matches(const Div *component) const;
 
-        const bool direct() const;
-        const int depth() const;
+        bool direct() const;
+        int depth() const;
         const std::string tag() const;
         const std::string id() const;
         const std::vector<std::string> classes() const;
@@ -44,7 +44,7 @@ namespace psychic_ui {
          * This is used when trying to figure out selectors priority
          * @return int
          */
-        const int weight() const;
+        int weight() const;
 
     protected:
         /**

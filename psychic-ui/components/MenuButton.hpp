@@ -21,9 +21,9 @@ namespace psychic_ui {
     public:
         explicit MenuButton(const MenuItem *menuItem);
         const MenuItem *menuItem() const;
-        const bool selected() const;
+        bool selected() const;
         void setSelected(bool selected);
-        const bool active() const override;
+        bool active() const override;
     protected:
         const MenuItem *_menuItem{};
         bool           _selected{false};

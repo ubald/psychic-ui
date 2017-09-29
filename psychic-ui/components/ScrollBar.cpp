@@ -48,7 +48,7 @@ namespace psychic_ui {
         return _viewport.get();
     }
 
-    const ScrollDirection ScrollBar::direction() const {
+    ScrollDirection ScrollBar::direction() const {
         return _direction;
     }
 

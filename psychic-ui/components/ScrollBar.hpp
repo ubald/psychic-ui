@@ -24,7 +24,7 @@ namespace psychic_ui {
     public:
         explicit ScrollBar(const std::shared_ptr<Div> &viewport, ScrollDirection direction = Vertical);
         Div *viewport() const;
-        const ScrollDirection direction() const;
+        ScrollDirection direction() const;
         void scrollPercentX(float scrollPercentX);
         void scrollPercentY(float scrollPercentY);
     protected:

@@ -15,9 +15,9 @@ namespace psychic_ui {
         explicit TextBase(const std::string &text = "");
         //virtual std::string text() const = 0;
         virtual void setText(const std::string &text) = 0;
-        const bool lcdRender() const;
+        bool lcdRender() const;
         TextBase *setLcdRender(bool lcdRender);
-        const bool subpixelText() const;
+        bool subpixelText() const;
         TextBase *setSubPixelText(bool subPixelText);
         void styleUpdated() override;
 
