@@ -100,10 +100,13 @@ namespace psychic_ui {
         return _caret;
     };
 
-    Text *Text::setCaret(unsigned int caret) {
+    Text *Text::setCaret(unsigned int caret, bool saveX) {
         _caret       = std::min(caret, static_cast<unsigned int>(_text.length()));
         _selectBegin = _caret;
         _selectEnd   = _caret;
+        if (saveX) {
+            _targetXPos = _textBox.posFromIndex(_caret).second;
+        }
         onCaret(_caret);
         return this;
     }
@@ -155,16 +158,17 @@ namespace psychic_ui {
     }
 
     void Text::subscribeToEdition() {
-        _onKeyDown   = onKeyDown([this](Key key) { handleKey(key); });
-        _onKeyRepeat = onKeyRepeat([this](Key key) { handleKey(key); });
+        _onFocus = onFocus([this](){ window()->startTextInput(); });
+        _onBlur = onBlur([this](){ window()->stopTextInput(); });
+        _onKeyDown   = onKeyDown([this](Key key, Mod mod) { handleKey(key, mod); });
+        _onKeyRepeat = onKeyRepeat([this](Key key, Mod mod) { handleKey(key, mod); });
         _onCharacter = onCharacter(
-            [this](unsigned int codepoint) {
-                UnicodeString uni_str(static_cast<UChar32>(codepoint));
+            [this](UnicodeString character) {
                 if (_selectBegin != _selectEnd) {
-                    _text.replace(_selectBegin, _selectEnd - _selectBegin, uni_str);
+                    _text.replace(_selectBegin, _selectEnd - _selectBegin, character);
                     setCaret(_selectBegin + 1);
                 } else {
-                    _text.insert(_caret, uni_str);
+                    _text.insert(_caret, character);
                     setCaret(++_caret);
                 }
                 updateDisplay();
@@ -173,6 +177,10 @@ namespace psychic_ui {
     }
 
     void Text::unsubscribeFromEdition() {
+        if (_onFocus) {
+            _onFocus->disconnect();
+            _onKeyDown = nullptr;
+        }
         if (_onKeyDown) {
             _onKeyDown->disconnect();
             _onKeyDown = nullptr;
@@ -193,16 +201,22 @@ namespace psychic_ui {
         invalidate();
     }
 
-    void Text::handleKey(Key key) {
+    void Text::handleKey(Key key, Mod mod) {
         switch (key) {
             case Key::HOME:
-                // TODO: ctrl+home goes to start of doc, home goes to end of line
-                setCaret(0);
+                if (mod.ctrl) {
+                    setCaret(0);
+                } else {
+                    setCaret(_textBox.lineStart(_textBox.lineFromIndex(_caret)));
+                }
                 break;
 
             case Key::END:
-                // TODO: ctrl+end goes to end of doc, end goes to end of line
-                setCaret(static_cast<unsigned int>(_text.length()));
+                if (mod.ctrl) {
+                    setCaret(static_cast<unsigned int>(_text.length()));
+                } else {
+                    setCaret(_textBox.lineEnd(_textBox.lineFromIndex(_caret)));
+                }
                 break;
 
             case Key::UP: {
@@ -212,8 +226,8 @@ namespace psychic_ui {
                     setCaret(0);
                 } else {
                     // Otherwise go one line up
-                    auto index = _textBox.indexFromPos(pos.second, static_cast<unsigned int>((pos.first - 1) * _lineHeight));
-                    setCaret(index);
+                    auto index = _textBox.indexFromPos(_targetXPos, static_cast<unsigned int>((pos.first - 1) * _lineHeight));
+                    setCaret(index, false);
                 }
                 break;
             }
@@ -225,8 +239,8 @@ namespace psychic_ui {
                     setCaret(static_cast<unsigned int>(_text.length()));
                 } else {
                     // Otherwise go one line down
-                    auto index = _textBox.indexFromPos(pos.second, static_cast<unsigned int>((pos.first + 1) * _lineHeight));
-                    setCaret(index);
+                    auto index = _textBox.indexFromPos(_targetXPos, static_cast<unsigned int>((pos.first + 1) * _lineHeight));
+                    setCaret(index, false);
                 }
                 break;
             }

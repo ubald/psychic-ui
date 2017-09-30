@@ -33,7 +33,18 @@ namespace psychic_ui {
         std::pair<unsigned int, unsigned int> getSelection() const;
         Text *setSelection(std::pair<unsigned int, unsigned int> selection);
         unsigned int getCaret() const;
-        Text *setCaret(unsigned int caret);
+
+        /**
+         * Set the caret position in the text
+         * @param caret Position of the caret
+         * @param saveX Used internally, saves where the caret is horizontally
+         *              in order to restore it horizontally in case navigating
+         *              in the text with the keyboard makes us pass by a line
+         *              that is shorter, we still want to navigate up or down
+         *              in the same column.
+         * @return Pointer to this, for call chaining
+         */
+        Text *setCaret(unsigned int caret, bool saveX = true);
 
         void styleUpdated() override;
         YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) override;
@@ -53,6 +64,7 @@ namespace psychic_ui {
         unsigned int  _selectBegin{0};
         unsigned int  _selectEnd{0};
         unsigned int  _caret{0};
+        unsigned int  _targetXPos{0};
         UnicodeString _text{};
         TextBox       _textBox{};
         BlobPtr       _blob{nullptr};
@@ -65,6 +77,8 @@ namespace psychic_ui {
         Div::KeySlot   _onKeyDown{nullptr};
         Div::KeySlot   _onKeyRepeat{nullptr};
         Div::CharSlot  _onCharacter{nullptr};
+        Div::FocusSlot _onFocus{nullptr};
+        Div::FocusSlot _onBlur{nullptr};
 
         void subscribeToSelection();
         void unsubscribeFromSelection();
@@ -72,6 +86,6 @@ namespace psychic_ui {
         void unsubscribeFromEdition();
 
         void updateDisplay();
-        void handleKey(Key key);
+        void handleKey(Key key, Mod mod);
     };
 }

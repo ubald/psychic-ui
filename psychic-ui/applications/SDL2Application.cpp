@@ -1,6 +1,7 @@
 #ifdef WITH_SDL2
 
 #include <iostream>
+#include <unicode/unistr.h>
 #include "SDL2Application.hpp"
 
 namespace psychic_ui {
@@ -29,6 +30,8 @@ namespace psychic_ui {
     std::unordered_map<unsigned int, std::unique_ptr<SDL2SystemWindow>> SDL2Application::sdl2Windows{};
 
     void SDL2Application::init() {
+        SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
+
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
             logSDLError("SDL_Init");
             throw std::runtime_error("Could not initialize SDL2!");
@@ -120,7 +123,6 @@ namespace psychic_ui {
 
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
         SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, SDL_TRUE);
         SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, SDL_TRUE);
@@ -134,12 +136,15 @@ namespace psychic_ui {
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, _stencilBits);
         if (_samples > 0) {
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, _samples);
+            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
         }
+
+        //glEnable(GL_MULTISAMPLE);
 
         // WINDOW FLAGS
 
         uint32_t windowFlags = 0;
+        // TODO: IOS
         #if defined(ANDROID)
         // For Android we need to set up for OpenGL ES and we make the window hi res & full screen
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
@@ -342,6 +347,14 @@ namespace psychic_ui {
         _windowDragMouseY = 0;
     }
 
+    void SDL2SystemWindow::startTextInput() {
+        SDL_StartTextInput();
+    }
+
+    void SDL2SystemWindow::stopTextInput() {
+        SDL_StopTextInput();
+    }
+
     void SDL2SystemWindow::handleEvent(const SDL_Event &e) {
         _lastInteraction = static_cast<double>(SDL_GetTicks()) / 1000.0f;
 
@@ -417,22 +430,19 @@ namespace psychic_ui {
                 break;
 
             case SDL_KEYDOWN:
-                // TODO: Key mods map
                 if (e.key.repeat) {
-                    _window->keyRepeat(mapKey(e.key.keysym.sym));
+                    _window->keyRepeat(mapKey(e.key.keysym.sym), mapMods(e.key.keysym.mod));
                 } else {
-                    _window->keyDown(mapKey(e.key.keysym.sym));
+                    _window->keyDown(mapKey(e.key.keysym.sym), mapMods(e.key.keysym.mod));
                 }
                 break;
 
             case SDL_KEYUP:
-                // TODO: Key mods map
-                _window->keyUp(mapKey(e.key.keysym.sym));
+                _window->keyUp(mapKey(e.key.keysym.sym), mapMods(e.key.keysym.mod));
                 break;
 
             case SDL_TEXTINPUT:
-            case SDL_TEXTEDITING:
-                // TODO: Setup text input
+                _window->keyboardCharacterEvent(UnicodeString::fromUTF8(e.text.text));
                 break;
 
             case SDL_MOUSEMOTION:
@@ -464,7 +474,7 @@ namespace psychic_ui {
                 }
                 _mouseState |= 1 << btn;
                 _window->mouseButton(_mouseX, _mouseY, btn, true, _modifiers);
-                _window->mouseDown(_mouseX, _mouseY, btn, _modifiers);
+                //_window->mouseDown(_mouseX, _mouseY, btn, _modifiers);
                 break;
             }
 
@@ -481,8 +491,8 @@ namespace psychic_ui {
                 }
                 _mouseState &= ~(1 << btn);
                 _window->mouseButton(_mouseX, _mouseY, btn, false, _modifiers);
-                _window->click(_mouseX, _mouseY, btn, _modifiers);
-                _window->mouseUp(_mouseX, _mouseY, btn, _modifiers);
+                //_window->click(_mouseX, _mouseY, btn, _modifiers);
+                //_window->mouseUp(_mouseX, _mouseY, btn, _modifiers);
                 break;
             }
 
@@ -500,6 +510,15 @@ namespace psychic_ui {
         _height = height;
         _window->windowResized(_width, _height);
         render();
+    }
+
+    Mod SDL2SystemWindow::mapMods(int mods) {
+        Mod mod{};
+        mod.shift = (mods & KMOD_SHIFT) != 0;
+        mod.ctrl  = (mods & KMOD_CTRL) != 0;
+        mod.alt   = (mods & KMOD_ALT) != 0;
+        mod.super = (mods & KMOD_GUI) != 0;
+        return mod;
     }
     
     Key SDL2SystemWindow::mapKey(int keycode) {

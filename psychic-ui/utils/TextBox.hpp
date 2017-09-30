@@ -69,10 +69,14 @@ namespace psychic_ui {
 
         unsigned int indexFromPos(int x, int y) const;
         std::pair<int, int> posFromIndex(int index) const;
+        unsigned int lineStart(unsigned int line) const;
+        unsigned int lineEnd(unsigned int line) const;
+        unsigned int lineFromIndex(unsigned int index) const;
 
     protected:
         unsigned int nextLineBreak(int start) const;
-        std::unique_ptr<BreakIterator> breakIterator{nullptr};
+        std::unique_ptr<BreakIterator> lineIterator{nullptr};
+        std::unique_ptr<BreakIterator> wordIterator{nullptr};
 
     private:
         SkRect                    _box{};
@@ -81,7 +85,6 @@ namespace psychic_ui {
         TextBoxAlign              _align{TextBoxAlign::Start};
         TextBoxMode               _mode{TextBoxMode::LineBreak};
         const UnicodeString       *_text{nullptr};
-        std::vector<unsigned int> _possibleBreakPositions{};
         const SkPaint             *_paint{nullptr};
         std::vector<unsigned int> visit(TextBoxVisitor visitor) const;
 

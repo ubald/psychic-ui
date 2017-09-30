@@ -85,7 +85,6 @@ namespace psychic_ui {
         void setSize(int width, int height) override;
         void setPosition(int x, int y) override ;
 
-
         /**
          * Mapping of internal cursors enum to glfw int cursor
          */
@@ -104,6 +103,7 @@ namespace psychic_ui {
         void iconifyEventCallback(int iconified);
         void closeEventCallback();
 
+        static Mod mapMods(int mods);
         static Key mapKey(int keycode);
     };
 }

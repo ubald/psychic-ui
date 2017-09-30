@@ -4,6 +4,7 @@
 #include <chrono>
 #include <memory>
 #include <unordered_map>
+#include <unicode/unistr.h>
 #include "GrContext.h"
 #include "SkSurface.h"
 #include "SkCanvas.h"
@@ -64,7 +65,7 @@ namespace psychic_ui {
         virtual void drawContents();
         void drawComponents();
 
-        void openMenu(const std::vector<std::shared_ptr<MenuItem>> &items, const int x, const int y);
+        void openMenu(const std::vector<std::shared_ptr<MenuItem>> &items, int x, int y);
         void closeMenu();
 
         std::shared_ptr<Div> appContainer() const {
@@ -112,7 +113,10 @@ namespace psychic_ui {
 
         // endregion
 
+
+
         // region Window Delegate
+
         virtual void windowMoved(int x, int y);
         virtual void windowResized(int width, int height);
         virtual void windowActivated();
@@ -124,11 +128,22 @@ namespace psychic_ui {
 
         virtual bool dropEvent(const std::vector<std::string> & /* filenames */) { return false; /* To be overridden */ }
 
+        // endregion
 
-        bool keyDown(Key key);
-        bool keyRepeat(Key key);
-        bool keyUp(Key key);
-        bool keyboardCharacterEvent(unsigned int codepoint);
+        // region Mouse
+        MouseEventStatus mouseButton(int mouseX, int mouseY, int button, bool down, int modifiers) override;
+        std::chrono::time_point<std::chrono::high_resolution_clock> _lastClick{};
+        // endregion
+
+        // region Keyboard
+
+        void startTextInput();
+        void stopTextInput();
+
+        bool keyDown(Key key, Mod mod);
+        bool keyRepeat(Key key, Mod mod);
+        bool keyUp(Key key, Mod mod);
+        bool keyboardCharacterEvent(const UnicodeString &character);
 
         // endregion
 
@@ -146,9 +161,9 @@ namespace psychic_ui {
         // region Rendering
 
         SystemWindow *_systemWindow{nullptr};
-        GrContext   *_sk_context{nullptr};
-        SkSurface   *_sk_surface{nullptr};
-        SkCanvas    *_sk_canvas{nullptr};
+        GrContext    *_sk_context{nullptr};
+        SkSurface    *_sk_surface{nullptr};
+        SkCanvas     *_sk_canvas{nullptr};
 
         // endregion
 
@@ -186,7 +201,7 @@ namespace psychic_ui {
 
         // region Focus
 
-        std::vector<Div*> _focusPath{};
+        std::vector<Div *> _focusPath{};
 
         // endregion
 

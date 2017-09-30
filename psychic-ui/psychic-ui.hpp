@@ -17,6 +17,13 @@
 
 namespace psychic_ui {
 
+    struct Mod {
+        bool shift{false};
+        bool ctrl{false};
+        bool alt{false};
+        bool super{false};
+    };
+
     /**
      * Since we support either SDL2 or GLFW, we have to map keyboard keys
      * to something we can use (they don't use the same values)

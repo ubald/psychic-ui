@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_set>
 #include <yoga/Yoga.h>
+#include <unicode/unistr.h>
 #include <SkCanvas.h>
 #include <SkRRect.h>
 #include "psychic-ui.hpp"
@@ -26,17 +27,17 @@ namespace psychic_ui {
         /**
          * Mouse was outside the component
          */
-        Out,
+            Out,
 
         /**
          * Mouse was over the component but no event was handled
          */
-        Over,
+            Over,
 
         /**
          * Mouse is over the component and an event was handled
          */
-        Handled
+            Handled
     };
 
     /**
@@ -174,15 +175,15 @@ namespace psychic_ui {
         void removeAll();
 
         /**
-         * Get the childat index
-         * @param index Index of the child to retreive
+         * Get the child at index
+         * @param index Index of the child to retrieve
          * @return Const pointer to the Div at index
          */
         const Div *at(unsigned int index) const;
 
         /**
-         * Get the childat index
-         * @param index Index of the child to retreive
+         * Get the child at index
+         * @param index Index of the child to retrieve
          * @return Pointer to the Div at index
          */
         Div *at(unsigned int index);
@@ -192,7 +193,7 @@ namespace psychic_ui {
          * @param child Shared pointer to a child
          * @return Index of the child
          */
-        int childIndex(const std::shared_ptr<Div> child) const;
+        int childIndex(std::shared_ptr<Div> child) const;
 
         /**
          * Get the index of a child by pointer
@@ -409,6 +410,7 @@ namespace psychic_ui {
         Signal<>                                                       onMouseOut{};
         Signal<const int, const int, const double, const double>       onMouseScroll{};
         Signal<>                                                       onClick{};
+        Signal<>                                                       onDoubleClick{};
 
         // endregion
 
@@ -423,18 +425,19 @@ namespace psychic_ui {
         virtual MouseEventStatus mouseDown(int mouseX, int mouseY, int button, int modifiers);
         virtual MouseEventStatus mouseUp(int mouseX, int mouseY, int button, int modifiers);
         virtual MouseEventStatus click(int mouseX, int mouseY, int button, int modifiers);
+        virtual MouseEventStatus doubleClick(int mouseX, int mouseY, int button, int modifiers);
         virtual MouseEventStatus mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
 
-        using KeySlot = std::shared_ptr<Slot<Key>>;
-        using CharSlot = std::shared_ptr<Slot<unsigned int>>;
+        using KeySlot = std::shared_ptr<Slot<Key, Mod>>;
+        using CharSlot = std::shared_ptr<Slot<const UnicodeString &>>;
         using FocusSlot = std::shared_ptr<Slot<>>;
 
-        Signal<Key>          onKeyDown{};
-        Signal<Key>          onKeyRepeat{};
-        Signal<Key>          onKeyUp{};
-        Signal<unsigned int> onCharacter{};
-        Signal<>             onFocus{};
-        Signal<>             onBlur{};
+        Signal<Key, Mod>              onKeyDown{};
+        Signal<Key, Mod>              onKeyRepeat{};
+        Signal<Key, Mod>              onKeyUp{};
+        Signal<const UnicodeString &> onCharacter{};
+        Signal<>                      onFocus{};
+        Signal<>                      onBlur{};
 
         // endregion
 
@@ -459,7 +462,6 @@ namespace psychic_ui {
         // endregion
 
         // region Hierarchy
-
 
         /**
          * Set the parent of that div
@@ -677,6 +679,7 @@ namespace psychic_ui {
 
         bool _mouseOver{false};
         bool _mouseDown{false};
+
 
 
         // endregion

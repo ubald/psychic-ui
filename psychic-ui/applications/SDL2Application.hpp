@@ -74,6 +74,10 @@ namespace psychic_ui {
         void setSize(int width, int height) override;
         void setPosition(int x, int y) override;
 
+        void startTextInput() override;
+        void stopTextInput() override;
+
+        static Mod mapMods(int mods);
         static Key mapKey(int keycode);
     };
 }

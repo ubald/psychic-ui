@@ -1371,6 +1371,37 @@ namespace psychic_ui {
         return ret == Out ? Over : ret;
     }
 
+    MouseEventStatus Div::doubleClick(const int mouseX, const int mouseY, const int button, const int modifiers) {
+        if (!_visible || !boundsContains(mouseX, mouseY)) {
+            return Out;
+        }
+
+        if (!_mouseDown) {
+            return Over;
+        }
+
+        int              localMouseX = mouseX - _x - _scrollX;
+        int              localMouseY = mouseY - _y - _scrollY;
+        MouseEventStatus ret         = Out;
+
+        if (_mouseChildren) {
+            for (auto &child: _children) {
+                auto res = child->doubleClick(localMouseX, localMouseY, button, modifiers);
+                if (res != Out) {
+                    ret = res;
+                    break;
+                }
+            }
+        }
+
+        if (_mouseEnabled && ret != Handled && onDoubleClick.hasSubscriptions()) {
+            onDoubleClick();
+            ret = Handled;
+        }
+
+        return ret == Out ? Over : ret;
+    }
+
     // endregion
 
     // region Move

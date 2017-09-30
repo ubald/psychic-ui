@@ -1,5 +1,6 @@
 #ifdef WITH_GLFW
 
+#include <unicode/unistr.h>
 #include "GLFWApplication.hpp"
 
 namespace psychic_ui {
@@ -521,12 +522,12 @@ namespace psychic_ui {
         }
 
         _window->mouseButton(_mouseX, _mouseY, btn, action == GLFW_PRESS, _modifiers);
-        if (action == GLFW_PRESS) {
-            _window->mouseDown(_mouseX, _mouseY, btn, _modifiers);
-        } else {
-            _window->click(_mouseX, _mouseY, btn, _modifiers);
-            _window->mouseUp(_mouseX, _mouseY, btn, _modifiers);
-        }
+        //if (action == GLFW_PRESS) {
+        //    _window->mouseDown(_mouseX, _mouseY, btn, _modifiers);
+        //} else {
+        //    _window->click(_mouseX, _mouseY, btn, _modifiers);
+        //    _window->mouseUp(_mouseX, _mouseY, btn, _modifiers);
+        //}
     }
 
     void GLFWSystemWindow::scrollEventCallback(double x, double y) {
@@ -543,19 +544,17 @@ namespace psychic_ui {
      */
     void GLFWSystemWindow::keyEventCallback(int key, int scancode, int action, int mods) {
         _lastInteraction = glfwGetTime();
-        Key k = mapKey(key);
-        // TODO: Key mods map
         switch (action) {
             case GLFW_PRESS:
-                _window->keyDown(k);
+                _window->keyDown(mapKey(key), mapMods(mods));
                 break;
 
             case GLFW_REPEAT:
-                _window->keyRepeat(k);
+                _window->keyRepeat(mapKey(key), mapMods(mods));
                 break;
 
             case GLFW_RELEASE:
-                _window->keyUp(k);
+                _window->keyUp(mapKey(key), mapMods(mods));
                 break;
 
             default:break;
@@ -568,7 +567,7 @@ namespace psychic_ui {
      */
     void GLFWSystemWindow::charEventCallback(unsigned int codepoint) {
         _lastInteraction = glfwGetTime();
-        _window->keyboardCharacterEvent(codepoint);
+        _window->keyboardCharacterEvent(UnicodeString(static_cast<UChar32>(codepoint)));
     }
 
     void GLFWSystemWindow::dropEventCallback(int count, const char **filenames) {
@@ -628,6 +627,15 @@ namespace psychic_ui {
     void GLFWSystemWindow::closeEventCallback() {
         _lastInteraction = glfwGetTime();
         glfwSetWindowShouldClose(_glfwWindow, _window->windowShouldClose() ? GLFW_TRUE : GLFW_FALSE);
+    }
+
+    Mod GLFWSystemWindow::mapMods(int mods) {
+        Mod mod{};
+        mod.shift = (mods & GLFW_MOD_SHIFT) != 0;
+        mod.ctrl  = (mods & GLFW_MOD_CONTROL) != 0;
+        mod.alt   = (mods & GLFW_MOD_ALT) != 0;
+        mod.super = (mods & GLFW_MOD_SUPER) != 0;
+        return mod;
     }
 
     Key GLFWSystemWindow::mapKey(int keycode) {

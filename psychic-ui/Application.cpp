@@ -40,4 +40,7 @@ namespace psychic_ui {
         return _stencilBits;
     }
 
+    void SystemWindow::startTextInput() {}
+
+    void SystemWindow::stopTextInput() {}
 }

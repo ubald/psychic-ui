@@ -45,6 +45,9 @@ namespace psychic_ui {
         virtual void setSize(int width, int height) = 0;
         virtual void setPosition(int x, int y) = 0;
 
+        virtual void startTextInput();
+        virtual void stopTextInput();
+
     protected:
         Application             *_application;
         std::shared_ptr<Window> _window;
@@ -54,7 +57,7 @@ namespace psychic_ui {
         int  _windowDragMouseY{0};
         int  _windowDragOffsetX{0};
         int  _windowDragOffsetY{0};
-        
+
         double _lastInteraction{0};
         int    _stencilBits{8};
         int    _samples{4};
