@@ -72,9 +72,6 @@ namespace psychic_ui {
 
         friend class Modal;
 
-    protected:
-
-
     public:
         Div();
         Div(const Div &) = delete;
@@ -377,11 +374,7 @@ namespace psychic_ui {
 
         // region Rendering
 
-        void invalidate();
-        virtual YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode);
-        virtual void render(SkCanvas *canvas);
-        virtual void clip(SkCanvas *canvas);
-        virtual void draw(SkCanvas *canvas);
+
 
         // endregion
 
@@ -396,21 +389,23 @@ namespace psychic_ui {
         bool getMouseDown() const;
         void setMouseDown(bool down); // Mostly for testing
 
-        using MouseButtonSlot = std::shared_ptr<Slot<const int, const int, const int, const bool, const int>>;
-        using MouseSlot = std::shared_ptr<Slot<const int, const int, const int, const int>>;
+        using MouseButtonSlot = std::shared_ptr<Slot<const int, const int, const MouseButton, const bool, const Mod>>;
+        using MouseMoveSlot = std::shared_ptr<Slot<const int, const int, const int, const Mod>>;
+        using MouseSlot = std::shared_ptr<Slot<const int, const int, const MouseButton, const Mod>>;
         using MouseTriggerSlot = std::shared_ptr<Slot<>>;
+        using MouseDoubleClickSlot = std::shared_ptr<Slot<const unsigned int>>;
         using MouseScrollSlot = std::shared_ptr<Slot<const int, const int, const double, const double>>;
 
-        Signal<const int, const int, const int, const bool, const int> onMouseButton{};
-        Signal<const int, const int, const int, const int>             onMouseDown{};
-        Signal<const int, const int, const int, const int>             onMouseUp{};
-        Signal<const int, const int, const int, const int>             onMouseUpOutside{};
-        Signal<const int, const int, const int, const int>             onMouseMove{};
-        Signal<>                                                       onMouseOver{};
-        Signal<>                                                       onMouseOut{};
-        Signal<const int, const int, const double, const double>       onMouseScroll{};
-        Signal<>                                                       onClick{};
-        Signal<>                                                       onDoubleClick{};
+        Signal<const int, const int, const MouseButton, const bool, const Mod> onMouseButton{};
+        Signal<const int, const int, const MouseButton, const Mod>             onMouseDown{};
+        Signal<const int, const int, const MouseButton, const Mod>             onMouseUp{};
+        Signal<const int, const int, const MouseButton, const Mod>             onMouseUpOutside{};
+        Signal<const int, const int, const int, const Mod>                     onMouseMove{};
+        Signal<>                                                               onMouseOver{};
+        Signal<>                                                               onMouseOut{};
+        Signal<const int, const int, const double, const double>               onMouseScroll{};
+        Signal<>                                                               onClick{};
+        Signal<const unsigned int>                                             onDoubleClick{};
 
         // endregion
 
@@ -419,22 +414,22 @@ namespace psychic_ui {
 
         // region External Event Triggers
 
-        virtual MouseEventStatus mouseMoved(int mouseX, int mouseY, int button, int modifiers, bool handled);
-        virtual bool mouseExited(int mouseX, int mouseY, int button, int modifiers);
-        virtual MouseEventStatus mouseButton(int mouseX, int mouseY, int button, bool down, int modifiers);
-        virtual MouseEventStatus mouseDown(int mouseX, int mouseY, int button, int modifiers);
-        virtual MouseEventStatus mouseUp(int mouseX, int mouseY, int button, int modifiers);
-        virtual MouseEventStatus click(int mouseX, int mouseY, int button, int modifiers);
-        virtual MouseEventStatus doubleClick(int mouseX, int mouseY, int button, int modifiers);
+        virtual MouseEventStatus mouseMoved(int mouseX, int mouseY, int buttons, Mod modifiers, bool handled);
+        virtual bool mouseExited(int mouseX, int mouseY, int buttons, Mod modifiers);
+        virtual MouseEventStatus mouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers);
+        virtual MouseEventStatus mouseDown(int mouseX, int mouseY, MouseButton button, Mod modifiers);
+        virtual MouseEventStatus mouseUp(int mouseX, int mouseY, MouseButton button, Mod modifiers);
+        virtual MouseEventStatus click(int mouseX, int mouseY, MouseButton button, Mod modifiers);
+        virtual MouseEventStatus doubleClick(int mouseX, int mouseY, const unsigned int clickCount, Mod modifiers);
         virtual MouseEventStatus mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
 
-        using KeySlot = std::shared_ptr<Slot<Key, Mod>>;
+        using KeySlot = std::shared_ptr<Slot<const Key, const Mod>>;
         using CharSlot = std::shared_ptr<Slot<const UnicodeString &>>;
         using FocusSlot = std::shared_ptr<Slot<>>;
 
-        Signal<Key, Mod>              onKeyDown{};
-        Signal<Key, Mod>              onKeyRepeat{};
-        Signal<Key, Mod>              onKeyUp{};
+        Signal<const Key, const Mod>  onKeyDown{};
+        Signal<const Key, const Mod>  onKeyRepeat{};
+        Signal<const Key, const Mod>  onKeyUp{};
         Signal<const UnicodeString &> onCharacter{};
         Signal<>                      onFocus{};
         Signal<>                      onBlur{};
@@ -633,6 +628,12 @@ namespace psychic_ui {
         // endregion
 
         // region Rendering
+
+        void invalidate();
+        virtual YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode);
+        virtual void render(SkCanvas *canvas);
+        void clip(SkCanvas *canvas);
+        virtual void draw(SkCanvas *canvas);
 
         bool _drawBackground{false};
         bool _drawBorder{false};

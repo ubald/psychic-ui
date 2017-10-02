@@ -16,13 +16,13 @@ namespace psychic_ui {
             ->set(shrink, 0);
 
         onResized(
-            [this](int width, int height) {
+            [this](int /*width*/, int /*height*/) {
                 updateSkin();
             }
         );
 
         onMouseScroll(
-            [this](const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
+            [this](const int /*mouseX*/, const int /*mouseY*/, const double scrollX, const double scrollY) {
                 if (_direction == Vertical) {
                     _viewport->scroll(0, scrollY);
                 } else {
@@ -32,13 +32,13 @@ namespace psychic_ui {
         );
 
         viewport->onResized(
-            [this](int width, int height) {
+            [this](int /*width*/, int /*height*/) {
                 updateSkin();
             }
         );
 
         viewport->onScrolled(
-            [this](int scrollX, int scrollY) {
+            [this](int /*scrollX*/, int /*scrollY*/) {
                 updateSkin();
             }
         );

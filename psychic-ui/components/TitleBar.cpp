@@ -33,13 +33,13 @@ namespace psychic_ui {
         _label->addClassName("title");
 
         onMouseDown(
-            [this](int mouseX, int mouseY, int button, int modifiers) {
+            [this](int /*mouseX*/, int /*mouseY*/, int /*button*/, Mod /*modifiers*/) {
                 window()->startDrag();
             }
         );
 
         onMouseUp(
-            [this](int mouseX, int mouseY, int button, int modifiers) {
+            [this](int /*mouseX*/, int /*mouseY*/, int /*button*/, Mod /*modifiers*/) {
                 window()->stopDrag();
             }
         );

@@ -12,26 +12,90 @@ namespace psychic_ui {
     /**
      * @class Text
      *
-     * Displays single or multiline text that is optionally selectable.
+     * Displays single or multiline text that is optionally selectable and/or editable.
      */
     class Text : public TextBase {
     public:
+        /**
+         * Construct a Text component, optionally initializing it with text
+         * @param text
+         */
         explicit Text(const std::string &text = "");
 
+        /**
+         * Get the component's text
+         * @return
+         */
         std::string text() const;
-        void setText(const std::string &text) override;
 
+        /**
+         * Set the component's text
+         * @param text
+         * @return Pointer to Text for chaining
+         */
+        Text *setText(const std::string &text) override;
+
+        /**
+         * Get whether the text is selectable or not
+         * @return
+         */
         bool selectable() const;
-        Text *setSelectable(bool lcdRender);
 
+        /**
+         * Set whether the text is selectable or not
+         * @param selectable
+         * @return Pointer to Text for chaining
+         */
+        Text *setSelectable(bool selectable);
+
+        /**
+         * Get whether the text is editable or not
+         * @return
+         */
         bool editable() const;
+
+        /**
+         * Set whether the text is editable or not
+         * @param editable
+         * @return Pointer to Text for chaining
+         */
         Text *setEditable(bool editable);
 
+        /**
+         * Get whether the text is multiline or not
+         * @return
+         */
         bool multiline() const;
+
+        /**
+         * Set whether the text is multiline or not
+         * @param multiline
+         * @return Pointer to Text for chaining
+         */
         Text *setMultiline(bool multiline);
 
+        /**
+         * Get the selection start and end index.
+         * If both values are equal, then nothing is selected.
+         *
+         * @return Pair of start and end positions of the selection
+         */
         std::pair<unsigned int, unsigned int> getSelection() const;
-        Text *setSelection(std::pair<unsigned int, unsigned int> selection);
+
+        /**
+         * Set the selection.
+         * If both values are equal, then nothing is selected.
+         *
+         * @param selectionBegin
+         * @param selectionEnd
+         * @return Pointer to Text for chaining
+         */
+        Text *setSelection(unsigned int selectionBegin, unsigned int selectionEnd);
+
+        /**
+         * Get the caret position
+         * @return
+         */
         unsigned int getCaret() const;
 
         /**
@@ -46,10 +110,6 @@ namespace psychic_ui {
          */
         Text *setCaret(unsigned int caret, bool saveX = true);
 
-        void styleUpdated() override;
-        YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) override;
-        void layoutUpdated() override;
-        void draw(SkCanvas *canvas) override;
 
         Signal<unsigned int, unsigned int> onSelection{};
         Signal<unsigned int>               onCaret{};
@@ -71,20 +131,25 @@ namespace psychic_ui {
         SkPaint       _selectionPaint{};
         SkPaint       _selectionBackgroundPaint{};
 
-        Div::MouseSlot _onMouseMove{nullptr};
-        Div::MouseSlot _onMouseDown{nullptr};
-        Div::MouseSlot _onMouseUp{nullptr};
-        Div::KeySlot   _onKeyDown{nullptr};
-        Div::KeySlot   _onKeyRepeat{nullptr};
-        Div::CharSlot  _onCharacter{nullptr};
-        Div::FocusSlot _onFocus{nullptr};
-        Div::FocusSlot _onBlur{nullptr};
+        Div::MouseMoveSlot        _onMouseMove{nullptr};
+        Div::MouseSlot            _onMouseDown{nullptr};
+        Div::MouseSlot            _onMouseUp{nullptr};
+        Div::MouseDoubleClickSlot _onDoubleClick{nullptr};
+        Div::KeySlot              _onKeyDown{nullptr};
+        Div::KeySlot              _onKeyRepeat{nullptr};
+        Div::CharSlot             _onCharacter{nullptr};
+        Div::FocusSlot            _onFocus{nullptr};
+        Div::FocusSlot            _onBlur{nullptr};
 
         void subscribeToSelection();
         void unsubscribeFromSelection();
         void subscribeToEdition();
         void unsubscribeFromEdition();
 
+        void styleUpdated() override;
+        YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) override;
+        void layoutUpdated() override;
+        void draw(SkCanvas *canvas) override;
         void updateDisplay();
         void handleKey(Key key, Mod mod);
     };

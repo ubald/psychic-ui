@@ -5,7 +5,7 @@
 
 namespace psychic_ui {
     Text::Text(const std::string &text) :
-        TextBase::TextBase(text) {
+        TextBase::TextBase() {
         setTag("Text");
 
         _textBox.setPaint(_textPaint);
@@ -26,12 +26,13 @@ namespace psychic_ui {
         return str;
     }
 
-    void Text::setText(const std::string &text) {
+    Text *Text::setText(const std::string &text) {
         _text = UnicodeString::fromUTF8(text);
         _textBox.setText(_text);
         _caret       = 0;
         _selectBegin = 0;
         _selectEnd   = 0;
+        return this;
     }
 
     bool Text::selectable() const {
@@ -78,14 +79,14 @@ namespace psychic_ui {
         }
         return this;
     }
-    
+
     std::pair<unsigned int, unsigned int> Text::getSelection() const {
         return std::make_pair(_selectBegin, _selectEnd);
     };
 
-    Text *Text::setSelection(std::pair<unsigned int, unsigned int> selection) {
-        _selectBegin = std::min(selection.first, static_cast<unsigned int>(_text.length()));
-        _selectEnd   = std::min(selection.second, static_cast<unsigned int>(_text.length()));
+    Text *Text::setSelection(unsigned int selectionBegin, unsigned int selectionEnd) {
+        _selectBegin = std::min(selectionBegin, static_cast<unsigned int>(_text.length()));
+        _selectEnd   = std::min(selectionEnd, static_cast<unsigned int>(_text.length()));
         if (_selectBegin > _selectEnd) {
             std::swap(_selectBegin, _selectEnd);
         }
@@ -113,11 +114,11 @@ namespace psychic_ui {
 
     void Text::subscribeToSelection() {
         _onMouseDown = onMouseDown(
-            [this](const int mouseX, const int mouseY, const int button, const int modifiers) {
+            [this](const int mouseX, const int mouseY, const int /*button*/, const Mod /*modifiers*/) {
                 unsigned int initialBegin = _textBox.indexFromPos(mouseX, mouseY);
                 setCaret(initialBegin);
                 _onMouseMove = window()->onMouseMove(
-                    [this, initialBegin](const int mouseX, const int mouseY, int button, int modifiers) {
+                    [this, initialBegin](const int mouseX, const int mouseY, int /*button*/, Mod /*modifiers*/) {
                         int lx = 0;
                         int ly = 0;
                         globalToLocal(lx, ly, mouseX, mouseY);
@@ -137,11 +138,29 @@ namespace psychic_ui {
         );
 
         _onMouseUp = onMouseUp(
-            [this](const int mouseX, const int mouseY, int button, int modifiers) {
+            [this](const int /*mouseX*/, const int /*mouseY*/, int /*button*/, Mod /*modifiers*/) {
                 if (_onMouseMove) {
                     _onMouseMove->disconnect();
                     _onMouseMove = nullptr;
                 }
+            }
+        );
+
+        _onDoubleClick = onDoubleClick(
+            [this](const unsigned int clickCount) {
+                if (clickCount == 2) {
+                    auto word = _textBox.wordAtIndex(_caret);
+                    _selectBegin = word.first;
+                    _selectEnd   = word.second;
+                } else if (clickCount == 3) {
+                    auto sentence = _textBox.sentenceAtIndex(_caret);
+                    _selectBegin = sentence.first;
+                    _selectEnd   = sentence.second;
+                } else { // if (clickCount == 4) {
+                    _selectBegin = 0;
+                    _selectEnd = static_cast<unsigned int>(_text.length());
+                }
+                onSelection(_selectBegin, _selectEnd);
             }
         );
     }
@@ -155,13 +174,17 @@ namespace psychic_ui {
             _onMouseUp->disconnect();
             _onMouseUp = nullptr;
         }
+        if (_onDoubleClick) {
+            _onDoubleClick->disconnect();
+            _onDoubleClick = nullptr;
+        }
     }
 
     void Text::subscribeToEdition() {
-        _onFocus = onFocus([this](){ window()->startTextInput(); });
-        _onBlur = onBlur([this](){ window()->stopTextInput(); });
-        _onKeyDown   = onKeyDown([this](Key key, Mod mod) { handleKey(key, mod); });
-        _onKeyRepeat = onKeyRepeat([this](Key key, Mod mod) { handleKey(key, mod); });
+        _onFocus     = onFocus([this]() { window()->startTextInput(); });
+        _onBlur      = onBlur([this]() { window()->stopTextInput(); });
+        _onKeyDown   = onKeyDown([this](const Key key, const Mod mod) { handleKey(key, mod); });
+        _onKeyRepeat = onKeyRepeat([this](const Key key, const Mod mod) { handleKey(key, mod); });
         _onCharacter = onCharacter(
             [this](UnicodeString character) {
                 if (_selectBegin != _selectEnd) {
@@ -179,7 +202,11 @@ namespace psychic_ui {
     void Text::unsubscribeFromEdition() {
         if (_onFocus) {
             _onFocus->disconnect();
-            _onKeyDown = nullptr;
+            _onFocus = nullptr;
+        }
+        if (_onBlur) {
+            _onBlur->disconnect();
+            _onBlur = nullptr;
         }
         if (_onKeyDown) {
             _onKeyDown->disconnect();
@@ -196,13 +223,20 @@ namespace psychic_ui {
     }
 
     void Text::updateDisplay() {
-        // TODO: This should be optimized as it copies the text into the textbox
-        _textBox.recalculate();
+        //_textBox.recalculate();
         invalidate();
     }
 
     void Text::handleKey(Key key, Mod mod) {
         switch (key) {
+            case Key::A:
+                if (mod.ctrl or mod.super) {
+                    _selectBegin = 0;
+                    _selectEnd = static_cast<unsigned int>(_text.length());
+                    onSelection(_selectBegin, _selectEnd);
+                }
+                break;
+
             case Key::HOME:
                 if (mod.ctrl) {
                     setCaret(0);
@@ -313,7 +347,7 @@ namespace psychic_ui {
         _selectionBackgroundPaint.setColor(_computedStyle->get(selectionBackgroundColor));
     }
 
-    YGSize Text::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+    YGSize Text::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode /*heightMode*/) {
         YGSize size{0.0f, _lineHeight};
         if (_text.isEmpty()) {
             return size;

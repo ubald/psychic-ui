@@ -13,8 +13,9 @@ namespace psychic_ui {
     TextBox::TextBox() {
         // TODO: Maybe this can be static
         UErrorCode status = U_ZERO_ERROR;
-        lineIterator = std::unique_ptr<BreakIterator>(BreakIterator::createLineInstance(Locale::getDefault(), status));
-        wordIterator = std::unique_ptr<BreakIterator>(BreakIterator::createWordInstance(Locale::getDefault(), status));
+        lineIterator     = std::unique_ptr<BreakIterator>(BreakIterator::createLineInstance(Locale::getDefault(), status));
+        wordIterator     = std::unique_ptr<BreakIterator>(BreakIterator::createWordInstance(Locale::getDefault(), status));
+        sentenceIterator = std::unique_ptr<BreakIterator>(BreakIterator::createSentenceInstance(Locale::getDefault(), status));
     }
 
     // region Properties
@@ -48,18 +49,21 @@ namespace psychic_ui {
 
     void TextBox::setText(const UnicodeString &text) {
         _text = &text;
-        recalculate();
-    }
-
-    void TextBox::recalculate() {
         lineIterator->setText(*_text);
         wordIterator->setText(*_text);
+        sentenceIterator->setText(*_text);
+        //recalculate();
     }
 
-    int TextBox::countLines() const {
-        int count = 0;
+    //void TextBox::recalculate() {
+    //    lineIterator->setText(*_text);
+    //    wordIterator->setText(*_text);
+    //}
+
+    unsigned int TextBox::countLines() const {
+        unsigned int count = 0;
         if (_box.width() > 0) {
-            int pos = 0;
+            unsigned int pos = 0;
             do {
                 count += 1;
                 pos = nextLineBreak(pos);
@@ -67,7 +71,7 @@ namespace psychic_ui {
                     // Skia's breakText broke down, we're probably narrower than a character
                     // Just assume we're one character wide so that our height is equal to the
                     // length of the text
-                    count = _text->length();
+                    count = static_cast<unsigned int>(_text->length());
                     break;
                 }
             } while (pos < _text->length());
@@ -106,7 +110,7 @@ namespace psychic_ui {
             return maxBreak;
         } else {
             int lastBreak = lineIterator->preceding(maxBreak);
-            return lastBreak != BreakIterator::DONE ? static_cast<unsigned int>(lastBreak) : maxBreak;
+            return lastBreak != BreakIterator::DONE && lastBreak > start ? static_cast<unsigned int>(lastBreak) : maxBreak;
         }
     }
 
@@ -197,7 +201,7 @@ namespace psychic_ui {
         if (line >= _lineStarts.size() - 1) {
             return static_cast<unsigned int>(_text->length());
         } else {
-            return _lineStarts[line + 1 ] - 1;
+            return _lineStarts[line + 1] - 1;
         }
     }
 
@@ -212,6 +216,14 @@ namespace psychic_ui {
         }
 
         return line;
+    }
+
+    std::pair<unsigned int, unsigned int> TextBox::wordAtIndex(unsigned int index) const {
+        return std::make_pair(wordIterator->preceding(index), wordIterator->following(index));
+    }
+
+    std::pair<unsigned int, unsigned int> TextBox::sentenceAtIndex(unsigned int index) const {
+        return std::make_pair(sentenceIterator->preceding(index), sentenceIterator->following(index));
     }
 
     unsigned int TextBox::indexFromPos(int x, int y) const {
@@ -229,7 +241,7 @@ namespace psychic_ui {
         }
 
         int lineStart = _lineStarts[line];
-        int lineEnd = line < _lineStarts.size() - 1 ? _lineStarts[line + 1] - 1 : static_cast<unsigned int>(_text->length());
+        int lineEnd   = line < _lineStarts.size() - 1 ? _lineStarts[line + 1] - 1 : static_cast<unsigned int>(_text->length());
 
         std::string str{};
         _text->tempSubStringBetween(lineStart, lineEnd).toUTF8String(str);
@@ -251,7 +263,7 @@ namespace psychic_ui {
         return lineStart + pos;
     }
 
-    std::pair<int, int> TextBox::posFromIndex(int index) const {
+    std::pair<unsigned int, unsigned int> TextBox::posFromIndex(unsigned int index) const {
         unsigned int line      = 0;
         unsigned int lineStart = 0;
 
@@ -270,7 +282,7 @@ namespace psychic_ui {
         return std::make_pair(line, x);
     }
 
-    /// CANVAS VISITOR
+    // CANVAS VISITOR
 
     void TextBox::draw(SkCanvas *canvas) {
         _lineStarts = visit(
@@ -280,7 +292,7 @@ namespace psychic_ui {
         );
     }
 
-    /// TEXT BLOB VISITOR
+    // TEXT BLOB VISITOR
 
     std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>> TextBox::snapshotTextBlob() {
         SkTextBlobBuilder builder{};

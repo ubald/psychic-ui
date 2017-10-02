@@ -501,24 +501,24 @@ namespace psychic_ui {
     }
 
     void GLFWSystemWindow::mouseButtonEventCallback(int button, int action, int modifiers) {
-        _modifiers       = modifiers;
+        _modifiers       = mapMods(modifiers);
         _lastInteraction = glfwGetTime();
 
-        int btn = 0;
+        MouseButton btn;
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
-            btn = 1;
+            btn = MouseButton::LEFT;
         } else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
-            btn = 2;
+            btn = MouseButton::MIDDLE;
         } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-            btn = 3;
+            btn = MouseButton::RIGHT;
         } else {
             return;
         }
 
         if (action == GLFW_PRESS) {
-            _mouseState |= 1 << btn;
+            _mouseState |= btn;
         } else {
-            _mouseState &= ~(1 << btn);
+            _mouseState &= ~btn;
         }
 
         _window->mouseButton(_mouseX, _mouseY, btn, action == GLFW_PRESS, _modifiers);
@@ -542,7 +542,7 @@ namespace psychic_ui {
      * @param action GLFW_PRESS, GLFW_REPEAT or GLFW_RELEASE
      * @param mods
      */
-    void GLFWSystemWindow::keyEventCallback(int key, int scancode, int action, int mods) {
+    void GLFWSystemWindow::keyEventCallback(int key, int /*scancode*/, int action, int mods) {
         _lastInteraction = glfwGetTime();
         switch (action) {
             case GLFW_PRESS:

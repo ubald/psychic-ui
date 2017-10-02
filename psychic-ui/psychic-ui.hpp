@@ -17,6 +17,12 @@
 
 namespace psychic_ui {
 
+    enum MouseButton {
+        LEFT = 1,
+        MIDDLE = 2,
+        RIGHT = 4
+    };
+
     struct Mod {
         bool shift{false};
         bool ctrl{false};

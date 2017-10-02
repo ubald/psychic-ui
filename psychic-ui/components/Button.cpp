@@ -18,7 +18,7 @@ namespace psychic_ui {
         }
 
         onMouseUp.subscribe(
-            [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const int /*modifiers*/) {
+            [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const Mod /*modifiers*/) {
                 if (_enabled && !_toggle) {
                     setSelected(false);
                 }
@@ -26,7 +26,7 @@ namespace psychic_ui {
         );
 
         onMouseDown.subscribe(
-            [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const int /*modifiers*/) {
+            [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const Mod /*modifiers*/) {
                 if (_enabled && !_toggle) {
                     setSelected(true);
                 }

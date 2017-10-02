@@ -14,14 +14,14 @@ namespace psychic_ui {
     public:
         explicit Label(const std::string &text = "");
         const std::string &text() const;
-        void setText(const std::string &text) override;
-        void styleUpdated() override;
-        YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) override;
-        void layoutUpdated() override;
-        void draw(SkCanvas *canvas) override;
+        Label *setText(const std::string &text) override;
     private:
         std::string _text;
         float       _yOffset{0.0f};
         std::string _drawText{};
+        void styleUpdated() override;
+        YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) override;
+        void layoutUpdated() override;
+        void draw(SkCanvas *canvas) override;
     };
 }

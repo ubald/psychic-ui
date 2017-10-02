@@ -62,8 +62,6 @@ namespace psychic_ui {
         void open(SystemWindow *systemWindow);
         void close();
         void drawAll();
-        virtual void drawContents();
-        void drawComponents();
 
         void openMenu(const std::vector<std::shared_ptr<MenuItem>> &items, int x, int y);
         void closeMenu();
@@ -113,8 +111,6 @@ namespace psychic_ui {
 
         // endregion
 
-
-
         // region Window Delegate
 
         virtual void windowMoved(int x, int y);
@@ -131,8 +127,11 @@ namespace psychic_ui {
         // endregion
 
         // region Mouse
-        MouseEventStatus mouseButton(int mouseX, int mouseY, int button, bool down, int modifiers) override;
+
+        MouseEventStatus mouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) override;
         std::chrono::time_point<std::chrono::high_resolution_clock> _lastClick{};
+        unsigned int _clickCount{0};
+
         // endregion
 
         // region Keyboard

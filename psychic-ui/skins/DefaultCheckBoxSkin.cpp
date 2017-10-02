@@ -27,7 +27,7 @@ namespace psychic_ui {
         _label->setText(label);
     }
 
-    void DefaultCheckBoxSkin::draw(SkCanvas *canvas) {
+    void DefaultCheckBoxSkin::draw(SkCanvas */*canvas*/) {
         // Don't use default rendering, render out custom component chrome
         // in this case, the chrome is drawn in the shape child because it
         // has a different size than the component.

@@ -66,11 +66,11 @@ namespace psychic_ui {
     protected:
         GLFWApplication *_glfwApplication{nullptr};
         GLFWwindow      *_glfwWindow{nullptr};
-        
-        int  _previousWindowX{0};
-        int  _previousWindowY{0};
-        int  _previousWindowWidth{0};
-        int  _previousWindowHeight{0};
+
+        int _previousWindowX{0};
+        int _previousWindowY{0};
+        int _previousWindowWidth{0};
+        int _previousWindowHeight{0};
 
         void setTitle(const std::string &title) override;
         void setFullscreen(bool fullscreen) override;
@@ -83,7 +83,7 @@ namespace psychic_ui {
         void startDrag() override;
         void stopDrag() override;
         void setSize(int width, int height) override;
-        void setPosition(int x, int y) override ;
+        void setPosition(int x, int y) override;
 
         /**
          * Mapping of internal cursors enum to glfw int cursor
@@ -105,6 +105,7 @@ namespace psychic_ui {
 
         static Mod mapMods(int mods);
         static Key mapKey(int keycode);
+        Mod        _modifiers{};
     };
 }
 

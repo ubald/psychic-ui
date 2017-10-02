@@ -270,7 +270,7 @@ namespace psychic_ui {
     }
 
     Div *Div::setFocusEnabled(bool focusEnabled) {
-        _focusEnabled = true;
+        _focusEnabled = focusEnabled;
         return this;
     }
 
@@ -309,16 +309,6 @@ namespace psychic_ui {
             return x >= _x && x < _x + _width && y >= _y && y < _y + _height;
         }
     }
-
-//    std::shared_ptr<Div> Div::findDiv(const int x, const int y) {
-//        int             lx = x - _x, ly = y - _y;
-//        for (const auto &child: _children) {
-//            if (child->visible() && child->boundsContains(lx, ly)) {
-//                return child->findDiv(lx, ly);
-//            }
-//        }
-//        return boundsContains(lx, ly) ? shared_from_this() : nullptr;
-//    }
 
     // endregion
 
@@ -1235,7 +1225,7 @@ namespace psychic_ui {
 
     // region Buttons
 
-    MouseEventStatus Div::mouseButton(const int mouseX, const int mouseY, const int button, const bool down, const int modifiers) {
+    MouseEventStatus Div::mouseButton(const int mouseX, const int mouseY, const MouseButton button, const bool down, const Mod modifiers) {
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
         }
@@ -1262,7 +1252,7 @@ namespace psychic_ui {
         return ret == Out ? Over : ret;
     }
 
-    MouseEventStatus Div::mouseDown(const int mouseX, const int mouseY, const int button, const int modifiers) {
+    MouseEventStatus Div::mouseDown(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
         }
@@ -1297,7 +1287,7 @@ namespace psychic_ui {
         return ret == Handled || onClick.hasSubscriptions() ? Handled : Over;
     }
 
-    MouseEventStatus Div::mouseUp(const int mouseX, const int mouseY, const int button, const int modifiers) {
+    MouseEventStatus Div::mouseUp(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
         if (!_visible) {
             return Out;
         }
@@ -1340,7 +1330,7 @@ namespace psychic_ui {
         return ret == Out ? Over : ret;
     }
 
-    MouseEventStatus Div::click(const int mouseX, const int mouseY, const int button, const int modifiers) {
+    MouseEventStatus Div::click(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
         }
@@ -1371,7 +1361,7 @@ namespace psychic_ui {
         return ret == Out ? Over : ret;
     }
 
-    MouseEventStatus Div::doubleClick(const int mouseX, const int mouseY, const int button, const int modifiers) {
+    MouseEventStatus Div::doubleClick(const int mouseX, const int mouseY, const unsigned int clickCount, const Mod modifiers) {
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
         }
@@ -1386,7 +1376,7 @@ namespace psychic_ui {
 
         if (_mouseChildren) {
             for (auto &child: _children) {
-                auto res = child->doubleClick(localMouseX, localMouseY, button, modifiers);
+                auto res = child->doubleClick(localMouseX, localMouseY, clickCount, modifiers);
                 if (res != Out) {
                     ret = res;
                     break;
@@ -1395,7 +1385,7 @@ namespace psychic_ui {
         }
 
         if (_mouseEnabled && ret != Handled && onDoubleClick.hasSubscriptions()) {
-            onDoubleClick();
+            onDoubleClick(clickCount);
             ret = Handled;
         }
 
@@ -1406,7 +1396,7 @@ namespace psychic_ui {
 
     // region Move
 
-    bool Div::mouseExited(const int mouseX, const int mouseY, const int button, const int modifiers) {
+    bool Div::mouseExited(const int mouseX, const int mouseY, const int buttons, const Mod modifiers) {
         if (!_mouseOver) {
             return false;
         }
@@ -1417,7 +1407,7 @@ namespace psychic_ui {
         int localMouseY = mouseY - _y - _scrollY;
         if (_mouseChildren) {
             for (auto &child: _children) {
-                if (child->mouseExited(localMouseX, localMouseY, button, modifiers)) {
+                if (child->mouseExited(localMouseX, localMouseY, buttons, modifiers)) {
                     break;
                 }
             }
@@ -1428,7 +1418,7 @@ namespace psychic_ui {
         return true;
     }
 
-    MouseEventStatus Div::mouseMoved(const int mouseX, const int mouseY, const int button, const int modifiers, bool handled) {
+    MouseEventStatus Div::mouseMoved(const int mouseX, const int mouseY, const int buttons, const Mod modifiers, bool handled) {
         if (!_visible) {
             return Out;
         }
@@ -1437,7 +1427,7 @@ namespace psychic_ui {
         bool wasOver = _mouseOver;
 
         if (!isOver && wasOver) {
-            mouseExited(mouseX, mouseY, button, modifiers);
+            mouseExited(mouseX, mouseY, buttons, modifiers);
         }
 
         bool allowOutsideMovement = this == window();
@@ -1459,7 +1449,7 @@ namespace psychic_ui {
 
             if (_mouseChildren) {
                 for (auto &child: _children) {
-                    auto res = child->mouseMoved(localMouseX, localMouseY, button, modifiers, handled);
+                    auto res = child->mouseMoved(localMouseX, localMouseY, buttons, modifiers, handled);
                     if (res != Out) {
                         handled = true;
                         if (ret != Handled) {
@@ -1474,7 +1464,7 @@ namespace psychic_ui {
             if (!handled && isOver && !wasOver) {
                 onMouseOver();
             }
-            onMouseMove(localMouseX, localMouseY, button, modifiers);
+            onMouseMove(localMouseX, localMouseY, buttons, modifiers);
             if (!handled && isOver && ret != Handled) {
                 window()->setCursor(_computedStyle->get(cursor));
                 ret = Handled;

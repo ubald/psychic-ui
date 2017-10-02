@@ -3,7 +3,7 @@
 
 namespace psychic_ui {
 
-    TextBase::TextBase(const std::string &text) :
+    TextBase::TextBase() :
         Div::Div() {
         setTag("TextBase");
 

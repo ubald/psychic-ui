@@ -21,10 +21,7 @@ namespace psychic_ui {
         void draw(SkCanvas *canvas) override;
         float                  _value{0.0f};
         std::shared_ptr<Label> _valueLabel{nullptr};
-        //std::shared_ptr<Div>   _container{nullptr};
-        //std::shared_ptr<Div>   _track{nullptr};
-        //std::shared_ptr<Div>   _range{nullptr};
-        Div::MouseSlot         _onMouseMove{nullptr};
+        Div::MouseMoveSlot     _onMouseMove{nullptr};
     };
 }
 

@@ -12,21 +12,20 @@ namespace psychic_ui {
      */
     class TextBase : public Div {
     public:
-        explicit TextBase(const std::string &text = "");
-        //virtual std::string text() const = 0;
-        virtual void setText(const std::string &text) = 0;
+        TextBase();
+        virtual TextBase *setText(const std::string &text) = 0;
         bool lcdRender() const;
         TextBase *setLcdRender(bool lcdRender);
         bool subpixelText() const;
         TextBase *setSubPixelText(bool subPixelText);
-        void styleUpdated() override;
 
     protected:
-        bool        _lcdRender{true};
-        bool        _subPixelText{true};
-        float       _fontSize{0.0f};
-        float       _lineHeight{0.0f};
-        SkPaint     _textPaint{};
+        bool    _lcdRender{true};
+        bool    _subPixelText{true};
+        float   _fontSize{0.0f};
+        float   _lineHeight{0.0f};
+        SkPaint _textPaint{};
+        void styleUpdated() override;
     };
 }
 

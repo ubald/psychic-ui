@@ -33,7 +33,39 @@ namespace psychic_ui {
         );
     }
 
-    MouseEventStatus Modal::mouseMoved(const int mouseX, const int mouseY, const int button, const int modifiers, bool handled) {
+    #define MODAL_MOUSE_EVENT_PROXY(event, args...)\
+        if (!_visible) {\
+            return Out;\
+        }\
+        \
+        int gx = 0;\
+        int gy = 0;\
+        localToGlobal(gx, gy, mouseX, mouseY);\
+        \
+        MouseEventStatus ret = Out;\
+        \
+        for (auto &weakChild: allowedMouseChildren) {\
+            if (auto child = weakChild.lock()) {\
+                int mx = mouseX;\
+                int my = mouseY;\
+                if (child->parent()) {\
+                    child->parent()->globalToLocal(mx, my, gx, gy);\
+                }\
+                auto res = child->event(mx, my, args);\
+                if (res != Out) {\
+                    ret = res;\
+                    break;\
+                }\
+            }\
+        }\
+        \
+        if (ret == Out) {\
+            ret = Div::event(mouseX, mouseY, args);\
+        }\
+        \
+        return ret;\
+
+    MouseEventStatus Modal::mouseMoved(const int mouseX, const int mouseY, const int buttons, const Mod modifiers, bool handled) {
         if (!_visible) {
             return Out;
         }
@@ -51,7 +83,7 @@ namespace psychic_ui {
                 if (child->parent()) {
                     child->parent()->globalToLocal(mx, my, gx, gy);
                 }
-                auto res = child->mouseMoved(mx, my, button, modifiers, handled);
+                auto res = child->mouseMoved(mx, my, buttons, modifiers, handled);
                 if (res != Out) {
                     handled = true;
                     if (ret != Handled) {
@@ -61,7 +93,7 @@ namespace psychic_ui {
             }
         }
 
-        auto res = Div::mouseMoved(mouseX, mouseY, button, modifiers, handled);
+        auto res = Div::mouseMoved(mouseX, mouseY, buttons, modifiers, handled);
         if ( res != Out && ret != Handled) {
             ret = res;
         }
@@ -69,73 +101,15 @@ namespace psychic_ui {
         return ret;
     }
 
-    MouseEventStatus Modal::mouseButton(const int mouseX, const int mouseY, const int button, const bool down, const int modifiers) {
-        if (!_visible) {
-            return Out;
-        }
-
-        int gx = 0;
-        int gy = 0;
-        localToGlobal(gx, gy, mouseX, mouseY);
-
-        MouseEventStatus ret = Out;
-
-        for (auto &weakChild: allowedMouseChildren) {
-            if (auto child = weakChild.lock()) {
-                int mx = mouseX;
-                int my = mouseY;
-                if (child->parent()) {
-                    child->parent()->globalToLocal(mx, my, gx, gy);
-                }
-                auto res = child->mouseButton(mx, my, button, down, modifiers);
-                if (res != Out) {
-                    ret = res;
-                    break;
-                }
-            }
-        }
-
-        if (ret == Out) {
-            ret = Div::mouseButton(mouseX, mouseY, button, down, modifiers);
-        }
-
-        return ret;
+    MouseEventStatus Modal::mouseButton(const int mouseX, const int mouseY, const MouseButton button, const bool down, const Mod modifiers) {
+        MODAL_MOUSE_EVENT_PROXY(mouseButton, button, down, modifiers)
     }
 
-    MouseEventStatus Modal::mouseDown(const int mouseX, const int mouseY, const int button, const int modifiers) {
-        if (!_visible) {
-            return Out;
-        }
-
-        int gx = 0;
-        int gy = 0;
-        localToGlobal(gx, gy, mouseX, mouseY);
-
-        MouseEventStatus ret = Out;
-
-        for (auto &weakChild: allowedMouseChildren) {
-            if (auto child = weakChild.lock()) {
-                int mx = mouseX;
-                int my = mouseY;
-                if (child->parent()) {
-                    child->parent()->globalToLocal(mx, my, gx, gy);
-                }
-                auto res = child->mouseDown(mx, my, button, modifiers);
-                if (res != Out) {
-                    ret = res;
-                    break;
-                }
-            }
-        }
-
-        if (ret == Out) {
-            ret = Div::mouseDown(mouseX, mouseY, button, modifiers);
-        }
-
-        return ret;
+    MouseEventStatus Modal::mouseDown(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
+        MODAL_MOUSE_EVENT_PROXY(mouseDown, button, modifiers)
     }
 
-    MouseEventStatus Modal::mouseUp(const int mouseX, const int mouseY, const int button, const int modifiers) {
+    MouseEventStatus Modal::mouseUp(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
         if (!_visible) {
             return Out;
         }
@@ -167,69 +141,15 @@ namespace psychic_ui {
         return ret;
     }
 
-    MouseEventStatus Modal::click(const int mouseX, const int mouseY, const int button, const int modifiers) {
-        if (!_visible) {
-            return Out;
-        }
+    MouseEventStatus Modal::click(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
+        MODAL_MOUSE_EVENT_PROXY(click, button, modifiers)
+    }
 
-        int gx = 0;
-        int gy = 0;
-        localToGlobal(gx, gy, mouseX, mouseY);
-
-        MouseEventStatus ret = Out;
-
-        for (auto &weakChild: allowedMouseChildren) {
-            if (auto child = weakChild.lock()) {
-                int mx = mouseX;
-                int my = mouseY;
-                if (child->parent()) {
-                    child->parent()->globalToLocal(mx, my, gx, gy);
-                }
-                auto res = child->click(mx, my, button, modifiers);
-                if (res != Out) {
-                    ret = res;
-                    break;
-                }
-            }
-        }
-
-        if (ret == Out) {
-            ret = Div::click(mouseX, mouseY, button, modifiers);
-        }
-
-        return ret;
+    MouseEventStatus Modal::doubleClick(const int mouseX, const int mouseY, const unsigned int clickCount, const Mod modifiers) {
+        MODAL_MOUSE_EVENT_PROXY(doubleClick, clickCount, modifiers)
     }
 
     MouseEventStatus Modal::mouseScrolled(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
-        if (!_visible) {
-            return Out;
-        }
-
-        int gx = 0;
-        int gy = 0;
-        localToGlobal(gx, gy, mouseX, mouseY);
-
-        MouseEventStatus ret = Out;
-
-        for (auto &weakChild: allowedMouseChildren) {
-            if (auto child = weakChild.lock()) {
-                int mx = mouseX;
-                int my = mouseY;
-                if (child->parent()) {
-                    child->parent()->globalToLocal(mx, my, gx, gy);
-                }
-                auto res = child->mouseScrolled(mx, my, scrollX, scrollX);
-                if (res != Out) {
-                    ret = res;
-                    break;
-                }
-            }
-        }
-
-        if (ret == Out) {
-            ret = Div::mouseScrolled(mouseX, mouseY, scrollY, scrollY);
-        }
-
-        return ret;
+        MODAL_MOUSE_EVENT_PROXY(mouseScrolled, scrollX, scrollY)
     }
 }

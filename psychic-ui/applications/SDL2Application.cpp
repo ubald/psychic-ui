@@ -458,41 +458,41 @@ namespace psychic_ui {
                     SDL_SetWindowPosition(_sdl2Window, _x + _windowDragOffsetX, _y + _windowDragOffsetY);
                 }
 
-                _window->mouseMoved(_mouseX, _mouseY, _mouseState, _modifiers, false);
+                _window->mouseMoved(_mouseX, _mouseY, _mouseState, mapMods(SDL_GetModState()), false);
                 break;
 
             case SDL_MOUSEBUTTONDOWN: {
-                int btn = 0;
+                MouseButton btn;
                 if (e.button.button == SDL_BUTTON_LEFT) {
-                    btn = 1;
+                    btn = MouseButton::LEFT;
                 } else if (e.button.button == SDL_BUTTON_MIDDLE) {
-                    btn = 2;
+                    btn = MouseButton::MIDDLE;
                 } else if (e.button.button == SDL_BUTTON_RIGHT) {
-                    btn = 3;
+                    btn = MouseButton::RIGHT;
                 } else {
                     break;
                 }
                 _mouseState |= 1 << btn;
-                _window->mouseButton(_mouseX, _mouseY, btn, true, _modifiers);
-                //_window->mouseDown(_mouseX, _mouseY, btn, _modifiers);
+                _window->mouseButton(_mouseX, _mouseY, btn, true, mapMods(SDL_GetModState()));
+                //_window->mouseDown(_mouseX, _mouseY, btn, mapMods(SDL_GetModState()));
                 break;
             }
 
             case SDL_MOUSEBUTTONUP: {
-                int btn = 0;
+                MouseButton btn;
                 if (e.button.button == SDL_BUTTON_LEFT) {
-                    btn = 1;
+                    btn = MouseButton::LEFT;
                 } else if (e.button.button == SDL_BUTTON_MIDDLE) {
-                    btn = 2;
+                    btn = MouseButton::MIDDLE;
                 } else if (e.button.button == SDL_BUTTON_RIGHT) {
-                    btn = 3;
+                    btn = MouseButton::RIGHT;
                 } else {
                     break;
                 }
-                _mouseState &= ~(1 << btn);
-                _window->mouseButton(_mouseX, _mouseY, btn, false, _modifiers);
-                //_window->click(_mouseX, _mouseY, btn, _modifiers);
-                //_window->mouseUp(_mouseX, _mouseY, btn, _modifiers);
+                _mouseState &= ~btn;
+                _window->mouseButton(_mouseX, _mouseY, btn, false, mapMods(SDL_GetModState()));
+                //_window->click(_mouseX, _mouseY, btn, mapMods(SDL_GetModState()));
+                //_window->mouseUp(_mouseX, _mouseY, btn, mapMods(SDL_GetModState()));
                 break;
             }
 

@@ -8,11 +8,11 @@ namespace psychic_ui {
     public:
         DefaultScrollBarSkin();
     protected:
-        ScrollDirection _direction{ScrollDirection::Vertical};
+        ScrollDirection      _direction{ScrollDirection::Vertical};
         std::shared_ptr<Div> _track{nullptr};
         std::shared_ptr<Div> _thumb{nullptr};
-        Div::MouseSlot         _onMouseMove{nullptr};
-        int dragOffset{0};
+        Div::MouseMoveSlot   _onMouseMove{nullptr};
+        int                  dragOffset{0};
         void added() override;
         void styleUpdated() override;
         void updateScrollBar(bool enabled, float scrollPosition, float contentRatio) override;

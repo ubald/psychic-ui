@@ -64,7 +64,6 @@ namespace psychic_ui {
         int    _mouseX{0};
         int    _mouseY{0};
         int    _mouseState{0};
-        int    _modifiers{0};
         int    _x{0};
         int    _y{0};
         int    _width{0};

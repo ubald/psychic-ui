@@ -37,7 +37,7 @@ namespace psychic_ui {
         menu = add<Modal>();
         menu->setId("menu");
         menu->onMouseDown.subscribe(
-            [this](const int mouseX, const int mouseY, const int button, const int modifiers) {
+            [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const Mod /*modifiers*/) {
                 closeMenu();
             }
         );
@@ -257,27 +257,6 @@ namespace psychic_ui {
     // region Draw
 
     void Window::drawAll() {
-        drawContents();
-        drawComponents();
-
-        // Performance
-        ++frames;
-        double delta = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::high_resolution_clock::now()
-            - lastReport
-        ).count();
-        if (delta >= 500) {
-            lastReport = std::chrono::high_resolution_clock::now();
-            fps        = frames / (delta / 1000.0f);
-            frames     = 0;
-        }
-    }
-
-    void Window::drawContents() {
-
-    }
-
-    void Window::drawComponents() {
         if (!_visible) {
             // TODO: That should not happen
             return;
@@ -332,6 +311,18 @@ namespace psychic_ui {
         _sk_canvas->clear(0x00000000);
         render(_sk_canvas);
         _sk_canvas->flush();
+
+        // Performance
+        ++frames;
+        double delta = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::high_resolution_clock::now()
+            - lastReport
+        ).count();
+        if (delta >= 500) {
+            lastReport = std::chrono::high_resolution_clock::now();
+            fps        = frames / (delta / 1000.0f);
+            frames     = 0;
+        }
     }
 
     // endregion
@@ -392,7 +383,7 @@ namespace psychic_ui {
 
     // region MouseEvents
 
-    MouseEventStatus Window::mouseButton(int mouseX, int mouseY, int button, bool down, int modifiers) {
+    MouseEventStatus Window::mouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) {
         auto res = Div::mouseButton(mouseX, mouseY, button, down, modifiers);
 
         if (down) {
@@ -400,12 +391,17 @@ namespace psychic_ui {
         } else {
             click(mouseX, mouseY, button, modifiers);
 
-            auto now = std::chrono::high_resolution_clock::now();
-            double delta = std::chrono::duration_cast<std::chrono::milliseconds>(now - _lastClick).count();
-            if (delta <= 500) {
-                doubleClick(mouseX, mouseY, button, modifiers);
+            if (button == MouseButton::LEFT) {
+                auto   now   = std::chrono::high_resolution_clock::now();
+                double delta = std::chrono::duration_cast<std::chrono::milliseconds>(now - _lastClick).count();
+                if (delta <= 500) {
+                    ++_clickCount;
+                    doubleClick(mouseX, mouseY, _clickCount, modifiers);
+                } else {
+                    _clickCount = 1;
+                }
+                _lastClick = now;
             }
-            _lastClick = now;
 
             mouseUp(mouseX, mouseY, button, modifiers);
         }

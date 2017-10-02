@@ -21,14 +21,14 @@ namespace psychic_ui {
               ->set(position, "absolute");
 
         _thumb->onMouseDown(
-            [this](const int mouseX, const int mouseY, int button, int modifiers) {
+            [this](const int mouseX, const int mouseY, MouseButton /*button*/, Mod /*modifiers*/) {
                 if (_direction == ScrollDirection::Vertical) {
                     dragOffset = mouseY;
                 } else {
                     dragOffset = mouseX;
                 }
                 _onMouseMove = window()->onMouseMove(
-                    [this](const int mouseX, const int mouseY, int button, int modifiers) {
+                    [this](const int mouseX, const int mouseY, int /*buttons*/, Mod /*modifiers*/) {
                         int lx = 0;
                         int ly = 0;
                         _track->globalToLocal(lx, ly, mouseX, mouseY);
@@ -43,7 +43,7 @@ namespace psychic_ui {
         );
 
         _thumb->onMouseUp(
-            [this](const int mouseX, const int mouseY, int button, int modifiers) {
+            [this](const int /*mouseX*/, const int /*mouseY*/, MouseButton /*button*/, Mod /*modifiers*/) {
                 if (_onMouseMove) {
                     _onMouseMove->disconnect();
                     _onMouseMove = nullptr;
