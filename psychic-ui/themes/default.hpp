@@ -10,6 +10,7 @@
 #include <psychic-ui/skins/TitleBarButtonSkin.hpp>
 #include <psychic-ui/skins/DefaultBasicButtonSkin.hpp>
 #include <psychic-ui/skins/DefaultTextInputSkin.hpp>
+#include <psychic-ui/skins/DefaultTextAreaSkin.hpp>
 #include <psychic-color/spaces/RGB.hpp>
 #include <psychic-color/spaces/HSB.hpp>
 
@@ -88,6 +89,7 @@ public:
         manager->loadFont("Ubuntu Regular", "../res/fonts/Ubuntu/Ubuntu-Regular.ttf");
 
         manager->registerSkin("default-text-input-skin", SkinType::make([]() { return std::make_shared<DefaultTextInputSkin>(); }));
+        manager->registerSkin("default-text-area-skin", SkinType::make([]() { return std::make_shared<DefaultTextAreaSkin>(); }));
         manager->registerSkin("default-basic-button-skin", SkinType::make([]() { return std::make_shared<DefaultBasicButtonSkin>(); }));
         manager->registerSkin("default-button-skin", SkinType::make([]() { return std::make_shared<DefaultButtonSkin>(); }));
         manager->registerSkin("default-checkbox-skin", SkinType::make([]() { return std::make_shared<DefaultCheckBoxSkin>(); }));
@@ -131,9 +133,9 @@ public:
                ->set(margin, 0)
                ->set(borderColor, themeHighlightColor.getColorAlpha());
 
-       //manager->style("Component:focus .defaultSkinChrome")
-       //        ->set(border, 2)
-       //        ->set(borderColor, themeHighlightColor.getColorAlpha());
+        //manager->style("Component:focus .defaultSkinChrome")
+        //        ->set(border, 2)
+        //        ->set(borderColor, themeHighlightColor.getColorAlpha());
 
         manager->style("Component:disabled .defaultSkinChrome")
                ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
@@ -243,6 +245,10 @@ public:
 
         manager->style("TextInput")
                ->set(skin, "default-text-input-skin")
+               ->set(padding, 6);
+
+        manager->style("TextArea")
+               ->set(skin, "default-text-area-skin")
                ->set(padding, 6);
 
         // endregion

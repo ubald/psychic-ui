@@ -30,7 +30,7 @@ namespace psychic_ui {
         return this;
     }
 
-    bool TextBase::subpixelText() const {
+    bool TextBase::subPixelText() const {
         return _subPixelText;
     }
 
@@ -42,12 +42,16 @@ namespace psychic_ui {
         return this;
     }
 
+    unsigned int TextBase::getLineHeight() const {
+        return static_cast<unsigned int>(std::ceil(_lineHeight));
+    }
+
     void TextBase::styleUpdated() {
         Div::styleUpdated();
 
-        bool  antiAlias = _computedStyle->get(textAntiAlias);
-        _fontSize      = _computedStyle->get(fontSize);
-        _lineHeight   = _computedStyle->get(lineHeight);
+        bool antiAlias = _computedStyle->get(textAntiAlias);
+        _fontSize   = _computedStyle->get(fontSize);
+        _lineHeight = _computedStyle->get(lineHeight);
         if (std::isnan(_lineHeight)) {
             _lineHeight = _fontSize * 1.5f;
         }
@@ -59,8 +63,11 @@ namespace psychic_ui {
         _textPaint.setTextSize(_fontSize);
         _textPaint.setColor(_computedStyle->get(color));
 
-        float mh = _computedStyle->get(minHeight);
-        _defaultStyle->set(minHeight, std::isnan(mh) ? _lineHeight : std::max(mh, _lineHeight));
+        // If we don't have a percentage based min height use the line height
+        if (!_computedStyle->has(minHeightPercent)) {
+            float mh = _computedStyle->get(minHeight);
+            _defaultStyle->set(minHeight, std::isnan(mh) ? _lineHeight : std::max(mh, std::max(_lineHeight, std::ceil(_textPaint.getFontSpacing()))));
+        }
     }
 
 

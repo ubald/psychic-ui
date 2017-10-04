@@ -49,18 +49,23 @@ namespace psychic_ui {
 
     void TextBox::setText(const UnicodeString &text) {
         _text = &text;
+        recalculate();
+    }
+
+    void TextBox::recalculate() {
+        // Note to self: Do not remove this method
+        // Even though the iterators kind of work if we modify the text without
+        // resetting it, they crash in certain situations
         lineIterator->setText(*_text);
         wordIterator->setText(*_text);
         sentenceIterator->setText(*_text);
-        //recalculate();
     }
 
-    //void TextBox::recalculate() {
-    //    lineIterator->setText(*_text);
-    //    wordIterator->setText(*_text);
-    //}
-
     unsigned int TextBox::countLines() const {
+        if (_mode == TextBoxMode::OneLine) {
+            return 1;
+        }
+
         unsigned int count = 0;
         if (_box.width() > 0) {
             unsigned int pos = 0;
@@ -93,10 +98,11 @@ namespace psychic_ui {
         std::string   str;
         remaining.toUTF8String(str);
 
-        // Start by find where the text would cut at max if we were not to use UnicodeString
+        // Start by finding where the text would cut at max if we were not to use UnicodeString
         auto advance = static_cast<unsigned int>(_paint->breakText(str.c_str(), str.size(), _box.width()));
-        if (advance == 0) {
-            return 0;
+
+        if (_mode == TextBoxMode::OneLine || advance == 0) {
+            return advance;
         }
 
         // Check if a line return exists before that
@@ -167,24 +173,41 @@ namespace psychic_ui {
 
         // Break lines
         unsigned int lastBreak = 0;
+        lines.push_back(lastBreak);
         for (;;) {
             unsigned int nextBreak = nextLineBreak(lastBreak);
+
             if (y + metrics.fDescent + metrics.fLeading > 0) {
                 std::string str{};
                 _text->tempSubStringBetween(lastBreak, nextBreak).toUTF8String(str);
                 visitor(str.c_str(), str.size(), x, y);
             }
-            // We actually want the lines to start at 0 and skip the last break
-            lines.push_back(lastBreak);
+
+            if (_mode == TextBoxMode::OneLine) {
+                break;
+            }
+
+            // Index wise there is no difference between the end of string and a
+            // final line return, so we have to check unfortunately because we don't
+            // want the end of the string being considered as the start of a new line.
+            if (nextBreak < _text->length() || _text->charAt(nextBreak - 1) == '\n') {
+                lines.push_back(nextBreak);
+            }
+
             lastBreak = nextBreak;
+
             if (lastBreak >= _text->length()) {
                 break;
             }
+
             y += scaledSpacing;
-            if (y + metrics.fAscent >= _box.fBottom) {
-                break;
-            }
+
+            // NOTE: this was preventing overflow/scroll of text areas
+            //if (y + metrics.fAscent >= _box.fBottom) {
+            //    break;
+            //}
         }
+        // NOTE: This was returning the bottom/height before
         //return y + metrics.fDescent + metrics.fLeading;
         return lines;
     }
@@ -219,11 +242,31 @@ namespace psychic_ui {
     }
 
     std::pair<unsigned int, unsigned int> TextBox::wordAtIndex(unsigned int index) const {
-        return std::make_pair(wordIterator->preceding(index), wordIterator->following(index));
+        auto begin = wordIterator->preceding(index);
+        auto end = wordIterator->following(index);
+        return std::make_pair(
+            begin != BreakIterator::DONE ? begin : 0,
+            end != BreakIterator::DONE ? end : _text->length()
+        );
     }
 
     std::pair<unsigned int, unsigned int> TextBox::sentenceAtIndex(unsigned int index) const {
-        return std::make_pair(sentenceIterator->preceding(index), sentenceIterator->following(index));
+        auto begin = sentenceIterator->preceding(index);
+        auto end = sentenceIterator->following(index);
+        return std::make_pair(
+            begin != BreakIterator::DONE ? begin : 0,
+            end != BreakIterator::DONE ? end : _text->length()
+        );
+    }
+
+    unsigned int TextBox::previousWordBoundary(unsigned int index) const {
+        auto boundary = static_cast<unsigned int>(wordIterator->preceding(index));
+        return boundary != BreakIterator::DONE ? boundary : 0;
+    }
+
+    unsigned int TextBox::nextWordBoundary(unsigned int index) const {
+        auto boundary = static_cast<unsigned int>(wordIterator->following(index));
+        return boundary != BreakIterator::DONE ? boundary : static_cast<unsigned int>(_text->length());
     }
 
     unsigned int TextBox::indexFromPos(int x, int y) const {

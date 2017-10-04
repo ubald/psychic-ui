@@ -5,10 +5,23 @@ namespace psychic_ui {
 
     TextInput::TextInput(const std::string &text) :
         Component<TextInputSkin>(),
-        _text(text) {
+        _text(text),
+        _textDisplay(std::make_shared<Text>(_text)) {
         setTag("TextInput");
         _focusEnabled = true;
+        _textDisplay->setMultiline(false);
+        _textDisplay->setEditable(true);
+        _textDisplay->onChange(
+            [this](std::string txt) {
+                _text = txt;
+                onChange(_text);
+            }
+        );
     }
+
+    std::shared_ptr<Text> TextInput::textDisplay() {
+        return _textDisplay;
+    };
 
     const std::string &TextInput::getText() const {
         return _text;
@@ -17,27 +30,9 @@ namespace psychic_ui {
     TextInput *TextInput::setText(const std::string &text) {
         if (_text != text) {
             _text = text;
-            _skin->textDisplay->setText(_text);
+            _textDisplay->setText(_text);
         }
         return this;
     }
 
-    void TextInput::skinChanged() {
-        Component<TextInputSkin>::skinChanged();
-
-        _skin->textDisplay->setEditable(true);
-        _skin->textDisplay->setText(_text);
-
-        if (_onChange) {
-            _onChange->disconnect();
-            _onChange = nullptr;
-        }
-
-        _onChange = _skin->textDisplay->onChange(
-            [this](std::string text) {
-                _text = text;
-                onChange(_text);
-            }
-        );
-    }
 }

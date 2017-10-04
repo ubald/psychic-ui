@@ -14,7 +14,6 @@ namespace psychic_ui {
         }
 
         virtual void setText(const std::string &/*text*/) {};
-        std::shared_ptr<Text> textDisplay{nullptr};
     };
 
     class TextInput : public Component<TextInputSkin> {
@@ -22,10 +21,11 @@ namespace psychic_ui {
         explicit TextInput(const std::string &text = "");
         const std::string &getText() const;
         TextInput *setText(const std::string &text);
+        std::shared_ptr<Text> textDisplay();
         Signal<std::string> onChange{};
+
     protected:
-        std::string                        _text{};
-        std::shared_ptr<Slot<std::string>> _onChange{nullptr};
-        void skinChanged() override;
+        std::string           _text{};
+        std::shared_ptr<Text> _textDisplay{nullptr};
     };
 }

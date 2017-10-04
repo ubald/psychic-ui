@@ -1535,6 +1535,7 @@ namespace psychic_ui {
         }
 
         if (ret != Handled && _computedStyle->get(overflow) == "scroll") {
+            // TODO: Cancel if already handled, we can't scroll two divs at the same time
             scroll(scrollX, scrollY);
         }
 

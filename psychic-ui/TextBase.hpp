@@ -16,8 +16,9 @@ namespace psychic_ui {
         virtual TextBase *setText(const std::string &text) = 0;
         bool lcdRender() const;
         TextBase *setLcdRender(bool lcdRender);
-        bool subpixelText() const;
+        bool subPixelText() const;
         TextBase *setSubPixelText(bool subPixelText);
+        unsigned int getLineHeight() const;
 
     protected:
         bool    _lcdRender{true};

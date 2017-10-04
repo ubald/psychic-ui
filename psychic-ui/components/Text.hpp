@@ -99,6 +99,19 @@ namespace psychic_ui {
         unsigned int getCaret() const;
 
         /**
+         * Get the line the caret is on
+         * @return
+         */
+        unsigned int getCaretLine() const;
+
+        /**
+         * Get the Y coordinate of the line.
+         * @param line Line number
+         * @return Y coordinate, line * line height
+         */
+        unsigned int getLineY(unsigned int line) const;
+
+        /**
          * Set the caret position in the text
          * @param caret Position of the caret
          * @param saveX Used internally, saves where the caret is horizontally
@@ -120,7 +133,7 @@ namespace psychic_ui {
 
         bool          _selectable{true};
         bool          _editable{false};
-        bool          _multiline{true};
+        bool          _multiline{false};
         unsigned int  _selectBegin{0};
         unsigned int  _selectEnd{0};
         unsigned int  _caret{0};

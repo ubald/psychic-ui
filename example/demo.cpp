@@ -1,6 +1,6 @@
 #include <iostream>
 #include "demo.hpp"
-#include "example/components/DemoWindow.hpp"
+#include "example/demo/DemoWindow.hpp"
 
 #ifdef USE_GLFW
 #include <psychic-ui/applications/GLFWApplication.hpp>

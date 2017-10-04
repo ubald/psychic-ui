@@ -168,6 +168,7 @@ namespace psychic_ui {
             right->add<Text>(lorem + "\n" + lorem)
                  ->setEditable(true)
                  ->style()
+                 ->set(padding, 12)
                  ->set(fontSize, 10)
                  ->set(lineHeight, 12);
 

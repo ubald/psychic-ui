@@ -6,6 +6,9 @@ namespace psychic_ui {
 
     namespace internal {
         class SkinBase : public Div {
+        public:
+            virtual void addedToComponent() {};
+            virtual void removedFromComponent() {};
         protected:
             SkinBase();
             const InheritableValues inheritableValues() const override;

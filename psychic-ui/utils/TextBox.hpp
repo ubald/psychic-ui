@@ -132,7 +132,7 @@ namespace psychic_ui {
          * It is automatically called when setting the text, but must be
          * called manually when the text changes.
          */
-        //void recalculate();
+        void recalculate();
 
         /**
          * Count the number of lines in the TextBox
@@ -235,6 +235,22 @@ namespace psychic_ui {
          * @return Pair of start and end word position
          */
         std::pair<unsigned int, unsigned int> wordAtIndex(unsigned int index) const;
+
+        /**
+         * Get the previous word boundary from index.
+         *
+         * @param index
+         * @return Previous word boundary position
+         */
+        unsigned int previousWordBoundary(unsigned int index) const;
+
+        /**
+         * Get the next word boundary from index.
+         *
+         * @param index
+         * @return Next word boundary position
+         */
+        unsigned int nextWordBoundary(unsigned int index) const;
 
         /**
          * Get the sentence at the index position.

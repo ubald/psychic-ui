@@ -154,7 +154,8 @@ endif ()
 
 # LIBRARY
 
-set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
+set(SOURCE_FILES
+    ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     ${YOGA_SOURCES}
     psychic-ui/components/Button.cpp
     psychic-ui/components/Button.hpp
@@ -241,8 +242,12 @@ set(SOURCE_FILES ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     psychic-ui/skins/DefaultSkin.hpp
     psychic-ui/components/TextInput.cpp
     psychic-ui/components/TextInput.hpp
+    psychic-ui/components/TextArea.cpp
+    psychic-ui/components/TextArea.hpp
     psychic-ui/skins/DefaultTextInputSkin.cpp
     psychic-ui/skins/DefaultTextInputSkin.hpp
+    psychic-ui/skins/DefaultTextAreaSkin.cpp
+    psychic-ui/skins/DefaultTextAreaSkin.hpp
     psychic-ui/utils/TextBox.cpp
     psychic-ui/utils/TextBox.hpp
     psychic-ui/components/Text.cpp

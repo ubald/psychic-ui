@@ -9,6 +9,8 @@ namespace psychic_ui {
         setTag("Text");
 
         _textBox.setPaint(_textPaint);
+        _textBox.setMode(_multiline ? TextBoxMode::LineBreak : TextBoxMode::OneLine);
+
         setText(text);
 
         if (_selectable) {
@@ -76,6 +78,7 @@ namespace psychic_ui {
     Text *Text::setMultiline(const bool multiline) {
         if (_multiline != multiline) {
             _multiline = multiline;
+            _textBox.setMode(_multiline ? TextBoxMode::LineBreak : TextBoxMode::OneLine);
         }
         return this;
     }
@@ -110,6 +113,14 @@ namespace psychic_ui {
         }
         onCaret(_caret);
         return this;
+    }
+
+    unsigned int Text::getCaretLine() const {
+        return _textBox.lineFromIndex(_caret);
+    }
+
+    unsigned int Text::getLineY(unsigned int line) const {
+        return static_cast<unsigned int>(std::ceil(line * _lineHeight));
     }
 
     void Text::subscribeToSelection() {
@@ -158,7 +169,7 @@ namespace psychic_ui {
                     _selectEnd   = sentence.second;
                 } else { // if (clickCount == 4) {
                     _selectBegin = 0;
-                    _selectEnd = static_cast<unsigned int>(_text.length());
+                    _selectEnd   = static_cast<unsigned int>(_text.length());
                 }
                 onSelection(_selectBegin, _selectEnd);
             }
@@ -223,7 +234,7 @@ namespace psychic_ui {
     }
 
     void Text::updateDisplay() {
-        //_textBox.recalculate();
+        _textBox.recalculate();
         invalidate();
     }
 
@@ -232,7 +243,7 @@ namespace psychic_ui {
             case Key::A:
                 if (mod.ctrl or mod.super) {
                     _selectBegin = 0;
-                    _selectEnd = static_cast<unsigned int>(_text.length());
+                    _selectEnd   = static_cast<unsigned int>(_text.length());
                     onSelection(_selectBegin, _selectEnd);
                 }
                 break;
@@ -281,22 +292,37 @@ namespace psychic_ui {
 
             case Key::LEFT:
                 if (_caret > 0) {
-                    setCaret(--_caret);
+                    if (mod.ctrl) {
+                        setCaret(_textBox.previousWordBoundary(_caret));
+                    } else {
+                        setCaret(--_caret);
+                    }
                 }
                 break;
 
             case Key::RIGHT:
                 if (_caret < _text.length()) {
-                    setCaret(++_caret);
+                    if (mod.ctrl) {
+                        setCaret(_textBox.nextWordBoundary(_caret));
+                    } else {
+                        setCaret(++_caret);
+                    }
                 }
                 break;
 
             case Key::BACKSPACE:
                 if (_caret > 0) {
                     if (_selectBegin != _selectEnd) {
+                        // Remove selection
                         _text.remove(_selectBegin, _selectEnd - _selectBegin);
                         setCaret(_selectBegin);
+                    } else if (mod.ctrl) {
+                        // Remove preceding word
+                        auto from = _textBox.previousWordBoundary(_caret);
+                        _text.removeBetween(from, _caret);
+                        setCaret(from);
                     } else {
+                        // Remove preceding character
                         _text.remove(_caret - 1, 1);
                         setCaret(--_caret);
                     }
@@ -307,9 +333,14 @@ namespace psychic_ui {
             case Key::DELETE:
                 if (_caret < _text.length()) {
                     if (_selectBegin != _selectEnd) {
+                        // Delete selection
                         _text.remove(_selectBegin, _selectEnd - _selectBegin);
                         setCaret(_selectBegin);
+                    } else if (mod.ctrl) {
+                        // Delete following word
+                        _text.removeBetween(_caret, _textBox.nextWordBoundary(_caret));
                     } else {
+                        // Delete following character
                         _text.remove(_caret, 1);
                     }
                     updateDisplay();
@@ -347,18 +378,16 @@ namespace psychic_ui {
         _selectionBackgroundPaint.setColor(_computedStyle->get(selectionBackgroundColor));
     }
 
-    YGSize Text::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode /*heightMode*/) {
+    YGSize Text::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
         YGSize size{0.0f, _lineHeight};
         if (_text.isEmpty()) {
             return size;
         }
 
-        // TODO: If we only measure using the text box we can probably skip this conversion
-        std::string str;
-        _text.toUTF8String(str);
-
         if (widthMode == YGMeasureModeUndefined) {
             // Don't care about setWidth so measure the longest line
+            std::string str;
+            _text.toUTF8String(str);
             auto              lines         = string_utils::split(str, '\n');
             unsigned int      longestIndex  = 0;
             unsigned long     longestLength = 0;
@@ -374,19 +403,10 @@ namespace psychic_ui {
             size.width  = std::ceil(_textPaint.measureText(lines[longestIndex].c_str(), longestLength));
             size.height = lines.size() * _lineHeight;
         } else {
-            float w = _textPaint.measureText(str.c_str(), str.size());
-            if (w > width) {
-                _textBox.setMode(TextBoxMode::LineBreak);
-                // The passed sizes consider padding, which is different than when we draw
-                _textBox.setBox(0, 0, width, height);
-                // size.getHeight = _textBox.getTextHeight();
-                // TextBox doesn't measure the same way it draws, we have to set the spacing manually
-                size.height = _textBox.countLines() * _lineHeight;
-            } else {
-                _textBox.setMode(TextBoxMode::OneLine);
-                size.width  = std::ceil(w);
-                size.height = _lineHeight;//_textPaint.getFontSpacing();
-            }
+            //_textBox.setMode(TextBoxMode::LineBreak);
+            // The passed sizes consider padding, which is different than when we draw
+            _textBox.setBox(0, 0, width, height);
+            size.height = _textBox.countLines() * _lineHeight;
         }
 
         return size;
@@ -394,7 +414,7 @@ namespace psychic_ui {
 
     void Text::layoutUpdated() {
         TextBase::layoutUpdated();
-        _textBox.setBox(0.0f, 0.0f, _width, _height);
+        _textBox.setBox(0.0f, 0.0f, _paddedRect.width(), _paddedRect.height());
         _blob = _textBox.snapshotTextBlob();
     }
 

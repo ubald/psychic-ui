@@ -29,6 +29,9 @@ public:
         manager->style("Buttons Button")
                ->set(margin, 12);
 
+        manager->style("TextInputs TextArea")
+               ->set(height, 120);
+
         manager->style("Ranges Range")
                ->set(margin, 12);
 

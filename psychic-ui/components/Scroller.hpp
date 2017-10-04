@@ -5,14 +5,15 @@
 #include <psychic-ui/Div.hpp>
 
 namespace psychic_ui {
-    class Scroller: public Div {
+    class Scroller : public Div {
     public:
-        Scroller();
-        explicit Scroller(std::shared_ptr<Div> viewport);
+        explicit Scroller(std::shared_ptr<Div> content);
+        Div *viewport();
     protected:
-        std::shared_ptr<Div> _viewport{};
-        std::shared_ptr<ScrollBar> _horizontalScrollBar{};
-        std::shared_ptr<ScrollBar> _verticalScrollBar{};
+        std::shared_ptr<Div>       _content{nullptr};
+        std::shared_ptr<Div>       _viewport{nullptr};
+        std::shared_ptr<ScrollBar> _horizontalScrollBar{nullptr};
+        std::shared_ptr<ScrollBar> _verticalScrollBar{nullptr};
     };
 }
 

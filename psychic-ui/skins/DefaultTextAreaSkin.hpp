@@ -1,11 +1,12 @@
 #pragma once
 
-#include "../components/TextInput.hpp"
+#include "psychic-ui/components/TextArea.hpp"
+#include "psychic-ui/components/Scroller.hpp"
 
 namespace psychic_ui {
-    class DefaultTextInputSkin : public TextInputSkin {
+    class DefaultTextAreaSkin : public TextAreaSkin {
     public:
-        DefaultTextInputSkin();
+        DefaultTextAreaSkin();
     private:
         void addedToComponent() override;
         void removedFromComponent() override;

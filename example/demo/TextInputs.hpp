@@ -5,6 +5,7 @@
 #include <psychic-ui/components/Box.hpp>
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/TextInput.hpp>
+#include <psychic-ui/components/TextArea.hpp>
 
 namespace psychic_ui {
 
@@ -51,7 +52,7 @@ namespace psychic_ui {
                 ->set(basis, 0) // Both columns needs to be considered the same size
                 ->set(gap, 6);
 
-            left->add<Label>("Single Line")
+            left->add<Label>("Single Line Inputs")
                 ->addClassName("h1");
 
             left->add<TextInput>();
@@ -68,8 +69,13 @@ namespace psychic_ui {
                 ->set(basis, 0) // Both columns needs to be considered the same size
                 ->set(gap, 6);
 
-            right->add<Label>("Multiline")
+            right->add<Label>("Multiline Text Areas")
                  ->addClassName("h1");
+
+            right->add<TextArea>();
+            right->add<TextArea>();
+            right->add<TextArea>();
+            right->add<TextArea>();
 
         }
     }
