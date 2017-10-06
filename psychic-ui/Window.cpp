@@ -17,7 +17,6 @@ namespace psychic_ui {
         YGConfigSetExperimentalFeatureEnabled(YGConfigGetDefault(), YGExperimentalFeatureWebFlexBasis, true);
         YGConfigSetPointScaleFactor(YGConfigGetDefault(), 0.0f); // We'll round the values ourselves, rounding is bugged
 
-
         _inlineStyle->set(position, "absolute");
         _inlineStyle->set(overflow, "hidden");
 

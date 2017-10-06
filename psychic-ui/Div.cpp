@@ -710,8 +710,7 @@ namespace psychic_ui {
                     std::cerr << "Could not find div to measure" << std::endl;
                     return size;
                 }
-                size = div->measure(width, widthMode, height, heightMode);
-                return size;
+                return div->measure(width, widthMode, height, heightMode);
             }
         );
     }

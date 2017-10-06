@@ -398,7 +398,7 @@ namespace psychic_ui {
                     longestLength = len;
                 }
             }
-            _textBox.setMode(TextBoxMode::OneLine);
+            //_textBox.setMode(TextBoxMode::OneLine);
             // TODO: This doesn't seem to take the right padding into account
             size.width  = std::ceil(_textPaint.measureText(lines[longestIndex].c_str(), longestLength));
             size.height = lines.size() * _lineHeight;
