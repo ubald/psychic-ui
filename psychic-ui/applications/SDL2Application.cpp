@@ -139,8 +139,6 @@ namespace psychic_ui {
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
         }
 
-        //glEnable(GL_MULTISAMPLE);
-
         // WINDOW FLAGS
 
         uint32_t windowFlags = 0;

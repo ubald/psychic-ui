@@ -74,9 +74,19 @@ namespace psychic_ui {
 
     public:
         Div();
-        Div(const Div &) = delete;
-        ~Div();
 
+        /**
+         * Just as a safety for now, delete the copy constructor
+         * because I don't see a reason why we would need it.
+         */
+        Div(const Div &) = delete;
+
+        ~Div() override;
+
+        /**
+         * Just as a safety for now, delete the copy constructor
+         * because I don't see a reason why we would need it.
+         */
         Div &operator=(const Div &) = delete;
 
         /**

@@ -1,6 +1,8 @@
 #include <iostream>
 #include "GrBackendSurface.h"
 #include "Window.hpp"
+#include <SkSurface.h>
+
 
 namespace psychic_ui {
 
@@ -84,9 +86,7 @@ namespace psychic_ui {
             throw std::runtime_error("Skia surface requested without a context");
         }
 
-        if (_sk_surface) {
-            delete _sk_surface;
-        }
+        delete _sk_surface;
 
         GrGLFramebufferInfo framebufferInfo{};
         framebufferInfo.fFBOID = 0;  // assume default framebuffer
@@ -98,6 +98,7 @@ namespace psychic_ui {
             kSkia8888_GrPixelConfig,
             framebufferInfo
         );
+
         _sk_surface = SkSurface::MakeFromBackendRenderTarget(
             _sk_context,
             backendRenderTarget,
@@ -514,10 +515,6 @@ namespace psychic_ui {
     bool Window::windowShouldClose() {
         return true;
     }
-
-    // endregion
-
-    // region Event Callbacks
 
     // endregion
 
