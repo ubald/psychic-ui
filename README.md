@@ -4,7 +4,7 @@
 
 [![Build Status](https://travis-ci.org/ubald/psychic-ui.svg?branch=master)](https://travis-ci.org/ubald/psychic-ui)
 
-![Screenshot](/doc/screenshot.png)
+![Screenshot](/docs/screenshot.png)
 
 ## Roadmap
 
