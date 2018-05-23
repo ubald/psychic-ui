@@ -1,7 +1,8 @@
 #include <iostream>
 #include "GrBackendSurface.h"
 #include "Window.hpp"
-#include <SkSurface.h>
+#include "SkSurface.h"
+#include "gl/GrGLInterface.h"
 
 
 namespace psychic_ui {
@@ -77,6 +78,7 @@ namespace psychic_ui {
     }
 
     void Window::initSkia() {
+        auto interface = GrGLMakeNativeInterface();
         _sk_context = GrContext::MakeGL(nullptr).release();
         getSkiaSurface();
     }
@@ -90,21 +92,30 @@ namespace psychic_ui {
 
         GrGLFramebufferInfo framebufferInfo{};
         framebufferInfo.fFBOID = 0;  // assume default framebuffer
+        framebufferInfo.fFormat = 0x8058; // TODO: Get proper values
+
+
         GrBackendRenderTarget backendRenderTarget(
             _systemWindow->getWidth(),
             _systemWindow->getHeight(),
             _systemWindow->getSamples(),
             _systemWindow->getStencilBits(),
-            kSkia8888_GrPixelConfig,
             framebufferInfo
         );
+
+        // setup SkSurface
+        // To use distance field text, use commented out SkSurfaceProps instead
+        // SkSurfaceProps props(SkSurfaceProps::kUseDeviceIndependentFonts_Flag,
+        //                      SkSurfaceProps::kLegacyFontHost_InitType);
+        SkSurfaceProps props(SkSurfaceProps::kLegacyFontHost_InitType);
 
         _sk_surface = SkSurface::MakeFromBackendRenderTarget(
             _sk_context,
             backendRenderTarget,
             kBottomLeft_GrSurfaceOrigin,
+            kRGBA_8888_SkColorType,
             nullptr,
-            nullptr
+            &props
         ).release();
         if (!_sk_surface) {
             SkDebugf("SkSurface::MakeFromBackendRenderTarget returned null\n");

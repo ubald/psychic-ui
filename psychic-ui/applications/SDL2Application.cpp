@@ -136,14 +136,13 @@ namespace psychic_ui {
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, _stencilBits);
         if (_samples > 0) {
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, _samples);
         }
 
         // WINDOW FLAGS
 
         uint32_t windowFlags = 0;
-        // TODO: IOS
-        #if defined(ANDROID)
+        #if defined(ANDROID) || defined(IOS)
         // For Android we need to set up for OpenGL ES and we make the window hi res & full screen
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
         windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE |
@@ -188,6 +187,7 @@ namespace psychic_ui {
         // GATHER INFORMATION
         SDL_GetWindowPosition(_sdl2Window, &_x, &_y);
         SDL_GetWindowSize(_sdl2Window, &_width, &_height);
+
         // TODO: Pixel ratio?
 
         // GL CONTEXT
@@ -518,7 +518,7 @@ namespace psychic_ui {
         mod.super = (mods & KMOD_GUI) != 0;
         return mod;
     }
-    
+
     Key SDL2SystemWindow::mapKey(int keycode) {
         switch (keycode) {
             case SDLK_SPACE: return Key::SPACE;
