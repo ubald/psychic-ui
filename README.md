@@ -48,7 +48,7 @@ It can be built with the rest of the library with the CMake option `PSYCHIC_UI_B
     
 #### Mac
 
-    brew install libpng jpeg jpeg-turbo icu4c freetype
+    brew install cmake libpng jpeg jpeg-turbo icu4c freetype
     
 ### Building
 
