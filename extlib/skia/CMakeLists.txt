@@ -32,6 +32,6 @@ add_custom_command(OUTPUT ${SKIA_STATIC_LIB}
 
 add_custom_target(skia DEPENDS ${SKIA_STATIC_LIB})
 
-file(GLOB SKIA_INCLUDE_DIRS_ ${CMAKE_CURRENT_LIST_DIR}/../external/skia/include/*)
+file(GLOB SKIA_INCLUDE_DIRS_ ${CMAKE_CURRENT_LIST_DIR}/../external/skia/include/* ${CMAKE_CURRENT_LIST_DIR}/../external/skia/src/*)
 set(SKIA_INCLUDE_DIRS "${SKIA_INCLUDE_DIRS_}" PARENT_SCOPE)
 set(SKIA_LIBRARIES ${SKIA_STATIC_LIB} PARENT_SCOPE)

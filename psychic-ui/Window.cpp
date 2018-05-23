@@ -3,6 +3,7 @@
 #include "Window.hpp"
 #include "SkSurface.h"
 #include "gl/GrGLInterface.h"
+#include "gl/GrGLUtil.h"
 
 
 namespace psychic_ui {
@@ -79,7 +80,7 @@ namespace psychic_ui {
 
     void Window::initSkia() {
         auto interface = GrGLMakeNativeInterface();
-        _sk_context = GrContext::MakeGL(nullptr).release();
+        _sk_context = GrContext::MakeGL(interface).release();
         getSkiaSurface();
     }
 
@@ -92,7 +93,7 @@ namespace psychic_ui {
 
         GrGLFramebufferInfo framebufferInfo{};
         framebufferInfo.fFBOID = 0;  // assume default framebuffer
-        framebufferInfo.fFormat = 0x8058; // TODO: Get proper values
+        framebufferInfo.fFormat = GR_GL_RGBA8;
 
 
         GrBackendRenderTarget backendRenderTarget(
