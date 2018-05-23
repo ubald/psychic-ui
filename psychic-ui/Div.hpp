@@ -81,7 +81,7 @@ namespace psychic_ui {
          */
         Div(const Div &) = delete;
 
-        ~Div() override;
+        ~Div(); // override;
 
         /**
          * Just as a safety for now, delete the copy constructor
