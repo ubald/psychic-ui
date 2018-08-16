@@ -1,15 +1,11 @@
-#include <iostream>
-#include "demo.hpp"
-#include "example/demo/DemoWindow.hpp"
+#include "playground.hpp"
 #include <psychic-ui/Application.hpp>
-
-using namespace psychic_ui;
 
 int main(int /* argc */, char ** /* argv */) {
     try {
         auto app = std::make_unique<Application>();
         app->init();
-        app->open(std::make_shared<DemoWindow>());
+        app->open(std::make_shared<psychic_ui_playground::PlaygroundWindow>());
         app->mainloop();
         app->shutdown();
     } catch (const std::runtime_error &e) {

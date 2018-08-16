@@ -29,10 +29,12 @@ namespace psychic_ui {
                 int yOver  = (line + 1) * _textDisplay->getLineHeight();
                 int yUnder = line * _textDisplay->getLineHeight();
 
-                std::cout << line << std::endl;
+                std::cout << line << " " << yOver << " " << yUnder << " " << _textScroller->viewport()->scrollY() << " " << _textScroller->viewport()->getHeight() << std::endl;
 
                 if (yOver > -_textScroller->viewport()->scrollY() + _textScroller->viewport()->getHeight()) {
+                    std::cout << -(yOver - _textScroller->viewport()->getHeight()) << std::endl;
                     _textScroller->viewport()->setScrollY(-(yOver - _textScroller->viewport()->getHeight()));
+                    std::cout << _textScroller->viewport()->scrollY() << " " << _textScroller->viewport()->getHeight() << std::endl;
                 } else if (yUnder < -_textScroller->viewport()->scrollY()) {
                     _textScroller->viewport()->setScrollY(-(yUnder));
                 }

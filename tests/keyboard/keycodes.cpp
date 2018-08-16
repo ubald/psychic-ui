@@ -1,6 +1,6 @@
 #if defined(WITH_SDL2) && defined(WITH_GLFW)
 
-#include "catch.hpp"
+#include "catch2/catch.hpp"
 #include <iostream>
 
 #include <SDL.h>

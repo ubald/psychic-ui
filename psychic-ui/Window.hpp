@@ -14,7 +14,7 @@
 #include "style/Style.hpp"
 #include "components/Menu.hpp"
 #include "signals/Signal.hpp"
-#include "Application.hpp"
+#include "ApplicationBase.hpp"
 
 namespace psychic_ui {
 

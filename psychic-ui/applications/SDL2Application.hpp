@@ -4,7 +4,7 @@
 
 #include <SDL.h>
 #include "../Window.hpp"
-#include "../Application.hpp"
+#include "psychic-ui/ApplicationBase.hpp"
 
 #if defined(PSYCHIC_UI_WITH_GLAD)
 #if defined(PSYCHIC_UI_SHARED) && !defined(GLAD_GLAPI_EXPORT)
@@ -26,7 +26,7 @@
 namespace psychic_ui {
     class SDL2SystemWindow;
 
-    class SDL2Application : public Application {
+    class SDL2Application : public ApplicationBase {
         friend class SDL2SystemWindow;
 
     public:

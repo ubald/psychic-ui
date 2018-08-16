@@ -1,5 +1,5 @@
 #include <memory>
-#include "catch.hpp"
+#include "catch2/catch.hpp"
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/style/Style.hpp>
 #include <psychic-ui/Div.hpp>

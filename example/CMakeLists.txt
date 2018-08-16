@@ -4,7 +4,6 @@ add_feature_info("example" PSYCHIC_UI_BUILD_EXAMPLE "Example Application")
 if (PSYCHIC_UI_BUILD_EXAMPLE)
     set(DEMO_SOURCES
         demo.cpp
-        demo.cpp
         )
 
     if (PSYCHIC_UI_BUILD_GLFW)

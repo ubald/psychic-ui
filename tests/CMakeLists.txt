@@ -5,10 +5,10 @@ if (PSYCHIC_UI_BUILD_TESTS)
 
     if (NOT TARGET catch)
         ExternalProject_Add(catch
-            GIT_REPOSITORY https://github.com/philsquared/Catch.git
+                GIT_REPOSITORY https://github.com/philsquared/Catch.git
             GIT_TAG master
             PREFIX "${CMAKE_BINARY_DIR}/catch"
-            CMAKE_ARGS "-DNO_SELFTEST=YES"
+            CMAKE_ARGS "-DCATCH_BUILD_TESTING=NO"
             INSTALL_COMMAND ""
             )
 

@@ -144,6 +144,11 @@ namespace psychic_ui {
         SkPaint       _selectionPaint{};
         SkPaint       _selectionBackgroundPaint{};
 
+        /**
+         * Whether we're waiting on layout validation to sent the caret signal
+         */
+        bool _pendingCaretSignal{false};
+
         Div::MouseMoveSlot        _onMouseMove{nullptr};
         Div::MouseSlot            _onMouseDown{nullptr};
         Div::MouseSlot            _onMouseUp{nullptr};
@@ -163,7 +168,23 @@ namespace psychic_ui {
         YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) override;
         void layoutUpdated() override;
         void draw(SkCanvas *canvas) override;
-        void updateDisplay();
+
+        /**
+         * Call when text has changed in another manner than using `setText`.
+         * Since we're referencing the string we habe to call this method whenever
+         * the text inside string changes.
+         */
+        void textChanged();
+
+        /**
+         * Called when text was edited, as a shortcut to both
+         * `textChanged` and `setCaret` since they have to be called
+         * in a particular order and we don't want to repeat both calls.
+         *
+         * @param caret Position the caret should be at after the text was edited
+         */
+        void textEdited(unsigned int caret);
+
         void handleKey(Key key, Mod mod);
     };
 }

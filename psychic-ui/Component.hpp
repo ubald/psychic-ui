@@ -36,7 +36,7 @@ namespace psychic_ui {
     Component<T>::Component():
         Div() {
         setTag("Component");
-        // Out skin will inherit all of our styles but the external ones (margin)
+        // Our skin will inherit all of our styles but the external ones (margin)
         // But we should do our part and ignore any internal layout styling
         _ignoreInternalLayoutContraints = true;
     }

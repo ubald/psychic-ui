@@ -134,24 +134,28 @@ namespace psychic_ui {
 
             left->add<Text>(lorem)
                 ->setEditable(true)
+                ->setMultiline(true)
                 ->style()
                 ->set(lineHeight, Style::Auto)
                 ->set(fontSize, 10);
 
             left->add<Text>(lorem)
                 ->setEditable(true)
+                ->setMultiline(true)
                 ->style()
                 ->set(lineHeight, Style::Auto)
                 ->set(fontSize, 12);
 
             left->add<Text>(lorem)
                 ->setEditable(true)
+                ->setMultiline(true)
                 ->style()
                 ->set(lineHeight, Style::Auto)
                 ->set(fontSize, 16);
 
             left->add<Text>(lorem)
                 ->setEditable(true)
+                ->setMultiline(true)
                 ->style()
                 ->set(lineHeight, Style::Auto)
                 ->set(fontSize, 24);
@@ -167,6 +171,7 @@ namespace psychic_ui {
 
             right->add<Text>(lorem + "\n" + lorem)
                  ->setEditable(true)
+                 ->setMultiline(true)
                  ->style()
                  ->set(padding, 12)
                  ->set(fontSize, 10)
@@ -174,18 +179,21 @@ namespace psychic_ui {
 
             right->add<Text>(lorem)
                  ->setEditable(true)
+                 ->setMultiline(true)
                  ->style()
                  ->set(fontSize, 12)
                  ->set(lineHeight, 14);
 
             right->add<Text>(lorem)
                  ->setEditable(true)
+                 ->setMultiline(true)
                  ->style()
                  ->set(fontSize, 16)
                  ->set(lineHeight, 18);
 
             right->add<Text>(lorem)
                  ->setEditable(true)
+                 ->setMultiline(true)
                  ->style()
                  ->set(fontSize, 24)
                  ->set(lineHeight, 28);

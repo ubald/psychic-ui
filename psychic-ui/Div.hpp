@@ -640,6 +640,7 @@ namespace psychic_ui {
         // region Rendering
 
         void invalidate();
+        bool isValid() const;
         virtual YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode);
         virtual void render(SkCanvas *canvas);
         void clip(SkCanvas *canvas);

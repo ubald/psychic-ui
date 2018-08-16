@@ -53,15 +53,11 @@ namespace psychic_ui {
     }
 
     void ScrollBar::scrollPercentX(float scrollPercentX) {
-        _viewport->setScrollX((int) (
-            -std::max(0.0f, std::fmin(scrollPercentX, 1.0f))
-            * (float) (_viewport->contentWidth() - _viewport->getWidth())));
+        _viewport->setScrollX(static_cast<int>(-std::max(0.0f, std::fmin(scrollPercentX, 1.0f)) * static_cast<float>(_viewport->contentWidth() - _viewport->getWidth())));
     }
 
     void ScrollBar::scrollPercentY(float scrollPercentY) {
-        _viewport->setScrollY((int) (
-            -std::max(0.0f, std::fmin(scrollPercentY, 1.0f))
-            * (float) (_viewport->contentHeight() - _viewport->getHeight())));
+        _viewport->setScrollY(static_cast<int>(-std::max(0.0f, std::fmin(scrollPercentY, 1.0f)) * static_cast<float>(_viewport->contentHeight() - _viewport->getHeight())));
     }
 
     void ScrollBar::updateSkin() {
@@ -70,6 +66,7 @@ namespace psychic_ui {
         bool  enabled        = false;
 
         if (_direction == Vertical) {
+             std::cout << "scroll " << _viewport->contentHeight() << " " << _viewport->contentHeight() << " " << _viewport->getHeight() << std::endl;
             if (_viewport && _viewport->contentHeight() > 0 && _viewport->contentHeight() > _viewport->getHeight()) {
                 _viewport->setScrollY(
                     std::max(_viewport->scrollY(), _viewport->getHeight() - _viewport->contentHeight())

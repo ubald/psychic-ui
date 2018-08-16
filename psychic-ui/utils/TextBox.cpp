@@ -22,6 +22,7 @@ namespace psychic_ui {
 
     void TextBox::setMode(TextBoxMode mode) {
         _mode = mode;
+        calculate();
     }
 
     void TextBox::setAlign(TextBoxAlign align) {
@@ -34,6 +35,7 @@ namespace psychic_ui {
 
     void TextBox::setBox(float left, float top, float right, float bottom) {
         _box.set(left, top, right, bottom);
+        calculate();
     }
 
     void TextBox::setSpacing(float mul, float add) {
@@ -49,48 +51,88 @@ namespace psychic_ui {
 
     void TextBox::setText(const UnicodeString &text) {
         _text = &text;
-        recalculate();
+        updateText();
     }
 
-    void TextBox::recalculate() {
+    void TextBox::updateText() {
         // Note to self: Do not remove this method
         // Even though the iterators kind of work if we modify the text without
         // resetting it, they crash in certain situations
         lineIterator->setText(*_text);
         wordIterator->setText(*_text);
         sentenceIterator->setText(*_text);
+
+        // Text had changed, recalculate line breaks
+        calculate();
     }
 
-    unsigned int TextBox::countLines() const {
+    void TextBox::calculate() {
+        _lineStarts.clear();
+
+        if (_box.width() <= 0 || _text->length() == 0) {
+            return;
+        }
+
+        unsigned int lastBreak = 0;
+
+        _lineStarts.push_back(lastBreak);
+
         if (_mode == TextBoxMode::OneLine) {
-            return 1;
+            return;
         }
 
-        unsigned int count = 0;
-        if (_box.width() > 0) {
-            unsigned int pos = 0;
-            do {
-                count += 1;
-                pos = nextLineBreak(pos);
-                if (pos == 0) {
-                    // Skia's breakText broke down, we're probably narrower than a character
-                    // Just assume we're one character wide so that our height is equal to the
-                    // length of the text
-                    count = static_cast<unsigned int>(_text->length());
-                    break;
-                }
-            } while (pos < _text->length());
-        }
-        return count;
+        do {
+            unsigned int nextBreak = nextLineBreak(lastBreak);
+
+            //if (nextBreak == 0) {
+            //    // Skia's breakText broke down, we're probably narrower than a character
+            //    // Just assume we're one character wide so that our height is equal to the
+            //    // length of the text
+            //    count = static_cast<unsigned int>(_text->length());
+            //    break;
+            //}
+
+            // Index wise there is no difference between the end of string and a
+            // final line return, so we have to check unfortunately because we don't
+            // want the end of the string being considered as the start of a new line.
+            if (nextBreak < _text->length() || _text->charAt(nextBreak - 1) == '\n') {
+                _lineStarts.push_back(nextBreak);
+            }
+
+            lastBreak = nextBreak;
+
+        } while (lastBreak < _text->length());
     }
+
+    //unsigned int TextBox::countLines() const {
+    //    if (_mode == TextBoxMode::OneLine) {
+    //        return 1;
+    //    }
+    //
+    //    unsigned int count = 0;
+    //    if (_box.width() > 0) {
+    //        unsigned int pos = 0;
+    //        do {
+    //            count += 1;
+    //            pos = nextLineBreak(pos);
+    //            if (pos == 0) {
+    //                // Skia's breakText broke down, we're probably narrower than a character
+    //                // Just assume we're one character wide so that our height is equal to the
+    //                // length of the text
+    //                count = static_cast<unsigned int>(_text->length());
+    //                break;
+    //            }
+    //        } while (pos < _text->length());
+    //    }
+    //    return count;
+    //}
 
     unsigned int TextBox::lineCount() const {
         return static_cast<unsigned int>(_lineStarts.size());
     }
 
     float TextBox::getTextHeight() const {
-        float spacing = _paint->getFontSpacing() * _spacingMult + _spacingAdd;
-        return countLines() * spacing;
+        return _lineStarts.size() * (_paint->getFontSpacing() * _spacingMult + _spacingAdd);
     }
 
     unsigned int TextBox::nextLineBreak(int start) const {
@@ -120,13 +162,11 @@ namespace psychic_ui {
         }
     }
 
-    std::vector<unsigned int> TextBox::visit(TextBoxVisitor visitor) const {
-        std::vector<unsigned int> lines{};
-
+    void TextBox::visit(const TextBoxVisitor &visitor) const {
         float maxWidth = _box.width();
 
         if (maxWidth <= 0 || _text->length() == 0) {
-            return lines;
+            return;
         }
 
         float                x = 0.0f;
@@ -154,7 +194,7 @@ namespace psychic_ui {
         // Compute Y position for first line
         float textHeight = fontHeight;
         if (_mode == TextBoxMode::LineBreak && _align != TextBoxAlign::Start) {
-            textHeight += scaledSpacing * (countLines() - 1);
+            textHeight += scaledSpacing * (_lineStarts.size() - 1);
         }
 
         switch (_align) {
@@ -171,34 +211,19 @@ namespace psychic_ui {
 
         y += _box.fTop - metrics.fAscent;
 
-        // Break lines
-        unsigned int lastBreak = 0;
-        lines.push_back(lastBreak);
-        for (;;) {
-            unsigned int nextBreak = nextLineBreak(lastBreak);
+        // Visit lines
+        auto lines = static_cast<unsigned int>(_lineStarts.size());
 
+        for (unsigned int i = 0; i < lines; ++i) {
             if (y + metrics.fDescent + metrics.fLeading > 0) {
                 std::string str{};
-                _text->tempSubStringBetween(lastBreak, nextBreak).toUTF8String(str);
+                _text->tempSubStringBetween(
+                    _lineStarts[i],
+                    i < lines - 1 ? _lineStarts[i+1] : static_cast<unsigned int>(_text->length())
+                ).toUTF8String(str);
                 visitor(str.c_str(), str.size(), x, y);
             }
 
-            if (_mode == TextBoxMode::OneLine) {
-                break;
-            }
-
-            // Index wise there is no difference between the end of string and a
-            // final line return, so we have to check unfortunately because we don't
-            // want the end of the string being considered as the start of a new line.
-            if (nextBreak < _text->length() || _text->charAt(nextBreak - 1) == '\n') {
-                lines.push_back(nextBreak);
-            }
-
-            lastBreak = nextBreak;
-
-            if (lastBreak >= _text->length()) {
-                break;
-            }
 
             y += scaledSpacing;
 
@@ -206,10 +231,12 @@ namespace psychic_ui {
             //if (y + metrics.fAscent >= _box.fBottom) {
             //    break;
             //}
+
+            //lastStart = lineStart;
         }
+
         // NOTE: This was returning the bottom/height before
         //return y + metrics.fDescent + metrics.fLeading;
-        return lines;
     }
 
     unsigned int TextBox::lineStart(unsigned int line) const {
@@ -328,7 +355,7 @@ namespace psychic_ui {
     // CANVAS VISITOR
 
     void TextBox::draw(SkCanvas *canvas) {
-        _lineStarts = visit(
+        visit(
             [this, canvas](const char text[], size_t len, float x, float y) {
                 canvas->drawText(text, len, x, y, *_paint);
             }
@@ -341,7 +368,7 @@ namespace psychic_ui {
         SkTextBlobBuilder builder{};
         SkPaint           p(*_paint);
         p.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
-        _lineStarts = visit(
+        visit(
             [this, &builder, &p](const char text[], size_t len, float x, float y) {
                 _paint->textToGlyphs(text, len, builder.allocRun(p, _paint->countText(text, len), x, y).glyphs);
             }

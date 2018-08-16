@@ -111,7 +111,16 @@ namespace psychic_ui {
         if (saveX) {
             _targetXPos = _textBox.posFromIndex(_caret).second;
         }
-        onCaret(_caret);
+        if (isValid()) {
+            std::cout << "on caret is valid" << std::endl;
+            onCaret(_caret);
+        } else {
+            std::cout << "on caret pending" << std::endl;
+
+            // Wait until the layout is valid to notify,
+            // otherwise the caret position won't be correct.
+            _pendingCaretSignal = true;
+        }
         return this;
     }
 
@@ -200,12 +209,11 @@ namespace psychic_ui {
             [this](UnicodeString character) {
                 if (_selectBegin != _selectEnd) {
                     _text.replace(_selectBegin, _selectEnd - _selectBegin, character);
-                    setCaret(_selectBegin + 1);
+                    textEdited(_selectBegin + 1);
                 } else {
                     _text.insert(_caret, character);
-                    setCaret(++_caret);
+                    textEdited(++_caret);
                 }
-                updateDisplay();
             }
         );
     }
@@ -233,9 +241,14 @@ namespace psychic_ui {
         }
     }
 
-    void Text::updateDisplay() {
-        _textBox.recalculate();
+    void Text::textChanged() {
+        _textBox.updateText();
         invalidate();
+    }
+
+    void Text::textEdited(unsigned int caret) {
+        textChanged(); // Before setCaret so that `onCaret` has access to computed lines
+        setCaret(caret);
     }
 
     void Text::handleKey(Key key, Mod mod) {
@@ -315,18 +328,17 @@ namespace psychic_ui {
                     if (_selectBegin != _selectEnd) {
                         // Remove selection
                         _text.remove(_selectBegin, _selectEnd - _selectBegin);
-                        setCaret(_selectBegin);
+                        textEdited(_selectBegin);
                     } else if (mod.ctrl) {
                         // Remove preceding word
                         auto from = _textBox.previousWordBoundary(_caret);
                         _text.removeBetween(from, _caret);
-                        setCaret(from);
+                        textEdited(from);
                     } else {
                         // Remove preceding character
                         _text.remove(_caret - 1, 1);
-                        setCaret(--_caret);
+                        textEdited(--_caret);
                     }
-                    updateDisplay();
                 }
                 break;
 
@@ -335,15 +347,16 @@ namespace psychic_ui {
                     if (_selectBegin != _selectEnd) {
                         // Delete selection
                         _text.remove(_selectBegin, _selectEnd - _selectBegin);
-                        setCaret(_selectBegin);
+                        textEdited(_selectBegin);
                     } else if (mod.ctrl) {
                         // Delete following word
                         _text.removeBetween(_caret, _textBox.nextWordBoundary(_caret));
+                        textChanged();
                     } else {
                         // Delete following character
                         _text.remove(_caret, 1);
+                        textChanged();
                     }
-                    updateDisplay();
                 }
                 break;
 
@@ -352,12 +365,11 @@ namespace psychic_ui {
                     UnicodeString uni_str(static_cast<UChar32>('\n'));
                     if (_selectBegin != _selectEnd) {
                         _text.replace(_selectBegin, _selectEnd - _selectBegin, uni_str);
-                        setCaret(_selectBegin + 1);
+                        textEdited(_selectBegin + 1);
                     } else {
                         _text.insert(_caret, uni_str);
-                        setCaret(++_caret);
+                        textEdited(++_caret);
                     }
-                    updateDisplay();
                 }
                 break;
 
@@ -398,15 +410,12 @@ namespace psychic_ui {
                     longestLength = len;
                 }
             }
-            //_textBox.setMode(TextBoxMode::OneLine);
-            // TODO: This doesn't seem to take the right padding into account
             size.width  = std::ceil(_textPaint.measureText(lines[longestIndex].c_str(), longestLength));
             size.height = lines.size() * _lineHeight;
         } else {
-            //_textBox.setMode(TextBoxMode::LineBreak);
             // The passed sizes consider padding, which is different than when we draw
-            _textBox.setBox(0, 0, width, height);
-            size.height = _textBox.countLines() * _lineHeight;
+            _textBox.setBox(0.0f, 0.0f, width, height);
+            size.height = _textBox.lineCount() * _lineHeight;
         }
 
         return size;
@@ -416,6 +425,12 @@ namespace psychic_ui {
         TextBase::layoutUpdated();
         _textBox.setBox(0.0f, 0.0f, _paddedRect.width(), _paddedRect.height());
         _blob = _textBox.snapshotTextBlob();
+        std::cout << "layout" << std::endl;
+        if (_pendingCaretSignal) {
+            std::cout << "on caret" << std::endl;
+            onCaret(_caret);
+            _pendingCaretSignal = false;
+        }
     }
 
     void Text::draw(SkCanvas *canvas) {

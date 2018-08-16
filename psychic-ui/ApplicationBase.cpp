@@ -1,10 +1,10 @@
 #include <memory>
-#include "Application.hpp"
+#include "ApplicationBase.hpp"
 #include "Window.hpp"
 
 namespace psychic_ui {
 
-    SystemWindow::SystemWindow(Application *application, std::shared_ptr<Window> window) :
+    SystemWindow::SystemWindow(ApplicationBase *application, std::shared_ptr<Window> window) :
         _application(application),
         _window(window) {
 

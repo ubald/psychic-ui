@@ -1,9 +1,9 @@
 #pragma once
 
-#include <psychic-ui/Window.hpp>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Tabs.hpp>
@@ -37,7 +37,7 @@ namespace psychic_ui {
 
     DemoWindow::DemoWindow() :
         Window("Demo Application") {
-        //_decorated = false;
+        _decorated = false;
 
         loadStyleSheet<OneDarkStyleSheet>();
         loadStyleSheet<DemoStyleSheet>();

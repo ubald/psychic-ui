@@ -233,8 +233,8 @@ set(SOURCE_FILES
     psychic-ui/Window.hpp
     psychic-ui/components/Box.cpp
     psychic-ui/components/Box.hpp
-    psychic-ui/Application.cpp
-    psychic-ui/Application.hpp
+    psychic-ui/ApplicationBase.cpp
+    psychic-ui/ApplicationBase.hpp
     psychic-ui/applications/GLFWApplication.cpp
     psychic-ui/applications/GLFWApplication.hpp
     psychic-ui/applications/SDL2Application.cpp
@@ -340,6 +340,7 @@ file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 # SUBDIRECTORIES
 add_subdirectory(tests)
 add_subdirectory(example)
+add_subdirectory(playground)
 
 #
 # OTHER TARGETS

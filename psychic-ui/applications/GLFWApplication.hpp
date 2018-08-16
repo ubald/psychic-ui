@@ -4,7 +4,7 @@
 
 #include <memory>
 #include "../Window.hpp"
-#include "../Application.hpp"
+#include "psychic-ui/ApplicationBase.hpp"
 
 #if defined(PSYCHIC_UI_WITH_GLAD)
 #if defined(PSYCHIC_UI_SHARED) && !defined(GLAD_GLAPI_EXPORT)
@@ -39,7 +39,7 @@ namespace psychic_ui {
 
     class GLFWSystemWindow;
 
-    class GLFWApplication : public Application {
+    class GLFWApplication : public ApplicationBase {
         friend class GLFWSystemWindow;
 
     public:

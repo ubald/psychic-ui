@@ -1,6 +1,7 @@
 #pragma once
 
 #include <psychic-ui/Div.hpp>
+#include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/ScrollBar.hpp>
 
 namespace psychic_ui {

@@ -8,9 +8,12 @@ namespace psychic_ui {
         _text(text),
         _textDisplay(std::make_shared<Text>(_text)) {
         setTag("TextInput");
+
         _focusEnabled = true;
-        _textDisplay->setMultiline(false);
+
         _textDisplay->setEditable(true);
+        _textDisplay->setMultiline(false);
+
         _textDisplay->onChange(
             [this](std::string txt) {
                 _text = txt;

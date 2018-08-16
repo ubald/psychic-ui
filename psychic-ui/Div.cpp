@@ -33,7 +33,6 @@ namespace psychic_ui {
         _yogaNode(YGNodeNew()) {
         setTag("div");
 
-
         YGNodeSetContext(_yogaNode, this);
         YGNodeSetPrintFunc(
             _yogaNode, [](YGNodeRef node) {
@@ -261,6 +260,10 @@ namespace psychic_ui {
         return this;
     }
 
+    bool Div::active() const {
+        return _enabled && _mouseDown;
+    };
+
     // endregion
 
     // region Focus
@@ -284,14 +287,6 @@ namespace psychic_ui {
             invalidateStyle();
         }
     }
-
-    // endregion
-
-    // region State
-
-    bool Div::active() const {
-        return _enabled && _mouseDown;
-    };
 
     // endregion
 
@@ -620,6 +615,7 @@ namespace psychic_ui {
             _visible = _computedStyle->get(visible);
         }
         // endregion
+
         // region Radius
         float tmp;
         if (_computedStyle->has(borderRadius)) {
@@ -686,9 +682,10 @@ namespace psychic_ui {
             && _radiusBottomLeft == _radiusBottomRight
         );
         // endregion
+
         // region Background
-        _drawBackground       = _computedStyle->has(backgroundColor)
-                                && (_computedStyle->get(backgroundColor) != 0x00000000);
+        _drawBackground = _computedStyle->has(backgroundColor)
+                          && (_computedStyle->get(backgroundColor) != 0x00000000);
         // endregion
     }
 
@@ -698,6 +695,12 @@ namespace psychic_ui {
 
     void Div::invalidate() {
         YGNodeMarkDirty(_yogaNode);
+        //std::cout << "Mark dirty" << std::endl;
+    }
+
+    bool Div::isValid() const {
+        std::cout << "Is dirty: " << (YGNodeIsDirty(_yogaNode) ? "Yes" : "No") << std::endl;
+        return !YGNodeIsDirty(_yogaNode);
     }
 
     void Div::setMeasurable() {
@@ -722,8 +725,9 @@ namespace psychic_ui {
 
     #define YOGA_STYLE_SET_FLOAT_UNDEFINED(prop, style) \
         if (_computedStyle->has(style)) { \
-            YGNodeStyleSet##prop(_yogaNode, _computedStyle->get(style)); \
-        } else if (!std::isnan(YGNodeStyleGet##prop(_yogaNode))) { \
+            float value = _computedStyle->get(style); \
+            YGNodeStyleSet##prop(_yogaNode, std::isnan(value) ? YGUndefined : value); \
+        } else if (YGNodeStyleGet##prop(_yogaNode) != YGUndefined) { \
             YGNodeStyleSet##prop(_yogaNode, YGUndefined); \
         } \
 
@@ -746,10 +750,11 @@ namespace psychic_ui {
 
     #define YOGA_STYLE_SET_PERCENT_AUTO(prop, style) \
         if (_computedStyle->has(style)) { \
-            if (std::isnan(_computedStyle->get(style))) { \
+            float value = _computedStyle->get(style); \
+            if (std::isnan(value)) { \
                 YGNodeStyleSet##prop##Auto(_yogaNode); \
             } else { \
-                YGNodeStyleSet##prop(_yogaNode,  _computedStyle->get(style)); \
+                YGNodeStyleSet##prop(_yogaNode, value); \
             } \
         } else if (_computedStyle->has(style##Percent)) { \
             YGNodeStyleSet##prop##Percent(_yogaNode, YogaPercent(_computedStyle->get(style##Percent))); \
@@ -757,12 +762,15 @@ namespace psychic_ui {
             YGNodeStyleSet##prop##Auto(_yogaNode); \
         } \
 
-    #define YOGA_STYLE_EDGE_FLOAT(prop, edge, style) \
-        if (_computedStyle->has(style) || !std::isnan(YGNodeStyleGet##prop(_yogaNode, YGEdge##edge))) { \
-            YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, _computedStyle->get(style)); \
+    #define YOGA_STYLE_SET_EDGE_FLOAT(prop, edge, style) \
+        if (_computedStyle->has(style)) { \
+            float value = _computedStyle->get(style); \
+            YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, std::isnan(value) ? YGUndefined : value); \
+        } else if (YGNodeStyleGet##prop(_yogaNode, YGEdge##edge) != YGUndefined) { \
+            YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, YGUndefined); \
         } \
 
-    #define YOGA_STYLE_EDGE_PERCENT(prop, edge, style) \
+    #define YOGA_STYLE_SET_EDGE_PERCENT(prop, edge, style) \
         if (_computedStyle->has(style) && !std::isnan(_computedStyle->get(style))) { \
             YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, _computedStyle->get(style)); \
         } else if (_computedStyle->has(style##Percent)) { \
@@ -771,12 +779,13 @@ namespace psychic_ui {
             YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, YGUndefined); \
         } \
 
-    #define YOGA_STYLE_EDGE_PERCENT_AUTO(prop, edge, style) \
+    #define YOGA_STYLE_SET_EDGE_PERCENT_AUTO(prop, edge, style) \
         if (_computedStyle->has(style)) { \
-            if (std::isnan(_computedStyle->get(style))) { \
+            float value = _computedStyle->get(style); \
+            if (std::isnan(value)) { \
                 YGNodeStyleSet##prop##Auto(_yogaNode, YGEdge##edge); \
             } else { \
-                YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, _computedStyle->get(style)); \
+                YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, value); \
             } \
         } else if (_computedStyle->has(style##Percent)) { \
             YGNodeStyleSet##prop##Percent(_yogaNode, YGEdge##edge, YogaPercent(_computedStyle->get(style##Percent))); \
@@ -803,10 +812,10 @@ namespace psychic_ui {
         YOGA_STYLE_SET_FLOAT(FlexShrink, shrink, /*kWebDefaultFlexShrink*/ 1.0f) // NOTE: Not the default actually
         YOGA_STYLE_SET_PERCENT_AUTO(FlexBasis, basis)
 
-        YOGA_STYLE_EDGE_PERCENT(Position, Left, left)
-        YOGA_STYLE_EDGE_PERCENT(Position, Top, top)
-        YOGA_STYLE_EDGE_PERCENT(Position, Right, right)
-        YOGA_STYLE_EDGE_PERCENT(Position, Bottom, bottom)
+        YOGA_STYLE_SET_EDGE_PERCENT(Position, Left, left)
+        YOGA_STYLE_SET_EDGE_PERCENT(Position, Top, top)
+        YOGA_STYLE_SET_EDGE_PERCENT(Position, Right, right)
+        YOGA_STYLE_SET_EDGE_PERCENT(Position, Bottom, bottom)
 
         YOGA_STYLE_SET_PERCENT_AUTO(Width, width)
         YOGA_STYLE_SET_PERCENT(MinWidth, minWidth)
@@ -816,30 +825,30 @@ namespace psychic_ui {
         YOGA_STYLE_SET_PERCENT(MaxHeight, maxHeight)
         // TODO AspectRatio
 
-        YOGA_STYLE_EDGE_PERCENT_AUTO(Margin, All, margin)
-        YOGA_STYLE_EDGE_PERCENT_AUTO(Margin, Horizontal, marginHorizontal)
-        YOGA_STYLE_EDGE_PERCENT_AUTO(Margin, Vertical, marginVertical)
-        YOGA_STYLE_EDGE_PERCENT_AUTO(Margin, Left, marginLeft)
-        YOGA_STYLE_EDGE_PERCENT_AUTO(Margin, Top, marginTop)
-        YOGA_STYLE_EDGE_PERCENT_AUTO(Margin, Right, marginRight)
-        YOGA_STYLE_EDGE_PERCENT_AUTO(Margin, Bottom, marginBottom)
+        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, All, margin)
+        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, Horizontal, marginHorizontal)
+        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, Vertical, marginVertical)
+        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, Left, marginLeft)
+        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, Top, marginTop)
+        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, Right, marginRight)
+        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, Bottom, marginBottom)
 
         if (!_ignoreInternalLayoutContraints) {
-            YOGA_STYLE_EDGE_PERCENT(Padding, All, padding)
-            YOGA_STYLE_EDGE_PERCENT(Padding, Horizontal, paddingHorizontal)
-            YOGA_STYLE_EDGE_PERCENT(Padding, Vertical, paddingVertical)
-            YOGA_STYLE_EDGE_PERCENT(Padding, Left, paddingLeft)
-            YOGA_STYLE_EDGE_PERCENT(Padding, Top, paddingTop)
-            YOGA_STYLE_EDGE_PERCENT(Padding, Right, paddingRight)
-            YOGA_STYLE_EDGE_PERCENT(Padding, Bottom, paddingBottom)
+            YOGA_STYLE_SET_EDGE_PERCENT(Padding, All, padding)
+            YOGA_STYLE_SET_EDGE_PERCENT(Padding, Horizontal, paddingHorizontal)
+            YOGA_STYLE_SET_EDGE_PERCENT(Padding, Vertical, paddingVertical)
+            YOGA_STYLE_SET_EDGE_PERCENT(Padding, Left, paddingLeft)
+            YOGA_STYLE_SET_EDGE_PERCENT(Padding, Top, paddingTop)
+            YOGA_STYLE_SET_EDGE_PERCENT(Padding, Right, paddingRight)
+            YOGA_STYLE_SET_EDGE_PERCENT(Padding, Bottom, paddingBottom)
 
-            YOGA_STYLE_EDGE_FLOAT(Border, All, border)
-            YOGA_STYLE_EDGE_FLOAT(Border, Horizontal, borderHorizontal)
-            YOGA_STYLE_EDGE_FLOAT(Border, Vertical, borderVertical)
-            YOGA_STYLE_EDGE_FLOAT(Border, Left, borderLeft)
-            YOGA_STYLE_EDGE_FLOAT(Border, Top, borderTop)
-            YOGA_STYLE_EDGE_FLOAT(Border, Right, borderRight)
-            YOGA_STYLE_EDGE_FLOAT(Border, Bottom, borderBottom)
+            YOGA_STYLE_SET_EDGE_FLOAT(Border, All, border)
+            YOGA_STYLE_SET_EDGE_FLOAT(Border, Horizontal, borderHorizontal)
+            YOGA_STYLE_SET_EDGE_FLOAT(Border, Vertical, borderVertical)
+            YOGA_STYLE_SET_EDGE_FLOAT(Border, Left, borderLeft)
+            YOGA_STYLE_SET_EDGE_FLOAT(Border, Top, borderTop)
+            YOGA_STYLE_SET_EDGE_FLOAT(Border, Right, borderRight)
+            YOGA_STYLE_SET_EDGE_FLOAT(Border, Bottom, borderBottom)
         }
     }
 
@@ -878,6 +887,8 @@ namespace psychic_ui {
         _borderTop    = YGNodeLayoutGetBorder(_yogaNode, YGEdgeTop);
         _borderRight  = YGNodeLayoutGetBorder(_yogaNode, YGEdgeRight);
         _borderBottom = YGNodeLayoutGetBorder(_yogaNode, YGEdgeBottom);
+
+        std::cout << _borderLeft << " " << _borderTop << " " << _borderRight << " " << _borderBottom << std::endl;
 
         _paddedRect.set(
             _x + YGNodeLayoutGetPadding(_yogaNode, YGEdgeLeft) + _borderLeft,

@@ -132,7 +132,12 @@ namespace psychic_ui {
          * It is automatically called when setting the text, but must be
          * called manually when the text changes.
          */
-        void recalculate();
+        void updateText();
+
+        /**
+         * Calculate line breal
+         */
+        void calculate();
 
         /**
          * Count the number of lines in the TextBox
@@ -289,7 +294,7 @@ namespace psychic_ui {
         const UnicodeString            *_text{nullptr};
         const SkPaint                  *_paint{nullptr};
 
-        std::vector<unsigned int> visit(TextBoxVisitor visitor) const;
+        void visit(const TextBoxVisitor &visitor) const;
 
         // Calculated values
         std::vector<unsigned int> _lineStarts{};
