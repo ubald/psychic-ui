@@ -440,7 +440,7 @@ namespace psychic_ui {
                 break;
 
             case SDL_TEXTINPUT:
-                _window->keyboardCharacterEvent(UnicodeString::fromUTF8(e.text.text));
+                _window->keyboardCharacterEvent(icu::UnicodeString::fromUTF8(e.text.text));
                 break;
 
             case SDL_MOUSEMOTION:

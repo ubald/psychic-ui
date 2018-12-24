@@ -567,7 +567,7 @@ namespace psychic_ui {
      */
     void GLFWSystemWindow::charEventCallback(unsigned int codepoint) {
         _lastInteraction = glfwGetTime();
-        _window->keyboardCharacterEvent(UnicodeString(static_cast<UChar32>(codepoint)));
+        _window->keyboardCharacterEvent(icu::UnicodeString(static_cast<UChar32>(codepoint)));
     }
 
     void GLFWSystemWindow::dropEventCallback(int count, const char **filenames) {

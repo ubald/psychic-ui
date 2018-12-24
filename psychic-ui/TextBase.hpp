@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SkPaint.h>
+#include <SkFont.h>
 #include "Div.hpp"
 
 namespace psychic_ui {

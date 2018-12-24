@@ -13,9 +13,9 @@ namespace psychic_ui {
     TextBox::TextBox() {
         // TODO: Maybe this can be static
         UErrorCode status = U_ZERO_ERROR;
-        lineIterator     = std::unique_ptr<BreakIterator>(BreakIterator::createLineInstance(Locale::getDefault(), status));
-        wordIterator     = std::unique_ptr<BreakIterator>(BreakIterator::createWordInstance(Locale::getDefault(), status));
-        sentenceIterator = std::unique_ptr<BreakIterator>(BreakIterator::createSentenceInstance(Locale::getDefault(), status));
+        lineIterator     = std::unique_ptr<icu::BreakIterator>(icu::BreakIterator::createLineInstance(icu::Locale::getDefault(), status));
+        wordIterator     = std::unique_ptr<icu::BreakIterator>(icu::BreakIterator::createWordInstance(icu::Locale::getDefault(), status));
+        sentenceIterator = std::unique_ptr<icu::BreakIterator>(icu::BreakIterator::createSentenceInstance(icu::Locale::getDefault(), status));
     }
 
     // region Properties
@@ -49,7 +49,7 @@ namespace psychic_ui {
 
     // endregion
 
-    void TextBox::setText(const UnicodeString &text) {
+    void TextBox::setText(const icu::UnicodeString &text) {
         _text = &text;
         updateText();
     }
@@ -136,12 +136,14 @@ namespace psychic_ui {
     }
 
     unsigned int TextBox::nextLineBreak(int start) const {
-        UnicodeString remaining = _text->tempSubStringBetween(start, _text->length());
-        std::string   str;
+        icu::UnicodeString remaining = _text->tempSubStringBetween(start, _text->length());
+        std::string        str;
         remaining.toUTF8String(str);
 
         // Start by finding where the text would cut at max if we were not to use UnicodeString
-        auto advance = static_cast<unsigned int>(_paint->breakText(str.c_str(), str.size(), _box.width()));
+        // TODO: Fix deprecated thing
+        SkFont font    = SkFont::LEGACY_ExtractFromPaint(*_paint);
+        auto   advance = static_cast<unsigned int>(font.breakText(str.c_str(), str.size(), SkTextEncoding::kUTF8, _box.width()));
 
         if (_mode == TextBoxMode::OneLine || advance == 0) {
             return advance;
@@ -158,7 +160,7 @@ namespace psychic_ui {
             return maxBreak;
         } else {
             int lastBreak = lineIterator->preceding(maxBreak);
-            return lastBreak != BreakIterator::DONE && lastBreak > start ? static_cast<unsigned int>(lastBreak) : maxBreak;
+            return lastBreak != icu::BreakIterator::DONE && lastBreak > start ? static_cast<unsigned int>(lastBreak) : maxBreak;
         }
     }
 
@@ -169,21 +171,21 @@ namespace psychic_ui {
             return;
         }
 
-        float                x = 0.0f;
-        float                y = 0.0f;
-        SkPaint::FontMetrics metrics{};
+        float         x = 0.0f;
+        float         y = 0.0f;
+        SkFontMetrics metrics{};
 
-        switch (_paint->getTextAlign()) {
-            case SkPaint::kLeft_Align:
-                x = 0;
-                break;
-            case SkPaint::kCenter_Align:
-                x = maxWidth * 0.5f;
-                break;
-            default:
-                x = maxWidth;
-                break;
-        }
+        //switch (_paint->getTextAlign()) {
+        //    case SkPaint::kLeft_Align:
+        //        x = 0;
+        //        break;
+        //    case SkPaint::kCenter_Align:
+        //        x = maxWidth * 0.5f;
+        //        break;
+        //    default:
+        //        x = maxWidth;
+        //        break;
+        //}
 
         x += _box.fLeft;
 
@@ -219,7 +221,7 @@ namespace psychic_ui {
                 std::string str{};
                 _text->tempSubStringBetween(
                     _lineStarts[i],
-                    i < lines - 1 ? _lineStarts[i+1] : static_cast<unsigned int>(_text->length())
+                    i < lines - 1 ? _lineStarts[i + 1] : static_cast<unsigned int>(_text->length())
                 ).toUTF8String(str);
                 visitor(str.c_str(), str.size(), x, y);
             }
@@ -270,30 +272,30 @@ namespace psychic_ui {
 
     std::pair<unsigned int, unsigned int> TextBox::wordAtIndex(unsigned int index) const {
         auto begin = wordIterator->preceding(index);
-        auto end = wordIterator->following(index);
+        auto end   = wordIterator->following(index);
         return std::make_pair(
-            begin != BreakIterator::DONE ? begin : 0,
-            end != BreakIterator::DONE ? end : _text->length()
+            begin != icu::BreakIterator::DONE ? begin : 0,
+            end != icu::BreakIterator::DONE ? end : _text->length()
         );
     }
 
     std::pair<unsigned int, unsigned int> TextBox::sentenceAtIndex(unsigned int index) const {
         auto begin = sentenceIterator->preceding(index);
-        auto end = sentenceIterator->following(index);
+        auto end   = sentenceIterator->following(index);
         return std::make_pair(
-            begin != BreakIterator::DONE ? begin : 0,
-            end != BreakIterator::DONE ? end : _text->length()
+            begin != icu::BreakIterator::DONE ? begin : 0,
+            end != icu::BreakIterator::DONE ? end : _text->length()
         );
     }
 
     unsigned int TextBox::previousWordBoundary(unsigned int index) const {
         auto boundary = static_cast<unsigned int>(wordIterator->preceding(index));
-        return boundary != BreakIterator::DONE ? boundary : 0;
+        return boundary != icu::BreakIterator::DONE ? boundary : 0;
     }
 
     unsigned int TextBox::nextWordBoundary(unsigned int index) const {
         auto boundary = static_cast<unsigned int>(wordIterator->following(index));
-        return boundary != BreakIterator::DONE ? boundary : static_cast<unsigned int>(_text->length());
+        return boundary != icu::BreakIterator::DONE ? boundary : static_cast<unsigned int>(_text->length());
     }
 
     unsigned int TextBox::indexFromPos(int x, int y) const {
@@ -366,11 +368,12 @@ namespace psychic_ui {
 
     std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>> TextBox::snapshotTextBlob() {
         SkTextBlobBuilder builder{};
-        SkPaint           p(*_paint);
-        p.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
+        // TODO: Get rid of legacy
+        SkFont           font = SkFont::LEGACY_ExtractFromPaint(*_paint);
+        //p.setTextEncoding(SkTextEncoding::kGlyphID);
         visit(
-            [this, &builder, &p](const char text[], size_t len, float x, float y) {
-                _paint->textToGlyphs(text, len, builder.allocRun(p, _paint->countText(text, len), x, y).glyphs);
+            [this, &builder, &font](const char text[], size_t len, float x, float y) {
+                _paint->textToGlyphs(text, len, builder.allocRun(font, _paint->countText(text, len), x, y).glyphs);
             }
         );
         return std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>>(builder.make().release(), [](SkTextBlob *ptr) { ptr->unref(); });

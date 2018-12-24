@@ -476,7 +476,7 @@ namespace psychic_ui {
         return false;
     }
 
-    bool Window::keyboardCharacterEvent(const UnicodeString &character) {
+    bool Window::keyboardCharacterEvent(const icu::UnicodeString &character) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
             // Only the focusEnabled divs get the character events

@@ -434,13 +434,13 @@ namespace psychic_ui {
         virtual MouseEventStatus mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
 
         using KeySlot = std::shared_ptr<Slot<const Key, const Mod>>;
-        using CharSlot = std::shared_ptr<Slot<const UnicodeString &>>;
+        using CharSlot = std::shared_ptr<Slot<const icu::UnicodeString &>>;
         using FocusSlot = std::shared_ptr<Slot<>>;
 
         Signal<const Key, const Mod>  onKeyDown{};
         Signal<const Key, const Mod>  onKeyRepeat{};
         Signal<const Key, const Mod>  onKeyUp{};
-        Signal<const UnicodeString &> onCharacter{};
+        Signal<const icu::UnicodeString &> onCharacter{};
         Signal<>                      onFocus{};
         Signal<>                      onBlur{};
 

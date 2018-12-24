@@ -48,7 +48,7 @@ set(CPACK_COMPONENT_HEADERS_DESCRIPTION "C/C++ header used to build programs wit
 set(CPACK_COMPONENT_HEADERS_DEPENDS libraries)
 
 # CPack - Source
-set(CPACK_SOURCE_IGNORE_FILES "/\.idea/;/build/;/cmake-build-debug/;${CPACK_SOURCE_IGNORE_FILES}")
+set(CPACK_SOURCE_IGNORE_FILES "/.git/;/.idea/;/build/;/cmake-build-debug/;${CPACK_SOURCE_IGNORE_FILES}")
 
 #
 # BUILDING
@@ -95,9 +95,6 @@ else()
     find_package(ICU REQUIRED COMPONENTS uc)
 endif()
 
-set(PSYCHIC_UI_EXTRA_LIBS "")
-set(LIBPSYCHIC_UI_EXTRA_SOURCE "")
-
 if (WIN32)
     add_definitions(-DWIN)
 elseif (APPLE)
@@ -105,7 +102,6 @@ elseif (APPLE)
 elseif (UNIX)
     add_definitions(-DUNIX)
 endif ()
-
 
 # GLAD
 add_subdirectory(extlib/glad)
@@ -130,7 +126,6 @@ add_subdirectory(extlib/yoga)
 # SKIA
 add_subdirectory(extlib/skia)
 
-
 # PSYCHIC COLOR
 if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/lib/psychic-color/.git")
     message(FATAL_ERROR "Psychic UI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
@@ -139,6 +134,9 @@ endif ()
 add_subdirectory(lib/psychic-color)
 
 # EXTRAS
+
+set(PSYCHIC_UI_EXTRA_LIBS "")
+set(LIBPSYCHIC_UI_EXTRA_SOURCE "")
 
 # Required core libraries on various platforms
 if (WIN32)
@@ -293,6 +291,7 @@ target_link_libraries(psychic-ui
     )
 
 if (PSYCHIC_UI_BUILD_GLFW)
+    add_dependencies(psychic-ui glfw)
     target_include_directories(psychic-ui PUBLIC ${GLFW_INCLUDE_DIRS})
     target_link_libraries(psychic-ui glfw)
 endif ()
@@ -307,7 +306,6 @@ if (CMAKE_SYSTEM MATCHES "Linux" AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif ()
 
 add_dependencies(psychic-ui psychic-color)
-add_dependencies(psychic-ui glfw)
 add_dependencies(psychic-ui skia)
 
 if (PSYCHIC_UI_BUILD_SHARED)

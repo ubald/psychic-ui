@@ -131,18 +131,18 @@ namespace psychic_ui {
     protected:
         using BlobPtr = std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>>;
 
-        bool          _selectable{true};
-        bool          _editable{false};
-        bool          _multiline{false};
-        unsigned int  _selectBegin{0};
-        unsigned int  _selectEnd{0};
-        unsigned int  _caret{0};
-        unsigned int  _targetXPos{0};
-        UnicodeString _text{};
-        TextBox       _textBox{};
-        BlobPtr       _blob{nullptr};
-        SkPaint       _selectionPaint{};
-        SkPaint       _selectionBackgroundPaint{};
+        bool               _selectable{true};
+        bool               _editable{false};
+        bool               _multiline{false};
+        unsigned int       _selectBegin{0};
+        unsigned int       _selectEnd{0};
+        unsigned int       _caret{0};
+        unsigned int       _targetXPos{0};
+        icu::UnicodeString _text{};
+        TextBox            _textBox{};
+        BlobPtr            _blob{nullptr};
+        SkPaint            _selectionPaint{};
+        SkPaint            _selectionBackgroundPaint{};
 
         /**
          * Whether we're waiting on layout validation to sent the caret signal

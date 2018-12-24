@@ -29,7 +29,7 @@ namespace psychic_ui {
     }
 
     Text *Text::setText(const std::string &text) {
-        _text = UnicodeString::fromUTF8(text);
+        _text = icu::UnicodeString::fromUTF8(text);
         _textBox.setText(_text);
         _caret       = 0;
         _selectBegin = 0;
@@ -206,7 +206,7 @@ namespace psychic_ui {
         _onKeyDown   = onKeyDown([this](const Key key, const Mod mod) { handleKey(key, mod); });
         _onKeyRepeat = onKeyRepeat([this](const Key key, const Mod mod) { handleKey(key, mod); });
         _onCharacter = onCharacter(
-            [this](UnicodeString character) {
+            [this](icu::UnicodeString character) {
                 if (_selectBegin != _selectEnd) {
                     _text.replace(_selectBegin, _selectEnd - _selectBegin, character);
                     textEdited(_selectBegin + 1);
@@ -362,7 +362,7 @@ namespace psychic_ui {
 
             case Key::ENTER:
                 if (_multiline) {
-                    UnicodeString uni_str(static_cast<UChar32>('\n'));
+                    icu::UnicodeString uni_str(static_cast<UChar32>('\n'));
                     if (_selectBegin != _selectEnd) {
                         _text.replace(_selectBegin, _selectEnd - _selectBegin, uni_str);
                         textEdited(_selectBegin + 1);

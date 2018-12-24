@@ -25,7 +25,7 @@ namespace psychic_ui {
 
     void Label::styleUpdated() {
         TextBase::styleUpdated();
-        SkPaint::FontMetrics metrics{};
+        SkFontMetrics metrics{};
         _textPaint.getFontMetrics(&metrics);
         _yOffset = -metrics.fAscent;
     }
@@ -51,7 +51,9 @@ namespace psychic_ui {
 
     void Label::layoutUpdated() {
         TextBase::layoutUpdated();
-        _drawText = _text.substr(0, _textPaint.breakText(_text.c_str(), _text.size(), _paddedRect.width()));
+        // TODO: Fix deprecated thing
+        SkFont font = SkFont::LEGACY_ExtractFromPaint(_textPaint);
+        _drawText = _text.substr(0, font.breakText(_text.c_str(), _text.size(), SkTextEncoding::kUTF8, _paddedRect.width()));
     }
 
     void Label::draw(SkCanvas *canvas) {

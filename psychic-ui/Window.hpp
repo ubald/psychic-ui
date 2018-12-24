@@ -142,7 +142,7 @@ namespace psychic_ui {
         bool keyDown(Key key, Mod mod);
         bool keyRepeat(Key key, Mod mod);
         bool keyUp(Key key, Mod mod);
-        bool keyboardCharacterEvent(const UnicodeString &character);
+        bool keyboardCharacterEvent(const icu::UnicodeString &character);
 
         // endregion
 

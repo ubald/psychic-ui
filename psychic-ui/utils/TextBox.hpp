@@ -125,7 +125,7 @@ namespace psychic_ui {
          *
          * @param text
          */
-        void setText(const UnicodeString &text);
+        void setText(const icu::UnicodeString &text);
 
         /**
          * Resets the iterators in order to recalculate new values.
@@ -283,16 +283,16 @@ namespace psychic_ui {
         std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>> snapshotTextBlob();
 
     private:
-        std::unique_ptr<BreakIterator> lineIterator{nullptr};
-        std::unique_ptr<BreakIterator> wordIterator{nullptr};
-        std::unique_ptr<BreakIterator> sentenceIterator{nullptr};
-        SkRect                         _box{};
-        float                          _spacingMult{1.0f};
-        float                          _spacingAdd{0.0f};
-        TextBoxAlign                   _align{TextBoxAlign::Start};
-        TextBoxMode                    _mode{TextBoxMode::LineBreak};
-        const UnicodeString            *_text{nullptr};
-        const SkPaint                  *_paint{nullptr};
+        std::unique_ptr<icu::BreakIterator> lineIterator{nullptr};
+        std::unique_ptr<icu::BreakIterator> wordIterator{nullptr};
+        std::unique_ptr<icu::BreakIterator> sentenceIterator{nullptr};
+        SkRect                              _box{};
+        float                               _spacingMult{1.0f};
+        float                               _spacingAdd{0.0f};
+        TextBoxAlign                        _align{TextBoxAlign::Start};
+        TextBoxMode                         _mode{TextBoxMode::LineBreak};
+        const icu::UnicodeString            *_text{nullptr};
+        const SkPaint                       *_paint{nullptr};
 
         void visit(const TextBoxVisitor &visitor) const;
 
