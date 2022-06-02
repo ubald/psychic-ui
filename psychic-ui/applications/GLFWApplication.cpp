@@ -356,9 +356,9 @@ namespace psychic_ui {
 
     void GLFWSystemWindow::setVisible(bool visible) {
         if (visible) {
-            glfwHideWindow(_glfwWindow);
-        } else {
             glfwShowWindow(_glfwWindow);
+        } else {
+            glfwHideWindow(_glfwWindow);
         }
     }
 
