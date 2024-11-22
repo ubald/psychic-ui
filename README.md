@@ -1,4 +1,5 @@
-# WIP
+> [!WARNING]  
+> While I would love to continue this project because I believe it still has potential, I have no plan to restart development in the near future. Thanks to everyone who have starred, used or contributed to it.
 
 # Psychic UI
 
