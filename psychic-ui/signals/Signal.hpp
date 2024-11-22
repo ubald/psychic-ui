@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <functional>
 #include <vector>
+#include <memory>
+
 #include "Slot.hpp"
 
 namespace psychic_ui {
@@ -20,14 +22,14 @@ namespace psychic_ui {
         /**
          * Check if the signal has any subscriptions
          */
-        bool hasSubscriptions() {
+        bool hasSubscriptions() const {
             return !slots.empty();
         }
 
         /**
          * Get the number of subscriptions
          */
-        std::size_t subscriptionCount() {
+        std::size_t subscriptionCount() const {
             return slots.size();
         }
 
@@ -42,7 +44,7 @@ namespace psychic_ui {
          * Unsubscribe from this signal
          */
         void unsubscribe(std::shared_ptr<Slot<T...>> slot);
-        void unsubscribe(Slot<T...> *slot);
+        void unsubscribe(const Slot<T...> *slot);
 
         /**
          * Emit a signal
@@ -85,12 +87,12 @@ namespace psychic_ui {
     }
 
     template<class... T>
-    void Signal<T...>::unsubscribe(Slot<T...> *slot) {
+    void Signal<T...>::unsubscribe(const Slot<T...> *slot) {
         slots.erase(
             std::remove_if(
                 slots.begin(),
                 slots.end(),
-                [slot](const auto &s) {
+                [slot](const std::shared_ptr<Slot<T...>> &s) {
                     return s.get() == slot;
                 }
             ),
