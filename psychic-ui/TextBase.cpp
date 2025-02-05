@@ -43,6 +43,7 @@ namespace psychic_ui {
     }
 
     unsigned int TextBase::getLineHeight() const {
+        // TODO: Fix that type issue
         return static_cast<unsigned int>(std::ceil(_lineHeight));
     }
 

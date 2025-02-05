@@ -52,6 +52,7 @@ namespace psychic_ui {
         );
 
         // We don't like these from the web default
+        // TODO: Is this still needed?
         YGNodeStyleSetFlexDirection(_yogaNode, YGFlexDirectionColumn);
     }
 
@@ -60,7 +61,7 @@ namespace psychic_ui {
     }
 
     std::string Div::toString() const {
-        std::string str = "";
+        std::string str;
         if (_parent) {
             str = _parent->toString();
         }
@@ -503,9 +504,9 @@ namespace psychic_ui {
         return _computedStyle.get();
     }
 
-    Div *Div::setTag(std::string divName) {
-        std::transform(divName.begin(), divName.end(), divName.begin(), ::tolower);
-        _tags.push_back(divName);
+    Div *Div::setTag(std::string tag) {
+        std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
+        _tags.push_back(tag);
         invalidateStyle();
         return this;
     }
@@ -568,7 +569,7 @@ namespace psychic_ui {
         return this;
     }
 
-    const InheritableValues Div::inheritableValues() const {
+    InheritableValues Div::inheritableValues() const {
         return _inheritableValues;
     }
 
@@ -887,8 +888,6 @@ namespace psychic_ui {
         _borderTop    = YGNodeLayoutGetBorder(_yogaNode, YGEdgeTop);
         _borderRight  = YGNodeLayoutGetBorder(_yogaNode, YGEdgeRight);
         _borderBottom = YGNodeLayoutGetBorder(_yogaNode, YGEdgeBottom);
-
-        std::cout << _borderLeft << " " << _borderTop << " " << _borderRight << " " << _borderBottom << std::endl;
 
         _paddedRect.set(
             _x + YGNodeLayoutGetPadding(_yogaNode, YGEdgeLeft) + _borderLeft,

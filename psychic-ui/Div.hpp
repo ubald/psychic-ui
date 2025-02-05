@@ -378,7 +378,7 @@ namespace psychic_ui {
         Div *setClassNames(std::unordered_set<std::string> additionalClassNames);
         Div *addClassName(std::string className);
         Div *removeClassName(std::string className);
-        virtual const InheritableValues inheritableValues() const;
+        virtual InheritableValues inheritableValues() const;
 
         // endregion
 
@@ -492,9 +492,9 @@ namespace psychic_ui {
          * Set the component tag, it wil be appended to _componentTag in order to get a type hierarchy for styling.
          * Obviously this should be static and/or use Reflection but in order to progress in other parts of the library
          * it will stay local for the time being, until a better technique is implemented.
-         * @param componentName
+         * @param tag
          */
-        Div *setTag(std::string componentName);
+        Div *setTag(std::string tag);
 
         /**
          * Chain of tags from the inheritance chain
@@ -617,7 +617,7 @@ namespace psychic_ui {
 
         /**
          * Sets the component as measurable
-         * Registeres the measure callback
+         * Registers the measure callback
          */
         void setMeasurable();
 

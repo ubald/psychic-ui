@@ -13,7 +13,7 @@ namespace psychic_ui {
 
     public:
 
-        const std::shared_ptr<T> skin() const { return _skin; };
+        std::shared_ptr<T> skin() const { return _skin; };
         Component<T> *setSkin(std::shared_ptr<T> skin);
 
     protected:

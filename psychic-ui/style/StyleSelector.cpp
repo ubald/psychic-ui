@@ -91,7 +91,7 @@ namespace psychic_ui {
 
             if (selector) {
                 r->_depth = selector->_depth + 1;
-                r->_next = std::move(selector);
+                r->_next  = std::move(selector);
             }
 
             selector = std::move(r);
@@ -120,7 +120,8 @@ namespace psychic_ui {
         }
 
         // Match tag
-        if (!_tag.empty() && std::find(component->tags().cbegin(), component->tags().cend(), _tag) == component->tags().cend()) {
+        if (!_tag.empty()
+            && std::find(component->tags().cbegin(), component->tags().cend(), _tag) == component->tags().cend()) {
             return parentMatches;
         }
 
@@ -157,7 +158,8 @@ namespace psychic_ui {
                         return component->childCount() == 0;
                     case firstChild:
                         // NOTE: Children are stored in reverse order
-                        return component->parent() && component->parent()->childIndex(component) == component->parent()->childCount() - 1;
+                        return component->parent()
+                               && component->parent()->childIndex(component) == component->parent()->childCount() - 1;
                     case lastChild:
                         // NOTE: Children are stored in reverse order
                         return component->parent() && component->parent()->childIndex(component) == 0;

@@ -1,9 +1,7 @@
-#include <iostream>
 #include <utility>
 #include "Button.hpp"
 
 namespace psychic_ui {
-
 
     Button::Button(const std::string &label, ClickCallback onClickCallback) :
         Component() {
@@ -68,7 +66,7 @@ namespace psychic_ui {
 
     bool Button::active() const {
         return Component::active() || _selected;
-    };
+    }
 
     void Button::skinChanged() {
         if (_skin) {

@@ -27,7 +27,7 @@ namespace psychic_ui {
         return this;
     }
 
-    const sk_sp<SkTypeface> StyleManager::font(const std::string &name) const {
+    sk_sp<SkTypeface> StyleManager::font(const std::string &name) const {
         auto font = _fonts.find(name);
         return font != _fonts.cend() ? font->second : nullptr;
     }

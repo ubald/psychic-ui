@@ -11,7 +11,7 @@ namespace psychic_ui {
             virtual void removedFromComponent() {};
         protected:
             SkinBase();
-            const InheritableValues inheritableValues() const override;
+            InheritableValues inheritableValues() const override;
         private:
             static const InheritableValues _inheritableValues;
         };

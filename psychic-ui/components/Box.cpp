@@ -45,7 +45,7 @@ namespace psychic_ui {
     }
 
     void HBox::updateRules() {
-        // Once we have access to a style manager add a custom rule targeting us by internal id
+        // TODO: Once we have access to a style manager add a custom rule targeting us by internal id
         if (auto sm = styleManager()) {
             sm->style("#" + _internalId + " > div")
               ->set(marginRight, _gap); // This is our gap, we'll need to cancel it for the last child
@@ -53,8 +53,6 @@ namespace psychic_ui {
               ->set(marginRight, 0); // Last child gap cancellation
         }
     }
-
-
 
     // VBOX
 
@@ -70,7 +68,7 @@ namespace psychic_ui {
     }
 
     void VBox::updateRules() {
-        // Once we have access to a style manager add a custom rule targeting us by internal id
+        // TODO: Once we have access to a style manager add a custom rule targeting us by internal id
         if (auto sm = styleManager()) {
             sm->style("#" + _internalId + " > div")
               ->set(marginBottom, _gap); // This is our gap, we'll need to cancel it for the last child

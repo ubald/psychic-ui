@@ -1,9 +1,11 @@
 #include "Shape.hpp"
 
+#include <utility>
+
 namespace psychic_ui {
 
     Shape::Shape(std::function<void(Shape *, SkCanvas *)> drawFunc) :
-        _drawFunc(drawFunc) {
+        _drawFunc(std::move(drawFunc)) {
         setTag("Shape");
     }
 

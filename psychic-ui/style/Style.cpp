@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iostream>
+#include <utility>
 #include "Style.hpp"
 #include "../Div.hpp"
 
@@ -12,8 +13,8 @@ namespace psychic_ui {
         overlay(fromStyle);
     }
 
-    Style::Style(const std::function<void()> &onChanged) :
-        _onChanged(onChanged) {}
+    Style::Style(std::function<void()> onChanged) :
+        _onChanged(std::move(onChanged)) {}
 
     Style *Style::overlay(const Style *style) {
         if (style) {

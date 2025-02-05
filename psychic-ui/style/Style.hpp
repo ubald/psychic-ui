@@ -62,15 +62,15 @@ namespace psychic_ui {
 
     enum ColorProperty {
         // CSS-Compatible
-            color,
-            backgroundColor,
-            borderColor,
-            borderHorizontalColor,
-            borderLeftColor,
-            borderRightColor,
-            borderVerticalColor,
-            borderTopColor,
-            borderBottomColor,
+        color,
+        backgroundColor,
+        borderColor,
+        borderHorizontalColor,
+        borderLeftColor,
+        borderRightColor,
+        borderVerticalColor,
+        borderTopColor,
+        borderBottomColor,
         // Custom
         selectionColor,
         selectionBackgroundColor,
@@ -79,52 +79,52 @@ namespace psychic_ui {
 
     enum StringProperty {
         // Yoga/Flex
-            fontFamily, textAlign, textJustify,
-            position, direction, display,
-            justifyContent, flexDirection, alignContent, alignItems, alignSelf,
-            flexWrap, overflow,
+        fontFamily, textAlign, textJustify,
+        position, direction, display,
+        justifyContent, flexDirection, alignContent, alignItems, alignSelf,
+        flexWrap, overflow,
         // Custom
-            skin,
-            orientation // For sliders
+        skin,
+        orientation // For sliders
     };
 
     enum FloatProperty {
         // Yoga/Flex
-            flex, grow, shrink, basis, basisPercent,
-            left, leftPercent, right, rightPercent, top, topPercent, bottom, bottomPercent,
-            width, widthPercent, minWidth, minWidthPercent, maxWidth, maxWidthPercent,
-            height, heightPercent, minHeight, minHeightPercent, maxHeight, maxHeightPercent,
-            margin,
-            marginHorizontal, marginLeft, marginRight,
-            marginVertical, marginTop, marginBottom,
-            marginPercent,
-            marginHorizontalPercent, marginLeftPercent, marginRightPercent,
-            marginVerticalPercent, marginTopPercent, marginBottomPercent,
-            padding,
-            paddingHorizontal, paddingLeft, paddingRight,
-            paddingVertical, paddingTop, paddingBottom,
-            paddingPercent,
-            paddingHorizontalPercent, paddingLeftPercent, paddingRightPercent,
-            paddingVerticalPercent, paddingTopPercent, paddingBottomPercent,
-            border, borderHorizontal, borderLeft, borderRight, borderVertical, borderTop, borderBottom,
+        flex, grow, shrink, basis, basisPercent,
+        left, leftPercent, right, rightPercent, top, topPercent, bottom, bottomPercent,
+        width, widthPercent, minWidth, minWidthPercent, maxWidth, maxWidthPercent,
+        height, heightPercent, minHeight, minHeightPercent, maxHeight, maxHeightPercent,
+        margin,
+        marginHorizontal, marginLeft, marginRight,
+        marginVertical, marginTop, marginBottom,
+        marginPercent,
+        marginHorizontalPercent, marginLeftPercent, marginRightPercent,
+        marginVerticalPercent, marginTopPercent, marginBottomPercent,
+        padding,
+        paddingHorizontal, paddingLeft, paddingRight,
+        paddingVertical, paddingTop, paddingBottom,
+        paddingPercent,
+        paddingHorizontalPercent, paddingLeftPercent, paddingRightPercent,
+        paddingVerticalPercent, paddingTopPercent, paddingBottomPercent,
+        border, borderHorizontal, borderLeft, borderRight, borderVertical, borderTop, borderBottom,
         // Custom
-            opacity,
-            fontSize, letterSpacing, lineHeight,
-            borderRadius, borderRadiusTop, borderRadiusBottom, borderRadiusLeft, borderRadiusRight,
-            borderRadiusTopLeft, borderRadiusTopRight, borderRadiusBottomLeft, borderRadiusBottomRight,
+        opacity,
+        fontSize, letterSpacing, lineHeight,
+        borderRadius, borderRadiusTop, borderRadiusBottom, borderRadiusLeft, borderRadiusRight,
+        borderRadiusTopLeft, borderRadiusTopRight, borderRadiusBottomLeft, borderRadiusBottomRight,
     };
 
     enum IntProperty {
         // Custom
-            cursor,
-            gap
+        cursor,
+        gap
     };
 
     enum BoolProperty {
         // Custom
-            antiAlias,
-            textAntiAlias,
-            visible
+        antiAlias,
+        textAntiAlias,
+        visible
     };
 
     struct InheritableValues {
@@ -161,7 +161,7 @@ namespace psychic_ui {
 
         Style() = default;
         explicit Style(const Style *fromStyle);
-        explicit Style(const std::function<void()> &onChanged);
+        explicit Style(std::function<void()> onChanged);
 
         /**
          * Add all values from style onto this

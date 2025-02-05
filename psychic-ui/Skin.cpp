@@ -55,7 +55,7 @@ namespace psychic_ui {
                 ->set(grow, 1);
         }
 
-        const InheritableValues SkinBase::inheritableValues() const {
+        InheritableValues SkinBase::inheritableValues() const {
             return _inheritableValues;
         }
     }

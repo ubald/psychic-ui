@@ -46,7 +46,7 @@ namespace psychic_ui {
         void setValid() { _valid = true; }
 
         StyleManager *loadFont(const std::string &name, const std::string &path);
-        const sk_sp<SkTypeface> font(const std::string &name) const;
+        sk_sp<SkTypeface> font(const std::string &name) const;
 
         StyleManager *registerSkin(const std::string &name, SkinMaker hatcher);
         std::shared_ptr<internal::SkinBase> skin(const std::string &name);

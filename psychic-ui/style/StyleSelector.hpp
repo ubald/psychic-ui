@@ -51,7 +51,7 @@ namespace psychic_ui {
          * Internal match method
          * This method allows expanding the search to the parent, it is hidden as we don't
          * want the end user calling it directly as the first level of matching must not expand
-         * since we optimized by retreiving the parent's computed style instead of walking
+         * since we optimized by retrieving the parent's computed style instead of walking
          * back up the hierarchy for every possible style declaration. We assume that the
          * parent is current.
          * @param component

@@ -55,9 +55,7 @@ namespace psychic_ui {
             left->add<Label>("Single Line Inputs")
                 ->addClassName("h1");
 
-            left->add<TextInput>();
-            left->add<TextInput>();
-            left->add<TextInput>();
+            left->add<TextInput>(lorem);
             left->add<TextInput>();
 
             // Multi Lines
@@ -72,9 +70,7 @@ namespace psychic_ui {
             right->add<Label>("Multiline Text Areas")
                  ->addClassName("h1");
 
-            right->add<TextArea>();
-            right->add<TextArea>();
-            right->add<TextArea>();
+            right->add<TextArea>(lorem);
             right->add<TextArea>();
 
         }
