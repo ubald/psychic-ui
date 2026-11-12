@@ -262,20 +262,34 @@ namespace psychic_ui {
                 break;
 
             case Key::C:
-                if (mod.ctrl or mod.super) {
-                    std::cout << "Copy is not implemented!";
-                }
-                break;
-
             case Key::X:
-                if (mod.ctrl or mod.super) {
-                    std::cout << "Cut is not implemented!";
+                if ((mod.ctrl or mod.super) && _selectBegin != _selectEnd) {
+                    std::string selected;
+                    _text.tempSubString(_selectBegin, _selectEnd - _selectBegin).toUTF8String(selected);
+                    window()->setClipboardText(selected);
+                    if (key == Key::X) {
+                        _text.remove(_selectBegin, _selectEnd - _selectBegin);
+                        textEdited(_selectBegin);
+                    }
                 }
                 break;
 
             case Key::V:
                 if (mod.ctrl or mod.super) {
-                    std::cout << "Paste is not implemented!";
+                    auto pasted = icu::UnicodeString::fromUTF8(window()->clipboardText());
+                    if (!_multiline) {
+                        pasted.findAndReplace(u"\r\n", u" ").findAndReplace(u"\n", u" ").findAndReplace(u"\r", u" ");
+                    }
+                    if (pasted.isEmpty()) {
+                        break;
+                    }
+                    if (_selectBegin != _selectEnd) {
+                        _text.replace(_selectBegin, _selectEnd - _selectBegin, pasted);
+                        textEdited(_selectBegin + pasted.length());
+                    } else {
+                        _text.insert(_caret, pasted);
+                        textEdited(_caret + pasted.length());
+                    }
                 }
                 break;
 

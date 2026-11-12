@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Button.hpp>
+#include <psychic-ui/components/Text.hpp>
 #include <psychic-ui/components/TitleBar.hpp>
 #include "fake_system_window.hpp"
 
@@ -84,4 +85,34 @@ TEST_CASE("Drag areas", "[backend][drag]") {
         systemWindow.layout();
         CHECK_FALSE(window->isDragArea(barX, barY));
     }
+}
+
+TEST_CASE("Text copies, cuts and pastes through the clipboard", "[backend][clipboard][text]") {
+    auto window = std::make_shared<TestWindow>();
+    FakeSystemWindow systemWindow(window);
+    auto text = window->appContainer()->add<Text>("Hello wörld");
+    text->setEditable(true);
+    systemWindow.layout();
+    window->requestFocus(text.get());
+
+    Mod ctrl{};
+    ctrl.ctrl = true;
+
+    text->setSelection(6, 11);
+    window->keyDown(Key::C, ctrl);
+    CHECK(window->clipboardText() == "wörld");
+    CHECK(text->text() == "Hello wörld");
+
+    window->keyDown(Key::X, ctrl);
+    CHECK(text->text() == "Hello ");
+
+    // Single-line text pastes line breaks as spaces
+    window->setClipboardText("big\nworld");
+    window->keyDown(Key::V, ctrl);
+    CHECK(text->text() == "Hello big world");
+    CHECK(text->getCaret() == 15);
+
+    // Without the modifier, it's just a key
+    window->keyDown(Key::V, Mod{});
+    CHECK(text->text() == "Hello big world");
 }
