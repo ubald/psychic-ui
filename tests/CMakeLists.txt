@@ -26,7 +26,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
 
     target_link_libraries(psychic-ui-tests PRIVATE psychic-ui Catch2::Catch2WithMain)
     target_compile_definitions(psychic-ui-tests PRIVATE
-        PSYCHIC_UI_TEST_FONT="${PROJECT_SOURCE_DIR}/res/fonts/Ubuntu/Ubuntu-Regular.ttf")
+        PSYCHIC_UI_TEST_FONTS="${PROJECT_SOURCE_DIR}/res/fonts/Ubuntu/")
 
     add_test(NAME psychic-ui-tests COMMAND psychic-ui-tests)
 

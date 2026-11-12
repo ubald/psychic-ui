@@ -58,6 +58,10 @@ namespace psychic_ui {
         }
     }
 
+    float TextBase::linesHeight(size_t lines) const {
+        return std::max(lines * _lineHeight, std::ceil(_textPaint.getFontSpacing()));
+    }
+
     void TextBase::styleUpdated() {
         Div::styleUpdated();
 
@@ -75,10 +79,18 @@ namespace psychic_ui {
         _textPaint.setTextSize(_fontSize);
         _textPaint.setColor(_computedStyle->get(color));
 
-        // If we don't have a percentage based min height use the line height
-        if (!_computedStyle->has(minHeightPercent)) {
-            float mh = _computedStyle->get(minHeight);
-            _defaultStyle->set(minHeight, std::isnan(mh) ? _lineHeight : std::max(mh, std::max(_lineHeight, std::ceil(_textPaint.getFontSpacing()))));
+        // Yoga caches measures: re-measure when anything changing the text metrics changes
+        float spacing = _computedStyle->get(letterSpacing);
+        FontKey fontKey{
+            _textPaint.getTypeface(),
+            _fontSize,
+            std::isnan(spacing) ? 0.0f : spacing,
+            _lineHeight,
+            _textPaint.isSubpixelText()
+        };
+        if (fontKey != _fontKey) {
+            _fontKey = fontKey;
+            invalidate();
         }
     }
 

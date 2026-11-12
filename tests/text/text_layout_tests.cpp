@@ -15,7 +15,8 @@ using Catch::Approx;
 
 namespace {
 
-    const std::string FONT = "Ubuntu Regular";
+    const std::string FONT      = "Ubuntu Regular";
+    const std::string BOLD_FONT = "Ubuntu Bold";
     const float       LINE_HEIGHT = 20.0f;
 
     /**
@@ -32,16 +33,19 @@ namespace {
             YGNodeCalculateLayout(_yogaNode, width, height, YGDirectionLTR);
             layoutUpdated();
         }
+
+        using Div::invalidate;
     };
 
     std::shared_ptr<StyleManager> makeStyleManager() {
         auto styleManager = std::make_shared<StyleManager>();
-        styleManager->loadFont(FONT, PSYCHIC_UI_TEST_FONT);
+        styleManager->loadFont(FONT, PSYCHIC_UI_TEST_FONTS "Ubuntu-Regular.ttf");
+        styleManager->loadFont(BOLD_FONT, PSYCHIC_UI_TEST_FONTS "Ubuntu-Bold.ttf");
         return styleManager;
     }
 
     template<typename T>
-    std::shared_ptr<T> addText(Root &root, const std::string &text, float size = 14.0f) {
+    std::shared_ptr<T> addText(Root &root, const std::string &text, float size = 14.0f, const std::string &font = FONT) {
         auto node = root.add<T>(text);
         node->style()
             ->set(fontFamily, FONT)
@@ -54,12 +58,12 @@ namespace {
     /**
      * Width of the widest line, measured with the same paint settings as TextBase
      */
-    float textWidth(const std::shared_ptr<StyleManager> &styleManager, const std::string &text, float size = 14.0f) {
+    float textWidth(const std::shared_ptr<StyleManager> &styleManager, const std::string &text, float size = 14.0f, const std::string &font = FONT) {
         SkPaint paint{};
         paint.setAntiAlias(true);
         paint.setLCDRenderText(true);
         paint.setSubpixelText(true);
-        paint.setTypeface(styleManager->font(FONT));
+        paint.setTypeface(styleManager->font(font));
         paint.setTextSize(size);
         float       width = 0.0f;
         size_t      start = 0;
@@ -155,5 +159,69 @@ TEST_CASE("Text and Label are measured to their content", "[text]") {
         REQUIRE(text->getWidth() == 60);
         REQUIRE(text->getHeight() >= 2 * LINE_HEIGHT);
         REQUIRE(std::fmod(text->getHeight(), LINE_HEIGHT) == 0);
+    }
+}
+
+TEST_CASE("Text and Label are re-measured when their font changes through style", "[text]") {
+    auto styleManager = makeStyleManager();
+
+    Root root{styleManager};
+    root.style()
+        ->set(width, 400.0f)
+        ->set(height, 300.0f)
+        ->set(alignItems, "start");
+
+    const std::string str   = "Hello, measured world";
+    auto              text  = addText<Text>(root, str);
+    auto              label = addText<Label>(root, str);
+    // Twice, so that anything settling over a second pass is done before the change
+    root.layout(400, 300);
+    root.layout(400, 300);
+    REQUIRE(text->getWidth() == Approx(textWidth(styleManager, str)).margin(1));
+    REQUIRE(label->getWidth() == Approx(textWidth(styleManager, str)).margin(1));
+
+    SECTION("font size") {
+        text->style()->set(fontSize, 16.0f);
+        label->style()->set(fontSize, 16.0f);
+        root.layout(400, 300);
+
+        REQUIRE(text->getWidth() == Approx(textWidth(styleManager, str, 16.0f)).margin(1));
+        REQUIRE(label->getWidth() == Approx(textWidth(styleManager, str, 16.0f)).margin(1));
+    }
+
+    SECTION("font family") {
+        const float bold = textWidth(styleManager, str, 14.0f, BOLD_FONT);
+        REQUIRE(bold != Approx(textWidth(styleManager, str)).margin(1));
+
+        text->style()->set(fontFamily, BOLD_FONT);
+        label->style()->set(fontFamily, BOLD_FONT);
+        root.layout(400, 300);
+
+        REQUIRE(text->getWidth() == Approx(bold).margin(1));
+        REQUIRE(label->getWidth() == Approx(bold).margin(1));
+    }
+
+    SECTION("line height") {
+        text->style()->set(lineHeight, 32.0f);
+        label->style()->set(lineHeight, 32.0f);
+        root.layout(400, 300);
+
+        REQUIRE(text->getHeight() == 32);
+        REQUIRE(label->getHeight() == 32);
+    }
+
+    SECTION("text") {
+        text->setText("Hi");
+        label->setText("Hi");
+        root.layout(400, 300);
+
+        REQUIRE(text->getWidth() == Approx(textWidth(styleManager, "Hi")).margin(1));
+        REQUIRE(label->getWidth() == Approx(textWidth(styleManager, "Hi")).margin(1));
+    }
+
+    SECTION("invalidating a Div without a measure function is harmless") {
+        root.invalidate();
+        root.layout(400, 300);
+        REQUIRE(text->getWidth() == Approx(textWidth(styleManager, str)).margin(1));
     }
 }

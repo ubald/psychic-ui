@@ -1,5 +1,6 @@
 #pragma once
 
+#include <tuple>
 #include <SkPaint.h>
 #include <SkFont.h>
 #include "Div.hpp"
@@ -37,6 +38,21 @@ namespace psychic_ui {
          * @return available when Exactly, the smallest of both when AtMost, content otherwise
          */
         static float fit(float content, float available, YGMeasureMode mode);
+
+        /**
+         * Height of the given number of lines, never less than the font spacing
+         * so that a single line's glyphs fit even when the line height is smaller
+         * @param lines Line count
+         * @return Height in pixels
+         */
+        float linesHeight(size_t lines) const;
+
+    private:
+        /**
+         * What changes the text metrics: typeface, size, letter spacing, line height, subpixel positioning
+         */
+        using FontKey = std::tuple<const SkTypeface *, float, float, float, bool>;
+        FontKey _fontKey{};
     };
 }
 

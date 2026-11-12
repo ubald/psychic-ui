@@ -32,7 +32,7 @@ namespace psychic_ui {
 
     YGSize Label::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
         float maxContent = std::ceil(_textPaint.measureText(_text.c_str(), _text.size()));
-        return YGSize{fit(maxContent, width, widthMode), fit(_lineHeight, height, heightMode)};
+        return YGSize{fit(maxContent, width, widthMode), fit(linesHeight(1), height, heightMode)};
     }
 
     void Label::layoutUpdated() {

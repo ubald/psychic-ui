@@ -33,6 +33,7 @@ namespace psychic_ui {
         _caret       = 0;
         _selectBegin = 0;
         _selectEnd   = 0;
+        invalidate();
         return this;
     }
 
@@ -78,6 +79,7 @@ namespace psychic_ui {
         if (_multiline != multiline) {
             _multiline = multiline;
             _textBox.setMode(_multiline ? TextBoxMode::LineBreak : TextBoxMode::OneLine);
+            invalidate();
         }
         return this;
     }
@@ -111,11 +113,8 @@ namespace psychic_ui {
             _targetXPos = _textBox.posFromIndex(_caret).second;
         }
         if (isValid()) {
-            std::cout << "on caret is valid" << std::endl;
             onCaret(_caret);
         } else {
-            std::cout << "on caret pending" << std::endl;
-
             // Wait until the layout is valid to notify,
             // otherwise the caret position won't be correct.
             _pendingCaretSignal = true;
@@ -412,16 +411,14 @@ namespace psychic_ui {
         // so the drawing state (_textBox's box and lines) is left untouched.
         float contentWidth = fit(std::ceil(_textBox.maxContentWidth()), width, widthMode);
         auto  lines        = std::max<size_t>(1, _textBox.lineStartsAt(contentWidth).size());
-        return YGSize{contentWidth, fit(lines * _lineHeight, height, heightMode)};
+        return YGSize{contentWidth, fit(linesHeight(lines), height, heightMode)};
     }
 
     void Text::layoutUpdated() {
         TextBase::layoutUpdated();
         _textBox.setBox(0.0f, 0.0f, _paddedRect.width(), _paddedRect.height());
         _blob = _textBox.snapshotTextBlob();
-        std::cout << "layout" << std::endl;
         if (_pendingCaretSignal) {
-            std::cout << "on caret" << std::endl;
             onCaret(_caret);
             _pendingCaretSignal = false;
         }

@@ -628,12 +628,13 @@ namespace psychic_ui {
     // region Layout
 
     void Div::invalidate() {
-        YGNodeMarkDirty(_yogaNode);
-        //std::cout << "Mark dirty" << std::endl;
+        // Yoga only lets leaves with a measure function be marked dirty (it asserts otherwise)
+        if (YGNodeHasMeasureFunc(_yogaNode)) {
+            YGNodeMarkDirty(_yogaNode);
+        }
     }
 
     bool Div::isValid() const {
-        std::cout << "Is dirty: " << (YGNodeIsDirty(_yogaNode) ? "Yes" : "No") << std::endl;
         return !YGNodeIsDirty(_yogaNode);
     }
 
