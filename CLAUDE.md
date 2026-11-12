@@ -18,8 +18,8 @@ cmake --build --preset debug -j"$(nproc)"
 
 No preset sets a generator, so it stays CMake's default (Make), not Ninja; pass `-j` yourself.
 
-- CMake 3.24 or newer. The root `CMakeLists.txt` sets `CMAKE_POLICY_VERSION_MINIMUM` to 3.5 around the GLFW and psychic-color subdirectories, whose old `cmake_minimum_required` CMake 4 otherwise rejects; nothing needs to set it from outside.
-- Everything is a target: Yoga is its own static `yogacore` target (`extlib/external/yoga/yoga/CMakeLists.txt`, added from `extlib/yoga/`; it compiles as C++20 with `-Wall -Werror` in its own directory), Skia the imported `Skia::Skia`, GLFW the static `glfw`. ICU and Fontconfig use CMake's own Find modules; there's no `cmake/` directory any more. On macOS the Homebrew prefix comes from `brew --prefix`.
+- CMake 3.24 or newer. The root `CMakeLists.txt` sets `CMAKE_POLICY_VERSION_MINIMUM` to 3.5 around the GLFW subdirectory, whose old `cmake_minimum_required` CMake 4 otherwise rejects (with a deprecation warning that remains); nothing needs to set it from outside.
+- Everything is a target: psychic-color is the static `psychic-color::psychic-color`, Yoga is its own static `yogacore` target (`extlib/external/yoga/yoga/CMakeLists.txt`, added from `extlib/yoga/`; it compiles as C++20 with `-Wall -Werror` in its own directory), Skia the imported `Skia::Skia`, GLFW the static `glfw`. ICU and Fontconfig use CMake's own Find modules; there's no `cmake/` directory any more. On macOS the Homebrew prefix comes from `brew --prefix`.
 - Skia is built by `extlib/skia/skia_build.sh.in`, which CMake runs as the `skia-build` custom command when `<build dir>/extlib/skia/build/libskia.a` is missing: it calls `tools/git-sync-deps` (needs network), then `gn` and `ninja` from depot_tools (the downloaded `gn` binary runs through nix-ld). These scripts need **Python 2**, which nixpkgs unstable dropped, so the flake takes `python27` from a second `nixos-25.11` input; it isn't in the binary cache and builds from source once. The first Skia build is slow; copying an existing `extlib/skia/build` into a new build directory (`cp -a`) before its first build skips it.
 - Skia's gn args in `extlib/skia/CMakeLists.txt` work around modern GCC/ICU: `-include cstdint` (GCC 13+) and `skia_use_sfntly=false` (sfntly is C++14 and can't include ICU 64+ headers).
 - The library requires C++20 (`target_compile_features(psychic-ui PUBLIC cxx_std_20)`), so whatever links it builds as C++20 too. GCC 16 defaults to C++20, so the compile flags may show no `-std` at all.
@@ -30,7 +30,7 @@ No preset sets a generator, so it stays CMake's default (Make), not Ninja; pass 
 
 ## Tests
 
-Catch2 v3 into one executable, linked to `Catch2::Catch2WithMain` (there's no `main.cpp`) and registered with CTest. `tests/CMakeLists.txt` uses an installed Catch2 3 when `find_package` finds one (the flake provides `catch2_3`); otherwise FetchContent downloads `v3.16.1` into `<build dir>/_deps`. `-DCMAKE_DISABLE_FIND_PACKAGE_Catch2=ON` forces the download. `lib/psychic-color`'s own tests are turned off from the root `CMakeLists.txt`: they download Catch's `master` branch at build time, which no longer exists.
+Catch2 v3 into one executable, linked to `Catch2::Catch2WithMain` (there's no `main.cpp`) and registered with CTest. `tests/CMakeLists.txt` uses an installed Catch2 3 when `find_package` finds one (the flake provides `catch2_3`); otherwise FetchContent downloads `v3.16.1` into `<build dir>/_deps`. `-DCMAKE_DISABLE_FIND_PACKAGE_Catch2=ON` forces the download. `lib/psychic-color`'s own tests (`PSYCHIC_COLOR_BUILD_TESTS`) default off when it isn't the top-level project, so they aren't built here.
 
 ```sh
 ctest --preset debug                                       # all tests, through CTest

@@ -95,16 +95,16 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux|BSD")
     find_package(Fontconfig REQUIRED)
 endif ()
 
-# GLFW and psychic-color declare `cmake_minimum_required` versions that CMake 4
-# rejects; let them configure with the oldest policies it still supports.
-set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
-
 # GLAD
 add_subdirectory(extlib/glad)
 
 # GLFW
 if (PSYCHIC_UI_BUILD_GLFW)
+    # GLFW declares a `cmake_minimum_required` that CMake 4 rejects; let it
+    # configure with the oldest policies CMake still supports.
+    set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
     add_subdirectory(extlib/glfw)
+    unset(CMAKE_POLICY_VERSION_MINIMUM)
 endif ()
 
 # SDL
@@ -123,11 +123,10 @@ if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/lib/psychic-color/.git")
     message(FATAL_ERROR "Psychic UI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
 endif ()
 
-# Its tests download Catch's `master` branch at build time, which no longer exists
-set(PSYCHIC_COLOR_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+# Static, without overriding BUILD_SHARED_LIBS for the rest of the project
+set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(lib/psychic-color)
-
-unset(CMAKE_POLICY_VERSION_MINIMUM)
+unset(BUILD_SHARED_LIBS)
 
 # LIBRARY
 
@@ -243,7 +242,6 @@ target_compile_options(psychic-ui PRIVATE -Wall -Wextra)
 
 target_include_directories(psychic-ui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${PSYCHIC_COLOR_INCLUDE_DIRS}
     )
 
 target_link_libraries(psychic-ui PUBLIC
@@ -252,7 +250,7 @@ target_link_libraries(psychic-ui PUBLIC
     yogacore
     ICU::uc
     ICU::data
-    psychic-color
+    psychic-color::psychic-color
     )
 
 if (WIN32)
