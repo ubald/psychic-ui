@@ -22,7 +22,9 @@ if (PSYCHIC_UI_BUILD_TESTS)
         layout/layout_pipeline_tests.cpp
         div/children_tests.cpp
         keyboard/keycodes.cpp
-        text/text_layout_tests.cpp)
+        text/text_layout_tests.cpp
+        signals/signal_tests.cpp
+        signals/lifetime_tests.cpp)
 
     target_link_libraries(psychic-ui-tests PRIVATE psychic-ui Catch2::Catch2WithMain)
     target_compile_definitions(psychic-ui-tests PRIVATE
