@@ -121,6 +121,12 @@ if (PSYCHIC_UI_BUILD_SDL3)
     set(SDL_POWER OFF)
     set(SDL_VULKAN OFF)
     set(SDL_KMSDRM OFF)
+    # X11 extensions for features Psychic UI doesn't use (screensaver inhibition, shaped windows,
+    # synthetic input, message box double buffering): SDL stops if their headers are missing
+    set(SDL_X11_XSCRNSAVER OFF)
+    set(SDL_X11_XSHAPE OFF)
+    set(SDL_X11_XTEST OFF)
+    set(SDL_X11_XDBE OFF)
     FetchContent_MakeAvailable(SDL3)
 endif ()
 

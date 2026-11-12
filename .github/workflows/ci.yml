@@ -36,7 +36,7 @@ jobs:
             libjpeg-dev \
             zlib1g-dev \
             libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
-            libxext-dev libxfixes-dev libxss-dev libxtst-dev libxkbcommon-dev \
+            libxext-dev libxfixes-dev libxkbcommon-dev \
             libwayland-dev libdecor-0-dev libegl-dev libdbus-1-dev libibus-1.0-dev
 
       # The image's python-is-python3 makes `python` Python 3
