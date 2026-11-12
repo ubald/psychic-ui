@@ -141,7 +141,14 @@ if (PSYCHIC_UI_BUILD_GLFW_ADAPTER)
     set(GLFW_BUILD_TESTS OFF)
     set(GLFW_BUILD_DOCS OFF)
     set(GLFW_INSTALL OFF)
-    # Wayland only when its development files are there (GLFW stops otherwise); X11 always
+    # Wayland only when its development files are there (GLFW stops otherwise), and not next to a
+    # fetched, static SDL3: both compile the same Wayland protocol code, whose symbols then clash
+    # when linked together. X11 always.
+    if (CMAKE_SYSTEM_NAME MATCHES "Linux|BSD" AND NOT DEFINED GLFW_BUILD_WAYLAND)
+        if (DEFINED sdl3_SOURCE_DIR)
+            set(GLFW_BUILD_WAYLAND OFF)
+        endif ()
+    endif ()
     if (CMAKE_SYSTEM_NAME MATCHES "Linux|BSD" AND NOT DEFINED GLFW_BUILD_WAYLAND)
         find_package(PkgConfig QUIET)
         if (PKG_CONFIG_FOUND)
