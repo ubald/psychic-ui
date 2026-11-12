@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# Builds without Nix, from system packages only.
+#
+# The pinned Skia (m73) runs `tools/git-sync-deps` and gn scripts that need
+# Python 2 as `python`, syncs ~25 repos and takes ~420 ninja steps, so its
+# output directory is cached per Skia commit and build script.
+
+jobs:
+  linux:
+    name: Linux
+    # 22.04 is the last Ubuntu that packages Python 2 (`python2`)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            python2 \
+            libgl-dev \
+            libsdl2-dev \
+            libicu-dev \
+            libfreetype-dev \
+            libfontconfig-dev \
+            libpng-dev \
+            libjpeg-dev \
+            zlib1g-dev \
+            libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+
+      # The image's python-is-python3 makes `python` Python 3
+      - name: Make `python` Python 2
+        run: |
+          mkdir -p "$RUNNER_TEMP/python2"
+          ln -s /usr/bin/python2 "$RUNNER_TEMP/python2/python"
+          echo "$RUNNER_TEMP/python2" >> "$GITHUB_PATH"
+
+      - name: Find the Skia commit
+        id: skia
+        run: echo "commit=$(git rev-parse HEAD:extlib/external/skia)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Skia
+        id: skia-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: build/debug/extlib/skia/build
+          key: skia-${{ runner.os }}-${{ runner.arch }}-${{ steps.skia.outputs.commit }}-${{ hashFiles('extlib/skia/CMakeLists.txt', 'extlib/skia/skia_build.sh.in') }}
+
+      - name: Configure
+        run: cmake --preset debug
+
+      # On its own, so a Skia that built is cached even if the rest fails
+      - name: Build Skia
+        if: steps.skia-cache.outputs.cache-hit != 'true'
+        run: cmake --build --preset debug --target skia-build
+
+      - name: Save Skia
+        if: steps.skia-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: build/debug/extlib/skia/build
+          key: ${{ steps.skia-cache.outputs.cache-primary-key }}
+
+      - name: Build
+        run: cmake --build --preset debug -j"$(nproc)"
+
+      - name: Test
+        run: ctest --preset debug
+
+  macos:
+    name: macOS
+    runs-on: macos-latest
+    # Allowed to fail until Skia is upgraded: the 2018 Skia isn't expected to
+    # build on Apple Silicon with current Xcode. The job still exercises the
+    # macOS CMake branches (brew --prefix, OBJCXX, Skia's extra flags).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      # `sdl2` is now sdl2-compat, SDL2's API over SDL3
+      - name: Install dependencies
+        run: brew install icu4c sdl2 freetype jpeg-turbo libpng pyenv
+
+      # Homebrew has no Python 2; pyenv builds it from source
+      - name: Install Python 2
+        run: |
+          pyenv install 2.7.18
+          echo "$(pyenv root)/versions/2.7.18/bin" >> "$GITHUB_PATH"
+
+      - name: Find the Skia commit
+        id: skia
+        run: echo "commit=$(git rev-parse HEAD:extlib/external/skia)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Skia
+        id: skia-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: build/debug/extlib/skia/build
+          key: skia-${{ runner.os }}-${{ runner.arch }}-${{ steps.skia.outputs.commit }}-${{ hashFiles('extlib/skia/CMakeLists.txt', 'extlib/skia/skia_build.sh.in') }}
+
+      - name: Configure
+        run: cmake --preset debug
+
+      - name: Build Skia
+        if: steps.skia-cache.outputs.cache-hit != 'true'
+        run: cmake --build --preset debug --target skia-build
+
+      - name: Save Skia
+        if: steps.skia-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: build/debug/extlib/skia/build
+          key: ${{ steps.skia-cache.outputs.cache-primary-key }}
+
+      - name: Build
+        run: cmake --build --preset debug -j"$(sysctl -n hw.ncpu)"
+
+      - name: Test
+        run: ctest --preset debug

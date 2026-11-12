@@ -3,7 +3,7 @@
 
 # Psychic UI
 
-[![Build Status](https://travis-ci.org/ubald/psychic-ui.svg?branch=master)](https://travis-ci.org/ubald/psychic-ui)
+[![CI](https://github.com/ubald/psychic-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/ubald/psychic-ui/actions/workflows/ci.yml)
 
 ![Screenshot](/docs/screenshot.png)
 

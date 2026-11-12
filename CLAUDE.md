@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Status
 
-The project is being resumed after years idle (the README still says it's paused). Dependencies are pinned through git submodules; Yoga is at 3.2.2, while Skia m73 and GLFW 3.3-dev are still 2018-era versions. The goal is to upgrade them all to current versions. `.travis.yml` is dead.
+The project is being resumed after years idle (the README still says it's paused). Dependencies are pinned through git submodules; Yoga is at 3.2.2, while Skia m73 and GLFW 3.3-dev are still 2018-era versions. The goal is to upgrade them all to current versions.
 
 ## Building
 
@@ -21,6 +21,7 @@ No preset sets a generator, so it stays CMake's default (Make), not Ninja; pass 
 - CMake 3.24 or newer. The root `CMakeLists.txt` sets `CMAKE_POLICY_VERSION_MINIMUM` to 3.5 around the GLFW subdirectory, whose old `cmake_minimum_required` CMake 4 otherwise rejects (with a deprecation warning that remains); nothing needs to set it from outside.
 - Everything is a target: psychic-color is the static `psychic-color::psychic-color`, Yoga is its own static `yogacore` target (`extlib/external/yoga/yoga/CMakeLists.txt`, added from `extlib/yoga/`; it compiles as C++20 with `-Wall -Werror` in its own directory), Skia the imported `Skia::Skia`, GLFW the static `glfw`. ICU and Fontconfig use CMake's own Find modules; there's no `cmake/` directory any more. On macOS the Homebrew prefix comes from `brew --prefix`.
 - Skia is built by `extlib/skia/skia_build.sh.in`, which CMake runs as the `skia-build` custom command when `<build dir>/extlib/skia/build/libskia.a` is missing: it calls `tools/git-sync-deps` (needs network), then `gn` and `ninja` from depot_tools (the downloaded `gn` binary runs through nix-ld). These scripts need **Python 2**, which nixpkgs unstable dropped, so the flake takes `python27` from a second `nixos-25.11` input; it isn't in the binary cache and builds from source once. The first Skia build is slow; copying an existing `extlib/skia/build` into a new build directory (`cp -a`) before its first build skips it.
+- CI (`.github/workflows/ci.yml`, GitHub Actions) proves the build works without Nix, from system packages: Linux on `ubuntu-22.04`, the last Ubuntu that packages Python 2, and macOS, allowed to fail until the Skia upgrade. Both cache Skia's output directory per Skia commit and build script.
 - Skia's gn args in `extlib/skia/CMakeLists.txt` work around modern GCC/ICU: `-include cstdint` (GCC 13+) and `skia_use_sfntly=false` (sfntly is C++14 and can't include ICU 64+ headers).
 - The library requires C++20 (`target_compile_features(psychic-ui PUBLIC cxx_std_20)`), so whatever links it builds as C++20 too. GCC 16 defaults to C++20, so the compile flags may show no `-std` at all.
 - CMake options (all `ON` by default): `BUILD_SHARED_LIBS` (builds psychic-ui as a shared library; GLFW, Yoga, psychic-color and a fetched Catch2 stay static either way), `PSYCHIC_UI_BUILD_GLFW`, `PSYCHIC_UI_BUILD_SDL2`, `PSYCHIC_UI_BUILD_TESTS`, `PSYCHIC_UI_BUILD_EXAMPLE`, `PSYCHIC_UI_BUILD_PLAYGROUND`.
