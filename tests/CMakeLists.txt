@@ -21,10 +21,14 @@ if (PSYCHIC_UI_BUILD_TESTS)
         style/yoga_tests.cpp
         layout/layout_pipeline_tests.cpp
         div/children_tests.cpp
-        keyboard/keycodes.cpp
         text/text_layout_tests.cpp
         signals/signal_tests.cpp
         signals/lifetime_tests.cpp)
+
+    if (PSYCHIC_UI_BUILD_SDL3)
+        target_sources(psychic-ui-tests PRIVATE
+            keyboard/keycodes.cpp)
+    endif ()
 
     target_link_libraries(psychic-ui-tests PRIVATE psychic-ui Catch2::Catch2WithMain)
     target_compile_definitions(psychic-ui-tests PRIVATE

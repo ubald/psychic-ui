@@ -36,7 +36,7 @@
           freetype
           fontconfig
           icu
-          SDL2
+          sdl3
           zlib
           expat
 

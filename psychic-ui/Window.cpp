@@ -1,8 +1,10 @@
+#include <cstring>
 #include <iostream>
 #include <utility>
 #include "GrBackendSurface.h"
 #include "Window.hpp"
 #include "SkSurface.h"
+#include "gl/GrGLAssembleInterface.h"
 #include "gl/GrGLInterface.h"
 #include "gl/GrGLUtil.h"
 
@@ -44,8 +46,7 @@ namespace psychic_ui {
     }
 
     Window::~Window() {
-        delete _sk_surface;
-        delete _sk_context;
+        releaseSkia();
     }
 
     // region Hierarchy
@@ -59,13 +60,16 @@ namespace psychic_ui {
     // region Lifecycle
 
     void Window::open(SystemWindow *systemWindow) {
+        // Skia's GPU objects belong to the previous system window's GL context
+        releaseSkia();
         _systemWindow = systemWindow;
-
-        // Setup Skia
-        initSkia();
 
         // Performance
         lastReport = std::chrono::high_resolution_clock::now();
+    }
+
+    SystemWindow *Window::systemWindow() const {
+        return _systemWindow;
     }
 
     void Window::close() {
@@ -74,9 +78,36 @@ namespace psychic_ui {
     }
 
     void Window::initSkia() {
-        auto interface = GrGLMakeNativeInterface();
+        // The GL functions come from the system window's loader (SDL, GLFW), not from Skia's native
+        // interface, which only knows GLX on Linux and fails in an EGL context (Wayland)
+        auto interface = GrGLMakeAssembledInterface(
+            _systemWindow,
+            [](void *ctx, const char name[]) -> GrGLFuncPtr {
+                // Skia also asks for eglQueryString, only to list EGL extensions it can do without. A GLX
+                // loader returns a stub for any name, which crashes when called, so it gets none.
+                if (std::strncmp(name, "egl", 3) == 0) {
+                    return nullptr;
+                }
+                return reinterpret_cast<GrGLFuncPtr>(static_cast<SystemWindow *>(ctx)->glProcAddress(name));
+            }
+        );
+        if (!interface) {
+            throw std::runtime_error("Could not get the OpenGL functions Skia needs");
+        }
         _sk_context = GrContext::MakeGL(interface).release();
-        getSkiaSurface();
+        if (!_sk_context) {
+            throw std::runtime_error("Could not create a Skia OpenGL context");
+        }
+        _surfaceStale = true;
+    }
+
+    void Window::releaseSkia() {
+        delete _sk_surface;
+        _sk_surface = nullptr;
+        _sk_canvas  = nullptr;
+        delete _sk_context;
+        _sk_context   = nullptr;
+        _surfaceStale = true;
     }
 
     void Window::getSkiaSurface() {
@@ -85,15 +116,19 @@ namespace psychic_ui {
         }
 
         delete _sk_surface;
+        _sk_surface   = nullptr;
+        _sk_canvas    = nullptr;
+        _surfaceStale = false;
 
         GrGLFramebufferInfo framebufferInfo{};
         framebufferInfo.fFBOID = 0;  // assume default framebuffer
         framebufferInfo.fFormat = GR_GL_RGBA8;
 
 
+        // In pixels; `drawAll` scales the canvas to the window's units
         GrBackendRenderTarget backendRenderTarget(
-            _systemWindow->getWidth(),
-            _systemWindow->getHeight(),
+            _systemWindow->getFramebufferWidth(),
+            _systemWindow->getFramebufferHeight(),
             _systemWindow->getSamples(),
             _systemWindow->getStencilBits(),
             framebufferInfo
@@ -294,33 +329,34 @@ namespace psychic_ui {
     }
 
     void Window::drawAll() {
-        if (!_visible) {
-            // TODO: That should not happen
+        if (!_visible || !_systemWindow) {
             return;
         }
 
-        //glfwMakeContextCurrent(_glfwWindow);
-        //glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
-        //glfwGetWindowSize(_glfwWindow, &_windowWidth, &_windowHeight);
-        //
-        //#if defined(_WIN32) || defined(__linux__)
-        //_windowWidth = (int)(_windowWidth / _pixelRatio);
-        //_windowHeight =(int)(_windowHeight / _pixelRatio);
-        //_fbWidth = (int)(_fbWidth * _pixelRatio);
-        //_fbHeight = (int)(_fbHeight * _pixelRatio);
-        //#else
-        //if (_windowWidth) {
-        //    _pixelRatio = (float) _fbWidth / (float) _windowWidth;
-        //}
-        //#endif
-
         updateStylesAndLayout();
 
-        //glViewport(0, 0, _fbWidth, _fbHeight);
-        //glBindSampler(0, 0);
+        // Skia is set up here rather than in `open` because a GL context is only known to be current
+        // while drawing (an embedding host makes it current for its own frame)
+        if (!_sk_context) {
+            initSkia();
+        } else if (_systemWindow->sharesContext()) {
+            // The host drew with the same context since our last frame
+            _sk_context->resetContext();
+        }
+        if (_surfaceStale) {
+            getSkiaSurface();
+        }
+        if (!_sk_canvas) {
+            return;
+        }
 
         _sk_canvas->clear(0x00000000);
+        // Layout is in window units, the surface in pixels
+        _sk_canvas->save();
+        const float pixelRatio = _systemWindow->getPixelRatio();
+        _sk_canvas->scale(pixelRatio, pixelRatio);
         render(_sk_canvas);
+        _sk_canvas->restore();
         _sk_canvas->flush();
 
         // Performance
@@ -501,8 +537,8 @@ namespace psychic_ui {
         _windowWidth  = width;
         _windowHeight = height;
 
-        // Get a new surface
-        getSkiaSurface();
+        // The next frame gets a new surface, at the new framebuffer size
+        _surfaceStale = true;
     }
 
     void Window::windowActivated() {

@@ -54,10 +54,6 @@ set(CPACK_SOURCE_IGNORE_FILES "/.git/;/.idea/;/build/;/cmake-build-debug/;${CPAC
 # BUILDING
 #
 
-if (APPLE)
-    enable_language(OBJCXX)
-endif ()
-
 # Homebrew's keg-only packages (ICU, jpeg-turbo) aren't on the default search
 # path; ask brew where it lives rather than assuming /usr/local or /opt/homebrew.
 if (APPLE)
@@ -78,11 +74,8 @@ add_feature_info("psychic-ui-shared" BUILD_SHARED_LIBS "Build shared library")
 # The static dependencies below end up inside the shared library
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-option(PSYCHIC_UI_BUILD_SDL2 "SDL2 Support" ON)
-add_feature_info("psychic-ui-sdl2" PSYCHIC_UI_BUILD_SDL2 "Build with support for SDL2")
-
-option(PSYCHIC_UI_BUILD_GLFW "GLFW Support" ON)
-add_feature_info("psychic-ui-glfw" PSYCHIC_UI_BUILD_GLFW "Build with support for GLFW")
+option(PSYCHIC_UI_BUILD_SDL3 "SDL3 backend: the application runner, and the adapter for SDL hosts" ON)
+add_feature_info("psychic-ui-sdl3" PSYCHIC_UI_BUILD_SDL3 "Build the SDL3 backend")
 
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
@@ -98,18 +91,34 @@ endif ()
 # GLAD
 add_subdirectory(extlib/glad)
 
-# GLFW
-if (PSYCHIC_UI_BUILD_GLFW)
-    # GLFW declares a `cmake_minimum_required` that CMake 4 rejects; let it
-    # configure with the oldest policies CMake still supports.
-    set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
-    add_subdirectory(extlib/glfw)
-    unset(CMAKE_POLICY_VERSION_MINIMUM)
-endif ()
+include(FetchContent)
 
-# SDL
-if (PSYCHIC_UI_BUILD_SDL2)
-    find_package(SDL2 CONFIG REQUIRED)
+# SDL3: an installed one if there is one, otherwise this release, built static with only what windows,
+# events and OpenGL need
+if (PSYCHIC_UI_BUILD_SDL3)
+    FetchContent_Declare(SDL3
+        URL https://github.com/libsdl-org/SDL/releases/download/release-3.4.20/SDL3-3.4.20.tar.gz
+        URL_HASH SHA256=f3bb06f55bed9557227a700af2ea62e49497ebdf58037732a731a5fb3ef8581f
+        FIND_PACKAGE_ARGS 3.2 CONFIG
+        )
+    set(SDL_SHARED OFF)
+    set(SDL_STATIC ON)
+    set(SDL_TEST_LIBRARY OFF)
+    set(SDL_TESTS OFF)
+    set(SDL_EXAMPLES OFF)
+    set(SDL_INSTALL OFF)
+    set(SDL_AUDIO OFF)
+    set(SDL_CAMERA OFF)
+    set(SDL_GPU OFF)
+    set(SDL_RENDER OFF)
+    set(SDL_JOYSTICK OFF)
+    set(SDL_HAPTIC OFF)
+    set(SDL_HIDAPI OFF)
+    set(SDL_SENSOR OFF)
+    set(SDL_POWER OFF)
+    set(SDL_VULKAN OFF)
+    set(SDL_KMSDRM OFF)
+    FetchContent_MakeAvailable(SDL3)
 endif ()
 
 # YOGA
@@ -208,12 +217,8 @@ set(SOURCE_FILES
     psychic-ui/Window.hpp
     psychic-ui/components/Box.cpp
     psychic-ui/components/Box.hpp
-    psychic-ui/ApplicationBase.cpp
-    psychic-ui/ApplicationBase.hpp
-    psychic-ui/applications/GLFWApplication.cpp
-    psychic-ui/applications/GLFWApplication.hpp
-    psychic-ui/applications/SDL2Application.cpp
-    psychic-ui/applications/SDL2Application.hpp
+    psychic-ui/SystemWindow.cpp
+    psychic-ui/SystemWindow.hpp
     psychic-ui/skins/DefaultSkin.hpp
     psychic-ui/components/TextInput.cpp
     psychic-ui/components/TextInput.hpp
@@ -231,8 +236,13 @@ set(SOURCE_FILES
     psychic-ui/TextBase.hpp
     )
 
-if (APPLE)
-    list(APPEND SOURCE_FILES psychic-ui/darwin.mm)
+if (PSYCHIC_UI_BUILD_SDL3)
+    list(APPEND SOURCE_FILES
+        psychic-ui/applications/SDL3Application.cpp
+        psychic-ui/applications/SDL3Application.hpp
+        psychic-ui/applications/SDL3SystemWindow.cpp
+        psychic-ui/applications/SDL3SystemWindow.hpp
+        )
 endif ()
 
 add_library(psychic-ui ${SOURCE_FILES})
@@ -261,14 +271,8 @@ elseif (UNIX)
     target_compile_definitions(psychic-ui PUBLIC UNIX)
 endif ()
 
-if (PSYCHIC_UI_BUILD_GLFW)
-    target_compile_definitions(psychic-ui PUBLIC WITH_GLFW)
-    target_link_libraries(psychic-ui PUBLIC glfw)
-endif ()
-
-if (PSYCHIC_UI_BUILD_SDL2)
-    target_compile_definitions(psychic-ui PUBLIC WITH_SDL2)
-    target_link_libraries(psychic-ui PUBLIC SDL2::SDL2)
+if (PSYCHIC_UI_BUILD_SDL3)
+    target_link_libraries(psychic-ui PUBLIC SDL3::SDL3)
 endif ()
 
 if (PSYCHIC_UI_USE_GLAD)

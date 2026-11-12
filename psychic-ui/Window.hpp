@@ -14,7 +14,7 @@
 #include "style/Style.hpp"
 #include "components/Menu.hpp"
 #include "signals/Signal.hpp"
-#include "ApplicationBase.hpp"
+#include "SystemWindow.hpp"
 
 namespace psychic_ui {
 
@@ -59,7 +59,12 @@ namespace psychic_ui {
         int windowHeight() const;
         void setWindowSize(int width, int height);
 
+        /**
+         * Attaches the window to the system window that shows it, or detaches it with `nullptr`.
+         * Skia is set up on the first frame drawn after, in the system window's GL context.
+         */
         void open(SystemWindow *systemWindow);
+        SystemWindow *systemWindow() const;
         void close();
         void drawAll();
 
@@ -184,9 +189,6 @@ namespace psychic_ui {
         bool        _resizable{true};
         bool        _decorated{true};
 
-        //int   _fbWidth{0};
-        //int   _fbHeight{0};
-        float _pixelRatio;
 
         // endregion
 
@@ -206,6 +208,12 @@ namespace psychic_ui {
 
         void initSkia();
         void getSkiaSurface();
+        void releaseSkia();
+
+        /**
+         * The Skia surface no longer matches the framebuffer (it was resized): the next frame makes a new one
+         */
+        bool _surfaceStale{true};
 
         // endregion
 

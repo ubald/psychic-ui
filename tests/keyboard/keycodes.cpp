@@ -1,29 +1,39 @@
-#if defined(WITH_SDL2) && defined(WITH_GLFW)
-
 #include <catch2/catch_test_macros.hpp>
-#include <iostream>
+#include <psychic-ui/applications/SDL3SystemWindow.hpp>
 
-#include <SDL.h>
-#include <GLFW/glfw3.h>
+using namespace psychic_ui;
 
-/**
- * This is not a real test,
- * its only a simple way to verify that both libraries
- * return the same keycodes
- */
-TEST_CASE( "Check supported keycodes" ) {
-    //CHECK(SDLK_RETURN == GLFW_KEY_ENTER);
-    //CHECK(SDLK_RETURN2 == GLFW_KEY_ENTER);
-    //CHECK(SDLK_ESCAPE== GLFW_KEY_ESCAPE);
-    //CHECK(SDLK_BACKSPACE == GLFW_KEY_BACKSPACE);
-    //CHECK(SDLK_TAB == GLFW_KEY_TAB);
-    //
-    //CHECK(SDLK_SPACE == GLFW_KEY_SPACE);
-    //CHECK(SDLK_COMMA == GLFW_KEY_COMMA);
-    //CHECK(SDLK_COMMA == GLFW_KEY_COMMA);
-    //CHECK(SDLK_BACKSLASH == GLFW_KEY_BACKSLASH);
-    //CHECK(SDLK_LEFTBRACKET == GLFW_KEY_LEFT_BRACKET);
-    //CHECK(SDLK_RIGHTBRACKET == GLFW_KEY_RIGHT_BRACKET);
+TEST_CASE("SDL3 keycodes map to Psychic UI keys", "[keyboard][sdl3]") {
+    CHECK(SDL3SystemWindow::mapKey(SDLK_A) == Key::A);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_Z) == Key::Z);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_0) == Key::ZERO);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_9) == Key::NINE);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_RETURN) == Key::ENTER);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_BACKSPACE) == Key::BACKSPACE);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_DELETE) == Key::DELETE);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_LEFT) == Key::LEFT);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_HOME) == Key::HOME);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_APOSTROPHE) == Key::APOSTROPHE);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_GRAVE) == Key::GRAVE_ACCENT);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_F12) == Key::F12);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_KP_ENTER) == Key::KP_ENTER);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_LGUI) == Key::LEFT_SUPER);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_APPLICATION) == Key::MENU);
+    CHECK(SDL3SystemWindow::mapKey(SDLK_UNKNOWN) == Key::UNKNOWN);
 }
 
-#endif
+TEST_CASE("SDL3 modifiers map to Psychic UI modifiers", "[keyboard][sdl3]") {
+    const Mod none = SDL3SystemWindow::mapMods(SDL_KMOD_NONE);
+    CHECK_FALSE((none.shift || none.ctrl || none.alt || none.super));
+
+    // Either side counts
+    const Mod mod = SDL3SystemWindow::mapMods(SDL_KMOD_LSHIFT | SDL_KMOD_RCTRL | SDL_KMOD_LALT | SDL_KMOD_RGUI);
+    CHECK(mod.shift);
+    CHECK(mod.ctrl);
+    CHECK(mod.alt);
+    CHECK(mod.super);
+
+    // Lock keys aren't modifiers
+    const Mod locks = SDL3SystemWindow::mapMods(SDL_KMOD_CAPS | SDL_KMOD_NUM);
+    CHECK_FALSE((locks.shift || locks.ctrl || locks.alt || locks.super));
+}
