@@ -5,10 +5,10 @@ namespace psychic_ui {
     Modal::Modal() : Div() {
         setTag("Modal");
         style()
-            ->set(position, "absolute")
-            ->set(widthPercent, 1.0f)
-            ->set(heightPercent, 1.0f)
-            ->set(overflow, "hidden");
+            .position(Position::Absolute)
+            .width(100_pct)
+            .height(100_pct)
+            .overflow(Overflow::Hidden);
     }
 
     void Modal::addMouseEnabledDiv(std::shared_ptr<Div> mouseEnabledDiv) {

@@ -10,15 +10,15 @@ namespace psychic_ui {
         _track = add<Div>();
         _track->addClassName("track")
               ->style()
-              ->set(position, "absolute")
-              ->set(widthPercent, 1.0f)
-              ->set(heightPercent, 1.0f);
+              .position(Position::Absolute)
+              .width(100_pct)
+              .height(100_pct);
 
 
         _thumb = add<Div>();
         _thumb->addClassName("thumb")
               ->style()
-              ->set(position, "absolute");
+              .position(Position::Absolute);
 
         _thumb->onMouseDown(
             [this](const int mouseX, const int mouseY, MouseButton /*button*/, Mod /*modifiers*/) {
@@ -71,17 +71,17 @@ namespace psychic_ui {
         if (_direction == Vertical) {
             _thumb
                 ->style()
-                ->set(left, 0.f)
-                ->set(right, 0.f)
-                ->set(top, 0)
-                ->set(bottom, Style::Auto);
+                .left(0.f)
+                .right(0.f)
+                .top(0)
+                .bottom(Auto);
         } else {
             _thumb
                 ->style()
-                ->set(left, 0)
-                ->set(right, Style::Auto)
-                ->set(top, 0.f)
-                ->set(bottom, 0.f);
+                .left(0)
+                .right(Auto)
+                .top(0.f)
+                .bottom(0.f);
         }
     }
 
@@ -89,27 +89,27 @@ namespace psychic_ui {
         setEnabled(enabled);
         if (component()->direction() == Vertical) {
             _thumb->style()
-                  ->set(top, (int) (scrollPosition * (float) (_track->getHeight() - _thumb->getHeight())))
-                  ->set(heightPercent, contentRatio);
+                  .top((int) (scrollPosition * (float) (_track->getHeight() - _thumb->getHeight())))
+                  .height(Length::percent(contentRatio * 100.0f));
         } else {
             _thumb->style()
-                  ->set(left, (int) (scrollPosition * (float) (_track->getWidth() - _thumb->getWidth())))
-                  ->set(widthPercent, contentRatio);
+                  .left((int) (scrollPosition * (float) (_track->getWidth() - _thumb->getWidth())))
+                  .width(Length::percent(contentRatio * 100.0f));
         }
 
     }
 
 //    void DefaultScrollBarSkin::draw(SkCanvas *canvas) {
 //        SkPaint paint;
-//        paint.setAntiAlias(_computedStyle->get(antiAlias));
-//        if (_computedStyle->has(opacity)) {
-//            paint.setAlpha((unsigned int) (_computedStyle->get(opacity) * 255.f));
+//        paint.setAntiAlias(_computedStyle.antiAlias());
+//        if (_computedStyle.has(Property::opacity)) {
+//            paint.setAlpha((unsigned int) (_computedStyle.opacity() * 255.f));
 //        }
 //        paint.setStyle(SkPaint::kFill_Style);
-//        paint.setColor(_computedStyle->get(backgroundColor));
+//        paint.setColor(_computedStyle.backgroundColor());
 //        canvas->drawRect(_rect, paint);
 //
-//        paint.setColor(_computedStyle->get(color));
+//        paint.setColor(_computedStyle.color());
 //
 //        int minSize = 24;
 //        SkRect rect;

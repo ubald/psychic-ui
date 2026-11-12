@@ -23,7 +23,7 @@ namespace psychic_ui {
 
         void styleUpdated() override;
 
-        std::string        _skinName{};
+        Atom               _skinName{};
         std::shared_ptr<T> _skin{nullptr};
 
         // Make some of div's stuff protected since we manage our content
@@ -63,10 +63,10 @@ namespace psychic_ui {
     template<class T>
     void Component<T>::styleUpdated() {
         Div::styleUpdated();
-        std::string skinName = _computedStyle->get(StringProperty::skin);
+        const Atom &skinName = _computedStyle.skin();
         if (skinName != _skinName) {
             _skinName = skinName;
-            setSkin(std::dynamic_pointer_cast<T>(styleManager()->skin(_skinName)));
+            setSkin(std::dynamic_pointer_cast<T>(styleManager()->skin(_skinName.str())));
         }
     }
 }

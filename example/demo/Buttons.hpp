@@ -15,9 +15,9 @@ namespace psychic_ui {
         setClassNames({"demo-panel"});
 
         style()
-            ->set(flexWrap, "wrap")
-            ->set(flexDirection, "row")
-            ->set(alignItems, "start");
+            .wrap(Wrap::Wrap)
+            .direction(Direction::Row)
+            .alignItems(Align::Start);
 
         // Push
         add<Button>("Push");

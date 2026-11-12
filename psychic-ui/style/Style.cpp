@@ -1,122 +1,102 @@
-#include <algorithm>
 #include <iostream>
-#include <utility>
+#include <type_traits>
 #include "Style.hpp"
-#include "../Div.hpp"
 
 namespace psychic_ui {
 
-    const float Style::Auto = nanf("auto");
-
-    Style::Style(const Style *fromStyle) {
-        overlay(fromStyle);
+    std::string_view propertyName(Property property) {
+        switch (property) {
+            #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout) case Property::name: return #name;
+            PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
+            #undef PSYCHIC_UI_X
+        }
+        return "?";
     }
 
-    Style::Style(std::function<void()> onChanged) :
-        _onChanged(std::move(onChanged)) {}
+    Style &Style::operator=(const Style &other) {
+        if (this != &other && !(*this == other)) {
+            _set    = other._set;
+            _values = other._values;
+            changed();
+        }
+        return *this;
+    }
 
-    Style *Style::overlay(const Style *style) {
-        if (style) {
-            doOverlay(style->_colorValues, _colorValues);
-            doOverlay(style->_stringValues, _stringValues);
-            doOverlay(style->_floatValues, _floatValues);
-            doOverlay(style->_intValues, _intValues);
-            doOverlay(style->_boolValues, _boolValues);
+    Style &Style::unset(Property property) {
+        const std::size_t i = index(property);
+        if (_set.test(i)) {
+            static const StyleValues defaults{};
+            switch (property) {
+                #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout) \
+                    case Property::name: _values.name = defaults.name; break;
+                PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
+                #undef PSYCHIC_UI_X
+            }
+            _set.reset(i);
+            changed();
+        }
+        return *this;
+    }
 
-            // Just assume something changed
-            if (_onChanged) {
-                _onChanged();
+    Style &Style::clear() {
+        if (_set.any()) {
+            _set.reset();
+            _values = StyleValues{};
+            changed();
+        }
+        return *this;
+    }
+
+    Style &Style::overlay(const Style &style, const PropertyMask &only) {
+        const PropertyMask copied = style._set & only;
+        if (copied.none()) {
+            return *this;
+        }
+        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout) \
+            if (copied.test(index(Property::name))) { _values.name = style._values.name; }
+        PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
+        #undef PSYCHIC_UI_X
+        _set |= copied;
+        changed();
+        return *this;
+    }
+
+    Style &Style::defaults(const Style &style) {
+        return overlay(style, ~_set);
+    }
+
+    PropertyMask Style::diff(const Style &other) const {
+        PropertyMask changed = _set ^ other._set;
+        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout) \
+            if (!(_values.name == other._values.name)) { changed.set(index(Property::name)); }
+        PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
+        #undef PSYCHIC_UI_X
+        return changed;
+    }
+
+    namespace {
+        template<class T>
+        void printValue(std::ostream &os, const T &value) {
+            if constexpr (std::is_enum_v<T>) {
+                os << +static_cast<std::underlying_type_t<T>>(value);
+            } else if constexpr (std::is_same_v<T, bool>) {
+                os << (value ? "true" : "false");
+            } else {
+                os << value;
             }
         }
-
-        return this;
     }
 
-    Style *Style::overlayInheritable(const Style *style, const Div *div) {
-        if (style) {
-            doInheritance(style->_colorValues, _colorValues, div->inheritableValues().colorInheritable);
-            doInheritance(style->_stringValues, _stringValues, div->inheritableValues().stringInheritable);
-            doInheritance(style->_floatValues, _floatValues, div->inheritableValues().floatInheritable);
-            doInheritance(style->_intValues, _intValues, div->inheritableValues().intInheritable);
-            doInheritance(style->_boolValues, _boolValues, div->inheritableValues().boolInheritable);
-
-            // Just assume something changed
-            if (_onChanged) {
-                _onChanged();
-            }
-        }
-
-        return this;
-    }
-
-    Style *Style::defaults(const Style *style) {
-        if (style) {
-            doDefaults(style->_colorValues, _colorValues);
-            doDefaults(style->_stringValues, _stringValues);
-            doDefaults(style->_floatValues, _floatValues);
-            doDefaults(style->_intValues, _intValues);
-            doDefaults(style->_boolValues, _boolValues);
-
-            // Just assume something changed
-            if (_onChanged) {
-                _onChanged();
-            }
-        }
-
-        return this;
-    }
-
-    Style *Style::clear() {
-        _colorValues.clear();
-        _stringValues.clear();
-        _floatValues.clear();
-        _intValues.clear();
-        _boolValues.clear();
-        if (_onChanged) {
-            _onChanged();
-        }
-        return this;
+    void Style::trace(std::ostream &os) const {
+        os << "{" << std::endl;
+        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout) \
+            if (has(Property::name)) { os << "    " #name ": "; printValue(os, _values.name); os << std::endl; }
+        PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
+        #undef PSYCHIC_UI_X
+        os << "}" << std::endl;
     }
 
     void Style::trace() const {
-        #ifdef DEBUG_STYLES
-        for (const auto &declaration: declarations) {
-            std::cout << declaration << std::endl;
-        }
-        #endif
-
-        std::cout << "{" << std::endl;
-        for (auto const &kv : _colorValues) {
-            std::cout << "    " << kv.first << ": " << kv.second << std::endl;
-        }
-
-        for (auto const &kv : _stringValues) {
-            std::cout << "    " << kv.first << ": \"" << kv.second << "\"" << std::endl;
-        }
-
-        for (auto const &kv : _floatValues) {
-            std::cout << "    " << kv.first << ": " << kv.second << std::endl;
-        }
-
-        for (auto const &kv : _intValues) {
-            std::cout << "    " << kv.first << ": " << kv.second << std::endl;
-        }
-
-        for (auto const &kv : _boolValues) {
-            std::cout << "    " << kv.first << ": " << (kv.second ? "true" : "false") << std::endl;
-        }
-        std::cout << "}" << std::endl << std::endl;
-    }
-
-    bool Style::operator==(const Style &other) const {
-        return _colorValues == other._colorValues
-               && _stringValues == other._stringValues
-               && _floatValues == other._floatValues
-               && _intValues == other._intValues
-               && _boolValues == other._boolValues;
-    }
-
-    bool Style::operator!=(const Style &other) const {
-        return !(*this == other);
+        trace(std::cout);
     }
 }

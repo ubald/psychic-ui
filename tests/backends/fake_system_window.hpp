@@ -76,7 +76,7 @@ namespace psychic_ui_tests {
         bool getMaximized() const override { return false; }
         void setMaximized(bool /*maximized*/) override {}
         void setVisible(bool /*visible*/) override {}
-        void setCursor(int /*cursor*/) override {}
+        void setCursor(Cursor /*cursor*/) override {}
         void startDrag() override { ++dragsStarted; }
         void stopDrag() override {}
         void setSize(int /*width*/, int /*height*/) override {}

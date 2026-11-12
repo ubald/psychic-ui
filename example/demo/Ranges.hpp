@@ -18,8 +18,8 @@ namespace psychic_ui {
             auto left = container->add<Div>();
             left
                 ->style()
-                ->set(grow, 1)
-                ->set(shrink, 1);
+                .grow(1)
+                .shrink(1);
 
             left->add<Label>("Horizontal");
 
@@ -34,25 +34,25 @@ namespace psychic_ui {
             auto right = container->add<Div>();
             right
                 ->style()
-                ->set(grow, 1)
-                ->set(shrink, 1);
+                .grow(1)
+                .shrink(1);
 
             right->add<Label>("Vertical");
 
             auto rcont = right->add<HBox>();
             rcont
                 ->style()
-                ->set(grow, 1);
+                .grow(1);
 
             rcont->add<Range<int>>()
                  ->setRange(0, 10)
                  ->style()
-                 ->set(orientation, "vertical");
+                 .orientation(Orientation::Vertical);
 
             rcont->add<Range<float>>()
                  ->setRange(1.23f, 4.56f)
                  ->style()
-                 ->set(orientation, "vertical");
+                 .orientation(Orientation::Vertical);
 
 //            add<Label>("Skinned");
 //            add<Range<int>>(std::make_shared<MySliderSkin>())

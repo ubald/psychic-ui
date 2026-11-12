@@ -12,8 +12,8 @@ namespace psychic_ui {
             addClassName("horizontal");
         }
         style()
-            ->set(grow, 0)
-            ->set(shrink, 0);
+            .grow(0)
+            .shrink(0);
 
         onResized(
             [this](int /*width*/, int /*height*/) {

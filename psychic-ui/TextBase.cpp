@@ -8,8 +8,8 @@ namespace psychic_ui {
         setTag("TextBase");
 
         _defaultStyle
-            ->set(shrink, 0)
-            ->set(grow, 0);
+            .shrink(0)
+            .grow(0);
 
         setMeasurable();
 
@@ -65,26 +65,23 @@ namespace psychic_ui {
     void TextBase::styleUpdated() {
         Div::styleUpdated();
 
-        bool antiAlias = _computedStyle->get(textAntiAlias);
-        _fontSize   = _computedStyle->get(fontSize);
-        _lineHeight = _computedStyle->get(lineHeight);
-        if (std::isnan(_lineHeight)) {
-            _lineHeight = _fontSize * 1.5f;
-        }
+        bool antiAlias = _computedStyle.textAntiAlias();
+        _fontSize   = _computedStyle.fontSize();
+        // Auto is 1.5 times the font size, a percent is of the font size
+        _lineHeight = _computedStyle.lineHeight().resolve(_fontSize, _fontSize * 1.5f);
 
         _textPaint.setAntiAlias(antiAlias);
         _textPaint.setLCDRenderText(antiAlias && _lcdRender);
         _textPaint.setSubpixelText(antiAlias && _subPixelText);
-        _textPaint.setTypeface(styleManager()->font(_computedStyle->get(fontFamily)));
+        _textPaint.setTypeface(styleManager()->font(_computedStyle.fontFamily().str()));
         _textPaint.setTextSize(_fontSize);
-        _textPaint.setColor(_computedStyle->get(color));
+        _textPaint.setColor(_computedStyle.color().argb());
 
         // Yoga caches measures: re-measure when anything changing the text metrics changes
-        float spacing = _computedStyle->get(letterSpacing);
         FontKey fontKey{
             _textPaint.getTypeface(),
             _fontSize,
-            std::isnan(spacing) ? 0.0f : spacing,
+            _computedStyle.letterSpacing(),
             _lineHeight,
             _textPaint.isSubpixelText()
         };

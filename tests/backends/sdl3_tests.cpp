@@ -68,13 +68,13 @@ TEST_CASE("SDL3: events for another window are left alone", "[backend][sdl3]") {
     auto e = sdl.event(SDL_EVENT_WINDOW_CLOSE_REQUESTED);
     e.window.windowID += 1000;
     CHECK_FALSE(sdl.adapter->handleEvent(e));
-    CHECK(sdl.window->getVisible());
+    CHECK(sdl.window->windowVisible());
 }
 
 TEST_CASE("SDL3: mouse events reach the div under the pointer", "[backend][sdl3]") {
     SDL3Fixture sdl;
     auto div = sdl.window->appContainer()->add<Div>();
-    div->style()->set(width, 100.0f)->set(height, 100.0f);
+    div->style().width(100.0f).height(100.0f);
     sdl.layout();
 
     int downs  = 0;
@@ -114,7 +114,7 @@ TEST_CASE("SDL3: mouse events reach the div under the pointer", "[backend][sdl3]
 TEST_CASE("SDL3: wheel events scroll at the pointer", "[backend][sdl3]") {
     SDL3Fixture sdl;
     auto div = sdl.window->appContainer()->add<Div>();
-    div->style()->set(width, 100.0f)->set(height, 100.0f);
+    div->style().width(100.0f).height(100.0f);
     sdl.layout();
 
     double scrolledY = 0;
@@ -207,7 +207,7 @@ TEST_CASE("SDL3: dropped files arrive together", "[backend][sdl3]") {
 TEST_CASE("SDL3: a close request closes a window that agrees", "[backend][sdl3]") {
     SDL3Fixture sdl;
     sdl.adapter->handleEvent(sdl.event(SDL_EVENT_WINDOW_CLOSE_REQUESTED));
-    CHECK_FALSE(sdl.window->getVisible());
+    CHECK_FALSE(sdl.window->windowVisible());
     CHECK_FALSE(sdl.adapter->render());
 }
 

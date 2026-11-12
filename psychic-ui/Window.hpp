@@ -46,7 +46,12 @@ namespace psychic_ui {
         bool getFullscreen() const;
         void setFullscreen(bool fullscreen);
 
-        void setVisible(bool value) override;
+        /**
+         * Whether the system window is shown. Not the `visible` style: the window's own visibility, which
+         * `close()` turns off and the application follows.
+         */
+        bool windowVisible() const;
+        void setWindowVisible(bool value);
 
         /**
          * Moves the window with the mouse until `stopDrag()`, for a custom title bar. Prefer `addDragArea`,
@@ -117,7 +122,7 @@ namespace psychic_ui {
             return menu;
         }
 
-        void setCursor(int cursor);
+        void setCursor(Cursor cursor);
 
         // region Signals
 
@@ -218,6 +223,7 @@ namespace psychic_ui {
         // region Window
 
         std::string _title;
+        bool        _windowVisible{true};
         bool        _fullscreen{false};
         bool        _resizable{true};
         bool        _decorated{true};
@@ -230,7 +236,7 @@ namespace psychic_ui {
         /**
          * Cursor to use when this component has the mouse focus
          */
-        int _cursor{Cursor::Arrow};
+        Cursor _cursor{Cursor::Arrow};
 
         //int _mouseX{0};
         //int _mouseY{0};

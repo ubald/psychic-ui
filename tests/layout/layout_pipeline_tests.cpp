@@ -40,8 +40,8 @@ namespace {
 
 SCENARIO("styles are computed before layout, visible or not", "[layout]") {
     auto styleManager = std::make_shared<StyleManager>();
-    styleManager->style(".tall")->set(height, 40.0f);
-    styleManager->style(".box:hover")->set(height, 60.0f);
+    styleManager->style(".tall").height(40.0f);
+    styleManager->style(".box:hover").height(60.0f);
     auto window = makeWindow(styleManager);
     window->updateStylesAndLayout();
 
@@ -74,7 +74,7 @@ SCENARIO("styles are computed before layout, visible or not", "[layout]") {
         auto hidden  = window->appContainer()->add<Div>();
         auto sibling = window->appContainer()->add<Div>();
         hidden->setVisible(false);
-        sibling->style()->set(height, 10.0f);
+        sibling->style().height(10.0f);
         window->updateStylesAndLayout();
         REQUIRE(sibling->y() == 0);
 
@@ -91,7 +91,7 @@ SCENARIO("styles are computed before layout, visible or not", "[layout]") {
 
     GIVEN("a div far outside the window") {
         auto offscreen = window->appContainer()->add<Div>();
-        offscreen->style()->set(position, "absolute")->set(left, 5000.0f)->set(top, 5000.0f);
+        offscreen->style().position(Position::Absolute).left(5000.0f).top(5000.0f);
         window->updateStylesAndLayout();
 
         WHEN("a class changes its height") {
@@ -163,7 +163,7 @@ SCENARIO("the setters write the inline style, the only input of the layout", "[l
         }
 
         WHEN("a stylesheet gives it another height") {
-            styleManager->style(".box")->set(height, 10.0f);
+            styleManager->style(".box").height(10.0f);
             window->updateStylesAndLayout();
 
             THEN("the inline height wins") {
@@ -184,7 +184,7 @@ SCENARIO("the setters write the inline style, the only input of the layout", "[l
 
     GIVEN("an absolute div placed with setX and setY") {
         auto div = window->appContainer()->add<Div>();
-        div->style()->set(position, "absolute");
+        div->style().position(Position::Absolute);
         div->setSize(10, 10);
 
         WHEN("the position is negative") {
@@ -205,7 +205,7 @@ SCENARIO("the root is laid out at the window size", "[layout]") {
     auto styleManager = std::make_shared<StyleManager>();
     auto window       = makeWindow(styleManager);
     auto child        = window->appContainer()->add<Div>();
-    child->style()->set(heightPercent, 1.0f);
+    child->style().height(100_pct);
     window->updateStylesAndLayout();
     REQUIRE(window->getWidth() == 800);
     REQUIRE(window->getHeight() == 600);
@@ -224,7 +224,7 @@ SCENARIO("the root is laid out at the window size", "[layout]") {
 
     WHEN("the window is resized and the stylesheet changes in the same frame") {
         window->setWindowSize(1024, 768);
-        styleManager->style("#app")->set(padding, 4.0f);
+        styleManager->style("#app").padding(4.0f);
         window->updateStylesAndLayout();
 
         THEN("the root is laid out at the new size with the new style") {

@@ -4,7 +4,7 @@ namespace psychic_ui {
 
     Spacer::Spacer() :
         Div() {
-        _defaultStyle->set(grow, 1);
+        _defaultStyle.grow(1);
     }
 
 }

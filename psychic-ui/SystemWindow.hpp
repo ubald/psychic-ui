@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include "psychic-ui.hpp"
+#include "style/Values.hpp"
 
 namespace psychic_ui {
     class Window;
@@ -63,7 +64,7 @@ namespace psychic_ui {
         virtual bool getMaximized() const = 0;
         virtual void setMaximized(bool maximized) = 0;
         virtual void setVisible(bool visible) = 0;
-        virtual void setCursor(int cursor) = 0;
+        virtual void setCursor(Cursor cursor) = 0;
         virtual void startDrag() = 0;
         virtual void stopDrag() = 0;
 

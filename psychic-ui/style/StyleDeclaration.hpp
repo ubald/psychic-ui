@@ -1,25 +1,31 @@
 #pragma once
 
-#include <vector>
-#include <string>
 #include <memory>
-#include <functional>
+#include <string>
 #include "Style.hpp"
 #include "StyleSelector.hpp"
 
 namespace psychic_ui {
+    /**
+     * A stylesheet rule: a selector and the style it applies
+     */
     class StyleDeclaration {
     public:
-        explicit StyleDeclaration(std::unique_ptr<StyleSelector> selector);
-        StyleDeclaration(std::unique_ptr<StyleSelector> selector, const std::function<void()> &onChanged);
-        const StyleSelector *selector() const;
-        Style *style() const;
+        StyleDeclaration(std::string selectorString, std::unique_ptr<StyleSelector> selector, Style::ChangedCallback onChanged = nullptr, void *owner = nullptr);
+
+        const std::string &selectorString() const { return _selectorString; }
+
+        const StyleSelector *selector() const { return _selector.get(); }
+
+        Style &style() { return _style; }
+
+        const Style &style() const { return _style; }
 
         /**
          * Returns the cached weight computed from the selector chain
          * @return int
          */
-        int weight() const;
+        int weight() const { return _weight; }
 
         /**
          * Whether the rule is in effect: false once its style manager was reset, until it is declared again
@@ -29,14 +35,10 @@ namespace psychic_ui {
         void setActive(bool active) { _active = active; }
 
     protected:
-        const std::unique_ptr<StyleSelector> _selector{nullptr};
-        std::unique_ptr<Style>               _style{nullptr};
+        const std::string                    _selectorString;
+        const std::unique_ptr<StyleSelector> _selector;
+        Style                                _style;
         int                                  _weight{0};
         bool                                 _active{false};
-
-        #ifdef DEBUG_STYLES
-    public:
-        std::string selectorString{};
-        #endif
     };
 }

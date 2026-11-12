@@ -8,8 +8,8 @@ namespace psychic_ui {
         Div() {
         setTag("TitleBar");
         _defaultStyle
-            ->set(flexDirection, "row")
-            ->set(shrink, 0);
+            .direction(Direction::Row)
+            .shrink(0);
 
         add<Button>(
             "Close", [this]() {

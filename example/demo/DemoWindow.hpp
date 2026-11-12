@@ -142,21 +142,21 @@ namespace psychic_ui {
                },
                [](const auto &item) {
                    auto panel = item.second->hatch();
-                   panel->style()->set(heightPercent, 1.0f);
+                   panel->style().height(100_pct);
                    return panel;
                }
            )
            ->select(panels[1])
            ->style()
-           ->set(heightPercent, 1.f);
+           .height(100_pct);
 
         fpsLabel = app->add<Label>();
         fpsLabel->style()
-                ->set(fontFamily, "stan0755")
-                ->set(fontSize, 8)
-                ->set(textAntiAlias, false)
-                ->set(position, "absolute")
-                ->set(right, 0);
+                .fontFamily("stan0755")
+                .fontSize(8)
+                .textAntiAlias(false)
+                .position(Position::Absolute)
+                .right(0);
     }
 
     void DemoWindow::render(SkCanvas *canvas) {

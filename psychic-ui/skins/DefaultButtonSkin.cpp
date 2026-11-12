@@ -15,8 +15,8 @@ namespace psychic_ui {
         // Add the button's surface
         SkPaint paint{};
         paint.setStyle(SkPaint::kFill_Style);
-        paint.setColor(_computedStyle->get(backgroundColor));
-        paint.setAntiAlias(_computedStyle->get(antiAlias));
+        paint.setColor(_computedStyle.backgroundColor().argb());
+        paint.setAntiAlias(_computedStyle.antiAlias());
         canvas->drawRRect(inner, paint);
     }
 }

@@ -43,7 +43,7 @@ TEST_CASE("Drag areas", "[backend][drag]") {
     FakeSystemWindow systemWindow(window);
     auto titleBar = window->appContainer()->add<TitleBar>();
     auto below    = window->appContainer()->add<Div>();
-    below->style()->set(height, 100.0f);
+    below->style().height(100.0f);
     systemWindow.layout();
 
     // The title bar's empty part, right of its buttons and label

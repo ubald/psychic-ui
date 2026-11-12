@@ -35,7 +35,7 @@ namespace psychic_ui {
 
     SDL3SystemWindow &SDL3Application::open(std::shared_ptr<Window> window) {
         SDL_WindowFlags flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-        if (!window->getVisible()) {
+        if (!window->windowVisible()) {
             flags |= SDL_WINDOW_HIDDEN;
         }
         if (window->getResizable()) {

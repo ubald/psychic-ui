@@ -138,36 +138,36 @@ namespace psychic_ui {
         setClassNames({"demo-panel"});
 
         style()
-            ->set(flexDirection, "row")
-            ->set(padding, 0); // We're using a scroller so no padding
+            .direction(Direction::Row)
+            .padding(0); // We're using a scroller so no padding
 
         auto scroller = add<Div>();
         scroller
             ->style()
-            ->set(widthPercent, 1.0f)
-            ->set(heightPercent, 1.0f)
-            ->set(padding, 24)
-            ->set(overflow, "scroll");
+            .width(100_pct)
+            .height(100_pct)
+            .padding(24)
+            .overflow(Overflow::Scroll);
 
         auto scrollbar = add<ScrollBar>(scroller);
         scrollbar
             ->style()
-            ->set(heightPercent, 1.0f);
+            .height(100_pct);
 
         {
             auto container = scroller->add<HBox>();
             container
                 ->style()
-                ->set(shrink, 0)
-                ->set(gap, 12);
+                .shrink(0)
+                .gap(12);
 
             // region Colors
             auto left = container->add<VBox>();
             left
                 ->style()
-                ->set(grow, 1)
-                ->set(basis, 0) // Both columns needs to be considered the same size
-                ->set(gap, 6);
+                .grow(1)
+                .basis(0) // Both columns needs to be considered the same size
+                .gap(6);
 
             // region Colors Content
             {
@@ -180,25 +180,25 @@ namespace psychic_ui {
                 left->add<Range<float>>(
                     [this, swatch](float value) {
                         argb.setAlpha(value);
-                        swatch->style()->set(backgroundColor, argb.getColor());
+                        swatch->style().backgroundColor(Color::fromARGB(argb.getColor()));
                     }
                 );
                 left->add<Range<float>>(
                     [this, swatch](float value) {
                         argb.setRed(value);
-                        swatch->style()->set(backgroundColor, argb.getColor());
+                        swatch->style().backgroundColor(Color::fromARGB(argb.getColor()));
                     }
                 );
                 left->add<Range<float>>(
                     [this, swatch](float value) {
                         argb.setGreen(value);
-                        swatch->style()->set(backgroundColor, argb.getColor());
+                        swatch->style().backgroundColor(Color::fromARGB(argb.getColor()));
                     }
                 );
                 left->add<Range<float>>(
                     [this, swatch](float value) {
                         argb.setBlue(value);
-                        swatch->style()->set(backgroundColor, argb.getColor());
+                        swatch->style().backgroundColor(Color::fromARGB(argb.getColor()));
                     }
                 );
             }
@@ -214,21 +214,21 @@ namespace psychic_ui {
                     [this, swatch](float value) {
                         rgb.setRed(value);
                         swatch->style()
-                              ->set(backgroundColor, PsychicColor::setColorAlpha(rgb.getColor(), 255));
+                              .backgroundColor(psychic_ui::rgb(rgb.getColor()));
                     }
                 );
                 left->add<Range<float>>(
                     [this, swatch](float value) {
                         rgb.setGreen(value);
                         swatch->style()
-                              ->set(backgroundColor, PsychicColor::setColorAlpha(rgb.getColor(), 255));
+                              .backgroundColor(psychic_ui::rgb(rgb.getColor()));
                     }
                 );
                 left->add<Range<float>>(
                     [this, swatch](float value) {
                         rgb.setBlue(value);
                         swatch->style()
-                              ->set(backgroundColor, PsychicColor::setColorAlpha(rgb.getColor(), 255));
+                              .backgroundColor(psychic_ui::rgb(rgb.getColor()));
                     }
                 );
             }
@@ -244,28 +244,28 @@ namespace psychic_ui {
                     0, 255,
                     [this, swatch](unsigned int value) {
                         hex.setAlpha(value);
-                        swatch->style()->set(backgroundColor, hex.getColor());
+                        swatch->style().backgroundColor(Color::fromARGB(hex.getColor()));
                     }
                 );
                 left->add<Range<unsigned int>>(
                     0, 255,
                     [this, swatch](unsigned int value) {
                         hex.setRed(value);
-                        swatch->style()->set(backgroundColor, hex.getColor());
+                        swatch->style().backgroundColor(Color::fromARGB(hex.getColor()));
                     }
                 );
                 left->add<Range<unsigned int>>(
                     0, 255,
                     [this, swatch](unsigned int value) {
                         hex.setGreen(value);
-                        swatch->style()->set(backgroundColor, hex.getColor());
+                        swatch->style().backgroundColor(Color::fromARGB(hex.getColor()));
                     }
                 );
                 left->add<Range<unsigned int>>(
                     0, 255,
                     [this, swatch](unsigned int value) {
                         hex.setBlue(value);
-                        swatch->style()->set(backgroundColor, hex.getColor());
+                        swatch->style().backgroundColor(Color::fromARGB(hex.getColor()));
                     }
                 );
             }
@@ -281,7 +281,7 @@ namespace psychic_ui {
                     [this, swatch](float value) {
                         gray.setGray(value);
                         swatch->style()
-                              ->set(backgroundColor, PsychicColor::setColorAlpha(gray.getColor(), 255));
+                              .backgroundColor(psychic_ui::rgb(gray.getColor()));
                     }
                 );
             }
@@ -297,21 +297,21 @@ namespace psychic_ui {
                     [this, swatch](float value) {
                         hsb.setHue(value);
                         swatch->style()
-                              ->set(backgroundColor, PsychicColor::setColorAlpha(hsb.getColor(), 255));
+                              .backgroundColor(psychic_ui::rgb(hsb.getColor()));
                     }
                 );
                 left->add<Range<float>>(
                     [this, swatch](float value) {
                         hsb.setSaturation(value);
                         swatch->style()
-                              ->set(backgroundColor, PsychicColor::setColorAlpha(hsb.getColor(), 255));
+                              .backgroundColor(psychic_ui::rgb(hsb.getColor()));
                     }
                 );
                 left->add<Range<float>>(
                     [this, swatch](float value) {
                         hsb.setBrightness(value);
                         swatch->style()
-                              ->set(backgroundColor, PsychicColor::setColorAlpha(hsb.getColor(), 255));
+                              .backgroundColor(psychic_ui::rgb(hsb.getColor()));
                     }
                 );
             }
@@ -327,21 +327,21 @@ namespace psychic_ui {
                     [this, swatch](float value) {
                         hsl.setHue(value);
                         swatch->style()
-                              ->set(backgroundColor, PsychicColor::setColorAlpha(hsl.getColor(), 255));
+                              .backgroundColor(psychic_ui::rgb(hsl.getColor()));
                     }
                 );
                 left->add<Range<float>>(
                     [this, swatch](float value) {
                         hsl.setSaturation(value);
                         swatch->style()
-                              ->set(backgroundColor, PsychicColor::setColorAlpha(hsl.getColor(), 255));
+                              .backgroundColor(psychic_ui::rgb(hsl.getColor()));
                     }
                 );
                 left->add<Range<float>>(
                     [this, swatch](float value) {
                         hsl.setLightness(value);
                         swatch->style()
-                              ->set(backgroundColor, PsychicColor::setColorAlpha(hsl.getColor(), 255));
+                              .backgroundColor(psychic_ui::rgb(hsl.getColor()));
                     }
                 );
             }
@@ -354,9 +354,9 @@ namespace psychic_ui {
             right
                 ->addClassName("color-schemes")
                 ->style()
-                ->set(grow, 1)
-                ->set(basis, 0) // Both columns needs to be considered the same size
-                ->set(gap, 6);
+                .grow(1)
+                .basis(0) // Both columns needs to be considered the same size
+                .gap(6);
 
             // region Schemes Content
             {
@@ -685,108 +685,108 @@ namespace psychic_ui {
      * This is horrible but its only a test/demo
      */
     void Colors::updateSwatches() {
-        primarySwatch->style()->set(backgroundColor, PsychicColor::setColorAlpha(primary.getColor(), 255));
+        primarySwatch->style().backgroundColor(psychic_ui::rgb(primary.getColor()));
 
         analogous.generate();
-        analogousSwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(analogous.getColor(0).getColor(), 255));
-        analogousSwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(analogous.getColor(1).getColor(), 255));
-        analogousSwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(analogous.getColor(2).getColor(), 255));
-        analogousSwatch3->style()->set(backgroundColor, PsychicColor::setColorAlpha(analogous.getColor(3).getColor(), 255));
-        analogousSwatch4->style()->set(backgroundColor, PsychicColor::setColorAlpha(analogous.getColor(4).getColor(), 255));
+        analogousSwatch0->style().backgroundColor(psychic_ui::rgb(analogous.getColor(0).getColor()));
+        analogousSwatch1->style().backgroundColor(psychic_ui::rgb(analogous.getColor(1).getColor()));
+        analogousSwatch2->style().backgroundColor(psychic_ui::rgb(analogous.getColor(2).getColor()));
+        analogousSwatch3->style().backgroundColor(psychic_ui::rgb(analogous.getColor(3).getColor()));
+        analogousSwatch4->style().backgroundColor(psychic_ui::rgb(analogous.getColor(4).getColor()));
 
         rybAnalogous.generate();
-        rybAnalogousSwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybAnalogous.getColor(0).getColor(), 255));
-        rybAnalogousSwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybAnalogous.getColor(1).getColor(), 255));
-        rybAnalogousSwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybAnalogous.getColor(2).getColor(), 255));
-        rybAnalogousSwatch3->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybAnalogous.getColor(3).getColor(), 255));
-        rybAnalogousSwatch4->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybAnalogous.getColor(4).getColor(), 255));
+        rybAnalogousSwatch0->style().backgroundColor(psychic_ui::rgb(rybAnalogous.getColor(0).getColor()));
+        rybAnalogousSwatch1->style().backgroundColor(psychic_ui::rgb(rybAnalogous.getColor(1).getColor()));
+        rybAnalogousSwatch2->style().backgroundColor(psychic_ui::rgb(rybAnalogous.getColor(2).getColor()));
+        rybAnalogousSwatch3->style().backgroundColor(psychic_ui::rgb(rybAnalogous.getColor(3).getColor()));
+        rybAnalogousSwatch4->style().backgroundColor(psychic_ui::rgb(rybAnalogous.getColor(4).getColor()));
 
         monochrome.generate();
-        monochromeSwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(monochrome.getColor(0).getColor(), 255));
-        monochromeSwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(monochrome.getColor(1).getColor(), 255));
-        monochromeSwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(monochrome.getColor(2).getColor(), 255));
-        monochromeSwatch3->style()->set(backgroundColor, PsychicColor::setColorAlpha(monochrome.getColor(3).getColor(), 255));
-        monochromeSwatch4->style()->set(backgroundColor, PsychicColor::setColorAlpha(monochrome.getColor(4).getColor(), 255));
+        monochromeSwatch0->style().backgroundColor(psychic_ui::rgb(monochrome.getColor(0).getColor()));
+        monochromeSwatch1->style().backgroundColor(psychic_ui::rgb(monochrome.getColor(1).getColor()));
+        monochromeSwatch2->style().backgroundColor(psychic_ui::rgb(monochrome.getColor(2).getColor()));
+        monochromeSwatch3->style().backgroundColor(psychic_ui::rgb(monochrome.getColor(3).getColor()));
+        monochromeSwatch4->style().backgroundColor(psychic_ui::rgb(monochrome.getColor(4).getColor()));
 
         complementary.generate();
-        complementarySwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(complementary.getColor(0).getColor(), 255));
-        complementarySwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(complementary.getColor(1).getColor(), 255));
-        complementarySwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(complementary.getColor(2).getColor(), 255));
-        complementarySwatch3->style()->set(backgroundColor, PsychicColor::setColorAlpha(complementary.getColor(3).getColor(), 255));
-        complementarySwatch4->style()->set(backgroundColor, PsychicColor::setColorAlpha(complementary.getColor(4).getColor(), 255));
-        complementarySwatch5->style()->set(backgroundColor, PsychicColor::setColorAlpha(complementary.getColor(5).getColor(), 255));
+        complementarySwatch0->style().backgroundColor(psychic_ui::rgb(complementary.getColor(0).getColor()));
+        complementarySwatch1->style().backgroundColor(psychic_ui::rgb(complementary.getColor(1).getColor()));
+        complementarySwatch2->style().backgroundColor(psychic_ui::rgb(complementary.getColor(2).getColor()));
+        complementarySwatch3->style().backgroundColor(psychic_ui::rgb(complementary.getColor(3).getColor()));
+        complementarySwatch4->style().backgroundColor(psychic_ui::rgb(complementary.getColor(4).getColor()));
+        complementarySwatch5->style().backgroundColor(psychic_ui::rgb(complementary.getColor(5).getColor()));
 
         rybComplementary.generate();
-        rybComplementarySwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybComplementary.getColor(0).getColor(), 255));
-        rybComplementarySwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybComplementary.getColor(1).getColor(), 255));
-        rybComplementarySwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybComplementary.getColor(2).getColor(), 255));
-        rybComplementarySwatch3->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybComplementary.getColor(3).getColor(), 255));
-        rybComplementarySwatch4->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybComplementary.getColor(4).getColor(), 255));
-        rybComplementarySwatch5->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybComplementary.getColor(5).getColor(), 255));
+        rybComplementarySwatch0->style().backgroundColor(psychic_ui::rgb(rybComplementary.getColor(0).getColor()));
+        rybComplementarySwatch1->style().backgroundColor(psychic_ui::rgb(rybComplementary.getColor(1).getColor()));
+        rybComplementarySwatch2->style().backgroundColor(psychic_ui::rgb(rybComplementary.getColor(2).getColor()));
+        rybComplementarySwatch3->style().backgroundColor(psychic_ui::rgb(rybComplementary.getColor(3).getColor()));
+        rybComplementarySwatch4->style().backgroundColor(psychic_ui::rgb(rybComplementary.getColor(4).getColor()));
+        rybComplementarySwatch5->style().backgroundColor(psychic_ui::rgb(rybComplementary.getColor(5).getColor()));
 
         splitComplementary.generate();
-        splitComplementarySwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(splitComplementary.getColor(0).getColor(), 255));
-        splitComplementarySwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(splitComplementary.getColor(1).getColor(), 255));
-        splitComplementarySwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(splitComplementary.getColor(2).getColor(), 255));
+        splitComplementarySwatch0->style().backgroundColor(psychic_ui::rgb(splitComplementary.getColor(0).getColor()));
+        splitComplementarySwatch1->style().backgroundColor(psychic_ui::rgb(splitComplementary.getColor(1).getColor()));
+        splitComplementarySwatch2->style().backgroundColor(psychic_ui::rgb(splitComplementary.getColor(2).getColor()));
 
         rybSplitComplementary.generate();
-        rybSplitComplementarySwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybSplitComplementary.getColor(0).getColor(), 255));
-        rybSplitComplementarySwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybSplitComplementary.getColor(1).getColor(), 255));
-        rybSplitComplementarySwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybSplitComplementary.getColor(2).getColor(), 255));
+        rybSplitComplementarySwatch0->style().backgroundColor(psychic_ui::rgb(rybSplitComplementary.getColor(0).getColor()));
+        rybSplitComplementarySwatch1->style().backgroundColor(psychic_ui::rgb(rybSplitComplementary.getColor(1).getColor()));
+        rybSplitComplementarySwatch2->style().backgroundColor(psychic_ui::rgb(rybSplitComplementary.getColor(2).getColor()));
         
         compound.generate();
-        compoundSwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(compound.getColor(0).getColor(), 255));
-        compoundSwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(compound.getColor(1).getColor(), 255));
-        compoundSwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(compound.getColor(2).getColor(), 255));
-        compoundSwatch3->style()->set(backgroundColor, PsychicColor::setColorAlpha(compound.getColor(3).getColor(), 255));
-        compoundSwatch4->style()->set(backgroundColor, PsychicColor::setColorAlpha(compound.getColor(4).getColor(), 255));
-        compoundSwatch5->style()->set(backgroundColor, PsychicColor::setColorAlpha(compound.getColor(5).getColor(), 255));
+        compoundSwatch0->style().backgroundColor(psychic_ui::rgb(compound.getColor(0).getColor()));
+        compoundSwatch1->style().backgroundColor(psychic_ui::rgb(compound.getColor(1).getColor()));
+        compoundSwatch2->style().backgroundColor(psychic_ui::rgb(compound.getColor(2).getColor()));
+        compoundSwatch3->style().backgroundColor(psychic_ui::rgb(compound.getColor(3).getColor()));
+        compoundSwatch4->style().backgroundColor(psychic_ui::rgb(compound.getColor(4).getColor()));
+        compoundSwatch5->style().backgroundColor(psychic_ui::rgb(compound.getColor(5).getColor()));
         
         rybCompound.generate();
-        rybCompoundSwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybCompound.getColor(0).getColor(), 255));
-        rybCompoundSwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybCompound.getColor(1).getColor(), 255));
-        rybCompoundSwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybCompound.getColor(2).getColor(), 255));
-        rybCompoundSwatch3->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybCompound.getColor(3).getColor(), 255));
-        rybCompoundSwatch4->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybCompound.getColor(4).getColor(), 255));
-        rybCompoundSwatch5->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybCompound.getColor(5).getColor(), 255));
+        rybCompoundSwatch0->style().backgroundColor(psychic_ui::rgb(rybCompound.getColor(0).getColor()));
+        rybCompoundSwatch1->style().backgroundColor(psychic_ui::rgb(rybCompound.getColor(1).getColor()));
+        rybCompoundSwatch2->style().backgroundColor(psychic_ui::rgb(rybCompound.getColor(2).getColor()));
+        rybCompoundSwatch3->style().backgroundColor(psychic_ui::rgb(rybCompound.getColor(3).getColor()));
+        rybCompoundSwatch4->style().backgroundColor(psychic_ui::rgb(rybCompound.getColor(4).getColor()));
+        rybCompoundSwatch5->style().backgroundColor(psychic_ui::rgb(rybCompound.getColor(5).getColor()));
         
         flippedCompound.generate();
-        flippedCompoundSwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(flippedCompound.getColor(0).getColor(), 255));
-        flippedCompoundSwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(flippedCompound.getColor(1).getColor(), 255));
-        flippedCompoundSwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(flippedCompound.getColor(2).getColor(), 255));
-        flippedCompoundSwatch3->style()->set(backgroundColor, PsychicColor::setColorAlpha(flippedCompound.getColor(3).getColor(), 255));
-        flippedCompoundSwatch4->style()->set(backgroundColor, PsychicColor::setColorAlpha(flippedCompound.getColor(4).getColor(), 255));
-        flippedCompoundSwatch5->style()->set(backgroundColor, PsychicColor::setColorAlpha(flippedCompound.getColor(5).getColor(), 255));
+        flippedCompoundSwatch0->style().backgroundColor(psychic_ui::rgb(flippedCompound.getColor(0).getColor()));
+        flippedCompoundSwatch1->style().backgroundColor(psychic_ui::rgb(flippedCompound.getColor(1).getColor()));
+        flippedCompoundSwatch2->style().backgroundColor(psychic_ui::rgb(flippedCompound.getColor(2).getColor()));
+        flippedCompoundSwatch3->style().backgroundColor(psychic_ui::rgb(flippedCompound.getColor(3).getColor()));
+        flippedCompoundSwatch4->style().backgroundColor(psychic_ui::rgb(flippedCompound.getColor(4).getColor()));
+        flippedCompoundSwatch5->style().backgroundColor(psychic_ui::rgb(flippedCompound.getColor(5).getColor()));
 
         rybFlippedCompound.generate();
-        rybFlippedCompoundSwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybFlippedCompound.getColor(0).getColor(), 255));
-        rybFlippedCompoundSwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybFlippedCompound.getColor(1).getColor(), 255));
-        rybFlippedCompoundSwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybFlippedCompound.getColor(2).getColor(), 255));
-        rybFlippedCompoundSwatch3->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybFlippedCompound.getColor(3).getColor(), 255));
-        rybFlippedCompoundSwatch4->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybFlippedCompound.getColor(4).getColor(), 255));
-        rybFlippedCompoundSwatch5->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybFlippedCompound.getColor(5).getColor(), 255));
+        rybFlippedCompoundSwatch0->style().backgroundColor(psychic_ui::rgb(rybFlippedCompound.getColor(0).getColor()));
+        rybFlippedCompoundSwatch1->style().backgroundColor(psychic_ui::rgb(rybFlippedCompound.getColor(1).getColor()));
+        rybFlippedCompoundSwatch2->style().backgroundColor(psychic_ui::rgb(rybFlippedCompound.getColor(2).getColor()));
+        rybFlippedCompoundSwatch3->style().backgroundColor(psychic_ui::rgb(rybFlippedCompound.getColor(3).getColor()));
+        rybFlippedCompoundSwatch4->style().backgroundColor(psychic_ui::rgb(rybFlippedCompound.getColor(4).getColor()));
+        rybFlippedCompoundSwatch5->style().backgroundColor(psychic_ui::rgb(rybFlippedCompound.getColor(5).getColor()));
         
         rybTriad.generate();
-        rybTriadSwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybTriad.getColor(0).getColor(), 255));
-        rybTriadSwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybTriad.getColor(1).getColor(), 255));
-        rybTriadSwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybTriad.getColor(2).getColor(), 255));
+        rybTriadSwatch0->style().backgroundColor(psychic_ui::rgb(rybTriad.getColor(0).getColor()));
+        rybTriadSwatch1->style().backgroundColor(psychic_ui::rgb(rybTriad.getColor(1).getColor()));
+        rybTriadSwatch2->style().backgroundColor(psychic_ui::rgb(rybTriad.getColor(2).getColor()));
 
         triad.generate();
-        triadSwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(triad.getColor(0).getColor(), 255));
-        triadSwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(triad.getColor(1).getColor(), 255));
-        triadSwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(triad.getColor(2).getColor(), 255));
+        triadSwatch0->style().backgroundColor(psychic_ui::rgb(triad.getColor(0).getColor()));
+        triadSwatch1->style().backgroundColor(psychic_ui::rgb(triad.getColor(1).getColor()));
+        triadSwatch2->style().backgroundColor(psychic_ui::rgb(triad.getColor(2).getColor()));
         
         rybTetrad.generate();
-        rybTetradSwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybTetrad.getColor(0).getColor(), 255));
-        rybTetradSwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybTetrad.getColor(1).getColor(), 255));
-        rybTetradSwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybTetrad.getColor(2).getColor(), 255));
-        rybTetradSwatch3->style()->set(backgroundColor, PsychicColor::setColorAlpha(rybTetrad.getColor(3).getColor(), 255));
+        rybTetradSwatch0->style().backgroundColor(psychic_ui::rgb(rybTetrad.getColor(0).getColor()));
+        rybTetradSwatch1->style().backgroundColor(psychic_ui::rgb(rybTetrad.getColor(1).getColor()));
+        rybTetradSwatch2->style().backgroundColor(psychic_ui::rgb(rybTetrad.getColor(2).getColor()));
+        rybTetradSwatch3->style().backgroundColor(psychic_ui::rgb(rybTetrad.getColor(3).getColor()));
 
         tetrad.generate();
-        tetradSwatch0->style()->set(backgroundColor, PsychicColor::setColorAlpha(tetrad.getColor(0).getColor(), 255));
-        tetradSwatch1->style()->set(backgroundColor, PsychicColor::setColorAlpha(tetrad.getColor(1).getColor(), 255));
-        tetradSwatch2->style()->set(backgroundColor, PsychicColor::setColorAlpha(tetrad.getColor(2).getColor(), 255));
-        tetradSwatch3->style()->set(backgroundColor, PsychicColor::setColorAlpha(tetrad.getColor(3).getColor(), 255));
+        tetradSwatch0->style().backgroundColor(psychic_ui::rgb(tetrad.getColor(0).getColor()));
+        tetradSwatch1->style().backgroundColor(psychic_ui::rgb(tetrad.getColor(1).getColor()));
+        tetradSwatch2->style().backgroundColor(psychic_ui::rgb(tetrad.getColor(2).getColor()));
+        tetradSwatch3->style().backgroundColor(psychic_ui::rgb(tetrad.getColor(3).getColor()));
     }
 }
 

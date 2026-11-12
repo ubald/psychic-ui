@@ -70,7 +70,7 @@ namespace {
 TEST_CASE("GLFW: the adapter chains to the host's callbacks and gives them back", "[backend][glfw]") {
     GLFWHost host;
     auto div = host.window->appContainer()->add<Div>();
-    div->style()->set(width, 100.0f)->set(height, 100.0f);
+    div->style().width(100.0f).height(100.0f);
 
     int keys  = 0;
     int downs = 0;

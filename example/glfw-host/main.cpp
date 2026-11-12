@@ -25,9 +25,9 @@ namespace {
             loadStyleSheet<OneDarkStyleSheet>();
 
             app->style()
-               ->set(flexDirection, "column")
-               ->set(alignItems, "flex-start")
-               ->set(padding, 24.0f);
+               .direction(Direction::Column)
+               .alignItems(Align::Start) // "flex-start" before, which the string parser ignored (stretch)
+               .padding(24.0f);
 
             spaced(app->add<Label>("This window, its context and its loop belong to the host. Escape quits."));
             _clicks = spaced(app->add<Label>("Not clicked yet"));
@@ -35,13 +35,13 @@ namespace {
                 ++_count;
                 _clicks->setText("Clicked " + std::to_string(_count) + (_count == 1 ? " time" : " times"));
             }));
-            spaced(app->add<TextInput>("Type here"))->style()->set(width, 320.0f);
+            spaced(app->add<TextInput>("Type here"))->style().width(320.0f);
         }
 
     private:
         template<typename T>
         static std::shared_ptr<T> spaced(std::shared_ptr<T> div) {
-            div->style()->set(marginBottom, 12.0f);
+            div->style().marginBottom(12.0f);
             return div;
         }
 

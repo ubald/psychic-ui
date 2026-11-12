@@ -13,8 +13,8 @@ namespace psychic_ui {
                 if (component()->mouseOver() || component()->checked() ) {
                     SkPaint paint{};
                     paint.setStyle(SkPaint::kFill_Style);
-                    paint.setColor(shape->computedStyle()->get(backgroundColor));
-                    paint.setAntiAlias(shape->computedStyle()->get(antiAlias));
+                    paint.setColor(shape->computedStyle().backgroundColor().argb());
+                    paint.setAntiAlias(shape->computedStyle().antiAlias());
                     canvas->drawRRect(inner, paint);
                 }
             }

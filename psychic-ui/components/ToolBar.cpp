@@ -6,9 +6,8 @@ namespace psychic_ui {
         Div() {
         setTag("ToolBar");
         _defaultStyle
-            ->set(height, 48)
-            ->set(shrink, 0)
-            ->set(justifyContent, "stretch");
+            .height(48)
+            .shrink(0);
     }
 
 }

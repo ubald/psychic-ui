@@ -12,8 +12,7 @@ namespace psychic_ui {
         setTag("MenuBar");
 
         _defaultStyle
-            ->set(shrink, 0)
-            ->set(justifyContent, "stretch");
+            .shrink(0);
     }
 
     std::shared_ptr<Div> MenuBar::getItemDiv(const std::shared_ptr<MenuItem> &item) {

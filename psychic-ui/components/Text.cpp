@@ -416,10 +416,10 @@ namespace psychic_ui {
         _textBox.setSpacing(_fontSize / _textPaint.getFontSpacing(), _lineHeight - _fontSize);
 
         _selectionPaint.setStyle(SkPaint::kFill_Style);
-        _selectionPaint.setColor(_computedStyle->get(selectionColor));
+        _selectionPaint.setColor(_computedStyle.selectionColor().argb());
 
         _selectionBackgroundPaint = _textPaint;
-        _selectionBackgroundPaint.setColor(_computedStyle->get(selectionBackgroundColor));
+        _selectionBackgroundPaint.setColor(_computedStyle.selectionBackgroundColor().argb());
     }
 
     YGSize Text::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {

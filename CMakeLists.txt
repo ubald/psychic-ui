@@ -243,6 +243,7 @@ set(SOURCE_FILES
     psychic-ui/skins/SliderRangeSkin.hpp
     psychic-ui/skins/TitleBarButtonSkin.cpp
     psychic-ui/skins/TitleBarButtonSkin.hpp
+    psychic-ui/style/Properties.hpp
     psychic-ui/style/Style.cpp
     psychic-ui/style/Style.hpp
     psychic-ui/style/StyleDeclaration.cpp
@@ -253,10 +254,11 @@ set(SOURCE_FILES
     psychic-ui/style/StyleSelector.hpp
     psychic-ui/style/StyleSheet.cpp
     psychic-ui/style/StyleSheet.hpp
+    psychic-ui/style/Values.cpp
+    psychic-ui/style/Values.hpp
     psychic-ui/utils/ColorUtils.hpp
     psychic-ui/utils/Hatcher.hpp
     psychic-ui/utils/StringUtils.hpp
-    psychic-ui/utils/YogaUtils.hpp
     psychic-ui/Component.hpp
     psychic-ui/Div.cpp
     psychic-ui/Div.hpp

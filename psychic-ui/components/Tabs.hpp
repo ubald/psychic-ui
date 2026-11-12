@@ -38,7 +38,7 @@ namespace psychic_ui {
         _getLabel(getLabel),
         _tabChanged(tabChanged) {
         this->setTag("Tabs");
-        this->_defaultStyle->set(shrink, 0);
+        this->_defaultStyle.shrink(0);
     }
 
     template<class T>

@@ -48,10 +48,10 @@ namespace {
     std::shared_ptr<T> addText(Root &root, const std::string &text, float size = 14.0f, const std::string &font = FONT) {
         auto node = root.add<T>(text);
         node->style()
-            ->set(fontFamily, FONT)
-            ->set(fontSize, size)
-            ->set(lineHeight, LINE_HEIGHT)
-            ->set(textAntiAlias, true);
+            .fontFamily(FONT)
+            .fontSize(size)
+            .lineHeight(LINE_HEIGHT)
+            .textAntiAlias(true);
         return node;
     }
 
@@ -87,15 +87,15 @@ TEST_CASE("Text and Label are measured to their content", "[text]") {
 
     Root root{styleManager};
     root.style()
-        ->set(width, 400.0f)
-        ->set(height, 300.0f);
+        .width(400.0f)
+        .height(300.0f);
 
     const std::string str = "Hello, measured world";
     const float       expected = textWidth(styleManager, str);
     REQUIRE(expected > 0);
 
     SECTION("in a row") {
-        root.style()->set(flexDirection, "row");
+        root.style().direction(Direction::Row);
         auto text  = addText<Text>(root, str);
         auto label = addText<Label>(root, str);
         root.layout(400, 300);
@@ -105,7 +105,7 @@ TEST_CASE("Text and Label are measured to their content", "[text]") {
     }
 
     SECTION("in a column aligned to the start") {
-        root.style()->set(alignItems, "start");
+        root.style().alignItems(Align::Start);
         auto text  = addText<Text>(root, str);
         auto label = addText<Label>(root, str);
         root.layout(400, 300);
@@ -128,7 +128,7 @@ TEST_CASE("Text and Label are measured to their content", "[text]") {
     }
 
     SECTION("empty text still gets a line") {
-        root.style()->set(alignItems, "start");
+        root.style().alignItems(Align::Start);
         auto text  = addText<Text>(root, "");
         auto label = addText<Label>(root, "");
         root.layout(400, 300);
@@ -140,7 +140,7 @@ TEST_CASE("Text and Label are measured to their content", "[text]") {
     }
 
     SECTION("multiline text is as wide as its widest line") {
-        root.style()->set(alignItems, "start");
+        root.style().alignItems(Align::Start);
         const std::string lines = "short\na much longer line\nmid line";
         auto              text  = addText<Text>(root, lines);
         text->setMultiline(true);
@@ -151,7 +151,7 @@ TEST_CASE("Text and Label are measured to their content", "[text]") {
     }
 
     SECTION("multiline text wraps in a narrow column") {
-        root.style()->set(width, 60.0f);
+        root.style().width(60.0f);
         auto text = addText<Text>(root, str);
         text->setMultiline(true);
         root.layout(60, 300);
@@ -167,9 +167,9 @@ TEST_CASE("Text and Label are re-measured when their font changes through style"
 
     Root root{styleManager};
     root.style()
-        ->set(width, 400.0f)
-        ->set(height, 300.0f)
-        ->set(alignItems, "start");
+        .width(400.0f)
+        .height(300.0f)
+        .alignItems(Align::Start);
 
     const std::string str   = "Hello, measured world";
     auto              text  = addText<Text>(root, str);
@@ -181,8 +181,8 @@ TEST_CASE("Text and Label are re-measured when their font changes through style"
     REQUIRE(label->getWidth() == Approx(textWidth(styleManager, str)).margin(1));
 
     SECTION("font size") {
-        text->style()->set(fontSize, 16.0f);
-        label->style()->set(fontSize, 16.0f);
+        text->style().fontSize(16.0f);
+        label->style().fontSize(16.0f);
         root.layout(400, 300);
 
         REQUIRE(text->getWidth() == Approx(textWidth(styleManager, str, 16.0f)).margin(1));
@@ -193,8 +193,8 @@ TEST_CASE("Text and Label are re-measured when their font changes through style"
         const float bold = textWidth(styleManager, str, 14.0f, BOLD_FONT);
         REQUIRE(bold != Approx(textWidth(styleManager, str)).margin(1));
 
-        text->style()->set(fontFamily, BOLD_FONT);
-        label->style()->set(fontFamily, BOLD_FONT);
+        text->style().fontFamily(BOLD_FONT);
+        label->style().fontFamily(BOLD_FONT);
         root.layout(400, 300);
 
         REQUIRE(text->getWidth() == Approx(bold).margin(1));
@@ -202,8 +202,8 @@ TEST_CASE("Text and Label are re-measured when their font changes through style"
     }
 
     SECTION("line height") {
-        text->style()->set(lineHeight, 32.0f);
-        label->style()->set(lineHeight, 32.0f);
+        text->style().lineHeight(32.0f);
+        label->style().lineHeight(32.0f);
         root.layout(400, 300);
 
         REQUIRE(text->getHeight() == 32);

@@ -213,8 +213,15 @@ namespace psychic_ui {
 
         // region Visibility, Focus & State
 
+        /**
+         * Whether the div is painted and hit, from its computed `visible` style. Hidden divs are still laid out.
+         */
         bool getVisible() const;
-        virtual void setVisible(bool value);
+
+        /**
+         * Shortcut for the inline style's `visible`
+         */
+        void setVisible(bool value);
         bool enabled() const;
         virtual Div *setEnabled(bool enabled);
         virtual bool active() const;
@@ -320,10 +327,12 @@ namespace psychic_ui {
         // region Style
 
         /**
-         * Get the inline style
-         * @return Style*
+         * The inline style, which overrides the stylesheets: `div->style().padding(24)`.
+         * Changing it invalidates the div's style.
          */
-        Style *style() const;
+        Style &style();
+
+        const Style &style() const;
 
         /**
          * Get the current style manager
@@ -361,10 +370,10 @@ namespace psychic_ui {
         bool styleDirty() const;
 
         /**
-         * Get the computed style
-         * @return
+         * The computed style: what the stylesheets, the parent and the inline and default styles give this div,
+         * as of the last style pass
          */
-        const Style *computedStyle() const;
+        const Style &computedStyle() const;
 
         const std::vector<std::string> &tags() const;
         const std::string internalId() const;
@@ -374,7 +383,10 @@ namespace psychic_ui {
         Div *setClassNames(std::unordered_set<std::string> additionalClassNames);
         Div *addClassName(std::string className);
         Div *removeClassName(std::string className);
-        virtual InheritableValues inheritableValues() const;
+        /**
+         * The properties this div takes from its parent's computed style when no rule sets them
+         */
+        virtual const PropertyMask &inheritedProperties() const;
 
         // endregion
 
@@ -538,19 +550,24 @@ namespace psychic_ui {
          * Use this instead of the inline style when a component needs a specific default for it to work correctly
          * For example, text components should not grow/shrink as they are inline, but yoga doesn't let us do that.
          */
-        std::unique_ptr<Style> _defaultStyle{nullptr};
+        Style _defaultStyle;
 
         /**
          * Inline Style
          * Use the inline styles to set values that will override any stylesheet
          */
-        std::unique_ptr<Style> _inlineStyle{nullptr};
+        Style _inlineStyle;
 
         /**
          * Computed Style
          * Computed style values, use this to obtain the final style to be applied
          */
-        std::unique_ptr<Style> _computedStyle{nullptr};
+        Style _computedStyle{};
+
+        /**
+         * Whether the computed style was pushed to the Yoga node once: until then every layout property is
+         */
+        bool _layoutInitialized{false};
 
         /**
          * Dirty style flag
@@ -638,11 +655,11 @@ namespace psychic_ui {
         void setMeasurable();
 
         /**
-         * Updates the layout from the computed style
-         * No style validation will occur
-         * The layoutUpdated() method will be called on the next frame, after yoga has computed the new layout
+         * Push the computed style's layout properties to the Yoga node, only those in `changed`.
+         * Paint-only properties never reach Yoga, so changing them doesn't dirty the layout.
+         * The layoutUpdated() method will be called after Yoga has computed the new layout
          */
-        void updateLayout();
+        void updateLayout(const PropertyMask &changed);
 
         /**
          * Callback for when layout was updated
@@ -713,7 +730,6 @@ namespace psychic_ui {
         // endregion
 
     private:
-        static const InheritableValues _inheritableValues;
         void addedToRenderRecursive();
         void removedFromRenderRecursive();
     };

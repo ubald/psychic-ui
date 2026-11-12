@@ -12,7 +12,7 @@ namespace psychic_ui {
                 [this](const std::shared_ptr<MenuItem> &item) { return getItemDiv(item); }
             )) {
         setTag("Menu");
-        _inlineStyle->set(position, "absolute");
+        _inlineStyle.position(Position::Absolute);
         add(menuContainer);
     }
 
@@ -46,8 +46,8 @@ namespace psychic_ui {
                     globalToLocal(lx, ly, x, y);
                     subMenu = add<Menu>(sub->items);
                     subMenu->style()
-                           ->set(left, lx)
-                           ->set(top, ly);
+                           .left(lx)
+                           .top(ly);
                     for (auto &child: menuContainer->children()) {
                         auto menuButton = std::dynamic_pointer_cast<MenuButton>(child);
                         if (menuButton) {

@@ -16,16 +16,17 @@ namespace psychic_ui {
         _skins.clear();
         for (auto *rule: _rules) {
             rule->setActive(false);
-            rule->style()->clear();
+            rule->style().clear();
         }
         _rules.clear();
-        _valid = false;
+        _universal = nullptr;
+        _valid     = false;
     }
 
-    StyleManager *StyleManager::loadFont(const std::string &name, const std::string &path) {
+    StyleManager &StyleManager::loadFont(const std::string &name, const std::string &path) {
         _fonts.insert({name, SkTypeface::MakeFromFile(path.c_str())});
         _valid = false;
-        return this;
+        return *this;
     }
 
     sk_sp<SkTypeface> StyleManager::font(const std::string &name) const {
@@ -33,10 +34,10 @@ namespace psychic_ui {
         return font != _fonts.cend() ? font->second : nullptr;
     }
 
-    StyleManager *StyleManager::registerSkin(const std::string &name, SkinMaker hatcher) {
+    StyleManager &StyleManager::registerSkin(const std::string &name, SkinMaker hatcher) {
         _skins.insert(std::make_pair(name, std::move(hatcher)));
         _valid = false;
-        return this;
+        return *this;
     }
 
     std::shared_ptr<internal::SkinBase> StyleManager::skin(const std::string &name) {
@@ -44,7 +45,7 @@ namespace psychic_ui {
         return skin != _skins.cend() ? skin->second->hatch() : nullptr;
     }
 
-    Style *StyleManager::style(std::string selectorString) {
+    Style &StyleManager::style(std::string selectorString) {
         std::transform(selectorString.begin(), selectorString.end(), selectorString.begin(), ::tolower);
         auto it = _declarations.find(selectorString);
         if (it == _declarations.cend()) {
@@ -52,73 +53,76 @@ namespace psychic_ui {
             if (!selector) {
                 throw std::invalid_argument("Invalid style selector: \"" + selectorString + "\"");
             }
-            auto declaration = std::make_unique<StyleDeclaration>(std::move(selector), [this]() { _valid = false; });
-            #ifdef DEBUG_STYLES
-            declaration->selectorString = selectorString;
-            #endif
+            auto declaration = std::make_unique<StyleDeclaration>(
+                selectorString, std::move(selector),
+                [](void *manager) { static_cast<StyleManager *>(manager)->_valid = false; }, this
+            );
             it = _declarations.emplace(selectorString, std::move(declaration)).first;
         }
 
         StyleDeclaration *declaration = it->second.get();
         if (!declaration->active()) {
             // New, or dropped by reset(): it starts empty, after the rules declared so far
-            declaration->style()->clear();
+            declaration->style().clear();
             declaration->setActive(true);
             _rules.push_back(declaration);
+            if (selectorString == "*") {
+                _universal = declaration;
+            }
             _valid = false;
         }
         return declaration->style();
     }
 
-    std::unique_ptr<Style> StyleManager::computeStyle(const Div *component) {
-        // Weight, then index in _rules: the declaration order breaks ties
-        std::vector<std::pair<int, std::size_t>> directMatches;
+    void StyleManager::match(const Div *component) {
+        _matches.clear();
+        for (std::size_t i = 0; i < _rules.size(); ++i) {
+            if (_rules[i] != _universal && _rules[i]->selector()->matches(component)) {
+                _matches.emplace_back(_rules[i]->weight(), i);
+            }
+        }
+        // Heaviest overlaid last; on equal weight the rule declared last wins, like CSS's order of appearance
+        std::sort(_matches.begin(), _matches.end());
+    }
+
+    Style StyleManager::computeStyle(const Div *component) {
+        Style s;
 
         // Start with global values
-        auto universal = _declarations.find("*");
-        auto s         = std::make_unique<Style>(
-            universal != _declarations.cend() && universal->second->active() ? universal->second->style() : nullptr
-        );
+        if (_universal) {
+            s.overlay(_universal->style());
+        }
 
         // Apply inherited values
         if (component->_parent) {
-            s->overlayInheritable(component->_parent->_computedStyle.get(), component);
-
-            #ifdef DEBUG_STYLES
-            s->declarations.insert(
-                s->declarations.end(),
-                component->_parent->_computedStyle->declarations.cbegin(),
-                component->_parent->_computedStyle->declarations.cend()
-            );
-            #endif
+            s.overlay(component->_parent->_computedStyle, component->inheritedProperties());
         }
 
-        // Get direct matches
-        for (std::size_t i = 0; i < _rules.size(); ++i) {
-            if (_rules[i]->selector()->matches(component)) {
-                directMatches.emplace_back(_rules[i]->weight(), i);
-            }
-        }
-
-        // Heaviest overlaid last; on equal weight the rule declared last wins, like CSS's order of appearance
-        std::sort(directMatches.begin(), directMatches.end());
-
-        // Apply direct matches
-        for (const auto &[weight, index]: directMatches) {
-            s->overlay(_rules[index]->style());
-
-            #ifdef DEBUG_STYLES
-            s->declarations.push_back("[weight: " + std::to_string(weight) + "] " + _rules[index]->selectorString);
-            #endif
+        // Apply the matching rules
+        match(component);
+        for (const auto &[weight, index]: _matches) {
+            s.overlay(_rules[index]->style());
         }
 
         // Overlay "inline" style
-        s->overlay(component->_inlineStyle.get());
+        s.overlay(component->_inlineStyle);
 
         // Set defaults (only after everything else, this way we only fill in the blanks)
-        s->defaults(component->_defaultStyle.get());
+        s.defaults(component->_defaultStyle);
 
         return s;
+    }
+
+    std::vector<std::string> StyleManager::matchedSelectors(const Div *component) {
+        std::vector<std::string> selectors;
+        if (_universal) {
+            selectors.push_back("*");
+        }
+        match(component);
+        for (const auto &[weight, index]: _matches) {
+            selectors.push_back("[weight: " + std::to_string(weight) + "] " + _rules[index]->selectorString());
+        }
+        return selectors;
     }
 
 }

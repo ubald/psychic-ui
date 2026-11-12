@@ -31,12 +31,12 @@ namespace psychic_ui {
         }
 
         // In the order of `Cursor`
-        _cursors[Cursor::Arrow]     = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT);
-        _cursors[Cursor::IBeam]     = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_TEXT);
-        _cursors[Cursor::Crosshair] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_CROSSHAIR);
-        _cursors[Cursor::Hand]      = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_POINTER);
-        _cursors[Cursor::HResize]   = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_EW_RESIZE);
-        _cursors[Cursor::VResize]   = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NS_RESIZE);
+        _cursors[static_cast<int>(Cursor::Arrow)]     = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT);
+        _cursors[static_cast<int>(Cursor::IBeam)]     = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_TEXT);
+        _cursors[static_cast<int>(Cursor::Crosshair)] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_CROSSHAIR);
+        _cursors[static_cast<int>(Cursor::Hand)]      = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_POINTER);
+        _cursors[static_cast<int>(Cursor::HResize)]   = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_EW_RESIZE);
+        _cursors[static_cast<int>(Cursor::VResize)]   = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NS_RESIZE);
 
         _window->open(this);
     }
@@ -67,7 +67,7 @@ namespace psychic_ui {
     }
 
     bool SDL3SystemWindow::render() {
-        if (!_window->getVisible()) {
+        if (!_window->windowVisible()) {
             return false;
         }
 
@@ -136,9 +136,10 @@ namespace psychic_ui {
         }
     }
 
-    void SDL3SystemWindow::setCursor(int cursor) {
-        if (cursor >= 0 && cursor < static_cast<int>(std::size(_cursors)) && _cursors[cursor]) {
-            SDL_SetCursor(_cursors[cursor]);
+    void SDL3SystemWindow::setCursor(Cursor cursor) {
+        const auto index = static_cast<std::size_t>(cursor);
+        if (index < std::size(_cursors) && _cursors[index]) {
+            SDL_SetCursor(_cursors[index]);
         }
     }
 

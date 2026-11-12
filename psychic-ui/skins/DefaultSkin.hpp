@@ -17,9 +17,9 @@ namespace psychic_ui {
          * @return Inner SkRRect, for the caller to use to continue drawing inside the component
          */
         inline static SkRRect draw(Div *div, SkCanvas *canvas) {
-            const Style *style = div->computedStyle();
-            float radius = style->get(borderRadius);
-            float strokeWidth = style->get(border);
+            const Style &style = div->computedStyle();
+            float radius = style.borderRadius();
+            float strokeWidth = style.border();
 
             // Setup main rect
             SkRRect rect = SkRRect::MakeRectXY(
@@ -34,11 +34,11 @@ namespace psychic_ui {
 
             // Setup paint
             SkPaint paint{};
-            paint.setAntiAlias(style->get(antiAlias));
+            paint.setAntiAlias(style.antiAlias());
             paint.setStyle(SkPaint::kFill_Style);
-            paint.setColor(style->get(contentBackgroundColor));
-            if (style->has(opacity)) {
-                paint.setAlpha((unsigned int) (style->get(opacity) * 255.f));
+            paint.setColor(style.contentBackgroundColor().argb());
+            if (style.opacity() < 1.0f) {
+                paint.setAlpha((unsigned int) (paint.getAlpha() * style.opacity())); // Fades, keeping the color's own alpha
             }
 
             // Paint background
@@ -55,7 +55,7 @@ namespace psychic_ui {
                 stroke.inset(strokeInset, strokeInset);
                 paint.setStyle(SkPaint::kStroke_Style);
                 paint.setStrokeWidth(strokeWidth);
-                paint.setColor(style->get(borderColor));
+                paint.setColor(style.borderColor().argb());
                 canvas->drawRRect(stroke, paint);
             }
 

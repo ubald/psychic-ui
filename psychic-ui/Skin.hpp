@@ -11,9 +11,12 @@ namespace psychic_ui {
             virtual void removedFromComponent() {};
         protected:
             SkinBase();
-            InheritableValues inheritableValues() const override;
-        private:
-            static const InheritableValues _inheritableValues;
+
+            /**
+             * A skin draws its component, so it takes almost all of the component's style:
+             * everything but what places the component among its siblings (margins, size, position, flex item)
+             */
+            const PropertyMask &inheritedProperties() const override;
         };
     }
 
@@ -27,4 +30,3 @@ namespace psychic_ui {
     };
 
 }
-

@@ -14,7 +14,7 @@ namespace psychic_ui {
         _textDisplay->setEditable(true);
         _textDisplay->setMultiline(true);
         _textDisplay->style()
-                    ->set(minHeightPercent, 1.0f);
+                    .minHeight(100_pct);
 
         _textDisplay->onChange(
             [this](std::string txt) {

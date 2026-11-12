@@ -4,9 +4,9 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include <functional>
 #include <type_traits>
-#include "psychic-ui/psychic-ui.hpp"
+#include <utility>
+#include <SkTypeface.h>
 #include "psychic-ui/utils/Hatcher.hpp"
 #include "Style.hpp"
 #include "StyleSelector.hpp"
@@ -36,7 +36,7 @@ namespace psychic_ui {
 
         /**
          * Forget the fonts, the skins and every rule.
-         * The rules' styles are emptied but stay allocated, so a `Style *` obtained from `style()` stays valid:
+         * The rules' styles are emptied but stay allocated, so a `Style &` obtained from `style()` stays valid:
          * declaring the same selector again (usually by loading a stylesheet) brings that rule back.
          */
         void reset();
@@ -55,31 +55,57 @@ namespace psychic_ui {
 
         void setValid() { _valid = true; }
 
-        StyleManager *loadFont(const std::string &name, const std::string &path);
+        StyleManager &loadFont(const std::string &name, const std::string &path);
         sk_sp<SkTypeface> font(const std::string &name) const;
 
-        StyleManager *registerSkin(const std::string &name, SkinMaker hatcher);
+        StyleManager &registerSkin(const std::string &name, SkinMaker hatcher);
         std::shared_ptr<internal::SkinBase> skin(const std::string &name);
 
         /**
          * Get the rule for a selector, declaring it if needed. Selectors are case insensitive.
          * Rules apply like CSS: by specificity (weight), and on equal specificity the rule declared last wins.
+         *
+         *     manager->style("Button:hover").backgroundColor(rgb(0x3C414F));
+         *
          * @throws std::invalid_argument when the selector can't be parsed
          */
-        Style *style(std::string selector);
-        std::unique_ptr<Style> computeStyle(const Div *component);
+        Style &style(std::string selector);
+
+        /**
+         * The style a Div gets, from (lowest priority first) the `*` rule, what it inherits from its parent's
+         * computed style, the rules matching it, its inline style, and its default style for what is still unset
+         */
+        Style computeStyle(const Div *component);
+
+        /**
+         * The selectors of the rules matching a Div, in the order they apply. For debugging.
+         */
+        std::vector<std::string> matchedSelectors(const Div *component);
 
     protected:
         /**
-         * Every rule ever declared, by lowercase selector. Never shrinks, so that a `Style *` handed out stays valid.
+         * Every rule ever declared, by lowercase selector. Never shrinks, so that a `Style &` handed out stays valid.
          */
         std::unordered_map<std::string, std::unique_ptr<StyleDeclaration>> _declarations{};
         /**
          * The rules in effect, in declaration order: on equal weight, a later rule wins
          */
         std::vector<StyleDeclaration *>                                    _rules{};
+        /**
+         * The `*` rule, if declared
+         */
+        StyleDeclaration                                                   *_universal{nullptr};
+        /**
+         * Weight and index in _rules of the rules matching the Div being computed, kept to reuse its memory
+         */
+        std::vector<std::pair<int, std::size_t>>                           _matches{};
         std::unordered_map<std::string, sk_sp<SkTypeface>>                 _fonts{};
         std::unordered_map<std::string, SkinMaker>                         _skins{};
         bool                                                               _valid{false};
+
+        /**
+         * Fill _matches with the rules matching a Div, in the order they apply
+         */
+        void match(const Div *component);
     };
 }

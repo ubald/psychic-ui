@@ -89,9 +89,9 @@ TEST_CASE("A div clicked through dispatch removes itself", "[signals][lifetime]"
     auto window = std::make_shared<HeadlessWindow>();
     auto root   = window->appContainer();
     auto container = root->add<Div>();
-    container->style()->set(width, 100.0f)->set(height, 100.0f);
+    container->style().width(100.0f).height(100.0f);
     auto item = container->add<Div>();
-    item->style()->set(width, 100.0f)->set(height, 100.0f);
+    item->style().width(100.0f).height(100.0f);
     int clicked = 0;
     item->onClick([&, raw = item.get()]() {
         ++clicked;

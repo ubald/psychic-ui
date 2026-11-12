@@ -73,12 +73,12 @@ namespace psychic_ui {
         }
 
         // In the order of `Cursor`
-        _cursors[Cursor::Arrow]     = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-        _cursors[Cursor::IBeam]     = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
-        _cursors[Cursor::Crosshair] = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
-        _cursors[Cursor::Hand]      = glfwCreateStandardCursor(GLFW_POINTING_HAND_CURSOR);
-        _cursors[Cursor::HResize]   = glfwCreateStandardCursor(GLFW_RESIZE_EW_CURSOR);
-        _cursors[Cursor::VResize]   = glfwCreateStandardCursor(GLFW_RESIZE_NS_CURSOR);
+        _cursors[static_cast<int>(Cursor::Arrow)]     = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+        _cursors[static_cast<int>(Cursor::IBeam)]     = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+        _cursors[static_cast<int>(Cursor::Crosshair)] = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+        _cursors[static_cast<int>(Cursor::Hand)]      = glfwCreateStandardCursor(GLFW_POINTING_HAND_CURSOR);
+        _cursors[static_cast<int>(Cursor::HResize)]   = glfwCreateStandardCursor(GLFW_RESIZE_EW_CURSOR);
+        _cursors[static_cast<int>(Cursor::VResize)]   = glfwCreateStandardCursor(GLFW_RESIZE_NS_CURSOR);
 
         adapters().push_back(this);
 
@@ -207,7 +207,7 @@ namespace psychic_ui {
     }
 
     bool GLFWSystemWindow::render() {
-        if (!_window->getVisible()) {
+        if (!_window->windowVisible()) {
             // Closed from inside: let the host's loop know
             glfwSetWindowShouldClose(_glfwWindow, GLFW_TRUE);
             return false;
@@ -283,9 +283,9 @@ namespace psychic_ui {
         }
     }
 
-    void GLFWSystemWindow::setCursor(int cursor) {
-        if (cursor >= 0 && cursor < static_cast<int>(std::size(_cursors))) {
-            glfwSetCursor(_glfwWindow, _cursors[cursor]);
+    void GLFWSystemWindow::setCursor(Cursor cursor) {
+        if (static_cast<std::size_t>(cursor) < std::size(_cursors)) {
+            glfwSetCursor(_glfwWindow, _cursors[static_cast<std::size_t>(cursor)]);
         }
     }
 

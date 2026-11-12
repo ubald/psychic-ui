@@ -8,15 +8,15 @@ namespace psychic_ui {
         _viewport(std::make_shared<Div>()) {
         _viewport->add(_content);
         _viewport->style()
-                 ->set(widthPercent, 1.0f)
-                 ->set(heightPercent, 1.0f)
-                 ->set(overflow, "scroll");
+                 .width(100_pct)
+                 .height(100_pct)
+                 .overflow(Overflow::Scroll);
 
         auto container = add<Div>();
         container->style()
-                 ->set(flexDirection, "row")
-                 ->set(widthPercent, 1.0f)
-                 ->set(heightPercent, 1.0f);
+                 .direction(Direction::Row)
+                 .width(100_pct)
+                 .height(100_pct);
         container->add(_viewport);
 
         _verticalScrollBar   = container->add<ScrollBar>(_viewport, ScrollDirection::Vertical);

@@ -3,7 +3,6 @@
 #include <iostream>
 #include <SkPaint.h>
 #include <SkDashPathEffect.h>
-#include "utils/YogaUtils.hpp"
 #include "yoga/Yoga.h"
 #include "Div.hpp"
 #include "Window.hpp"
@@ -33,14 +32,6 @@ namespace psychic_ui {
         }
     }
 
-    const InheritableValues Div::_inheritableValues{
-        {color},
-        {fontFamily},
-        {fontSize, letterSpacing, lineHeight},
-        {cursor},
-        {}
-    };
-
     #ifdef DEBUG_LAYOUT
     bool Div::debugLayout{false};
     #endif
@@ -50,9 +41,8 @@ namespace psychic_ui {
     Div::Div() :
         Observer(),
         _internalId(std::to_string(idCounter++)),
-        _defaultStyle(std::make_unique<Style>([this]() { invalidateStyle(); })),
-        _inlineStyle(std::make_unique<Style>([this]() { invalidateStyle(); })),
-        _computedStyle(std::make_unique<Style>()),
+        _defaultStyle([](void *div) { static_cast<Div *>(div)->invalidateStyle(); }, this),
+        _inlineStyle([](void *div) { static_cast<Div *>(div)->invalidateStyle(); }, this),
         _yogaNode(YGNodeNewWithConfig(yogaConfig())) {
         setTag("div");
 
@@ -262,8 +252,7 @@ namespace psychic_ui {
     }
 
     void Div::setVisible(bool value) {
-        _visible = value;
-        style()->set(visible, value);
+        _inlineStyle.visible(value);
     }
 
     bool Div::enabled() const {
@@ -315,7 +304,7 @@ namespace psychic_ui {
     }
 
     bool Div::boundsContains(const int x, const int y) const {
-        if (_computedStyle->get(overflow) == "visible") {
+        if (_computedStyle.overflow() == Overflow::Visible) {
             return x >= _boundsLeft && x < _boundsRight && y >= _boundsTop && y < _boundsBottom;
         } else {
             // TODO: Keep right and bottom cached
@@ -347,8 +336,8 @@ namespace psychic_ui {
 
     void Div::setPosition(int x, int y) {
         _inlineStyle
-            ->set(left, static_cast<float>(x))
-            ->set(top, static_cast<float>(y));
+            .left(x)
+            .top(y);
     }
 
     int Div::x() const {
@@ -356,7 +345,7 @@ namespace psychic_ui {
     }
 
     void Div::setX(int x) {
-        _inlineStyle->set(left, static_cast<float>(x));
+        _inlineStyle.left(x);
     }
 
     int Div::y() const {
@@ -364,13 +353,13 @@ namespace psychic_ui {
     }
 
     void Div::setY(int y) {
-        _inlineStyle->set(top, static_cast<float>(y));
+        _inlineStyle.top(y);
     }
 
     void Div::setSize(int width, int height) {
         _inlineStyle
-            ->set(psychic_ui::width, static_cast<float>(width))
-            ->set(psychic_ui::height, static_cast<float>(height));
+            .width(width)
+            .height(height);
     }
 
     int Div::getWidth() const {
@@ -378,7 +367,7 @@ namespace psychic_ui {
     }
 
     void Div::setWidth(int width) {
-        _inlineStyle->set(psychic_ui::width, static_cast<float>(width));
+        _inlineStyle.width(width);
     }
 
     int Div::getHeight() const {
@@ -386,7 +375,7 @@ namespace psychic_ui {
     }
 
     void Div::setHeight(int height) {
-        _inlineStyle->set(psychic_ui::height, static_cast<float>(height));
+        _inlineStyle.height(height);
     }
 
     // endregion
@@ -410,12 +399,16 @@ namespace psychic_ui {
         invalidateStyle();
     }
 
-    Style *Div::style() const {
-        return _inlineStyle.get();
+    Style &Div::style() {
+        return _inlineStyle;
     }
 
-    const Style *Div::computedStyle() const {
-        return _computedStyle.get();
+    const Style &Div::style() const {
+        return _inlineStyle;
+    }
+
+    const Style &Div::computedStyle() const {
+        return _computedStyle;
     }
 
     Div *Div::setTag(std::string tag) {
@@ -483,8 +476,8 @@ namespace psychic_ui {
         return this;
     }
 
-    InheritableValues Div::inheritableValues() const {
-        return _inheritableValues;
+    const PropertyMask &Div::inheritedProperties() const {
+        return psychic_ui::inheritedProperties;
     }
 
     // endregion
@@ -516,8 +509,12 @@ namespace psychic_ui {
 
     void Div::updateStyle() {
         if (auto sm = styleManager()) {
-            _computedStyle = sm->computeStyle(this);
-            updateLayout();
+            Style computed = sm->computeStyle(this);
+            // Only what changed reaches Yoga, everything the first time
+            PropertyMask changed = _layoutInitialized ? _computedStyle.diff(computed) : PropertyMask{}.set();
+            _computedStyle     = computed;
+            _layoutInitialized = true;
+            updateLayout(changed);
             _styleDirty = false;
             styleUpdated();
         }
@@ -544,60 +541,46 @@ namespace psychic_ui {
     }
 
     void Div::styleUpdated() {
-        // region Visibility
-        if (_computedStyle->has(visible)) {
-            _visible = _computedStyle->get(visible);
-        }
-        // endregion
+        // Derived state is always assigned, from the computed value or its default,
+        // so that a rule that stops matching (:hover, a removed class) takes its effect away with it
+
+        _visible = _computedStyle.visible();
 
         // region Radius
-        float tmp;
-        if (_computedStyle->has(borderRadius)) {
-            tmp                = _computedStyle->get(borderRadius);
-            _radiusTopLeft     = tmp;
-            _radiusTopRight    = tmp;
-            _radiusBottomLeft  = tmp;
-            _radiusBottomRight = tmp;
-        }
+        // The most specific radius set wins: corner, then side, then all
+        const Style &s = _computedStyle;
+        _radiusTopLeft     = s.borderRadius();
+        _radiusTopRight    = s.borderRadius();
+        _radiusBottomLeft  = s.borderRadius();
+        _radiusBottomRight = s.borderRadius();
 
-        if (_computedStyle->has(borderRadiusLeft)) {
-            tmp               = _computedStyle->get(borderRadiusLeft);
-            _radiusTopLeft    = tmp;
-            _radiusBottomLeft = tmp;
+        if (s.has(Property::borderRadiusLeft)) {
+            _radiusTopLeft    = s.borderRadiusLeft();
+            _radiusBottomLeft = s.borderRadiusLeft();
         }
-
-        if (_computedStyle->has(borderRadiusRight)) {
-            tmp                = _computedStyle->get(borderRadiusRight);
-            _radiusTopRight    = tmp;
-            _radiusBottomRight = tmp;
+        if (s.has(Property::borderRadiusRight)) {
+            _radiusTopRight    = s.borderRadiusRight();
+            _radiusBottomRight = s.borderRadiusRight();
         }
-
-        if (_computedStyle->has(borderRadiusTop)) {
-            tmp             = _computedStyle->get(borderRadiusTop);
-            _radiusTopLeft  = tmp;
-            _radiusTopRight = tmp;
+        if (s.has(Property::borderRadiusTop)) {
+            _radiusTopLeft  = s.borderRadiusTop();
+            _radiusTopRight = s.borderRadiusTop();
         }
-
-        if (_computedStyle->has(borderRadiusBottom)) {
-            tmp                = _computedStyle->get(borderRadiusBottom);
-            _radiusBottomLeft  = tmp;
-            _radiusBottomRight = tmp;
+        if (s.has(Property::borderRadiusBottom)) {
+            _radiusBottomLeft  = s.borderRadiusBottom();
+            _radiusBottomRight = s.borderRadiusBottom();
         }
-
-        if (_computedStyle->has(borderRadiusTopLeft)) {
-            _radiusTopLeft = _computedStyle->get(borderRadiusTopLeft);;
+        if (s.has(Property::borderRadiusTopLeft)) {
+            _radiusTopLeft = s.borderRadiusTopLeft();
         }
-
-        if (_computedStyle->has(borderRadiusTopRight)) {
-            _radiusTopRight = _computedStyle->get(borderRadiusTopRight);;
+        if (s.has(Property::borderRadiusTopRight)) {
+            _radiusTopRight = s.borderRadiusTopRight();
         }
-
-        if (_computedStyle->has(borderRadiusBottomLeft)) {
-            _radiusBottomLeft = _computedStyle->get(borderRadiusBottomLeft);;
+        if (s.has(Property::borderRadiusBottomLeft)) {
+            _radiusBottomLeft = s.borderRadiusBottomLeft();
         }
-
-        if (_computedStyle->has(borderRadiusBottomRight)) {
-            _radiusBottomRight = _computedStyle->get(borderRadiusBottomRight);;
+        if (s.has(Property::borderRadiusBottomRight)) {
+            _radiusBottomRight = s.borderRadiusBottomRight();
         }
 
         _radii[0].set(_radiusTopLeft, _radiusTopLeft);
@@ -615,11 +598,13 @@ namespace psychic_ui {
             && _radiusTopRight == _radiusBottomLeft
             && _radiusBottomLeft == _radiusBottomRight
         );
+
+        // The layout may not change, but the rounded rect must follow the radii
+        _roundRect.setRectRadii(_rect, _radii);
         // endregion
 
         // region Background
-        _drawBackground = _computedStyle->has(backgroundColor)
-                          && (_computedStyle->get(backgroundColor) != 0x00000000);
+        _drawBackground = s.has(Property::backgroundColor) && s.backgroundColor().argb() != 0x00000000;
         // endregion
     }
 
@@ -653,137 +638,235 @@ namespace psychic_ui {
         );
     }
 
-    // region Yoga Macros
+    // region Style to Yoga
 
-    #define YOGA_STYLE_SET(prop, conv, style, fallback) \
-        YGNodeStyleSet##prop(_yogaNode, Yoga##conv##FromString(_computedStyle->get(style), fallback)); \
+    namespace {
+        YGFlexDirection toYoga(Direction direction) {
+            switch (direction) {
+                case Direction::ColumnReverse:
+                    return YGFlexDirectionColumnReverse;
+                case Direction::Row:
+                    return YGFlexDirectionRow;
+                case Direction::RowReverse:
+                    return YGFlexDirectionRowReverse;
+                default:
+                    return YGFlexDirectionColumn;
+            }
+        }
 
-    #define YOGA_STYLE_SET_FLOAT_UNDEFINED(prop, style) \
-        if (_computedStyle->has(style)) { \
-            float value = _computedStyle->get(style); \
-            YGNodeStyleSet##prop(_yogaNode, std::isnan(value) ? YGUndefined : value); \
-        } else if (!YGFloatIsUndefined(YGNodeStyleGet##prop(_yogaNode))) { \
-            YGNodeStyleSet##prop(_yogaNode, YGUndefined); \
-        } \
+        YGDirection toYoga(TextDirection direction) {
+            switch (direction) {
+                case TextDirection::Ltr:
+                    return YGDirectionLTR;
+                case TextDirection::Rtl:
+                    return YGDirectionRTL;
+                default:
+                    return YGDirectionInherit;
+            }
+        }
 
-    #define YOGA_STYLE_SET_FLOAT(prop, style, fallback) \
-        if (_computedStyle->has(style)) { \
-            YGNodeStyleSet##prop(_yogaNode, _computedStyle->get(style)); \
-        } else if (YGNodeStyleGet##prop(_yogaNode) != (fallback)) { \
-            /*Yoga returns the default value when it is set as undefined*/ \
-            YGNodeStyleSet##prop(_yogaNode, YGUndefined); \
-        } \
+        YGJustify toYoga(Justify justify) {
+            switch (justify) {
+                case Justify::Center:
+                    return YGJustifyCenter;
+                case Justify::End:
+                    return YGJustifyFlexEnd;
+                case Justify::SpaceBetween:
+                    return YGJustifySpaceBetween;
+                case Justify::SpaceAround:
+                    return YGJustifySpaceAround;
+                case Justify::SpaceEvenly:
+                    return YGJustifySpaceEvenly;
+                default:
+                    return YGJustifyFlexStart;
+            }
+        }
 
-    #define YOGA_STYLE_SET_PERCENT(prop, style) \
-        if (_computedStyle->has(style) && !std::isnan(_computedStyle->get(style))) { \
-            YGNodeStyleSet##prop(_yogaNode, _computedStyle->get(style)); \
-        } else if (_computedStyle->has(style##Percent)) { \
-            YGNodeStyleSet##prop##Percent(_yogaNode, YogaPercent(_computedStyle->get(style##Percent))); \
-        } else if (YGNodeStyleGet##prop(_yogaNode).unit != YGUnitAuto) { \
-            YGNodeStyleSet##prop(_yogaNode, YGUndefined); \
-        } \
+        YGAlign toYoga(Align align) {
+            switch (align) {
+                case Align::Start:
+                    return YGAlignFlexStart;
+                case Align::Center:
+                    return YGAlignCenter;
+                case Align::End:
+                    return YGAlignFlexEnd;
+                case Align::Stretch:
+                    return YGAlignStretch;
+                case Align::Baseline:
+                    return YGAlignBaseline;
+                case Align::SpaceBetween:
+                    return YGAlignSpaceBetween;
+                case Align::SpaceAround:
+                    return YGAlignSpaceAround;
+                case Align::SpaceEvenly:
+                    return YGAlignSpaceEvenly;
+                default:
+                    return YGAlignAuto;
+            }
+        }
 
-    #define YOGA_STYLE_SET_PERCENT_AUTO(prop, style) \
-        if (_computedStyle->has(style)) { \
-            float value = _computedStyle->get(style); \
-            if (std::isnan(value)) { \
-                YGNodeStyleSet##prop##Auto(_yogaNode); \
-            } else { \
-                YGNodeStyleSet##prop(_yogaNode, value); \
-            } \
-        } else if (_computedStyle->has(style##Percent)) { \
-            YGNodeStyleSet##prop##Percent(_yogaNode, YogaPercent(_computedStyle->get(style##Percent))); \
-        } else if (YGNodeStyleGet##prop(_yogaNode).unit != YGUnitAuto) { \
-            YGNodeStyleSet##prop##Auto(_yogaNode); \
-        } \
+        YGPositionType toYoga(Position position) {
+            switch (position) {
+                case Position::Static:
+                    return YGPositionTypeStatic;
+                case Position::Absolute:
+                    return YGPositionTypeAbsolute;
+                default:
+                    return YGPositionTypeRelative;
+            }
+        }
 
-    #define YOGA_STYLE_SET_EDGE_FLOAT(prop, edge, style) \
-        if (_computedStyle->has(style)) { \
-            float value = _computedStyle->get(style); \
-            YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, std::isnan(value) ? YGUndefined : value); \
-        } else if (!YGFloatIsUndefined(YGNodeStyleGet##prop(_yogaNode, YGEdge##edge))) { \
-            YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, YGUndefined); \
-        } \
+        YGWrap toYoga(Wrap wrap) {
+            switch (wrap) {
+                case Wrap::Wrap:
+                    return YGWrapWrap;
+                case Wrap::WrapReverse:
+                    return YGWrapWrapReverse;
+                default:
+                    return YGWrapNoWrap;
+            }
+        }
 
-    #define YOGA_STYLE_SET_EDGE_PERCENT(prop, edge, style) \
-        if (_computedStyle->has(style) && !std::isnan(_computedStyle->get(style))) { \
-            YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, _computedStyle->get(style)); \
-        } else if (_computedStyle->has(style##Percent)) { \
-            YGNodeStyleSet##prop##Percent(_yogaNode, YGEdge##edge, YogaPercent(_computedStyle->get(style##Percent))); \
-        } else if (YGNodeStyleGet##prop(_yogaNode, YGEdge##edge).unit != YGUnitUndefined) { \
-            YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, YGUndefined); \
-        } \
+        YGOverflow toYoga(Overflow overflow) {
+            switch (overflow) {
+                case Overflow::Hidden:
+                    return YGOverflowHidden;
+                case Overflow::Scroll:
+                    return YGOverflowScroll;
+                default:
+                    return YGOverflowVisible;
+            }
+        }
 
-    #define YOGA_STYLE_SET_EDGE_PERCENT_AUTO(prop, edge, style) \
-        if (_computedStyle->has(style)) { \
-            float value = _computedStyle->get(style); \
-            if (std::isnan(value)) { \
-                YGNodeStyleSet##prop##Auto(_yogaNode, YGEdge##edge); \
-            } else { \
-                YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, value); \
-            } \
-        } else if (_computedStyle->has(style##Percent)) { \
-            YGNodeStyleSet##prop##Percent(_yogaNode, YGEdge##edge, YogaPercent(_computedStyle->get(style##Percent))); \
-        } else if (YGNodeStyleGet##prop(_yogaNode, YGEdge##edge).unit != YGUnitUndefined) { \
-            YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, YGUndefined); \
-        } \
+        YGDisplay toYoga(Display display) {
+            switch (display) {
+                case Display::None:
+                    return YGDisplayNone;
+                case Display::Contents:
+                    return YGDisplayContents;
+                default:
+                    return YGDisplayFlex;
+            }
+        }
+
+        YGBoxSizing toYoga(BoxSizing boxSizing) {
+            return boxSizing == BoxSizing::ContentBox ? YGBoxSizingContentBox : YGBoxSizingBorderBox;
+        }
+
+        using SetFloat = void (*)(YGNodeRef, float);
+        using SetAuto = void (*)(YGNodeRef);
+        using SetEdge = void (*)(YGNodeRef, YGEdge, float);
+        using SetEdgeAuto = void (*)(YGNodeRef, YGEdge);
+
+        /**
+         * A float that Yoga treats as undefined when unset (the flex shorthand needs grow/shrink undefined)
+         */
+        void setFloat(YGNodeRef node, const Style &style, Property property, float value, SetFloat set) {
+            set(node, style.has(property) ? value : YGUndefined);
+        }
+
+        /**
+         * A dimension: unset is `autoValue` when there is one (width, height, basis), undefined otherwise
+         */
+        void setLength(YGNodeRef node, const Style &style, Property property, Length value, SetFloat point, SetFloat percent, SetAuto autoValue) {
+            if (!style.has(property) || value.isAuto()) {
+                autoValue ? autoValue(node) : point(node, YGUndefined);
+            } else if (value.isPercent()) {
+                percent(node, value.value);
+            } else {
+                point(node, value.value);
+            }
+        }
+
+        /**
+         * An edge: unset is undefined, so that Yoga falls back to the less specific edge (left, horizontal, all)
+         */
+        void setEdge(YGNodeRef node, const Style &style, Property property, YGEdge edge, Length value, SetEdge point, SetEdge percent, SetEdgeAuto autoValue) {
+            if (!style.has(property)) {
+                point(node, edge, YGUndefined);
+            } else if (value.isAuto()) {
+                autoValue ? autoValue(node, edge) : point(node, edge, YGUndefined);
+            } else if (value.isPercent()) {
+                percent(node, edge, value.value);
+            } else {
+                point(node, edge, value.value);
+            }
+        }
+
+        void setBorder(YGNodeRef node, const Style &style, Property property, YGEdge edge, float value) {
+            YGNodeStyleSetBorder(node, edge, style.has(property) ? value : YGUndefined);
+        }
+    }
 
     // endregion
 
-    void Div::updateLayout() {
-        YOGA_STYLE_SET(Direction, Direction, direction, YGDirectionInherit)
-        YOGA_STYLE_SET(FlexDirection, FlexDirection, flexDirection, YGFlexDirectionColumn)
-        YOGA_STYLE_SET(JustifyContent, Justify, justifyContent, YGJustifyFlexStart)
-        YOGA_STYLE_SET(AlignContent, Align, alignContent, YGAlignFlexStart)
-        YOGA_STYLE_SET(AlignItems, Align, alignItems, YGAlignStretch)
-        YOGA_STYLE_SET(AlignSelf, Align, alignSelf, YGAlignAuto)
-        YOGA_STYLE_SET(PositionType, Position, position, YGPositionTypeRelative)
-        YOGA_STYLE_SET(FlexWrap, Wrap, flexWrap, YGWrapNoWrap)
-        YOGA_STYLE_SET(Overflow, Overflow, overflow, YGOverflowVisible)
-        YOGA_STYLE_SET(Display, Display, display, YGDisplayFlex)
+    void Div::updateLayout(const PropertyMask &changed) {
+        if ((changed & layoutProperties).none()) {
+            return; // Paint only: Yoga's node stays clean
+        }
 
-        YOGA_STYLE_SET_FLOAT_UNDEFINED(Flex, flex)
-        YOGA_STYLE_SET_FLOAT(FlexGrow, grow, /*kDefaultFlexGrow*/ 0.0f)
-        YOGA_STYLE_SET_FLOAT(FlexShrink, shrink, /*kWebDefaultFlexShrink*/ 1.0f) // NOTE: Not the default actually
-        YOGA_STYLE_SET_PERCENT_AUTO(FlexBasis, basis)
+        const Style &s = _computedStyle;
+        YGNodeRef  n   = _yogaNode;
+        auto       has = [&changed](Property property) { return changed.test(index(property)); };
+        using P = Property;
 
-        YOGA_STYLE_SET_EDGE_PERCENT(Position, Left, left)
-        YOGA_STYLE_SET_EDGE_PERCENT(Position, Top, top)
-        YOGA_STYLE_SET_EDGE_PERCENT(Position, Right, right)
-        YOGA_STYLE_SET_EDGE_PERCENT(Position, Bottom, bottom)
+        // Enumerated values are always pushed, unset is their default
+        if (has(P::textDirection)) { YGNodeStyleSetDirection(n, toYoga(s.textDirection())); }
+        if (has(P::direction)) { YGNodeStyleSetFlexDirection(n, toYoga(s.direction())); }
+        if (has(P::justify)) { YGNodeStyleSetJustifyContent(n, toYoga(s.justify())); }
+        if (has(P::alignContent)) { YGNodeStyleSetAlignContent(n, toYoga(s.alignContent())); }
+        if (has(P::alignItems)) { YGNodeStyleSetAlignItems(n, toYoga(s.alignItems())); }
+        if (has(P::alignSelf)) { YGNodeStyleSetAlignSelf(n, toYoga(s.alignSelf())); }
+        if (has(P::position)) { YGNodeStyleSetPositionType(n, toYoga(s.position())); }
+        if (has(P::wrap)) { YGNodeStyleSetFlexWrap(n, toYoga(s.wrap())); }
+        if (has(P::overflow)) { YGNodeStyleSetOverflow(n, toYoga(s.overflow())); }
+        if (has(P::display)) { YGNodeStyleSetDisplay(n, toYoga(s.display())); }
+        if (has(P::boxSizing)) { YGNodeStyleSetBoxSizing(n, toYoga(s.boxSizing())); }
 
-        YOGA_STYLE_SET_PERCENT_AUTO(Width, width)
-        YOGA_STYLE_SET_PERCENT(MinWidth, minWidth)
-        YOGA_STYLE_SET_PERCENT(MaxWidth, maxWidth)
-        YOGA_STYLE_SET_PERCENT_AUTO(Height, height)
-        YOGA_STYLE_SET_PERCENT(MinHeight, minHeight)
-        YOGA_STYLE_SET_PERCENT(MaxHeight, maxHeight)
-        // TODO AspectRatio
+        if (has(P::flex)) { setFloat(n, s, P::flex, s.flex(), YGNodeStyleSetFlex); }
+        if (has(P::grow)) { setFloat(n, s, P::grow, s.grow(), YGNodeStyleSetFlexGrow); }
+        if (has(P::shrink)) { setFloat(n, s, P::shrink, s.shrink(), YGNodeStyleSetFlexShrink); }
+        if (has(P::basis)) { setLength(n, s, P::basis, s.basis(), YGNodeStyleSetFlexBasis, YGNodeStyleSetFlexBasisPercent, YGNodeStyleSetFlexBasisAuto); }
+        if (has(P::aspectRatio)) { setFloat(n, s, P::aspectRatio, s.aspectRatio(), YGNodeStyleSetAspectRatio); }
 
-        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, All, margin)
-        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, Horizontal, marginHorizontal)
-        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, Vertical, marginVertical)
-        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, Left, marginLeft)
-        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, Top, marginTop)
-        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, Right, marginRight)
-        YOGA_STYLE_SET_EDGE_PERCENT_AUTO(Margin, Bottom, marginBottom)
+        // Insets: auto is the same as none
+        if (has(P::left)) { setEdge(n, s, P::left, YGEdgeLeft, s.left(), YGNodeStyleSetPosition, YGNodeStyleSetPositionPercent, nullptr); }
+        if (has(P::top)) { setEdge(n, s, P::top, YGEdgeTop, s.top(), YGNodeStyleSetPosition, YGNodeStyleSetPositionPercent, nullptr); }
+        if (has(P::right)) { setEdge(n, s, P::right, YGEdgeRight, s.right(), YGNodeStyleSetPosition, YGNodeStyleSetPositionPercent, nullptr); }
+        if (has(P::bottom)) { setEdge(n, s, P::bottom, YGEdgeBottom, s.bottom(), YGNodeStyleSetPosition, YGNodeStyleSetPositionPercent, nullptr); }
 
+        if (has(P::width)) { setLength(n, s, P::width, s.width(), YGNodeStyleSetWidth, YGNodeStyleSetWidthPercent, YGNodeStyleSetWidthAuto); }
+        if (has(P::height)) { setLength(n, s, P::height, s.height(), YGNodeStyleSetHeight, YGNodeStyleSetHeightPercent, YGNodeStyleSetHeightAuto); }
+        if (has(P::minWidth)) { setLength(n, s, P::minWidth, s.minWidth(), YGNodeStyleSetMinWidth, YGNodeStyleSetMinWidthPercent, nullptr); }
+        if (has(P::minHeight)) { setLength(n, s, P::minHeight, s.minHeight(), YGNodeStyleSetMinHeight, YGNodeStyleSetMinHeightPercent, nullptr); }
+        if (has(P::maxWidth)) { setLength(n, s, P::maxWidth, s.maxWidth(), YGNodeStyleSetMaxWidth, YGNodeStyleSetMaxWidthPercent, nullptr); }
+        if (has(P::maxHeight)) { setLength(n, s, P::maxHeight, s.maxHeight(), YGNodeStyleSetMaxHeight, YGNodeStyleSetMaxHeightPercent, nullptr); }
+
+        if (has(P::margin)) { setEdge(n, s, P::margin, YGEdgeAll, s.margin(), YGNodeStyleSetMargin, YGNodeStyleSetMarginPercent, YGNodeStyleSetMarginAuto); }
+        if (has(P::marginHorizontal)) { setEdge(n, s, P::marginHorizontal, YGEdgeHorizontal, s.marginHorizontal(), YGNodeStyleSetMargin, YGNodeStyleSetMarginPercent, YGNodeStyleSetMarginAuto); }
+        if (has(P::marginVertical)) { setEdge(n, s, P::marginVertical, YGEdgeVertical, s.marginVertical(), YGNodeStyleSetMargin, YGNodeStyleSetMarginPercent, YGNodeStyleSetMarginAuto); }
+        if (has(P::marginLeft)) { setEdge(n, s, P::marginLeft, YGEdgeLeft, s.marginLeft(), YGNodeStyleSetMargin, YGNodeStyleSetMarginPercent, YGNodeStyleSetMarginAuto); }
+        if (has(P::marginTop)) { setEdge(n, s, P::marginTop, YGEdgeTop, s.marginTop(), YGNodeStyleSetMargin, YGNodeStyleSetMarginPercent, YGNodeStyleSetMarginAuto); }
+        if (has(P::marginRight)) { setEdge(n, s, P::marginRight, YGEdgeRight, s.marginRight(), YGNodeStyleSetMargin, YGNodeStyleSetMarginPercent, YGNodeStyleSetMarginAuto); }
+        if (has(P::marginBottom)) { setEdge(n, s, P::marginBottom, YGEdgeBottom, s.marginBottom(), YGNodeStyleSetMargin, YGNodeStyleSetMarginPercent, YGNodeStyleSetMarginAuto); }
+
+        // A component forwards its padding and border to its skin
         if (!_ignoreInternalLayoutContraints) {
-            YOGA_STYLE_SET_EDGE_PERCENT(Padding, All, padding)
-            YOGA_STYLE_SET_EDGE_PERCENT(Padding, Horizontal, paddingHorizontal)
-            YOGA_STYLE_SET_EDGE_PERCENT(Padding, Vertical, paddingVertical)
-            YOGA_STYLE_SET_EDGE_PERCENT(Padding, Left, paddingLeft)
-            YOGA_STYLE_SET_EDGE_PERCENT(Padding, Top, paddingTop)
-            YOGA_STYLE_SET_EDGE_PERCENT(Padding, Right, paddingRight)
-            YOGA_STYLE_SET_EDGE_PERCENT(Padding, Bottom, paddingBottom)
+            if (has(P::padding)) { setEdge(n, s, P::padding, YGEdgeAll, s.padding(), YGNodeStyleSetPadding, YGNodeStyleSetPaddingPercent, nullptr); }
+            if (has(P::paddingHorizontal)) { setEdge(n, s, P::paddingHorizontal, YGEdgeHorizontal, s.paddingHorizontal(), YGNodeStyleSetPadding, YGNodeStyleSetPaddingPercent, nullptr); }
+            if (has(P::paddingVertical)) { setEdge(n, s, P::paddingVertical, YGEdgeVertical, s.paddingVertical(), YGNodeStyleSetPadding, YGNodeStyleSetPaddingPercent, nullptr); }
+            if (has(P::paddingLeft)) { setEdge(n, s, P::paddingLeft, YGEdgeLeft, s.paddingLeft(), YGNodeStyleSetPadding, YGNodeStyleSetPaddingPercent, nullptr); }
+            if (has(P::paddingTop)) { setEdge(n, s, P::paddingTop, YGEdgeTop, s.paddingTop(), YGNodeStyleSetPadding, YGNodeStyleSetPaddingPercent, nullptr); }
+            if (has(P::paddingRight)) { setEdge(n, s, P::paddingRight, YGEdgeRight, s.paddingRight(), YGNodeStyleSetPadding, YGNodeStyleSetPaddingPercent, nullptr); }
+            if (has(P::paddingBottom)) { setEdge(n, s, P::paddingBottom, YGEdgeBottom, s.paddingBottom(), YGNodeStyleSetPadding, YGNodeStyleSetPaddingPercent, nullptr); }
 
-            YOGA_STYLE_SET_EDGE_FLOAT(Border, All, border)
-            YOGA_STYLE_SET_EDGE_FLOAT(Border, Horizontal, borderHorizontal)
-            YOGA_STYLE_SET_EDGE_FLOAT(Border, Vertical, borderVertical)
-            YOGA_STYLE_SET_EDGE_FLOAT(Border, Left, borderLeft)
-            YOGA_STYLE_SET_EDGE_FLOAT(Border, Top, borderTop)
-            YOGA_STYLE_SET_EDGE_FLOAT(Border, Right, borderRight)
-            YOGA_STYLE_SET_EDGE_FLOAT(Border, Bottom, borderBottom)
+            if (has(P::border)) { setBorder(n, s, P::border, YGEdgeAll, s.border()); }
+            if (has(P::borderHorizontal)) { setBorder(n, s, P::borderHorizontal, YGEdgeHorizontal, s.borderHorizontal()); }
+            if (has(P::borderVertical)) { setBorder(n, s, P::borderVertical, YGEdgeVertical, s.borderVertical()); }
+            if (has(P::borderLeft)) { setBorder(n, s, P::borderLeft, YGEdgeLeft, s.borderLeft()); }
+            if (has(P::borderTop)) { setBorder(n, s, P::borderTop, YGEdgeTop, s.borderTop()); }
+            if (has(P::borderRight)) { setBorder(n, s, P::borderRight, YGEdgeRight, s.borderRight()); }
+            if (has(P::borderBottom)) { setBorder(n, s, P::borderBottom, YGEdgeBottom, s.borderBottom()); }
         }
     }
 
@@ -952,16 +1035,16 @@ namespace psychic_ui {
     }
 
     void Div::clip(SkCanvas *canvas) {
-        bool clip = _computedStyle->get(overflow) != "visible";
+        bool clip = _computedStyle.overflow() != Overflow::Visible;
         if (!clip) {
             return;
         }
 
-        bool aa = _computedStyle->get(antiAlias);
+        bool aa = _computedStyle.antiAlias();
         if (_drawRoundRect && _drawBorder) {
             SkRRect roundRect;
             // TODO: Offset for unequal borders
-            float   hb = _computedStyle->get(border) / 2;
+            float   hb = _computedStyle.border() / 2;
             _roundRect.inset(hb, hb, &roundRect);
             canvas->clipRRect(roundRect, aa);
         } else if (_drawRoundRect) {
@@ -976,13 +1059,14 @@ namespace psychic_ui {
         if (_drawBackground || _drawBorder) {
             SkPaint paint;
             paint.setStyle(SkPaint::kFill_Style);
-            paint.setColor(_computedStyle->get(backgroundColor));
-            paint.setAntiAlias(_computedStyle->get(antiAlias));
-            if (_computedStyle->has(opacity)) {
-                paint.setAlpha((unsigned int) (_computedStyle->get(opacity) * 255.f));
+            paint.setColor(_computedStyle.backgroundColor().argb());
+            paint.setAntiAlias(_computedStyle.antiAlias());
+            if (_computedStyle.opacity() < 1.0f) {
+                // Fades the color, keeping its own transparency
+                paint.setAlpha((unsigned int) (paint.getAlpha() * _computedStyle.opacity()));
             }
 
-            float hb = _computedStyle->get(border) / 2;
+            float hb = _computedStyle.border() / 2;
             if (_drawComplexRoundRect) {
                 SkRRect roundRect = _roundRect;
                 if (_drawBackground && _drawBorder) {
@@ -996,8 +1080,8 @@ namespace psychic_ui {
 
                 if (_drawBorder) {
                     paint.setStyle(SkPaint::kStroke_Style);
-                    paint.setColor(_computedStyle->get(borderColor));
-                    paint.setStrokeWidth(_computedStyle->get(border));
+                    paint.setColor(_computedStyle.borderColor().argb());
+                    paint.setStrokeWidth(_computedStyle.border());
                     canvas->drawRRect(roundRect, paint);
                 }
 
@@ -1010,8 +1094,8 @@ namespace psychic_ui {
                         canvas->drawRoundRect(inset, _radiusTopLeft, _radiusTopLeft, paint);
                     }
                     paint.setStyle(SkPaint::kStroke_Style);
-                    paint.setColor(_computedStyle->get(borderColor));
-                    paint.setStrokeWidth(_computedStyle->get(border));
+                    paint.setColor(_computedStyle.borderColor().argb());
+                    paint.setStrokeWidth(_computedStyle.border());
                     canvas->drawRoundRect(inset, _radiusTopLeft, _radiusTopLeft, paint);
                 }
 
@@ -1022,8 +1106,8 @@ namespace psychic_ui {
                 if (_drawBorder && !_drawComplexBorders) {
                     SkRect inset = _rect.makeInset(hb, hb);
                     paint.setStyle(SkPaint::kStroke_Style);
-                    paint.setColor(_computedStyle->get(borderColor));
-                    paint.setStrokeWidth(_computedStyle->get(border));
+                    paint.setColor(_computedStyle.borderColor().argb());
+                    paint.setStrokeWidth(_computedStyle.border());
                     canvas->drawRect(inset, paint);
                 }
             }
@@ -1040,12 +1124,12 @@ namespace psychic_ui {
             if (_borderLeft > 0) {
                 bool draw = true;
                 paint.setStrokeWidth(_borderLeft);
-                if (_computedStyle->has(borderLeftColor)) {
-                    paint.setColor(_computedStyle->get(borderLeftColor));
-                } else if (_computedStyle->has(borderHorizontalColor)) {
-                    paint.setColor(_computedStyle->get(borderHorizontalColor));
-                } else if (_computedStyle->has(borderColor)) {
-                    paint.setColor(_computedStyle->get(borderColor));
+                if (_computedStyle.has(Property::borderLeftColor)) {
+                    paint.setColor(_computedStyle.borderLeftColor().argb());
+                } else if (_computedStyle.has(Property::borderHorizontalColor)) {
+                    paint.setColor(_computedStyle.borderHorizontalColor().argb());
+                } else if (_computedStyle.has(Property::borderColor)) {
+                    paint.setColor(_computedStyle.borderColor().argb());
                 } else {
                     draw = false;
                 }
@@ -1058,12 +1142,12 @@ namespace psychic_ui {
             if (_borderRight > 0) {
                 bool draw = true;
                 paint.setStrokeWidth(_borderRight);
-                if (_computedStyle->has(borderRightColor)) {
-                    paint.setColor(_computedStyle->get(borderRightColor));
-                } else if (_computedStyle->has(borderHorizontalColor)) {
-                    paint.setColor(_computedStyle->get(borderHorizontalColor));
-                } else if (_computedStyle->has(borderColor)) {
-                    paint.setColor(_computedStyle->get(borderColor));
+                if (_computedStyle.has(Property::borderRightColor)) {
+                    paint.setColor(_computedStyle.borderRightColor().argb());
+                } else if (_computedStyle.has(Property::borderHorizontalColor)) {
+                    paint.setColor(_computedStyle.borderHorizontalColor().argb());
+                } else if (_computedStyle.has(Property::borderColor)) {
+                    paint.setColor(_computedStyle.borderColor().argb());
                 } else {
                     draw = false;
                 }
@@ -1076,12 +1160,12 @@ namespace psychic_ui {
             if (_borderTop > 0) {
                 bool draw = true;
                 paint.setStrokeWidth(_borderTop);
-                if (_computedStyle->has(borderTopColor)) {
-                    paint.setColor(_computedStyle->get(borderTopColor));
-                } else if (_computedStyle->has(borderVerticalColor)) {
-                    paint.setColor(_computedStyle->get(borderVerticalColor));
-                } else if (_computedStyle->has(borderColor)) {
-                    paint.setColor(_computedStyle->get(borderColor));
+                if (_computedStyle.has(Property::borderTopColor)) {
+                    paint.setColor(_computedStyle.borderTopColor().argb());
+                } else if (_computedStyle.has(Property::borderVerticalColor)) {
+                    paint.setColor(_computedStyle.borderVerticalColor().argb());
+                } else if (_computedStyle.has(Property::borderColor)) {
+                    paint.setColor(_computedStyle.borderColor().argb());
                 } else {
                     draw = false;
                 }
@@ -1094,12 +1178,12 @@ namespace psychic_ui {
             if (_borderBottom > 0) {
                 bool draw = true;
                 paint.setStrokeWidth(_borderBottom);
-                if (_computedStyle->has(borderBottomColor)) {
-                    paint.setColor(_computedStyle->get(borderBottomColor));
-                } else if (_computedStyle->has(borderVerticalColor)) {
-                    paint.setColor(_computedStyle->get(borderVerticalColor));
-                } else if (_computedStyle->has(borderColor)) {
-                    paint.setColor(_computedStyle->get(borderColor));
+                if (_computedStyle.has(Property::borderBottomColor)) {
+                    paint.setColor(_computedStyle.borderBottomColor().argb());
+                } else if (_computedStyle.has(Property::borderVerticalColor)) {
+                    paint.setColor(_computedStyle.borderVerticalColor().argb());
+                } else if (_computedStyle.has(Property::borderColor)) {
+                    paint.setColor(_computedStyle.borderColor().argb());
                 } else {
                     draw = false;
                 }
@@ -1439,7 +1523,7 @@ namespace psychic_ui {
             }
             onMouseMove(localMouseX, localMouseY, buttons, modifiers);
             if (!handled && isOver && ret != Handled) {
-                window()->setCursor(_computedStyle->get(cursor));
+                window()->setCursor(_computedStyle.cursor());
                 ret = Handled;
             } else if (isOver) {
                 ret = Over;
@@ -1512,7 +1596,7 @@ namespace psychic_ui {
             ret = Handled;
         }
 
-        if (ret != Handled && _computedStyle->get(overflow) == "scroll") {
+        if (ret != Handled && _computedStyle.overflow() == Overflow::Scroll) {
             // TODO: Cancel if already handled, we can't scroll two divs at the same time
             scroll(scrollX, scrollY);
         }

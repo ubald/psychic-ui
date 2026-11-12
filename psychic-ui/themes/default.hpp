@@ -14,48 +14,54 @@
 #include <psychic-color/spaces/RGB.hpp>
 #include <psychic-color/spaces/HSB.hpp>
 
-using namespace psychic_ui;
-using namespace psychic_color;
+namespace psychic_ui {
 
-#define BASE_00 0xFF151515
-#define BASE_01 0xFF202020
-#define BASE_02 0xFF303030
-#define BASE_03 0xFF505050
-#define BASE_04 0xFFB0B0B0
-#define BASE_05 0xFFD0D0D0
-#define BASE_06 0xFFE0E0E0
-#define BASE_07 0xFFF5F5F5
+/**
+ * Named colors: a base16 gray scale and accents, and the One Dark palette
+ */
+namespace palette {
+    inline constexpr Color base00 = argb(0xFF151515);
+    inline constexpr Color base01 = argb(0xFF202020);
+    inline constexpr Color base02 = argb(0xFF303030);
+    inline constexpr Color base03 = argb(0xFF505050);
+    inline constexpr Color base04 = argb(0xFFB0B0B0);
+    inline constexpr Color base05 = argb(0xFFD0D0D0);
+    inline constexpr Color base06 = argb(0xFFE0E0E0);
+    inline constexpr Color base07 = argb(0xFFF5F5F5);
 
-#define BASE_RED 0xFFAC4142
-#define BASE_ORANGE 0xFFD28445
-#define BASE_YELLOW 0xFFF4BF75
-#define BASE_GREEN 0xFF90A959
-#define BASE_TURQUOISE 0xFF75B5AA
-#define BASE_BLUE 0xFF6A9FB5
-#define BASE_VIOLET 0xFFAA759F
-#define BASE_BROWN 0xFF8F5536
+    inline constexpr Color baseRed       = argb(0xFFAC4142);
+    inline constexpr Color baseOrange    = argb(0xFFD28445);
+    inline constexpr Color baseYellow    = argb(0xFFF4BF75);
+    inline constexpr Color baseGreen     = argb(0xFF90A959);
+    inline constexpr Color baseTurquoise = argb(0xFF75B5AA);
+    inline constexpr Color baseBlue      = argb(0xFF6A9FB5);
+    inline constexpr Color baseViolet    = argb(0xFFAA759F);
+    inline constexpr Color baseBrown     = argb(0xFF8F5536);
 
-#define ONE_LIGHT 0xFFABB2BF
-#define ONE_MEDIUM 0xFF828997
-#define ONE_DARK 0xFF5C6370
-#define ONE_CYAN 0xFF56B6C2
-#define ONE_BLUE 0xFF61AFEF
-#define ONE_PURPLE 0xFFC678DD
-#define ONE_GREEN 0xFF98C379
-#define ONE_RED_FADED 0xFFE06C75
-#define ONE_RED 0xFFBE5046
-#define ONE_ORANGE 0xFFD19A66
-#define ONE_YELLOW 0xFFE5C07B
-#define ONE_FOREGROUND 0xFFABB2BF
-#define ONE_BACKGROUND 0xFF282C34
-#define ONE_GUTTER 0xFF636D83
-#define ONE_BLUE_ACCENT 0xFF528BFF
+    inline constexpr Color oneLight      = argb(0xFFABB2BF);
+    inline constexpr Color oneMedium     = argb(0xFF828997);
+    inline constexpr Color oneDark       = argb(0xFF5C6370);
+    inline constexpr Color oneCyan       = argb(0xFF56B6C2);
+    inline constexpr Color oneBlue       = argb(0xFF61AFEF);
+    inline constexpr Color onePurple     = argb(0xFFC678DD);
+    inline constexpr Color oneGreen      = argb(0xFF98C379);
+    inline constexpr Color oneRedFaded   = argb(0xFFE06C75);
+    inline constexpr Color oneRed        = argb(0xFFBE5046);
+    inline constexpr Color oneOrange     = argb(0xFFD19A66);
+    inline constexpr Color oneYellow     = argb(0xFFE5C07B);
+    inline constexpr Color oneForeground = argb(0xFFABB2BF);
+    inline constexpr Color oneBackground = argb(0xFF282C34);
+    inline constexpr Color oneGutter     = argb(0xFF636D83);
+    inline constexpr Color oneBlueAccent = argb(0xFF528BFF);
+}
 
 /**
  * Psychic UI Style
  */
 class PsychicUIStyleSheet : public StyleSheet {
 protected:
+    using HSB = psychic_color::HSB;
+
     HSB themeSeparatorColor{}; // Deepest level
     HSB themeBackgroundColor{}; // Inputs & content backgrounds
     HSB themeBaseColor{}; // Base color, panel backgrounds
@@ -101,135 +107,135 @@ public:
 
         // region Defaults
         manager->style("*")
-               ->set(overflow, "visible")
-               ->set(fontFamily, "Ubuntu Regular")
-               ->set(fontSize, text)
-               ->set(lineHeight, 16)
-               ->set(color, themeForegroundColor.getColorAlpha())
-               ->set(selectionColor, BASE_00)
-               ->set(selectionBackgroundColor, themeHighlightColor.getColorAlpha())
-               ->set(antiAlias, true)
-               ->set(textAntiAlias, true);
+               .overflow(Overflow::Visible)
+               .fontFamily("Ubuntu Regular")
+               .fontSize(text)
+               .lineHeight(16)
+               .color(themeForegroundColor)
+               .selectionColor(palette::base00)
+               .selectionBackgroundColor(themeHighlightColor)
+               .antiAlias(true)
+               .textAntiAlias(true);
 
         manager->style("Component .defaultSkinChrome")
-               ->set(borderRadius, radius)
-               ->set(border, 1)
-               ->set(margin, 1)
-                   //->set(color, themeForegroundColor.getColorAlpha())
-               ->set(borderColor, themeLowContrastColor.getColorAlpha(0x40)) // TODO: Should be contrasting with alpha
-               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha())
-               ->set(contentBackgroundColor, themeBackgroundColor.getColorAlpha());
+               .borderRadius(radius)
+               .border(1)
+               .margin(1)
+                   //.color(themeForegroundColor)
+               .borderColor(Color(themeLowContrastColor).withAlpha(0x40)) // TODO: Should be contrasting with alpha
+               .backgroundColor(themeMediumContrastColor)
+               .contentBackgroundColor(themeBackgroundColor);
 
         manager->style("Component:hover .defaultSkinChrome")
-               ->set(borderColor, themeLowContrastColor.getColorAlpha(0x80)) // TODO: Should be contrasting with alpha
-               ->set(backgroundColor, themeHighContrastColor.getColorAlpha());
+               .borderColor(Color(themeLowContrastColor).withAlpha(0x80)) // TODO: Should be contrasting with alpha
+               .backgroundColor(themeHighContrastColor);
 
         manager->style("Component:active .defaultSkinChrome")
-               ->set(borderColor, themeLowContrastColor.getColorAlpha(0xC0)) // TODO: Should be contrasting with alpha
-               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
+               .borderColor(Color(themeLowContrastColor).withAlpha(0xC0)) // TODO: Should be contrasting with alpha
+               .backgroundColor(themeHighlightColor);
 
         manager->style("Component:focus .defaultSkinChrome")
-               ->set(border, 2)
-               ->set(margin, 0)
-               ->set(borderColor, themeHighlightColor.getColorAlpha());
+               .border(2)
+               .margin(0)
+               .borderColor(themeHighlightColor);
 
         //manager->style("Component:focus .defaultSkinChrome")
-        //        ->set(border, 2)
-        //        ->set(borderColor, themeHighlightColor.getColorAlpha());
+        //        .border(2)
+        //        .borderColor(themeHighlightColor);
 
         manager->style("Component:disabled .defaultSkinChrome")
-               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
+               .backgroundColor(themeLowContrastColor);
 
         manager->style("Component:disabled:hover .defaultSkinChrome")
-               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
+               .backgroundColor(themeLowContrastColor);
 
         manager->style("Component:disabled:active .defaultSkinChrome")
-               ->set(backgroundColor, themeHighlightColor.getColorAlpha()); // TODO: Fade
+               .backgroundColor(themeHighlightColor); // TODO: Fade
 
         // endregion
 
         // region Typography
 
         manager->style(".h1")
-               ->set(fontFamily, "Ubuntu Light")
-               ->set(fontSize, hugeText)
-               ->set(lineHeight, hugeText);
+               .fontFamily("Ubuntu Light")
+               .fontSize(hugeText)
+               .lineHeight(hugeText);
 
         manager->style(".h2")
-               ->set(fontFamily, "Ubuntu Light")
-               ->set(fontSize, bigText)
-               ->set(lineHeight, bigText);
+               .fontFamily("Ubuntu Light")
+               .fontSize(bigText)
+               .lineHeight(bigText);
 
         manager->style(".h3")
-               ->set(fontFamily, "Ubuntu Light")
-               ->set(fontSize, largeText)
-               ->set(lineHeight, largeText);
+               .fontFamily("Ubuntu Light")
+               .fontSize(largeText)
+               .lineHeight(largeText);
 
         manager->style(".h4")
-               ->set(fontFamily, "Ubuntu Regular")
-               ->set(fontSize, mediumText)
-               ->set(lineHeight, mediumText);
+               .fontFamily("Ubuntu Regular")
+               .fontSize(mediumText)
+               .lineHeight(mediumText);
 
         manager->style(".h5")
-               ->set(fontFamily, "Ubuntu Regular")
-               ->set(fontSize, text)
-               ->set(lineHeight, text);
+               .fontFamily("Ubuntu Regular")
+               .fontSize(text)
+               .lineHeight(text);
 
         manager->style(".h6")
-               ->set(fontFamily, "Ubuntu Regular")
-               ->set(fontSize, smallText)
-               ->set(lineHeight, smallText);
+               .fontFamily("Ubuntu Regular")
+               .fontSize(smallText)
+               .lineHeight(smallText);
 
         // endregion
 
         // region Window
         manager->style("Window")
-               ->set(color, themeForegroundColor.getColorAlpha())
-               ->set(backgroundColor, themeBackgroundColor.getColorAlpha())
-               ->set(border, 1)
-               ->set(borderColor, themeSeparatorColor.getColorAlpha());
+               .color(themeForegroundColor)
+               .backgroundColor(themeBackgroundColor)
+               .border(1)
+               .borderColor(themeSeparatorColor);
         // endregion
 
         // region Title Bar
         manager->style("TitleBar")
-               ->set(alignItems, "center")
-               ->set(height, 48)
-               ->set(padding, 12)
-               ->set(backgroundColor, themeBaseColor.getColorAlpha())
-               ->set(borderBottom, 1)
-               ->set(borderColor, themeSeparatorColor.getColorAlpha());
+               .alignItems(Align::Center)
+               .height(48)
+               .padding(12)
+               .backgroundColor(themeBaseColor)
+               .borderBottom(1)
+               .borderColor(themeSeparatorColor);
 
         manager->style("TitleBar Label.title")
-               ->set(fontFamily, "Ubuntu Light")
-               ->set(fontSize, largeText)
-               ->set(marginLeft, 12)
-               ->set(grow, 1);
+               .fontFamily("Ubuntu Light")
+               .fontSize(largeText)
+               .marginLeft(12)
+               .grow(1);
 
         manager->style("TitleBar Button")
-               ->set(skin, "title-bar-button")
-               ->set(width, 18)
-               ->set(height, 18)
-               ->set(margin, 3)
-               ->set(padding, 0)
-               ->set(border, 0);
+               .skin("title-bar-button")
+               .width(18)
+               .height(18)
+               .margin(3)
+               .padding(0)
+               .border(0);
 
         manager->style("TitleBar Button.close")
-               ->set(backgroundColor, 0xffff5f57);
+               .backgroundColor(argb(0xffff5f57));
 
         manager->style("TitleBar Button.close:hover")
-               ->set(backgroundColor, 0xffff5f57);
+               .backgroundColor(argb(0xffff5f57));
 
         manager->style("TitleBar Button.minimize")
-               ->set(backgroundColor, 0xffffbd2f);
+               .backgroundColor(argb(0xffffbd2f));
 
         manager->style("TitleBar Button.minimize:hover")
-               ->set(backgroundColor, 0xffffbd2f);
+               .backgroundColor(argb(0xffffbd2f));
 
         manager->style("TitleBar Button.maximize")
-               ->set(backgroundColor, 0xff28c940);
+               .backgroundColor(argb(0xff28c940));
 
         manager->style("TitleBar Button.maximize:hover")
-               ->set(backgroundColor, 0xff28c940);
+               .backgroundColor(argb(0xff28c940));
 
         // endregion
 
@@ -244,266 +250,266 @@ public:
         // region Text Input
 
         manager->style("TextInput")
-               ->set(skin, "default-text-input-skin")
-               ->set(padding, 6);
+               .skin("default-text-input-skin")
+               .padding(6);
 
         manager->style("TextArea")
-               ->set(skin, "default-text-area-skin")
-               ->set(padding, 6);
+               .skin("default-text-area-skin")
+               .padding(6);
 
         // endregion
 
         // region ScrollBars
 
         manager->style("ScrollBar")
-               ->set(skin, "default-scrollbar-skin");
+               .skin("default-scrollbar-skin");
 
         manager->style("ScrollBar.vertical")
-               ->set(width, scrollBarSize);
+               .width(scrollBarSize);
 
         manager->style("ScrollBar.horizontal")
-               ->set(height, scrollBarSize);
+               .height(scrollBarSize);
 
         manager->style("ScrollBar .track")
-               ->set(backgroundColor, themeBackgroundColor.getColorAlpha());
+               .backgroundColor(themeBackgroundColor);
 
         manager->style("ScrollBar .thumb")
-               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
+               .backgroundColor(themeLowContrastColor);
 
         manager->style("ScrollBar.vertical .thumb")
-               ->set(marginLeft, 1)
-               ->set(minHeight, 24);
+               .marginLeft(1)
+               .minHeight(24);
 
         manager->style("ScrollBar.horizontal .thumb")
-               ->set(marginTop, 1)
-               ->set(minWidth, 24);
+               .marginTop(1)
+               .minWidth(24);
 
         manager->style("ScrollBar:hover .thumb")
-               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha());
+               .backgroundColor(themeMediumContrastColor);
 
         manager->style("ScrollBar:active .thumb")
-               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
+               .backgroundColor(themeHighlightColor);
 
         manager->style("ScrollBar:disabled .thumb")
-               ->set(backgroundColor, themeBaseColor.getColorAlpha());
+               .backgroundColor(themeBaseColor);
 
         manager->style("Scroller ScrollBar.horizontal")
-               ->set(marginRight, scrollBarSize);
+               .marginRight(scrollBarSize);
 
         // endregion
 
         // region Buttons
         manager->style("Button")
-               ->set(skin, "default-button-skin")
-               ->set(cursor, Cursor::Hand)
-               ->set(flexDirection, "row")
-               ->set(alignItems, "center")
-               ->set(padding, 12)
-               ->set(fontSize, mediumText)
-               ->set(lineHeight, mediumText)
-               ->set(color, themeForegroundColor.getColorAlpha())
-               ->set(backgroundColor, themeMediumContrastColor.getColorAlpha());
+               .skin("default-button-skin")
+               .cursor(Cursor::Hand)
+               .direction(Direction::Row)
+               .alignItems(Align::Center)
+               .padding(12)
+               .fontSize(mediumText)
+               .lineHeight(mediumText)
+               .color(themeForegroundColor)
+               .backgroundColor(themeMediumContrastColor);
 
         manager->style("Button:hover")
-               ->set(backgroundColor, themeHighContrastColor.getColorAlpha());
+               .backgroundColor(themeHighContrastColor);
 
         manager->style("Button:active")
-               ->set(color, BASE_00)
-               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
+               .color(palette::base00)
+               .backgroundColor(themeHighlightColor);
 
         manager->style("Button:disabled")
-               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
+               .backgroundColor(themeLowContrastColor);
 
         manager->style("Button:disabled:hover")
-               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
+               .backgroundColor(themeLowContrastColor);
 
         manager->style("Button:disabled:active")
-               ->set(color, BASE_00)
-               ->set(backgroundColor, themeHighlightColor.getColorAlpha()); // TODO: Fade
+               .color(palette::base00)
+               .backgroundColor(themeHighlightColor); // TODO: Fade
 
         // endregion
 
         // region CheckBox
         manager->style("CheckBox")
-               ->set(skin, "default-checkbox-skin")
-               ->set(flexDirection, "row")
-               ->set(alignItems, "center")
-               ->set(padding, 12)
-               ->set(color, themeForegroundColor.getColorAlpha())
-               ->set(fontSize, mediumText)
-               ->set(lineHeight, mediumText);
+               .skin("default-checkbox-skin")
+               .direction(Direction::Row)
+               .alignItems(Align::Center)
+               .padding(12)
+               .color(themeForegroundColor)
+               .fontSize(mediumText)
+               .lineHeight(mediumText);
 
         manager->style("CheckBox Shape")
-               ->set(width, 24)
-               ->set(height, 24)
-               ->set(marginRight, 6);
+               .width(24)
+               .height(24)
+               .marginRight(6);
 
         // endregion
 
         // region Menus
         manager->style("Menu")
-               ->set(backgroundColor, themeBackgroundColor.getColorAlpha())
-               ->set(opacity, 0.8f)
-               ->set(minWidth, 200)
-               ->set(alignItems, "stretch");
+               .backgroundColor(themeBackgroundColor)
+               .opacity(0.8f)
+               .minWidth(200)
+               .alignItems(Align::Stretch);
 
         manager->style("Menu MenuButton")
-               ->set(flexDirection, "row")
-               ->set(paddingHorizontal, 6)
-               ->set(paddingVertical, 6)
-               ->set(borderRadius, 0)
-               ->set(backgroundColor, themeBackgroundColor.getColorAlpha());
+               .direction(Direction::Row)
+               .paddingHorizontal(6)
+               .paddingVertical(6)
+               .borderRadius(0)
+               .backgroundColor(themeBackgroundColor);
 
         manager->style("Menu MenuButton.simple")
-               ->set(skin, "menu-button-skin");
+               .skin("menu-button-skin");
 
         manager->style("Menu MenuButton.submenu")
-               ->set(skin, "sub-menu-button-skin");
+               .skin("sub-menu-button-skin");
 
         manager->style("Menu MenuButton .label")
-               ->set(grow, 1)
-               ->set(fontFamily, "Ubuntu Regular")
-               ->set(fontSize, smallText)
-               ->set(lineHeight, text);
+               .grow(1)
+               .fontFamily("Ubuntu Regular")
+               .fontSize(smallText)
+               .lineHeight(text);
 
         manager->style("Menu MenuButton .shortcut")
-               ->set(fontSize, smallText)
-               ->set(lineHeight, text)
-               ->set(color, themeForegroundColor.getColorAlpha());
+               .fontSize(smallText)
+               .lineHeight(text)
+               .color(themeForegroundColor);
 
         manager->style("Menu MenuButton.submenu .arrow")
-               ->set(width, 6);
+               .width(6);
 
         manager->style("Menu MenuButton:hover")
-               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
+               .backgroundColor(themeHighlightColor);
 
         manager->style("Menu MenuButton:hover .label")
-               ->set(color, BASE_00); // TODO: Contrasting text
+               .color(palette::base00); // TODO: Contrasting text
 
         manager->style("Menu MenuButton:hover .shortcut")
-               ->set(color, BASE_03); // TODO: Contrasting text
+               .color(palette::base03); // TODO: Contrasting text
 
         manager->style("Menu MenuButton.submenu:hover .arrow")
-               ->set(color, BASE_00); // TODO: Contrasting text
+               .color(palette::base00); // TODO: Contrasting text
 
         manager->style("Menu MenuButton:active")
-               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
+               .backgroundColor(themeHighlightColor);
 
         manager->style("Menu MenuButton:active .label")
-               ->set(color, BASE_00); // TODO: Contrasting text
+               .color(palette::base00); // TODO: Contrasting text
 
         manager->style("Menu MenuButton:active .shortcut")
-               ->set(color, BASE_03); // TODO: Contrasting text
+               .color(palette::base03); // TODO: Contrasting text
 
         manager->style("Menu MenuButton.submenu:active .arrow")
-               ->set(color, BASE_00); // TODO: Contrasting text
+               .color(palette::base00); // TODO: Contrasting text
 
         // endregion
 
         // region Ranges
 
         manager->style("Range")
-               ->set(skin, "slider");
+               .skin("slider");
 
         manager->style("Range Slider")
-               ->set(borderRadius, radius)
-               ->set(fontFamily, "Ubuntu Regular")
-               ->set(fontSize, smallText)
-               ->set(lineHeight, smallText)
-               ->set(color, themeForegroundColor.getColorAlpha());
+               .borderRadius(radius)
+               .fontFamily("Ubuntu Regular")
+               .fontSize(smallText)
+               .lineHeight(smallText)
+               .color(themeForegroundColor);
 
         manager->style("Range Slider.horizontal")
-               ->set(height, 24);
+               .height(24);
 
         manager->style("Range Slider.vertical")
-               ->set(width, 24);
+               .width(24);
 
         manager->style("Range:hover Slider.inverted")
-               ->set(color, BASE_00); // TODO: Contrasting text
+               .color(palette::base00); // TODO: Contrasting text
 
         manager->style("Range:hover Slider.normal")
-               ->set(color, themeForegroundColor.getColorAlpha()); // TODO: Contrasting text
+               .color(themeForegroundColor); // TODO: Contrasting text
 
         manager->style("Range:active Slider.normal")
-               ->set(color, themeForegroundColor.getColorAlpha()); // TODO: Contrasting text
+               .color(themeForegroundColor); // TODO: Contrasting text
 
         manager->style("Range:active Slider.inverted")
-               ->set(color, BASE_00); // TODO: Contrasting text
+               .color(palette::base00); // TODO: Contrasting text
 
         // endregion
 
         // region Tabs
         manager->style("Tabs")
-               ->set(flexDirection, "row")
-               ->set(borderBottom, 1)
-               ->set(borderColor, themeSeparatorColor.getColorAlpha())
-               ->set(backgroundColor, themeLowContrastColor.getColorAlpha());
+               .direction(Direction::Row)
+               .borderBottom(1)
+               .borderColor(themeSeparatorColor)
+               .backgroundColor(themeLowContrastColor);
 
         manager->style("Tabs button")
-               ->set(skin, "default-basic-button-skin")
-               ->set(fontSize, smallText)
-               ->set(lineHeight, text)
-               ->set(marginHorizontal, -1)
-               ->set(paddingHorizontal, 12)
-               ->set(paddingVertical, 6)
-               ->set(borderRadius, 0)
-               ->set(borderHorizontal, 1)
-               ->set(borderColor, themeSeparatorColor.getColorAlpha());
+               .skin("default-basic-button-skin")
+               .fontSize(smallText)
+               .lineHeight(text)
+               .marginHorizontal(-1)
+               .paddingHorizontal(12)
+               .paddingVertical(6)
+               .borderRadius(0)
+               .borderHorizontal(1)
+               .borderColor(themeSeparatorColor);
 
 //        manager->style("tabs button:firstChild")
-//               ->set(borderRadiusLeft, radius);
+//               .borderRadiusLeft(radius);
 //
 //        manager->style("tabs button:lastChild")
-//               ->set(borderRadiusRight, radius);
+//               .borderRadiusRight(radius);
 
         // endregion
 
         // region Tab Container
 
         manager->style("TabContainer")
-               ->set(backgroundColor, themeBaseColor.getColorAlpha());
+               .backgroundColor(themeBaseColor);
 
         // endregion
 
         // region MenuBar
         manager->style("MenuBar")
-               ->set(flexDirection, "row")
-               ->set(backgroundColor, themeBackgroundColor.getColorAlpha())
-               ->set(borderBottom, 1)
-               ->set(borderColor, themeSeparatorColor.getColorAlpha());
+               .direction(Direction::Row)
+               .backgroundColor(themeBackgroundColor)
+               .borderBottom(1)
+               .borderColor(themeSeparatorColor);
 
         manager->style("MenuBar Button")
-               ->set(skin, "default-basic-button-skin")
-               ->set(fontSize, smallText)
-               ->set(lineHeight, smallText)
-               ->set(paddingHorizontal, 12)
-               ->set(paddingVertical, 6)
-               ->set(borderRadius, 0)
-               ->set(backgroundColor, themeBackgroundColor.getColorAlpha());
+               .skin("default-basic-button-skin")
+               .fontSize(smallText)
+               .lineHeight(smallText)
+               .paddingHorizontal(12)
+               .paddingVertical(6)
+               .borderRadius(0)
+               .backgroundColor(themeBackgroundColor);
 
         manager->style("MenuBar Button:hover")
-               ->set(color, themeHighlightColor.getColorAlpha());
+               .color(themeHighlightColor);
 
         manager->style("MenuBar Button:active")
-               ->set(color, BASE_00) // TODO: Contrasting text
-               ->set(backgroundColor, themeHighlightColor.getColorAlpha());
+               .color(palette::base00) // TODO: Contrasting text
+               .backgroundColor(themeHighlightColor);
 
         // endregion
 
         // region ToolBar
         manager->style("ToolBar")
-               ->set(flexDirection, "row")
-               ->set(backgroundColor, themeLowContrastColor.getColorAlpha())
-               ->set(borderBottom, 1)
-               ->set(borderColor, themeSeparatorColor.getColorAlpha());
+               .direction(Direction::Row)
+               .backgroundColor(themeLowContrastColor)
+               .borderBottom(1)
+               .borderColor(themeSeparatorColor);
 
         manager->style("ToolBar Button")
-               ->set(skin, "default-basic-button-skin")
-               ->set(marginHorizontal, -1)
-               ->set(paddingHorizontal, 18)
-               ->set(borderRadius, 0)
-               ->set(borderHorizontal, 1)
-               ->set(borderColor, themeSeparatorColor.getColorAlpha());
+               .skin("default-basic-button-skin")
+               .marginHorizontal(-1)
+               .paddingHorizontal(18)
+               .borderRadius(0)
+               .borderHorizontal(1)
+               .borderColor(themeSeparatorColor);
         // endregion
     }
 };
@@ -585,3 +591,5 @@ public:
         themeYellowColor         = HSB{0xE5C07B};
     }
 };
+
+}

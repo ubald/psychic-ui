@@ -29,7 +29,7 @@ namespace psychic_ui {
         Div(),
         _getTabComponentCallback(getComponent) {
         this->setTag("TabContainer");
-        _defaultStyle->set(overflow, "hidden");
+        _defaultStyle.overflow(Overflow::Hidden);
 
         // Make the tabs component
         _tabs = this->add<Tabs<T>>(data, getLabel, [this](const T &data) { onTabChanged(data); });

@@ -33,11 +33,11 @@ namespace psychic_ui {
             ->setMouseEnabled(false)
             ->setMouseChildren(false)
             ->style()
-            ->set(position, "absolute")
-            ->set(alignItems, "center")
-            ->set(justifyContent, "center")
-            ->set(widthPercent, 1.0f)
-            ->set(heightPercent, 1.0f);
+            .position(Position::Absolute)
+            .alignItems(Align::Center)
+            .justify(Justify::Center)
+            .width(100_pct)
+            .height(100_pct);
 
         _valueLabel = label->add<Label>();
         _valueLabel
@@ -48,15 +48,15 @@ namespace psychic_ui {
         // Don't use default rendering, render out custom component chrome
         SkRRect inner = default_skin::draw(this, canvas);
 
-        bool aa = _computedStyle->get(antiAlias);
+        bool aa = _computedStyle.antiAlias();
         canvas->clipRRect(inner, aa);
 
         SkPaint paint{};
         paint.setStyle(SkPaint::kFill_Style);
-        paint.setColor(_computedStyle->get(backgroundColor));
+        paint.setColor(_computedStyle.backgroundColor().argb());
         paint.setAntiAlias(aa);
 
-        if (_computedStyle->get(orientation) == "vertical") {
+        if (_computedStyle.orientation() == Orientation::Vertical) {
             float h = std::round((_height - 2 * default_skin::padding) * _value);
             canvas->drawRect(
                 SkRect{
@@ -91,7 +91,7 @@ namespace psychic_ui {
 
     void SliderRangeSkin::styleUpdated() {
         RangeSkin::styleUpdated();
-        if (_computedStyle->get(orientation) == "vertical") {
+        if (_computedStyle.orientation() == Orientation::Vertical) {
             addClassName("vertical");
             removeClassName("horizontal");
             _valueLabel->setVisible(false);
@@ -115,7 +115,7 @@ namespace psychic_ui {
     }
 
     void SliderRangeSkin::sendMouseValue(const int x, const int y) {
-        if (_computedStyle->get(orientation) == "vertical") {
+        if (_computedStyle.orientation() == Orientation::Vertical) {
             component()->setLinearPercentage(
                 1.0f - (
                     (static_cast<float>(y) - default_skin::padding) /

@@ -27,7 +27,7 @@ namespace psychic_ui {
                 SkPaint paint;
                 paint.setAntiAlias(true);
                 paint.setStyle(SkPaint::kFill_Style);
-                paint.setColor(shape->computedStyle()->get(color));
+                paint.setColor(shape->computedStyle().color().argb());
                 SkPath path;
                 path.moveTo(0, 0);
                 path.lineTo(shape->getWidth(), shape->getHeight() / 2);

@@ -2,25 +2,10 @@
 
 namespace psychic_ui {
 
-    StyleDeclaration::StyleDeclaration(std::unique_ptr<StyleSelector> selector) :
-        StyleDeclaration(std::move(selector), nullptr) {}
-
-    StyleDeclaration::StyleDeclaration(std::unique_ptr<StyleSelector> selector, const std::function<void()> &onChanged) :
+    StyleDeclaration::StyleDeclaration(std::string selectorString, std::unique_ptr<StyleSelector> selector, Style::ChangedCallback onChanged, void *owner) :
+        _selectorString(std::move(selectorString)),
         _selector(std::move(selector)),
-        _style(std::make_unique<Style>(onChanged)) {
-        // Compute weight
-        _weight = _selector->weight();
-    }
+        _style(onChanged, owner),
+        _weight(_selector->weight()) {}
 
-    const StyleSelector *StyleDeclaration::selector() const {
-        return _selector.get();
-    }
-
-    Style *StyleDeclaration::style() const {
-        return _style.get();
-    }
-
-    int StyleDeclaration::weight() const {
-        return _weight;
-    }
 }

@@ -6,8 +6,8 @@ namespace psychic_ui {
         ButtonSkin() {
         setTag("TitleBarButtonSkin");
         style()
-            ->set(widthPercent, 1.0f)
-            ->set(heightPercent, 1.0f);
+            .width(100_pct)
+            .height(100_pct);
     }
 
     void TitleBarButtonSkin::draw(SkCanvas *canvas) {
@@ -25,7 +25,7 @@ namespace psychic_ui {
         canvas->drawCircle(hw, hh, hw - 1, paint);
 
         paint.setStyle(SkPaint::kFill_Style);
-        paint.setColor(component()->computedStyle()->get(backgroundColor));
+        paint.setColor(component()->computedStyle().backgroundColor().argb());
         canvas->drawCircle(hw, hh, hw - 2, paint);
     }
 

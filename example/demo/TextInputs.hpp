@@ -20,37 +20,37 @@ namespace psychic_ui {
         setClassNames({"demo-panel"});
 
         style()
-            ->set(flexDirection, "row")
-            ->set(padding, 0); // We're using a scroller so no padding
+            .direction(Direction::Row)
+            .padding(0); // We're using a scroller so no padding
 
         auto scroller = add<Div>();
         scroller
             ->style()
-            ->set(widthPercent, 1.0f)
-            ->set(heightPercent, 1.0f)
-            ->set(padding, 24)
-            ->set(overflow, "scroll");
+            .width(100_pct)
+            .height(100_pct)
+            .padding(24)
+            .overflow(Overflow::Scroll);
 
         auto scrollbar = add<ScrollBar>(scroller);
         scrollbar
             ->style()
-            ->set(heightPercent, 1.0f);
+            .height(100_pct);
 
         {
             auto container = scroller->add<HBox>();
             container
                 ->style()
-                ->set(shrink, 0)
-                ->set(gap, 12);
+                .shrink(0)
+                .gap(12);
 
             // Single Lines
 
             auto left = container->add<VBox>();
             left
                 ->style()
-                ->set(grow, 1)
-                ->set(basis, 0) // Both columns needs to be considered the same size
-                ->set(gap, 6);
+                .grow(1)
+                .basis(0) // Both columns needs to be considered the same size
+                .gap(6);
 
             left->add<Label>("Single Line Inputs")
                 ->addClassName("h1");
@@ -63,9 +63,9 @@ namespace psychic_ui {
             auto right = container->add<VBox>();
             right
                 ->style()
-                ->set(grow, 1)
-                ->set(basis, 0) // Both columns needs to be considered the same size
-                ->set(gap, 6);
+                .grow(1)
+                .basis(0) // Both columns needs to be considered the same size
+                .gap(6);
 
             right->add<Label>("Multiline Text Areas")
                  ->addClassName("h1");

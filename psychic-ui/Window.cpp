@@ -18,21 +18,22 @@ namespace psychic_ui {
         setTag("Window");
         setWindowSize(1440, 900);
 
-        _inlineStyle->set(position, "absolute");
-        _inlineStyle->set(overflow, "hidden");
+        _inlineStyle
+            .position(Position::Absolute)
+            .overflow(Overflow::Hidden);
 
         app = add<Div>();
         app->setId("app");
         app->style()
-           ->set(position, "absolute")
-           ->set(widthPercent, 1.0f)
-           ->set(heightPercent, 1.0f)
-           ->set(overflow, "hidden");
+           .position(Position::Absolute)
+           .width(100_pct)
+           .height(100_pct)
+           .overflow(Overflow::Hidden);
 
         modal = add<Modal>();
         modal->setId("modal");
         modal->style()
-             ->set(visible, false);
+             .visible(false);
 
         menu = add<Modal>();
         menu->setId("menu");
@@ -42,7 +43,7 @@ namespace psychic_ui {
             }
         );
         menu->style()
-            ->set(visible, false);
+            .visible(false);
     }
 
     Window::~Window() {
@@ -74,7 +75,7 @@ namespace psychic_ui {
 
     void Window::close() {
         // TODO: Find a better application-friendly close method
-        _visible = false;
+        setWindowVisible(false);
     }
 
     void Window::initSkia() {
@@ -235,16 +236,20 @@ namespace psychic_ui {
         }
     }
 
-    void Window::setVisible(bool value) {
-        if (_visible != value) {
-            _visible = value;
+    bool Window::windowVisible() const {
+        return _windowVisible;
+    }
+
+    void Window::setWindowVisible(bool value) {
+        if (_windowVisible != value) {
+            _windowVisible = value;
             if (_systemWindow) {
-                _systemWindow->setVisible(_visible);
+                _systemWindow->setVisible(_windowVisible);
             }
         }
     }
 
-    void Window::setCursor(int cursor) {
+    void Window::setCursor(Cursor cursor) {
         if (_cursor != cursor) {
             _cursor = cursor;
             if (_systemWindow) {
@@ -380,7 +385,7 @@ namespace psychic_ui {
     }
 
     void Window::drawAll() {
-        if (!_visible || !_systemWindow) {
+        if (!_windowVisible || !_systemWindow) {
             return;
         }
 
@@ -433,17 +438,17 @@ namespace psychic_ui {
         menu->globalToLocal(lx, ly, x, y);
         auto m = menu->add<Menu>(items);
         m->style()
-         ->set(left, lx)
-         ->set(top, ly);
+         .left(lx)
+         .top(ly);
         menu->style()
-            ->set(visible, true);
+            .visible(true);
         onMenuOpened.emit();
     }
 
     void Window::closeMenu() {
         menu->removeAll();
         menu->style()
-            ->set(visible, false);
+            .visible(false);
         onMenuClosed.emit();
     }
 

@@ -134,16 +134,16 @@ TEST_CASE("children are kept in document order, matching yoga", "[div][children]
 
 TEST_CASE(":first-child and :last-child match the document order", "[div][children][style]") {
     auto styleManager = std::make_shared<StyleManager>();
-    styleManager->style("div")->set(fontFamily, "")->set(textAlign, "");
-    styleManager->style("div:first-child")->set(fontFamily, "F");
-    styleManager->style("div:last-child")->set(textAlign, "L");
+    styleManager->style("div").fontFamily("").skin("");
+    styleManager->style("div:first-child").fontFamily("F");
+    styleManager->style("div:last-child").skin("L");
 
     auto parent = make("p");
     parent->setStyleManager(styleManager);
 
     // "F" when matching :first-child, "L" when matching :last-child, as last computed
     auto matched = [](const std::shared_ptr<TestDiv> &div) {
-        return div->computedStyle()->get(fontFamily) + div->computedStyle()->get(textAlign);
+        return div->computedStyle().fontFamily().str() + div->computedStyle().skin().str();
     };
     auto restyled = [&matched](const std::shared_ptr<TestDiv> &div) {
         div->updateStyle();
@@ -185,7 +185,7 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
     auto styleManager = std::make_shared<StyleManager>();
     auto root         = make("root");
     root->setStyleManager(styleManager);
-    root->style()->set(width, 100)->set(height, 100);
+    root->style().width(100).height(100);
 
     std::vector<std::shared_ptr<TestDiv>> children;
     std::string                           hits;
@@ -193,11 +193,11 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
         auto child = make(name);
         root->add(child);
         child->style()
-             ->set(position, "absolute")
-             ->set(left, 0)
-             ->set(top, 0)
-             ->set(width, 100)
-             ->set(height, 100);
+             .position(Position::Absolute)
+             .left(0)
+             .top(0)
+             .width(100)
+             .height(100);
         child->onMouseButton.subscribe(
             [&hits, name](const int, const int, const MouseButton, const bool, const Mod) {
                 hits += name;
@@ -221,7 +221,7 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
     SECTION("a child inserted at the front is under the others") {
         auto d = make("d");
         root->add(0, d);
-        d->style()->set(position, "absolute")->set(width, 100)->set(height, 100);
+        d->style().position(Position::Absolute).width(100).height(100);
         d->onMouseButton.subscribe([&hits](const int, const int, const MouseButton, const bool, const Mod) { hits += "d"; });
         layout();
         root->mouseButton(50, 50, LEFT, true, Mod{});

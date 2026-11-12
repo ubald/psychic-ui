@@ -5,7 +5,6 @@
 //#include <rxcpp/rx.hpp>
 
 // Configuration
-#define DEBUG_STYLES
 #define DEBUG_LAYOUT
 
 // Define command key for windows/mac/linux
@@ -160,6 +159,4 @@ namespace psychic_ui {
         MENU,
     };
 
-    // TODO: Get rid of this and use psychic-color
-    typedef SkColor Color;
 }

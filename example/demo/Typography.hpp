@@ -19,37 +19,37 @@ namespace psychic_ui {
         setClassNames({"demo-panel"});
 
         style()
-            ->set(flexDirection, "row")
-            ->set(padding, 0); // We're using a scroller so no padding
+            .direction(Direction::Row)
+            .padding(0); // We're using a scroller so no padding
 
         auto scroller = add<Div>();
         scroller
             ->style()
-            ->set(widthPercent, 1.0f)
-            ->set(heightPercent, 1.0f)
-            ->set(padding, 24)
-            ->set(overflow, "scroll");
+            .width(100_pct)
+            .height(100_pct)
+            .padding(24)
+            .overflow(Overflow::Scroll);
 
         auto scrollbar = add<ScrollBar>(scroller);
         scrollbar
             ->style()
-            ->set(heightPercent, 1.0f);
+            .height(100_pct);
 
         {
             auto container = scroller->add<HBox>();
             container
                 ->style()
-                ->set(shrink, 0)
-                ->set(gap, 12);
+                .shrink(0)
+                .gap(12);
 
             // Anti Aliasing
 
             auto left = container->add<VBox>();
             left
                 ->style()
-                ->set(grow, 1)
-                ->set(basis, 0) // Both columns needs to be considered the same size
-                ->set(gap, 6);
+                .grow(1)
+                .basis(0) // Both columns needs to be considered the same size
+                .gap(6);
 
             left->add<Label>("Anti Aliasing")
                 ->addClassName("h1");
@@ -58,40 +58,40 @@ namespace psychic_ui {
 
             left->add<Label>("Simple Label (No AA)")
                 ->style()
-                ->set(textAntiAlias, false);
+                .textAntiAlias(false);
 
             left->add<Label>("Simple Label (AA)")
                 ->setLcdRender(false)
                 ->setSubPixelText(false)
                 ->style()
-                ->set(textAntiAlias, true);
+                .textAntiAlias(true);
 
             left->add<Label>("Simple Label (AA+LCD)")
                 ->setLcdRender(true)
                 ->setSubPixelText(false)
                 ->style()
-                ->set(textAntiAlias, true);
+                .textAntiAlias(true);
 
             left->add<Label>("Simple Label (AA+SUB)")
                 ->setLcdRender(false)
                 ->setSubPixelText(true)
                 ->style()
-                ->set(textAntiAlias, true);
+                .textAntiAlias(true);
 
             left->add<Label>("Simple Label (AA+LCD+SUB)")
                 ->setLcdRender(true)
                 ->setSubPixelText(true)
                 ->style()
-                ->set(textAntiAlias, true);
+                .textAntiAlias(true);
 
             // Ellipsis
 
             auto right = container->add<VBox>();
             right
                 ->style()
-                ->set(grow, 1)
-                ->set(basis, 0) // Both columns needs to be considered the same size
-                ->set(gap, 6);
+                .grow(1)
+                .basis(0) // Both columns needs to be considered the same size
+                .gap(6);
 
             right->add<Label>("Ellipsis")
                  ->addClassName("h1");
@@ -120,15 +120,15 @@ namespace psychic_ui {
             auto container = scroller->add<HBox>();
             container
                 ->style()
-                ->set(shrink, 0)
-                ->set(gap, 12);
+                .shrink(0)
+                .gap(12);
 
             auto left = container->add<VBox>();
             left
                 ->style()
-                ->set(grow, 1)
-                ->set(basis, 0) // Both columns needs to be considered the same size
-                ->set(gap, 6);
+                .grow(1)
+                .basis(0) // Both columns needs to be considered the same size
+                .gap(6);
 
             left->add<Label>("Automatic Line Height");
 
@@ -136,36 +136,36 @@ namespace psychic_ui {
                 ->setEditable(true)
                 ->setMultiline(true)
                 ->style()
-                ->set(lineHeight, Style::Auto)
-                ->set(fontSize, 10);
+                .lineHeight(Auto)
+                .fontSize(10);
 
             left->add<Text>(lorem)
                 ->setEditable(true)
                 ->setMultiline(true)
                 ->style()
-                ->set(lineHeight, Style::Auto)
-                ->set(fontSize, 12);
+                .lineHeight(Auto)
+                .fontSize(12);
 
             left->add<Text>(lorem)
                 ->setEditable(true)
                 ->setMultiline(true)
                 ->style()
-                ->set(lineHeight, Style::Auto)
-                ->set(fontSize, 16);
+                .lineHeight(Auto)
+                .fontSize(16);
 
             left->add<Text>(lorem)
                 ->setEditable(true)
                 ->setMultiline(true)
                 ->style()
-                ->set(lineHeight, Style::Auto)
-                ->set(fontSize, 24);
+                .lineHeight(Auto)
+                .fontSize(24);
 
             auto right = container->add<VBox>();
             right
                 ->style()
-                ->set(grow, 1)
-                ->set(basis, 0) // Both columns needs to be considered the same size
-                ->set(gap, 6);
+                .grow(1)
+                .basis(0) // Both columns needs to be considered the same size
+                .gap(6);
 
             right->add<Label>("Manual Line Height");
 
@@ -173,30 +173,30 @@ namespace psychic_ui {
                  ->setEditable(true)
                  ->setMultiline(true)
                  ->style()
-                 ->set(padding, 12)
-                 ->set(fontSize, 10)
-                 ->set(lineHeight, 12);
+                 .padding(12)
+                 .fontSize(10)
+                 .lineHeight(12);
 
             right->add<Text>(lorem)
                  ->setEditable(true)
                  ->setMultiline(true)
                  ->style()
-                 ->set(fontSize, 12)
-                 ->set(lineHeight, 14);
+                 .fontSize(12)
+                 .lineHeight(14);
 
             right->add<Text>(lorem)
                  ->setEditable(true)
                  ->setMultiline(true)
                  ->style()
-                 ->set(fontSize, 16)
-                 ->set(lineHeight, 18);
+                 .fontSize(16)
+                 .lineHeight(18);
 
             right->add<Text>(lorem)
                  ->setEditable(true)
                  ->setMultiline(true)
                  ->style()
-                 ->set(fontSize, 24)
-                 ->set(lineHeight, 28);
+                 .fontSize(24)
+                 .lineHeight(28);
         }
     }
 
