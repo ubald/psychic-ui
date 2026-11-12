@@ -5,7 +5,9 @@ on:
   pull_request:
   workflow_dispatch:
 
-# Builds without Nix, from system packages only.
+# Builds without Nix, from system packages only. Ubuntu 22.04 packages neither
+# SDL3 nor GLFW 3.4, so CMake fetches and builds them: the X11, Wayland, EGL
+# and IBus development packages are theirs.
 #
 # The pinned Skia (m73) runs `tools/git-sync-deps` and gn scripts that need
 # Python 2 as `python`, syncs ~25 repos and takes ~420 ninja steps, so its
@@ -27,14 +29,15 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             python2 \
             libgl-dev \
-            libsdl2-dev \
             libicu-dev \
             libfreetype-dev \
             libfontconfig-dev \
             libpng-dev \
             libjpeg-dev \
             zlib1g-dev \
-            libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+            libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
+            libxext-dev libxfixes-dev libxss-dev libxtst-dev libxkbcommon-dev \
+            libwayland-dev libdecor-0-dev libegl-dev libdbus-1-dev libibus-1.0-dev
 
       # The image's python-is-python3 makes `python` Python 3
       - name: Make `python` Python 2
@@ -80,16 +83,15 @@ jobs:
     runs-on: macos-latest
     # Allowed to fail until Skia is upgraded: the 2018 Skia isn't expected to
     # build on Apple Silicon with current Xcode. The job still exercises the
-    # macOS CMake branches (brew --prefix, OBJCXX, Skia's extra flags).
+    # macOS CMake branches (brew --prefix, Skia's extra flags).
     continue-on-error: true
     steps:
       - uses: actions/checkout@v7
         with:
           submodules: recursive
 
-      # `sdl2` is now sdl2-compat, SDL2's API over SDL3
       - name: Install dependencies
-        run: brew install icu4c sdl2 freetype jpeg-turbo libpng pyenv
+        run: brew install icu4c sdl3 glfw freetype jpeg-turbo libpng pyenv
 
       # Homebrew has no Python 2; pyenv builds it from source
       - name: Install Python 2
