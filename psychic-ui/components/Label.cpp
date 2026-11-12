@@ -29,9 +29,9 @@ namespace psychic_ui {
         _yOffset = -metrics.fAscent;
     }
 
-    YGSize Label::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+    Size Label::measure(Constraint width, Constraint height) {
         float maxContent = std::ceil(_textPaint.measureText(_text.c_str(), _text.size()));
-        return YGSize{fit(maxContent, width, widthMode), fit(linesHeight(1), height, heightMode)};
+        return Size{width.apply(maxContent), height.apply(linesHeight(1))};
     }
 
     void Label::layoutUpdated() {

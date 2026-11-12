@@ -262,6 +262,7 @@ set(SOURCE_FILES
     psychic-ui/Component.hpp
     psychic-ui/Div.cpp
     psychic-ui/Div.hpp
+    psychic-ui/Measure.hpp
     psychic-ui/Modal.cpp
     psychic-ui/Modal.hpp
     psychic-ui/opengl.hpp
@@ -321,11 +322,13 @@ target_include_directories(psychic-ui PUBLIC
 target_link_libraries(psychic-ui PUBLIC
     OpenGL::GL
     Skia::Skia
-    yogacore
     ICU::uc
     ICU::data
     psychic-color::psychic-color
     )
+
+# Yoga is an implementation detail: no public header includes it
+target_link_libraries(psychic-ui PRIVATE yogacore)
 
 if (WIN32)
     target_compile_definitions(psychic-ui PUBLIC WIN)

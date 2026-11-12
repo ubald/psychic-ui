@@ -1,7 +1,6 @@
 #pragma once
 
 #include <SkColor.h>
-#include <yoga/Yoga.h>
 //#include <rxcpp/rx.hpp>
 
 // Configuration

@@ -54,15 +54,6 @@ namespace psychic_ui {
         void updateTextFlags(bool lcdRender, bool subPixelText);
 
         /**
-         * Fit a measured content size to what Yoga allows in a measure function
-         * @param content Size the content wants
-         * @param available Size passed by Yoga
-         * @param mode Measure mode passed by Yoga
-         * @return available when Exactly, the smallest of both when AtMost, content otherwise
-         */
-        static float fit(float content, float available, YGMeasureMode mode);
-
-        /**
          * Height of the given number of lines, never less than the font spacing
          * so that a single line's glyphs fit even when the line height is smaller
          * @param lines Line count

@@ -22,7 +22,7 @@ namespace psychic_ui {
         float       _yOffset{0.0f};
         std::string _drawText{};
         void styleUpdated() override;
-        YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) override;
+        Size measure(Constraint width, Constraint height) override;
         void layoutUpdated() override;
         void draw(SkCanvas *canvas) override;
     };

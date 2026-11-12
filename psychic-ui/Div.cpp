@@ -566,17 +566,30 @@ namespace psychic_ui {
         return !YGNodeIsDirty(_yogaNode);
     }
 
+    namespace {
+        Constraint toConstraint(float size, YGMeasureMode mode) {
+            switch (mode) {
+                case YGMeasureModeExactly:
+                    return {size, Fit::Exact};
+                case YGMeasureModeAtMost:
+                    return {size, Fit::AtMost};
+                default:
+                    return {size, Fit::Unbounded};
+            }
+        }
+    }
+
     void Div::setMeasurable() {
         YGNodeSetMeasureFunc(
             _yogaNode,
             [](YGNodeConstRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
-                YGSize size{};
-                auto   div = static_cast<Div *>(YGNodeGetContext(node));
+                auto div = static_cast<Div *>(YGNodeGetContext(node));
                 if (!div) {
                     std::cerr << "Could not find div to measure" << std::endl;
-                    return size;
+                    return YGSize{};
                 }
-                return div->measure(width, widthMode, height, heightMode);
+                Size size = div->measure(toConstraint(width, widthMode), toConstraint(height, heightMode));
+                return YGSize{size.width, size.height};
             }
         );
     }
@@ -895,8 +908,8 @@ namespace psychic_ui {
 
     // region Draw
 
-    YGSize Div::measure(float width, YGMeasureMode /*widthMode*/, float height, YGMeasureMode /*heightMode*/) {
-        return YGSize{width, height};
+    Size Div::measure(Constraint width, Constraint height) {
+        return Size{width.size, height.size};
     }
 
     void Div::render(SkCanvas *canvas) {

@@ -1,6 +1,7 @@
 #include <cstring>
 #include <iostream>
 #include <utility>
+#include <yoga/Yoga.h>
 #include "GrBackendSurface.h"
 #include "Window.hpp"
 #include "SkSurface.h"

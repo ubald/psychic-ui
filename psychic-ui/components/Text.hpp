@@ -173,7 +173,7 @@ namespace psychic_ui {
 
         void removedFromRender() override;
         void styleUpdated() override;
-        YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) override;
+        Size measure(Constraint width, Constraint height) override;
         void layoutUpdated() override;
         void draw(SkCanvas *canvas) override;
 

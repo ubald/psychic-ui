@@ -38,17 +38,6 @@ namespace psychic_ui {
         return static_cast<unsigned int>(std::ceil(_lineHeight));
     }
 
-    float TextBase::fit(float content, float available, YGMeasureMode mode) {
-        switch (mode) {
-            case YGMeasureModeExactly:
-                return available;
-            case YGMeasureModeAtMost:
-                return std::min(content, available);
-            default:
-                return content;
-        }
-    }
-
     float TextBase::linesHeight(size_t lines) const {
         return std::max(lines * _lineHeight, std::ceil(_textPaint.getFontSpacing()));
     }

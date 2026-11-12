@@ -417,12 +417,12 @@ namespace psychic_ui {
         _selectionBackgroundPaint.setColor(_computedStyle.selectionBackgroundColor().argb());
     }
 
-    YGSize Text::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
-        // Pure: Yoga caches measures and calls this with various constraints,
+    Size Text::measure(Constraint width, Constraint height) {
+        // Pure: the layout caches measures and calls this with various constraints,
         // so the drawing state (_textBox's box and lines) is left untouched.
-        float contentWidth = fit(std::ceil(_textBox.maxContentWidth()), width, widthMode);
+        float contentWidth = width.apply(std::ceil(_textBox.maxContentWidth()));
         auto  lines        = std::max<size_t>(1, _textBox.lineStartsAt(contentWidth).size());
-        return YGSize{contentWidth, fit(linesHeight(lines), height, heightMode)};
+        return Size{contentWidth, height.apply(linesHeight(lines))};
     }
 
     void Text::layoutUpdated() {

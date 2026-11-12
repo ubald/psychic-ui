@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 #include <unordered_set>
-#include <yoga/Yoga.h>
+#include "psychic-ui/Measure.hpp"
 #include <unicode/unistr.h>
 #include <SkCanvas.h>
 #include <SkRRect.h>
@@ -16,6 +16,9 @@
 #include "psychic-ui/style/StyleManager.hpp"
 #include "psychic-ui/signals/Signal.hpp"
 #include "psychic-ui/signals/Observer.hpp"
+
+// Yoga stays out of the public headers: its node is only named here
+struct YGNode;
 
 namespace psychic_ui {
 
@@ -786,7 +789,7 @@ namespace psychic_ui {
         /**
          * Yoga Node
          */
-        YGNodeRef _yogaNode{nullptr};
+        YGNode *_yogaNode{nullptr};
 
         /**
          * Component's rect
@@ -850,7 +853,12 @@ namespace psychic_ui {
 
         void invalidate();
         bool isValid() const;
-        virtual YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode);
+
+        /**
+         * The size of a measurable div's content (see setMeasurable), within what the layout offers
+         * in each dimension. Must be pure: the layout caches it and calls it with various constraints.
+         */
+        virtual Size measure(Constraint width, Constraint height);
         virtual void render(SkCanvas *canvas);
         void clip(SkCanvas *canvas);
         virtual void draw(SkCanvas *canvas);

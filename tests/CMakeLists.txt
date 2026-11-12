@@ -23,6 +23,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         style/values_tests.cpp
         style/yoga_tests.cpp
         layout/layout_pipeline_tests.cpp
+        layout/measure_tests.cpp
         div/children_tests.cpp
         div/api_tests.cpp
         div/event_tests.cpp
@@ -42,7 +43,8 @@ if (PSYCHIC_UI_BUILD_TESTS)
             backends/glfw_tests.cpp)
     endif ()
 
-    target_link_libraries(psychic-ui-tests PRIVATE psychic-ui Catch2::Catch2WithMain)
+    # yogacore too: some tests check the Yoga nodes directly
+    target_link_libraries(psychic-ui-tests PRIVATE psychic-ui yogacore Catch2::Catch2WithMain)
     target_compile_definitions(psychic-ui-tests PRIVATE
         PSYCHIC_UI_TEST_FONTS="${PROJECT_SOURCE_DIR}/res/fonts/Ubuntu/")
 
