@@ -150,13 +150,6 @@ namespace psychic_ui {
 
     class Style {
     public:
-        /**
-         * Dummy style is used when we don't want to disrupt the styling code by having to
-         * check for nullptrs, we just return this style instead, it is pure garbage ;)
-         */
-        static std::unique_ptr<Style> dummyStyle;
-
-
         static const float Auto;
 
         Style() = default;
@@ -180,6 +173,11 @@ namespace psychic_ui {
          * @param style
          */
         Style *defaults(const Style *style);
+
+        /**
+         * Remove every value
+         */
+        Style *clear();
 
         bool operator==(const Style &other) const;
         bool operator!=(const Style &other) const;

@@ -10,9 +10,9 @@ using namespace psychic_ui;
 TEST_CASE("basic style getter", "[style]") {
     auto styleManager = std::make_shared<StyleManager>();
 
-    SECTION("returns dummy style if selector is garbage") {
-        auto style = styleManager->style("");
-        REQUIRE(style == Style::dummyStyle.get());
+    SECTION("throws if the selector is garbage") {
+        REQUIRE_THROWS_AS(styleManager->style(""), std::invalid_argument);
+        REQUIRE_THROWS_AS(styleManager->style(" . . "), std::invalid_argument);
     }
 
     SECTION("returns the same style with same name") {

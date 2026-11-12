@@ -1,26 +1,27 @@
-#include <iostream>
+#include <algorithm>
+#include <stdexcept>
 #include "StyleManager.hpp"
 #include "../Div.hpp"
-#include "../utils/StringUtils.hpp"
 
 namespace psychic_ui {
 
-    std::shared_ptr<StyleManager> StyleManager::instance{nullptr};
-
     std::shared_ptr<StyleManager> StyleManager::getInstance() {
-        if (!instance) {
-            instance = std::make_shared<StyleManager>();
-        }
+        // Built on first use, so it doesn't depend on the initialization order of other translation units
+        static std::shared_ptr<StyleManager> instance = std::make_shared<StyleManager>();
         return instance;
     }
 
     void StyleManager::reset() {
         _fonts.clear();
         _skins.clear();
-        _declarations.clear();
+        for (auto *rule: _rules) {
+            rule->setActive(false);
+            rule->style()->clear();
+        }
+        _rules.clear();
         _valid = false;
     }
-    
+
     StyleManager *StyleManager::loadFont(const std::string &name, const std::string &path) {
         _fonts.insert({name, SkTypeface::MakeFromFile(path.c_str())});
         _valid = false;
@@ -46,33 +47,38 @@ namespace psychic_ui {
     Style *StyleManager::style(std::string selectorString) {
         std::transform(selectorString.begin(), selectorString.end(), selectorString.begin(), ::tolower);
         auto it = _declarations.find(selectorString);
-        if (it != _declarations.cend()) {
-            return it->second->style();
-        } else {
+        if (it == _declarations.cend()) {
             auto selector = StyleSelector::fromSelector(selectorString);
             if (!selector) {
-                std::cerr << "Invalid selector: \"" << selectorString << "\", returning dummy style.";
-                return Style::dummyStyle.get();
+                throw std::invalid_argument("Invalid style selector: \"" + selectorString + "\"");
             }
-
-            _declarations[selectorString] = std::make_unique<StyleDeclaration>(
-                std::move(selector),
-                [this]() { _valid = false; }
-            );
-
+            auto declaration = std::make_unique<StyleDeclaration>(std::move(selector), [this]() { _valid = false; });
             #ifdef DEBUG_STYLES
-            _declarations[selectorString]->selectorString = selectorString;
+            declaration->selectorString = selectorString;
             #endif
-
-            return _declarations[selectorString]->style();
+            it = _declarations.emplace(selectorString, std::move(declaration)).first;
         }
+
+        StyleDeclaration *declaration = it->second.get();
+        if (!declaration->active()) {
+            // New, or dropped by reset(): it starts empty, after the rules declared so far
+            declaration->style()->clear();
+            declaration->setActive(true);
+            _rules.push_back(declaration);
+            _valid = false;
+        }
+        return declaration->style();
     }
 
     std::unique_ptr<Style> StyleManager::computeStyle(const Div *component) {
-        std::vector<std::pair<int, StyleDeclaration *>> directMatches;
+        // Weight, then index in _rules: the declaration order breaks ties
+        std::vector<std::pair<int, std::size_t>> directMatches;
 
         // Start with global values
-        auto s = std::make_unique<Style>(style("*"));
+        auto universal = _declarations.find("*");
+        auto s         = std::make_unique<Style>(
+            universal != _declarations.cend() && universal->second->active() ? universal->second->style() : nullptr
+        );
 
         // Apply inherited values
         if (component->_parent) {
@@ -87,27 +93,22 @@ namespace psychic_ui {
             #endif
         }
 
-        // Get Direct matches
-        for (const auto &declaration: _declarations) {
-            if (declaration.second->selector()->matches(component)) {
-                directMatches.emplace_back(declaration.second->weight(), declaration.second.get());
+        // Get direct matches
+        for (std::size_t i = 0; i < _rules.size(); ++i) {
+            if (_rules[i]->selector()->matches(component)) {
+                directMatches.emplace_back(_rules[i]->weight(), i);
             }
         }
 
-        // Sort direct matches by weight, heaviest overlaid last
-        std::sort(
-            directMatches.begin(), directMatches.end(), [](const auto &a, const auto &b) {
-                return a.first < b.first;
-            }
-        );
+        // Heaviest overlaid last; on equal weight the rule declared last wins, like CSS's order of appearance
+        std::sort(directMatches.begin(), directMatches.end());
 
         // Apply direct matches
-        for (const auto &directMatch: directMatches) {
-            s->overlay(directMatch.second->style());
+        for (const auto &[weight, index]: directMatches) {
+            s->overlay(_rules[index]->style());
 
             #ifdef DEBUG_STYLES
-            s->declarations
-             .push_back("[weight: " + std::to_string(directMatch.first) + "] " + directMatch.second->selectorString);
+            s->declarations.push_back("[weight: " + std::to_string(weight) + "] " + _rules[index]->selectorString);
             #endif
         }
 

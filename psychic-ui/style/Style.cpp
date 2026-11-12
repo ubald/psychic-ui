@@ -6,7 +6,6 @@
 
 namespace psychic_ui {
 
-    std::unique_ptr<Style> Style::dummyStyle{std::make_unique<Style>()};
     const float Style::Auto = nanf("auto");
 
     Style::Style(const Style *fromStyle) {
@@ -64,6 +63,18 @@ namespace psychic_ui {
             }
         }
 
+        return this;
+    }
+
+    Style *Style::clear() {
+        _colorValues.clear();
+        _stringValues.clear();
+        _floatValues.clear();
+        _intValues.clear();
+        _boolValues.clear();
+        if (_onChanged) {
+            _onChanged();
+        }
         return this;
     }
 

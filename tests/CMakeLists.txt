@@ -18,6 +18,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         style/style_manager_tests.cpp
         style/style_tests.cpp
         style/style_rule_tests.cpp
+        style/cascade_tests.cpp
         style/yoga_tests.cpp
         layout/layout_pipeline_tests.cpp
         div/children_tests.cpp
