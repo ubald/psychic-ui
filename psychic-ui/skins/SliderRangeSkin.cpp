@@ -24,10 +24,7 @@ namespace psychic_ui {
 
         onMouseUp(
             [this](const int /*mouseX*/, const int /*mouseY*/, MouseButton /*button*/, Mod /*modifiers*/) {
-                if (_onMouseMove) {
-                    _onMouseMove->disconnect();
-                    _onMouseMove = nullptr;
-                }
+                _onMouseMove.disconnect();
             }
         );
 
@@ -85,6 +82,11 @@ namespace psychic_ui {
 
     void SliderRangeSkin::added() {
         setValue(component() ? component()->getLinearPercentage() : 0.0f);
+    }
+
+    void SliderRangeSkin::removedFromRender() {
+        RangeSkin::removedFromRender();
+        _onMouseMove.disconnect(); // Removed mid-drag: the mouse up won't reach us
     }
 
     void SliderRangeSkin::styleUpdated() {

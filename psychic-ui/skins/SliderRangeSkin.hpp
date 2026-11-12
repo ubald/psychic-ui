@@ -17,11 +17,12 @@ namespace psychic_ui {
     protected:
         void styleUpdated() override;
         void added() override;
+        void removedFromRender() override;
         void sendMouseValue(int x, int y);
         void draw(SkCanvas *canvas) override;
         float                  _value{0.0f};
         std::shared_ptr<Label> _valueLabel{nullptr};
-        Div::MouseMoveSlot     _onMouseMove{nullptr};
+        ScopedSlot             _onMouseMove{}; // On the window, only while dragging
     };
 }
 

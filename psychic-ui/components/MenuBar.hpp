@@ -11,7 +11,7 @@ namespace psychic_ui {
         explicit MenuBar(const std::vector<std::shared_ptr<MenuItem>> &items);
     protected:
         std::shared_ptr<Div> getItemDiv(const std::shared_ptr<MenuItem> &item);
-        void openMenu(std::shared_ptr<Button> menuItemButton, SubMenuItem *sub);
+        void openMenu(Button *menuItemButton, SubMenuItem *sub);
 
         void addedToRender() override;
         void removedFromRender() override;

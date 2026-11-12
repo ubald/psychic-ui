@@ -157,10 +157,7 @@ namespace psychic_ui {
 
         _onMouseUp = onMouseUp(
             [this](const int /*mouseX*/, const int /*mouseY*/, int /*button*/, Mod /*modifiers*/) {
-                if (_onMouseMove) {
-                    _onMouseMove->disconnect();
-                    _onMouseMove = nullptr;
-                }
+                _onMouseMove.disconnect();
             }
         );
 
@@ -237,6 +234,11 @@ namespace psychic_ui {
             _onCharacter->disconnect();
             _onCharacter = nullptr;
         }
+    }
+
+    void Text::removedFromRender() {
+        TextBase::removedFromRender();
+        _onMouseMove.disconnect(); // Removed mid-selection: the mouse up won't reach us
     }
 
     void Text::textChanged() {

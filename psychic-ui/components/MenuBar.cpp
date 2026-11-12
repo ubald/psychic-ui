@@ -26,19 +26,20 @@ namespace psychic_ui {
         if (sub) {
             auto menuItem = std::make_shared<Button>(sub->label);
             menuItem->setToggle(true);
+            // The button owns these slots: a raw pointer to it, as a shared_ptr would keep it alive forever
             menuItem->onClick(
-                [this, sub, menuItem]() {
+                [this, sub, button = menuItem.get()]() {
                     if (sub.get() == currentMenuItem) {
                         window()->closeMenu();
                     } else {
-                        openMenu(menuItem, sub.get());
+                        openMenu(button, sub.get());
                     }
                 }
             );
             menuItem->onMouseOver(
-                [this, sub, menuItem]() {
+                [this, sub, button = menuItem.get()]() {
                     if (menuOpened) {
-                        openMenu(menuItem, sub.get());
+                        openMenu(button, sub.get());
                     }
                 }
             );
@@ -48,7 +49,7 @@ namespace psychic_ui {
         return nullptr;
     }
 
-    void MenuBar::openMenu(std::shared_ptr<Button> menuItemButton, SubMenuItem *sub) {
+    void MenuBar::openMenu(Button *menuItemButton, SubMenuItem *sub) {
         if (sub == currentMenuItem) {
             return;
         }
@@ -65,7 +66,7 @@ namespace psychic_ui {
         for (auto &child: _children) {
             auto menuButton = std::dynamic_pointer_cast<Button>(child);
             if (menuButton) {
-                menuButton->setSelected(menuButton.get() == menuItemButton.get());
+                menuButton->setSelected(menuButton.get() == menuItemButton);
             }
         }
 

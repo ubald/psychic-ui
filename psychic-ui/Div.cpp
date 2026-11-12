@@ -1164,6 +1164,7 @@ namespace psychic_ui {
     // region Buttons
 
     MouseEventStatus Div::mouseButton(const int mouseX, const int mouseY, const MouseButton button, const bool down, const Mod modifiers) {
+        const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
         }
@@ -1195,6 +1196,7 @@ namespace psychic_ui {
     }
 
     MouseEventStatus Div::mouseDown(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
+        const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
         }
@@ -1234,6 +1236,7 @@ namespace psychic_ui {
     }
 
     MouseEventStatus Div::mouseUp(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
+        const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible) {
             return Out;
         }
@@ -1281,6 +1284,7 @@ namespace psychic_ui {
     }
 
     MouseEventStatus Div::click(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
+        const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
         }
@@ -1316,6 +1320,7 @@ namespace psychic_ui {
     }
 
     MouseEventStatus Div::doubleClick(const int mouseX, const int mouseY, const unsigned int clickCount, const Mod modifiers) {
+        const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
         }
@@ -1355,6 +1360,7 @@ namespace psychic_ui {
     // region Move
 
     bool Div::mouseExited(const int mouseX, const int mouseY, const int buttons, const Mod modifiers) {
+        const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_mouseOver) {
             return false;
         }
@@ -1381,6 +1387,7 @@ namespace psychic_ui {
     }
 
     MouseEventStatus Div::mouseMoved(const int mouseX, const int mouseY, const int buttons, const Mod modifiers, bool handled) {
+        const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible) {
             return Out;
         }
@@ -1477,6 +1484,7 @@ namespace psychic_ui {
     }
 
     MouseEventStatus Div::mouseScrolled(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
+        const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
         }

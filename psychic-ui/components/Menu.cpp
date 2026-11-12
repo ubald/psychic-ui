@@ -34,13 +34,14 @@ namespace psychic_ui {
         if (sub) {
             auto subMenuButton = std::make_shared<MenuButton>(sub.get());
             subMenuButton->addClassName("submenu");
+            // The button owns this slot: a raw pointer to it, as a shared_ptr would keep it alive forever
             subMenuButton->onMouseOver(
-                [this, sub, subMenuButton]() {
+                [this, sub, button = subMenuButton.get()]() {
                     if (subMenu) {
                         remove(subMenu);
                     }
                     int x, y;
-                    subMenuButton->localToGlobal(x, y, subMenuButton->getWidth());
+                    button->localToGlobal(x, y, button->getWidth());
                     int lx, ly;
                     globalToLocal(lx, ly, x, y);
                     subMenu = add<Menu>(sub->items);

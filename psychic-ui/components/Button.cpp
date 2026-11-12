@@ -11,10 +11,6 @@ namespace psychic_ui {
 
         _label = label;
 
-        if (onClickCallback) {
-            onClick(std::move(onClickCallback));
-        }
-
         onMouseUp.subscribe(
             [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const Mod /*modifiers*/) {
                 if (_enabled && !_toggle) {
@@ -38,6 +34,11 @@ namespace psychic_ui {
                 }
             }
         );
+
+        // After the toggle above, so that the callback sees the new `selected()`
+        if (onClickCallback) {
+            onClick(std::move(onClickCallback));
+        }
     }
 
     const std::string &Button::label() const {

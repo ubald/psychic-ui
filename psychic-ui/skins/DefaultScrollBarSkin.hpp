@@ -11,9 +11,10 @@ namespace psychic_ui {
         ScrollDirection      _direction{ScrollDirection::Vertical};
         std::shared_ptr<Div> _track{nullptr};
         std::shared_ptr<Div> _thumb{nullptr};
-        Div::MouseMoveSlot   _onMouseMove{nullptr};
+        ScopedSlot           _onMouseMove{}; // On the window, only while dragging
         int                  dragOffset{0};
         void added() override;
+        void removedFromRender() override;
         void styleUpdated() override;
         void updateScrollBar(bool enabled, float scrollPosition, float contentRatio) override;
         void setupDirection();

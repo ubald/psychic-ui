@@ -44,10 +44,7 @@ namespace psychic_ui {
 
         _thumb->onMouseUp(
             [this](const int /*mouseX*/, const int /*mouseY*/, MouseButton /*button*/, Mod /*modifiers*/) {
-                if (_onMouseMove) {
-                    _onMouseMove->disconnect();
-                    _onMouseMove = nullptr;
-                }
+                _onMouseMove.disconnect();
             }
         );
     }
@@ -55,6 +52,11 @@ namespace psychic_ui {
     void DefaultScrollBarSkin::added() {
         ScrollBarSkin::added();
         setupDirection();
+    }
+
+    void DefaultScrollBarSkin::removedFromRender() {
+        ScrollBarSkin::removedFromRender();
+        _onMouseMove.disconnect(); // Removed mid-drag: the mouse up won't reach us
     }
 
     void DefaultScrollBarSkin::styleUpdated() {

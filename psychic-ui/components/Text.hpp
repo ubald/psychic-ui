@@ -149,7 +149,7 @@ namespace psychic_ui {
          */
         bool _pendingCaretSignal{false};
 
-        Div::MouseMoveSlot        _onMouseMove{nullptr};
+        ScopedSlot                _onMouseMove{}; // On the window, only while selecting
         Div::MouseSlot            _onMouseDown{nullptr};
         Div::MouseSlot            _onMouseUp{nullptr};
         Div::MouseDoubleClickSlot _onDoubleClick{nullptr};
@@ -164,6 +164,7 @@ namespace psychic_ui {
         void subscribeToEdition();
         void unsubscribeFromEdition();
 
+        void removedFromRender() override;
         void styleUpdated() override;
         YGSize measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) override;
         void layoutUpdated() override;
