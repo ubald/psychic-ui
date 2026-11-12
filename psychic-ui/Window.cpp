@@ -265,6 +265,57 @@ namespace psychic_ui {
         }
     }
 
+    bool Window::supportsDrag() const {
+        return _systemWindow && _systemWindow->supportsDrag();
+    }
+
+    void Window::addDragArea(const std::shared_ptr<Div> &div) {
+        std::erase_if(_dragAreas, [](const auto &area) { return area.expired(); });
+        _dragAreas.push_back(div);
+    }
+
+    /**
+     * Whether the point, in `div`'s coordinates, is on a visible descendant that handles mouse buttons or clicks
+     */
+    static bool interactiveChildAt(const Div &div, const int x, const int y) {
+        for (const auto &child : div.children()) {
+            const int localX = x - child->x();
+            const int localY = y - child->y();
+            if (!child->getVisible() || !child->mouseEnabled()
+                || localX < 0 || localY < 0 || localX >= child->getWidth() || localY >= child->getHeight()) {
+                continue;
+            }
+            if (child->onMouseButton.hasSubscriptions() || child->onMouseDown.hasSubscriptions()
+                || child->onMouseUp.hasSubscriptions() || child->onClick.hasSubscriptions()
+                || interactiveChildAt(*child, localX, localY)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool Window::isDragArea(const int x, const int y) {
+        // An open menu or modal takes every press
+        if (menu->getVisible() || modal->getVisible()) {
+            return false;
+        }
+
+        for (const auto &weak : _dragAreas) {
+            auto area = weak.lock();
+            if (!area || !area->getVisible() || area->window() != this) {
+                continue;
+            }
+
+            int localX = 0;
+            int localY = 0;
+            area->globalToLocal(localX, localY, x, y);
+            if (localX >= 0 && localY >= 0 && localX < area->getWidth() && localY < area->getHeight()) {
+                return !interactiveChildAt(*area, localX, localY);
+            }
+        }
+        return false;
+    }
+
     int Window::windowX() const {
         return _systemWindow ? _systemWindow->getX() : 0;
     }
@@ -454,6 +505,20 @@ namespace psychic_ui {
         }
 
         return res;
+    }
+
+    // endregion
+
+    // region Clipboard
+
+    std::string Window::clipboardText() const {
+        return _systemWindow ? _systemWindow->getClipboardText() : std::string{};
+    }
+
+    void Window::setClipboardText(const std::string &text) {
+        if (_systemWindow) {
+            _systemWindow->setClipboardText(text);
+        }
     }
 
     // endregion

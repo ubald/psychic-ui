@@ -64,11 +64,23 @@ namespace psychic_ui {
         virtual void setCursor(int cursor) = 0;
         virtual void startDrag() = 0;
         virtual void stopDrag() = 0;
+
+        /**
+         * Whether the window can be moved from inside it, by `Window::isDragArea` or `startDrag()`
+         */
+        virtual bool supportsDrag() const;
         virtual void setSize(int width, int height) = 0;
         virtual void setPosition(int x, int y) = 0;
 
         virtual void startTextInput();
         virtual void stopTextInput();
+
+        /**
+         * The system clipboard's text, in UTF-8. Without a system clipboard (this default), a clipboard
+         * that only lives in this system window.
+         */
+        virtual std::string getClipboardText() const;
+        virtual void setClipboardText(const std::string &text);
 
     protected:
         std::shared_ptr<Window> _window;
@@ -103,5 +115,8 @@ namespace psychic_ui {
         bool   _focused{false};
         bool   _minimized{false};
         bool   _maximized{false};
+
+    private:
+        std::string _clipboardText{};
     };
 }

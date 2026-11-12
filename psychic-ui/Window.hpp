@@ -48,8 +48,31 @@ namespace psychic_ui {
 
         void setVisible(bool value) override;
 
+        /**
+         * Moves the window with the mouse until `stopDrag()`, for a custom title bar. Prefer `addDragArea`,
+         * which also works where applications can't place their windows (Wayland).
+         */
         void startDrag();
         void stopDrag();
+
+        /**
+         * Whether the window can be moved from inside it (custom title bars). False on Wayland when the
+         * system window has no way to hand the move to the compositor: use system decorations there.
+         */
+        bool supportsDrag() const;
+
+        /**
+         * Marks a div as a part of the window that moves it when dragged, like a title bar. Pressing on its
+         * interactive children (anything with mouse button or click handlers) still reaches them.
+         * Held weakly: a div that goes away stops being one.
+         */
+        void addDragArea(const std::shared_ptr<Div> &div);
+
+        /**
+         * Whether a press at this point (window coordinates) should move the window. The system window
+         * asks it before the press is dispatched, so that the window manager or compositor moves the window.
+         */
+        bool isDragArea(int x, int y);
 
         int windowX() const;
         int windowY() const;
@@ -150,6 +173,16 @@ namespace psychic_ui {
 
         // endregion
 
+        // region Clipboard
+
+        /**
+         * The system clipboard's text, in UTF-8
+         */
+        std::string clipboardText() const;
+        void setClipboardText(const std::string &text);
+
+        // endregion
+
         // region Keyboard
 
         void startTextInput();
@@ -220,6 +253,8 @@ namespace psychic_ui {
         // region Focus
 
         std::vector<Div *> _focusPath{};
+
+        std::vector<std::weak_ptr<Div>> _dragAreas{};
 
         // endregion
 

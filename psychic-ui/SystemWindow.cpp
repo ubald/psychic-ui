@@ -67,9 +67,21 @@ namespace psychic_ui {
         return _stencilBits;
     }
 
+    bool SystemWindow::supportsDrag() const {
+        return true;
+    }
+
     void SystemWindow::startTextInput() {}
 
     void SystemWindow::stopTextInput() {}
+
+    std::string SystemWindow::getClipboardText() const {
+        return _clipboardText;
+    }
+
+    void SystemWindow::setClipboardText(const std::string &text) {
+        _clipboardText = text;
+    }
 
     void SystemWindow::readFramebufferFormat() {
         // Through the window's own GL loader, so that no GL headers or link-time GL symbols are needed

@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstring>
 #include <unicode/unistr.h>
 #include "SDL3SystemWindow.hpp"
 #include "../Window.hpp"
@@ -158,6 +159,57 @@ namespace psychic_ui {
         _dragging = false;
     }
 
+    bool SDL3SystemWindow::supportsDrag() const {
+        // Without a hit test, `startDrag` places the window itself, which Wayland doesn't allow
+        const char *driver = SDL_GetCurrentVideoDriver();
+        return _hitTestInstalled || !driver || std::strcmp(driver, "wayland") != 0;
+    }
+
+    bool SDL3SystemWindow::installHitTest() {
+        _hitTestInstalled = SDL_SetWindowHitTest(
+            _sdlWindow,
+            [](SDL_Window * /*window*/, const SDL_Point *point, void *data) {
+                return static_cast<SDL3SystemWindow *>(data)->hitTest(point->x, point->y);
+            },
+            this
+        );
+        return _hitTestInstalled;
+    }
+
+    SDL_HitTestResult SDL3SystemWindow::hitTest(const int x, const int y) {
+        // An undecorated window has no borders to resize it by but these
+        const SDL_WindowFlags flags = SDL_GetWindowFlags(_sdlWindow);
+        if ((flags & SDL_WINDOW_BORDERLESS) && (flags & SDL_WINDOW_RESIZABLE)
+            && !(flags & (SDL_WINDOW_MAXIMIZED | SDL_WINDOW_FULLSCREEN))) {
+            constexpr int border = 4;
+            const bool left   = x < border;
+            const bool right  = x >= _width - border;
+            const bool top    = y < border;
+            const bool bottom = y >= _height - border;
+            if (top && left) { return SDL_HITTEST_RESIZE_TOPLEFT; }
+            if (top && right) { return SDL_HITTEST_RESIZE_TOPRIGHT; }
+            if (bottom && left) { return SDL_HITTEST_RESIZE_BOTTOMLEFT; }
+            if (bottom && right) { return SDL_HITTEST_RESIZE_BOTTOMRIGHT; }
+            if (top) { return SDL_HITTEST_RESIZE_TOP; }
+            if (bottom) { return SDL_HITTEST_RESIZE_BOTTOM; }
+            if (left) { return SDL_HITTEST_RESIZE_LEFT; }
+            if (right) { return SDL_HITTEST_RESIZE_RIGHT; }
+        }
+
+        return _window->isDragArea(x, y) ? SDL_HITTEST_DRAGGABLE : SDL_HITTEST_NORMAL;
+    }
+
+    std::string SDL3SystemWindow::getClipboardText() const {
+        char *text = SDL_GetClipboardText();
+        std::string result = text ? text : "";
+        SDL_free(text);
+        return result;
+    }
+
+    void SDL3SystemWindow::setClipboardText(const std::string &text) {
+        SDL_SetClipboardText(text.c_str());
+    }
+
     void SDL3SystemWindow::startTextInput() {
         SDL_StartTextInput(_sdlWindow);
     }
@@ -295,6 +347,23 @@ namespace psychic_ui {
                 _window->mouseButton(_mouseX, _mouseY, button, down, mapMods(SDL_GetModState()));
                 break;
             }
+
+            case SDL_EVENT_DROP_BEGIN:
+                _droppedFiles.clear();
+                break;
+
+            case SDL_EVENT_DROP_FILE:
+                if (e.drop.data) {
+                    _droppedFiles.emplace_back(e.drop.data);
+                }
+                break;
+
+            case SDL_EVENT_DROP_COMPLETE:
+                if (!_droppedFiles.empty()) {
+                    _window->dropEvent(_droppedFiles);
+                    _droppedFiles.clear();
+                }
+                break;
 
             case SDL_EVENT_MOUSE_WHEEL: {
                 const float direction = e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1.0f : 1.0f;

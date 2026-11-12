@@ -47,6 +47,8 @@ namespace psychic_ui {
 
     void TitleBar::addedToRender() {
         Div::addedToRender();
+        // Lets the window manager or compositor move the window from here (on Wayland too)
+        window()->addDragArea(shared_from_this());
         // TODO: Allow updates to title
         _label->setText(window()->getTitle());
     }
