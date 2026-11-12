@@ -20,7 +20,6 @@ namespace psychic_ui {
                 YGConfigSetUseWebDefaults(config, true);
                 YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureWebFlexBasis, true);
                 YGConfigSetPointScaleFactor(config, 0.0f); // We'll round the values ourselves, rounding is bugged
-                YGConfigSetErrata(config, YGErrataClassic); // Keep Yoga 1.x layout instead of the W3C-conformant one
             }
 
             ~YogaConfig() {
