@@ -8,14 +8,14 @@ if (PSYCHIC_UI_BUILD_EXAMPLE)
 
     if (PSYCHIC_UI_BUILD_GLFW)
         add_executable(psychic-ui-demo-glfw ${DEMO_SOURCES})
-        target_compile_definitions(psychic-ui-demo-glfw PRIVATE -DUSE_GLFW)
-        target_link_libraries(psychic-ui-demo-glfw psychic-ui ${PSYCHIC_UI_EXTRA_LIBS})
+        target_compile_definitions(psychic-ui-demo-glfw PRIVATE USE_GLFW)
+        target_link_libraries(psychic-ui-demo-glfw PRIVATE psychic-ui)
     endif ()
 
     if (PSYCHIC_UI_BUILD_SDL2)
         add_executable(psychic-ui-demo-sdl2 ${DEMO_SOURCES})
-        target_compile_definitions(psychic-ui-demo-sdl2 PRIVATE -DUSE_SDL2)
-        target_link_libraries(psychic-ui-demo-sdl2 psychic-ui ${PSYCHIC_UI_EXTRA_LIBS})
+        target_compile_definitions(psychic-ui-demo-sdl2 PRIVATE USE_SDL2)
+        target_link_libraries(psychic-ui-demo-sdl2 PRIVATE psychic-ui)
     endif ()
 
 

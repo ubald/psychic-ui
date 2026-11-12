@@ -3,30 +3,26 @@ add_feature_info("psychic-ui-tests" PSYCHIC_UI_BUILD_TESTS "Psychic UI tests")
 
 if (PSYCHIC_UI_BUILD_TESTS)
 
-    if (NOT TARGET catch)
-        ExternalProject_Add(catch
-            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-            GIT_TAG v2.13.10  # Last Catch2 v2; tests use its single header
-            PREFIX "${CMAKE_BINARY_DIR}/catch"
-            CMAKE_ARGS "-DCATCH_BUILD_TESTING=NO"
-            INSTALL_COMMAND ""
-            )
-
-        set(CATCH_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/catch/src/catch/single_include CACHE INTERNAL "Global catch include")
-    endif()
+    # An installed Catch2 3 if there is one, otherwise this release, built static
+    set(BUILD_SHARED_LIBS OFF)
+    include(FetchContent)
+    FetchContent_Declare(Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG v3.16.1
+        GIT_SHALLOW TRUE
+        FIND_PACKAGE_ARGS 3
+        )
+    FetchContent_MakeAvailable(Catch2)
 
     add_executable(psychic-ui-tests
-        main.cpp
         style/style_manager_tests.cpp
         style/style_tests.cpp
         style/style_rule_tests.cpp
         style/yoga_tests.cpp
         keyboard/keycodes.cpp)
 
-    target_include_directories(psychic-ui-tests PUBLIC ${CATCH_INCLUDE_DIRS})
-    target_link_libraries(psychic-ui-tests psychic-ui ${PSYCHIC_UI_EXTRA_LIBS})
+    target_link_libraries(psychic-ui-tests PRIVATE psychic-ui Catch2::Catch2WithMain)
 
-    add_dependencies(psychic-ui-tests psychic-ui)
-    add_dependencies(psychic-ui-tests catch)
+    add_test(NAME psychic-ui-tests COMMAND psychic-ui-tests)
 
 endif()

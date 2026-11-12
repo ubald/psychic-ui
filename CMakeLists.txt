@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.4)
-project(psychic-ui)
+cmake_minimum_required(VERSION 3.24...4.4)
+project(psychic-ui VERSION 0.0.0 LANGUAGES C CXX)
 
 #
 # CONFIGURATION
@@ -7,9 +7,9 @@ project(psychic-ui)
 
 # Project Variables
 set(PSYCHIC_UI_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(PSYCHIC_UI_VERSION_MAJOR 0)
-set(PSYCHIC_UI_VERSION_MINOR 0)
-set(PSYCHIC_UI_VERSION_PATCH 0)
+set(PSYCHIC_UI_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(PSYCHIC_UI_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(PSYCHIC_UI_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(PSYCHIC_UI_VERSION_STRING ${PSYCHIC_UI_VERSION_MAJOR}.${PSYCHIC_UI_VERSION_MINOR}.${PSYCHIC_UI_VERSION_PATCH})
 set(PSYCHIC_UI_API_VERSION ${PSYCHIC_UI_VERSION_MAJOR}.${PSYCHIC_UI_VERSION_MINOR})
 
@@ -54,26 +54,29 @@ set(CPACK_SOURCE_IGNORE_FILES "/.git/;/.idea/;/build/;/cmake-build-debug/;${CPAC
 # BUILDING
 #
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -stdlib=libc++")
+if (APPLE)
+    enable_language(OBJCXX)
 endif ()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-
+# Homebrew's keg-only packages (ICU, jpeg-turbo) aren't on the default search
+# path; ask brew where it lives rather than assuming /usr/local or /opt/homebrew.
 if (APPLE)
-    list(APPEND CMAKE_PREFIX_PATH /usr/local/opt)
-    list(APPEND CMAKE_LIBRARY_PATH /usr/local/opt)
+    find_program(BREW brew)
+    if (BREW)
+        execute_process(COMMAND ${BREW} --prefix OUTPUT_VARIABLE HOMEBREW_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+        list(APPEND CMAKE_PREFIX_PATH "${HOMEBREW_PREFIX}/opt/icu4c" "${HOMEBREW_PREFIX}/opt/jpeg-turbo" "${HOMEBREW_PREFIX}")
+    endif ()
 endif ()
 
 include(ExternalProject)
 include(CPack)
 include(FeatureSummary)
 
-option(PSYCHIC_UI_BUILD_SHARED "Build Psychic UI as a shared library?" ON)
-add_feature_info("psychic-ui-shared" PSYCHIC_UI_BUILD_SHARED "Build shared library")
+option(BUILD_SHARED_LIBS "Build Psychic UI as a shared library?" ON)
+add_feature_info("psychic-ui-shared" BUILD_SHARED_LIBS "Build shared library")
+
+# The static dependencies below end up inside the shared library
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(PSYCHIC_UI_BUILD_SDL2 "SDL2 Support" ON)
 add_feature_info("psychic-ui-sdl2" PSYCHIC_UI_BUILD_SDL2 "Build with support for SDL2")
@@ -82,26 +85,19 @@ option(PSYCHIC_UI_BUILD_GLFW "GLFW Support" ON)
 add_feature_info("psychic-ui-glfw" PSYCHIC_UI_BUILD_GLFW "Build with support for GLFW")
 
 find_package(OpenGL REQUIRED)
+find_package(Threads REQUIRED)
+find_package(ZLIB REQUIRED)
 find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
-find_package(JPEGTURBO REQUIRED)
 find_package(Freetype REQUIRED)
-
-if(APPLE)
-    # Use brew's version, FindICU can't find it
-    set(ICU_LIBRARIES /usr/local/opt/icu4c/lib/libicuuc.a /usr/local/opt/icu4c/lib/libicudata.a)
-    set(ICU_INCLUDE_DIRS /usr/local/opt/icu4c/include)
-else()
-    find_package(ICU REQUIRED COMPONENTS uc)
-endif()
-
-if (WIN32)
-    add_definitions(-DWIN)
-elseif (APPLE)
-    add_definitions(-DAPPLE)
-elseif (UNIX)
-    add_definitions(-DUNIX)
+find_package(ICU REQUIRED COMPONENTS uc data)
+if (CMAKE_SYSTEM_NAME MATCHES "Linux|BSD")
+    find_package(Fontconfig REQUIRED)
 endif ()
+
+# GLFW and psychic-color declare `cmake_minimum_required` versions that CMake 4
+# rejects; let them configure with the oldest policies it still supports.
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
 # GLAD
 add_subdirectory(extlib/glad)
@@ -109,15 +105,11 @@ add_subdirectory(extlib/glad)
 # GLFW
 if (PSYCHIC_UI_BUILD_GLFW)
     add_subdirectory(extlib/glfw)
-    add_definitions(-DWITH_GLFW)
 endif ()
 
 # SDL
 if (PSYCHIC_UI_BUILD_SDL2)
-    find_package(SDL2 REQUIRED)
-    if (SDL2_FOUND)
-        add_definitions(-DWITH_SDL2)
-    endif ()
+    find_package(SDL2 CONFIG REQUIRED)
 endif ()
 
 # YOGA
@@ -131,32 +123,16 @@ if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/lib/psychic-color/.git")
     message(FATAL_ERROR "Psychic UI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
 endif ()
 
-# Its tests would declare the same `catch` target as ours, pinned differently
+# Its tests download Catch's `master` branch at build time, which no longer exists
 set(PSYCHIC_COLOR_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 add_subdirectory(lib/psychic-color)
 
-# EXTRAS
-
-set(PSYCHIC_UI_EXTRA_LIBS "")
-set(LIBPSYCHIC_UI_EXTRA_SOURCE "")
-
-# Required core libraries on various platforms
-if (WIN32)
-    list(APPEND PSYCHIC_UI_EXTRA_LIBS opengl32)
-elseif (APPLE)
-    list(APPEND LIBPSYCHIC_UI_EXTRA_SOURCE psychic-ui/darwin.mm)
-elseif (CMAKE_SYSTEM MATCHES "Linux")
-    find_package(Fontconfig REQUIRED)
-    list(APPEND PSYCHIC_UI_EXTRA_LIBS
-        fontconfig
-        )
-endif ()
+unset(CMAKE_POLICY_VERSION_MINIMUM)
 
 # LIBRARY
 
 set(SOURCE_FILES
     ${LIBPSYCHIC_UI_EXTRA_SOURCE}
-    ${YOGA_SOURCES}
     psychic-ui/components/Button.cpp
     psychic-ui/components/Button.hpp
     psychic-ui/components/CheckBox.cpp
@@ -256,81 +232,62 @@ set(SOURCE_FILES
     psychic-ui/TextBase.hpp
     )
 
-add_library(psychic-ui SHARED ${SOURCE_FILES})
+if (APPLE)
+    list(APPEND SOURCE_FILES psychic-ui/darwin.mm)
+endif ()
 
-# WARNINGS
-add_definitions(-Wall)
-add_definitions(-Wextra)
-#add_definitions(-Werror)
+add_library(psychic-ui ${SOURCE_FILES})
 
-# On Travis' GCC 4.9 it defaults to old C standards, required for Yoga
-set_property(TARGET psychic-ui PROPERTY C_STANDARD 11)
+target_compile_features(psychic-ui PUBLIC cxx_std_20)
+target_compile_options(psychic-ui PRIVATE -Wall -Wextra)
 
 target_include_directories(psychic-ui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${OPENGL_INCLUDE_DIR}
-    ${YOGA_INCLUDE_DIRS}
-    ${SKIA_INCLUDE_DIRS}
-    ${ICU_INCLUDE_DIRS}
     ${PSYCHIC_COLOR_INCLUDE_DIRS}
     )
 
-target_link_libraries(psychic-ui
-    # OPENGL
-    ${OPENGL_LIBRARY}
-    # Skia
-    ${PNG_LIBRARIES}
-    ${JPEG_LIBRARY}
-    ${TURBOJPEG_LIBRARY}
-    ${FREETYPE_LIBRARIES}
-    ${SKIA_LIBRARIES}
-    # Yoga
-    ${YOGA_LIBRARIES}
-    # ICU
-    ${ICU_LIBRARIES}
-    # PSYCHIC COLOR
-    ${PSYCHIC_COLOR_LIBRARIES}
+target_link_libraries(psychic-ui PUBLIC
+    OpenGL::GL
+    Skia::Skia
+    yogacore
+    ICU::uc
+    ICU::data
+    psychic-color
     )
 
+if (WIN32)
+    target_compile_definitions(psychic-ui PUBLIC WIN)
+elseif (APPLE)
+    target_compile_definitions(psychic-ui PUBLIC APPLE)
+elseif (UNIX)
+    target_compile_definitions(psychic-ui PUBLIC UNIX)
+endif ()
+
 if (PSYCHIC_UI_BUILD_GLFW)
-    add_dependencies(psychic-ui glfw)
-    target_include_directories(psychic-ui PUBLIC ${GLFW_INCLUDE_DIRS})
-    target_link_libraries(psychic-ui glfw)
+    target_compile_definitions(psychic-ui PUBLIC WITH_GLFW)
+    target_link_libraries(psychic-ui PUBLIC glfw)
 endif ()
 
 if (PSYCHIC_UI_BUILD_SDL2)
-    target_include_directories(psychic-ui PUBLIC ${SDL2_INCLUDE_DIR})
-    target_link_libraries(psychic-ui ${SDL2_LIBRARY})
-endif ()
-
-if (CMAKE_SYSTEM MATCHES "Linux" AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    target_link_libraries(psychic-ui c++abi)  # Necessary for Travis Clang builds
-endif ()
-
-add_dependencies(psychic-ui psychic-color)
-add_dependencies(psychic-ui skia)
-
-if (PSYCHIC_UI_BUILD_SHARED)
-    set_property(TARGET psychic-ui PROPERTY POSITION_INDEPENDENT_CODE ON)
-    set_property(TARGET psychic-ui APPEND PROPERTY COMPILE_DEFINITIONS "_GLFW_BUILD_DLL")
-    target_link_libraries(psychic-ui ${PSYCHIC_UI_EXTRA_LIBS})
+    target_compile_definitions(psychic-ui PUBLIC WITH_SDL2)
+    target_link_libraries(psychic-ui PUBLIC SDL2::SDL2)
 endif ()
 
 if (PSYCHIC_UI_USE_GLAD)
     add_dependencies(psychic-ui glad)
     target_include_directories(psychic-ui PRIVATE ${GLAD_INCLUDE_DIR})
-    target_link_libraries(psychic-ui ${GLAD_LIBRARIES})
-    target_compile_definitions(psychic-ui PRIVATE -DPSYCHIC_UI_WITH_GLAD)
-    if (PSYCHIC_UI_BUILD_SHARED)
-        set_property(TARGET psychic-ui APPEND PROPERTY COMPILE_DEFINITIONS "GLAD_GLAPI_EXPORT;GLAD_GLAPI_EXPORT_BUILD")
+    target_link_libraries(psychic-ui PRIVATE ${GLAD_LIBRARIES})
+    target_compile_definitions(psychic-ui PRIVATE PSYCHIC_UI_WITH_GLAD)
+    if (BUILD_SHARED_LIBS)
+        target_compile_definitions(psychic-ui PRIVATE GLAD_GLAPI_EXPORT GLAD_GLAPI_EXPORT_BUILD)
     endif ()
 endif ()
 
-if (PSYCHIC_UI_BUILD_SHARED AND NOT ${CMAKE_BUILD_TYPE} MATCHES "Deb")
+if (BUILD_SHARED_LIBS AND NOT CMAKE_BUILD_TYPE MATCHES "Deb")
     if (APPLE)
-        add_custom_command(TARGET psychic-ui POST_BUILD COMMAND strip -u -r "$<TARGET_FILE_DIR:psychic-ui>/$<TARGET_FILE_NAME:psychic-ui>")
+        add_custom_command(TARGET psychic-ui POST_BUILD COMMAND strip -u -r "$<TARGET_FILE:psychic-ui>")
     elseif (UNIX)
-        add_custom_command(TARGET psychic-ui POST_BUILD COMMAND strip "$<TARGET_FILE_DIR:psychic-ui>/$<TARGET_FILE_NAME:psychic-ui>")
+        add_custom_command(TARGET psychic-ui POST_BUILD COMMAND strip "$<TARGET_FILE:psychic-ui>")
     endif ()
 endif ()
 
@@ -338,6 +295,7 @@ endif ()
 file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # SUBDIRECTORIES
+enable_testing()
 add_subdirectory(tests)
 add_subdirectory(example)
 add_subdirectory(playground)

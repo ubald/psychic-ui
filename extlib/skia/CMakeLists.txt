@@ -10,8 +10,9 @@ set(SKIA_ARGS_LIST skia_use_dng_sdk=false skia_use_expat=false skia_use_libwebp=
 list(APPEND SKIA_ARGS_LIST "skia_use_sfntly=false")  # PDF font subsetting, unused; its C++14 can't include ICU 64+ headers
 
 if (APPLE)
-    list(APPEND SKIA_ARGS_LIST "extra_cflags=[\"-I/usr/local/opt/icu4c/include\", \"-I/usr/local/opt/jpeg-turbo/include\", \"-I/usr/local/opt/freetype/include/freetype2\"]")
-    list(APPEND SKIA_ARGS_LIST "extra_ldflags=[\"-L/usr/local/opt/icu4c/lib\", \"-L/usr/local/opt/jpeg-turbo\", \"-L/usr/local/opt/freetype\"]")
+    # Homebrew's keg-only ICU and jpeg-turbo, found through CMAKE_PREFIX_PATH by the root CMakeLists
+    list(APPEND SKIA_ARGS_LIST "extra_cflags=[\"-I${ICU_INCLUDE_DIR}\", \"-I${JPEG_INCLUDE_DIR}\", \"-I${FREETYPE_INCLUDE_DIR_freetype2}\"]")
+    list(APPEND SKIA_ARGS_LIST "extra_ldflags=[\"-L${ICU_INCLUDE_DIR}/../lib\", \"-L${JPEG_INCLUDE_DIR}/../lib\"]")
 elseif (CMAKE_SYSTEM MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
 #    list(APPEND SKIA_ARGS_LIST "extra_cflags=[\"-I${JPEGTURBO_INCLUDE_DIR}\"]")
 #    list(APPEND SKIA_ARGS_LIST "extra_ldflags=[\"-L${TURBOJPEG_LIBRARY}\"]")
@@ -32,8 +33,22 @@ add_custom_command(OUTPUT ${SKIA_STATIC_LIB}
     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../external/skia
 )
 
-add_custom_target(skia DEPENDS ${SKIA_STATIC_LIB})
+add_custom_target(skia-build DEPENDS ${SKIA_STATIC_LIB})
 
-file(GLOB SKIA_INCLUDE_DIRS_ ${CMAKE_CURRENT_LIST_DIR}/../external/skia/include/* ${CMAKE_CURRENT_LIST_DIR}/../external/skia/src/*)
-set(SKIA_INCLUDE_DIRS "${SKIA_INCLUDE_DIRS_}" PARENT_SCOPE)
-set(SKIA_LIBRARIES ${SKIA_STATIC_LIB} PARENT_SCOPE)
+# The m73 headers include each other by bare name, so every include/ and src/ subdirectory is on the path
+file(GLOB SKIA_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/../external/skia/include/* ${CMAKE_CURRENT_LIST_DIR}/../external/skia/src/*)
+
+add_library(Skia::Skia STATIC IMPORTED GLOBAL)
+set_target_properties(Skia::Skia PROPERTIES IMPORTED_LOCATION ${SKIA_STATIC_LIB})
+target_include_directories(Skia::Skia INTERFACE ${SKIA_INCLUDE_DIRS})
+target_link_libraries(Skia::Skia INTERFACE
+    PNG::PNG
+    JPEG::JPEG
+    ZLIB::ZLIB
+    Freetype::Freetype
+    ICU::uc
+    Threads::Threads
+    ${CMAKE_DL_LIBS}
+    $<$<TARGET_EXISTS:Fontconfig::Fontconfig>:Fontconfig::Fontconfig>
+    )
+add_dependencies(Skia::Skia skia-build)

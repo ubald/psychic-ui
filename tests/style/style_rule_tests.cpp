@@ -1,4 +1,4 @@
-#include "catch2/catch.hpp"
+#include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/style/StyleSelector.hpp>
 
 using namespace psychic_ui;

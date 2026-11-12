@@ -40,6 +40,9 @@
           zlib
           expat
 
+          # Found by the tests' FetchContent instead of downloading it
+          catch2_3
+
           # GLFW's X11 backend
           libx11
           libxrandr
@@ -49,10 +52,6 @@
           libxext
           libxxf86vm
         ];
-
-        # CMake 4 rejects the `cmake_minimum_required` versions below 3.5 used
-        # here and in the GLFW and Yoga submodules.
-        CMAKE_POLICY_VERSION_MINIMUM = "3.5";
       };
     };
 }
