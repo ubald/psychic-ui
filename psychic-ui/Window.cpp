@@ -1,4 +1,5 @@
 #include <iostream>
+#include <utility>
 #include "GrBackendSurface.h"
 #include "Window.hpp"
 #include "SkSurface.h"
@@ -8,9 +9,9 @@
 
 namespace psychic_ui {
 
-    Window::Window(const std::string &title) :
+    Window::Window(std::string title) :
         Div::Div(),
-        _title(title) {
+        _title(std::move(title)) {
         setStyleManager(StyleManager::getInstance()); // NOTE: Each window could get its own style manager
         setTag("Window");
         setWindowSize(1440, 900);
@@ -129,7 +130,7 @@ namespace psychic_ui {
 
     // region Window Attributes
 
-    const std::string Window::getTitle() const {
+    std::string Window::getTitle() const {
         return _title;
     }
 

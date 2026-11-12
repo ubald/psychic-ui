@@ -261,6 +261,24 @@ namespace psychic_ui {
                 }
                 break;
 
+            case Key::C:
+                if (mod.ctrl or mod.super) {
+                    std::cout << "Copy is not implemented!";
+                }
+                break;
+
+            case Key::X:
+                if (mod.ctrl or mod.super) {
+                    std::cout << "Cut is not implemented!";
+                }
+                break;
+
+            case Key::V:
+                if (mod.ctrl or mod.super) {
+                    std::cout << "Paste is not implemented!";
+                }
+                break;
+
             case Key::HOME:
                 if (mod.ctrl) {
                     setCaret(0);

@@ -10,11 +10,11 @@ namespace psychic_ui {
 
     void DefaultTextInputSkin::addedToComponent() {
         add(component()->textDisplay());
-    };
+    }
 
     void DefaultTextInputSkin::removedFromComponent() {
         remove(component()->textDisplay());
-    };
+    }
 
     void DefaultTextInputSkin::draw(SkCanvas *canvas) {
         // Don't use default rendering, render out custom component chrome

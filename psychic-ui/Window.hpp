@@ -20,12 +20,12 @@ namespace psychic_ui {
 
     class Window : public Div {
     public:
-        explicit Window(const std::string &title);
+        explicit Window(std::string title);
         virtual ~Window();
 
         Window *window() override;
 
-        const std::string getTitle() const;
+        std::string getTitle() const;
         void setTitle(const std::string &title);
 
         bool getResizable() const;

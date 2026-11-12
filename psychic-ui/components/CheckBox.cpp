@@ -3,7 +3,6 @@
 
 namespace psychic_ui {
 
-
     CheckBox::CheckBox(const std::string &label, std::function<void(bool)> onChangeCallback) :
         Component() {
         setTag("CheckBox");

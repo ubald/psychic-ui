@@ -76,14 +76,14 @@ public:
     PsychicUIStyleSheet() = default;
 
     void load(StyleManager *manager) override {
-        int smallText     = 10;
-        int text          = 12;
-        int mediumText    = 14;
-        int largeText     = 18;
-        int bigText       = 24;
-        int hugeText      = 36;
-        int radius        = 7;
-        int scrollBarSize = 12;
+        float smallText     = 10.0;
+        float text          = 12.0;
+        float mediumText    = 14.0;
+        float largeText     = 18.0;
+        float bigText       = 24.0;
+        float hugeText      = 36.0;
+        float radius        = 7.0;
+        float scrollBarSize = 12.0;
 
         manager->loadFont("Ubuntu Light", "../res/fonts/Ubuntu/Ubuntu-Light.ttf");
         manager->loadFont("Ubuntu Regular", "../res/fonts/Ubuntu/Ubuntu-Regular.ttf");

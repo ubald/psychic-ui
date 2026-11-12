@@ -11,11 +11,11 @@ namespace psychic_ui {
 
     void DefaultTextAreaSkin::addedToComponent() {
         add(component()->textScroller());
-    };
+    }
 
     void DefaultTextAreaSkin::removedFromComponent() {
         remove(component()->textScroller());
-    };
+    }
 
     void DefaultTextAreaSkin::draw(SkCanvas *canvas) {
         // Don't use default rendering, render out custom component chrome

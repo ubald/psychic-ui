@@ -71,7 +71,7 @@ namespace psychic_ui {
                 _viewport->setScrollY(
                     std::max(_viewport->scrollY(), _viewport->getHeight() - _viewport->contentHeight())
                 );
-                scrollPosition = -_viewport->scrollY() / (float) (_viewport->contentHeight() - _viewport->getHeight());
+                scrollPosition = -(float) _viewport->scrollY() / (float) (_viewport->contentHeight() - _viewport->getHeight());
                 contentRatio   = std::max(0.1f, (float) _viewport->getHeight() / (float) _viewport->contentHeight());
                 enabled        = true;
             } else {
@@ -82,7 +82,7 @@ namespace psychic_ui {
                 _viewport->setScrollX(
                     std::max(_viewport->scrollX(), _viewport->getWidth() - _viewport->contentWidth())
                 );
-                scrollPosition = -_viewport->scrollX() / (float) (_viewport->contentWidth() - _viewport->getWidth());
+                scrollPosition = -(float) _viewport->scrollX() / (float) (_viewport->contentWidth() - _viewport->getWidth());
                 contentRatio   = std::max(0.1f, (float) _viewport->getWidth() / (float) _viewport->contentWidth());
                 enabled        = true;
             } else {
