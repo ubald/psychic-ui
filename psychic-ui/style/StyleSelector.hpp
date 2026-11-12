@@ -8,14 +8,14 @@
 namespace psychic_ui {
     class Div;
 
-    enum Pseudo {
-        focus,
-        hover,
-        active,
-        disabled,
-        empty,
-        firstChild,
-        lastChild
+    enum class Pseudo {
+        Focus,
+        Hover,
+        Active,
+        Disabled,
+        Empty,
+        FirstChild,
+        LastChild
     };
 
     enum class Token {
@@ -36,7 +36,7 @@ namespace psychic_ui {
         const std::string &tag() const;
         const std::string &id() const;
         const std::vector<std::string> &classes() const;
-        const std::unordered_set<Pseudo, std::hash<int>> &pseudo() const;
+        const std::unordered_set<Pseudo> &pseudo() const;
         const StyleSelector *next() const;
 
         /**
@@ -64,7 +64,7 @@ namespace psychic_ui {
         std::string                                _tag{};
         std::string                                _id{};
         std::vector<std::string>                   _classes{};
-        std::unordered_set<Pseudo, std::hash<int>> _pseudo{};
+        std::unordered_set<Pseudo> _pseudo{};
         std::unique_ptr<StyleSelector>             _next{nullptr};
     };
 }

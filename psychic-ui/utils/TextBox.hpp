@@ -30,7 +30,7 @@ namespace psychic_ui {
     /**
      * TextBox vertical alignment values
      */
-    enum TextBoxAlign {
+    enum class TextBoxAlign {
         Start,
         Center,
         End,

@@ -58,7 +58,7 @@ TEST_CASE("rules from selectors", "[style]") {
 
         SECTION("tag:pseudo") {
             auto rule = StyleSelector::fromSelector("div:hover");
-            auto a = std::unordered_set<Pseudo, std::hash<int>>{hover};
+            auto a = std::unordered_set<Pseudo>{Pseudo::Hover};
             REQUIRE(rule != nullptr);
             REQUIRE(rule->direct() == false);
             REQUIRE(rule->tag() == "div");
@@ -80,7 +80,7 @@ TEST_CASE("rules from selectors", "[style]") {
 
         SECTION("tag.class:pseudo") {
             auto rule = StyleSelector::fromSelector("div.styled:hover");
-            auto a = std::unordered_set<Pseudo, std::hash<int>>{hover};
+            auto a = std::unordered_set<Pseudo>{Pseudo::Hover};
             REQUIRE(rule != nullptr);
             REQUIRE(rule->direct() == false);
             REQUIRE(rule->tag() == "div");
@@ -104,7 +104,7 @@ TEST_CASE("rules from selectors", "[style]") {
 
         SECTION("tag.class.class:pseudo") {
             auto rule = StyleSelector::fromSelector("div.styled.more:hover");
-            auto a = std::unordered_set<Pseudo, std::hash<int>>{hover};
+            auto a = std::unordered_set<Pseudo>{Pseudo::Hover};
             REQUIRE(rule != nullptr);
             REQUIRE(rule->direct() == false);
             REQUIRE(rule->tag() == "div");
@@ -132,7 +132,7 @@ TEST_CASE("rules from selectors", "[style]") {
 
         SECTION(".class:pseudo") {
             auto rule = StyleSelector::fromSelector(".styled:hover");
-            auto a = std::unordered_set<Pseudo, std::hash<int>>{hover};
+            auto a = std::unordered_set<Pseudo>{Pseudo::Hover};
             REQUIRE(rule != nullptr);
             REQUIRE(rule->direct() == false);
             REQUIRE(rule->tag().empty());
@@ -156,7 +156,7 @@ TEST_CASE("rules from selectors", "[style]") {
 
         SECTION(".class.class:pseudo") {
             auto rule = StyleSelector::fromSelector(".styled.more:hover");
-            auto a = std::unordered_set<Pseudo, std::hash<int>>{hover};
+            auto a = std::unordered_set<Pseudo>{Pseudo::Hover};
             REQUIRE(rule != nullptr);
             REQUIRE(rule->direct() == false);
             REQUIRE(rule->tag().empty());
@@ -173,7 +173,7 @@ TEST_CASE("rules from selectors", "[style]") {
 
         SECTION(":pseudo") {
             auto rule = StyleSelector::fromSelector(":hover");
-            auto a = std::unordered_set<Pseudo, std::hash<int>>{hover};
+            auto a = std::unordered_set<Pseudo>{Pseudo::Hover};
             REQUIRE(rule != nullptr);
             REQUIRE(rule->direct() == false);
             REQUIRE(rule->tag().empty());
@@ -184,7 +184,7 @@ TEST_CASE("rules from selectors", "[style]") {
 
         SECTION(":pseudo") {
             auto rule = StyleSelector::fromSelector(":hover:disabled");
-            auto a = std::unordered_set<Pseudo, std::hash<int>>{hover, disabled};
+            auto a = std::unordered_set<Pseudo>{Pseudo::Hover, Pseudo::Disabled};
             REQUIRE(rule != nullptr);
             REQUIRE(rule->direct() == false);
             REQUIRE(rule->tag().empty());
@@ -229,7 +229,7 @@ TEST_CASE("rules from selectors", "[style]") {
 
         SECTION("tag1.class1:pseudo1 tag2.class2:hover") {
             auto rule = StyleSelector::fromSelector("tag1.class1:pseudo1 tag2.class2:hover");
-            auto a = std::unordered_set<Pseudo, std::hash<int>>{hover};
+            auto a = std::unordered_set<Pseudo>{Pseudo::Hover};
             REQUIRE(rule != nullptr);
             REQUIRE(rule->direct() == false);
             REQUIRE(rule->tag() == "tag2");

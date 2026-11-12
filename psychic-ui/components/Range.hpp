@@ -43,10 +43,10 @@ namespace psychic_ui {
         };
     }
 
-    enum RangeMode {
-        linear,
-        logarithmic,
-        logarithmicInverse
+    enum class RangeMode {
+        Linear,
+        Logarithmic,
+        LogarithmicInverse
     };
 
     template<class T>
@@ -127,7 +127,7 @@ namespace psychic_ui {
         PSYCHIC_UI_EVENT(onChanged, changed)
 
     protected:
-        RangeMode _mode{linear};
+        RangeMode _mode{RangeMode::Linear};
         T         _min{0};
         T         _max{1};
         T         _step{0};
@@ -257,10 +257,10 @@ namespace psychic_ui {
     void Range<T>::setLinearPercentage(const float percent) {
         float v;
         switch (_mode) {
-            case logarithmic:
+            case RangeMode::Logarithmic:
                 v = std::log((percent * 9.0f) + 1.0f) * (float) M_LOG10E;
                 break;
-            case logarithmicInverse:
+            case RangeMode::LogarithmicInverse:
                 v = 1.0f - std::log(((1.0f - percent) * 9.0f) + 1.0f) * (float) M_LOG10E;
                 break;
             default:
@@ -283,9 +283,9 @@ namespace psychic_ui {
     float Range<T>::getLinearPercentageFor(const T value) const {
         float v = getPercentageFor(value);
         switch (_mode) {
-            case logarithmic:
+            case RangeMode::Logarithmic:
                 return ((float) std::pow(10, v) - 1.0f) / 9.0f;
-            case logarithmicInverse:
+            case RangeMode::LogarithmicInverse:
                 return 1.0f - ((float) std::pow(10, 1.0f - v) - 1.0f) / 9.0f;
             default:
                 return v;

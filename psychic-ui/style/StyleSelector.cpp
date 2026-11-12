@@ -60,19 +60,19 @@ namespace psychic_ui {
                             case Token::Pseudo:
                                 std::string pseudo = selectorItem.substr(lastTokenPos, pos - lastTokenPos);
                                 if (pseudo == "focus") {
-                                    r->_pseudo.insert(focus);
+                                    r->_pseudo.insert(Pseudo::Focus);
                                 } else if (pseudo == "hover") {
-                                    r->_pseudo.insert(hover);
+                                    r->_pseudo.insert(Pseudo::Hover);
                                 } else if (pseudo == "active") {
-                                    r->_pseudo.insert(active);
+                                    r->_pseudo.insert(Pseudo::Active);
                                 } else if (pseudo == "disabled") {
-                                    r->_pseudo.insert(disabled);
+                                    r->_pseudo.insert(Pseudo::Disabled);
                                 } else if (pseudo == "empty") {
-                                    r->_pseudo.insert(empty);
+                                    r->_pseudo.insert(Pseudo::Empty);
                                 } else if (pseudo == "firstchild" || pseudo == "first-child") {
-                                    r->_pseudo.insert(firstChild);
+                                    r->_pseudo.insert(Pseudo::FirstChild);
                                 } else if (pseudo == "lastchild" || pseudo == "last-child") {
-                                    r->_pseudo.insert(lastChild);
+                                    r->_pseudo.insert(Pseudo::LastChild);
                                 }
                                 break;
                         }
@@ -146,19 +146,19 @@ namespace psychic_ui {
             _pseudo.cend(),
             [&component](const auto &pseudo) {
                 switch (pseudo) {
-                    case hover:
+                    case Pseudo::Hover:
                         return component->mouseOver();
-                    case focus:
+                    case Pseudo::Focus:
                         return component->focusEnabled() && component->focused();
-                    case active:
+                    case Pseudo::Active:
                         return component->active();
-                    case disabled:
+                    case Pseudo::Disabled:
                         return !component->enabled();
-                    case empty:
+                    case Pseudo::Empty:
                         return component->childCount() == 0;
-                    case firstChild:
+                    case Pseudo::FirstChild:
                         return component->parent() && component->parent()->childIndex(component) == 0;
-                    case lastChild:
+                    case Pseudo::LastChild:
                         return component->parent()
                                && component->parent()->childIndex(component) == (int) component->parent()->childCount() - 1;
                 }
@@ -198,7 +198,7 @@ namespace psychic_ui {
         return _classes;
     }
 
-    const std::unordered_set<Pseudo, std::hash<int>> &StyleSelector::pseudo() const {
+    const std::unordered_set<Pseudo> &StyleSelector::pseudo() const {
         return _pseudo;
     }
 
@@ -212,25 +212,25 @@ namespace psychic_ui {
         w += (int) _classes.size() * 10;
         for (const auto &pseudo: _pseudo) {
             switch (pseudo) {
-                case hover:
+                case Pseudo::Hover:
                     w += 1;
                     break;
-                case active:
+                case Pseudo::Active:
                     w += 2;
                     break;
-                case focus:
+                case Pseudo::Focus:
                     w += 3;
                     break;
-                case disabled:
+                case Pseudo::Disabled:
                     w += 4;
                     break;
-                case empty:
+                case Pseudo::Empty:
                     w += 1;
                     break;
-                case firstChild:
+                case Pseudo::FirstChild:
                     w += 1;
                     break;
-                case lastChild:
+                case Pseudo::LastChild:
                     w += 1;
                     break;
             }
