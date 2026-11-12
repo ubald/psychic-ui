@@ -53,3 +53,42 @@ TEST_CASE( "Making sure yoga does what we want" ) {
     YGNodeFreeRecursive(container);
     YGConfigFree(config);
 }
+
+TEST_CASE( "Wrapping container keeps the cross axis margin of flex-start items" ) {
+    // Same settings as the config every Div uses (Div.cpp)
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, true);
+    YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureWebFlexBasis, true);
+    YGConfigSetPointScaleFactor(config, 0.0f);
+
+    auto container = YGNodeNewWithConfig(config);
+    YGNodeStyleSetFlexDirection(container, YGFlexDirectionRow);
+    YGNodeStyleSetFlexWrap(container, YGWrapWrap);
+    YGNodeStyleSetAlignItems(container, YGAlignFlexStart);
+    YGNodeStyleSetWidth(container, 300);
+
+    // Two items with a margin on the first line, a third without one wraps onto the second
+    YGNodeRef items[3];
+    for (int i = 0; i < 3; ++i) {
+        items[i] = YGNodeNewWithConfig(config);
+        YGNodeStyleSetWidth(items[i], 100);
+        YGNodeStyleSetHeight(items[i], 40);
+        if (i < 2) {
+            YGNodeStyleSetMargin(items[i], YGEdgeAll, 12);
+        }
+        YGNodeInsertChild(container, items[i], i);
+    }
+
+    YGNodeCalculateLayout(container, YGUndefined, YGUndefined, YGDirectionLTR);
+
+    REQUIRE(YGNodeLayoutGetLeft(items[0]) == 12);
+    REQUIRE(YGNodeLayoutGetTop(items[0]) == 12);
+    REQUIRE(YGNodeLayoutGetLeft(items[1]) == 136);
+    REQUIRE(YGNodeLayoutGetTop(items[1]) == 12);
+    REQUIRE(YGNodeLayoutGetLeft(items[2]) == 0);
+    REQUIRE(YGNodeLayoutGetTop(items[2]) == 64);
+    REQUIRE(YGNodeLayoutGetHeight(container) == 104);
+
+    YGNodeFreeRecursive(container);
+    YGConfigFree(config);
+}
