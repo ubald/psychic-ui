@@ -64,7 +64,7 @@ namespace psychic_ui {
         \
         return ret;\
 
-    MouseEventStatus Modal::mouseMoved(const int mouseX, const int mouseY, const int buttons, const Mod modifiers, bool handled) {
+    MouseEventStatus Modal::handleMouseMoved(const int mouseX, const int mouseY, const int buttons, const Mod modifiers, bool handled) {
         if (!_visible) {
             return Out;
         }
@@ -82,7 +82,7 @@ namespace psychic_ui {
                 if (child->parent()) {
                     child->parent()->globalToLocal(mx, my, gx, gy);
                 }
-                auto res = child->mouseMoved(mx, my, buttons, modifiers, handled);
+                auto res = child->handleMouseMoved(mx, my, buttons, modifiers, handled);
                 if (res != Out) {
                     handled = true;
                     if (ret != Handled) {
@@ -92,7 +92,7 @@ namespace psychic_ui {
             }
         }
 
-        auto res = Div::mouseMoved(mouseX, mouseY, buttons, modifiers, handled);
+        auto res = Div::handleMouseMoved(mouseX, mouseY, buttons, modifiers, handled);
         if ( res != Out && ret != Handled) {
             ret = res;
         }
@@ -100,15 +100,15 @@ namespace psychic_ui {
         return ret;
     }
 
-    MouseEventStatus Modal::mouseButton(const int mouseX, const int mouseY, const MouseButton button, const bool down, const Mod modifiers) {
-        MODAL_MOUSE_EVENT_PROXY(mouseButton, button, down, modifiers)
+    MouseEventStatus Modal::handleMouseButton(const int mouseX, const int mouseY, const MouseButton button, const bool down, const Mod modifiers) {
+        MODAL_MOUSE_EVENT_PROXY(handleMouseButton, button, down, modifiers)
     }
 
-    MouseEventStatus Modal::mouseDown(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
-        MODAL_MOUSE_EVENT_PROXY(mouseDown, button, modifiers)
+    MouseEventStatus Modal::handleMouseDown(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
+        MODAL_MOUSE_EVENT_PROXY(handleMouseDown, button, modifiers)
     }
 
-    MouseEventStatus Modal::mouseUp(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
+    MouseEventStatus Modal::handleMouseUp(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
         if (!_visible) {
             return Out;
         }
@@ -126,7 +126,7 @@ namespace psychic_ui {
                 if (child->parent()) {
                     child->parent()->globalToLocal(mx, my, gx, gy);
                 }
-                auto res = child->mouseUp(mx, my, button, modifiers);
+                auto res = child->handleMouseUp(mx, my, button, modifiers);
                 if (res != Out && ret != Handled) {
                     ret = res;
                 }
@@ -134,21 +134,21 @@ namespace psychic_ui {
         }
 
         if (ret == Out) {
-            ret = Div::mouseUp(mouseX, mouseY, button, modifiers);
+            ret = Div::handleMouseUp(mouseX, mouseY, button, modifiers);
         }
 
         return ret;
     }
 
-    MouseEventStatus Modal::click(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
-        MODAL_MOUSE_EVENT_PROXY(click, button, modifiers)
+    MouseEventStatus Modal::handleClick(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
+        MODAL_MOUSE_EVENT_PROXY(handleClick, button, modifiers)
     }
 
-    MouseEventStatus Modal::doubleClick(const int mouseX, const int mouseY, const unsigned int clickCount, const Mod modifiers) {
-        MODAL_MOUSE_EVENT_PROXY(doubleClick, clickCount, modifiers)
+    MouseEventStatus Modal::handleDoubleClick(const int mouseX, const int mouseY, const unsigned int clickCount, const Mod modifiers) {
+        MODAL_MOUSE_EVENT_PROXY(handleDoubleClick, clickCount, modifiers)
     }
 
-    MouseEventStatus Modal::mouseScrolled(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
-        MODAL_MOUSE_EVENT_PROXY(mouseScrolled, scrollX, scrollY)
+    MouseEventStatus Modal::handleMouseScrolled(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
+        MODAL_MOUSE_EVENT_PROXY(handleMouseScrolled, scrollX, scrollY)
     }
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <utility>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -390,13 +391,13 @@ namespace psychic_ui {
         }
 
         void scroll(double scrollX, double scrollY);
-        Signal<int, int> onScrolled{};
+        Signal<int, int> scrolled{};
 
         // endregion
 
         // region Layout
 
-        Signal<int, int> onResized{};
+        Signal<int, int> resized{};
 
         #ifdef DEBUG_LAYOUT
         static bool debugLayout;
@@ -528,16 +529,16 @@ namespace psychic_ui {
         using MouseDoubleClickSlot = std::shared_ptr<Slot<unsigned int>>;
         using MouseScrollSlot = std::shared_ptr<Slot<int, int, double, double>>;
 
-        Signal<int, int, MouseButton, bool, Mod> onMouseButton{};
-        Signal<int, int, MouseButton, Mod>       onMouseDown{};
-        Signal<int, int, MouseButton, Mod>       onMouseUp{};
-        Signal<int, int, MouseButton, Mod>       onMouseUpOutside{};
-        Signal<int, int, int, Mod>               onMouseMove{};
-        Signal<>                                 onMouseOver{};
-        Signal<>                                 onMouseOut{};
-        Signal<int, int, double, double>         onMouseScroll{};
-        Signal<>                                 onClick{};
-        Signal<unsigned int>                     onDoubleClick{};
+        Signal<int, int, MouseButton, bool, Mod> mouseButton{};
+        Signal<int, int, MouseButton, Mod>       mouseDown{};
+        Signal<int, int, MouseButton, Mod>       mouseUp{};
+        Signal<int, int, MouseButton, Mod>       mouseUpOutside{};
+        Signal<int, int, int, Mod>               mouseMoved{};
+        Signal<>                                 mouseEntered{};
+        Signal<>                                 mouseExited{};
+        Signal<int, int, double, double>         mouseScrolled{};
+        Signal<>                                 clicked{};
+        Signal<unsigned int>                     doubleClicked{};
 
         // endregion
 
@@ -546,25 +547,66 @@ namespace psychic_ui {
 
         // region External Event Triggers
 
-        virtual MouseEventStatus mouseMoved(int mouseX, int mouseY, int buttons, Mod modifiers, bool handled);
-        virtual bool mouseExited(int mouseX, int mouseY, int buttons, Mod modifiers);
-        virtual MouseEventStatus mouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers);
-        virtual MouseEventStatus mouseDown(int mouseX, int mouseY, MouseButton button, Mod modifiers);
-        virtual MouseEventStatus mouseUp(int mouseX, int mouseY, MouseButton button, Mod modifiers);
-        virtual MouseEventStatus click(int mouseX, int mouseY, MouseButton button, Mod modifiers);
-        virtual MouseEventStatus doubleClick(int mouseX, int mouseY, const unsigned int clickCount, Mod modifiers);
-        virtual MouseEventStatus mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
+        virtual MouseEventStatus handleMouseMoved(int mouseX, int mouseY, int buttons, Mod modifiers, bool handled);
+        virtual bool handleMouseExited(int mouseX, int mouseY, int buttons, Mod modifiers);
+        virtual MouseEventStatus handleMouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers);
+        virtual MouseEventStatus handleMouseDown(int mouseX, int mouseY, MouseButton button, Mod modifiers);
+        virtual MouseEventStatus handleMouseUp(int mouseX, int mouseY, MouseButton button, Mod modifiers);
+        virtual MouseEventStatus handleClick(int mouseX, int mouseY, MouseButton button, Mod modifiers);
+        virtual MouseEventStatus handleDoubleClick(int mouseX, int mouseY, const unsigned int clickCount, Mod modifiers);
+        virtual MouseEventStatus handleMouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
 
         using KeySlot = std::shared_ptr<Slot<Key, Mod>>;
         using CharSlot = std::shared_ptr<Slot<icu::UnicodeString>>;
         using FocusSlot = std::shared_ptr<Slot<>>;
 
-        Signal<Key, Mod>           onKeyDown{};
-        Signal<Key, Mod>           onKeyRepeat{};
-        Signal<Key, Mod>           onKeyUp{};
-        Signal<icu::UnicodeString> onCharacter{};
-        Signal<>                   onFocus{};
-        Signal<>                   onBlur{};
+        Signal<Key, Mod>           keyDown{};
+        Signal<Key, Mod>           keyRepeated{};
+        Signal<Key, Mod>           keyUp{};
+        Signal<icu::UnicodeString> characterTyped{};
+        Signal<>                   focusGained{};
+        Signal<>                   focusLost{};
+
+        // endregion
+
+        // region Events
+
+        // Each event is a Signal member named for what happened (`clicked`, `mouseDown`, `resized`; components add
+        // `changed` and others), and a chainable `on<Event>(callback)` that subscribes to it and returns this div:
+        //
+        //     add<Button>("Save").onClicked([this] { save(); });
+        //
+        // The signal belongs to the div, so the callback lives as long as the div. Capture `this` (the div that
+        // creates the child, which outlives it) or raw pointers, never a shared_ptr to the div the signal belongs
+        // to: the div would own the callback that owns the div, a cycle that never frees it.
+        // To stop listening before the div dies, subscribe to the signal itself and keep the slot
+        // (`ScopedSlot slot = button.clicked.subscribe(...)`). To listen to a signal of something that may die
+        // first, use `subscribeTo` (Observer), which ends the subscription with the subscriber.
+        #define PSYCHIC_UI_EVENT(connector, signal) \
+            template<class Self, class F> \
+            Self &connector(this Self &self, F &&callback) { \
+                self.signal.subscribe(std::forward<F>(callback)); \
+                return self; \
+            }
+
+        PSYCHIC_UI_EVENT(onMouseButton, mouseButton)
+        PSYCHIC_UI_EVENT(onMouseDown, mouseDown)
+        PSYCHIC_UI_EVENT(onMouseUp, mouseUp)
+        PSYCHIC_UI_EVENT(onMouseUpOutside, mouseUpOutside)
+        PSYCHIC_UI_EVENT(onMouseMoved, mouseMoved)
+        PSYCHIC_UI_EVENT(onMouseEntered, mouseEntered)
+        PSYCHIC_UI_EVENT(onMouseExited, mouseExited)
+        PSYCHIC_UI_EVENT(onMouseScrolled, mouseScrolled)
+        PSYCHIC_UI_EVENT(onClicked, clicked)
+        PSYCHIC_UI_EVENT(onDoubleClicked, doubleClicked)
+        PSYCHIC_UI_EVENT(onKeyDown, keyDown)
+        PSYCHIC_UI_EVENT(onKeyRepeated, keyRepeated)
+        PSYCHIC_UI_EVENT(onKeyUp, keyUp)
+        PSYCHIC_UI_EVENT(onCharacterTyped, characterTyped)
+        PSYCHIC_UI_EVENT(onFocusGained, focusGained)
+        PSYCHIC_UI_EVENT(onFocusLost, focusLost)
+        PSYCHIC_UI_EVENT(onScrolled, scrolled)
+        PSYCHIC_UI_EVENT(onResized, resized)
 
         // endregion
 

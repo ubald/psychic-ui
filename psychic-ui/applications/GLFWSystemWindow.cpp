@@ -336,7 +336,7 @@ namespace psychic_ui {
             glfwSetWindowPos(_glfwWindow, windowX + static_cast<int>(x - _dragX), windowY + static_cast<int>(y - _dragY));
         }
 
-        _window->mouseMoved(_mouseX, _mouseY, _mouseState, _modifiers, false);
+        _window->handleMouseMoved(_mouseX, _mouseY, _mouseState, _modifiers, false);
     }
 
     void GLFWSystemWindow::mouseButtonEvent(int button, int action, int mods) {
@@ -356,25 +356,25 @@ namespace psychic_ui {
         } else {
             _mouseState &= ~btn;
         }
-        _window->mouseButton(_mouseX, _mouseY, btn, down, _modifiers);
+        _window->handleMouseButton(_mouseX, _mouseY, btn, down, _modifiers);
     }
 
     void GLFWSystemWindow::scrollEvent(double x, double y) {
-        _window->mouseScrolled(_mouseX, _mouseY, x, y);
+        _window->handleMouseScrolled(_mouseX, _mouseY, x, y);
     }
 
     void GLFWSystemWindow::keyEvent(int key, int /*scancode*/, int action, int mods) {
         _modifiers = mapMods(mods);
         switch (action) {
-            case GLFW_PRESS: _window->keyDown(mapKey(key), _modifiers); break;
-            case GLFW_REPEAT: _window->keyRepeat(mapKey(key), _modifiers); break;
-            case GLFW_RELEASE: _window->keyUp(mapKey(key), _modifiers); break;
+            case GLFW_PRESS: _window->handleKeyDown(mapKey(key), _modifiers); break;
+            case GLFW_REPEAT: _window->handleKeyRepeat(mapKey(key), _modifiers); break;
+            case GLFW_RELEASE: _window->handleKeyUp(mapKey(key), _modifiers); break;
             default: break;
         }
     }
 
     void GLFWSystemWindow::charEvent(unsigned int codepoint) {
-        _window->keyboardCharacterEvent(icu::UnicodeString(static_cast<UChar32>(codepoint)));
+        _window->handleCharacter(icu::UnicodeString(static_cast<UChar32>(codepoint)));
     }
 
     void GLFWSystemWindow::dropEvent(int count, const char **paths) {

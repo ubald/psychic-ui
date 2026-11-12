@@ -15,14 +15,14 @@ namespace psychic_ui {
         _textDisplay->multiline(true);
         _textDisplay->minHeight(100_pct);
 
-        _textDisplay->onChange(
+        _textDisplay->onChanged(
             [this](std::string txt) {
                 _text = txt;
-                onChange(_text);
+                changed.emit(_text);
             }
         );
 
-        _textDisplay->onCaret(
+        _textDisplay->onCaretMoved(
             [this](unsigned int /*caret*/) {
                 int line = _textDisplay->getCaretLine();
                 int yOver  = (line + 1) * _textDisplay->getLineHeight();

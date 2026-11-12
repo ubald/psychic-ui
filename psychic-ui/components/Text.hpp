@@ -110,9 +110,13 @@ namespace psychic_ui {
         unsigned int getLineY(unsigned int line) const;
 
 
-        Signal<unsigned int, unsigned int> onSelection{};
-        Signal<unsigned int>               onCaret{};
-        Signal<std::string>                onChange{};
+        Signal<unsigned int, unsigned int> selectionChanged{};
+        Signal<unsigned int>               caretMoved{};
+        Signal<std::string>                changed{};
+
+        PSYCHIC_UI_EVENT(onSelectionChanged, selectionChanged)
+        PSYCHIC_UI_EVENT(onCaretMoved, caretMoved)
+        PSYCHIC_UI_EVENT(onChanged, changed)
 
     protected:
         using BlobPtr = std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>>;

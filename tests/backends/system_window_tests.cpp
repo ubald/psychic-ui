@@ -98,20 +98,20 @@ TEST_CASE("Text copies, cuts and pastes through the clipboard", "[backend][clipb
     ctrl.ctrl = true;
 
     text.selection(6, 11);
-    window->keyDown(Key::C, ctrl);
+    window->handleKeyDown(Key::C, ctrl);
     CHECK(window->clipboardText() == "wörld");
     CHECK(text.text() == "Hello wörld");
 
-    window->keyDown(Key::X, ctrl);
+    window->handleKeyDown(Key::X, ctrl);
     CHECK(text.text() == "Hello ");
 
     // Single-line text pastes line breaks as spaces
     window->setClipboardText("big\nworld");
-    window->keyDown(Key::V, ctrl);
+    window->handleKeyDown(Key::V, ctrl);
     CHECK(text.text() == "Hello big world");
     CHECK(text.caret() == 15);
 
     // Without the modifier, it's just a key
-    window->keyDown(Key::V, Mod{});
+    window->handleKeyDown(Key::V, Mod{});
     CHECK(text.text() == "Hello big world");
 }

@@ -35,7 +35,7 @@ namespace psychic_ui {
         menu = &add<Modal>()
             .id("menu")
             .visible(false);
-        menu->onMouseDown.subscribe(
+        menu->mouseDown.subscribe(
             [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const Mod /*modifiers*/) {
                 closeMenu();
             }
@@ -286,8 +286,8 @@ namespace psychic_ui {
                 || localX < 0 || localY < 0 || localX >= child->getWidth() || localY >= child->getHeight()) {
                 continue;
             }
-            if (child->onMouseButton.hasSubscriptions() || child->onMouseDown.hasSubscriptions()
-                || child->onMouseUp.hasSubscriptions() || child->onClick.hasSubscriptions()
+            if (child->mouseButton.hasSubscriptions() || child->mouseDown.hasSubscriptions()
+                || child->mouseUp.hasSubscriptions() || child->clicked.hasSubscriptions()
                 || interactiveChildAt(*child, localX, localY)) {
                 return true;
             }
@@ -436,13 +436,13 @@ namespace psychic_ui {
             .left(lx)
             .top(ly);
         menu->visible(true);
-        onMenuOpened.emit();
+        menuOpened.emit();
     }
 
     void Window::closeMenu() {
         menu->removeAll();
         menu->visible(false);
-        onMenuClosed.emit();
+        menuClosed.emit();
     }
 
     // endregion
@@ -463,7 +463,7 @@ namespace psychic_ui {
             auto it = std::find(path.cbegin(), path.cend(), focused);
             if (it == path.cend()) {
                 focused->setFocused(false);
-                focused->onBlur();
+                focused->focusLost.emit();
             }
         }
 
@@ -471,7 +471,7 @@ namespace psychic_ui {
         _focusPath = std::move(path);
         for (const auto &focused: _focusPath) {
             focused->setFocused(true);
-            focused->onFocus();
+            focused->focusGained.emit();
         }
     }
 
@@ -479,27 +479,27 @@ namespace psychic_ui {
 
     // region MouseEvents
 
-    MouseEventStatus Window::mouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) {
-        auto res = Div::mouseButton(mouseX, mouseY, button, down, modifiers);
+    MouseEventStatus Window::handleMouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) {
+        auto res = Div::handleMouseButton(mouseX, mouseY, button, down, modifiers);
 
         if (down) {
-            mouseDown(mouseX, mouseY, button, modifiers);
+            handleMouseDown(mouseX, mouseY, button, modifiers);
         } else {
-            click(mouseX, mouseY, button, modifiers);
+            handleClick(mouseX, mouseY, button, modifiers);
 
             if (button == MouseButton::LEFT) {
                 auto   now   = std::chrono::high_resolution_clock::now();
                 double delta = std::chrono::duration_cast<std::chrono::milliseconds>(now - _lastClick).count();
                 if (delta <= 500) {
                     ++_clickCount;
-                    doubleClick(mouseX, mouseY, _clickCount, modifiers);
+                    handleDoubleClick(mouseX, mouseY, _clickCount, modifiers);
                 } else {
                     _clickCount = 1;
                 }
                 _lastClick = now;
             }
 
-            mouseUp(mouseX, mouseY, button, modifiers);
+            handleMouseUp(mouseX, mouseY, button, modifiers);
         }
 
         return res;
@@ -535,52 +535,52 @@ namespace psychic_ui {
         }
     }
 
-    bool Window::keyDown(Key key, Mod mod) {
+    bool Window::handleKeyDown(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
             // Everyone in the focus path gets the key events, focusEnabled or not
             Div *div = (*focused);
-            if (div->onKeyDown.hasSubscriptions()) {
-                div->onKeyDown(key, mod);
+            if (div->keyDown.hasSubscriptions()) {
+                div->keyDown.emit(key, mod);
                 return true;
             }
         }
         return false;
     }
 
-    bool Window::keyRepeat(Key key, Mod mod) {
+    bool Window::handleKeyRepeat(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
             // Everyone in the focus path gets the key events, focusEnabled or not
             Div *div = (*focused);
-            if (div->onKeyRepeat.hasSubscriptions()) {
-                div->onKeyRepeat(key, mod);
+            if (div->keyRepeated.hasSubscriptions()) {
+                div->keyRepeated.emit(key, mod);
                 return true;
             }
         }
         return false;
     }
 
-    bool Window::keyUp(Key key, Mod mod) {
+    bool Window::handleKeyUp(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
             // Everyone in the focus path gets the key events, focusEnabled or not
             Div *div = (*focused);
-            if (div->onKeyUp.hasSubscriptions()) {
-                div->onKeyUp(key, mod);
+            if (div->keyUp.hasSubscriptions()) {
+                div->keyUp.emit(key, mod);
                 return true;
             }
         }
         return false;
     }
 
-    bool Window::keyboardCharacterEvent(const icu::UnicodeString &character) {
+    bool Window::handleCharacter(const icu::UnicodeString &character) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
             // Only the focusEnabled divs get the character events
             Div *div = (*focused);
-            if (div->onCharacter.hasSubscriptions()) {
-                div->onCharacter(character);
+            if (div->characterTyped.hasSubscriptions()) {
+                div->characterTyped.emit(character);
                 return true;
             }
         }

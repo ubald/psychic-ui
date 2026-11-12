@@ -21,7 +21,7 @@ namespace psychic_ui {
         if (simple) {
             auto simpleMenuButton = std::make_shared<MenuButton>(simple.get());
             simpleMenuButton->addClassName("simple");
-            simpleMenuButton->onClick([this, simple](){
+            simpleMenuButton->onClicked([this, simple](){
                 if (simple->callback) {
                     simple->callback();
                 }
@@ -35,7 +35,7 @@ namespace psychic_ui {
             auto subMenuButton = std::make_shared<MenuButton>(sub.get());
             subMenuButton->addClassName("submenu");
             // The button owns this slot: a raw pointer to it, as a shared_ptr would keep it alive forever
-            subMenuButton->onMouseOver(
+            subMenuButton->onMouseEntered(
                 [this, sub, button = subMenuButton.get()]() {
                     if (subMenu) {
                         remove(*subMenu);

@@ -294,21 +294,21 @@ namespace psychic_ui {
 
             case SDL_EVENT_KEY_DOWN:
                 if (e.key.repeat) {
-                    _window->keyRepeat(mapKey(e.key.key), mapMods(e.key.mod));
+                    _window->handleKeyRepeat(mapKey(e.key.key), mapMods(e.key.mod));
                 } else {
-                    _window->keyDown(mapKey(e.key.key), mapMods(e.key.mod));
+                    _window->handleKeyDown(mapKey(e.key.key), mapMods(e.key.mod));
                 }
                 break;
 
             case SDL_EVENT_KEY_UP:
-                _window->keyUp(mapKey(e.key.key), mapMods(e.key.mod));
+                _window->handleKeyUp(mapKey(e.key.key), mapMods(e.key.mod));
                 break;
 
             case SDL_EVENT_TEXT_INPUT: {
                 // One code point at a time, like typed characters, even when an input method commits several
                 const icu::UnicodeString text = icu::UnicodeString::fromUTF8(e.text.text);
                 for (int32_t i = 0; i < text.length(); i = text.moveIndex32(i, 1)) {
-                    _window->keyboardCharacterEvent(icu::UnicodeString(text.char32At(i)));
+                    _window->handleCharacter(icu::UnicodeString(text.char32At(i)));
                 }
                 break;
             }
@@ -328,7 +328,7 @@ namespace psychic_ui {
                     );
                 }
 
-                _window->mouseMoved(_mouseX, _mouseY, _mouseState, mapMods(SDL_GetModState()), false);
+                _window->handleMouseMoved(_mouseX, _mouseY, _mouseState, mapMods(SDL_GetModState()), false);
                 break;
 
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -345,7 +345,7 @@ namespace psychic_ui {
                 } else {
                     _mouseState &= ~button;
                 }
-                _window->mouseButton(_mouseX, _mouseY, button, down, mapMods(SDL_GetModState()));
+                _window->handleMouseButton(_mouseX, _mouseY, button, down, mapMods(SDL_GetModState()));
                 break;
             }
 
@@ -368,7 +368,7 @@ namespace psychic_ui {
 
             case SDL_EVENT_MOUSE_WHEEL: {
                 const float direction = e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1.0f : 1.0f;
-                _window->mouseScrolled(
+                _window->handleMouseScrolled(
                     static_cast<int>(e.wheel.mouse_x),
                     static_cast<int>(e.wheel.mouse_y),
                     e.wheel.x * direction,

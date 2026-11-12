@@ -46,7 +46,11 @@ namespace psychic_ui {
 
         bool active() const override;
 
-        Signal<bool> onChange{};
+        /**
+         * The checked state changed, with the new state
+         */
+        Signal<bool> changed{};
+        PSYCHIC_UI_EVENT(onChanged, changed)
 
     protected:
         std::string _label{};

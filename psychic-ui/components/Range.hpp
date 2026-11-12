@@ -120,7 +120,11 @@ namespace psychic_ui {
         float getLinearPercentage() const override;
         void setLinearPercentage(float percent) override;
 
-        Signal<T> onChange{};
+        /**
+         * The value changed, with the new value
+         */
+        Signal<T> changed{};
+        PSYCHIC_UI_EVENT(onChanged, changed)
 
     protected:
         RangeMode _mode{linear};
@@ -143,14 +147,14 @@ namespace psychic_ui {
         internal::RangeBase(), _min(min), _max(max), _value(value) {
         setTag("Range");
         if (onChangeCallback) {
-            onChange.subscribe(std::forward<std::function<void(T)>>(onChangeCallback));
+            changed.subscribe(std::forward<std::function<void(T)>>(onChangeCallback));
         }
 
         _step = std::is_floating_point<T>::value ? 0.01f : 1;
 
         checkRange();
 
-        onMouseScroll.subscribe(
+        mouseScrolled.subscribe(
             [this](const int /*mouseX*/, const int /*mouseY*/, const double /*scrollX*/, const double scrollY) {
                 if (std::is_floating_point<T>::value) {
                     updateValue(_value + (scrollY * _step));
@@ -237,7 +241,7 @@ namespace psychic_ui {
         float v = std::max(_min, std::min(value, _max));
         if (v != _value) {
             _value = v;
-            onChange(_value);
+            changed.emit(_value);
             if (_skin) {
                 _skin->setValue(getLinearPercentage());
             }

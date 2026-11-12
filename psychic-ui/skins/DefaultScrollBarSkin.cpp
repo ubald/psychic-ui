@@ -25,7 +25,7 @@ namespace psychic_ui {
                 } else {
                     dragOffset = mouseX;
                 }
-                _onMouseMove = window()->onMouseMove(
+                _onMouseMove = window()->mouseMoved.subscribe(
                     [this](const int mouseX, const int mouseY, int /*buttons*/, Mod /*modifiers*/) {
                         int lx = 0;
                         int ly = 0;

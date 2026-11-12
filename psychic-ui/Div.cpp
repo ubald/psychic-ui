@@ -887,7 +887,7 @@ namespace psychic_ui {
         layoutReady = true;
 
         if (previousWidth != _width || previousHeight != _height || previousBoundsRect != _boundsRect) {
-            onResized(_width, _height);
+            resized.emit(_width, _height);
         }
     }
 
@@ -1180,7 +1180,7 @@ namespace psychic_ui {
 
     // region Buttons
 
-    MouseEventStatus Div::mouseButton(const int mouseX, const int mouseY, const MouseButton button, const bool down, const Mod modifiers) {
+    MouseEventStatus Div::handleMouseButton(const int mouseX, const int mouseY, const MouseButton button, const bool down, const Mod modifiers) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
@@ -1196,7 +1196,7 @@ namespace psychic_ui {
                 if (child->_parent != this) {
                     continue; // Removed by an earlier handler
                 }
-                auto res = child->mouseButton(localMouseX, localMouseY, button, down, modifiers);
+                auto res = child->handleMouseButton(localMouseX, localMouseY, button, down, modifiers);
                 if (res != Out) {
                     ret = res;
                     break;
@@ -1204,15 +1204,15 @@ namespace psychic_ui {
             }
         }
 
-        if (_mouseEnabled && ret != Handled && onMouseButton.hasSubscriptions()) {
-            onMouseButton(localMouseX, localMouseY, button, down, modifiers);
+        if (_mouseEnabled && ret != Handled && mouseButton.hasSubscriptions()) {
+            mouseButton.emit(localMouseX, localMouseY, button, down, modifiers);
             ret = Handled;
         }
 
         return ret == Out ? Over : ret;
     }
 
-    MouseEventStatus Div::mouseDown(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
+    MouseEventStatus Div::handleMouseDown(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
@@ -1230,7 +1230,7 @@ namespace psychic_ui {
                 if (child->_parent != this) {
                     continue; // Removed by an earlier handler
                 }
-                auto res = child->mouseDown(localMouseX, localMouseY, button, modifiers);
+                auto res = child->handleMouseDown(localMouseX, localMouseY, button, modifiers);
                 if (res != Out) {
                     ret = res;
                     break;
@@ -1243,16 +1243,16 @@ namespace psychic_ui {
             window()->requestFocus(this);
         }
 
-        if (_mouseEnabled && ret != Handled && onMouseDown.hasSubscriptions()) {
-            onMouseDown(localMouseX, localMouseY, button, modifiers);
+        if (_mouseEnabled && ret != Handled && mouseDown.hasSubscriptions()) {
+            mouseDown.emit(localMouseX, localMouseY, button, modifiers);
             ret = Handled;
         }
 
         // onClick swallows mouse down events, otherwise a parent might hijack it
-        return ret == Handled || onClick.hasSubscriptions() ? Handled : Over;
+        return ret == Handled || clicked.hasSubscriptions() ? Handled : Over;
     }
 
-    MouseEventStatus Div::mouseUp(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
+    MouseEventStatus Div::handleMouseUp(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible) {
             return Out;
@@ -1275,32 +1275,39 @@ namespace psychic_ui {
                 if (child->_parent != this) {
                     continue; // Removed by an earlier handler
                 }
-                auto res = child->mouseUp(localMouseX, localMouseY, button, modifiers);
+                auto res = child->handleMouseUp(localMouseX, localMouseY, button, modifiers);
                 if (res == Over) {
                     ret = res;
                 }
             }
         }
 
-        if (_mouseEnabled && wasDown) {
-            // Special case for items receiving a mouse up outside
-            onMouseUpOutside(localMouseX, localMouseY, button, modifiers);
-            onMouseUp(localMouseX, localMouseY, button, modifiers);
+        if (!_mouseEnabled) {
+            return isOver ? (ret == Out ? Over : ret) : Out;
+        }
+
+        // A press that started here ends here, wherever it is released (a drag stops even outside): mouseUp once,
+        // and mouseUpOutside first when released outside. A release over us without a press here is ours unless
+        // a child handled it.
+        const bool hadSubscriptions = mouseUp.hasSubscriptions();
+        if (wasDown && !isOver) {
+            mouseUpOutside.emit(localMouseX, localMouseY, button, modifiers);
+        }
+        if (wasDown || (isOver && ret != Handled)) {
+            mouseUp.emit(localMouseX, localMouseY, button, modifiers);
+            if (isOver && hadSubscriptions) {
+                ret = Handled;
+            }
         }
 
         if (!isOver) {
             return Out;
         }
 
-        if (_mouseEnabled && ret != Handled && onMouseUp.hasSubscriptions()) {
-            onMouseUp(localMouseX, localMouseY, button, modifiers);
-            ret = Handled;
-        }
-
         return ret == Out ? Over : ret;
     }
 
-    MouseEventStatus Div::click(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
+    MouseEventStatus Div::handleClick(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
@@ -1320,7 +1327,7 @@ namespace psychic_ui {
                 if (child->_parent != this) {
                     continue; // Removed by an earlier handler
                 }
-                auto res = child->click(localMouseX, localMouseY, button, modifiers);
+                auto res = child->handleClick(localMouseX, localMouseY, button, modifiers);
                 if (res != Out) {
                     ret = res;
                     break;
@@ -1328,15 +1335,15 @@ namespace psychic_ui {
             }
         }
 
-        if (_mouseEnabled && ret != Handled && onClick.hasSubscriptions()) {
-            onClick();
+        if (_mouseEnabled && ret != Handled && clicked.hasSubscriptions()) {
+            clicked.emit();
             ret = Handled;
         }
 
         return ret == Out ? Over : ret;
     }
 
-    MouseEventStatus Div::doubleClick(const int mouseX, const int mouseY, const unsigned int clickCount, const Mod modifiers) {
+    MouseEventStatus Div::handleDoubleClick(const int mouseX, const int mouseY, const unsigned int clickCount, const Mod modifiers) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
@@ -1356,7 +1363,7 @@ namespace psychic_ui {
                 if (child->_parent != this) {
                     continue; // Removed by an earlier handler
                 }
-                auto res = child->doubleClick(localMouseX, localMouseY, clickCount, modifiers);
+                auto res = child->handleDoubleClick(localMouseX, localMouseY, clickCount, modifiers);
                 if (res != Out) {
                     ret = res;
                     break;
@@ -1364,8 +1371,8 @@ namespace psychic_ui {
             }
         }
 
-        if (_mouseEnabled && ret != Handled && onDoubleClick.hasSubscriptions()) {
-            onDoubleClick(clickCount);
+        if (_mouseEnabled && ret != Handled && doubleClicked.hasSubscriptions()) {
+            doubleClicked.emit(clickCount);
             ret = Handled;
         }
 
@@ -1376,7 +1383,7 @@ namespace psychic_ui {
 
     // region Move
 
-    bool Div::mouseExited(const int mouseX, const int mouseY, const int buttons, const Mod modifiers) {
+    bool Div::handleMouseExited(const int mouseX, const int mouseY, const int buttons, const Mod modifiers) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_mouseOver) {
             return false;
@@ -1392,18 +1399,18 @@ namespace psychic_ui {
                 if (child->_parent != this) {
                     continue; // Removed by an earlier handler
                 }
-                if (child->mouseExited(localMouseX, localMouseY, buttons, modifiers)) {
+                if (child->handleMouseExited(localMouseX, localMouseY, buttons, modifiers)) {
                     break;
                 }
             }
         }
 
-        onMouseOut();
+        mouseExited.emit();
 
         return true;
     }
 
-    MouseEventStatus Div::mouseMoved(const int mouseX, const int mouseY, const int buttons, const Mod modifiers, bool handled) {
+    MouseEventStatus Div::handleMouseMoved(const int mouseX, const int mouseY, const int buttons, const Mod modifiers, bool handled) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible) {
             return Out;
@@ -1413,7 +1420,7 @@ namespace psychic_ui {
         bool wasOver = _mouseOver;
 
         if (!isOver && wasOver) {
-            mouseExited(mouseX, mouseY, buttons, modifiers);
+            handleMouseExited(mouseX, mouseY, buttons, modifiers);
         }
 
         bool allowOutsideMovement = this == window();
@@ -1439,7 +1446,7 @@ namespace psychic_ui {
                     if (child->_parent != this) {
                         continue; // Removed by an earlier handler
                     }
-                    auto res = child->mouseMoved(localMouseX, localMouseY, buttons, modifiers, handled);
+                    auto res = child->handleMouseMoved(localMouseX, localMouseY, buttons, modifiers, handled);
                     if (res != Out) {
                         handled = true;
                         if (ret != Handled) {
@@ -1452,9 +1459,9 @@ namespace psychic_ui {
 
         if (_mouseEnabled) {
             if (!handled && isOver && !wasOver) {
-                onMouseOver();
+                mouseEntered.emit();
             }
-            onMouseMove(localMouseX, localMouseY, buttons, modifiers);
+            mouseMoved.emit(localMouseX, localMouseY, buttons, modifiers);
             if (!handled && isOver && ret != Handled) {
                 window()->setCursor(_computedStyle.cursor());
                 ret = Handled;
@@ -1474,12 +1481,12 @@ namespace psychic_ui {
         if (scrollX != _scrollX || scrollY != _scrollY) {
             _scrollX = scrollX;
             _scrollY = scrollY;
-            onScrolled(_scrollX, _scrollY);
+            scrolled.emit(_scrollX, _scrollY);
         }
     }
 
     void Div::scroll(const double scrollX, const double scrollY) {
-        bool scrolled = false;
+        bool moved = false;
 
         if (_width < _boundsRight - _boundsLeft) {
             int sx = std::min(
@@ -1488,7 +1495,7 @@ namespace psychic_ui {
                     _scrollX + (int) std::ceil(scrollX) * 2
                 ));
 
-            scrolled = _scrollX != sx;
+            moved |= _scrollX != sx;
             _scrollX = sx;
         }
 
@@ -1499,16 +1506,16 @@ namespace psychic_ui {
                     _scrollY + (int) std::ceil(scrollY) * 2
                 ));
 
-            scrolled = _scrollY != sy;
+            moved |= _scrollY != sy;
             _scrollY = sy;
         }
 
-        if (scrolled) {
-            onScrolled(_scrollX, _scrollY);
+        if (moved) {
+            scrolled.emit(_scrollX, _scrollY);
         }
     }
 
-    MouseEventStatus Div::mouseScrolled(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
+    MouseEventStatus Div::handleMouseScrolled(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(mouseX, mouseY)) {
             return Out;
@@ -1524,7 +1531,7 @@ namespace psychic_ui {
                 if (child->_parent != this) {
                     continue; // Removed by an earlier handler
                 }
-                auto res = child->mouseScrolled(localMouseX, localMouseY, scrollX, scrollY);
+                auto res = child->handleMouseScrolled(localMouseX, localMouseY, scrollX, scrollY);
                 if (res != Out) {
                     ret = res;
                     break;
@@ -1532,8 +1539,8 @@ namespace psychic_ui {
             }
         }
 
-        if (_mouseEnabled && ret != Handled && onMouseScroll.hasSubscriptions()) {
-            onMouseScroll(localMouseX, localMouseY, scrollX, scrollY);
+        if (_mouseEnabled && ret != Handled && mouseScrolled.hasSubscriptions()) {
+            mouseScrolled.emit(localMouseX, localMouseY, scrollX, scrollY);
             ret = Handled;
         }
 

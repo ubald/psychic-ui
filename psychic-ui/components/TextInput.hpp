@@ -28,7 +28,11 @@ namespace psychic_ui {
         }
 
         std::shared_ptr<Text> textDisplay();
-        Signal<std::string> onChange{};
+        /**
+         * The text changed, with the new text
+         */
+        Signal<std::string> changed{};
+        PSYCHIC_UI_EVENT(onChanged, changed)
 
     protected:
         void updateText(const std::string &text);

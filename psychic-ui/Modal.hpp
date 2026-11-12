@@ -37,13 +37,13 @@ namespace psychic_ui {
         std::vector<std::weak_ptr<Div>>allowedMouseChildren{};
 
         // Overridden Mouse Handlers
-         MouseEventStatus mouseMoved(int mouseX, int mouseY, int buttons, Mod modifiers, bool handled) override;
-         MouseEventStatus mouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) override;
-         MouseEventStatus mouseDown(int mouseX, int mouseY, MouseButton button, Mod modifiers) override;
-         MouseEventStatus mouseUp(int mouseX, int mouseY, MouseButton button, Mod modifiers) override;
-         MouseEventStatus click(int mouseX, int mouseY, MouseButton button, Mod modifiers) override;
-         MouseEventStatus doubleClick(int mouseX, int mouseY, unsigned int clickCount, Mod modifiers) override;
-         MouseEventStatus mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY) override;
+         MouseEventStatus handleMouseMoved(int mouseX, int mouseY, int buttons, Mod modifiers, bool handled) override;
+         MouseEventStatus handleMouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) override;
+         MouseEventStatus handleMouseDown(int mouseX, int mouseY, MouseButton button, Mod modifiers) override;
+         MouseEventStatus handleMouseUp(int mouseX, int mouseY, MouseButton button, Mod modifiers) override;
+         MouseEventStatus handleClick(int mouseX, int mouseY, MouseButton button, Mod modifiers) override;
+         MouseEventStatus handleDoubleClick(int mouseX, int mouseY, unsigned int clickCount, Mod modifiers) override;
+         MouseEventStatus handleMouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY) override;
     };
 }
 

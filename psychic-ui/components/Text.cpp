@@ -91,8 +91,8 @@ namespace psychic_ui {
             std::swap(_selectBegin, _selectEnd);
         }
 
-        onCaret(_selectEnd);
-        onSelection(_selectBegin, _selectEnd);
+        caretMoved.emit(_selectEnd);
+        selectionChanged.emit(_selectBegin, _selectEnd);
 
     }
 
@@ -108,7 +108,7 @@ namespace psychic_ui {
             _targetXPos = _textBox.posFromIndex(_caret).second;
         }
         if (isValid()) {
-            onCaret(_caret);
+            caretMoved.emit(_caret);
         } else {
             // Wait until the layout is valid to notify,
             // otherwise the caret position won't be correct.
@@ -125,11 +125,11 @@ namespace psychic_ui {
     }
 
     void Text::subscribeToSelection() {
-        _onMouseDown = onMouseDown(
+        _onMouseDown = mouseDown.subscribe(
             [this](const int mouseX, const int mouseY, const int /*button*/, const Mod /*modifiers*/) {
                 unsigned int initialBegin = _textBox.indexFromPos(mouseX, mouseY);
                 moveCaret(initialBegin);
-                _onMouseMove = window()->onMouseMove(
+                _onMouseMove = window()->mouseMoved.subscribe(
                     [this, initialBegin](const int mouseX, const int mouseY, int /*button*/, Mod /*modifiers*/) {
                         int lx = 0;
                         int ly = 0;
@@ -142,20 +142,20 @@ namespace psychic_ui {
                             _selectBegin = _caret;
                             _selectEnd   = initialBegin;
                         }
-                        onCaret(_caret);
-                        onSelection(_selectBegin, _selectEnd);
+                        caretMoved.emit(_caret);
+                        selectionChanged.emit(_selectBegin, _selectEnd);
                     }
                 );
             }
         );
 
-        _onMouseUp = onMouseUp(
+        _onMouseUp = mouseUp.subscribe(
             [this](const int /*mouseX*/, const int /*mouseY*/, int /*button*/, Mod /*modifiers*/) {
                 _onMouseMove.disconnect();
             }
         );
 
-        _onDoubleClick = onDoubleClick(
+        _onDoubleClick = doubleClicked.subscribe(
             [this](const unsigned int clickCount) {
                 if (clickCount == 2) {
                     auto word = _textBox.wordAtIndex(_caret);
@@ -169,7 +169,7 @@ namespace psychic_ui {
                     _selectBegin = 0;
                     _selectEnd   = static_cast<unsigned int>(_text.length());
                 }
-                onSelection(_selectBegin, _selectEnd);
+                selectionChanged.emit(_selectBegin, _selectEnd);
             }
         );
     }
@@ -190,11 +190,11 @@ namespace psychic_ui {
     }
 
     void Text::subscribeToEdition() {
-        _onFocus     = onFocus([this]() { window()->startTextInput(); });
-        _onBlur      = onBlur([this]() { window()->stopTextInput(); });
-        _onKeyDown   = onKeyDown([this](const Key key, const Mod mod) { handleKey(key, mod); });
-        _onKeyRepeat = onKeyRepeat([this](const Key key, const Mod mod) { handleKey(key, mod); });
-        _onCharacter = onCharacter(
+        _onFocus     = focusGained.subscribe([this]() { window()->startTextInput(); });
+        _onBlur      = focusLost.subscribe([this]() { window()->stopTextInput(); });
+        _onKeyDown   = keyDown.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); });
+        _onKeyRepeat = keyRepeated.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); });
+        _onCharacter = characterTyped.subscribe(
             [this](icu::UnicodeString character) {
                 if (_selectBegin != _selectEnd) {
                     _text.replace(_selectBegin, _selectEnd - _selectBegin, character);
@@ -238,6 +238,7 @@ namespace psychic_ui {
     void Text::textChanged() {
         _textBox.updateText();
         invalidate();
+        changed.emit(text());
     }
 
     void Text::textEdited(unsigned int caret) {
@@ -251,7 +252,7 @@ namespace psychic_ui {
                 if (mod.ctrl or mod.super) {
                     _selectBegin = 0;
                     _selectEnd   = static_cast<unsigned int>(_text.length());
-                    onSelection(_selectBegin, _selectEnd);
+                    selectionChanged.emit(_selectBegin, _selectEnd);
                 }
                 break;
 
@@ -429,7 +430,7 @@ namespace psychic_ui {
         _textBox.setBox(0.0f, 0.0f, _paddedRect.width(), _paddedRect.height());
         _blob = _textBox.snapshotTextBlob();
         if (_pendingCaretSignal) {
-            onCaret(_caret);
+            caretMoved.emit(_caret);
             _pendingCaretSignal = false;
         }
     }

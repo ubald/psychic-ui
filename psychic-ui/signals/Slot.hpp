@@ -131,7 +131,7 @@ namespace psychic_ui {
      * Use it for a subscription you replace or drop, typically to a signal that outlives you:
      *
      *     ScopedSlot _onMouseMove;
-     *     _onMouseMove = window()->onMouseMove([this](...) { ... }); // disconnects the previous one first
+     *     _onMouseMove = window()->mouseMoved.subscribe([this](...) { ... }); // disconnects the previous one first
      */
     class ScopedSlot {
     public:

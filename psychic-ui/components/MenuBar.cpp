@@ -25,7 +25,7 @@ namespace psychic_ui {
             auto menuItem = std::make_shared<Button>(sub->label);
             menuItem->toggle(true);
             // The button owns these slots: a raw pointer to it, as a shared_ptr would keep it alive forever
-            menuItem->onClick(
+            menuItem->onClicked(
                 [this, sub, button = menuItem.get()]() {
                     if (sub.get() == currentMenuItem) {
                         window()->closeMenu();
@@ -34,9 +34,9 @@ namespace psychic_ui {
                     }
                 }
             );
-            menuItem->onMouseOver(
+            menuItem->onMouseEntered(
                 [this, sub, button = menuItem.get()]() {
-                    if (menuOpened) {
+                    if (_menuOpen) {
                         openMenu(button, sub.get());
                     }
                 }
@@ -57,7 +57,7 @@ namespace psychic_ui {
         y += menuItemButton->getHeight();
         window()->openMenu(sub->items, x, y);
 
-        if (!menuOpened) {
+        if (!_menuOpen) {
             window()->menuContainer().addMouseEnabledDiv(shared_from_this());
         }
 
@@ -69,18 +69,18 @@ namespace psychic_ui {
         }
 
         currentMenuItem = sub;
-        menuOpened      = true;
+        _menuOpen      = true;
     }
 
     void MenuBar::addedToRender() {
         DataContainer<std::shared_ptr<MenuItem>>::addedToRender();
-        menuClosed = subscribeTo(
-            window()->onMenuClosed, [this]() {
-                if (!menuOpened) {
+        _menuClosedSlot = subscribeTo(
+            window()->menuClosed, [this]() {
+                if (!_menuOpen) {
                     return;
                 }
 
-                menuOpened      = false;
+                _menuOpen      = false;
                 currentMenuItem = nullptr;
                 window()->menuContainer().removeMouseEnabledDiv(shared_from_this());
                 for (auto &child: _children) {
@@ -95,8 +95,8 @@ namespace psychic_ui {
 
     void MenuBar::removedFromRender() {
         DataContainer<std::shared_ptr<MenuItem>>::removedFromRender();
-        unsubscribeFrom(menuClosed);
-        menuClosed = nullptr;
+        unsubscribeFrom(_menuClosedSlot);
+        _menuClosedSlot = nullptr;
     }
 
 }

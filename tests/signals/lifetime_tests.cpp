@@ -32,10 +32,10 @@ namespace {
 
         void clickAt(int x, int y) {
             layout();
-            mouseMoved(x, y, 0, Mod{}, false);
-            mouseButton(x, y, MouseButton::LEFT, true, Mod{});
+            handleMouseMoved(x, y, 0, Mod{}, false);
+            handleMouseButton(x, y, MouseButton::LEFT, true, Mod{});
             layout();
-            mouseButton(x, y, MouseButton::LEFT, false, Mod{});
+            handleMouseButton(x, y, MouseButton::LEFT, false, Mod{});
             layout();
         }
 
@@ -65,14 +65,14 @@ namespace {
     }
 
     struct FakeWindow : Div {
-        Signal<> onMenuClosed{};
+        Signal<> menuClosed{};
     };
 
     struct FakeMenuBar : Div {
         int closed = 0;
 
         void listen(FakeWindow &window) {
-            subscribeTo(window.onMenuClosed, [this]() { ++closed; });
+            subscribeTo(window.menuClosed, [this]() { ++closed; });
         }
     };
 }
@@ -82,9 +82,9 @@ TEST_CASE("A div's handler removes the div from its parent", "[signals][lifetime
     auto menu   = std::make_shared<Div>();
     Div  *item  = &menu->add<Div>(); // Only owner: menu's children
     int  ran    = 0;
-    item->onClick.subscribe([&]() { ++ran; menu->removeAll(); });
-    item->onClick.subscribe([&]() { ++ran; }); // Its signal is gone, not called
-    item->onClick();
+    item->clicked.subscribe([&]() { ++ran; menu->removeAll(); });
+    item->clicked.subscribe([&]() { ++ran; }); // Its signal is gone, not called
+    item->clicked.emit();
     REQUIRE(ran == 1);
     REQUIRE(menu->childCount() == 0);
 }
@@ -95,10 +95,10 @@ TEST_CASE("A div clicked through dispatch removes itself", "[signals][lifetime]"
     // Only owners: their parents
     auto &item  = root.add<Div>().width(100).height(100).add<Div>().width(100).height(100);
     int  clicked = 0;
-    item.onClick([&, raw = &item]() {
+    item.onClicked([&, raw = &item]() {
         ++clicked;
         root.removeAll(); // Destroys the dispatching div and its parent
-        REQUIRE(raw->onClick.subscriptionCount() == 1); // Still alive while dispatching
+        REQUIRE(raw->clicked.subscriptionCount() == 1); // Still alive while dispatching
     });
     std::weak_ptr<Div> weakItem = item.weak_from_this();
     window->clickAt(50, 50);
@@ -108,11 +108,11 @@ TEST_CASE("A div clicked through dispatch removes itself", "[signals][lifetime]"
 }
 
 TEST_CASE("An observer child outlives its parent's signal at teardown", "[signals][lifetime]") {
-    // Window's members, onMenuClosed included, die before its children (MenuBar subscribes to onMenuClosed)
+    // Window's members, onMenuClosed included, die before its children (MenuBar subscribes to menuClosed)
     auto window = std::make_shared<FakeWindow>();
     auto &bar   = window->add<FakeMenuBar>();
     bar.listen(*window);
-    window->onMenuClosed();
+    window->menuClosed.emit();
     REQUIRE(bar.closed == 1);
     window.reset();
 }
@@ -167,7 +167,7 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
         REQUIRE(item != nullptr);
         Div *raw = item.get();
         item.reset();
-        raw->onClick();
+        raw->clicked.emit();
         REQUIRE(newClicked == 1);
     }
 
@@ -178,7 +178,7 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
         auto recent = findButton(window->menuContainer(), "Recent");
         REQUIRE(recent != nullptr);
         HeadlessWindow::center(recent, x, y);
-        window->mouseMoved(x, y, 0, Mod{}, false);
+        window->handleMouseMoved(x, y, 0, Mod{}, false);
         window->layout();
         REQUIRE(findButton(window->menuContainer(), "Nothing") != nullptr);
         std::weak_ptr<Div> weakRecent = recent;
@@ -188,7 +188,7 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
     }
 
     SECTION("window teardown with the menu bar subscribed to onMenuClosed") {
-        // Members (onMenuClosed) die before the children (MenuBar)
+        // Members (menuClosed) die before the children (MenuBar)
         file.reset();
         window.reset();
     }

@@ -14,10 +14,10 @@ namespace psychic_ui {
         _textDisplay->editable(true);
         _textDisplay->multiline(false);
 
-        _textDisplay->onChange(
+        _textDisplay->onChanged(
             [this](std::string txt) {
                 _text = txt;
-                onChange(_text);
+                changed.emit(_text);
             }
         );
     }

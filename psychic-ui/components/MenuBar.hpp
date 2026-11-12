@@ -15,8 +15,8 @@ namespace psychic_ui {
 
         void addedToRender() override;
         void removedFromRender() override;
-        Window::MenuClosedSlot menuClosed{nullptr};
-        bool                   menuOpened{false};
+        Window::MenuClosedSlot _menuClosedSlot{nullptr};
+        bool                   _menuOpen{false};
         MenuItem *currentMenuItem{nullptr};
     };
 }

@@ -132,8 +132,11 @@ namespace psychic_ui {
         using MenuOpenedSlot = std::shared_ptr<Slot<>>;
         using MenuClosedSlot = std::shared_ptr<Slot<>>;
 
-        Signal<> onMenuOpened{};
-        Signal<> onMenuClosed{};
+        Signal<> menuOpened{};
+        Signal<> menuClosed{};
+
+        PSYCHIC_UI_EVENT(onMenuOpened, menuOpened)
+        PSYCHIC_UI_EVENT(onMenuClosed, menuClosed)
 
         // endregion
 
@@ -175,7 +178,7 @@ namespace psychic_ui {
 
         // region Mouse
 
-        MouseEventStatus mouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) override;
+        MouseEventStatus handleMouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) override;
         std::chrono::time_point<std::chrono::high_resolution_clock> _lastClick{};
         unsigned int _clickCount{0};
 
@@ -196,10 +199,10 @@ namespace psychic_ui {
         void startTextInput();
         void stopTextInput();
 
-        bool keyDown(Key key, Mod mod);
-        bool keyRepeat(Key key, Mod mod);
-        bool keyUp(Key key, Mod mod);
-        bool keyboardCharacterEvent(const icu::UnicodeString &character);
+        bool handleKeyDown(Key key, Mod mod);
+        bool handleKeyRepeat(Key key, Mod mod);
+        bool handleKeyUp(Key key, Mod mod);
+        bool handleCharacter(const icu::UnicodeString &character);
 
         // endregion
 

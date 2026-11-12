@@ -87,7 +87,7 @@ TEST_CASE("SDL3: mouse events reach the div under the pointer", "[backend][sdl3]
         downY = y;
         CHECK(button == MouseButton::LEFT);
     });
-    div.onClick([&]() { ++clicks; });
+    div.onClicked([&]() { ++clicks; });
 
     auto motion = sdl.event(SDL_EVENT_MOUSE_MOTION);
     motion.motion.x = 40.5f;
@@ -118,7 +118,7 @@ TEST_CASE("SDL3: wheel events scroll at the pointer", "[backend][sdl3]") {
     sdl.layout();
 
     double scrolledY = 0;
-    div.onMouseScroll([&](int, int, double, double y) { scrolledY = y; });
+    div.onMouseScrolled([&](int, int, double, double y) { scrolledY = y; });
 
     auto wheel = sdl.event(SDL_EVENT_MOUSE_WHEEL);
     wheel.wheel.mouse_x   = 50;
@@ -142,9 +142,9 @@ TEST_CASE("SDL3: keys and text reach the focused div", "[backend][sdl3]") {
     icu::UnicodeString typed{};
     int                characters = 0;
     div.onKeyDown([&](Key key, Mod mod) { downs.push_back(key); lastMod = mod; });
-    div.onKeyRepeat([&](Key, Mod) { ++repeats; });
+    div.onKeyRepeated([&](Key, Mod) { ++repeats; });
     div.onKeyUp([&](Key, Mod) { ++ups; });
-    div.onCharacter([&](const icu::UnicodeString &character) { typed += character; ++characters; });
+    div.onCharacterTyped([&](const icu::UnicodeString &character) { typed += character; ++characters; });
 
     auto key = sdl.event(SDL_EVENT_KEY_DOWN);
     key.key.key = SDLK_A;

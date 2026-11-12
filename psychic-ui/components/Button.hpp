@@ -21,11 +21,14 @@ namespace psychic_ui {
 
     class Button : public Component<ButtonSkin> {
     public:
-        Button(const std::string &label, ClickCallback onClick);
+        /**
+         * @param onClicked Connected to `clicked`, after the button updates its selection
+         */
+        Button(const std::string &label, ClickCallback onClicked);
 
         explicit Button(const std::string &label = "") : Button(label, nullptr) {}
 
-        explicit Button(ClickCallback onClick) : Button("", std::move(onClick)) {}
+        explicit Button(ClickCallback onClicked) : Button("", std::move(onClicked)) {}
 
         const std::string &label() const;
 
@@ -67,17 +70,17 @@ namespace psychic_ui {
 
         bool active() const override;
 
-        Button *onChange(std::function<void(bool)> onChange) {
-            _onChange = std::move(onChange);
-            return this;
-        }
+        /**
+         * The selection changed, with the new state
+         */
+        Signal<bool> changed{};
+        PSYCHIC_UI_EVENT(onChanged, changed)
 
     protected:
         std::string               _label{};
         bool                      _toggle{false};
         bool                      _autoToggle{true};
         bool                      _selected{false};
-        std::function<void(bool)> _onChange{nullptr};
 
         void updateLabel(const std::string &label);
         void updateSelected(bool selected);

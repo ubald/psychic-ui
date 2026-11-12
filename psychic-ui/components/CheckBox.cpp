@@ -12,10 +12,10 @@ namespace psychic_ui {
         _label = label;
 
         if (onChangeCallback) {
-            onChange(std::move(onChangeCallback));
+            changed.subscribe(std::move(onChangeCallback));
         }
 
-        onClick.subscribe(
+        clicked.subscribe(
             [this]() {
                 if (_enabled) {
                     updateChecked(!_checked);
@@ -43,7 +43,7 @@ namespace psychic_ui {
         if (_checked != checked) {
             _checked = checked;
             invalidateStyle();
-            onChange(_checked);
+            changed.emit(_checked);
         }
     }
 

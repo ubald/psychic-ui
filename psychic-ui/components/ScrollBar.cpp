@@ -20,7 +20,7 @@ namespace psychic_ui {
             }
         );
 
-        onMouseScroll(
+        onMouseScrolled(
             [this](const int /*mouseX*/, const int /*mouseY*/, const double scrollX, const double scrollY) {
                 if (_direction == ScrollDirection::Vertical) {
                     _viewport->scroll(0, scrollY);
@@ -32,13 +32,13 @@ namespace psychic_ui {
 
         // The viewport may outlive us: these subscriptions end with us
         subscribeTo(
-            viewport.onResized, [this](int /*width*/, int /*height*/) {
+            viewport.resized, [this](int /*width*/, int /*height*/) {
                 updateSkin();
             }
         );
 
         subscribeTo(
-            viewport.onScrolled, [this](int /*scrollX*/, int /*scrollY*/) {
+            viewport.scrolled, [this](int /*scrollX*/, int /*scrollY*/) {
                 updateSkin();
             }
         );

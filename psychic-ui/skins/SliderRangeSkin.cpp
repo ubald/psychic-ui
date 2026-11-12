@@ -11,7 +11,7 @@ namespace psychic_ui {
         onMouseDown(
             [this](const int mouseX, const int mouseY, MouseButton /*button*/, Mod /*modifiers*/) {
                 sendMouseValue(mouseX, mouseY);
-                _onMouseMove = window()->onMouseMove(
+                _onMouseMove = window()->mouseMoved.subscribe(
                     [this](const int mouseX, const int mouseY, int /*buttons*/, Mod /*modifiers*/) {
                         int lx = 0;
                         int ly = 0;
