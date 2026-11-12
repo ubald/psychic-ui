@@ -140,6 +140,22 @@ namespace psychic_ui {
         void calculate();
 
         /**
+         * Line starts of the text broken at the given width, without touching
+         * the cached lines used for drawing (safe to call from a measure function)
+         *
+         * @param width Width at which to break lines
+         * @return Index of the first character of each line, empty if the width is 0 or the text empty
+         */
+        std::vector<unsigned int> lineStartsAt(float width) const;
+
+        /**
+         * Width of the widest line, breaking only at line returns
+         *
+         * @return Width in pixels
+         */
+        float maxContentWidth() const;
+
+        /**
          * Count the number of lines in the TextBox
          *
          * This will not cache the results since it has to be const
@@ -172,6 +188,15 @@ namespace psychic_ui {
          * @return Index of the next line break from start
          */
         unsigned int nextLineBreak(int start) const;
+
+        /**
+         * Get the next line break from the provided start position, breaking at width
+         *
+         * @param start Where to start looking for a line break
+         * @param width Width at which to break lines
+         * @return Index of the next line break from start
+         */
+        unsigned int nextLineBreak(int start, float width) const;
 
         /**
          * Get the caret index from the x, y coordinates.

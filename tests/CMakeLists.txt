@@ -21,9 +21,12 @@ if (PSYCHIC_UI_BUILD_TESTS)
         style/yoga_tests.cpp
         layout/layout_pipeline_tests.cpp
         div/children_tests.cpp
-        keyboard/keycodes.cpp)
+        keyboard/keycodes.cpp
+        text/text_layout_tests.cpp)
 
     target_link_libraries(psychic-ui-tests PRIVATE psychic-ui Catch2::Catch2WithMain)
+    target_compile_definitions(psychic-ui-tests PRIVATE
+        PSYCHIC_UI_TEST_FONT="${PROJECT_SOURCE_DIR}/res/fonts/Ubuntu/Ubuntu-Regular.ttf")
 
     add_test(NAME psychic-ui-tests COMMAND psychic-ui-tests)
 

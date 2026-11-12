@@ -1,0 +1,159 @@
+#include <cmath>
+#include <memory>
+#include <string>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
+#include <SkPaint.h>
+#include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/style/Style.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/components/Text.hpp>
+#include <psychic-ui/components/Label.hpp>
+
+using namespace psychic_ui;
+using Catch::Approx;
+
+namespace {
+
+    const std::string FONT = "Ubuntu Regular";
+    const float       LINE_HEIGHT = 20.0f;
+
+    /**
+     * Root of a headless tree: what Window::drawAll does, without a window or a canvas
+     */
+    class Root : public Div {
+    public:
+        explicit Root(std::shared_ptr<StyleManager> styleManager) {
+            setStyleManager(std::move(styleManager));
+        }
+
+        void layout(float width, float height) {
+            updateStyleRecursive();
+            YGNodeCalculateLayout(_yogaNode, width, height, YGDirectionLTR);
+            layoutUpdated();
+        }
+    };
+
+    std::shared_ptr<StyleManager> makeStyleManager() {
+        auto styleManager = std::make_shared<StyleManager>();
+        styleManager->loadFont(FONT, PSYCHIC_UI_TEST_FONT);
+        return styleManager;
+    }
+
+    template<typename T>
+    std::shared_ptr<T> addText(Root &root, const std::string &text, float size = 14.0f) {
+        auto node = root.add<T>(text);
+        node->style()
+            ->set(fontFamily, FONT)
+            ->set(fontSize, size)
+            ->set(lineHeight, LINE_HEIGHT)
+            ->set(textAntiAlias, true);
+        return node;
+    }
+
+    /**
+     * Width of the widest line, measured with the same paint settings as TextBase
+     */
+    float textWidth(const std::shared_ptr<StyleManager> &styleManager, const std::string &text, float size = 14.0f) {
+        SkPaint paint{};
+        paint.setAntiAlias(true);
+        paint.setLCDRenderText(true);
+        paint.setSubpixelText(true);
+        paint.setTypeface(styleManager->font(FONT));
+        paint.setTextSize(size);
+        float       width = 0.0f;
+        size_t      start = 0;
+        while (start <= text.size()) {
+            size_t end = text.find('\n', start);
+            end = end == std::string::npos ? text.size() : end + 1;
+            width = std::max(width, paint.measureText(text.c_str() + start, end - start));
+            if (end == text.size()) {
+                break;
+            }
+            start = end;
+        }
+        return std::ceil(width);
+    }
+
+}
+
+TEST_CASE("Text and Label are measured to their content", "[text]") {
+    auto styleManager = makeStyleManager();
+    REQUIRE(styleManager->font(FONT));
+
+    Root root{styleManager};
+    root.style()
+        ->set(width, 400.0f)
+        ->set(height, 300.0f);
+
+    const std::string str = "Hello, measured world";
+    const float       expected = textWidth(styleManager, str);
+    REQUIRE(expected > 0);
+
+    SECTION("in a row") {
+        root.style()->set(flexDirection, "row");
+        auto text  = addText<Text>(root, str);
+        auto label = addText<Label>(root, str);
+        root.layout(400, 300);
+
+        REQUIRE(text->getWidth() == Approx(expected).margin(1));
+        REQUIRE(label->getWidth() == Approx(expected).margin(1));
+    }
+
+    SECTION("in a column aligned to the start") {
+        root.style()->set(alignItems, "start");
+        auto text  = addText<Text>(root, str);
+        auto label = addText<Label>(root, str);
+        root.layout(400, 300);
+
+        REQUIRE(text->getWidth() == Approx(expected).margin(1));
+        REQUIRE(text->getHeight() == LINE_HEIGHT);
+        REQUIRE(label->getWidth() == Approx(expected).margin(1));
+        REQUIRE(label->getHeight() == LINE_HEIGHT);
+    }
+
+    SECTION("in a stretched column") {
+        auto text  = addText<Text>(root, str);
+        auto label = addText<Label>(root, str);
+        root.layout(400, 300);
+
+        REQUIRE(text->getWidth() == 400);
+        REQUIRE(text->getHeight() == LINE_HEIGHT);
+        REQUIRE(label->getWidth() == 400);
+        REQUIRE(label->getHeight() == LINE_HEIGHT);
+    }
+
+    SECTION("empty text still gets a line") {
+        root.style()->set(alignItems, "start");
+        auto text  = addText<Text>(root, "");
+        auto label = addText<Label>(root, "");
+        root.layout(400, 300);
+
+        REQUIRE(text->getWidth() == 0);
+        REQUIRE(text->getHeight() == LINE_HEIGHT);
+        REQUIRE(label->getWidth() == 0);
+        REQUIRE(label->getHeight() == LINE_HEIGHT);
+    }
+
+    SECTION("multiline text is as wide as its widest line") {
+        root.style()->set(alignItems, "start");
+        const std::string lines = "short\na much longer line\nmid line";
+        auto              text  = addText<Text>(root, lines);
+        text->setMultiline(true);
+        root.layout(400, 300);
+
+        REQUIRE(text->getWidth() == Approx(textWidth(styleManager, lines)).margin(1));
+        REQUIRE(text->getHeight() == 3 * LINE_HEIGHT);
+    }
+
+    SECTION("multiline text wraps in a narrow column") {
+        root.style()->set(width, 60.0f);
+        auto text = addText<Text>(root, str);
+        text->setMultiline(true);
+        root.layout(60, 300);
+
+        REQUIRE(text->getWidth() == 60);
+        REQUIRE(text->getHeight() >= 2 * LINE_HEIGHT);
+        REQUIRE(std::fmod(text->getHeight(), LINE_HEIGHT) == 0);
+    }
+}

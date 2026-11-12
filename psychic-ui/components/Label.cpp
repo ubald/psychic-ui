@@ -30,23 +30,9 @@ namespace psychic_ui {
         _yOffset = -metrics.fAscent;
     }
 
-    YGSize Label::measure(float width, YGMeasureMode widthMode, float /*height*/, YGMeasureMode /*heightMode*/) {
-        YGSize size{0.0f, _lineHeight};
-
-        if (_text.empty()) {
-            return size;
-        }
-
-        if (widthMode == YGMeasureModeExactly) {
-            size.width = width;
-        } else {
-            size.width = std::ceil(_textPaint.measureText(_text.c_str(), _text.size()));
-            if (widthMode == YGMeasureModeAtMost) {
-                size.width = std::min(size.width, width);
-            }
-        }
-
-        return size;
+    YGSize Label::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+        float maxContent = std::ceil(_textPaint.measureText(_text.c_str(), _text.size()));
+        return YGSize{fit(maxContent, width, widthMode), fit(_lineHeight, height, heightMode)};
     }
 
     void Label::layoutUpdated() {

@@ -1,5 +1,4 @@
 #include <SkRegion.h>
-#include "psychic-ui/utils/StringUtils.hpp"
 #include "psychic-ui/Window.hpp"
 #include "Text.hpp"
 
@@ -409,34 +408,11 @@ namespace psychic_ui {
     }
 
     YGSize Text::measure(float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
-        YGSize size{0.0f, _lineHeight};
-        if (_text.isEmpty()) {
-            return size;
-        }
-
-        if (widthMode == YGMeasureModeUndefined) {
-            // Don't care about setWidth so measure the longest line
-            std::string str;
-            _text.toUTF8String(str);
-            auto              lines         = string_utils::split(str, '\n');
-            unsigned int      longestIndex  = 0;
-            unsigned long     longestLength = 0;
-            for (unsigned int i             = 0; i < lines.size(); ++i) {
-                unsigned long len = lines[i].size();
-                if (len > longestLength) {
-                    longestIndex  = i;
-                    longestLength = len;
-                }
-            }
-            size.width  = std::ceil(_textPaint.measureText(lines[longestIndex].c_str(), longestLength));
-            size.height = lines.size() * _lineHeight;
-        } else {
-            // The passed sizes consider padding, which is different than when we draw
-            _textBox.setBox(0.0f, 0.0f, width, height);
-            size.height = _textBox.lineCount() * _lineHeight;
-        }
-
-        return size;
+        // Pure: Yoga caches measures and calls this with various constraints,
+        // so the drawing state (_textBox's box and lines) is left untouched.
+        float contentWidth = fit(std::ceil(_textBox.maxContentWidth()), width, widthMode);
+        auto  lines        = std::max<size_t>(1, _textBox.lineStartsAt(contentWidth).size());
+        return YGSize{contentWidth, fit(lines * _lineHeight, height, heightMode)};
     }
 
     void Text::layoutUpdated() {

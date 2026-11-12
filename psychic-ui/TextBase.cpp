@@ -47,6 +47,17 @@ namespace psychic_ui {
         return static_cast<unsigned int>(std::ceil(_lineHeight));
     }
 
+    float TextBase::fit(float content, float available, YGMeasureMode mode) {
+        switch (mode) {
+            case YGMeasureModeExactly:
+                return available;
+            case YGMeasureModeAtMost:
+                return std::min(content, available);
+            default:
+                return content;
+        }
+    }
+
     void TextBase::styleUpdated() {
         Div::styleUpdated();
 

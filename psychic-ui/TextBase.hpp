@@ -28,6 +28,15 @@ namespace psychic_ui {
         float   _lineHeight{0.0f};
         SkPaint _textPaint{};
         void styleUpdated() override;
+
+        /**
+         * Fit a measured content size to what Yoga allows in a measure function
+         * @param content Size the content wants
+         * @param available Size passed by Yoga
+         * @param mode Measure mode passed by Yoga
+         * @return available when Exactly, the smallest of both when AtMost, content otherwise
+         */
+        static float fit(float content, float available, YGMeasureMode mode);
     };
 }
 

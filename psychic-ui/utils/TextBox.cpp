@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 #include <iostream>
+#include <algorithm>
 #include <cmath>
 #include "TextBox.hpp"
 
@@ -67,41 +68,62 @@ namespace psychic_ui {
     }
 
     void TextBox::calculate() {
-        _lineStarts.clear();
+        _lineStarts = lineStartsAt(_box.width());
+    }
 
-        if (_box.width() <= 0 || _text->length() == 0) {
-            return;
+    std::vector<unsigned int> TextBox::lineStartsAt(float width) const {
+        std::vector<unsigned int> lineStarts{};
+
+        if (width <= 0 || _text->length() == 0) {
+            return lineStarts;
         }
 
+        auto         length    = static_cast<unsigned int>(_text->length());
         unsigned int lastBreak = 0;
 
-        _lineStarts.push_back(lastBreak);
+        lineStarts.push_back(lastBreak);
 
         if (_mode == TextBoxMode::OneLine) {
-            return;
+            return lineStarts;
         }
 
         do {
-            unsigned int nextBreak = nextLineBreak(lastBreak);
+            unsigned int nextBreak = nextLineBreak(lastBreak, width);
 
-            //if (nextBreak == 0) {
-            //    // Skia's breakText broke down, we're probably narrower than a character
-            //    // Just assume we're one character wide so that our height is equal to the
-            //    // length of the text
-            //    count = static_cast<unsigned int>(_text->length());
-            //    break;
-            //}
+            // Skia's breakText broke down, we're narrower than a character:
+            // put one character per line instead of looping forever
+            if (nextBreak <= lastBreak) {
+                nextBreak = lastBreak + 1;
+            }
 
             // Index wise there is no difference between the end of string and a
             // final line return, so we have to check unfortunately because we don't
             // want the end of the string being considered as the start of a new line.
-            if (nextBreak < _text->length() || _text->charAt(nextBreak - 1) == '\n') {
-                _lineStarts.push_back(nextBreak);
+            if (nextBreak < length || _text->charAt(nextBreak - 1) == '\n') {
+                lineStarts.push_back(nextBreak);
             }
 
             lastBreak = nextBreak;
 
-        } while (lastBreak < _text->length());
+        } while (lastBreak < length);
+
+        return lineStarts;
+    }
+
+    float TextBox::maxContentWidth() const {
+        int   length   = _text->length();
+        int   start    = 0;
+        float maxWidth = 0.0f;
+        while (start < length) {
+            // A line keeps its line return: nextLineBreak measures it too
+            int end = _mode == TextBoxMode::OneLine ? -1 : _text->indexOf('\n', start);
+            end = end == -1 ? length : end + 1;
+            std::string str{};
+            _text->tempSubStringBetween(start, end).toUTF8String(str);
+            maxWidth = std::max(maxWidth, _paint->measureText(str.c_str(), str.size()));
+            start    = end;
+        }
+        return maxWidth;
     }
 
     //unsigned int TextBox::countLines() const {
@@ -136,6 +158,10 @@ namespace psychic_ui {
     }
 
     unsigned int TextBox::nextLineBreak(int start) const {
+        return nextLineBreak(start, _box.width());
+    }
+
+    unsigned int TextBox::nextLineBreak(int start, float width) const {
         icu::UnicodeString remaining = _text->tempSubStringBetween(start, _text->length());
         std::string        str;
         remaining.toUTF8String(str);
@@ -143,7 +169,7 @@ namespace psychic_ui {
         // Start by finding where the text would cut at max if we were not to use UnicodeString
         // TODO: Fix deprecated thing
         SkFont font    = SkFont::LEGACY_ExtractFromPaint(*_paint);
-        auto   advance = static_cast<unsigned int>(font.breakText(str.c_str(), str.size(), SkTextEncoding::kUTF8, _box.width()));
+        auto   advance = static_cast<unsigned int>(font.breakText(str.c_str(), str.size(), SkTextEncoding::kUTF8, width));
 
         if (_mode == TextBoxMode::OneLine || advance == 0) {
             return advance;
