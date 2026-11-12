@@ -19,6 +19,10 @@ namespace psychic_ui {
             rule->style().clear();
         }
         _rules.clear();
+        _rulesById.clear();
+        _rulesByClass.clear();
+        _rulesByTag.clear();
+        _otherRules.clear();
         _universal = nullptr;
         _valid     = false;
     }
@@ -68,21 +72,60 @@ namespace psychic_ui {
             _rules.push_back(declaration);
             if (selectorString == "*") {
                 _universal = declaration;
+            } else {
+                // Indexed by the rarest thing its rightmost part requires
+                const StyleSelector *selector = declaration->selector();
+                const std::size_t   index     = _rules.size() - 1;
+                if (!selector->id().empty()) {
+                    _rulesById[selector->id()].push_back(index);
+                } else if (!selector->classes().empty()) {
+                    _rulesByClass[selector->classes().front()].push_back(index);
+                } else if (!selector->tag().empty()) {
+                    _rulesByTag[selector->tag()].push_back(index);
+                } else {
+                    _otherRules.push_back(index);
+                }
             }
             _valid = false;
         }
         return declaration->style();
     }
 
-    void StyleManager::match(const Div *component) {
-        _matches.clear();
-        for (std::size_t i = 0; i < _rules.size(); ++i) {
-            if (_rules[i] != _universal && _rules[i]->selector()->matches(component)) {
+    void StyleManager::matchCandidates(const std::vector<std::size_t> &candidates, const Div *component) {
+        for (std::size_t i: candidates) {
+            if (_rules[i]->selector()->matches(component)) {
                 _matches.emplace_back(_rules[i]->weight(), i);
             }
         }
-        // Heaviest overlaid last; on equal weight the rule declared last wins, like CSS's order of appearance
+    }
+
+    void StyleManager::matchCandidates(const std::unordered_map<std::string, std::vector<std::size_t>> &index, const std::string &key, const Div *component) {
+        auto it = index.find(key);
+        if (it != index.cend()) {
+            matchCandidates(it->second, component);
+        }
+    }
+
+    void StyleManager::match(const Div *component) {
+        _matches.clear();
+        // Only the rules that can match: each is indexed once, under what its rightmost part requires
+        matchCandidates(_otherRules, component);
+        if (!_rulesById.empty()) {
+            if (!component->id().empty()) {
+                matchCandidates(_rulesById, component->id(), component);
+            }
+            matchCandidates(_rulesById, component->internalId(), component);
+        }
+        for (const auto &className: component->classNames()) {
+            matchCandidates(_rulesByClass, className, component);
+        }
+        for (const auto &tag: component->tags()) {
+            matchCandidates(_rulesByTag, tag, component);
+        }
+        // Heaviest overlaid last; on equal weight the rule declared last wins, like CSS's order of appearance.
+        // (weight, declaration index) pairs are unique once the duplicates (a tag set twice) are dropped.
         std::sort(_matches.begin(), _matches.end());
+        _matches.erase(std::unique(_matches.begin(), _matches.end()), _matches.end());
     }
 
     Style StyleManager::computeStyle(const Div *component) {

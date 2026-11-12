@@ -186,19 +186,19 @@ namespace psychic_ui {
         return _depth;
     }
 
-    const std::string StyleSelector::tag() const {
+    const std::string &StyleSelector::tag() const {
         return _tag;
     }
 
-    const std::string StyleSelector::id() const {
+    const std::string &StyleSelector::id() const {
         return _id;
     }
 
-    const std::vector<std::string> StyleSelector::classes() const {
+    const std::vector<std::string> &StyleSelector::classes() const {
         return _classes;
     }
 
-    const std::unordered_set<Pseudo, std::hash<int>> StyleSelector::pseudo() const {
+    const std::unordered_set<Pseudo, std::hash<int>> &StyleSelector::pseudo() const {
         return _pseudo;
     }
 

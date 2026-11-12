@@ -33,10 +33,10 @@ namespace psychic_ui {
 
         bool direct() const;
         int depth() const;
-        const std::string tag() const;
-        const std::string id() const;
-        const std::vector<std::string> classes() const;
-        const std::unordered_set<Pseudo, std::hash<int>> pseudo() const;
+        const std::string &tag() const;
+        const std::string &id() const;
+        const std::vector<std::string> &classes() const;
+        const std::unordered_set<Pseudo, std::hash<int>> &pseudo() const;
         const StyleSelector *next() const;
 
         /**

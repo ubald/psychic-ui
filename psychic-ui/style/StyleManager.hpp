@@ -96,6 +96,15 @@ namespace psychic_ui {
          */
         StyleDeclaration                                                   *_universal{nullptr};
         /**
+         * The rules (indices in _rules) by what their rightmost part requires: an id, else its first class,
+         * else its tag. A Div only needs testing against the rules indexed under its id, classes and tags,
+         * plus those that require none of them (pseudo-classes only).
+         */
+        std::unordered_map<std::string, std::vector<std::size_t>>          _rulesById{};
+        std::unordered_map<std::string, std::vector<std::size_t>>          _rulesByClass{};
+        std::unordered_map<std::string, std::vector<std::size_t>>          _rulesByTag{};
+        std::vector<std::size_t>                                           _otherRules{};
+        /**
          * Weight and index in _rules of the rules matching the Div being computed, kept to reuse its memory
          */
         std::vector<std::pair<int, std::size_t>>                           _matches{};
@@ -107,5 +116,11 @@ namespace psychic_ui {
          * Fill _matches with the rules matching a Div, in the order they apply
          */
         void match(const Div *component);
+
+        /**
+         * Add the candidates of one index bucket that match the Div to _matches
+         */
+        void matchCandidates(const std::vector<std::size_t> &candidates, const Div *component);
+        void matchCandidates(const std::unordered_map<std::string, std::vector<std::size_t>> &index, const std::string &key, const Div *component);
     };
 }

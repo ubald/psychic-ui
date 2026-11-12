@@ -95,3 +95,36 @@ TEST_CASE("resetting the style manager", "[style][cascade]") {
         REQUIRE(styleManager.computeStyle(div.get()).padding() == 1.0f);
     }
 }
+
+TEST_CASE("rules are found whatever their rightmost part requires", "[style][cascade]") {
+    StyleManager styleManager;
+    styleManager.style(":hover").fontSize(1);
+    styleManager.style("div").fontSize(2);
+    styleManager.style(".a").fontSize(3);
+    styleManager.style("div.a.b").fontSize(4);
+    styleManager.style("#named").fontSize(5);
+    styleManager.style(".a:hover").fontSize(6);
+
+    auto div = std::make_shared<Div>();
+    REQUIRE(styleManager.computeStyle(div.get()).fontSize() == 2);
+
+    div->setMouseOver(true);
+    REQUIRE(styleManager.computeStyle(div.get()).fontSize() == 2); // div (10) beats :hover (1)
+
+    div->setClassNames({"A"}); // Class names are case insensitive, like selectors
+    REQUIRE(styleManager.computeStyle(div.get()).fontSize() == 6);
+
+    div->setMouseOver(false);
+    div->addClassName("b");
+    REQUIRE(styleManager.computeStyle(div.get()).fontSize() == 4);
+
+    div->setId("Named");
+    REQUIRE(styleManager.computeStyle(div.get()).fontSize() == 4); // div.a.b (30) beats #named (15)
+
+    auto other = std::make_shared<Div>();
+    other->setId("named");
+    REQUIRE(styleManager.computeStyle(other.get()).fontSize() == 5);
+
+    styleManager.style("#" + other->internalId()).fontSize(7);
+    REQUIRE(styleManager.computeStyle(other.get()).fontSize() == 7); // Declared last
+}

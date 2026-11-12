@@ -376,8 +376,8 @@ namespace psychic_ui {
         const Style &computedStyle() const;
 
         const std::vector<std::string> &tags() const;
-        const std::string internalId() const;
-        const std::string id() const;
+        const std::string &internalId() const;
+        const std::string &id() const;
         Div *setId(std::string id);
         const std::unordered_set<std::string> &classNames() const;
         Div *setClassNames(std::unordered_set<std::string> additionalClassNames);

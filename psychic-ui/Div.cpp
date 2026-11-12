@@ -422,11 +422,11 @@ namespace psychic_ui {
         return _tags;
     }
 
-    const std::string Div::internalId() const {
+    const std::string &Div::internalId() const {
         return _internalId;
     }
 
-    const std::string Div::id() const {
+    const std::string &Div::id() const {
         return _id;
     }
 
@@ -453,7 +453,7 @@ namespace psychic_ui {
                 return c;
             }
         );
-        _classNames = std::move(classNames);
+        _classNames = std::move(lcClassNames);
         invalidateStyle();
         return this;
     }
