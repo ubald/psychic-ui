@@ -1,77 +1,181 @@
 #pragma once
 
+#include <concepts>
 #include <functional>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace psychic_ui {
 
     template<class... T>
     class Signal;
 
+    template<class... T>
+    class Slot;
+
+    namespace detail {
+        /**
+         * What a Signal shares with its slots and with its running emissions.
+         * Slots only hold a weak_ptr to it, so disconnecting after the signal died is a no-op.
+         * An emission holds a shared_ptr to it, so the slots it iterates outlive a handler that destroys the signal.
+         */
+        template<class... T>
+        struct SignalCore {
+            std::vector<std::shared_ptr<Slot<T...>>> slots{};
+            unsigned int                             emitting{0}; // Nested emissions in progress
+            bool                                     alive{true}; // False once the Signal is destroyed
+            bool                                     dirty{false}; // Some slots were disconnected
+
+            /**
+             * Drop the disconnected slots, unless an emission is iterating over them.
+             */
+            void compact() {
+                if (emitting > 0 || !dirty) {
+                    return;
+                }
+                dirty = false;
+                // Build the new list before releasing anything: releasing a callback runs the destructors of what
+                // it captured, which can disconnect other slots of this signal.
+                auto removed = std::exchange(slots, {});
+                slots.reserve(removed.size());
+                for (auto &slot: removed) {
+                    if (slot->_connected) {
+                        slots.push_back(std::move(slot));
+                    }
+                }
+                for (auto &slot: removed) {
+                    if (slot) {
+                        slot->_callback = nullptr; // A handle can outlive the slot; don't let it keep the captures
+                    }
+                }
+            }
+
+            ~SignalCore() {
+                // No emission is running (it would hold us), so no callback is running either
+                auto removed = std::move(slots);
+                for (auto &slot: removed) {
+                    slot->_connected = false;
+                    slot->_callback  = nullptr;
+                }
+            }
+        };
+    }
+
     /**
-     * Base Subscription, just so that we can store it in the Observer
+     * Type-erased slot, so that an Observer can store slots of any signal.
      */
     class SlotBase {
     public:
+        SlotBase() = default;
+        SlotBase(const SlotBase &) = delete;
+        SlotBase &operator=(const SlotBase &) = delete;
+        virtual ~SlotBase() = default;
+
         /**
-         * Disconnects this slot, removing it from the signal
+         * Disconnects this slot from its signal.
+         * Safe to call more than once, from inside the callback, and after the signal was destroyed.
          */
         virtual void disconnect() = 0;
+
+        /**
+         * Whether the callback will still be called when the signal is emitted
+         */
+        virtual bool connected() const = 0;
     };
 
     /**
-     * Subscription for a signal
-     * This is used in the Signal class to keep a list of callbacks to execute
-     * when the signal is emitted and also to hold as a shared_ptr in an Observer
-     * derived class in order to automatically clean subscriptions in scenarios where
-     * the Observer has a shorter life span than the Signal source. When a Signal
-     * source has a shorter life, there is no need to hold a pointer to the slot as
-     * the Signal will be destroyed first, thus destroying the slots and their callbacks.
+     * Subscription to a signal, returned by `Signal::subscribe`.
      *
-     * When keeping a pointer to a slot for manual disconnection, type the Slot template
-     * with the same type parameters as the Signal. For example, a `Signal<float, int>` will
-     * return a `shared_ptr<Slot<float, int>>` when subscribing.
+     * The signal keeps its slots alive, so dropping the returned pointer does not disconnect: keep it to disconnect
+     * manually, or extend from Observer and use `subscribeTo` to disconnect automatically when the observer dies.
+     * When keeping a slot, type it with the same type parameters as the Signal: a `Signal<float, int>` returns a
+     * `std::shared_ptr<Slot<float, int>>`.
      */
     template<class... T>
-    class Slot : public SlotBase {
+    class Slot final : public SlotBase {
     public:
-        /**
-         * Creates a slot from a signal and callback
-         * The pointer to the signal is used in order to be able to disconnect
-         * the slot from its `disconnect` method.
-         *
-         * You should not have to create slots manually, this is called
-         * by the Signal class when subscribing.
-         *
-         * @param signal Signal that this slot is attached to
-         * @param callback Callback to execute when the signal is emited
-         */
-        explicit Slot(Signal<T...> *signal, std::function<void(T...)> callback) :
-            notify(callback),
-            _signal(signal) {}
+        using Callback = std::function<void(const T &...)>;
 
-        /**
-         * Disconnect the slot
-         * This will unsubscribe from the signal, effectively removing this
-         * slot from the vector in the Signal instance.
-         */
+        Slot(std::weak_ptr<detail::SignalCore<T...>> core, Callback callback) :
+            _core(std::move(core)),
+            _callback(std::move(callback)) {}
+
         void disconnect() override {
-            _signal->unsubscribe(this);
-            _signal = nullptr;
+            if (!_connected) {
+                return;
+            }
+            _connected = false;
+            // The callback is released by the signal once no emission runs it: it may be the one calling us
+            if (auto core = _core.lock()) {
+                core->dirty = true;
+                core->compact();
+            }
         }
 
-        /**
-         * Function to ba called when the signal is emitted.
-         * This should not be called manually, it is called by
-         * the Signal class
-         */
-        std::function<void(T...)> notify{nullptr};
+        bool connected() const override {
+            return _connected;
+        }
 
     private:
-        /**
-         * Signal that owns this slot
-         * This pointer is used to allow disconnecting from the slot.
-         */
-        Signal<T...> *_signal;
+        friend class Signal<T...>;
+        friend struct detail::SignalCore<T...>;
+
+        std::weak_ptr<detail::SignalCore<T...>> _core;
+        Callback                                _callback;
+        bool                                    _connected{true};
+    };
+
+    /**
+     * Owning slot handle: disconnects when destroyed or when another slot is assigned to it.
+     * Use it for a subscription you replace or drop, typically to a signal that outlives you:
+     *
+     *     ScopedSlot _onMouseMove;
+     *     _onMouseMove = window()->onMouseMove([this](...) { ... }); // disconnects the previous one first
+     */
+    class ScopedSlot {
+    public:
+        ScopedSlot() = default;
+
+        template<class S>
+        requires std::derived_from<S, SlotBase>
+        ScopedSlot(std::shared_ptr<S> slot) : // NOLINT(google-explicit-constructor): assigned from subscribe()
+            _slot(std::move(slot)) {}
+
+        ScopedSlot(const ScopedSlot &) = delete;
+        ScopedSlot &operator=(const ScopedSlot &) = delete;
+
+        ScopedSlot(ScopedSlot &&other) noexcept :
+            _slot(std::move(other._slot)) {}
+
+        ScopedSlot &operator=(ScopedSlot &&other) noexcept {
+            if (this != &other) {
+                disconnect();
+                _slot = std::move(other._slot);
+            }
+            return *this;
+        }
+
+        ~ScopedSlot() {
+            disconnect();
+        }
+
+        void disconnect() {
+            if (auto slot = std::move(_slot)) {
+                slot->disconnect();
+            }
+        }
+
+        bool connected() const {
+            return _slot && _slot->connected();
+        }
+
+        explicit operator bool() const {
+            return connected();
+        }
+
+    private:
+        std::shared_ptr<SlotBase> _slot{};
     };
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 
-#include <functional>
+#include <memory>
+#include <utility>
 #include <vector>
 #include "Signal.hpp"
 #include "Slot.hpp"
@@ -8,47 +9,48 @@
 namespace psychic_ui {
 
     /**
-     * Used to stop type deduction in observer::subscribeTo's callback
-     * It can be deduced from the signal but was chocking on the callback lambda
-     */
-    template<typename... T>
-    struct Identity {
-        typedef std::function<void(T...)> type;
-    };
-
-    /**
      * Extend from Observer and use `subscribeTo` in order to remove subscriptions automatically.
-     * Useful in cases when the subclass' life is shorter than that of the signal.
+     * Useful in cases when the subclass' life is shorter than that of the signal. When the signal dies first, the
+     * subscription simply ends; disconnecting it later is a no-op.
      */
     class Observer {
     public:
         Observer() = default;
+        Observer(const Observer &) = delete;
+        Observer &operator=(const Observer &) = delete;
 
         ~Observer() {
-            for (auto &slot: slots) {
+            // Disconnecting can release callbacks, whose captures could call back into us: work on a local list
+            auto toDisconnect = std::move(slots);
+            for (auto &slot: toDisconnect) {
                 slot->disconnect();
             }
-            slots.clear();
         }
 
     protected:
         std::vector<std::shared_ptr<SlotBase>> slots{};
 
         /**
-         * Subscribe this observer to a signal
-         * Use this method when you know the the signal will outlive you.
+         * Subscribe this observer to a signal, disconnected when the observer is destroyed
          */
-        template<class... T>
-        std::shared_ptr<Slot<T...>> subscribeTo(Signal<T...> &signal, typename Identity<T...>::type &&callback) {
-            auto slot = signal.subscribe(std::forward<std::function<void(T...)>>(callback));
+        template<class... T, class F>
+        std::shared_ptr<Slot<T...>> subscribeTo(Signal<T...> &signal, F &&callback) {
+            // Forget the slots that ended on their own (signal destroyed, or disconnected directly)
+            std::erase_if(slots, [](const std::shared_ptr<SlotBase> &slot) { return !slot->connected(); });
+            auto slot = signal.subscribe(std::forward<F>(callback));
             slots.push_back(slot);
             return slot;
         }
 
-        template<class... T>
-        void unsubscribeFrom(std::shared_ptr<SlotBase> slot) {
+        /**
+         * Disconnect a slot obtained from `subscribeTo`, ignores null
+         */
+        void unsubscribeFrom(const std::shared_ptr<SlotBase> &slot) {
+            if (!slot) {
+                return;
+            }
             slot->disconnect();
-            slots.erase(std::remove(slots.begin(), slots.end(), slot), slots.end());
+            std::erase(slots, slot);
         }
     };
 

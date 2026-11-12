@@ -395,23 +395,23 @@ namespace psychic_ui {
         bool getMouseDown() const;
         void setMouseDown(bool down); // Mostly for testing
 
-        using MouseButtonSlot = std::shared_ptr<Slot<const int, const int, const MouseButton, const bool, const Mod>>;
-        using MouseMoveSlot = std::shared_ptr<Slot<const int, const int, const int, const Mod>>;
-        using MouseSlot = std::shared_ptr<Slot<const int, const int, const MouseButton, const Mod>>;
+        using MouseButtonSlot = std::shared_ptr<Slot<int, int, MouseButton, bool, Mod>>;
+        using MouseMoveSlot = std::shared_ptr<Slot<int, int, int, Mod>>;
+        using MouseSlot = std::shared_ptr<Slot<int, int, MouseButton, Mod>>;
         using MouseTriggerSlot = std::shared_ptr<Slot<>>;
-        using MouseDoubleClickSlot = std::shared_ptr<Slot<const unsigned int>>;
-        using MouseScrollSlot = std::shared_ptr<Slot<const int, const int, const double, const double>>;
+        using MouseDoubleClickSlot = std::shared_ptr<Slot<unsigned int>>;
+        using MouseScrollSlot = std::shared_ptr<Slot<int, int, double, double>>;
 
-        Signal<const int, const int, const MouseButton, const bool, const Mod> onMouseButton{};
-        Signal<const int, const int, const MouseButton, const Mod>             onMouseDown{};
-        Signal<const int, const int, const MouseButton, const Mod>             onMouseUp{};
-        Signal<const int, const int, const MouseButton, const Mod>             onMouseUpOutside{};
-        Signal<const int, const int, const int, const Mod>                     onMouseMove{};
-        Signal<>                                                               onMouseOver{};
-        Signal<>                                                               onMouseOut{};
-        Signal<const int, const int, const double, const double>               onMouseScroll{};
-        Signal<>                                                               onClick{};
-        Signal<const unsigned int>                                             onDoubleClick{};
+        Signal<int, int, MouseButton, bool, Mod> onMouseButton{};
+        Signal<int, int, MouseButton, Mod>       onMouseDown{};
+        Signal<int, int, MouseButton, Mod>       onMouseUp{};
+        Signal<int, int, MouseButton, Mod>       onMouseUpOutside{};
+        Signal<int, int, int, Mod>               onMouseMove{};
+        Signal<>                                 onMouseOver{};
+        Signal<>                                 onMouseOut{};
+        Signal<int, int, double, double>         onMouseScroll{};
+        Signal<>                                 onClick{};
+        Signal<unsigned int>                     onDoubleClick{};
 
         // endregion
 
@@ -429,16 +429,16 @@ namespace psychic_ui {
         virtual MouseEventStatus doubleClick(int mouseX, int mouseY, const unsigned int clickCount, Mod modifiers);
         virtual MouseEventStatus mouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
 
-        using KeySlot = std::shared_ptr<Slot<const Key, const Mod>>;
-        using CharSlot = std::shared_ptr<Slot<const icu::UnicodeString &>>;
+        using KeySlot = std::shared_ptr<Slot<Key, Mod>>;
+        using CharSlot = std::shared_ptr<Slot<icu::UnicodeString>>;
         using FocusSlot = std::shared_ptr<Slot<>>;
 
-        Signal<const Key, const Mod>  onKeyDown{};
-        Signal<const Key, const Mod>  onKeyRepeat{};
-        Signal<const Key, const Mod>  onKeyUp{};
-        Signal<const icu::UnicodeString &> onCharacter{};
-        Signal<>                      onFocus{};
-        Signal<>                      onBlur{};
+        Signal<Key, Mod>           onKeyDown{};
+        Signal<Key, Mod>           onKeyRepeat{};
+        Signal<Key, Mod>           onKeyUp{};
+        Signal<icu::UnicodeString> onCharacter{};
+        Signal<>                   onFocus{};
+        Signal<>                   onBlur{};
 
         // endregion
 
