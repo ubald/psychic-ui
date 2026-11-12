@@ -3,6 +3,7 @@
 #include <yoga/Yoga.h>
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/components/Box.hpp>
 
 using namespace psychic_ui;
 
@@ -139,6 +140,37 @@ TEST_CASE("only the changed layout properties reach Yoga", "[style][computed][la
         t.layout();
         REQUIRE(YGNodeStyleGetHeight(t.div->_yogaNode).unit == YGUnitAuto);
         REQUIRE(t.div->getHeight() == 0);
+    }
+}
+
+TEST_CASE("gap is Yoga's gap", "[style][computed][layout]") {
+    Tree t;
+    auto &row = t.div->add<HBox>(10);
+    std::vector<Div *> children;
+    for (int i = 0; i < 3; ++i) {
+        children.push_back(&row.add<Div>().width(20).height(20).marginRight(Length{i}));
+    }
+    t.layout();
+
+    SECTION("between children, without touching their margins") {
+        REQUIRE(children[0]->x() == 0);
+        REQUIRE(children[1]->x() == 30);     // 20 + gap
+        REQUIRE(children[2]->x() == 61);     // + margin 1 + gap
+        REQUIRE(children[1]->computedStyle().marginRight() == 1);
+        REQUIRE(children[2]->computedStyle().marginRight() == 2);
+    }
+
+    SECTION("columnGap overrides it between columns") {
+        row.columnGap(4);
+        t.layout();
+        REQUIRE(children[1]->x() == 24);
+    }
+
+    SECTION("rowGap overrides it between wrapped lines") {
+        row.width(50).wrap(Wrap::Wrap).alignContent(Align::Start).rowGap(6);
+        t.layout();
+        REQUIRE(children[1]->y() == 26);     // Wrapped: 20 + rowGap
+        REQUIRE(children[1]->x() == 0);
     }
 }
 

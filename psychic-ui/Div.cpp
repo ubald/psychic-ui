@@ -749,6 +749,19 @@ namespace psychic_ui {
             }
         }
 
+        /**
+         * A gap: unset is undefined, so that the row and column gaps fall back to `gap`
+         */
+        void setGap(YGNodeRef node, const Style &style, Property property, YGGutter gutter, Length value) {
+            if (!style.has(property) || value.isAuto()) {
+                YGNodeStyleSetGap(node, gutter, YGUndefined);
+            } else if (value.isPercent()) {
+                YGNodeStyleSetGapPercent(node, gutter, value.value);
+            } else {
+                YGNodeStyleSetGap(node, gutter, value.value);
+            }
+        }
+
         void setBorder(YGNodeRef node, const Style &style, Property property, YGEdge edge, float value) {
             YGNodeStyleSetBorder(node, edge, style.has(property) ? value : YGUndefined);
         }
@@ -784,6 +797,10 @@ namespace psychic_ui {
         if (has(P::shrink)) { setFloat(n, s, P::shrink, s.shrink(), YGNodeStyleSetFlexShrink); }
         if (has(P::basis)) { setLength(n, s, P::basis, s.basis(), YGNodeStyleSetFlexBasis, YGNodeStyleSetFlexBasisPercent, YGNodeStyleSetFlexBasisAuto); }
         if (has(P::aspectRatio)) { setFloat(n, s, P::aspectRatio, s.aspectRatio(), YGNodeStyleSetAspectRatio); }
+
+        if (has(P::gap)) { setGap(n, s, P::gap, YGGutterAll, s.gap()); }
+        if (has(P::rowGap)) { setGap(n, s, P::rowGap, YGGutterRow, s.rowGap()); }
+        if (has(P::columnGap)) { setGap(n, s, P::columnGap, YGGutterColumn, s.columnGap()); }
 
         // Insets: auto is the same as none
         if (has(P::left)) { setEdge(n, s, P::left, YGEdgeLeft, s.left(), YGNodeStyleSetPosition, YGNodeStyleSetPositionPercent, nullptr); }

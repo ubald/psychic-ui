@@ -65,8 +65,10 @@
     /* Components: the name of the skin to hatch (see StyleManager::registerSkin), slider orientation */ \
     X(skin,                     Atom,          detail::StringArg,  Atom{},                 false, false) \
     X(orientation,              Orientation,   Orientation,        Orientation::Horizontal, false, false) \
-    /* Space between the children of HBox and VBox */ \
-    X(gap,                      Length,        Length,             Length{},               false, false) \
+    /* Space between children: gap sets both, rowGap is between rows (lines), columnGap between columns */ \
+    X(gap,                      Length,        Length,             Length{},               false, true) \
+    X(rowGap,                   Length,        Length,             Length{},               false, true) \
+    X(columnGap,                Length,        Length,             Length{},               false, true) \
     /* Flexbox */ \
     X(direction,                Direction,     Direction,          Direction::Column,      false, true) \
     X(textDirection,            TextDirection, TextDirection,      TextDirection::Inherit, false, true) \

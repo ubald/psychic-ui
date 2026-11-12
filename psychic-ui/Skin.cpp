@@ -17,7 +17,7 @@ namespace psychic_ui {
                 P::fontFamily, P::fontSize, P::letterSpacing, P::lineHeight, P::textAlign, P::textAntiAlias,
                 // Content layout
                 P::textDirection, P::direction, P::justify, P::alignContent, P::alignItems, P::wrap, P::overflow,
-                P::orientation, P::gap,
+                P::orientation, P::gap, P::rowGap, P::columnGap,
                 P::padding, P::paddingHorizontal, P::paddingLeft, P::paddingRight,
                 P::paddingVertical, P::paddingTop, P::paddingBottom,
                 P::border, P::borderHorizontal, P::borderLeft, P::borderRight, P::borderVertical, P::borderTop, P::borderBottom,

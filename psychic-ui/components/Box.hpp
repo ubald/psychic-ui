@@ -4,39 +4,29 @@
 
 namespace psychic_ui {
 
+    /**
+     * A Div preset to lay its children out along one axis, spaced by `gap`.
+     * Nothing more than defaults that stylesheets and setters override:
+     * `add<HBox>(12)` is `add<Div>().row().gap(12)`, with the `HBox` tag for stylesheets.
+     */
     class Box : public Div {
-    public:
-        int getGap() const;
-        void setGap(int gap);
     protected:
-        Box() = default;
-        explicit Box(int gap);
-        int _gap{0};
-        virtual void updateRules() = 0;
-        void styleUpdated() override;
-        void createStyles() override;
+        Box(Direction direction, Length gap);
     };
 
     /**
-     * Helper container for quick & easy horizontal layouts
+     * Children in a row
      */
     class HBox : public Box {
     public:
-        HBox();
-        explicit HBox(int gap);
-    protected:
-        void updateRules() override ;
+        explicit HBox(Length gap = 0);
     };
 
-
     /**
-     * Helper container for quick & easy vertical layouts
+     * Children in a column
      */
     class VBox : public Box {
     public:
-        VBox();
-        explicit VBox(int gap);
-    protected:
-        void updateRules() override;
+        explicit VBox(Length gap = 0);
     };
 }
