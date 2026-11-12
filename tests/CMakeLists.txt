@@ -24,6 +24,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         style/yoga_tests.cpp
         layout/layout_pipeline_tests.cpp
         div/children_tests.cpp
+        div/api_tests.cpp
         backends/system_window_tests.cpp
         text/text_layout_tests.cpp
         signals/signal_tests.cpp

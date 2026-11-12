@@ -20,13 +20,21 @@ namespace psychic_ui {
     class TextArea : public Component<TextAreaSkin> {
     public:
         explicit TextArea(const std::string &text = "");
-        const std::string &getText() const;
-        TextArea *setText(const std::string &text);
+        const std::string &text() const;
+
+        template<class Self>
+        Self &text(this Self &self, const std::string &text) {
+            static_cast<TextArea &>(self).updateText(text);
+            return self;
+        }
+
         std::shared_ptr<Text> textDisplay();
         std::shared_ptr<Scroller> textScroller();
         Signal<std::string> onChange{};
 
     protected:
+        void updateText(const std::string &text);
+
         std::string               _text{};
         std::shared_ptr<Text>     _textDisplay{nullptr};
         std::shared_ptr<Scroller> _textScroller{nullptr};

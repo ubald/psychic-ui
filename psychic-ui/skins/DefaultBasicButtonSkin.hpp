@@ -8,7 +8,7 @@ namespace psychic_ui {
         DefaultBasicButtonSkin();
         void setLabel(const std::string &label) override;
     protected:
-        std::shared_ptr<Label> _label{nullptr};
+        Label *_label{nullptr}; // A child, which we own
     };
 }
 

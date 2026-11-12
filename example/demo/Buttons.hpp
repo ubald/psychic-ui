@@ -12,10 +12,9 @@ namespace psychic_ui {
 
     Buttons::Buttons() : Div() {
         setTag("Buttons");
-        setClassNames({"demo-panel"});
+        classNames({"demo-panel"});
 
-        style()
-            .wrap(Wrap::Wrap)
+        wrap(Wrap::Wrap)
             .direction(Direction::Row)
             .alignItems(Align::Start);
 
@@ -24,37 +23,37 @@ namespace psychic_ui {
 
 
         add<Button>("Push (Disabled)")
-            ->setEnabled(false);
+            .enabled(false);
 
         // Toggle
         add<Button>("Toggle")
-            ->setToggle(true);
+            .toggle(true);
 
         add<Button>("Toggle (Selected)")
-            ->setToggle(true)
-            ->setSelected(true);
+            .toggle(true)
+            .selected(true);
 
         add<Button>("Toggle (Disabled)")
-            ->setToggle(true)
-            ->setEnabled(false);
+            .toggle(true)
+            .enabled(false);
 
         add<Button>("Toggle (Selected, Disabled)")
-            ->setToggle(true)
-            ->setSelected(true)
-            ->setEnabled(false);
+            .toggle(true)
+            .selected(true)
+            .enabled(false);
 
         // CheckBox
         add<CheckBox>("Checkbox");
 
         add<CheckBox>("Checkbox (Disabled)")
-            ->setEnabled(false);
+            .enabled(false);
 
         add<CheckBox>("Checkbox (Checked)")
-            ->setChecked(true);
+            .checked(true);
 
         add<CheckBox>("Checkbox (Checked, Disabled)")
-            ->setChecked(true)
-            ->setEnabled(false);
+            .checked(true)
+            .enabled(false);
 
     }
 

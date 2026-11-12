@@ -16,11 +16,17 @@ namespace psychic_ui {
         using ComponentCallback = std::function<std::shared_ptr<Div>(const T &)>;
 
         TabContainer(const TabContainerData &data, LabelCallback getLabel, ComponentCallback getComponent);
-        TabContainer<T> * select(const T &item);
+        template<class Self>
+        Self &select(this Self &self, const T &item) {
+            static_cast<TabContainer &>(self).updateSelected(item);
+            return self;
+        }
+
     protected:
+        void updateSelected(const T &item);
         void onTabChanged(const T &item);
         ComponentCallback _getTabComponentCallback{nullptr};
-        std::shared_ptr<Tabs<T>> _tabs;
+        Tabs<T>              *_tabs{nullptr}; // A child, which we own
         std::shared_ptr<Div> _panel;
     };
 
@@ -32,7 +38,7 @@ namespace psychic_ui {
         _defaultStyle.overflow(Overflow::Hidden);
 
         // Make the tabs component
-        _tabs = this->add<Tabs<T>>(data, getLabel, [this](const T &data) { onTabChanged(data); });
+        _tabs = &this->template add<Tabs<T>>(data, getLabel, [this](const T &data) { onTabChanged(data); });
     }
 
     template<class T>
@@ -51,10 +57,9 @@ namespace psychic_ui {
     }
 
     template<class T>
-    TabContainer<T> * TabContainer<T>::select(const T &item) {
+    void TabContainer<T>::updateSelected(const T &item) {
         _tabs->select(item);
         onTabChanged(item);
-        return this;
     }
 }
 

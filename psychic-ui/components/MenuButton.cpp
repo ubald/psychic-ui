@@ -21,7 +21,7 @@ namespace psychic_ui {
         return _selected;
     }
 
-    void MenuButton::setSelected(const bool selected) {
+    void MenuButton::updateSelected(const bool selected) {
         if (_selected != selected) {
             _selected = selected;
             invalidateStyle();

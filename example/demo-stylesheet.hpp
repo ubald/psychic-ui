@@ -18,8 +18,7 @@ public:
         manager->style(".demo-panel")
                .padding(24);
 
-        manager
-            ->style("Divs .demo-div")
+        manager->style("Divs .demo-div")
             .margin(12)
             .width(128.0f)
             .height(64.0f)
@@ -35,24 +34,19 @@ public:
         manager->style("Ranges Range")
                .margin(12);
 
-        manager
-            ->style("Colors .swatch")
+        manager->style("Colors .swatch")
             .height(32.0f);
 
-        manager
-            ->style("Colors .swatches")
+        manager->style("Colors .swatches")
             .direction(Direction::Row);
 
-        manager
-            ->style("Colors .color-schemes .title")
+        manager->style("Colors .color-schemes .title")
             .marginTop(12);
 
-        manager
-            ->style("Colors .swatches .swatch")
+        manager->style("Colors .swatches .swatch")
             .grow(1);
 
-        manager
-            ->style("Colors .column Range")
+        manager->style("Colors .column Range")
             .shrink(0);
     }
 };

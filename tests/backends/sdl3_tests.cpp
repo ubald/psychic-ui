@@ -73,34 +73,34 @@ TEST_CASE("SDL3: events for another window are left alone", "[backend][sdl3]") {
 
 TEST_CASE("SDL3: mouse events reach the div under the pointer", "[backend][sdl3]") {
     SDL3Fixture sdl;
-    auto div = sdl.window->appContainer()->add<Div>();
-    div->style().width(100.0f).height(100.0f);
+    auto &div = sdl.window->appContainer().add<Div>();
+    div.width(100.0f).height(100.0f);
     sdl.layout();
 
     int downs  = 0;
     int clicks = 0;
     int downX  = -1;
     int downY  = -1;
-    div->onMouseDown([&](int x, int y, MouseButton button, Mod) {
+    div.onMouseDown([&](int x, int y, MouseButton button, Mod) {
         ++downs;
         downX = x;
         downY = y;
         CHECK(button == MouseButton::LEFT);
     });
-    div->onClick([&]() { ++clicks; });
+    div.onClick([&]() { ++clicks; });
 
     auto motion = sdl.event(SDL_EVENT_MOUSE_MOTION);
     motion.motion.x = 40.5f;
     motion.motion.y = 60.5f;
     CHECK(sdl.adapter->handleEvent(motion));
-    CHECK(div->mouseOver());
+    CHECK(div.mouseOver());
 
     CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, 40.5f, 60.5f));
     CHECK(downs == 1);
     // Float coordinates truncated, without the 2018 backends' (-1, -2) offset, in the div's coordinates
     int divX = 0;
     int divY = 0;
-    div->localToGlobal(divX, divY);
+    div.localToGlobal(divX, divY);
     CHECK(downX == 40 - divX);
     CHECK(downY == 60 - divY);
     CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, 40.5f, 60.5f));
@@ -113,12 +113,12 @@ TEST_CASE("SDL3: mouse events reach the div under the pointer", "[backend][sdl3]
 
 TEST_CASE("SDL3: wheel events scroll at the pointer", "[backend][sdl3]") {
     SDL3Fixture sdl;
-    auto div = sdl.window->appContainer()->add<Div>();
-    div->style().width(100.0f).height(100.0f);
+    auto &div = sdl.window->appContainer().add<Div>();
+    div.width(100.0f).height(100.0f);
     sdl.layout();
 
     double scrolledY = 0;
-    div->onMouseScroll([&](int, int, double, double y) { scrolledY = y; });
+    div.onMouseScroll([&](int, int, double, double y) { scrolledY = y; });
 
     auto wheel = sdl.event(SDL_EVENT_MOUSE_WHEEL);
     wheel.wheel.mouse_x   = 50;
@@ -131,9 +131,9 @@ TEST_CASE("SDL3: wheel events scroll at the pointer", "[backend][sdl3]") {
 
 TEST_CASE("SDL3: keys and text reach the focused div", "[backend][sdl3]") {
     SDL3Fixture sdl;
-    auto div = sdl.window->appContainer()->add<Div>();
+    auto &div = sdl.window->appContainer().add<Div>();
     sdl.layout();
-    sdl.window->requestFocus(div.get());
+    sdl.window->requestFocus(&div);
 
     std::vector<Key>   downs{};
     int                repeats = 0;
@@ -141,10 +141,10 @@ TEST_CASE("SDL3: keys and text reach the focused div", "[backend][sdl3]") {
     Mod                lastMod{};
     icu::UnicodeString typed{};
     int                characters = 0;
-    div->onKeyDown([&](Key key, Mod mod) { downs.push_back(key); lastMod = mod; });
-    div->onKeyRepeat([&](Key, Mod) { ++repeats; });
-    div->onKeyUp([&](Key, Mod) { ++ups; });
-    div->onCharacter([&](const icu::UnicodeString &character) { typed += character; ++characters; });
+    div.onKeyDown([&](Key key, Mod mod) { downs.push_back(key); lastMod = mod; });
+    div.onKeyRepeat([&](Key, Mod) { ++repeats; });
+    div.onKeyUp([&](Key, Mod) { ++ups; });
+    div.onCharacter([&](const icu::UnicodeString &character) { typed += character; ++characters; });
 
     auto key = sdl.event(SDL_EVENT_KEY_DOWN);
     key.key.key = SDLK_A;
@@ -213,12 +213,12 @@ TEST_CASE("SDL3: a close request closes a window that agrees", "[backend][sdl3]"
 
 TEST_CASE("SDL3: hit testing", "[backend][sdl3][drag]") {
     SDL3Fixture sdl(SDL_WINDOW_BORDERLESS | SDL_WINDOW_RESIZABLE);
-    auto titleBar = sdl.window->appContainer()->add<TitleBar>();
+    auto &titleBar = sdl.window->appContainer().add<TitleBar>();
     sdl.layout();
 
     // The title bar's empty part moves the window, its buttons don't
-    CHECK(sdl.adapter->hitTest(700, titleBar->getHeight() / 2) == SDL_HITTEST_DRAGGABLE);
-    const auto close = titleBar->children().front();
+    CHECK(sdl.adapter->hitTest(700, titleBar.getHeight() / 2) == SDL_HITTEST_DRAGGABLE);
+    const auto close = titleBar.children().front();
     int closeX = 0;
     int closeY = 0;
     close->localToGlobal(closeX, closeY, close->getWidth() / 2, close->getHeight() / 2);

@@ -7,17 +7,15 @@ namespace psychic_ui {
         ScrollBarSkin() {
         setTag("DefaultScrollBarSkin");
 
-        _track = add<Div>();
+        _track = &add<Div>();
         _track->addClassName("track")
-              ->style()
               .position(Position::Absolute)
               .width(100_pct)
               .height(100_pct);
 
 
-        _thumb = add<Div>();
+        _thumb = &add<Div>();
         _thumb->addClassName("thumb")
-              ->style()
               .position(Position::Absolute);
 
         _thumb->onMouseDown(
@@ -61,24 +59,20 @@ namespace psychic_ui {
 
     void DefaultScrollBarSkin::styleUpdated() {
         ScrollBarSkin::styleUpdated();
-        if (component() && component()->direction() != _direction) {
-            _direction = component()->direction();
+        if (component() && component()->scrollDirection() != _direction) {
+            _direction = component()->scrollDirection();
             setupDirection();
         }
     }
 
     void DefaultScrollBarSkin::setupDirection() {
-        if (_direction == Vertical) {
-            _thumb
-                ->style()
-                .left(0.f)
+        if (_direction == ScrollDirection::Vertical) {
+            _thumb->left(0.f)
                 .right(0.f)
                 .top(0)
                 .bottom(Auto);
         } else {
-            _thumb
-                ->style()
-                .left(0)
+            _thumb->left(0)
                 .right(Auto)
                 .top(0.f)
                 .bottom(0.f);
@@ -86,14 +80,12 @@ namespace psychic_ui {
     }
 
     void DefaultScrollBarSkin::updateScrollBar(bool enabled, float scrollPosition, float contentRatio) {
-        setEnabled(enabled);
-        if (component()->direction() == Vertical) {
-            _thumb->style()
-                  .top((int) (scrollPosition * (float) (_track->getHeight() - _thumb->getHeight())))
+        this->enabled(enabled);
+        if (component()->scrollDirection() == ScrollDirection::Vertical) {
+            _thumb->top((int) (scrollPosition * (float) (_track->getHeight() - _thumb->getHeight())))
                   .height(Length::percent(contentRatio * 100.0f));
         } else {
-            _thumb->style()
-                  .left((int) (scrollPosition * (float) (_track->getWidth() - _thumb->getWidth())))
+            _thumb->left((int) (scrollPosition * (float) (_track->getWidth() - _thumb->getWidth())))
                   .width(Length::percent(contentRatio * 100.0f));
         }
 

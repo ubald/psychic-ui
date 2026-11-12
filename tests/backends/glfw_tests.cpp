@@ -69,23 +69,23 @@ namespace {
 
 TEST_CASE("GLFW: the adapter chains to the host's callbacks and gives them back", "[backend][glfw]") {
     GLFWHost host;
-    auto div = host.window->appContainer()->add<Div>();
-    div->style().width(100.0f).height(100.0f);
+    auto &div = host.window->appContainer().add<Div>();
+    div.width(100.0f).height(100.0f);
 
     int keys  = 0;
     int downs = 0;
-    div->onKeyDown([&](Key key, Mod mod) {
+    div.onKeyDown([&](Key key, Mod mod) {
         ++keys;
         CHECK(key == Key::A);
         CHECK(mod.ctrl);
     });
-    div->onMouseDown([&](int, int, MouseButton, Mod) { ++downs; });
+    div.onMouseDown([&](int, int, MouseButton, Mod) { ++downs; });
 
     {
         GLFWSystemWindow adapter(host.window, host.glfwWindow);
         CHECK(host.window->windowWidth() == 800);
         host.layout();
-        host.window->requestFocus(div.get());
+        host.window->requestFocus(&div);
 
         CHECK(host.keyCallback() != hostKeyCallback);
         host.keyCallback()(host.glfwWindow, GLFW_KEY_A, 0, GLFW_PRESS, GLFW_MOD_CONTROL);

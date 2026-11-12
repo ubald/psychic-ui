@@ -67,7 +67,7 @@ SCENARIO("styles can be declared and computed") {
         }
 
         WHEN("div has id") {
-            div->setId("myDiv");
+            div->id("myDiv");
 
             THEN("it should retrieve a \"#myDiv\" selector") {
                 auto &style = styleManager->style("#myDiv");
@@ -85,7 +85,7 @@ SCENARIO("styles can be declared and computed") {
         }
 
         WHEN("div has class name") {
-            div->setClassNames({"class"});
+            div->classNames({"class"});
 
             THEN("it should retrieve a \"div\" selector") {
                 auto &style = styleManager->style("div");
@@ -131,7 +131,7 @@ SCENARIO("styles can be declared and computed") {
         }
 
         WHEN("div has multiple class names") {
-            div->setClassNames({"class", "other"});
+            div->classNames({"class", "other"});
 
             THEN("it should retrieve a \"div\" selector") {
                 auto &style = styleManager->style("div");
@@ -251,7 +251,7 @@ SCENARIO("styles can be declared and computed") {
         }
 
         WHEN("parent has a class names") {
-            parent->setClassNames({"class"});
+            parent->classNames({"class"});
 
             THEN("it should retrieve a \"div\" selector") {
                 auto &style = styleManager->style("div");
@@ -318,7 +318,7 @@ SCENARIO("styles can be declared and computed") {
         }
 
         WHEN("child has a class names") {
-            child->setClassNames({"class"});
+            child->classNames({"class"});
 
             THEN("it should retrieve a \"div\" selector") {
                 auto &style = styleManager->style("div");
@@ -385,8 +385,8 @@ SCENARIO("styles can be declared and computed") {
         }
 
         WHEN("both have a class names") {
-            parent->setClassNames({"class"});
-            child->setClassNames({"other"});
+            parent->classNames({"class"});
+            child->classNames({"other"});
 
             THEN("it should retrieve a \"div\" selector") {
                 auto &style = styleManager->style("div");
@@ -470,8 +470,8 @@ SCENARIO("styles can be declared and computed") {
         b->add(c);
 
         WHEN("skipping a node") {
-            a->setClassNames({"first"});
-            c->setClassNames({"last"});
+            a->classNames({"first"});
+            c->classNames({"last"});
 
             THEN("it should retrieve a \".first\" selector") {
                 auto &style = styleManager->style(".first");
@@ -497,9 +497,9 @@ SCENARIO("styles can be declared and computed") {
         }
 
         WHEN("targeting a direct descendant") {
-            a->setClassNames({"a"});
-            b->setClassNames({"b"});
-            c->setClassNames({"c"});
+            a->classNames({"a"});
+            b->classNames({"b"});
+            c->classNames({"c"});
             auto &style = styleManager->style(".a > div");
                 style.width(123);
             a->updateStyleRecursive();
@@ -529,10 +529,10 @@ TEST_CASE("Regressions") {
 
         auto window = std::make_shared<Div>();
         window->setStyleManager(styleManager);
-        window->setClassNames({"window"});
+        window->classNames({"window"});
 
         auto button = std::make_shared<Div>();
-        button->setClassNames({"button"});
+        button->classNames({"button"});
         window->add(button);
 
         auto label = std::make_shared<Div>();
@@ -567,7 +567,7 @@ TEST_CASE("Regressions") {
 
         auto div = std::make_shared<Div>();
         div->setStyleManager(styleManager);
-        div->setClassNames({"test"});
+        div->classNames({"test"});
 
         REQUIRE(styleManager->computeStyle(div.get()).color() == argb(0xFFFF0000));
 

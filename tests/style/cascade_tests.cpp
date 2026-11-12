@@ -9,7 +9,7 @@ using namespace psychic_ui;
 
 TEST_CASE("on equal specificity the rule declared last wins, whatever else is declared", "[style][cascade]") {
     auto div = std::make_shared<Div>();
-    div->setClassNames({"a", "b"});
+    div->classNames({"a", "b"});
 
     for (int extra: {0, 1, 5, 20, 100}) {
         CAPTURE(extra);
@@ -48,7 +48,7 @@ TEST_CASE("on equal specificity the rule declared last wins, whatever else is de
 
 TEST_CASE("a heavier rule wins whatever the declaration order", "[style][cascade]") {
     auto div = std::make_shared<Div>();
-    div->setClassNames({"a", "b"});
+    div->classNames({"a", "b"});
 
     StyleManager styleManager;
     styleManager.style(".a.b").padding(3.0f);
@@ -59,7 +59,7 @@ TEST_CASE("a heavier rule wins whatever the declaration order", "[style][cascade
 
 TEST_CASE("a rule declared again keeps its place", "[style][cascade]") {
     auto div = std::make_shared<Div>();
-    div->setClassNames({"a", "b"});
+    div->classNames({"a", "b"});
 
     StyleManager styleManager;
     styleManager.style(".a").padding(1.0f);
@@ -70,7 +70,7 @@ TEST_CASE("a rule declared again keeps its place", "[style][cascade]") {
 
 TEST_CASE("resetting the style manager", "[style][cascade]") {
     auto div = std::make_shared<Div>();
-    div->setClassNames({"a", "b"});
+    div->classNames({"a", "b"});
 
     StyleManager styleManager;
     Style        &a = styleManager.style(".a");
@@ -111,18 +111,18 @@ TEST_CASE("rules are found whatever their rightmost part requires", "[style][cas
     div->setMouseOver(true);
     REQUIRE(styleManager.computeStyle(div.get()).fontSize() == 2); // div (10) beats :hover (1)
 
-    div->setClassNames({"A"}); // Class names are case insensitive, like selectors
+    div->classNames({"A"}); // Class names are case insensitive, like selectors
     REQUIRE(styleManager.computeStyle(div.get()).fontSize() == 6);
 
     div->setMouseOver(false);
     div->addClassName("b");
     REQUIRE(styleManager.computeStyle(div.get()).fontSize() == 4);
 
-    div->setId("Named");
+    div->id("Named");
     REQUIRE(styleManager.computeStyle(div.get()).fontSize() == 4); // div.a.b (30) beats #named (15)
 
     auto other = std::make_shared<Div>();
-    other->setId("named");
+    other->id("named");
     REQUIRE(styleManager.computeStyle(other.get()).fontSize() == 5);
 
     styleManager.style("#" + other->internalId()).fontSize(7);

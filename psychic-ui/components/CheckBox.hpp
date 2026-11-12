@@ -29,10 +29,20 @@ namespace psychic_ui {
         explicit CheckBox(std::function<void(bool)> onChangeCallback) : CheckBox("", std::move(onChangeCallback)) {}
 
         const std::string &label() const;
-        void setLabel(const std::string &label);
+
+        template<class Self>
+        Self &label(this Self &self, const std::string &label) {
+            static_cast<CheckBox &>(self).updateLabel(label);
+            return self;
+        }
 
         bool checked() const;
-        CheckBox *setChecked(bool checked);
+
+        template<class Self>
+        Self &checked(this Self &self, detail::BoolArg checked) {
+            static_cast<CheckBox &>(self).updateChecked(checked.value);
+            return self;
+        }
 
         bool active() const override;
 
@@ -42,6 +52,8 @@ namespace psychic_ui {
         std::string _label{};
         bool        _checked{false};
 
+        void updateLabel(const std::string &label);
+        void updateChecked(bool checked);
         void skinChanged() override;
     };
 }

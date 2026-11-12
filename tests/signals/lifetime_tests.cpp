@@ -60,6 +60,10 @@ namespace {
         return nullptr;
     }
 
+    std::shared_ptr<Div> findButton(Div &root, const std::string &label) {
+        return findButton(root.shared_from_this(), label);
+    }
+
     struct FakeWindow : Div {
         Signal<> onMenuClosed{};
     };
@@ -76,7 +80,7 @@ namespace {
 TEST_CASE("A div's handler removes the div from its parent", "[signals][lifetime]") {
     // What a menu item does through window()->closeMenu() -> menu->removeAll()
     auto menu   = std::make_shared<Div>();
-    Div  *item  = menu->add<Div>().get(); // Only owner: menu's children
+    Div  *item  = &menu->add<Div>(); // Only owner: menu's children
     int  ran    = 0;
     item->onClick.subscribe([&]() { ++ran; menu->removeAll(); });
     item->onClick.subscribe([&]() { ++ran; }); // Its signal is gone, not called
@@ -87,41 +91,36 @@ TEST_CASE("A div's handler removes the div from its parent", "[signals][lifetime
 
 TEST_CASE("A div clicked through dispatch removes itself", "[signals][lifetime]") {
     auto window = std::make_shared<HeadlessWindow>();
-    auto root   = window->appContainer();
-    auto container = root->add<Div>();
-    container->style().width(100.0f).height(100.0f);
-    auto item = container->add<Div>();
-    item->style().width(100.0f).height(100.0f);
-    int clicked = 0;
-    item->onClick([&, raw = item.get()]() {
+    auto &root  = window->appContainer();
+    // Only owners: their parents
+    auto &item  = root.add<Div>().width(100).height(100).add<Div>().width(100).height(100);
+    int  clicked = 0;
+    item.onClick([&, raw = &item]() {
         ++clicked;
-        root->removeAll(); // Destroys the dispatching div and its parent
+        root.removeAll(); // Destroys the dispatching div and its parent
         REQUIRE(raw->onClick.subscriptionCount() == 1); // Still alive while dispatching
     });
-    std::weak_ptr<Div> weakItem = item;
-    item.reset();
-    container.reset();
+    std::weak_ptr<Div> weakItem = item.weak_from_this();
     window->clickAt(50, 50);
     REQUIRE(clicked == 1);
-    REQUIRE(root->childCount() == 0);
+    REQUIRE(root.childCount() == 0);
     REQUIRE(weakItem.expired());
 }
 
 TEST_CASE("An observer child outlives its parent's signal at teardown", "[signals][lifetime]") {
     // Window's members, onMenuClosed included, die before its children (MenuBar subscribes to onMenuClosed)
     auto window = std::make_shared<FakeWindow>();
-    auto bar    = window->add<FakeMenuBar>();
-    bar->listen(*window);
+    auto &bar   = window->add<FakeMenuBar>();
+    bar.listen(*window);
     window->onMenuClosed();
-    REQUIRE(bar->closed == 1);
-    bar.reset();
+    REQUIRE(bar.closed == 1);
     window.reset();
 }
 
 TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
     auto window = std::make_shared<HeadlessWindow>();
     int  newClicked = 0;
-    window->appContainer()->add<MenuBar>(
+    window->appContainer().add<MenuBar>(
         std::vector<std::shared_ptr<MenuItem>>{
             Menu::item(
                 "File", {
@@ -151,7 +150,7 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
         window->clickAt(x, y);
         REQUIRE(newClicked == 1);
         REQUIRE(weakItem.expired());
-        REQUIRE(window->menuContainer()->childCount() == 0);
+        REQUIRE(window->menuContainer().childCount() == 0);
         REQUIRE_FALSE(std::static_pointer_cast<Button>(file)->selected());
 
         // The focus moved to the removed item: clicking again must not reach it

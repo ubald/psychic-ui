@@ -9,8 +9,8 @@ namespace psychic_ui {
         DefaultScrollBarSkin();
     protected:
         ScrollDirection      _direction{ScrollDirection::Vertical};
-        std::shared_ptr<Div> _track{nullptr};
-        std::shared_ptr<Div> _thumb{nullptr};
+        Div *_track{nullptr}; // A child, which we own
+        Div *_thumb{nullptr}; // A child, which we own
         ScopedSlot           _onMouseMove{}; // On the window, only while dragging
         int                  dragOffset{0};
         void added() override;

@@ -10,8 +10,8 @@ namespace psychic_ui {
     public:
         DefaultMenuButtonSkin();
     protected:
-        std::shared_ptr<Label> label{nullptr};
-        std::shared_ptr<Label> shortcut{nullptr};
+        Label *label{nullptr}; // A child, which we own
+        Label *shortcut{nullptr}; // A child, which we own
 
         void added() override;
     };
@@ -20,7 +20,7 @@ namespace psychic_ui {
     public:
         DefaultSubMenuButtonSkin();
     protected:
-        std::shared_ptr<Shape> shape{nullptr};
+        Shape *shape{nullptr}; // A child, which we own
     };
 }
 

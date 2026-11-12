@@ -13,10 +13,26 @@ namespace psychic_ui {
 
     public:
 
+        /**
+         * The skin drawing this component, hatched from the `skin` style property
+         */
         std::shared_ptr<T> skin() const { return _skin; };
-        Component<T> *setSkin(std::shared_ptr<T> skin);
+
+        // The `skin` style property's setter, which the getter above would hide
+        using Div::skin;
+
+        /**
+         * Replace the skin with one built by hand, until the `skin` style property changes
+         */
+        template<class Self>
+        Self &setSkin(this Self &self, std::shared_ptr<T> skin) {
+            static_cast<Component &>(self).updateSkin(std::move(skin));
+            return self;
+        }
 
     protected:
+        void updateSkin(std::shared_ptr<T> skin);
+
         void draw(SkCanvas */*canvas*/) override {/*Skin Manages drawing*/}
 
         virtual void skinChanged() {}
@@ -42,7 +58,7 @@ namespace psychic_ui {
     }
 
     template<class T>
-    Component<T> *Component<T>::setSkin(std::shared_ptr<T> skin) {
+    void Component<T>::updateSkin(std::shared_ptr<T> skin) {
         if (skin != _skin) {
             if (_skin) {
                 _skin->removedFromComponent();
@@ -57,7 +73,6 @@ namespace psychic_ui {
             }
             skinChanged();
         }
-        return this;
     }
 
     template<class T>
@@ -66,7 +81,7 @@ namespace psychic_ui {
         const Atom &skinName = _computedStyle.skin();
         if (skinName != _skinName) {
             _skinName = skinName;
-            setSkin(std::dynamic_pointer_cast<T>(styleManager()->skin(_skinName.str())));
+            updateSkin(std::dynamic_pointer_cast<T>(styleManager()->skin(_skinName.str())));
         }
     }
 }

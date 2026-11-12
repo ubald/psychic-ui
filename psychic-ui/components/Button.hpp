@@ -25,27 +25,45 @@ namespace psychic_ui {
 
         explicit Button(const std::string &label = "") : Button(label, nullptr) {}
 
-        explicit Button(const ClickCallback &onClick) : Button("", std::move(onClick)) {}
+        explicit Button(ClickCallback onClick) : Button("", std::move(onClick)) {}
 
         const std::string &label() const;
-        void setLabel(const std::string &label);
 
-        bool toggle() const { return _toggle; }
-
-        Button *setToggle(const bool toggle) {
-            _toggle = toggle;
-            return this;
+        template<class Self>
+        Self &label(this Self &self, const std::string &label) {
+            static_cast<Button &>(self).updateLabel(label);
+            return self;
         }
 
+        /**
+         * Whether a click toggles the selection (instead of selecting while pressed)
+         */
+        bool toggle() const { return _toggle; }
+
+        template<class Self>
+        Self &toggle(this Self &self, detail::BoolArg toggle) {
+            static_cast<Button &>(self)._toggle = toggle.value;
+            return self;
+        }
+
+        /**
+         * Whether a toggle button changes its selection itself when clicked
+         */
         bool autoToggle() const { return _autoToggle; }
 
-        Button *setAutoToggle(const bool autoToggle) {
-            _autoToggle = autoToggle;
-            return this;
+        template<class Self>
+        Self &autoToggle(this Self &self, detail::BoolArg autoToggle) {
+            static_cast<Button &>(self)._autoToggle = autoToggle.value;
+            return self;
         }
 
         bool selected() const;
-        Button *setSelected(bool selected);
+
+        template<class Self>
+        Self &selected(this Self &self, detail::BoolArg selected) {
+            static_cast<Button &>(self).updateSelected(selected.value);
+            return self;
+        }
 
         bool active() const override;
 
@@ -61,6 +79,8 @@ namespace psychic_ui {
         bool                      _selected{false};
         std::function<void(bool)> _onChange{nullptr};
 
+        void updateLabel(const std::string &label);
+        void updateSelected(bool selected);
         void skinChanged() override;
     };
 }

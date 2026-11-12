@@ -57,6 +57,6 @@ namespace psychic_ui {
     protected:
         std::shared_ptr<Div> getItemDiv(const std::shared_ptr<MenuItem> &item);
         std::shared_ptr<DataContainer<std::shared_ptr<MenuItem>>> menuContainer{};
-        std::shared_ptr<Menu> subMenu{};
+        Menu *subMenu{nullptr}; // A child, which we own
     };
 }

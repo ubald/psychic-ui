@@ -1,7 +1,9 @@
 #pragma once
 
+#include <concepts>
 #include <iostream>
-
+#include <memory>
+#include <string>
 #include <vector>
 #include <unordered_set>
 #include <yoga/Yoga.h>
@@ -132,36 +134,47 @@ namespace psychic_ui {
         unsigned int childCount() const;
 
         /**
-         * Get the children of this Div
-         * @return Vector of child Divs
+         * The children, in document order. Don't add or remove children while iterating over it.
          */
-        const std::vector<std::shared_ptr<Div>> children() const;
+        const std::vector<std::shared_ptr<Div>> &children() const;
 
         /**
-         * Add a child at index
-         * @param index Index where to add the child
-         * @param child Child to add
-         * @return Pointer to this, used for chaining multiple calls
+         * Construct a child of type T and add it last. The parent owns the child:
+         *
+         *     auto &row = add<Div>().row().gap(12);
+         *     row.add<Button>("Save").onClicked([this] { save(); });
+         *
+         * @return The child, valid while this div holds it
          */
-        std::shared_ptr<Div> add(unsigned int index, std::shared_ptr<Div> child);
+        template<class T, class... Args>
+        requires (std::derived_from<T, Div> && std::constructible_from<T, Args...>)
+        T &add(Args &&... args) {
+            auto child = std::make_shared<T>(std::forward<Args>(args)...);
+            T    &ref  = *child;
+            insertChild(childCount(), std::move(child));
+            return ref;
+        }
 
         /**
-         * Add a child
-         * @param child Child to add
-         * @return Pointer to this, used for chaining multiple calls
+         * Add an existing child at index (in document order)
+         * @return The child
          */
-        std::shared_ptr<Div> add(std::shared_ptr<Div> child);
+        template<class T>
+        requires std::derived_from<T, Div>
+        T &add(unsigned int index, std::shared_ptr<T> child) {
+            T &ref = *child;
+            insertChild(index, std::move(child));
+            return ref;
+        }
 
         /**
-         * Construct a child from type T and add it at the same time
-         * @tparam T Type of the child to add
-         * @tparam Args
-         * @param args Arguments to pass to the child's constructor
-         * @return
+         * Add an existing child last
+         * @return The child
          */
-        template<typename T, typename... Args>
-        std::shared_ptr<T> add(Args &&... args) {
-            return std::static_pointer_cast<T>(add(std::make_shared<T>(std::forward<Args>(args)...)));
+        template<class T>
+        requires std::derived_from<T, Div>
+        T &add(std::shared_ptr<T> child) {
+            return add(childCount(), std::move(child));
         }
 
         /**
@@ -171,10 +184,10 @@ namespace psychic_ui {
         void remove(unsigned int index);
 
         /**
-         * Remove a child by shared pointer
-         * @param child Child to remove
+         * Remove a child, does nothing if it isn't one
          */
-        void remove(std::shared_ptr<Div> child);
+        void remove(const std::shared_ptr<Div> &child);
+        void remove(const Div &child);
 
         /**
          * Remove all children
@@ -200,7 +213,7 @@ namespace psychic_ui {
          * @param child Shared pointer to a child
          * @return Index of the child, -1 if it isn't a child
          */
-        int childIndex(std::shared_ptr<Div> child) const;
+        int childIndex(const std::shared_ptr<Div> &child) const;
 
         /**
          * Get the index of a child by pointer, in document order
@@ -211,46 +224,118 @@ namespace psychic_ui {
 
         // endregion
 
+        // region Style properties
+
+        // One chainable setter per style property, generated from PSYCHIC_UI_STYLE_PROPERTIES (style/Properties.hpp).
+        // They write the inline style, which overrides the stylesheets, and return the most derived type, so that
+        // base and derived setters chain in any order:
+        //
+        //     add<Button>("Toggle").enabled(false).toggle(true).padding(24).direction(Direction::Row);
+        //
+        // Read values back from computedStyle(), as of the last style pass.
+        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout) \
+            template<class Self> \
+            Self &name(this Self &self, Argument value) { \
+                static_cast<Div &>(self)._inlineStyle.name(value); \
+                return self; \
+            }
+        PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
+        #undef PSYCHIC_UI_X
+
+        /**
+         * Lay the children out in a row, shortcut for `direction(Direction::Row)`
+         */
+        template<class Self>
+        Self &row(this Self &self) { return self.direction(Direction::Row); }
+
+        /**
+         * Lay the children out in a column, shortcut for `direction(Direction::Column)`
+         */
+        template<class Self>
+        Self &column(this Self &self) { return self.direction(Direction::Column); }
+
+        /**
+         * Shortcut for `width(width).height(height)`
+         */
+        template<class Self>
+        Self &size(this Self &self, Length width, Length height) { return self.width(width).height(height); }
+
+        /**
+         * Overlay a whole style onto the inline style, for reusing a set of values:
+         *
+         *     const Style card = Style{}.padding(12).borderRadius(4).backgroundColor(rgb(0x202020));
+         *     add<Div>().style(card).grow(1);
+         */
+        template<class Self>
+        Self &style(this Self &self, const Style &style) {
+            static_cast<Div &>(self)._inlineStyle.overlay(style);
+            return self;
+        }
+
+        /**
+         * The inline style, as set through the setters above
+         */
+        const Style &style() const;
+
+        /**
+         * The computed style: what the stylesheets, the parent and the inline and default styles give this div,
+         * as of the last style pass
+         */
+        const Style &computedStyle() const;
+
+        // endregion
+
         // region Visibility, Focus & State
 
         /**
          * Whether the div is painted and hit, from its computed `visible` style. Hidden divs are still laid out.
          */
-        bool getVisible() const;
+        bool visible() const;
+
+        bool enabled() const;
 
         /**
-         * Shortcut for the inline style's `visible`
+         * Enable or disable the div (`:disabled` in stylesheets). Subclasses react in `enabledChanged()`.
          */
-        void setVisible(bool value);
-        bool enabled() const;
-        virtual Div *setEnabled(bool enabled);
+        template<class Self>
+        Self &enabled(this Self &self, detail::BoolArg enabled) {
+            static_cast<Div &>(self).updateEnabled(enabled.value);
+            return self;
+        }
+
         virtual bool active() const;
         bool focusEnabled() const;
-        Div *setFocusEnabled(bool focusEnabled);
+
+        /**
+         * Whether the div can take the focus (`:focus` in stylesheets)
+         */
+        template<class Self>
+        Self &focusEnabled(this Self &self, detail::BoolArg focusEnabled) {
+            static_cast<Div &>(self)._focusEnabled = focusEnabled.value;
+            return self;
+        }
+
         bool focused() const;
+
+        /**
+         * Used by the window, which manages the focus path
+         */
         void setFocused(bool focused);
 
         // endregion
 
         // region Position & Dimensions
 
-        // The setters are shortcuts that write the inline style (`left`, `top`, `width`, `height`), which goes
-        // through the computed style like any other style value: it is the only input of the layout.
-        // The getters read the layout's output, so they are only up to date after the window's layout pass.
-        // Use `style()` for the other properties (right, bottom, percents, min/max).
+        // The setters are style properties (`left`, `top`, `width`, `height`, ...), which go through the computed
+        // style like any other: it is the only input of the layout. The getters below read the layout's output,
+        // so they are only up to date after the window's layout pass.
 
         void localToGlobal(int &gx, int &gy, int x = 0, int y = 0) const;
         void globalToLocal(int &lx, int &ly, int x = 0, int y = 0) const;
-        void setPosition(int x, int y);
         int x() const;
-        void setX(int x);
         int y() const;
-        void setY(int y);
-        void setSize(int width, int height);
         int getWidth() const;
-        void setWidth(int width);
         int getHeight() const;
-        void setHeight(int height);
 
         // endregion
 
@@ -288,24 +373,20 @@ namespace psychic_ui {
             return _scrollX;
         }
 
-        Div *setScrollX(const int &scrollX) {
-            if (scrollX != _scrollX) {
-                _scrollX = scrollX;
-                onScrolled(_scrollX, _scrollY);
-            }
-            return this;
+        template<class Self>
+        Self &scrollX(this Self &self, int scrollX) {
+            static_cast<Div &>(self).scrollTo(scrollX, static_cast<Div &>(self)._scrollY);
+            return self;
         }
 
         int scrollY() const {
             return _scrollY;
         }
 
-        Div *setScrollY(const int &scrollY) {
-            if (scrollY != _scrollY) {
-                _scrollY = scrollY;
-                onScrolled(_scrollX, _scrollY);
-            }
-            return this;
+        template<class Self>
+        Self &scrollY(this Self &self, int scrollY) {
+            static_cast<Div &>(self).scrollTo(static_cast<Div &>(self)._scrollX, scrollY);
+            return self;
         }
 
         void scroll(double scrollX, double scrollY);
@@ -325,14 +406,6 @@ namespace psychic_ui {
         // endregion
 
         // region Style
-
-        /**
-         * The inline style, which overrides the stylesheets: `div->style().padding(24)`.
-         * Changing it invalidates the div's style.
-         */
-        Style &style();
-
-        const Style &style() const;
 
         /**
          * Get the current style manager
@@ -369,24 +442,48 @@ namespace psychic_ui {
          */
         bool styleDirty() const;
 
-        /**
-         * The computed style: what the stylesheets, the parent and the inline and default styles give this div,
-         * as of the last style pass
-         */
-        const Style &computedStyle() const;
-
         const std::vector<std::string> &tags() const;
         const std::string &internalId() const;
         const std::string &id() const;
-        Div *setId(std::string id);
+
+        /**
+         * Set the id, matched by `#id` selectors (case insensitive)
+         */
+        template<class Self>
+        Self &id(this Self &self, std::string id) {
+            static_cast<Div &>(self).updateId(std::move(id));
+            return self;
+        }
+
         const std::unordered_set<std::string> &classNames() const;
-        Div *setClassNames(std::unordered_set<std::string> additionalClassNames);
-        Div *addClassName(std::string className);
-        Div *removeClassName(std::string className);
+
+        /**
+         * Replace the class names, matched by `.class` selectors (case insensitive)
+         */
+        template<class Self>
+        Self &classNames(this Self &self, std::unordered_set<std::string> classNames) {
+            static_cast<Div &>(self).updateClassNames(std::move(classNames));
+            return self;
+        }
+
+        template<class Self>
+        Self &addClassName(this Self &self, std::string className) {
+            static_cast<Div &>(self).updateClassName(std::move(className), true);
+            return self;
+        }
+
+        template<class Self>
+        Self &removeClassName(this Self &self, std::string className) {
+            static_cast<Div &>(self).updateClassName(std::move(className), false);
+            return self;
+        }
+
         /**
          * The properties this div takes from its parent's computed style when no rule sets them
          */
         virtual const PropertyMask &inheritedProperties() const;
+
+        // endregion
 
         // endregion
 
@@ -399,9 +496,26 @@ namespace psychic_ui {
         // region Mouse
 
         bool mouseChildren() const;
-        Div *setMouseChildren(bool mouseChildren);
+
+        /**
+         * Whether the children get mouse events (this div still does)
+         */
+        template<class Self>
+        Self &mouseChildren(this Self &self, detail::BoolArg mouseChildren) {
+            static_cast<Div &>(self)._mouseChildren = mouseChildren.value;
+            return self;
+        }
+
         bool mouseEnabled() const;
-        Div *setMouseEnabled(bool mouseEnabled);
+
+        /**
+         * Whether this div gets mouse events; they pass through it when not (see mouseChildren for its children)
+         */
+        template<class Self>
+        Self &mouseEnabled(this Self &self, detail::BoolArg mouseEnabled) {
+            static_cast<Div &>(self)._mouseEnabled = mouseEnabled.value;
+            return self;
+        }
         bool mouseOver() const;
         void setMouseOver(bool over); // Mostly for testing
         bool getMouseDown() const;
@@ -500,6 +614,26 @@ namespace psychic_ui {
          */
         void invalidateEndChildrenStyle();
 
+        /**
+         * Insert a child in both the children and the Yoga node, then parent it (which styles it)
+         */
+        void insertChild(unsigned int index, std::shared_ptr<Div> child);
+
+        // region Implementation of the chainable setters
+
+        void updateEnabled(bool enabled);
+        void updateId(std::string id);
+        void updateClassNames(std::unordered_set<std::string> classNames);
+        void updateClassName(std::string className, bool present);
+        void scrollTo(int scrollX, int scrollY);
+
+        /**
+         * Called when `enabled(bool)` changes the enabled state
+         */
+        virtual void enabledChanged() {}
+
+        // endregion
+
         int                               _depth{0};
         Div                               *_parent{nullptr};
         /**
@@ -517,7 +651,7 @@ namespace psychic_ui {
          * it will stay local for the time being, until a better technique is implemented.
          * @param tag
          */
-        Div *setTag(std::string tag);
+        void setTag(std::string tag);
 
         /**
          * Chain of tags from the inheritance chain

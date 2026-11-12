@@ -11,8 +11,8 @@ namespace psychic_ui {
 
         _focusEnabled = true;
 
-        _textDisplay->setEditable(true);
-        _textDisplay->setMultiline(false);
+        _textDisplay->editable(true);
+        _textDisplay->multiline(false);
 
         _textDisplay->onChange(
             [this](std::string txt) {
@@ -26,16 +26,15 @@ namespace psychic_ui {
         return _textDisplay;
     };
 
-    const std::string &TextInput::getText() const {
+    const std::string &TextInput::text() const {
         return _text;
     }
 
-    TextInput *TextInput::setText(const std::string &text) {
+    void TextInput::updateText(const std::string &text) {
         if (_text != text) {
             _text = text;
-            _textDisplay->setText(_text);
+            _textDisplay->text(_text);
         }
-        return this;
     }
 
 }

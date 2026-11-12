@@ -38,20 +38,19 @@ namespace psychic_ui {
             subMenuButton->onMouseOver(
                 [this, sub, button = subMenuButton.get()]() {
                     if (subMenu) {
-                        remove(subMenu);
+                        remove(*subMenu);
                     }
                     int x, y;
                     button->localToGlobal(x, y, button->getWidth());
                     int lx, ly;
                     globalToLocal(lx, ly, x, y);
-                    subMenu = add<Menu>(sub->items);
-                    subMenu->style()
-                           .left(lx)
-                           .top(ly);
+                    subMenu = &add<Menu>(sub->items)
+                        .left(lx)
+                        .top(ly);
                     for (auto &child: menuContainer->children()) {
                         auto menuButton = std::dynamic_pointer_cast<MenuButton>(child);
                         if (menuButton) {
-                            menuButton->setSelected(menuButton->menuItem() == sub.get());
+                            menuButton->selected(menuButton->menuItem() == sub.get());
                         }
                     }
                 }

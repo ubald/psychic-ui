@@ -15,11 +15,32 @@ namespace psychic_ui {
     class TextBase : public Div {
     public:
         TextBase();
-        virtual TextBase *setText(const std::string &text) = 0;
+
+        /**
+         * Set the text (subclasses implement `updateText`)
+         */
+        template<class Self>
+        Self &text(this Self &self, const std::string &text) {
+            static_cast<TextBase &>(self).updateText(text);
+            return self;
+        }
+
         bool lcdRender() const;
-        TextBase *setLcdRender(bool lcdRender);
+
+        template<class Self>
+        Self &lcdRender(this Self &self, detail::BoolArg lcdRender) {
+            static_cast<TextBase &>(self).updateTextFlags(lcdRender.value, static_cast<TextBase &>(self)._subPixelText);
+            return self;
+        }
+
         bool subPixelText() const;
-        TextBase *setSubPixelText(bool subPixelText);
+
+        template<class Self>
+        Self &subPixelText(this Self &self, detail::BoolArg subPixelText) {
+            static_cast<TextBase &>(self).updateTextFlags(static_cast<TextBase &>(self)._lcdRender, subPixelText.value);
+            return self;
+        }
+
         unsigned int getLineHeight() const;
 
     protected:
@@ -29,6 +50,8 @@ namespace psychic_ui {
         float   _lineHeight{0.0f};
         SkPaint _textPaint{};
         void styleUpdated() override;
+        virtual void updateText(const std::string &text) = 0;
+        void updateTextFlags(bool lcdRender, bool subPixelText);
 
         /**
          * Fit a measured content size to what Yoga allows in a measure function

@@ -8,21 +8,21 @@ namespace psychic_ui {
         MenuButtonSkin() {
         setTag("DefaultMenuButtonSkin");
 
-        label = add<Label>();
+        label = &add<Label>();
         label->addClassName("label");
-        shortcut = add<Label>();
+        shortcut = &add<Label>();
         shortcut->addClassName("shortcut");
     }
 
     void DefaultMenuButtonSkin::added() {
-        label->setText(component()->menuItem()->label);
-        shortcut->setText(component()->menuItem()->shortcut);
+        label->text(component()->menuItem()->label);
+        shortcut->text(component()->menuItem()->shortcut);
     }
 
     DefaultSubMenuButtonSkin::DefaultSubMenuButtonSkin() :
         DefaultMenuButtonSkin() {
 
-        shape = add<Shape>(
+        shape = &add<Shape>(
             [](Shape *shape, SkCanvas *canvas) {
                 SkPaint paint;
                 paint.setAntiAlias(true);

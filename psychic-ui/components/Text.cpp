@@ -10,7 +10,7 @@ namespace psychic_ui {
         _textBox.setPaint(_textPaint);
         _textBox.setMode(_multiline ? TextBoxMode::LineBreak : TextBoxMode::OneLine);
 
-        setText(text);
+        updateText(text);
 
         if (_selectable) {
             subscribeToSelection();
@@ -27,21 +27,20 @@ namespace psychic_ui {
         return str;
     }
 
-    Text *Text::setText(const std::string &text) {
+    void Text::updateText(const std::string &text) {
         _text = icu::UnicodeString::fromUTF8(text);
         _textBox.setText(_text);
         _caret       = 0;
         _selectBegin = 0;
         _selectEnd   = 0;
         invalidate();
-        return this;
     }
 
     bool Text::selectable() const {
         return _selectable;
     }
 
-    Text *Text::setSelectable(const bool selectable) {
+    void Text::updateSelectable(const bool selectable) {
         if (_selectable != selectable) {
             if (_selectable) {
                 unsubscribeFromSelection();
@@ -51,14 +50,13 @@ namespace psychic_ui {
                 subscribeToSelection();
             }
         }
-        return this;
     }
 
     bool Text::editable() const {
         return _editable;
     }
 
-    Text *Text::setEditable(const bool editable) {
+    void Text::updateEditable(const bool editable) {
         if (_editable != editable) {
             if (_editable) {
                 unsubscribeFromEdition();
@@ -68,27 +66,25 @@ namespace psychic_ui {
                 subscribeToEdition();
             }
         }
-        return this;
     }
 
     bool Text::multiline() const {
         return _multiline;
     }
 
-    Text *Text::setMultiline(const bool multiline) {
+    void Text::updateMultiline(const bool multiline) {
         if (_multiline != multiline) {
             _multiline = multiline;
             _textBox.setMode(_multiline ? TextBoxMode::LineBreak : TextBoxMode::OneLine);
             invalidate();
         }
-        return this;
     }
 
-    std::pair<unsigned int, unsigned int> Text::getSelection() const {
+    std::pair<unsigned int, unsigned int> Text::selection() const {
         return std::make_pair(_selectBegin, _selectEnd);
     };
 
-    Text *Text::setSelection(unsigned int selectionBegin, unsigned int selectionEnd) {
+    void Text::updateSelection(unsigned int selectionBegin, unsigned int selectionEnd) {
         _selectBegin = std::min(selectionBegin, static_cast<unsigned int>(_text.length()));
         _selectEnd   = std::min(selectionEnd, static_cast<unsigned int>(_text.length()));
         if (_selectBegin > _selectEnd) {
@@ -98,14 +94,13 @@ namespace psychic_ui {
         onCaret(_selectEnd);
         onSelection(_selectBegin, _selectEnd);
 
-        return this;
     }
 
-    unsigned int Text::getCaret() const {
+    unsigned int Text::caret() const {
         return _caret;
     };
 
-    Text *Text::setCaret(unsigned int caret, bool saveX) {
+    void Text::moveCaret(unsigned int caret, bool saveX) {
         _caret       = std::min(caret, static_cast<unsigned int>(_text.length()));
         _selectBegin = _caret;
         _selectEnd   = _caret;
@@ -119,7 +114,6 @@ namespace psychic_ui {
             // otherwise the caret position won't be correct.
             _pendingCaretSignal = true;
         }
-        return this;
     }
 
     unsigned int Text::getCaretLine() const {
@@ -134,7 +128,7 @@ namespace psychic_ui {
         _onMouseDown = onMouseDown(
             [this](const int mouseX, const int mouseY, const int /*button*/, const Mod /*modifiers*/) {
                 unsigned int initialBegin = _textBox.indexFromPos(mouseX, mouseY);
-                setCaret(initialBegin);
+                moveCaret(initialBegin);
                 _onMouseMove = window()->onMouseMove(
                     [this, initialBegin](const int mouseX, const int mouseY, int /*button*/, Mod /*modifiers*/) {
                         int lx = 0;
@@ -248,7 +242,7 @@ namespace psychic_ui {
 
     void Text::textEdited(unsigned int caret) {
         textChanged(); // Before setCaret so that `onCaret` has access to computed lines
-        setCaret(caret);
+        moveCaret(caret);
     }
 
     void Text::handleKey(Key key, Mod mod) {
@@ -295,17 +289,17 @@ namespace psychic_ui {
 
             case Key::HOME:
                 if (mod.ctrl) {
-                    setCaret(0);
+                    moveCaret(0);
                 } else {
-                    setCaret(_textBox.lineStart(_textBox.lineFromIndex(_caret)));
+                    moveCaret(_textBox.lineStart(_textBox.lineFromIndex(_caret)));
                 }
                 break;
 
             case Key::END:
                 if (mod.ctrl) {
-                    setCaret(static_cast<unsigned int>(_text.length()));
+                    moveCaret(static_cast<unsigned int>(_text.length()));
                 } else {
-                    setCaret(_textBox.lineEnd(_textBox.lineFromIndex(_caret)));
+                    moveCaret(_textBox.lineEnd(_textBox.lineFromIndex(_caret)));
                 }
                 break;
 
@@ -313,11 +307,11 @@ namespace psychic_ui {
                 auto pos = _textBox.posFromIndex(_caret);
                 if (pos.first == 0) {
                     // On the first line, so reach beginning of line
-                    setCaret(0);
+                    moveCaret(0);
                 } else {
                     // Otherwise go one line up
                     auto index = _textBox.indexFromPos(_targetXPos, static_cast<unsigned int>((pos.first - 1) * _lineHeight));
-                    setCaret(index, false);
+                    moveCaret(index, false);
                 }
                 break;
             }
@@ -326,11 +320,11 @@ namespace psychic_ui {
                 auto pos = _textBox.posFromIndex(_caret);
                 if (pos.first == _textBox.lineCount() - 1) {
                     // On the last line, so reach end of line
-                    setCaret(static_cast<unsigned int>(_text.length()));
+                    moveCaret(static_cast<unsigned int>(_text.length()));
                 } else {
                     // Otherwise go one line down
                     auto index = _textBox.indexFromPos(_targetXPos, static_cast<unsigned int>((pos.first + 1) * _lineHeight));
-                    setCaret(index, false);
+                    moveCaret(index, false);
                 }
                 break;
             }
@@ -338,9 +332,9 @@ namespace psychic_ui {
             case Key::LEFT:
                 if (_caret > 0) {
                     if (mod.ctrl) {
-                        setCaret(_textBox.previousWordBoundary(_caret));
+                        moveCaret(_textBox.previousWordBoundary(_caret));
                     } else {
-                        setCaret(--_caret);
+                        moveCaret(--_caret);
                     }
                 }
                 break;
@@ -348,9 +342,9 @@ namespace psychic_ui {
             case Key::RIGHT:
                 if (_caret < _text.length()) {
                     if (mod.ctrl) {
-                        setCaret(_textBox.nextWordBoundary(_caret));
+                        moveCaret(_textBox.nextWordBoundary(_caret));
                     } else {
-                        setCaret(++_caret);
+                        moveCaret(++_caret);
                     }
                 }
                 break;

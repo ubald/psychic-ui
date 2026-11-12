@@ -154,30 +154,29 @@ namespace psychic_ui {
         return (unsigned int) _children.size();
     }
 
-    const std::vector<std::shared_ptr<Div>> Div::children() const {
+    const std::vector<std::shared_ptr<Div>> &Div::children() const {
         return _children;
     }
 
-    std::shared_ptr<Div> Div::add(unsigned int index, std::shared_ptr<Div> child) {
+    void Div::insertChild(unsigned int index, std::shared_ptr<Div> child) {
         assert(child != nullptr);
         assert(index <= childCount());
         // The current first/last children may lose their :first-child/:last-child state
         invalidateEndChildrenStyle();
         // Insert before setting the parent so that the child's first style pass sees its index
-        _children.insert(_children.cbegin() + index, child);
-        YGNodeInsertChild(_yogaNode, child->_yogaNode, index);
-        child->setParent(this);
-        return child;
+        Div *added = child.get();
+        _children.insert(_children.cbegin() + index, std::move(child));
+        YGNodeInsertChild(_yogaNode, added->_yogaNode, index);
+        added->setParent(this);
     }
 
-    std::shared_ptr<Div> Div::add(std::shared_ptr<Div> child) {
+    void Div::remove(const std::shared_ptr<Div> &child) {
         assert(child != nullptr);
-        return add(childCount(), child);
+        remove(*child);
     }
 
-    void Div::remove(const std::shared_ptr<Div> child) {
-        assert(child != nullptr);
-        int index = childIndex(child);
+    void Div::remove(const Div &child) {
+        int index = childIndex(&child);
         if (index >= 0) {
             remove((unsigned int) index);
         }
@@ -205,7 +204,7 @@ namespace psychic_ui {
         }
     }
 
-    int Div::childIndex(const std::shared_ptr<Div> child) const {
+    int Div::childIndex(const std::shared_ptr<Div> &child) const {
         assert(child != nullptr);
         return childIndex(child.get());
     }
@@ -247,24 +246,20 @@ namespace psychic_ui {
 
     // region State
 
-    bool Div::getVisible() const {
+    bool Div::visible() const {
         return _visible;
-    }
-
-    void Div::setVisible(bool value) {
-        _inlineStyle.visible(value);
     }
 
     bool Div::enabled() const {
         return _enabled;
     }
 
-    Div *Div::setEnabled(bool enabled) {
+    void Div::updateEnabled(bool enabled) {
         if (_enabled != enabled) {
             _enabled = enabled;
             invalidateStyle();
+            enabledChanged();
         }
-        return this;
     }
 
     bool Div::active() const {
@@ -277,11 +272,6 @@ namespace psychic_ui {
 
     bool Div::focusEnabled() const {
         return _focusEnabled;
-    }
-
-    Div *Div::setFocusEnabled(bool focusEnabled) {
-        _focusEnabled = focusEnabled;
-        return this;
     }
 
     bool Div::focused() const {
@@ -334,48 +324,20 @@ namespace psychic_ui {
         ly = y - gy;
     }
 
-    void Div::setPosition(int x, int y) {
-        _inlineStyle
-            .left(x)
-            .top(y);
-    }
-
     int Div::x() const {
         return _x;
-    }
-
-    void Div::setX(int x) {
-        _inlineStyle.left(x);
     }
 
     int Div::y() const {
         return _y;
     }
 
-    void Div::setY(int y) {
-        _inlineStyle.top(y);
-    }
-
-    void Div::setSize(int width, int height) {
-        _inlineStyle
-            .width(width)
-            .height(height);
-    }
-
     int Div::getWidth() const {
         return _width;
     }
 
-    void Div::setWidth(int width) {
-        _inlineStyle.width(width);
-    }
-
     int Div::getHeight() const {
         return _height;
-    }
-
-    void Div::setHeight(int height) {
-        _inlineStyle.height(height);
     }
 
     // endregion
@@ -399,10 +361,6 @@ namespace psychic_ui {
         invalidateStyle();
     }
 
-    Style &Div::style() {
-        return _inlineStyle;
-    }
-
     const Style &Div::style() const {
         return _inlineStyle;
     }
@@ -411,11 +369,10 @@ namespace psychic_ui {
         return _computedStyle;
     }
 
-    Div *Div::setTag(std::string tag) {
+    void Div::setTag(std::string tag) {
         std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
         _tags.push_back(tag);
         invalidateStyle();
-        return this;
     }
 
     const std::vector<std::string> &Div::tags() const {
@@ -430,50 +387,36 @@ namespace psychic_ui {
         return _id;
     }
 
-    Div *Div::setId(std::string id) {
+    void Div::updateId(std::string id) {
         std::transform(id.begin(), id.end(), id.begin(), ::tolower);
         if (id != _id) {
-            _id = id;
+            _id = std::move(id);
             invalidateStyle();
         }
-        return this;
     }
 
     const std::unordered_set<std::string> &Div::classNames() const {
         return _classNames;
     }
 
-    Div *Div::setClassNames(std::unordered_set<std::string> classNames) {
+    void Div::updateClassNames(std::unordered_set<std::string> classNames) {
         std::unordered_set<std::string> lcClassNames;
-        std::transform(
-            classNames.begin(), classNames.end(), std::inserter(lcClassNames, std::end(lcClassNames)),
-            [](auto className) {
-                std::string c = className;
-                std::transform(c.begin(), c.end(), c.begin(), ::tolower);
-                return c;
-            }
-        );
-        _classNames = std::move(lcClassNames);
-        invalidateStyle();
-        return this;
-    }
-
-    Div *Div::addClassName(std::string className) {
-        std::transform(className.begin(), className.end(), className.begin(), ::tolower);
-        auto res = _classNames.insert(className);
-        if (res.second) {
+        for (std::string className: classNames) {
+            std::transform(className.begin(), className.end(), className.begin(), ::tolower);
+            lcClassNames.insert(std::move(className));
+        }
+        if (lcClassNames != _classNames) {
+            _classNames = std::move(lcClassNames);
             invalidateStyle();
         }
-        return this;
     }
 
-    Div *Div::removeClassName(std::string className) {
+    void Div::updateClassName(std::string className, bool present) {
         std::transform(className.begin(), className.end(), className.begin(), ::tolower);
-        auto res = _classNames.erase(className);
-        if (res) {
+        bool changed = present ? _classNames.insert(std::move(className)).second : _classNames.erase(className) > 0;
+        if (changed) {
             invalidateStyle();
         }
-        return this;
     }
 
     const PropertyMask &Div::inheritedProperties() const {
@@ -1207,18 +1150,8 @@ namespace psychic_ui {
         return _mouseEnabled;
     }
 
-    Div *Div::setMouseEnabled(bool mouseEnabled) {
-        _mouseEnabled = mouseEnabled;
-        return this;
-    }
-
     bool Div::mouseChildren() const {
         return _mouseChildren;
-    }
-
-    Div *Div::setMouseChildren(bool mouseChildren) {
-        _mouseChildren = mouseChildren;
-        return this;
     }
 
     bool Div::mouseOver() const {
@@ -1536,6 +1469,14 @@ namespace psychic_ui {
     // endregion
 
     // region Scroll
+
+    void Div::scrollTo(int scrollX, int scrollY) {
+        if (scrollX != _scrollX || scrollY != _scrollY) {
+            _scrollX = scrollX;
+            _scrollY = scrollY;
+            onScrolled(_scrollX, _scrollY);
+        }
+    }
 
     void Div::scroll(const double scrollX, const double scrollY) {
         bool scrolled = false;

@@ -62,16 +62,56 @@ namespace psychic_ui {
         // region Range & Value
 
         RangeMode mode() const;
-        Range<T> *setMode(RangeMode mode);
-        Range<T> *setRange(T min, T max);
+
+        template<class Self>
+        Self &mode(this Self &self, RangeMode mode) {
+            static_cast<Range &>(self)._mode = mode;
+            return self;
+        }
+
+        /**
+         * Set the minimum and maximum (swapped if reversed), clamping the value
+         */
+        template<class Self>
+        Self &range(this Self &self, T min, T max) {
+            static_cast<Range &>(self).updateRange(min, max);
+            return self;
+        }
+
         const T min() const;
-        Range<T> *setMin(T min);
+
+        template<class Self>
+        Self &min(this Self &self, T min) {
+            static_cast<Range &>(self).updateMin(min);
+            return self;
+        }
+
         const T max() const;
-        Range<T> *setMax(T max);
+
+        template<class Self>
+        Self &max(this Self &self, T max) {
+            static_cast<Range &>(self).updateMax(max);
+            return self;
+        }
+
         const T step() const;
-        Range<T> *setStep(T step);
+
+        template<class Self>
+        Self &step(this Self &self, T step) {
+            static_cast<Range &>(self)._step = step;
+            return self;
+        }
+
         const T value() const;
-        Range<T> *setValue(T value);
+
+        /**
+         * Set the value, clamped to the range
+         */
+        template<class Self>
+        Self &value(this Self &self, T value) {
+            static_cast<Range &>(self).updateValue(value);
+            return self;
+        }
 
         // endregion
 
@@ -89,6 +129,10 @@ namespace psychic_ui {
         T         _step{0};
         T         _value{0};
         void checkRange();
+        void updateRange(T min, T max);
+        void updateMin(T min);
+        void updateMax(T max);
+        void updateValue(T value);
         float getPercentageFor(T value) const;
         float getLinearPercentageFor(T value) const;
         float nearestValidValue(T value, T step) const;
@@ -109,10 +153,10 @@ namespace psychic_ui {
         onMouseScroll.subscribe(
             [this](const int /*mouseX*/, const int /*mouseY*/, const double /*scrollX*/, const double scrollY) {
                 if (std::is_floating_point<T>::value) {
-                    setValue(_value + (scrollY * _step));
+                    updateValue(_value + (scrollY * _step));
                 } else {
                     // Event the smallest movement should yield a result
-                    setValue(_value + (std::ceil(scrollY) * _step));
+                    updateValue(_value + (std::ceil(scrollY) * _step));
                 }
             }
         );
@@ -140,27 +184,20 @@ namespace psychic_ui {
     }
 
     template<class T>
-    Range<T> *Range<T>::setMode(RangeMode mode) {
-        _mode = mode;
-        return this;
-    }
-
-    template<class T>
     void Range<T>::checkRange() {
         if (_min > _max) {
             std::swap(_min, _max);
         } else if (_min == _max) {
             _max += _step;
         }
-        setValue(_value); // Clamp to new limit
+        updateValue(_value); // Clamp to new limit
     }
 
     template<class T>
-    Range<T> *Range<T>::setRange(const T min, const T max) {
+    void Range<T>::updateRange(const T min, const T max) {
         _min = min;
         _max = max;
         checkRange();
-        return this;
     }
 
     template<class T>
@@ -169,10 +206,9 @@ namespace psychic_ui {
     }
 
     template<class T>
-    Range<T> *Range<T>::setMin(const T min) {
+    void Range<T>::updateMin(const T min) {
         _min = std::fmin(min, _max - _step);
-        setValue(_value); // Clamp to new limit
-        return this;
+        updateValue(_value); // Clamp to new limit
     }
 
     template<class T>
@@ -181,10 +217,9 @@ namespace psychic_ui {
     }
 
     template<class T>
-    Range<T> *Range<T>::setMax(const T max) {
+    void Range<T>::updateMax(const T max) {
         _max = std::max(_min + _step, max);
-        setValue(_value); // Clamp to new limit
-        return this;
+        updateValue(_value); // Clamp to new limit
     }
 
     template<class T>
@@ -193,18 +228,12 @@ namespace psychic_ui {
     }
 
     template<class T>
-    Range<T> *Range<T>::setStep(const T step) {
-        _step = step;
-        return this;
-    }
-
-    template<class T>
     const T Range<T>::value() const {
         return _value;
     }
 
     template<class T>
-    Range<T> *Range<T>::setValue(const T value) {
+    void Range<T>::updateValue(const T value) {
         float v = std::max(_min, std::min(value, _max));
         if (v != _value) {
             _value = v;
@@ -213,7 +242,6 @@ namespace psychic_ui {
                 _skin->setValue(getLinearPercentage());
             }
         }
-        return this;
     }
 
     template<class T>
@@ -236,7 +264,7 @@ namespace psychic_ui {
                 break;
         }
         v = (v * (static_cast<float>(_max) - static_cast<float >(_min))) + static_cast<float >(_min);
-        setValue(static_cast<T>(std::is_floating_point<T>::value ? v : std::round(v)));
+        updateValue(static_cast<T>(std::is_floating_point<T>::value ? v : std::round(v)));
     }
 
     template<class T>

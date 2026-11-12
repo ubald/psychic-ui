@@ -41,21 +41,21 @@ TEST_CASE("The clipboard goes through the system window", "[backend][clipboard]"
 TEST_CASE("Drag areas", "[backend][drag]") {
     auto window = std::make_shared<TestWindow>();
     FakeSystemWindow systemWindow(window);
-    auto titleBar = window->appContainer()->add<TitleBar>();
-    auto below    = window->appContainer()->add<Div>();
-    below->style().height(100.0f);
+    auto &titleBar = window->appContainer().add<TitleBar>();
+    auto &below = window->appContainer().add<Div>();
+    below.height(100.0f);
     systemWindow.layout();
 
     // The title bar's empty part, right of its buttons and label
     int barX = 0;
     int barY = 0;
-    titleBar->localToGlobal(barX, barY, titleBar->getWidth() - 10, titleBar->getHeight() / 2);
-    REQUIRE(titleBar->getHeight() > 0);
+    titleBar.localToGlobal(barX, barY, titleBar.getWidth() - 10, titleBar.getHeight() / 2);
+    REQUIRE(titleBar.getHeight() > 0);
     CHECK(window->isDragArea(barX, barY));
 
     // Its buttons still take presses
     std::shared_ptr<Div> close;
-    for (const auto &child : titleBar->children()) {
+    for (const auto &child : titleBar.children()) {
         if (std::dynamic_pointer_cast<Button>(child)) {
             close = child;
             break;
@@ -70,7 +70,7 @@ TEST_CASE("Drag areas", "[backend][drag]") {
     // Outside of it
     int belowX = 0;
     int belowY = 0;
-    below->localToGlobal(belowX, belowY, 10, 10);
+    below.localToGlobal(belowX, belowY, 10, 10);
     CHECK_FALSE(window->isDragArea(belowX, belowY));
 
     SECTION("not while a menu is open") {
@@ -80,8 +80,7 @@ TEST_CASE("Drag areas", "[backend][drag]") {
     }
 
     SECTION("not once the area is gone") {
-        window->appContainer()->remove(titleBar);
-        titleBar.reset();
+        window->appContainer().remove(titleBar);
         systemWindow.layout();
         CHECK_FALSE(window->isDragArea(barX, barY));
     }
@@ -90,29 +89,29 @@ TEST_CASE("Drag areas", "[backend][drag]") {
 TEST_CASE("Text copies, cuts and pastes through the clipboard", "[backend][clipboard][text]") {
     auto window = std::make_shared<TestWindow>();
     FakeSystemWindow systemWindow(window);
-    auto text = window->appContainer()->add<Text>("Hello wörld");
-    text->setEditable(true);
+    auto &text = window->appContainer().add<Text>("Hello wörld");
+    text.editable(true);
     systemWindow.layout();
-    window->requestFocus(text.get());
+    window->requestFocus(&text);
 
     Mod ctrl{};
     ctrl.ctrl = true;
 
-    text->setSelection(6, 11);
+    text.selection(6, 11);
     window->keyDown(Key::C, ctrl);
     CHECK(window->clipboardText() == "wörld");
-    CHECK(text->text() == "Hello wörld");
+    CHECK(text.text() == "Hello wörld");
 
     window->keyDown(Key::X, ctrl);
-    CHECK(text->text() == "Hello ");
+    CHECK(text.text() == "Hello ");
 
     // Single-line text pastes line breaks as spaces
     window->setClipboardText("big\nworld");
     window->keyDown(Key::V, ctrl);
-    CHECK(text->text() == "Hello big world");
-    CHECK(text->getCaret() == 15);
+    CHECK(text.text() == "Hello big world");
+    CHECK(text.caret() == 15);
 
     // Without the modifier, it's just a key
     window->keyDown(Key::V, Mod{});
-    CHECK(text->text() == "Hello big world");
+    CHECK(text.text() == "Hello big world");
 }

@@ -7,8 +7,7 @@ namespace psychic_ui {
         Div::Div() {
         setTag("TextBase");
 
-        _defaultStyle
-            .shrink(0)
+        _defaultStyle.shrink(0)
             .grow(0);
 
         setMeasurable();
@@ -22,24 +21,16 @@ namespace psychic_ui {
         return _lcdRender;
     }
 
-    TextBase *TextBase::setLcdRender(const bool lcdRender) {
-        if (_lcdRender != lcdRender) {
-            _lcdRender = lcdRender;
-            invalidateStyle();
-        }
-        return this;
-    }
-
     bool TextBase::subPixelText() const {
         return _subPixelText;
     }
 
-    TextBase *TextBase::setSubPixelText(const bool subPixelText) {
-        if (_subPixelText != subPixelText) {
+    void TextBase::updateTextFlags(const bool lcdRender, const bool subPixelText) {
+        if (_lcdRender != lcdRender || _subPixelText != subPixelText) {
+            _lcdRender    = lcdRender;
             _subPixelText = subPixelText;
             invalidateStyle();
         }
-        return this;
     }
 
     unsigned int TextBase::getLineHeight() const {

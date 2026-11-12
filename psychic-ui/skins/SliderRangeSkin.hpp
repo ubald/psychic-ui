@@ -21,7 +21,7 @@ namespace psychic_ui {
         void sendMouseValue(int x, int y);
         void draw(SkCanvas *canvas) override;
         float                  _value{0.0f};
-        std::shared_ptr<Label> _valueLabel{nullptr};
+        Label *_valueLabel{nullptr}; // A child, which we own
         ScopedSlot             _onMouseMove{}; // On the window, only while dragging
     };
 }

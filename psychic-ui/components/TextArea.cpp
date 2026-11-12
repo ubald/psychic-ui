@@ -11,10 +11,9 @@ namespace psychic_ui {
 
         _focusEnabled = true;
 
-        _textDisplay->setEditable(true);
-        _textDisplay->setMultiline(true);
-        _textDisplay->style()
-                    .minHeight(100_pct);
+        _textDisplay->editable(true);
+        _textDisplay->multiline(true);
+        _textDisplay->minHeight(100_pct);
 
         _textDisplay->onChange(
             [this](std::string txt) {
@@ -33,10 +32,10 @@ namespace psychic_ui {
 
                 if (yOver > -_textScroller->viewport()->scrollY() + _textScroller->viewport()->getHeight()) {
                     std::cout << -(yOver - _textScroller->viewport()->getHeight()) << std::endl;
-                    _textScroller->viewport()->setScrollY(-(yOver - _textScroller->viewport()->getHeight()));
+                    _textScroller->viewport()->scrollY(-(yOver - _textScroller->viewport()->getHeight()));
                     std::cout << _textScroller->viewport()->scrollY() << " " << _textScroller->viewport()->getHeight() << std::endl;
                 } else if (yUnder < -_textScroller->viewport()->scrollY()) {
-                    _textScroller->viewport()->setScrollY(-(yUnder));
+                    _textScroller->viewport()->scrollY(-(yUnder));
                 }
             }
         );
@@ -50,16 +49,15 @@ namespace psychic_ui {
         return _textScroller;
     };
 
-    const std::string &TextArea::getText() const {
+    const std::string &TextArea::text() const {
         return _text;
     }
 
-    TextArea *TextArea::setText(const std::string &text) {
+    void TextArea::updateText(const std::string &text) {
         if (_text != text) {
             _text = text;
-            _textDisplay->setText(_text);
+            _textDisplay->text(_text);
         }
-        return this;
     }
 
 }

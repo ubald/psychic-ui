@@ -7,30 +7,28 @@ namespace psychic_ui {
     TitleBar::TitleBar() :
         Div() {
         setTag("TitleBar");
-        _defaultStyle
-            .direction(Direction::Row)
+        _defaultStyle.direction(Direction::Row)
             .shrink(0);
 
         add<Button>(
             "Close", [this]() {
                 window()->close();
             }
-        )->addClassName("close");
+        ).addClassName("close");
 
         add<Button>(
             "Minimize", [this]() {
                 window()->toggleMinimized();
             }
-        )->addClassName("minimize");
+        ).addClassName("minimize");
 
         add<Button>(
             "Maximize", [this]() {
                 window()->toggleFullscreen();
             }
-        )->addClassName("maximize");
+        ).addClassName("maximize");
 
-        _label = add<Label>();
-        _label->addClassName("title");
+        _label = &add<Label>().addClassName("title");
 
         onMouseDown(
             [this](int /*mouseX*/, int /*mouseY*/, int /*button*/, Mod /*modifiers*/) {
@@ -50,7 +48,7 @@ namespace psychic_ui {
         // Lets the window manager or compositor move the window from here (on Wayland too)
         window()->addDragArea(shared_from_this());
         // TODO: Allow updates to title
-        _label->setText(window()->getTitle());
+        _label->text(window()->getTitle());
     }
 
 }

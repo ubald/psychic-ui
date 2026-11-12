@@ -10,8 +10,8 @@ namespace psychic_ui {
         DefaultCheckBoxSkin();
         void setLabel(const std::string &label) override;
     protected:
-        std::shared_ptr<Shape> _box{nullptr};
-        std::shared_ptr<Label> _label{nullptr};
+        Shape *_box{nullptr}; // A child, which we own
+        Label *_label{nullptr}; // A child, which we own
         void draw(SkCanvas *canvas) override;
     };
 }

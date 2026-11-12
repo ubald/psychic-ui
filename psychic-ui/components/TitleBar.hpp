@@ -9,7 +9,7 @@ namespace psychic_ui {
     public:
     TitleBar();
     protected:
-        std::shared_ptr<Label> _label{};
+        Label *_label{nullptr}; // A child, which we own
         void addedToRender() override;
     };
 }

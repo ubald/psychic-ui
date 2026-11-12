@@ -12,8 +12,8 @@ namespace psychic_ui {
     protected:
         std::shared_ptr<Div>       _content{nullptr};
         std::shared_ptr<Div>       _viewport{nullptr};
-        std::shared_ptr<ScrollBar> _horizontalScrollBar{nullptr};
-        std::shared_ptr<ScrollBar> _verticalScrollBar{nullptr};
+        ScrollBar            *_horizontalScrollBar{nullptr}; // Children, which we own
+        ScrollBar            *_verticalScrollBar{nullptr};
     };
 }
 

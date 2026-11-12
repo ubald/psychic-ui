@@ -28,20 +28,16 @@ namespace psychic_ui {
             }
         );
 
-        auto label = add<Div>();
-        label
-            ->setMouseEnabled(false)
-            ->setMouseChildren(false)
-            ->style()
+        auto &label = add<Div>()
+            .mouseEnabled(false)
+            .mouseChildren(false)
             .position(Position::Absolute)
             .alignItems(Align::Center)
             .justify(Justify::Center)
             .width(100_pct)
             .height(100_pct);
 
-        _valueLabel = label->add<Label>();
-        _valueLabel
-            ->style();
+        _valueLabel = &label.add<Label>();
     }
 
     void SliderRangeSkin::draw(SkCanvas *canvas) {
@@ -94,11 +90,11 @@ namespace psychic_ui {
         if (_computedStyle.orientation() == Orientation::Vertical) {
             addClassName("vertical");
             removeClassName("horizontal");
-            _valueLabel->setVisible(false);
+            _valueLabel->visible(false);
         } else {
             addClassName("horizontal");
             removeClassName("vertical");
-            _valueLabel->setVisible(true);
+            _valueLabel->visible(true);
         }
     }
 
@@ -111,7 +107,7 @@ namespace psychic_ui {
             addClassName("normal");
             removeClassName("inverted");
         }
-        _valueLabel->setText(component()->valueString());
+        _valueLabel->text(component()->valueString());
     }
 
     void SliderRangeSkin::sendMouseValue(const int x, const int y) {

@@ -40,8 +40,7 @@ namespace psychic_ui {
         Box(gap) {
         setTag("HBox");
 
-        _inlineStyle
-            .direction(Direction::Row);
+        _inlineStyle.direction(Direction::Row);
     }
 
     void HBox::updateRules() {
@@ -63,8 +62,7 @@ namespace psychic_ui {
         Box(gap) {
         setTag("VBox");
 
-        _inlineStyle
-            .direction(Direction::Column);
+        _inlineStyle.direction(Direction::Column);
     }
 
     void VBox::updateRules() {

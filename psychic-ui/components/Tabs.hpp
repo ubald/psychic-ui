@@ -18,12 +18,19 @@ namespace psychic_ui {
 
         Tabs(const TabData &data, LabelCallback getLabel, TabChanged tabChanged = nullptr);
 
-        void select(const T &item);
+        template<class Self>
+        Self &select(this Self &self, const T &item) {
+            static_cast<Tabs &>(self).updateSelected(item);
+            return self;
+        }
+
         std::string label(const T &data) const;
 
-        Tabs<T> *setData(const typename DataContainer<T>::ContainerData &data) override;
+
 
     protected:
+        void updateData(const typename DataContainer<T>::ContainerData &data) override;
+        void updateSelected(const T &item);
         std::shared_ptr<Button> getTab(const T &item);
         void updateSelection();
         LabelCallback         _getLabel{nullptr};
@@ -47,15 +54,15 @@ namespace psychic_ui {
             label(item),
             [&]() {
                 if (!_selected || item != *_selected) {
-                    select(item);
+                    updateSelected(item);
                     if (_tabChanged) {
                         _tabChanged(item);
                     }
                 }
             }
         );
-        tab->setToggle(true)
-           ->setAutoToggle(false);
+        tab->toggle(true)
+           .autoToggle(false);
         _buttons.push_back(tab.get());
 
         // TODO: This is here for now, until we have a clearer DataContainer lifecycle
@@ -70,7 +77,7 @@ namespace psychic_ui {
     }
 
     template<class T>
-    void Tabs<T>::select(const T &item) {
+    void Tabs<T>::updateSelected(const T &item) {
         // Find item in data since (pardon my C++ knowledge at this time) when initializing with a temporary data source
         // and selecting from this data source, the pointer becomes invalid once the original data source expired.
         auto res = std::find(this->_data.cbegin(), this->_data.cend(), item);
@@ -86,16 +93,15 @@ namespace psychic_ui {
     void Tabs<T>::updateSelection() {
         auto     pos = std::distance(this->_data.cbegin(), std::find(this->_data.cbegin(), this->_data.cend(), *_selected));
         for (unsigned int i   = 0; i < _buttons.size(); ++i) {
-            _buttons[i]->setSelected(i == pos);
+            _buttons[i]->selected(i == pos);
         }
     }
 
     template<class T>
-    Tabs<T> *Tabs<T>::setData(const typename DataContainer<T>::ContainerData &data) {
+    void Tabs<T>::updateData(const typename DataContainer<T>::ContainerData &data) {
         _selected = nullptr;
         _buttons.clear();
-        DataContainer<T>::setData(data);
-        return this;
+        DataContainer<T>::updateData(data);
     }
 
 }

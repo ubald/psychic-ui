@@ -24,28 +24,21 @@ namespace {
         HostedWindow() : Window("Psychic UI in a GLFW host") {
             loadStyleSheet<OneDarkStyleSheet>();
 
-            app->style()
-               .direction(Direction::Column)
+            app->direction(Direction::Column)
                .alignItems(Align::Start) // "flex-start" before, which the string parser ignored (stretch)
                .padding(24.0f);
 
-            spaced(app->add<Label>("This window, its context and its loop belong to the host. Escape quits."));
-            _clicks = spaced(app->add<Label>("Not clicked yet"));
-            spaced(app->add<Button>("Click me", [this]() {
+            app->add<Label>("This window, its context and its loop belong to the host. Escape quits.").marginBottom(12);
+            _clicks = &app->add<Label>("Not clicked yet").marginBottom(12);
+            app->add<Button>("Click me", [this]() {
                 ++_count;
-                _clicks->setText("Clicked " + std::to_string(_count) + (_count == 1 ? " time" : " times"));
-            }));
-            spaced(app->add<TextInput>("Type here"))->style().width(320.0f);
+                _clicks->text("Clicked " + std::to_string(_count) + (_count == 1 ? " time" : " times"));
+            }).marginBottom(12);
+            app->add<TextInput>("Type here").marginBottom(12).width(320);
         }
 
     private:
-        template<typename T>
-        static std::shared_ptr<T> spaced(std::shared_ptr<T> div) {
-            div->style().marginBottom(12.0f);
-            return div;
-        }
-
-        std::shared_ptr<Label> _clicks;
+        Label *_clicks{nullptr}; // A child of app, which the window owns
         int                    _count{0};
     };
 

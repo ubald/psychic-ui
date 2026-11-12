@@ -110,16 +110,19 @@ namespace psychic_ui {
         void openMenu(const std::vector<std::shared_ptr<MenuItem>> &items, int x, int y);
         void closeMenu();
 
-        std::shared_ptr<Div> appContainer() const {
-            return app;
+        /**
+         * Where the application's content goes, filling the window
+         */
+        Div &appContainer() const {
+            return *app;
         };
 
-        std::shared_ptr<Modal> modalContainer() const {
-            return modal;
+        Modal &modalContainer() const {
+            return *modal;
         }
 
-        std::shared_ptr<Modal> menuContainer() const {
-            return menu;
+        Modal &menuContainer() const {
+            return *menu;
         }
 
         void setCursor(Cursor cursor);
@@ -205,9 +208,10 @@ namespace psychic_ui {
 
         // region Default DIVs
 
-        std::shared_ptr<Div>   app{};
-        std::shared_ptr<Modal> modal{};
-        std::shared_ptr<Modal> menu{};
+        // Children of the window, which owns them
+        Div   *app{nullptr};
+        Modal *modal{nullptr};
+        Modal *menu{nullptr};
 
         // endregion
 

@@ -14,7 +14,7 @@ namespace psychic_ui {
         onMouseUp.subscribe(
             [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const Mod /*modifiers*/) {
                 if (_enabled && !_toggle) {
-                    setSelected(false);
+                    updateSelected(false);
                 }
             }
         );
@@ -22,7 +22,7 @@ namespace psychic_ui {
         onMouseDown.subscribe(
             [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const Mod /*modifiers*/) {
                 if (_enabled && !_toggle) {
-                    setSelected(true);
+                    updateSelected(true);
                 }
             }
         );
@@ -30,7 +30,7 @@ namespace psychic_ui {
         onClick.subscribe(
             [this]() {
                 if (_enabled && _toggle && _autoToggle) {
-                    setSelected(!_selected);
+                    updateSelected(!_selected);
                 }
             }
         );
@@ -45,16 +45,18 @@ namespace psychic_ui {
         return _label;
     }
 
-    void Button::setLabel(const std::string &label) {
+    void Button::updateLabel(const std::string &label) {
         _label = label;
-        _skin->setLabel(_label);
+        if (_skin) {
+            _skin->setLabel(_label);
+        }
     }
 
     bool Button::selected() const {
         return _selected;
     }
 
-    Button *Button::setSelected(const bool selected) {
+    void Button::updateSelected(const bool selected) {
         if (_selected != selected) {
             _selected = selected;
             invalidateStyle();
@@ -62,7 +64,6 @@ namespace psychic_ui {
                 _onChange(_selected);
             }
         }
-        return this;
     }
 
     bool Button::active() const {

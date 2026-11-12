@@ -14,7 +14,9 @@ namespace psychic_ui {
     public:
         explicit Label(const std::string &text = "");
         const std::string &text() const;
-        Label *setText(const std::string &text) override;
+        using TextBase::text;
+    protected:
+        void updateText(const std::string &text) override;
     private:
         std::string _text;
         float       _yOffset{0.0f};

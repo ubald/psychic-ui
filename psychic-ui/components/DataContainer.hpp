@@ -13,11 +13,21 @@ namespace psychic_ui {
 
         explicit DataContainer(const ContainerData &data, DivCallback getDiv);
 
-        ContainerData &data() const;
-        virtual DataContainer<T> *setData(const ContainerData &data);
+        const ContainerData &data() const;
+
+        /**
+         * Replace the data: the children are rebuilt before the next paint
+         */
+        template<class Self>
+        Self &data(this Self &self, const ContainerData &data) {
+            static_cast<DataContainer &>(self).updateData(data);
+            return self;
+        }
+
 
 
     protected:
+        virtual void updateData(const ContainerData &data);
         void render(SkCanvas *canvas) override;
         ContainerData _data{};
         DivCallback   _getDiv{nullptr};
@@ -38,17 +48,16 @@ namespace psychic_ui {
     }
 
     template<class T>
-    typename DataContainer<T>::ContainerData &DataContainer<T>::data() const {
+    const typename DataContainer<T>::ContainerData &DataContainer<T>::data() const {
         return _data;
     }
 
     template<class T>
-    DataContainer<T> *DataContainer<T>::setData(const typename DataContainer<T>::ContainerData &data) {
+    void DataContainer<T>::updateData(const typename DataContainer<T>::ContainerData &data) {
         if (data != _data) {
             _data = data;
             _dataChanged = true;
         }
-        return this;
     }
 
     template<class T>

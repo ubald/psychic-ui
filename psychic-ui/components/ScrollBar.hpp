@@ -14,20 +14,20 @@ namespace psychic_ui {
         virtual void updateScrollBar(bool enabled, float scrollPosition, float contentRatio) = 0;
     };
 
-    enum ScrollDirection {
-        Horizontal,
-        Vertical
-    };
+    using ScrollDirection = Orientation;
 
-    class ScrollBar: public Component<ScrollBarSkin> {
+    class ScrollBar : public Component<ScrollBarSkin> {
     public:
-        explicit ScrollBar(const std::shared_ptr<Div> &viewport, ScrollDirection direction = Vertical);
+        /**
+         * A scroll bar scrolling a viewport, which it keeps alive
+         */
+        explicit ScrollBar(Div &viewport, ScrollDirection direction = ScrollDirection::Vertical);
         Div *viewport() const;
-        ScrollDirection direction() const;
+        ScrollDirection scrollDirection() const;
         void scrollPercentX(float scrollPercentX);
         void scrollPercentY(float scrollPercentY);
     protected:
-        ScrollDirection      _direction{Vertical};
+        ScrollDirection      _direction{ScrollDirection::Vertical};
         std::shared_ptr<Div> _viewport{nullptr};
         void updateSkin();
     };

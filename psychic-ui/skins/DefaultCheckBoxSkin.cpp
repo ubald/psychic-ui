@@ -6,7 +6,7 @@ namespace psychic_ui {
         CheckBoxSkin() {
         setTag("DefaultCheckBoxSkin");
 
-        _box   = add<Shape>(
+        _box = &add<Shape>(
             [this](Shape *shape, SkCanvas *canvas) {
                 SkRRect inner = default_skin::draw(shape, canvas);
 
@@ -20,11 +20,11 @@ namespace psychic_ui {
             }
         );
         _box->addClassName("defaultSkinChrome");
-        _label = add<Label>();
+        _label = &add<Label>();
     }
 
     void DefaultCheckBoxSkin::setLabel(const std::string &label) {
-        _label->setText(label);
+        _label->text(label);
     }
 
     void DefaultCheckBoxSkin::draw(SkCanvas */*canvas*/) {

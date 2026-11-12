@@ -18,32 +18,28 @@ namespace psychic_ui {
         setTag("Window");
         setWindowSize(1440, 900);
 
-        _inlineStyle
-            .position(Position::Absolute)
+        _inlineStyle.position(Position::Absolute)
             .overflow(Overflow::Hidden);
 
-        app = add<Div>();
-        app->setId("app");
-        app->style()
-           .position(Position::Absolute)
-           .width(100_pct)
-           .height(100_pct)
-           .overflow(Overflow::Hidden);
+        app = &add<Div>()
+            .id("app")
+            .position(Position::Absolute)
+            .width(100_pct)
+            .height(100_pct)
+            .overflow(Overflow::Hidden);
 
-        modal = add<Modal>();
-        modal->setId("modal");
-        modal->style()
-             .visible(false);
+        modal = &add<Modal>()
+            .id("modal")
+            .visible(false);
 
-        menu = add<Modal>();
-        menu->setId("menu");
+        menu = &add<Modal>()
+            .id("menu")
+            .visible(false);
         menu->onMouseDown.subscribe(
             [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const Mod /*modifiers*/) {
                 closeMenu();
             }
         );
-        menu->style()
-            .visible(false);
     }
 
     Window::~Window() {
@@ -286,7 +282,7 @@ namespace psychic_ui {
         for (const auto &child : div.children()) {
             const int localX = x - child->x();
             const int localY = y - child->y();
-            if (!child->getVisible() || !child->mouseEnabled()
+            if (!child->visible() || !child->mouseEnabled()
                 || localX < 0 || localY < 0 || localX >= child->getWidth() || localY >= child->getHeight()) {
                 continue;
             }
@@ -301,13 +297,13 @@ namespace psychic_ui {
 
     bool Window::isDragArea(const int x, const int y) {
         // An open menu or modal takes every press
-        if (menu->getVisible() || modal->getVisible()) {
+        if (menu->visible() || modal->visible()) {
             return false;
         }
 
         for (const auto &weak : _dragAreas) {
             auto area = weak.lock();
-            if (!area || !area->getVisible() || area->window() != this) {
+            if (!area || !area->visible() || area->window() != this) {
                 continue;
             }
 
@@ -436,19 +432,16 @@ namespace psychic_ui {
         menu->removeAll();
         int lx, ly;
         menu->globalToLocal(lx, ly, x, y);
-        auto m = menu->add<Menu>(items);
-        m->style()
-         .left(lx)
-         .top(ly);
-        menu->style()
-            .visible(true);
+        menu->add<Menu>(items)
+            .left(lx)
+            .top(ly);
+        menu->visible(true);
         onMenuOpened.emit();
     }
 
     void Window::closeMenu() {
         menu->removeAll();
-        menu->style()
-            .visible(false);
+        menu->visible(false);
         onMenuClosed.emit();
     }
 

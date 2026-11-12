@@ -45,10 +45,9 @@ namespace {
     }
 
     template<typename T>
-    std::shared_ptr<T> addText(Root &root, const std::string &text, float size = 14.0f, const std::string &font = FONT) {
-        auto node = root.add<T>(text);
-        node->style()
-            .fontFamily(FONT)
+    T &addText(Root &root, const std::string &text, float size = 14.0f, const std::string &font = FONT) {
+        auto &node = root.add<T>(text);
+        node.fontFamily(FONT)
             .fontSize(size)
             .lineHeight(LINE_HEIGHT)
             .textAntiAlias(true);
@@ -86,8 +85,7 @@ TEST_CASE("Text and Label are measured to their content", "[text]") {
     REQUIRE(styleManager->font(FONT));
 
     Root root{styleManager};
-    root.style()
-        .width(400.0f)
+    root.width(400.0f)
         .height(300.0f);
 
     const std::string str = "Hello, measured world";
@@ -95,70 +93,70 @@ TEST_CASE("Text and Label are measured to their content", "[text]") {
     REQUIRE(expected > 0);
 
     SECTION("in a row") {
-        root.style().direction(Direction::Row);
-        auto text  = addText<Text>(root, str);
-        auto label = addText<Label>(root, str);
+        root.direction(Direction::Row);
+        auto &text  = addText<Text>(root, str);
+        auto &label = addText<Label>(root, str);
         root.layout(400, 300);
 
-        REQUIRE(text->getWidth() == Approx(expected).margin(1));
-        REQUIRE(label->getWidth() == Approx(expected).margin(1));
+        REQUIRE(text.getWidth() == Approx(expected).margin(1));
+        REQUIRE(label.getWidth() == Approx(expected).margin(1));
     }
 
     SECTION("in a column aligned to the start") {
-        root.style().alignItems(Align::Start);
-        auto text  = addText<Text>(root, str);
-        auto label = addText<Label>(root, str);
+        root.alignItems(Align::Start);
+        auto &text  = addText<Text>(root, str);
+        auto &label = addText<Label>(root, str);
         root.layout(400, 300);
 
-        REQUIRE(text->getWidth() == Approx(expected).margin(1));
-        REQUIRE(text->getHeight() == LINE_HEIGHT);
-        REQUIRE(label->getWidth() == Approx(expected).margin(1));
-        REQUIRE(label->getHeight() == LINE_HEIGHT);
+        REQUIRE(text.getWidth() == Approx(expected).margin(1));
+        REQUIRE(text.getHeight() == LINE_HEIGHT);
+        REQUIRE(label.getWidth() == Approx(expected).margin(1));
+        REQUIRE(label.getHeight() == LINE_HEIGHT);
     }
 
     SECTION("in a stretched column") {
-        auto text  = addText<Text>(root, str);
-        auto label = addText<Label>(root, str);
+        auto &text  = addText<Text>(root, str);
+        auto &label = addText<Label>(root, str);
         root.layout(400, 300);
 
-        REQUIRE(text->getWidth() == 400);
-        REQUIRE(text->getHeight() == LINE_HEIGHT);
-        REQUIRE(label->getWidth() == 400);
-        REQUIRE(label->getHeight() == LINE_HEIGHT);
+        REQUIRE(text.getWidth() == 400);
+        REQUIRE(text.getHeight() == LINE_HEIGHT);
+        REQUIRE(label.getWidth() == 400);
+        REQUIRE(label.getHeight() == LINE_HEIGHT);
     }
 
     SECTION("empty text still gets a line") {
-        root.style().alignItems(Align::Start);
-        auto text  = addText<Text>(root, "");
-        auto label = addText<Label>(root, "");
+        root.alignItems(Align::Start);
+        auto &text  = addText<Text>(root, "");
+        auto &label = addText<Label>(root, "");
         root.layout(400, 300);
 
-        REQUIRE(text->getWidth() == 0);
-        REQUIRE(text->getHeight() == LINE_HEIGHT);
-        REQUIRE(label->getWidth() == 0);
-        REQUIRE(label->getHeight() == LINE_HEIGHT);
+        REQUIRE(text.getWidth() == 0);
+        REQUIRE(text.getHeight() == LINE_HEIGHT);
+        REQUIRE(label.getWidth() == 0);
+        REQUIRE(label.getHeight() == LINE_HEIGHT);
     }
 
     SECTION("multiline text is as wide as its widest line") {
-        root.style().alignItems(Align::Start);
+        root.alignItems(Align::Start);
         const std::string lines = "short\na much longer line\nmid line";
-        auto              text  = addText<Text>(root, lines);
-        text->setMultiline(true);
+        auto              &text  = addText<Text>(root, lines);
+        text.multiline(true);
         root.layout(400, 300);
 
-        REQUIRE(text->getWidth() == Approx(textWidth(styleManager, lines)).margin(1));
-        REQUIRE(text->getHeight() == 3 * LINE_HEIGHT);
+        REQUIRE(text.getWidth() == Approx(textWidth(styleManager, lines)).margin(1));
+        REQUIRE(text.getHeight() == 3 * LINE_HEIGHT);
     }
 
     SECTION("multiline text wraps in a narrow column") {
-        root.style().width(60.0f);
-        auto text = addText<Text>(root, str);
-        text->setMultiline(true);
+        root.width(60.0f);
+        auto &text = addText<Text>(root, str);
+        text.multiline(true);
         root.layout(60, 300);
 
-        REQUIRE(text->getWidth() == 60);
-        REQUIRE(text->getHeight() >= 2 * LINE_HEIGHT);
-        REQUIRE(std::fmod(text->getHeight(), LINE_HEIGHT) == 0);
+        REQUIRE(text.getWidth() == 60);
+        REQUIRE(text.getHeight() >= 2 * LINE_HEIGHT);
+        REQUIRE(std::fmod(text.getHeight(), LINE_HEIGHT) == 0);
     }
 }
 
@@ -166,62 +164,61 @@ TEST_CASE("Text and Label are re-measured when their font changes through style"
     auto styleManager = makeStyleManager();
 
     Root root{styleManager};
-    root.style()
-        .width(400.0f)
+    root.width(400.0f)
         .height(300.0f)
         .alignItems(Align::Start);
 
     const std::string str   = "Hello, measured world";
-    auto              text  = addText<Text>(root, str);
-    auto              label = addText<Label>(root, str);
+    auto              &text  = addText<Text>(root, str);
+    auto              &label = addText<Label>(root, str);
     // Twice, so that anything settling over a second pass is done before the change
     root.layout(400, 300);
     root.layout(400, 300);
-    REQUIRE(text->getWidth() == Approx(textWidth(styleManager, str)).margin(1));
-    REQUIRE(label->getWidth() == Approx(textWidth(styleManager, str)).margin(1));
+    REQUIRE(text.getWidth() == Approx(textWidth(styleManager, str)).margin(1));
+    REQUIRE(label.getWidth() == Approx(textWidth(styleManager, str)).margin(1));
 
     SECTION("font size") {
-        text->style().fontSize(16.0f);
-        label->style().fontSize(16.0f);
+        text.fontSize(16.0f);
+        label.fontSize(16.0f);
         root.layout(400, 300);
 
-        REQUIRE(text->getWidth() == Approx(textWidth(styleManager, str, 16.0f)).margin(1));
-        REQUIRE(label->getWidth() == Approx(textWidth(styleManager, str, 16.0f)).margin(1));
+        REQUIRE(text.getWidth() == Approx(textWidth(styleManager, str, 16.0f)).margin(1));
+        REQUIRE(label.getWidth() == Approx(textWidth(styleManager, str, 16.0f)).margin(1));
     }
 
     SECTION("font family") {
         const float bold = textWidth(styleManager, str, 14.0f, BOLD_FONT);
         REQUIRE(bold != Approx(textWidth(styleManager, str)).margin(1));
 
-        text->style().fontFamily(BOLD_FONT);
-        label->style().fontFamily(BOLD_FONT);
+        text.fontFamily(BOLD_FONT);
+        label.fontFamily(BOLD_FONT);
         root.layout(400, 300);
 
-        REQUIRE(text->getWidth() == Approx(bold).margin(1));
-        REQUIRE(label->getWidth() == Approx(bold).margin(1));
+        REQUIRE(text.getWidth() == Approx(bold).margin(1));
+        REQUIRE(label.getWidth() == Approx(bold).margin(1));
     }
 
     SECTION("line height") {
-        text->style().lineHeight(32.0f);
-        label->style().lineHeight(32.0f);
+        text.lineHeight(32.0f);
+        label.lineHeight(32.0f);
         root.layout(400, 300);
 
-        REQUIRE(text->getHeight() == 32);
-        REQUIRE(label->getHeight() == 32);
+        REQUIRE(text.getHeight() == 32);
+        REQUIRE(label.getHeight() == 32);
     }
 
     SECTION("text") {
-        text->setText("Hi");
-        label->setText("Hi");
+        text.text("Hi");
+        label.text("Hi");
         root.layout(400, 300);
 
-        REQUIRE(text->getWidth() == Approx(textWidth(styleManager, "Hi")).margin(1));
-        REQUIRE(label->getWidth() == Approx(textWidth(styleManager, "Hi")).margin(1));
+        REQUIRE(text.getWidth() == Approx(textWidth(styleManager, "Hi")).margin(1));
+        REQUIRE(label.getWidth() == Approx(textWidth(styleManager, "Hi")).margin(1));
     }
 
     SECTION("invalidating a Div without a measure function is harmless") {
         root.invalidate();
         root.layout(400, 300);
-        REQUIRE(text->getWidth() == Approx(textWidth(styleManager, str)).margin(1));
+        REQUIRE(text.getWidth() == Approx(textWidth(styleManager, str)).margin(1));
     }
 }

@@ -11,54 +11,46 @@ namespace psychic_ui {
     public:
         Ranges() {
             setTag("Ranges");
-            setClassNames({"demo-panel"});
+            classNames({"demo-panel"});
 
-            auto container = add<HBox>();
+            auto &container = add<HBox>();
 
-            auto left = container->add<Div>();
-            left
-                ->style()
-                .grow(1)
+            auto &left = container.add<Div>();
+            left.grow(1)
                 .shrink(1);
 
-            left->add<Label>("Horizontal");
+            left.add<Label>("Horizontal");
 
-            auto lcont = left->add<Div>();
+            auto &lcont = left.add<Div>();
 
-            lcont->add<Range<int>>()
-                ->setRange(0, 10);
+            lcont.add<Range<int>>()
+                .range(0, 10);
 
-            lcont->add<Range<float>>()
-                ->setRange(1.23f, 4.56f);
+            lcont.add<Range<float>>()
+                .range(1.23f, 4.56f);
 
-            auto right = container->add<Div>();
-            right
-                ->style()
-                .grow(1)
+            auto &right = container.add<Div>();
+            right.grow(1)
                 .shrink(1);
 
-            right->add<Label>("Vertical");
+            right.add<Label>("Vertical");
 
-            auto rcont = right->add<HBox>();
-            rcont
-                ->style()
-                .grow(1);
+            auto &rcont = right.add<HBox>();
+            rcont.grow(1);
 
-            rcont->add<Range<int>>()
-                 ->setRange(0, 10)
-                 ->style()
+            rcont.add<Range<int>>()
+                 .range(0, 10)
                  .orientation(Orientation::Vertical);
 
-            rcont->add<Range<float>>()
-                 ->setRange(1.23f, 4.56f)
-                 ->style()
+            rcont.add<Range<float>>()
+                 .range(1.23f, 4.56f)
                  .orientation(Orientation::Vertical);
 
 //            add<Label>("Skinned");
 //            add<Range<int>>(std::make_shared<MySliderSkin>())
-//                ->setRange(0, 10);
+//                ->range(0, 10);
 //            add<Range<float>>(std::make_shared<MySliderSkin>())
-//                ->setRange(1.23f, 4.56f);
+//                ->range(1.23f, 4.56f);
         }
     };
 }

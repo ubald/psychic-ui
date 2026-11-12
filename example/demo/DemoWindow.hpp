@@ -32,7 +32,7 @@ namespace psychic_ui {
         void render(SkCanvas *canvas) override;
 
     private:
-        std::shared_ptr<Label> fpsLabel{};
+        Label *fpsLabel{nullptr};
     };
 
     DemoWindow::DemoWindow() :
@@ -112,19 +112,19 @@ namespace psychic_ui {
 
         app->add<MenuBar>(mainMenuContents);
 
-        auto toolBar = app->add<ToolBar>();
-        toolBar->add<Button>("New");
-        toolBar->add<Button>("Start");
-        toolBar->add<Button>("Stop");
+        auto &toolBar = app->add<ToolBar>();
+        toolBar.add<Button>("New");
+        toolBar.add<Button>("Start");
+        toolBar.add<Button>("Stop");
 
-        toolBar->add<Spacer>();
+        toolBar.add<Spacer>();
 
         #ifdef DEBUG_LAYOUT
-        toolBar->add<Button>("Debug Layout")
-            ->setToggle(true)
-            ->onChange([](bool selected) { Div::debugLayout = selected; });
+        toolBar.add<Button>("Debug Layout")
+            .toggle(true)
+            .onChange([](bool selected) { Div::debugLayout = selected; });
         #endif
-        toolBar->add<Button>("Help");
+        toolBar.add<Button>("Help");
 
         std::vector<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Div>>>>> panels{};
         panels.emplace_back(std::make_pair("Divs", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Divs>(); })));
@@ -142,17 +142,15 @@ namespace psychic_ui {
                },
                [](const auto &item) {
                    auto panel = item.second->hatch();
-                   panel->style().height(100_pct);
+                   panel->height(100_pct);
                    return panel;
                }
            )
-           ->select(panels[1])
-           ->style()
+           .select(panels[1])
            .height(100_pct);
 
-        fpsLabel = app->add<Label>();
-        fpsLabel->style()
-                .fontFamily("stan0755")
+        fpsLabel = &app->add<Label>();
+        fpsLabel->fontFamily("stan0755")
                 .fontSize(8)
                 .textAntiAlias(false)
                 .position(Position::Absolute)
@@ -162,7 +160,7 @@ namespace psychic_ui {
     void DemoWindow::render(SkCanvas *canvas) {
         std::stringstream stream;
         stream << std::fixed << std::setprecision(3) << fps;
-        fpsLabel->setText("FPS: " + stream.str());
+        fpsLabel->text("FPS: " + stream.str());
         Window::render(canvas);
     }
 }

@@ -28,51 +28,41 @@ namespace psychic_ui {
          */
         std::string text() const;
 
-        /**
-         * Set the component's text
-         * @param text
-         * @return Pointer to Text for chaining
-         */
-        Text *setText(const std::string &text) override;
+        // The setter, which the getter above would hide
+        using TextBase::text;
 
-        /**
-         * Get whether the text is selectable or not
-         * @return
-         */
         bool selectable() const;
 
         /**
-         * Set whether the text is selectable or not
-         * @param selectable
-         * @return Pointer to Text for chaining
+         * Whether the text can be selected with the mouse
          */
-        Text *setSelectable(bool selectable);
+        template<class Self>
+        Self &selectable(this Self &self, detail::BoolArg selectable) {
+            static_cast<Text &>(self).updateSelectable(selectable.value);
+            return self;
+        }
 
-        /**
-         * Get whether the text is editable or not
-         * @return
-         */
         bool editable() const;
 
         /**
-         * Set whether the text is editable or not
-         * @param editable
-         * @return Pointer to Text for chaining
+         * Whether the text can be edited when focused
          */
-        Text *setEditable(bool editable);
+        template<class Self>
+        Self &editable(this Self &self, detail::BoolArg editable) {
+            static_cast<Text &>(self).updateEditable(editable.value);
+            return self;
+        }
 
-        /**
-         * Get whether the text is multiline or not
-         * @return
-         */
         bool multiline() const;
 
         /**
-         * Set whether the text is multiline or not
-         * @param multiline
-         * @return Pointer to Text for chaining
+         * Whether the text wraps on several lines (or stays on one)
          */
-        Text *setMultiline(bool multiline);
+        template<class Self>
+        Self &multiline(this Self &self, detail::BoolArg multiline) {
+            static_cast<Text &>(self).updateMultiline(multiline.value);
+            return self;
+        }
 
         /**
          * Get the selection start and end index.
@@ -80,23 +70,31 @@ namespace psychic_ui {
          *
          * @return Pair of start and end positions of the selection
          */
-        std::pair<unsigned int, unsigned int> getSelection() const;
+        std::pair<unsigned int, unsigned int> selection() const;
 
         /**
-         * Set the selection.
-         * If both values are equal, then nothing is selected.
-         *
-         * @param selectionBegin
-         * @param selectionEnd
-         * @return Pointer to Text for chaining
+         * Set the selection. If both values are equal, then nothing is selected.
          */
-        Text *setSelection(unsigned int selectionBegin, unsigned int selectionEnd);
+        template<class Self>
+        Self &selection(this Self &self, unsigned int selectionBegin, unsigned int selectionEnd) {
+            static_cast<Text &>(self).updateSelection(selectionBegin, selectionEnd);
+            return self;
+        }
 
         /**
          * Get the caret position
          * @return
          */
-        unsigned int getCaret() const;
+        unsigned int caret() const;
+
+        /**
+         * Move the caret, which also empties the selection
+         */
+        template<class Self>
+        Self &caret(this Self &self, unsigned int caret) {
+            static_cast<Text &>(self).moveCaret(caret);
+            return self;
+        }
 
         /**
          * Get the line the caret is on
@@ -110,18 +108,6 @@ namespace psychic_ui {
          * @return Y coordinate, line * line height
          */
         unsigned int getLineY(unsigned int line) const;
-
-        /**
-         * Set the caret position in the text
-         * @param caret Position of the caret
-         * @param saveX Used internally, saves where the caret is horizontally
-         *              in order to restore it horizontally in case navigating
-         *              in the text with the keyboard makes us pass by a line
-         *              that is shorter, we still want to navigate up or down
-         *              in the same column.
-         * @return Pointer to this, for call chaining
-         */
-        Text *setCaret(unsigned int caret, bool saveX = true);
 
 
         Signal<unsigned int, unsigned int> onSelection{};
@@ -158,6 +144,23 @@ namespace psychic_ui {
         Div::CharSlot             _onCharacter{nullptr};
         Div::FocusSlot            _onFocus{nullptr};
         Div::FocusSlot            _onBlur{nullptr};
+
+        void updateText(const std::string &text) override;
+        void updateSelectable(bool selectable);
+        void updateEditable(bool editable);
+        void updateMultiline(bool multiline);
+        void updateSelection(unsigned int selectionBegin, unsigned int selectionEnd);
+
+        /**
+         * Set the caret position in the text
+         * @param caret Position of the caret
+         * @param saveX Used internally, saves where the caret is horizontally
+         *              in order to restore it horizontally in case navigating
+         *              in the text with the keyboard makes us pass by a line
+         *              that is shorter, we still want to navigate up or down
+         *              in the same column.
+         */
+        void moveCaret(unsigned int caret, bool saveX = true);
 
         void subscribeToSelection();
         void unsubscribeFromSelection();

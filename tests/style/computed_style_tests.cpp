@@ -26,7 +26,7 @@ namespace {
 
         Tree() {
             root->setStyleManager(styleManager);
-            root->style().width(200).height(200);
+            root->width(200).height(200);
             root->add(div);
             layout();
         }
@@ -55,10 +55,10 @@ TEST_CASE("derived state follows the computed style both ways", "[style][compute
     SECTION("visibility comes back when the rule hiding it stops matching") {
         t.div->addClassName("hidden");
         t.restyle();
-        REQUIRE_FALSE(t.div->getVisible());
+        REQUIRE_FALSE(t.div->visible());
         t.div->removeClassName("hidden");
         t.restyle();
-        REQUIRE(t.div->getVisible());
+        REQUIRE(t.div->visible());
     }
 
     SECTION("radii go back to 0 when the rules setting them stop matching") {
@@ -104,7 +104,7 @@ TEST_CASE("only the changed layout properties reach Yoga", "[style][computed][la
     Tree t;
     t.styleManager->style(".tinted").backgroundColor(rgb(0xFF0000)).borderRadius(4).color(rgb(0x00FF00));
     t.styleManager->style(".tall").height(40);
-    t.div->style().width(100);
+    t.div->width(100);
     t.layout();
     REQUIRE(t.div->getWidth() == 100);
     REQUIRE_FALSE(YGNodeIsDirty(t.root->_yogaNode));
@@ -144,10 +144,10 @@ TEST_CASE("only the changed layout properties reach Yoga", "[style][computed][la
 
 TEST_CASE("lengths reach Yoga in their unit", "[style][computed][layout]") {
     Tree t;
-    t.root->style().padding(10);
+    t.root->padding(10);
 
     SECTION("percent is 0-100") {
-        t.div->style().width(50_pct).height(25_pct);
+        t.div->width(50_pct).height(25_pct);
         t.layout();
         REQUIRE(YGNodeStyleGetWidth(t.div->_yogaNode).unit == YGUnitPercent);
         REQUIRE(YGNodeStyleGetWidth(t.div->_yogaNode).value == 50);
@@ -156,13 +156,13 @@ TEST_CASE("lengths reach Yoga in their unit", "[style][computed][layout]") {
     }
 
     SECTION("auto margins center") {
-        t.div->style().width(80).height(20).marginHorizontal(Auto);
+        t.div->width(80).height(20).marginHorizontal(Auto);
         t.layout();
         REQUIRE(t.div->x() == 60);
     }
 
     SECTION("the most specific edge wins, an unset edge falls back") {
-        t.div->style().height(20).margin(8).marginLeft(2);
+        t.div->height(20).margin(8).marginLeft(2);
         t.layout();
         REQUIRE(t.div->x() == 12);
         REQUIRE(t.div->y() == 18);

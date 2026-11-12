@@ -4,8 +4,7 @@ namespace psychic_ui {
 
     Modal::Modal() : Div() {
         setTag("Modal");
-        style()
-            .position(Position::Absolute)
+        _inlineStyle.position(Position::Absolute)
             .width(100_pct)
             .height(100_pct)
             .overflow(Overflow::Hidden);
