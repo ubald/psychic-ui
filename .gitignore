@@ -2,3 +2,4 @@ build/
 cmake-build*/
 .idea/workspace.xml
 .DS_Store
+.direnv/

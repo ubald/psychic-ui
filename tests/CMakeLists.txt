@@ -5,8 +5,8 @@ if (PSYCHIC_UI_BUILD_TESTS)
 
     if (NOT TARGET catch)
         ExternalProject_Add(catch
-                GIT_REPOSITORY https://github.com/philsquared/Catch.git
-            GIT_TAG master
+            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+            GIT_TAG v2.13.10  # Last Catch2 v2; tests use its single header
             PREFIX "${CMAKE_BINARY_DIR}/catch"
             CMAKE_ARGS "-DCATCH_BUILD_TESTING=NO"
             INSTALL_COMMAND ""
