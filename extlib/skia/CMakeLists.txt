@@ -49,6 +49,9 @@ file(GLOB SKIA_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/../external/skia/include/*
 add_library(Skia::Skia STATIC IMPORTED GLOBAL)
 set_target_properties(Skia::Skia PROPERTIES IMPORTED_LOCATION ${SKIA_STATIC_LIB})
 target_include_directories(Skia::Skia INTERFACE ${SKIA_INCLUDE_DIRS})
+# The m73 headers use std::result_of, which C++20 libc++ (macOS) removed; this brings it back.
+# libstdc++ ignores it. Drop it with the Skia upgrade.
+target_compile_definitions(Skia::Skia INTERFACE _LIBCPP_ENABLE_CXX20_REMOVED_TYPE_TRAITS)
 target_link_libraries(Skia::Skia INTERFACE
     PNG::PNG
     JPEG::JPEG
