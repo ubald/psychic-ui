@@ -170,11 +170,13 @@ namespace psychic_ui {
 
     std::shared_ptr<Div> Div::add(unsigned int index, std::shared_ptr<Div> child) {
         assert(child != nullptr);
-        assert(index >= 0 && index <= childCount());
-        child->setParent(this);
-        // Insert in "reverse" so that we can iterate front-to-back without using a reverse_iterator
-        _children.insert(_children.cend() - index, child);
+        assert(index <= childCount());
+        // The current first/last children may lose their :first-child/:last-child state
+        invalidateEndChildrenStyle();
+        // Insert before setting the parent so that the child's first style pass sees its index
+        _children.insert(_children.cbegin() + index, child);
         YGNodeInsertChild(_yogaNode, child->_yogaNode, index);
+        child->setParent(this);
         return child;
     }
 
@@ -185,58 +187,70 @@ namespace psychic_ui {
 
     void Div::remove(const std::shared_ptr<Div> child) {
         assert(child != nullptr);
-        _children.erase(std::remove(_children.begin(), _children.end(), child), _children.end());
-        YGNodeRemoveChild(_yogaNode, child->_yogaNode);
-        child->setParent(nullptr);
+        int index = childIndex(child);
+        if (index >= 0) {
+            remove((unsigned int) index);
+        }
     }
 
     void Div::remove(unsigned int index) {
-        assert(index <= childCount());
+        assert(index < childCount());
         std::shared_ptr<Div> child = _children[index];
-        _children.erase(_children.cend() - index);
+        _children.erase(_children.cbegin() + index);
         YGNodeRemoveChild(_yogaNode, child->_yogaNode);
+        // The new first/last children gain their :first-child/:last-child state
+        invalidateEndChildrenStyle();
         child->setParent(nullptr);
     }
 
     void Div::removeAll() {
-        for (auto &child: _children) {
-            child->setParent(nullptr);
-            YGNodeRemoveChild(_yogaNode, child->_yogaNode);
+        if (_children.empty()) {
+            return;
         }
+        auto children = std::move(_children);
         _children.clear();
+        YGNodeRemoveAllChildren(_yogaNode);
+        for (auto &child: children) {
+            child->setParent(nullptr);
+        }
     }
 
     int Div::childIndex(const std::shared_ptr<Div> child) const {
         assert(child != nullptr);
-        auto index = std::distance(
-            _children.cbegin(),
-            std::find(_children.cbegin(), _children.cend(), child)
-        );
-        return (index >= _children.size()) ? -1 : (int) index;
+        return childIndex(child.get());
     }
 
     int Div::childIndex(const Div *child) const {
         assert(child != nullptr);
-        auto index = std::distance(
+        auto it = std::find_if(
             _children.cbegin(),
-            std::find_if(
-                _children.cbegin(),
-                _children.cend(),
-                [child](const auto &c) {
-                    return c.get() == child;
-                }
-            ));
-        return (index >= _children.size()) ? -1 : (int) index;
+            _children.cend(),
+            [child](const auto &c) {
+                return c.get() == child;
+            }
+        );
+        return it == _children.cend() ? -1 : (int) std::distance(_children.cbegin(), it);
     }
 
     const Div *Div::at(unsigned int index) const {
-        assert(index <= childCount());
+        assert(index < childCount());
         return _children[index].get();
     }
 
     Div *Div::at(unsigned int index) {
-        assert(index <= childCount());
+        assert(index < childCount());
         return _children[index].get();
+    }
+
+    std::vector<std::shared_ptr<Div>> Div::childrenTopmostFirst() const {
+        return {_children.crbegin(), _children.crend()};
+    }
+
+    void Div::invalidateEndChildrenStyle() {
+        if (!_children.empty()) {
+            _children.front()->invalidateStyle();
+            _children.back()->invalidateStyle();
+        }
     }
 
     // endregion
@@ -928,10 +942,9 @@ namespace psychic_ui {
 
         canvas->translate(_x, _y);
 
-        // This is the only place where we iterate in reverse because we order children in reverse in the vector
-        // as to not explode when we modify children in event handlers. We still need to render back-to-front though ;)
-        for (auto child = _children.rbegin(); child != _children.rend(); ++child) {
-            (*child)->render(canvas);
+        // Back-to-front: children are in document order, the last one is on top
+        for (auto &child: _children) {
+            child->render(canvas);
         }
 
         canvas->restore();
@@ -1159,7 +1172,11 @@ namespace psychic_ui {
         MouseEventStatus ret         = Out;
 
         if (_mouseChildren) {
-            for (auto &child: _children) {
+            // Topmost first, over a copy since handlers can add or remove children
+            for (auto &child: childrenTopmostFirst()) {
+                if (child->_parent != this) {
+                    continue; // Removed by an earlier handler
+                }
                 auto res = child->mouseButton(localMouseX, localMouseY, button, down, modifiers);
                 if (res != Out) {
                     ret = res;
@@ -1188,7 +1205,11 @@ namespace psychic_ui {
         MouseEventStatus ret         = Out;
 
         if (_mouseChildren) {
-            for (auto &child: _children) {
+            // Topmost first, over a copy since handlers can add or remove children
+            for (auto &child: childrenTopmostFirst()) {
+                if (child->_parent != this) {
+                    continue; // Removed by an earlier handler
+                }
                 auto res = child->mouseDown(localMouseX, localMouseY, button, modifiers);
                 if (res != Out) {
                     ret = res;
@@ -1228,7 +1249,11 @@ namespace psychic_ui {
         MouseEventStatus ret         = Out;
 
         if (_mouseChildren && (isOver || wasDown)) {
-            for (auto &child: _children) {
+            // Topmost first, over a copy since handlers can add or remove children
+            for (auto &child: childrenTopmostFirst()) {
+                if (child->_parent != this) {
+                    continue; // Removed by an earlier handler
+                }
                 auto res = child->mouseUp(localMouseX, localMouseY, button, modifiers);
                 if (res == Over) {
                     ret = res;
@@ -1268,7 +1293,11 @@ namespace psychic_ui {
         MouseEventStatus ret         = Out;
 
         if (_mouseChildren) {
-            for (auto &child: _children) {
+            // Topmost first, over a copy since handlers can add or remove children
+            for (auto &child: childrenTopmostFirst()) {
+                if (child->_parent != this) {
+                    continue; // Removed by an earlier handler
+                }
                 auto res = child->click(localMouseX, localMouseY, button, modifiers);
                 if (res != Out) {
                     ret = res;
@@ -1299,7 +1328,11 @@ namespace psychic_ui {
         MouseEventStatus ret         = Out;
 
         if (_mouseChildren) {
-            for (auto &child: _children) {
+            // Topmost first, over a copy since handlers can add or remove children
+            for (auto &child: childrenTopmostFirst()) {
+                if (child->_parent != this) {
+                    continue; // Removed by an earlier handler
+                }
                 auto res = child->doubleClick(localMouseX, localMouseY, clickCount, modifiers);
                 if (res != Out) {
                     ret = res;
@@ -1330,7 +1363,11 @@ namespace psychic_ui {
         int localMouseX = mouseX - _x - _scrollX;
         int localMouseY = mouseY - _y - _scrollY;
         if (_mouseChildren) {
-            for (auto &child: _children) {
+            // Topmost first, over a copy since handlers can add or remove children
+            for (auto &child: childrenTopmostFirst()) {
+                if (child->_parent != this) {
+                    continue; // Removed by an earlier handler
+                }
                 if (child->mouseExited(localMouseX, localMouseY, buttons, modifiers)) {
                     break;
                 }
@@ -1372,7 +1409,11 @@ namespace psychic_ui {
             }
 
             if (_mouseChildren) {
-                for (auto &child: _children) {
+                // Topmost first, over a copy since handlers can add or remove children
+                for (auto &child: childrenTopmostFirst()) {
+                    if (child->_parent != this) {
+                        continue; // Removed by an earlier handler
+                    }
                     auto res = child->mouseMoved(localMouseX, localMouseY, buttons, modifiers, handled);
                     if (res != Out) {
                         handled = true;
@@ -1444,7 +1485,11 @@ namespace psychic_ui {
         MouseEventStatus ret         = Out;
 
         if (_mouseChildren) {
-            for (auto &child: _children) {
+            // Topmost first, over a copy since handlers can add or remove children
+            for (auto &child: childrenTopmostFirst()) {
+                if (child->_parent != this) {
+                    continue; // Removed by an earlier handler
+                }
                 auto res = child->mouseScrolled(localMouseX, localMouseY, scrollX, scrollY);
                 if (res != Out) {
                     ret = res;

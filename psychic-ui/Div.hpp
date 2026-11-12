@@ -166,7 +166,7 @@ namespace psychic_ui {
 
         /**
          * Remove a child by index
-         * @param index Index of the child to remove
+         * @param index Index of the child to remove, must be < childCount()
          */
         void remove(unsigned int index);
 
@@ -182,30 +182,30 @@ namespace psychic_ui {
         void removeAll();
 
         /**
-         * Get the child at index
-         * @param index Index of the child to retrieve
+         * Get the child at index, in document order (0 is the first child, drawn at the back)
+         * @param index Index of the child to retrieve, must be < childCount()
          * @return Const pointer to the Div at index
          */
         const Div *at(unsigned int index) const;
 
         /**
-         * Get the child at index
-         * @param index Index of the child to retrieve
+         * Get the child at index, in document order (0 is the first child, drawn at the back)
+         * @param index Index of the child to retrieve, must be < childCount()
          * @return Pointer to the Div at index
          */
         Div *at(unsigned int index);
 
         /**
-         * Get the index of a child by shared pointer
+         * Get the index of a child by shared pointer, in document order
          * @param child Shared pointer to a child
-         * @return Index of the child
+         * @return Index of the child, -1 if it isn't a child
          */
         int childIndex(std::shared_ptr<Div> child) const;
 
         /**
-         * Get the index of a child by pointer
+         * Get the index of a child by pointer, in document order
          * @param child Pointer to a child
-         * @return Index of the child
+         * @return Index of the child, -1 if it isn't a child
          */
         int childIndex(const Div *child) const;
 
@@ -476,8 +476,23 @@ namespace psychic_ui {
         virtual void addedToRender();
         virtual void removedFromRender();
 
+        /**
+         * Copy of the children, topmost (last) first, for dispatching mouse events.
+         * A copy so that handlers can add or remove children while we iterate.
+         */
+        std::vector<std::shared_ptr<Div>> childrenTopmostFirst() const;
+
+        /**
+         * Invalidate the style of the first and last children, whose :first-child/:last-child state
+         * changes when children are added or removed
+         */
+        void invalidateEndChildrenStyle();
+
         int                               _depth{0};
         Div                               *_parent{nullptr};
+        /**
+         * Children in document order (same as Yoga): first is at the back, last is on top
+         */
         std::vector<std::shared_ptr<Div>> _children{};
 
         // endregion

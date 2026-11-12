@@ -157,12 +157,10 @@ namespace psychic_ui {
                     case empty:
                         return component->childCount() == 0;
                     case firstChild:
-                        // NOTE: Children are stored in reverse order
-                        return component->parent()
-                               && component->parent()->childIndex(component) == component->parent()->childCount() - 1;
-                    case lastChild:
-                        // NOTE: Children are stored in reverse order
                         return component->parent() && component->parent()->childIndex(component) == 0;
+                    case lastChild:
+                        return component->parent()
+                               && component->parent()->childIndex(component) == (int) component->parent()->childCount() - 1;
                 }
                 return false; // Just to remove the warning...
             }

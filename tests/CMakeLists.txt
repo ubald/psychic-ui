@@ -20,6 +20,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         style/style_rule_tests.cpp
         style/yoga_tests.cpp
         layout/layout_pipeline_tests.cpp
+        div/children_tests.cpp
         keyboard/keycodes.cpp)
 
     target_link_libraries(psychic-ui-tests PRIVATE psychic-ui Catch2::Catch2WithMain)
