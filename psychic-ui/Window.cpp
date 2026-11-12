@@ -263,6 +263,32 @@ namespace psychic_ui {
 
     // region Draw
 
+    void Window::updateStylesAndLayout() {
+        // Styles first, since they are the layout's input
+        if (!_styleManager->valid()) {
+            updateStyleRecursive();
+            _styleManager->setValid();
+        }
+
+        // `styleUpdated` callbacks can invalidate styles, so run the pass again until nothing is dirty,
+        // but a bounded number of times so that a callback that always invalidates can't hang the frame:
+        // what is left waits for the next frame.
+        for (int pass = 0; pass < maxStylePasses && styleDirty(); ++pass) {
+            updateDirtyStyles();
+        }
+
+        // Then the layout
+        if (YGNodeIsDirty(_yogaNode)) {
+            #ifdef DEBUG_LAYOUT
+            if (debugLayout) {
+                std::cout << "Layout dirty!" << std::endl;
+            }
+            #endif
+            YGNodeCalculateLayout(_yogaNode, _width, _height, YGDirectionLTR);
+            layoutUpdated();
+        }
+    }
+
     void Window::drawAll() {
         if (!_visible) {
             // TODO: That should not happen
@@ -284,23 +310,7 @@ namespace psychic_ui {
         //}
         //#endif
 
-        // Check for dirty style manager
-        // Before layout since it can have an impact on the layout
-        if (!_styleManager->valid()) {
-            updateStyleRecursive();
-            _styleManager->setValid();
-        }
-
-        // Do Layout
-        if (YGNodeIsDirty(_yogaNode)) {
-            #ifdef DEBUG_LAYOUT
-            if (debugLayout) {
-                std::cout << "Layout dirty!" << std::endl;
-            }
-            #endif
-            YGNodeCalculateLayout(_yogaNode, _width, _height, YGDirectionLTR);
-            layoutUpdated();
-        }
+        updateStylesAndLayout();
 
         //glViewport(0, 0, _fbWidth, _fbHeight);
         //glBindSampler(0, 0);

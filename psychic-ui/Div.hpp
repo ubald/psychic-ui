@@ -359,10 +359,27 @@ namespace psychic_ui {
         void setStyleManager(std::shared_ptr<StyleManager> styleManager);
 
         /**
-         * Compute style for this component
+         * Compute style for this component and push it to its Yoga node
          */
         void updateStyle();
+
+        /**
+         * Compute style for this component and all its descendants, visible or not
+         */
         void updateStyleRecursive();
+
+        /**
+         * Compute style only where it was invalidated: nodes whose style is dirty and their descendants,
+         * reached through the `_descendantStyleDirty` flags, visible or not (hidden nodes still take part in layout).
+         * One pass: styles invalidated by a `styleUpdated` callback during the pass may be left dirty,
+         * check `styleDirty()` and run it again (`Window::updateStylesAndLayout` does).
+         */
+        void updateDirtyStyles();
+
+        /**
+         * Whether this node or one of its descendants needs its style computed
+         */
+        bool styleDirty() const;
 
         /**
          * Get the computed style
@@ -545,6 +562,11 @@ namespace psychic_ui {
          * Dirty style flag
          */
         bool _styleDirty{true};
+
+        /**
+         * A descendant has a dirty style, so the style pass has to go through this node
+         */
+        bool _descendantStyleDirty{false};
 
 
         /**

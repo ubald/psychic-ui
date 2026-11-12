@@ -590,13 +590,21 @@ namespace psychic_ui {
     }
 
     void Div::invalidateStyle() {
-        if (_styleDirty) {
-            return;
+        if (!_styleDirty) {
+            // Descendants inherit from us and can match on our state, the pass recomputes them with us
+            _styleDirty = true;
+            for (const auto &child: _children) {
+                child->invalidateStyle();
+            }
         }
-        _styleDirty = true;
-        for (const auto &child: _children) {
-            child->invalidateStyle();
+        // Let the style pass find us from the root
+        for (Div *ancestor = _parent; ancestor && !ancestor->_descendantStyleDirty; ancestor = ancestor->_parent) {
+            ancestor->_descendantStyleDirty = true;
         }
+    }
+
+    bool Div::styleDirty() const {
+        return _styleDirty || _descendantStyleDirty;
     }
 
     void Div::updateStyle() {
@@ -609,10 +617,21 @@ namespace psychic_ui {
     }
 
     void Div::updateStyleRecursive() {
+        // Cleared first so that invalidations made by the callbacks below flag us again
+        _descendantStyleDirty = false;
         updateStyle();
-        if (_visible) {
+        for (auto &child: _children) {
+            child->updateStyleRecursive();
+        }
+    }
+
+    void Div::updateDirtyStyles() {
+        if (_styleDirty) {
+            updateStyleRecursive();
+        } else if (_descendantStyleDirty) {
+            _descendantStyleDirty = false;
             for (auto &child: _children) {
-                child->updateStyleRecursive();
+                child->updateDirtyStyles();
             }
         }
     }
@@ -947,11 +966,7 @@ namespace psychic_ui {
     }
 
     void Div::render(SkCanvas *canvas) {
-        // Update styles first since it can have an impact on visibility
-        if (_styleDirty) {
-            updateStyle();
-        }
-
+        // Paint only: styles and layout were updated by the window before rendering
         if (!layoutReady || !_visible || canvas->quickReject(_rect)) {
             return;
         }

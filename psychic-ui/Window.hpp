@@ -63,6 +63,17 @@ namespace psychic_ui {
         void close();
         void drawAll();
 
+        /**
+         * The frame's work before painting, in order: compute the dirty styles (visible or not),
+         * then lay out the tree if needed. Called by `drawAll`, needs no canvas.
+         */
+        void updateStylesAndLayout();
+
+        /**
+         * How many style passes a frame may run when `styleUpdated` callbacks keep invalidating styles
+         */
+        static constexpr int maxStylePasses = 4;
+
         void openMenu(const std::vector<std::shared_ptr<MenuItem>> &items, int x, int y);
         void closeMenu();
 
