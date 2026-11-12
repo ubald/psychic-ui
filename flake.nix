@@ -17,8 +17,9 @@
         }).python27;
     in
     {
-      # Skia, Yoga, GLFW and depot_tools still come from the pinned submodules;
-      # this shell only supplies what their builds expect to find on the system.
+      # Skia, Yoga and depot_tools still come from the pinned submodules; this shell
+      # supplies what their builds expect to find on the system, and the packages
+      # CMake's find_package finds before it would fetch them (SDL3, GLFW, Catch2).
       devShells.${system}.default = pkgs.mkShell {
         name = "psychic-ui";
 
@@ -37,13 +38,14 @@
           fontconfig
           icu
           sdl3
+          glfw
           zlib
           expat
 
           # Found by the tests' FetchContent instead of downloading it
           catch2_3
 
-          # GLFW's X11 backend
+          # X11 development files: Skia's GLX code, and SDL3 or GLFW when they're fetched
           libx11
           libxrandr
           libxinerama

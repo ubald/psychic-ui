@@ -1,6 +1,3 @@
-[submodule "extlib/external/glfw"]
-	path = extlib/external/glfw
-	url = https://github.com/glfw/glfw.git
 [submodule "extlib/external/yoga"]
 	path = extlib/external/yoga
 	url = https://github.com/ubald/yoga.git

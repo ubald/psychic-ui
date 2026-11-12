@@ -77,6 +77,9 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 option(PSYCHIC_UI_BUILD_SDL3 "SDL3 backend: the application runner, and the adapter for SDL hosts" ON)
 add_feature_info("psychic-ui-sdl3" PSYCHIC_UI_BUILD_SDL3 "Build the SDL3 backend")
 
+option(PSYCHIC_UI_BUILD_GLFW_ADAPTER "GLFW adapter, to embed Psychic UI in a GLFW application" ON)
+add_feature_info("psychic-ui-glfw-adapter" PSYCHIC_UI_BUILD_GLFW_ADAPTER "Build the GLFW embedding adapter")
+
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
@@ -119,6 +122,35 @@ if (PSYCHIC_UI_BUILD_SDL3)
     set(SDL_VULKAN OFF)
     set(SDL_KMSDRM OFF)
     FetchContent_MakeAvailable(SDL3)
+endif ()
+
+# GLFW, for the embedding adapter: an installed 3.4+ if there is one, otherwise this release, built static
+if (PSYCHIC_UI_BUILD_GLFW_ADAPTER)
+    FetchContent_Declare(glfw3
+        URL https://github.com/glfw/glfw/releases/download/3.5.1/glfw-3.5.1.zip
+        URL_HASH SHA256=ea79bc5feffc254c87291980c2d0bce9acebb68c4983b79f961dcd2cb8a611a0
+        FIND_PACKAGE_ARGS 3.4 CONFIG
+        )
+    set(GLFW_BUILD_EXAMPLES OFF)
+    set(GLFW_BUILD_TESTS OFF)
+    set(GLFW_BUILD_DOCS OFF)
+    set(GLFW_INSTALL OFF)
+    # Wayland only when its development files are there (GLFW stops otherwise); X11 always
+    if (CMAKE_SYSTEM_NAME MATCHES "Linux|BSD" AND NOT DEFINED GLFW_BUILD_WAYLAND)
+        find_package(PkgConfig QUIET)
+        if (PKG_CONFIG_FOUND)
+            pkg_check_modules(GLFW_WAYLAND_DEPS QUIET wayland-client wayland-cursor wayland-egl xkbcommon)
+        endif ()
+        find_program(WAYLAND_SCANNER wayland-scanner)
+        if (GLFW_WAYLAND_DEPS_FOUND AND WAYLAND_SCANNER)
+            set(GLFW_BUILD_WAYLAND ON)
+        else ()
+            set(GLFW_BUILD_WAYLAND OFF)
+        endif ()
+    endif ()
+    set(BUILD_SHARED_LIBS OFF)
+    FetchContent_MakeAvailable(glfw3)
+    unset(BUILD_SHARED_LIBS)
 endif ()
 
 # YOGA
@@ -245,6 +277,13 @@ if (PSYCHIC_UI_BUILD_SDL3)
         )
 endif ()
 
+if (PSYCHIC_UI_BUILD_GLFW_ADAPTER)
+    list(APPEND SOURCE_FILES
+        psychic-ui/applications/GLFWSystemWindow.cpp
+        psychic-ui/applications/GLFWSystemWindow.hpp
+        )
+endif ()
+
 add_library(psychic-ui ${SOURCE_FILES})
 
 target_compile_features(psychic-ui PUBLIC cxx_std_20)
@@ -273,6 +312,10 @@ endif ()
 
 if (PSYCHIC_UI_BUILD_SDL3)
     target_link_libraries(psychic-ui PUBLIC SDL3::SDL3)
+endif ()
+
+if (PSYCHIC_UI_BUILD_GLFW_ADAPTER)
+    target_link_libraries(psychic-ui PUBLIC glfw)
 endif ()
 
 if (PSYCHIC_UI_USE_GLAD)

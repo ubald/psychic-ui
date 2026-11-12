@@ -40,9 +40,11 @@ namespace psychic_ui {
 
         /**
          * Whether something other than Psychic UI also draws with this GL context (a host application):
-         * Skia then forgets the GL state it caches before each frame.
+         * Skia then forgets the GL state it caches before each frame. True for the adapters that wrap
+         * a host's window; a host that draws nothing else can turn it off.
          */
         bool sharesContext() const;
+        void setSharesContext(bool sharesContext);
 
         int getX() const;
         int getY() const;

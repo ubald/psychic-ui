@@ -31,6 +31,10 @@ namespace psychic_ui {
         return _sharesContext;
     }
 
+    void SystemWindow::setSharesContext(bool sharesContext) {
+        _sharesContext = sharesContext;
+    }
+
     int SystemWindow::getX() const {
         return _x;
     }

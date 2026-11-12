@@ -32,6 +32,11 @@ if (PSYCHIC_UI_BUILD_TESTS)
             backends/sdl3_tests.cpp)
     endif ()
 
+    if (PSYCHIC_UI_BUILD_GLFW_ADAPTER)
+        target_sources(psychic-ui-tests PRIVATE
+            backends/glfw_tests.cpp)
+    endif ()
+
     target_link_libraries(psychic-ui-tests PRIVATE psychic-ui Catch2::Catch2WithMain)
     target_compile_definitions(psychic-ui-tests PRIVATE
         PSYCHIC_UI_TEST_FONTS="${PROJECT_SOURCE_DIR}/res/fonts/Ubuntu/")

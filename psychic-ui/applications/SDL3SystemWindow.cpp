@@ -15,7 +15,7 @@ namespace psychic_ui {
             throw std::invalid_argument("SDL3SystemWindow needs an SDL window");
         }
 
-        // Shared unless the runner, which owns the context, says otherwise
+        // The host may draw with this context too
         _sharesContext = true;
 
         SDL_GetWindowPosition(_sdlWindow, &_x, &_y);

@@ -88,7 +88,7 @@ namespace psychic_ui {
 
         owned->systemWindow = std::make_unique<SDL3SystemWindow>(window, owned->sdlWindow, owned->glContext);
         // Nothing else draws with this context
-        owned->systemWindow->_sharesContext = false;
+        owned->systemWindow->setSharesContext(false);
         owned->systemWindow->installHitTest();
 
         auto &systemWindow = *owned->systemWindow;
