@@ -89,7 +89,25 @@ namespace psychic_ui {
         owned->systemWindow = std::make_unique<SDL3SystemWindow>(window, owned->sdlWindow, owned->glContext);
         // Nothing else draws with this context
         owned->systemWindow->setSharesContext(false);
-        owned->systemWindow->installHitTest();
+        const bool hitTest = owned->systemWindow->installHitTest();
+
+        // With SDL_LOGGING=app=debug
+        using GetString = const char *(*)(unsigned);
+        auto glGetString = reinterpret_cast<GetString>(SDL_GL_GetProcAddress("glGetString"));
+        constexpr unsigned GL_RENDERER_ = 0x1F01;
+        constexpr unsigned GL_VERSION_  = 0x1F02;
+        SDL_LogDebug(
+            SDL_LOG_CATEGORY_APPLICATION,
+            "Psychic UI: SDL %d.%d.%d, %s video driver, OpenGL %s (%s), %d samples, %d stencil bits, %s, pixel density %.2f",
+            SDL_VERSIONNUM_MAJOR(SDL_GetVersion()), SDL_VERSIONNUM_MINOR(SDL_GetVersion()), SDL_VERSIONNUM_MICRO(SDL_GetVersion()),
+            SDL_GetCurrentVideoDriver(),
+            glGetString ? glGetString(GL_VERSION_) : "?",
+            glGetString ? glGetString(GL_RENDERER_) : "?",
+            owned->systemWindow->getSamples(),
+            owned->systemWindow->getStencilBits(),
+            hitTest ? "hit testing" : "no hit testing",
+            owned->systemWindow->getPixelRatio()
+        );
 
         auto &systemWindow = *owned->systemWindow;
         _windows.push_back(std::move(owned));
