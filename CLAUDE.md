@@ -8,7 +8,7 @@ The project is being resumed after years idle (the README still says it's paused
 
 ## Building
 
-The toolchain and system libraries come from the Nix flake's dev shell (`flake.nix`), loaded by direnv (`.envrc`: `use flake`); outside direnv, prefix commands with `nix develop -c`. Dependencies are git submodules (GLFW, Yoga, Skia, depot_tools, `lib/psychic-color`); CMake stops with a fatal error if they are missing:
+The toolchain and system libraries come from the Nix flake's dev shell (`flake.nix`), loaded by direnv (`.envrc`: `use flake`); outside direnv, prefix commands with `nix develop -c`. The flake is a convenience for local development only: the build must also work without Nix, so never make a dependency reachable only through it. Dependencies are git submodules (GLFW, Yoga, Skia, depot_tools, `lib/psychic-color`); CMake stops with a fatal error if they are missing:
 
 ```sh
 git submodule update --init --recursive
