@@ -10,9 +10,17 @@ set(SKIA_ARGS_LIST skia_use_dng_sdk=false skia_use_expat=false skia_use_libwebp=
 list(APPEND SKIA_ARGS_LIST "skia_use_sfntly=false")  # PDF font subsetting, unused; its C++14 can't include ICU 64+ headers
 
 if (APPLE)
-    # Homebrew's keg-only ICU and jpeg-turbo, found through CMAKE_PREFIX_PATH by the root CMakeLists
-    list(APPEND SKIA_ARGS_LIST "extra_cflags=[\"-I${ICU_INCLUDE_DIR}\", \"-I${JPEG_INCLUDE_DIR}\", \"-I${FREETYPE_INCLUDE_DIR_freetype2}\"]")
-    list(APPEND SKIA_ARGS_LIST "extra_ldflags=[\"-L${ICU_INCLUDE_DIR}/../lib\", \"-L${JPEG_INCLUDE_DIR}/../lib\"]")
+    # An official build takes ICU, jpeg-turbo, libpng, FreeType and zlib from the system (expat and
+    # libwebp are off). Point it at what the root CMakeLists found: Homebrew's prefix (/opt/homebrew
+    # on Apple Silicon) and its keg-only ICU and jpeg-turbo aren't on clang's default paths. zlib
+    # comes from the SDK, which is. Skia only builds static libraries, so the -L flags are for
+    # anything gn would link, not for libskia.a.
+    get_filename_component(SKIA_ICU_LIB_DIR "${ICU_UC_LIBRARY}" DIRECTORY)
+    get_filename_component(SKIA_JPEG_LIB_DIR "${JPEG_LIBRARY}" DIRECTORY)
+    get_filename_component(SKIA_PNG_LIB_DIR "${PNG_LIBRARY}" DIRECTORY)
+    get_filename_component(SKIA_FREETYPE_LIB_DIR "${FREETYPE_LIBRARY}" DIRECTORY)
+    list(APPEND SKIA_ARGS_LIST "extra_cflags=[\"-I${ICU_INCLUDE_DIR}\", \"-I${JPEG_INCLUDE_DIR}\", \"-I${PNG_PNG_INCLUDE_DIR}\", \"-I${FREETYPE_INCLUDE_DIR_freetype2}\"]")
+    list(APPEND SKIA_ARGS_LIST "extra_ldflags=[\"-L${SKIA_ICU_LIB_DIR}\", \"-L${SKIA_JPEG_LIB_DIR}\", \"-L${SKIA_PNG_LIB_DIR}\", \"-L${SKIA_FREETYPE_LIB_DIR}\"]")
 elseif (CMAKE_SYSTEM MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "BSD")
 #    list(APPEND SKIA_ARGS_LIST "extra_cflags=[\"-I${JPEGTURBO_INCLUDE_DIR}\"]")
 #    list(APPEND SKIA_ARGS_LIST "extra_ldflags=[\"-L${TURBOJPEG_LIBRARY}\"]")
