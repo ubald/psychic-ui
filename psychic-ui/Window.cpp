@@ -16,12 +16,6 @@ namespace psychic_ui {
         setTag("Window");
         setWindowSize(1440, 900);
 
-        // Initialize Yoga
-        // TODO: This should not be repeated for every window since its global
-        YGConfigSetUseWebDefaults(YGConfigGetDefault(), true);
-        YGConfigSetExperimentalFeatureEnabled(YGConfigGetDefault(), YGExperimentalFeatureWebFlexBasis, true);
-        YGConfigSetPointScaleFactor(YGConfigGetDefault(), 0.0f); // We'll round the values ourselves, rounding is bugged
-
         _inlineStyle->set(position, "absolute");
         _inlineStyle->set(overflow, "hidden");
 
@@ -306,16 +300,6 @@ namespace psychic_ui {
             #endif
             YGNodeCalculateLayout(_yogaNode, _width, _height, YGDirectionLTR);
             layoutUpdated();
-            #ifdef DEBUG_LAYOUT
-            if (debugLayout) {
-                YGNodePrint(
-                    _yogaNode,
-                    static_cast<YGPrintOptions>(YGPrintOptionsLayout
-                                                | YGPrintOptionsStyle
-                                                | YGPrintOptionsChildren));
-                std::cout << std::endl;
-            }
-            #endif
         }
 
         //glViewport(0, 0, _fbWidth, _fbHeight);

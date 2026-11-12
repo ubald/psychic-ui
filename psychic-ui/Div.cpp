@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cmath>
 #include <iostream>
 #include <SkPaint.h>
@@ -9,6 +10,29 @@
 
 
 namespace psychic_ui {
+
+    namespace {
+        // Shared by every Yoga node: built when the first Div is, so as a static it is destroyed after every static Div
+        struct YogaConfig {
+            YGConfigRef config{YGConfigNew()};
+
+            YogaConfig() {
+                YGConfigSetUseWebDefaults(config, true);
+                YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureWebFlexBasis, true);
+                YGConfigSetPointScaleFactor(config, 0.0f); // We'll round the values ourselves, rounding is bugged
+                YGConfigSetErrata(config, YGErrataClassic); // Keep Yoga 1.x layout instead of the W3C-conformant one
+            }
+
+            ~YogaConfig() {
+                YGConfigFree(config);
+            }
+        };
+
+        YGConfigRef yogaConfig() {
+            static YogaConfig yogaConfig;
+            return yogaConfig.config;
+        }
+    }
 
     const InheritableValues Div::_inheritableValues{
         {color},
@@ -30,26 +54,10 @@ namespace psychic_ui {
         _defaultStyle(std::make_unique<Style>([this]() { invalidateStyle(); })),
         _inlineStyle(std::make_unique<Style>([this]() { invalidateStyle(); })),
         _computedStyle(std::make_unique<Style>()),
-        _yogaNode(YGNodeNew()) {
+        _yogaNode(YGNodeNewWithConfig(yogaConfig())) {
         setTag("div");
 
         YGNodeSetContext(_yogaNode, this);
-        YGNodeSetPrintFunc(
-            _yogaNode, [](YGNodeRef node) {
-                auto div = static_cast<Div *>(YGNodeGetContext(node));
-                std::cout << "type=\"" << div->tags().back() << "\" ";
-                if (!div->id().empty()) {
-                    std::cout << "id=\"" << div->id() << "\" ";
-                }
-                if (!div->classNames().empty()) {
-                    std::cout << "class=\"";
-                    for (auto &className: div->classNames()) {
-                        std::cout << className << " ";
-                    }
-                    std::cout << "\" ";
-                }
-            }
-        );
 
         // We don't like these from the web default
         // TODO: Is this still needed?
@@ -707,7 +715,7 @@ namespace psychic_ui {
     void Div::setMeasurable() {
         YGNodeSetMeasureFunc(
             _yogaNode,
-            [](YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+            [](YGNodeConstRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
                 YGSize size{};
                 auto   div = static_cast<Div *>(YGNodeGetContext(node));
                 if (!div) {
@@ -728,7 +736,7 @@ namespace psychic_ui {
         if (_computedStyle->has(style)) { \
             float value = _computedStyle->get(style); \
             YGNodeStyleSet##prop(_yogaNode, std::isnan(value) ? YGUndefined : value); \
-        } else if (YGNodeStyleGet##prop(_yogaNode) != YGUndefined) { \
+        } else if (!YGFloatIsUndefined(YGNodeStyleGet##prop(_yogaNode))) { \
             YGNodeStyleSet##prop(_yogaNode, YGUndefined); \
         } \
 
@@ -767,7 +775,7 @@ namespace psychic_ui {
         if (_computedStyle->has(style)) { \
             float value = _computedStyle->get(style); \
             YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, std::isnan(value) ? YGUndefined : value); \
-        } else if (YGNodeStyleGet##prop(_yogaNode, YGEdge##edge) != YGUndefined) { \
+        } else if (!YGFloatIsUndefined(YGNodeStyleGet##prop(_yogaNode, YGEdge##edge))) { \
             YGNodeStyleSet##prop(_yogaNode, YGEdge##edge, YGUndefined); \
         } \
 

@@ -3,9 +3,10 @@
 #include <yoga/Yoga.h>
 
 TEST_CASE( "Making sure yoga does what we want" ) {
-    YGConfigSetUseWebDefaults(YGConfigGetDefault(), true);
-    auto container = YGNodeNew();
-    auto node = YGNodeNew();
+    auto config = YGConfigNew();
+    YGConfigSetUseWebDefaults(config, true);
+    auto container = YGNodeNewWithConfig(config);
+    auto node = YGNodeNewWithConfig(config);
     YGNodeInsertChild(container, node, YGNodeGetChildCount(container));
 
 
@@ -50,4 +51,5 @@ TEST_CASE( "Making sure yoga does what we want" ) {
     }
 
     YGNodeFreeRecursive(container);
+    YGConfigFree(config);
 }
