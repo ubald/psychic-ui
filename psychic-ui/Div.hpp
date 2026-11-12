@@ -225,46 +225,25 @@ namespace psychic_ui {
 
         // endregion
 
-        // region Position
+        // region Position & Dimensions
 
-        void setPosition(int x, int y);
-        void setPosition(int left, int top, int right, int bottom);
+        // The setters are shortcuts that write the inline style (`left`, `top`, `width`, `height`), which goes
+        // through the computed style like any other style value: it is the only input of the layout.
+        // The getters read the layout's output, so they are only up to date after the window's layout pass.
+        // Use `style()` for the other properties (right, bottom, percents, min/max).
+
         void localToGlobal(int &gx, int &gy, int x = 0, int y = 0) const;
         void globalToLocal(int &lx, int &ly, int x = 0, int y = 0) const;
+        void setPosition(int x, int y);
         int x() const;
         void setX(int x);
         int y() const;
         void setY(int y);
-        int getLeft() const;
-        void setLeft(int left);
-        int getRight() const;
-        void setRight(int right);
-        int getTop() const;
-        void setTop(int top);
-        int getBottom() const;
-        void setBottom(int bottom);
-        float getLeftPercent() const;
-        void setLeftPercent(float leftPercent);
-        float getRightPercent() const;
-        void setRightPercent(float rightPercent);
-        float getTopPercent() const;
-        void setTopPercent(float topPercent);
-        float getBottomPercent() const;
-        void setBottomPercent(float bottomPercent);
-
-        // endregion
-
-        // region Dimensions
-
         void setSize(int width, int height);
         int getWidth() const;
         void setWidth(int width);
         int getHeight() const;
         void setHeight(int height);
-        float getWidthPercent() const;
-        void setWidthPercent(float widthPercent);
-        float getHeightPercent() const;
-        void setHeightPercent(float heightPercent);
 
         // endregion
 

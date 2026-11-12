@@ -222,6 +222,13 @@ namespace psychic_ui {
         // Performances
         double fps{0.0f};
 
+        /**
+         * Window size, read through `windowWidth()`/`windowHeight()` (the system window's once opened):
+         * the size the root is laid out at
+         */
+        int _windowWidth{0};
+        int _windowHeight{0};
+
     private:
         // Dont allow direct manipulation by others than the window itself
         using Div::add;

@@ -245,15 +245,16 @@ namespace psychic_ui {
     }
 
     int Window::windowWidth() const {
-        return _systemWindow ? _systemWindow->getWidth() : _width;
+        return _systemWindow ? _systemWindow->getWidth() : _windowWidth;
     }
 
     int Window::windowHeight() const {
-        return _systemWindow ? _systemWindow->getHeight() : _height;
+        return _systemWindow ? _systemWindow->getHeight() : _windowHeight;
     }
 
     void Window::setWindowSize(const int width, const int height) {
-        setSize(width, height);
+        _windowWidth  = width;
+        _windowHeight = height;
         if (_systemWindow) {
             _systemWindow->setSize(width, height);
         }
@@ -277,14 +278,17 @@ namespace psychic_ui {
             updateDirtyStyles();
         }
 
-        // Then the layout
-        if (YGNodeIsDirty(_yogaNode)) {
+        // Then the layout, at the window's current size: the root has no width or height of its own,
+        // it fills the size given here
+        const int width  = windowWidth();
+        const int height = windowHeight();
+        if (YGNodeIsDirty(_yogaNode) || width != _width || height != _height) {
             #ifdef DEBUG_LAYOUT
             if (debugLayout) {
                 std::cout << "Layout dirty!" << std::endl;
             }
             #endif
-            YGNodeCalculateLayout(_yogaNode, _width, _height, YGDirectionLTR);
+            YGNodeCalculateLayout(_yogaNode, width, height, YGDirectionLTR);
             layoutUpdated();
         }
     }
@@ -493,11 +497,9 @@ namespace psychic_ui {
     }
 
     void Window::windowResized(const int width, const int height) {
-        // std::cout << "Resized" << std::endl;
-
-        // Set setLayout setSize
-        YGNodeStyleSetWidth(_yogaNode, width);
-        YGNodeStyleSetHeight(_yogaNode, height);
+        // The system window already holds the new size, the next frame lays out the root at it
+        _windowWidth  = width;
+        _windowHeight = height;
 
         // Get a new surface
         getSkiaSurface();

@@ -3,6 +3,7 @@
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/Div.hpp>
+#include <psychic-ui/components/ToolBar.hpp>
 
 using namespace psychic_ui;
 
@@ -139,4 +140,99 @@ TEST_CASE("a styleUpdated that always invalidates doesn't hang the frame", "[lay
     window->appContainer()->add<AlwaysDirtyDiv>();
     window->updateStylesAndLayout();
     REQUIRE(window->styleDirty());
+}
+
+SCENARIO("the setters write the inline style, the only input of the layout", "[layout]") {
+    auto styleManager = std::make_shared<StyleManager>();
+    auto window       = makeWindow(styleManager);
+
+    GIVEN("a div given a height with setHeight") {
+        auto div = window->appContainer()->add<Div>();
+        div->addClassName("box");
+        div->setHeight(48);
+        window->updateStylesAndLayout();
+        REQUIRE(div->getHeight() == 48);
+
+        WHEN("its style is updated") {
+            div->addClassName("other");
+            window->updateStylesAndLayout();
+
+            THEN("it keeps its height") {
+                REQUIRE(div->getHeight() == 48);
+            }
+        }
+
+        WHEN("a stylesheet gives it another height") {
+            styleManager->style(".box")->set(height, 10.0f);
+            window->updateStylesAndLayout();
+
+            THEN("the inline height wins") {
+                REQUIRE(div->getHeight() == 48);
+            }
+        }
+    }
+
+    GIVEN("a toolbar") {
+        auto toolBar = window->appContainer()->add<ToolBar>();
+        toolBar->addClassName("other");
+        window->updateStylesAndLayout();
+
+        THEN("it keeps its 48 px height through style updates") {
+            REQUIRE(toolBar->getHeight() == 48);
+        }
+    }
+
+    GIVEN("an absolute div placed with setX and setY") {
+        auto div = window->appContainer()->add<Div>();
+        div->style()->set(position, "absolute");
+        div->setSize(10, 10);
+
+        WHEN("the position is negative") {
+            div->setX(-5);
+            div->setY(-7);
+            window->updateStylesAndLayout();
+
+            THEN("the layout places it there") {
+                REQUIRE(div->x() == -5);
+                REQUIRE(div->y() == -7);
+                REQUIRE(div->getWidth() == 10);
+            }
+        }
+    }
+}
+
+SCENARIO("the root is laid out at the window size", "[layout]") {
+    auto styleManager = std::make_shared<StyleManager>();
+    auto window       = makeWindow(styleManager);
+    auto child        = window->appContainer()->add<Div>();
+    child->style()->set(heightPercent, 1.0f);
+    window->updateStylesAndLayout();
+    REQUIRE(window->getWidth() == 800);
+    REQUIRE(window->getHeight() == 600);
+    REQUIRE(child->getWidth() == 800);
+
+    WHEN("the window is resized") {
+        window->setWindowSize(1024, 768);
+        window->updateStylesAndLayout();
+
+        THEN("the same pass lays out the root at the new size") {
+            REQUIRE(window->getWidth() == 1024);
+            REQUIRE(window->getHeight() == 768);
+            REQUIRE(child->getHeight() == 768);
+        }
+    }
+
+    WHEN("the window is resized and the stylesheet changes in the same frame") {
+        window->setWindowSize(1024, 768);
+        styleManager->style("#app")->set(padding, 4.0f);
+        window->updateStylesAndLayout();
+
+        THEN("the root is laid out at the new size with the new style") {
+            REQUIRE(window->getWidth() == 1024);
+            REQUIRE(window->getHeight() == 768);
+            REQUIRE(window->appContainer()->getWidth() == 1024);
+            REQUIRE(child->x() == 4);
+            REQUIRE(child->getWidth() == 1024 - 8);
+        }
+    }
 }

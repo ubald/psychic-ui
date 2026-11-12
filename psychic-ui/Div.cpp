@@ -57,10 +57,6 @@ namespace psychic_ui {
         setTag("div");
 
         YGNodeSetContext(_yogaNode, this);
-
-        // We don't like these from the web default
-        // TODO: Is this still needed?
-        YGNodeStyleSetFlexDirection(_yogaNode, YGFlexDirectionColumn);
     }
 
     Div::~Div() {
@@ -315,7 +311,7 @@ namespace psychic_ui {
 
     // endregion
 
-    // region Position
+    // region Position & Dimensions
 
     void Div::localToGlobal(int &gx, int &gy, const int x, const int y) const {
         int lgx = _x + x;
@@ -336,17 +332,9 @@ namespace psychic_ui {
     }
 
     void Div::setPosition(int x, int y) {
-        _x = x;
-        _y = y;
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, _x);
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, _y);
-    }
-
-    void Div::setPosition(int left, int top, int right, int bottom) {
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, left);
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, top);
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeRight, right);
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeBottom, bottom);
+        _inlineStyle
+            ->set(left, static_cast<float>(x))
+            ->set(top, static_cast<float>(y));
     }
 
     int Div::x() const {
@@ -354,8 +342,7 @@ namespace psychic_ui {
     }
 
     void Div::setX(int x) {
-        _x = x;
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, _x >= 0 ? _x : YGUndefined);
+        _inlineStyle->set(left, static_cast<float>(x));
     }
 
     int Div::y() const {
@@ -363,87 +350,13 @@ namespace psychic_ui {
     }
 
     void Div::setY(int y) {
-        _y = y;
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, _y >= 0 ? _y : YGUndefined);
+        _inlineStyle->set(top, static_cast<float>(y));
     }
-
-    int Div::getLeft() const {
-        return (int) YGNodeStyleGetPosition(_yogaNode, YGEdgeLeft).value;
-    }
-
-    void Div::setLeft(int left) {
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, left);
-    }
-
-    float Div::getLeftPercent() const {
-        auto size = YGNodeStyleGetPosition(_yogaNode, YGEdgeLeft);
-        return size.unit == YGUnitPercent ? size.value / 100.f : nanf("not a percent");
-    }
-
-    void Div::setLeftPercent(float leftPercent) {
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeLeft, YogaPercent(leftPercent));
-    }
-
-    int Div::getRight() const {
-        return (int) YGNodeStyleGetPosition(_yogaNode, YGEdgeRight).value;
-    }
-
-    void Div::setRight(int right) {
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeRight, right);
-    }
-
-    float Div::getRightPercent() const {
-        auto size = YGNodeStyleGetPosition(_yogaNode, YGEdgeRight);
-        return size.unit == YGUnitPercent ? size.value / 100.f : nanf("not a percent");
-    }
-
-    void Div::setRightPercent(float rightPercent) {
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeRight, YogaPercent(rightPercent));
-    }
-
-    int Div::getTop() const {
-        return (int) YGNodeStyleGetPosition(_yogaNode, YGEdgeTop).value;
-    }
-
-    void Div::setTop(int top) {
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, top);
-    }
-
-    float Div::getTopPercent() const {
-        auto size = YGNodeStyleGetPosition(_yogaNode, YGEdgeTop);
-        return size.unit == YGUnitPercent ? size.value / 100.f : nanf("not a percent");
-    }
-
-    void Div::setTopPercent(float topPercent) {
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeTop, YogaPercent(topPercent));
-    }
-
-    int Div::getBottom() const {
-        return (int) YGNodeStyleGetPosition(_yogaNode, YGEdgeBottom).value;
-    }
-
-    void Div::setBottom(int bottom) {
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeBottom, bottom);
-    }
-
-    float Div::getBottomPercent() const {
-        auto size = YGNodeStyleGetPosition(_yogaNode, YGEdgeBottom);
-        return size.unit == YGUnitPercent ? size.value / 100.f : nanf("not a percent");
-    }
-
-    void Div::setBottomPercent(float bottomPercent) {
-        YGNodeStyleSetPosition(_yogaNode, YGEdgeBottom, YogaPercent(bottomPercent));
-    }
-
-    // endregion
-
-    // region Dimensions
 
     void Div::setSize(int width, int height) {
-        _width  = width;
-        _height = height;
-        YGNodeStyleSetWidth(_yogaNode, _width);
-        YGNodeStyleSetHeight(_yogaNode, _height);
+        _inlineStyle
+            ->set(psychic_ui::width, static_cast<float>(width))
+            ->set(psychic_ui::height, static_cast<float>(height));
     }
 
     int Div::getWidth() const {
@@ -451,8 +364,7 @@ namespace psychic_ui {
     }
 
     void Div::setWidth(int width) {
-        _width = width;
-        YGNodeStyleSetWidth(_yogaNode, _width);
+        _inlineStyle->set(psychic_ui::width, static_cast<float>(width));
     }
 
     int Div::getHeight() const {
@@ -460,26 +372,7 @@ namespace psychic_ui {
     }
 
     void Div::setHeight(int height) {
-        _height = height;
-        YGNodeStyleSetHeight(_yogaNode, _height);
-    }
-
-    float Div::getWidthPercent() const {
-        auto size = YGNodeStyleGetWidth(_yogaNode);
-        return size.unit == YGUnitPercent ? size.value / 100.f : nanf("not a percent");
-    }
-
-    void Div::setWidthPercent(float widthPercent) {
-        YGNodeStyleSetWidthPercent(_yogaNode, YogaPercent(widthPercent));
-    }
-
-    float Div::getHeightPercent() const {
-        auto size = YGNodeStyleGetHeight(_yogaNode);
-        return size.unit == YGUnitPercent ? size.value / 100.f : nanf("not a percent");
-    }
-
-    void Div::setHeightPercent(float heightPercent) {
-        YGNodeStyleSetHeightPercent(_yogaNode, YogaPercent(heightPercent));
+        _inlineStyle->set(psychic_ui::height, static_cast<float>(height));
     }
 
     // endregion
