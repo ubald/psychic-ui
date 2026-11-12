@@ -140,23 +140,23 @@ namespace psychic_ui {
         direction(Direction::Row)
             .padding(0); // We're using a scroller so no padding
 
-        auto &scroller = add<Div>();
-        scroller.width(100_pct)
+        auto &scroller = add<Div>()
+            .width(100_pct)
             .height(100_pct)
             .padding(24)
             .overflow(Overflow::Scroll);
 
-        auto &scrollbar = add<ScrollBar>(scroller);
-        scrollbar.height(100_pct);
+        auto &scrollbar = add<ScrollBar>(scroller)
+            .height(100_pct);
 
         {
-            auto &container = scroller.add<HBox>();
-            container.shrink(0)
+            auto &container = scroller.add<HBox>()
+                .shrink(0)
                 .gap(12);
 
             // region Colors
-            auto &left = container.add<VBox>();
-            left.grow(1)
+            auto &left = container.add<VBox>()
+                .grow(1)
                 .basis(0) // Both columns needs to be considered the same size
                 .gap(6);
 
@@ -331,8 +331,8 @@ namespace psychic_ui {
             // endregion
 
             // region Schemes
-            auto &right = container.add<VBox>();
-            right.addClassName("color-schemes")
+            auto &right = container.add<VBox>()
+                .addClassName("color-schemes")
                 .grow(1)
                 .basis(0) // Both columns needs to be considered the same size
                 .gap(6);
@@ -379,8 +379,8 @@ namespace psychic_ui {
                         }
                     );
 
-                    auto &swatches = right.add<Div>();
-                    swatches.addClassName("swatches");
+                    auto &swatches = right.add<Div>()
+                        .addClassName("swatches");
                     monochromeSwatch0 = &swatches.add<Div>();
                     monochromeSwatch0->addClassName("swatch");
                     monochromeSwatch1 = &swatches.add<Div>();
@@ -409,8 +409,8 @@ namespace psychic_ui {
                     );
 
                     right.add<Label>("Artistic");
-                    auto &rybSwatches = right.add<Div>();
-                    rybSwatches.addClassName("swatches");
+                    auto &rybSwatches = right.add<Div>()
+                        .addClassName("swatches");
                     rybAnalogousSwatch0 = &rybSwatches.add<Div>();
                     rybAnalogousSwatch0->addClassName("swatch");
                     rybAnalogousSwatch1 = &rybSwatches.add<Div>();
@@ -423,8 +423,8 @@ namespace psychic_ui {
                     rybAnalogousSwatch4->addClassName("swatch");
 
                     right.add<Label>("Scientific");
-                    auto &swatches = right.add<Div>();
-                    swatches.addClassName("swatches");
+                    auto &swatches = right.add<Div>()
+                        .addClassName("swatches");
                     analogousSwatch0 = &swatches.add<Div>();
                     analogousSwatch0->addClassName("swatch");
                     analogousSwatch1 = &swatches.add<Div>();
@@ -443,8 +443,8 @@ namespace psychic_ui {
                          .addClassName("title");
 
                     right.add<Label>("Artistic");
-                    auto &rybSwatches = right.add<Div>();
-                    rybSwatches.addClassName("swatches");
+                    auto &rybSwatches = right.add<Div>()
+                        .addClassName("swatches");
                     rybComplementarySwatch0 = &rybSwatches.add<Div>();
                     rybComplementarySwatch0->addClassName("swatch");
                     rybComplementarySwatch1 = &rybSwatches.add<Div>();
@@ -459,8 +459,8 @@ namespace psychic_ui {
                     rybComplementarySwatch5->addClassName("swatch");
 
                     right.add<Label>("Scientific");
-                    auto &swatches = right.add<Div>();
-                    swatches.addClassName("swatches");
+                    auto &swatches = right.add<Div>()
+                        .addClassName("swatches");
                     complementarySwatch0 = &swatches.add<Div>();
                     complementarySwatch0->addClassName("swatch");
                     complementarySwatch1 = &swatches.add<Div>();
@@ -491,8 +491,8 @@ namespace psychic_ui {
                     );
 
                     right.add<Label>("Artistic");
-                    auto &rybSwatches = right.add<Div>();
-                    rybSwatches.addClassName("swatches");
+                    auto &rybSwatches = right.add<Div>()
+                        .addClassName("swatches");
                     rybSplitComplementarySwatch0 = &rybSwatches.add<Div>();
                     rybSplitComplementarySwatch0->addClassName("swatch");
                     rybSplitComplementarySwatch1 = &rybSwatches.add<Div>();
@@ -501,8 +501,8 @@ namespace psychic_ui {
                     rybSplitComplementarySwatch2->addClassName("swatch");
 
                     right.add<Label>("Scientific");
-                    auto &swatches = right.add<Div>();
-                    swatches.addClassName("swatches");
+                    auto &swatches = right.add<Div>()
+                        .addClassName("swatches");
                     splitComplementarySwatch0 = &swatches.add<Div>();
                     splitComplementarySwatch0->addClassName("swatch");
                     splitComplementarySwatch1 = &swatches.add<Div>();
@@ -518,8 +518,8 @@ namespace psychic_ui {
                          .addClassName("title");
                          
                     right.add<Label>("Artistic");
-                    auto &rybSwatches = right.add<Div>();
-                    rybSwatches.addClassName("swatches");
+                    auto &rybSwatches = right.add<Div>()
+                        .addClassName("swatches");
                     rybCompoundSwatch0 = &rybSwatches.add<Div>();
                     rybCompoundSwatch0->addClassName("swatch");
                     rybCompoundSwatch1 = &rybSwatches.add<Div>();
@@ -534,8 +534,8 @@ namespace psychic_ui {
                     rybCompoundSwatch5->addClassName("swatch");
                     
                     right.add<Label>("Scientific");
-                    auto &swatches = right.add<Div>();
-                    swatches.addClassName("swatches");
+                    auto &swatches = right.add<Div>()
+                        .addClassName("swatches");
                     compoundSwatch0 = &swatches.add<Div>();
                     compoundSwatch0->addClassName("swatch");
                     compoundSwatch1 = &swatches.add<Div>();
@@ -556,8 +556,8 @@ namespace psychic_ui {
                          .addClassName("title");
                          
                     right.add<Label>("Artistic");
-                    auto &rybSwatches = right.add<Div>();
-                    rybSwatches.addClassName("swatches");
+                    auto &rybSwatches = right.add<Div>()
+                        .addClassName("swatches");
                     rybFlippedCompoundSwatch0 = &rybSwatches.add<Div>();
                     rybFlippedCompoundSwatch0->addClassName("swatch");
                     rybFlippedCompoundSwatch1 = &rybSwatches.add<Div>();
@@ -572,8 +572,8 @@ namespace psychic_ui {
                     rybFlippedCompoundSwatch5->addClassName("swatch");
                     
                     right.add<Label>("Scientific");
-                    auto &swatches = right.add<Div>();
-                    swatches.addClassName("swatches");
+                    auto &swatches = right.add<Div>()
+                        .addClassName("swatches");
                     flippedCompoundSwatch0 = &swatches.add<Div>();
                     flippedCompoundSwatch0->addClassName("swatch");
                     flippedCompoundSwatch1 = &swatches.add<Div>();
@@ -594,8 +594,8 @@ namespace psychic_ui {
                          .addClassName("title");
 
                     right.add<Label>("Artistic");
-                    auto &rybSwatches = right.add<Div>();
-                    rybSwatches.addClassName("swatches");
+                    auto &rybSwatches = right.add<Div>()
+                        .addClassName("swatches");
                     rybTriadSwatch0 = &rybSwatches.add<Div>();
                     rybTriadSwatch0->addClassName("swatch");
                     rybTriadSwatch1 = &rybSwatches.add<Div>();
@@ -604,8 +604,8 @@ namespace psychic_ui {
                     rybTriadSwatch2->addClassName("swatch");
 
                     right.add<Label>("Scientific");
-                    auto &swatches = right.add<Div>();
-                    swatches.addClassName("swatches");
+                    auto &swatches = right.add<Div>()
+                        .addClassName("swatches");
                     triadSwatch0 = &swatches.add<Div>();
                     triadSwatch0->addClassName("swatch");
                     triadSwatch1 = &swatches.add<Div>();
@@ -630,8 +630,8 @@ namespace psychic_ui {
                     );
 
                     right.add<Label>("Artistic");
-                    auto &rybSwatches = right.add<Div>();
-                    rybSwatches.addClassName("swatches");
+                    auto &rybSwatches = right.add<Div>()
+                        .addClassName("swatches");
                     rybTetradSwatch0 = &rybSwatches.add<Div>();
                     rybTetradSwatch0->addClassName("swatch");
                     rybTetradSwatch1 = &rybSwatches.add<Div>();
@@ -642,8 +642,8 @@ namespace psychic_ui {
                     rybTetradSwatch3->addClassName("swatch");
 
                     right.add<Label>("Scientific");
-                    auto &swatches = right.add<Div>();
-                    swatches.addClassName("swatches");
+                    auto &swatches = right.add<Div>()
+                        .addClassName("swatches");
                     tetradSwatch0 = &swatches.add<Div>();
                     tetradSwatch0->addClassName("swatch");
                     tetradSwatch1 = &swatches.add<Div>();

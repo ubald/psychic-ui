@@ -17,23 +17,23 @@ namespace psychic_ui {
         direction(Direction::Row)
             .padding(0); // We're using a scroller so no padding
 
-        auto &scroller = add<Div>();
-        scroller.shrink(1)
+        auto &scroller = add<Div>()
+            .shrink(1)
             .height(100_pct)
             .padding(24)
             .overflow(Overflow::Scroll)
             .wrap(Wrap::Wrap)
             .direction(Direction::Row);
 
-        auto &scrollbar = add<ScrollBar>(scroller);
-        scrollbar.height(100_pct);
+        auto &scrollbar = add<ScrollBar>(scroller)
+            .height(100_pct);
 
         // region No Borders
 
         {
             // Rectangle
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rectangle");
             c.add<Div>()
              .addClassName("demo-div")
@@ -41,8 +41,8 @@ namespace psychic_ui {
         }
         {
             // Rounded
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded 12px");
             c.add<Div>()
              .addClassName("demo-div")
@@ -50,8 +50,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Left
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Left");
             c.add<Div>()
              .addClassName("demo-div")
@@ -59,8 +59,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Right
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Right");
             c.add<Div>()
              .addClassName("demo-div")
@@ -68,8 +68,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Top
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Top");
             c.add<Div>()
              .addClassName("demo-div")
@@ -77,8 +77,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Bottom
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Bottom");
             c.add<Div>()
              .addClassName("demo-div")
@@ -86,8 +86,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Top Left
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Top Left");
             c.add<Div>()
              .addClassName("demo-div")
@@ -95,8 +95,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Top Right
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Top Right");
             c.add<Div>()
              .addClassName("demo-div")
@@ -104,8 +104,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Bottom Left
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Bottom Left");
             c.add<Div>()
              .addClassName("demo-div")
@@ -113,8 +113,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Bottom Right
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Bottom Right");
             c.add<Div>()
              .addClassName("demo-div")
@@ -124,8 +124,8 @@ namespace psychic_ui {
         // region Full Borders
         {
             // Rectangle
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rectangle Border");
             c.add<Div>()
              .addClassName("demo-div")
@@ -134,8 +134,8 @@ namespace psychic_ui {
         }
         {
             // Rounded
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded 12px Border");
             c.add<Div>()
              .addClassName("demo-div")
@@ -144,8 +144,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Left
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Left Border");
             c.add<Div>()
              .addClassName("demo-div")
@@ -154,8 +154,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Right
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Right Border");
             c.add<Div>()
              .addClassName("demo-div")
@@ -164,8 +164,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Top
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Top Border");
             c.add<Div>()
              .addClassName("demo-div")
@@ -174,8 +174,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Bottom
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Bottom Border");
             c.add<Div>()
              .addClassName("demo-div")
@@ -184,8 +184,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Top Left
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Top Left Border");
             c.add<Div>()
              .addClassName("demo-div")
@@ -194,8 +194,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Top Right
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Top Right Border");
             c.add<Div>()
              .addClassName("demo-div")
@@ -204,8 +204,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Bottom Left
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Bottom Left Border");
             c.add<Div>()
              .addClassName("demo-div")
@@ -214,8 +214,8 @@ namespace psychic_ui {
         }
         {
             // Rounded Bottom Right
-            auto &c = scroller.add<Div>();
-            c.direction(Direction::Column);
+            auto &c = scroller.add<Div>()
+                .direction(Direction::Column);
             c.add<Label>("Rounded Bottom Right Border");
             c.add<Div>()
              .addClassName("demo-div")

@@ -22,24 +22,24 @@ namespace psychic_ui {
         direction(Direction::Row)
             .padding(0); // We're using a scroller so no padding
 
-        auto &scroller = add<Div>();
-        scroller.width(100_pct)
+        auto &scroller = add<Div>()
+            .width(100_pct)
             .height(100_pct)
             .padding(24)
             .overflow(Overflow::Scroll);
 
-        auto &scrollbar = add<ScrollBar>(scroller);
-        scrollbar.height(100_pct);
+        auto &scrollbar = add<ScrollBar>(scroller)
+            .height(100_pct);
 
         {
-            auto &container = scroller.add<HBox>();
-            container.shrink(0)
+            auto &container = scroller.add<HBox>()
+                .shrink(0)
                 .gap(12);
 
             // Single Lines
 
-            auto &left = container.add<VBox>();
-            left.grow(1)
+            auto &left = container.add<VBox>()
+                .grow(1)
                 .basis(0) // Both columns needs to be considered the same size
                 .gap(6);
 
@@ -51,8 +51,8 @@ namespace psychic_ui {
 
             // Multi Lines
 
-            auto &right = container.add<VBox>();
-            right.grow(1)
+            auto &right = container.add<VBox>()
+                .grow(1)
                 .basis(0) // Both columns needs to be considered the same size
                 .gap(6);
 

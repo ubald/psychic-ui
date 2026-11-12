@@ -15,8 +15,8 @@ namespace psychic_ui {
 
             auto &container = add<HBox>();
 
-            auto &left = container.add<Div>();
-            left.grow(1)
+            auto &left = container.add<Div>()
+                .grow(1)
                 .shrink(1);
 
             left.add<Label>("Horizontal");
@@ -29,14 +29,14 @@ namespace psychic_ui {
             lcont.add<Range<float>>()
                 .range(1.23f, 4.56f);
 
-            auto &right = container.add<Div>();
-            right.grow(1)
+            auto &right = container.add<Div>()
+                .grow(1)
                 .shrink(1);
 
             right.add<Label>("Vertical");
 
-            auto &rcont = right.add<HBox>();
-            rcont.grow(1);
+            auto &rcont = right.add<HBox>()
+                .grow(1);
 
             rcont.add<Range<int>>()
                  .range(0, 10)
