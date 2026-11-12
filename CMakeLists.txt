@@ -64,6 +64,16 @@ if (APPLE)
     endif ()
 endif ()
 
+# The API relies on C++23's explicit object parameters ("deducing this"). Older compilers accept
+# -std=c++23 but fail deep in the headers, so stop here with the versions that support it.
+if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 14)
+    OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 18)
+    OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16)
+    OR (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.32))
+    message(FATAL_ERROR "Psychic UI needs C++23 deducing this: GCC 14+, Clang 18+, Apple Clang 16+ or MSVC 17.2+ "
+        "(found ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}). Pass another one with -DCMAKE_CXX_COMPILER=...")
+endif ()
+
 include(ExternalProject)
 include(CPack)
 include(FeatureSummary)
@@ -299,7 +309,7 @@ endif ()
 
 add_library(psychic-ui ${SOURCE_FILES})
 
-target_compile_features(psychic-ui PUBLIC cxx_std_20)
+target_compile_features(psychic-ui PUBLIC cxx_std_23)
 target_compile_options(psychic-ui PRIVATE -Wall -Wextra)
 
 target_include_directories(psychic-ui PUBLIC

@@ -39,6 +39,15 @@ jobs:
             libxext-dev libxfixes-dev libxkbcommon-dev \
             libwayland-dev libdecor-0-dev libegl-dev libdbus-1-dev libibus-1.0-dev
 
+      # Psychic UI needs C++23 deducing this (GCC 14+) and jammy's default is
+      # GCC 11; the Ubuntu toolchain PPA has GCC 14 for it. Only CMake gets it
+      # (Configure below): Skia's gn build keeps the default `cc`/`c++`.
+      - name: Install GCC 14
+        run: |
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends g++-14
+
       # The image's python-is-python3 makes `python` Python 3
       - name: Make `python` Python 2
         run: |
@@ -58,7 +67,7 @@ jobs:
           key: skia-${{ runner.os }}-${{ runner.arch }}-${{ steps.skia.outputs.commit }}-${{ hashFiles('extlib/skia/CMakeLists.txt', 'extlib/skia/skia_build.sh.in') }}
 
       - name: Configure
-        run: cmake --preset debug
+        run: cmake --preset debug -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14
 
       # On its own, so a Skia that built is cached even if the rest fails
       - name: Build Skia
