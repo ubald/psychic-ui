@@ -18,18 +18,14 @@ namespace {
         sk_sp<SkSurface> surface{SkSurface::MakeRasterN32Premul(1440, 900)};
 
         HeadlessWindow() : Window("Headless") {
+            setWindowSize(1440, 900);
             loadStyleSheet<OneDarkStyleSheet>();
         }
 
         void layout() {
             // Twice: rendering creates the children of data containers (MenuBar, Menu)
             for (int i = 0; i < 2; ++i) {
-                if (!_styleManager->valid()) {
-                    updateStyleRecursive();
-                    _styleManager->setValid();
-                }
-                YGNodeCalculateLayout(_yogaNode, _width, _height, YGDirectionLTR);
-                layoutUpdated();
+                updateStylesAndLayout();
                 render(surface->getCanvas());
             }
         }
