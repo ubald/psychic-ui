@@ -1,5 +1,8 @@
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/applications/SDL3SystemWindow.hpp>
+#include <psychic-ui/components/Range.hpp>
+#include <psychic-ui/components/Scroller.hpp>
 #include <psychic-ui/components/TitleBar.hpp>
 #include "fake_system_window.hpp"
 
@@ -241,4 +244,129 @@ TEST_CASE("SDL3: the clipboard", "[backend][sdl3][clipboard]") {
     sdl.window->setClipboardText("from Psychic UI ✓");
     CHECK(sdl.window->clipboardText() == "from Psychic UI ✓");
     CHECK(SDL_HasClipboardText());
+}
+
+namespace {
+    bool moveTo(SDL3Fixture &sdl, float x, float y) {
+        auto motion = sdl.event(SDL_EVENT_MOUSE_MOTION);
+        motion.motion.x = x;
+        motion.motion.y = y;
+        return sdl.adapter->handleEvent(motion);
+    }
+
+    /**
+     * Where a skin's point is in the window
+     */
+    SkPoint inWindow(const Div &skin, float x, float y) {
+        int windowX = 0;
+        int windowY = 0;
+        skin.localToGlobal(windowX, windowY, static_cast<int>(x), static_cast<int>(y));
+        return SkPoint::Make(static_cast<float>(windowX), static_cast<float>(windowY));
+    }
+
+    /**
+     * A range drawn as a dial: its values go down its height, whatever the mouse's x
+     */
+    class DialSkin : public RangeSkin {
+    public:
+        void setValue(float /*value*/) override {}
+
+        float valueAt(int /*x*/, int y) const override {
+            return static_cast<float>(y) / static_cast<float>(_height);
+        }
+    };
+}
+
+TEST_CASE("SDL3: dragging a range follows the mouse, through its skin's geometry", "[backend][sdl3][drag]") {
+    SDL3Fixture sdl;
+    auto &range = sdl.window->appContainer().add<Range<float>>();
+    sdl.layout();
+    auto skin = range.skin();
+    REQUIRE(skin);
+    const float width = static_cast<float>(skin->getWidth());
+    REQUIRE(width > 100.0f);
+
+    // The default slider's track is its inside, 2 px from each end
+    const SkPoint quarter = inWindow(*skin, 2.0f + (width - 4.0f) * 0.25f, 10.0f);
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, quarter.x(), quarter.y()));
+    CHECK(range.value() == Catch::Approx(0.25f).margin(0.01f));
+    CHECK(range.active());
+
+    // Dragging, even off the range, keeps following the mouse
+    const SkPoint threeQuarters = inWindow(*skin, 2.0f + (width - 4.0f) * 0.75f, 300.0f);
+    moveTo(sdl, threeQuarters.x(), threeQuarters.y());
+    CHECK(range.value() == Catch::Approx(0.75f).margin(0.01f));
+    moveTo(sdl, quarter.x() - 500.0f, quarter.y());
+    CHECK(range.value() == 0.0f); // Clamped
+
+    // Released, it stops
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, quarter.x() - 500.0f, quarter.y()));
+    moveTo(sdl, threeQuarters.x(), threeQuarters.y());
+    CHECK(range.value() == 0.0f);
+
+    // A skin with another geometry: the range asks it where values are
+    range.skin(std::make_shared<DialSkin>()).height(100.0f);
+    sdl.layout();
+    const SkPoint middle = inWindow(*range.skin(), 10.0f, 50.0f);
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, middle.x(), middle.y()));
+    CHECK(range.value() == Catch::Approx(0.5f).margin(0.01f));
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, middle.x(), middle.y()));
+
+    // Disabled, it doesn't move
+    range.enabled(false);
+    sdl.layout();
+    const SkPoint low = inWindow(*range.skin(), 10.0f, 90.0f);
+    sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, low.x(), low.y());
+    CHECK(range.value() == Catch::Approx(0.5f).margin(0.01f));
+    sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, low.x(), low.y());
+}
+
+TEST_CASE("SDL3: dragging a scroll bar's thumb scrolls its viewport", "[backend][sdl3][drag]") {
+    SDL3Fixture sdl;
+    auto content = std::make_shared<Div>();
+    content->size(100, 1000).shrink(0);
+    auto &scroller = sdl.window->appContainer().add<Scroller>(content);
+    scroller.size(200, 200);
+    sdl.layout();
+    sdl.layout(); // The thumb is sized from the first layout
+
+    ScrollBar *scrollBar = nullptr;
+    for (const auto &child: scroller.children()) {
+        for (const auto &grandChild: child->children()) { // Beside the viewport, in a row
+            auto bar = std::dynamic_pointer_cast<ScrollBar>(grandChild);
+            if (bar && bar->scrollDirection() == ScrollDirection::Vertical) {
+                scrollBar = bar.get();
+            }
+        }
+    }
+    REQUIRE(scrollBar);
+    auto skin = scrollBar->skin();
+    REQUIRE(skin);
+    const SkRect track = skin->trackRect();
+    const SkRect thumb = skin->thumbRect();
+    REQUIRE(thumb.height() < track.height());
+    REQUIRE(scroller.viewport()->scrollY() == 0);
+
+    // A press on the track, below the thumb, doesn't drag
+    const SkPoint below = inWindow(*skin, thumb.centerX(), thumb.bottom() + 20.0f);
+    sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, below.x(), below.y());
+    moveTo(sdl, below.x(), below.y() + 50.0f);
+    sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, below.x(), below.y() + 50.0f);
+    CHECK(scroller.viewport()->scrollY() == 0);
+
+    // Pressed in its middle, the thumb follows the mouse: halfway down its free length is halfway down the content
+    const SkPoint grab = inWindow(*skin, thumb.centerX(), thumb.centerY());
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, grab.x(), grab.y()));
+    const float free          = track.height() - thumb.height();
+    const int   contentScroll = scroller.viewport()->contentHeight() - scroller.viewport()->getHeight();
+    REQUIRE(contentScroll > 0);
+    moveTo(sdl, grab.x() + 300.0f, grab.y() + free / 2.0f); // Off the bar sideways too
+    CHECK(scroller.viewport()->scrollY() == Catch::Approx(-contentScroll / 2.0).margin(contentScroll / free + 1.0));
+    moveTo(sdl, grab.x(), grab.y() + 10 * free); // Past the end
+    CHECK(scroller.viewport()->scrollY() == -contentScroll);
+
+    // Released, it stops
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, grab.x(), grab.y() + 10 * free));
+    moveTo(sdl, grab.x(), grab.y());
+    CHECK(scroller.viewport()->scrollY() == -contentScroll);
 }

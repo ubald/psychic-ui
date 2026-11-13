@@ -13,6 +13,9 @@ namespace psychic_ui {
     public:
         ScrollBarSkinBase();
 
+        SkRect trackRect() const override;
+        SkRect thumbRect() const override;
+
     protected:
         ScrollDirection _direction{ScrollDirection::Vertical};
         Div             *_track{nullptr}; // The `.track` part, a child, which we own

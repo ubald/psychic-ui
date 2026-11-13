@@ -11,6 +11,7 @@
 #include "../utils/StringUtils.hpp"
 #include "Label.hpp"
 #include "../signals/Signal.hpp"
+#include "../signals/Slot.hpp"
 
 namespace psychic_ui {
 
@@ -25,7 +26,16 @@ namespace psychic_ui {
         }
 
     public:
+        /**
+         * The value changed, as a linear percentage (0 to 1)
+         */
         virtual void setValue(float value) = 0;
+
+        /**
+         * The linear percentage (0 to 1, or beyond, which the range clamps) a press or drag at this point, in the
+         * skin's coordinates, picks. The range handles the mouse; the skin only knows where its values are.
+         */
+        virtual float valueAt(int x, int y) const = 0;
     };
 
     namespace internal {
@@ -34,12 +44,25 @@ namespace psychic_ui {
          */
         class RangeBase : public Component<RangeSkin> {
         protected:
-            RangeBase() = default;
+            /**
+             * Pressing sets the value under the mouse, then dragging (anywhere in the window) follows it
+             */
+            RangeBase();
 
         public:
             virtual float getLinearPercentage() const = 0;
             virtual void setLinearPercentage(float percent) = 0;
             virtual std::string valueString() const = 0;
+
+        protected:
+            ScopedSlot _onMouseMove{}; // On the window, only while dragging
+
+            /**
+             * Set the value the skin has at this point, in window coordinates
+             */
+            void dragTo(int windowX, int windowY);
+
+            void removedFromRender() override;
         };
     }
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "psychic-ui/signals/Slot.hpp"
 #include "psychic-ui/skins/base/ScrollBarSkinBase.hpp"
 
 namespace psychic_ui {
@@ -10,9 +9,5 @@ namespace psychic_ui {
     class DefaultScrollBarSkin : public ScrollBarSkinBase {
     public:
         DefaultScrollBarSkin();
-    protected:
-        ScopedSlot _onMouseMove{}; // On the window, only while dragging
-        int        dragOffset{0};
-        void removedFromRender() override;
     };
 }

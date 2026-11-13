@@ -1,4 +1,5 @@
 #include "ScrollBar.hpp"
+#include "psychic-ui/Window.hpp"
 
 namespace psychic_ui {
     ScrollBar::ScrollBar(Div &viewport, ScrollDirection direction) :
@@ -17,6 +18,38 @@ namespace psychic_ui {
         onResize(
             [this](int /*width*/, int /*height*/) {
                 updateSkin();
+            }
+        );
+
+        onMousePress(
+            [this](const int mouseX, const int mouseY, MouseButton /*button*/, Mod /*modifiers*/) {
+                if (!_skin) {
+                    return;
+                }
+                int windowX = 0;
+                int windowY = 0;
+                localToGlobal(windowX, windowY, mouseX, mouseY);
+                int x = 0;
+                int y = 0;
+                _skin->globalToLocal(x, y, windowX, windowY);
+                const SkRect thumb = _skin->thumbRect();
+                if (!thumb.contains(static_cast<float>(x), static_cast<float>(y))) {
+                    return;
+                }
+                _dragOffset = _direction == ScrollDirection::Vertical
+                              ? static_cast<float>(y) - thumb.top()
+                              : static_cast<float>(x) - thumb.left();
+                _onMouseMove = window()->mouseMoved.subscribe(
+                    [this](const int mouseX, const int mouseY, int /*buttons*/, Mod /*modifiers*/) {
+                        dragTo(mouseX, mouseY);
+                    }
+                );
+            }
+        );
+
+        onMouseRelease(
+            [this](const int /*mouseX*/, const int /*mouseY*/, MouseButton /*button*/, Mod /*modifiers*/) {
+                _onMouseMove.disconnect();
             }
         );
 
@@ -60,13 +93,34 @@ namespace psychic_ui {
         _viewport->scrollY(static_cast<int>(-std::max(0.0f, std::fmin(scrollPercentY, 1.0f)) * static_cast<float>(_viewport->contentHeight() - _viewport->getHeight())));
     }
 
+    void ScrollBar::dragTo(const int windowX, const int windowY) {
+        if (!_skin) {
+            return;
+        }
+        int x = 0;
+        int y = 0;
+        _skin->globalToLocal(x, y, windowX, windowY);
+        const SkRect track = _skin->trackRect();
+        const SkRect thumb = _skin->thumbRect();
+        // The thumb's start follows the mouse, at the distance from it where it was pressed
+        if (_direction == ScrollDirection::Vertical) {
+            scrollPercentY((static_cast<float>(y) - track.top() - _dragOffset) / (track.height() - thumb.height()));
+        } else {
+            scrollPercentX((static_cast<float>(x) - track.left() - _dragOffset) / (track.width() - thumb.width()));
+        }
+    }
+
+    void ScrollBar::removedFromRender() {
+        Component::removedFromRender();
+        _onMouseMove.disconnect(); // Removed mid-drag: the mouse up won't reach us
+    }
+
     void ScrollBar::updateSkin() {
         float scrollPosition = 0;
         float contentRatio   = 1.0f;
         bool  enabled        = false;
 
         if (_direction == ScrollDirection::Vertical) {
-             std::cout << "scroll " << _viewport->contentHeight() << " " << _viewport->contentHeight() << " " << _viewport->getHeight() << std::endl;
             if (_viewport && _viewport->contentHeight() > 0 && _viewport->contentHeight() > _viewport->getHeight()) {
                 _viewport->scrollY(
                     std::max(_viewport->scrollY(), _viewport->getHeight() - _viewport->contentHeight())

@@ -15,6 +15,14 @@ namespace psychic_ui {
               .position(Position::Absolute);
     }
 
+    SkRect ScrollBarSkinBase::trackRect() const {
+        return SkRect::MakeXYWH(_track->x(), _track->y(), _track->getWidth(), _track->getHeight());
+    }
+
+    SkRect ScrollBarSkinBase::thumbRect() const {
+        return SkRect::MakeXYWH(_thumb->x(), _thumb->y(), _thumb->getWidth(), _thumb->getHeight());
+    }
+
     void ScrollBarSkinBase::added() {
         ScrollBarSkin::added();
         setupDirection();

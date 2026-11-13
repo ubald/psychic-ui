@@ -1,6 +1,5 @@
 #pragma once
 
-#include "psychic-ui/signals/Slot.hpp"
 #include "psychic-ui/skins/base/RangeSkinBase.hpp"
 
 namespace psychic_ui {
@@ -12,12 +11,10 @@ namespace psychic_ui {
     public:
         DefaultSliderSkin();
 
-    protected:
-        ScopedSlot _onMouseMove{}; // On the window, only while dragging
+        float valueAt(int x, int y) const override;
 
+    protected:
         void valueChanged() override;
-        void removedFromRender() override;
-        void sendMouseValue(int x, int y);
         void drawChrome(SkCanvas *canvas, const paint::Box &box, SkinState state) override;
     };
 }
