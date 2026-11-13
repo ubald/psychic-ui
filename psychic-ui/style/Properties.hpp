@@ -49,6 +49,17 @@
     /* Painting */ \
     X(antiAlias,                bool,          detail::BoolArg,    false,                  false, false) \
     X(opacity,                  float,         detail::FloatArg,   1.0f,                   false, false) \
+    /* A line around the border box, outlineOffset away from it (inside if negative), over the div and its children; */ \
+    /* none at width 0 */ \
+    X(outlineColor,             Color,         Color,              argb(0xFF000000),       false, false) \
+    X(outlineWidth,             float,         detail::FloatArg,   0.0f,                   false, false) \
+    X(outlineOffset,            float,         detail::FloatArg,   0.0f,                   false, false) \
+    /* A blurred copy of the border box under the div, outside it, like CSS's box-shadow; none while transparent. */ \
+    /* shadowBlur is the blur radius (twice the Gaussian's sigma, as in CSS) */ \
+    X(shadowColor,              Color,         Color,              argb(0x00000000),       false, false) \
+    X(shadowBlur,               float,         detail::FloatArg,   0.0f,                   false, false) \
+    X(shadowOffsetX,            float,         detail::FloatArg,   0.0f,                   false, false) \
+    X(shadowOffsetY,            float,         detail::FloatArg,   0.0f,                   false, false) \
     /* Radii: the most specific one set wins (corner, then side, then all) */ \
     X(borderRadius,             float,         detail::FloatArg,   0.0f,                   false, false) \
     X(borderRadiusTop,          float,         detail::FloatArg,   0.0f,                   false, false) \

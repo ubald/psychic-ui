@@ -1,6 +1,8 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include "include/core/SkBlurTypes.h"
+#include "include/core/SkMaskFilter.h"
 #include "include/core/SkPaint.h"
 #include "include/effects/SkDashPathEffect.h"
 #include "yoga/Yoga.h"
@@ -489,6 +491,15 @@ namespace psychic_ui {
 
         _visible = _computedStyle.visible();
 
+        // A Gaussian reaches about 3 sigmas, 1.5 blur radii
+        const Style &paint = _computedStyle;
+        _paintOutset = std::max(
+            paint.outlineWidth() > 0.0f ? std::max(0.0f, paint.outlineOffset() + paint.outlineWidth()) : 0.0f,
+            paint.shadowColor().alpha() > 0
+            ? paint.shadowBlur() * 1.5f + std::max(std::abs(paint.shadowOffsetX()), std::abs(paint.shadowOffsetY()))
+            : 0.0f
+        );
+
         // region Radius
         // The most specific radius set wins: corner, then side, then all
         const Style &s = _computedStyle;
@@ -934,19 +945,26 @@ namespace psychic_ui {
         // Skia rejects empty rects, but an empty div still renders (a data container builds its
         // children when it renders): outset, only what's off-screen is rejected, as with Skia m73.
         const float opacity = _computedStyle.opacity();
-        if (!layoutReady || !_visible || opacity <= 0.0f || canvas->quickReject(_rect.makeOutset(1.0f, 1.0f))) {
+        const float outset = 1.0f + _paintOutset;
+        if (!layoutReady || !_visible || opacity <= 0.0f || canvas->quickReject(_rect.makeOutset(outset, outset))) {
             return;
         }
 
         if (opacity < 1.0f) {
             // CSS opacity: the div and its children are drawn into a layer, which is then blended as one group, so
             // overlapping parts don't show through each other and nested opacities multiply
-            canvas->saveLayerAlpha(&_boundsRect, static_cast<U8CPU>(std::lround(opacity * 255.0f)));
+            const SkRect layer = _boundsRect.makeOutset(_paintOutset, _paintOutset);
+            canvas->saveLayerAlpha(&layer, static_cast<U8CPU>(std::lround(opacity * 255.0f)));
         } else {
             canvas->save();
         }
 
+        drawShadow(canvas);
+
         draw(canvas);
+
+        // The children are clipped, the outline after them isn't
+        canvas->save();
 
         clip(canvas);
 
@@ -1014,6 +1032,46 @@ namespace psychic_ui {
         }
 
         canvas->restore();
+
+        drawOutline(canvas);
+
+        canvas->restore();
+    }
+
+    void Div::drawShadow(SkCanvas *canvas) {
+        const Style &style = _computedStyle;
+        if (style.shadowColor().alpha() == 0) {
+            return;
+        }
+        SkPaint paint;
+        paint.setAntiAlias(true);
+        paint.setColor(style.shadowColor().argb());
+        if (style.shadowBlur() > 0.0f) {
+            paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, style.shadowBlur() / 2.0f));
+        }
+        // Only outside the box, as in CSS: a translucent background doesn't show it
+        canvas->save();
+        canvas->clipRRect(_roundRect, SkClipOp::kDifference, true);
+        canvas->drawRRect(_roundRect.makeOffset(style.shadowOffsetX(), style.shadowOffsetY()), paint);
+        canvas->restore();
+    }
+
+    void Div::drawOutline(SkCanvas *canvas) {
+        const Style &style = _computedStyle;
+        const float width  = style.outlineWidth();
+        if (width <= 0.0f || style.outlineColor().alpha() == 0) {
+            return;
+        }
+        SkPaint paint;
+        paint.setAntiAlias(true);
+        paint.setStyle(SkPaint::kStroke_Style);
+        paint.setStrokeWidth(width);
+        paint.setColor(style.outlineColor().argb());
+        // The stroke's center line, half its width outside the offset; corners stay concentric with the border's
+        SkRRect line;
+        const float outset = style.outlineOffset() + width / 2.0f;
+        _roundRect.outset(outset, outset, &line);
+        canvas->drawRRect(line, paint);
     }
 
     void Div::clip(SkCanvas *canvas) {

@@ -826,6 +826,11 @@ namespace psychic_ui {
          */
         SkRect _boundsRect{};
 
+        /**
+         * How far the shadow and the outline paint outside the border box, for culling and the opacity layer
+         */
+        float _paintOutset{0.0f};
+
 
         /**
          * Ignore internal layout constraints (padding, border)
@@ -868,6 +873,12 @@ namespace psychic_ui {
         virtual void render(SkCanvas *canvas);
         void clip(SkCanvas *canvas);
         virtual void draw(SkCanvas *canvas);
+
+        /**
+         * The `shadow*` and `outline*` styles, around the border box: every div paints them, whatever its `draw`
+         */
+        void drawShadow(SkCanvas *canvas);
+        void drawOutline(SkCanvas *canvas);
 
         bool _drawBackground{false};
         bool _drawBorder{false};
