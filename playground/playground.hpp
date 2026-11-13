@@ -18,7 +18,7 @@ namespace psychic_ui_playground {
         Window("Playground Application") {
         _decorated = false;
 
-        loadStyleSheet<OneDarkStyleSheet>();
+        loadStyleSheet<PsychicUIStyleSheet>();
         //loadStyleSheet<PlaygroundStyleSheet>();
 
         Div::debugLayout = true;

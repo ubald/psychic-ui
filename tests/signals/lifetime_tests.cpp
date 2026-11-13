@@ -19,7 +19,7 @@ namespace {
 
         HeadlessWindow() : Window("Headless") {
             setWindowSize(1440, 900);
-            loadStyleSheet<OneDarkStyleSheet>();
+            loadStyleSheet<PsychicUIStyleSheet>();
         }
 
         void layout() {

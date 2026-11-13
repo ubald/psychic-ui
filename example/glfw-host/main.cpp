@@ -22,7 +22,7 @@ namespace {
     class HostedWindow : public Window {
     public:
         HostedWindow() : Window("Psychic UI in a GLFW host") {
-            loadStyleSheet<OneDarkStyleSheet>();
+            loadStyleSheet<PsychicUIStyleSheet>();
 
             app->direction(Direction::Column)
                .alignItems(Align::Start) // "flex-start" before, which the string parser ignored (stretch)

@@ -253,6 +253,11 @@ set(SOURCE_FILES
     psychic-ui/style/StyleSheet.hpp
     psychic-ui/style/Values.cpp
     psychic-ui/style/Values.hpp
+    psychic-ui/themes/default.hpp
+    psychic-ui/themes/one-dark.hpp
+    psychic-ui/themes/one-light.hpp
+    psychic-ui/themes/psychic.hpp
+    psychic-ui/themes/Theme.hpp
     psychic-ui/utils/ColorUtils.hpp
     psychic-ui/utils/Hatcher.hpp
     psychic-ui/utils/StringUtils.hpp

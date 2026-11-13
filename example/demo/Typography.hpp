@@ -8,13 +8,13 @@
 
 namespace psychic_ui {
 
-    class Typography : public Div {
+    class TypographyPanel : public Div {
     public:
-        Typography();
+        TypographyPanel();
     };
 
 
-    Typography::Typography() : Div() {
+    TypographyPanel::TypographyPanel() : Div() {
         tag("Typography")
             .classNames({"demo-panel"})
             .direction(Direction::Row)

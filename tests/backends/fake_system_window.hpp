@@ -16,7 +16,7 @@ namespace psychic_ui_tests {
         std::vector<std::string> dropped{};
 
         TestWindow() : Window("Test") {
-            loadStyleSheet<OneDarkStyleSheet>();
+            loadStyleSheet<PsychicUIStyleSheet>();
         }
 
         bool dropEvent(const std::vector<std::string> &filenames) override {

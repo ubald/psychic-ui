@@ -2,6 +2,9 @@
 
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/style/StyleSheet.hpp>
+#include <psychic-ui/themes/one-dark.hpp>
+#include <psychic-ui/themes/one-light.hpp>
+#include <psychic-ui/themes/psychic.hpp>
 #include <psychic-ui/skins/SliderRangeSkin.hpp>
 #include <psychic-ui/skins/DefaultButtonSkin.hpp>
 #include <psychic-ui/skins/DefaultScrollBarSkin.hpp>
@@ -11,8 +14,6 @@
 #include <psychic-ui/skins/DefaultBasicButtonSkin.hpp>
 #include <psychic-ui/skins/DefaultTextInputSkin.hpp>
 #include <psychic-ui/skins/DefaultTextAreaSkin.hpp>
-#include <psychic-color/spaces/RGB.hpp>
-#include <psychic-color/spaces/HSB.hpp>
 
 namespace psychic_ui {
 
@@ -56,43 +57,18 @@ namespace palette {
 }
 
 /**
- * Psychic UI Style
+ * Psychic UI's look, from the style manager's theme
  */
 class PsychicUIStyleSheet : public StyleSheet {
-protected:
-    using HSB = psychic_color::HSB;
-
-    HSB themeSeparatorColor{}; // Deepest level
-    HSB themeBackgroundColor{}; // Inputs & content backgrounds
-    HSB themeBaseColor{}; // Base color, panel backgrounds
-    HSB themeLowContrastColor{};
-    HSB themeMediumContrastColor{};
-    HSB themeHighContrastColor{};
-    HSB themeForegroundColor{}; // Base foreground color
-    HSB themeHighlightColor{}; // Color used for active statuses
-    HSB themeCyanColor{};
-    HSB themeBlueColor{};
-    HSB themePurpleColor{};
-    HSB themeGreenColor{};
-    HSB themeRedColor{};
-    HSB themeRedOrangeColor{};
-    HSB themeOrangeColor{};
-    HSB themeYellowColor{};
 public:
-    PsychicUIStyleSheet() = default;
-
     void load(StyleManager *manager) override {
-        float smallText     = 10.0;
-        float text          = 12.0;
-        float mediumText    = 14.0;
-        float largeText     = 18.0;
-        float bigText       = 24.0;
-        float hugeText      = 36.0;
-        float radius        = 7.0;
-        float scrollBarSize = 12.0;
+        const Theme      &theme = manager->theme();
+        const Palette    &p     = theme.palette;
+        const Typography &t     = theme.type;
+        const Metrics    &m     = theme.metrics;
 
-        manager->loadFont("Ubuntu Light", "../res/fonts/Ubuntu/Ubuntu-Light.ttf");
-        manager->loadFont("Ubuntu Regular", "../res/fonts/Ubuntu/Ubuntu-Regular.ttf");
+        manager->loadFont(std::string{t.light.name}, std::string{t.light.path});
+        manager->loadFont(std::string{t.regular.name}, std::string{t.regular.path});
 
         manager->registerSkin("default-text-input-skin", SkinType::make([]() { return std::make_shared<DefaultTextInputSkin>(); }));
         manager->registerSkin("default-text-area-skin", SkinType::make([]() { return std::make_shared<DefaultTextAreaSkin>(); }));
@@ -108,107 +84,107 @@ public:
         // region Defaults
         manager->style("*")
                .overflow(Overflow::Visible)
-               .fontFamily("Ubuntu Regular")
-               .fontSize(text)
-               .lineHeight(16)
-               .color(themeForegroundColor)
-               .selectionColor(palette::base00)
-               .selectionBackgroundColor(themeHighlightColor)
+               .fontFamily(t.regular.name)
+               .fontSize(t.text)
+               .lineHeight(t.lineHeight)
+               .color(p.text)
+               .selectionColor(p.onAccent)
+               .selectionBackgroundColor(p.accent)
                .antiAlias(true)
                .textAntiAlias(true);
 
         manager->style("Component .defaultSkinChrome")
-               .borderRadius(radius)
-               .border(1)
-               .margin(1)
-                   //.color(themeForegroundColor)
-               .borderColor(Color(themeLowContrastColor).withAlpha(0x40)) // TODO: Should be contrasting with alpha
-               .backgroundColor(themeMediumContrastColor)
-               .contentBackgroundColor(themeBackgroundColor);
+               .borderRadius(m.radius)
+               .border(m.border)
+               .margin(m.focusWidth - m.border) // Keeps the size when focused
+                   //.color(p.text)
+               .borderColor(p.muted.withAlpha(0x40))
+               .backgroundColor(p.control)
+               .contentBackgroundColor(p.background);
 
         manager->style("Component:hover .defaultSkinChrome")
-               .borderColor(Color(themeLowContrastColor).withAlpha(0x80)) // TODO: Should be contrasting with alpha
-               .backgroundColor(themeHighContrastColor);
+               .borderColor(p.muted.withAlpha(0x80))
+               .backgroundColor(p.controlHover);
 
         manager->style("Component:active .defaultSkinChrome")
-               .borderColor(Color(themeLowContrastColor).withAlpha(0xC0)) // TODO: Should be contrasting with alpha
-               .backgroundColor(themeHighlightColor);
+               .borderColor(p.muted.withAlpha(0xC0))
+               .backgroundColor(p.accent);
 
         manager->style("Component:focus .defaultSkinChrome")
-               .border(2)
+               .border(m.focusWidth)
                .margin(0)
-               .borderColor(themeHighlightColor);
+               .borderColor(p.accent);
 
         //manager->style("Component:focus .defaultSkinChrome")
-        //        .border(2)
-        //        .borderColor(themeHighlightColor);
+        //        .border(m.focusWidth)
+        //        .borderColor(p.accent);
 
         manager->style("Component:disabled .defaultSkinChrome")
-               .backgroundColor(themeLowContrastColor);
+               .backgroundColor(p.muted);
 
         manager->style("Component:disabled:hover .defaultSkinChrome")
-               .backgroundColor(themeLowContrastColor);
+               .backgroundColor(p.muted);
 
         manager->style("Component:disabled:active .defaultSkinChrome")
-               .backgroundColor(themeHighlightColor); // TODO: Fade
+               .backgroundColor(p.accent); // TODO: Fade
 
         // endregion
 
         // region Typography
 
         manager->style(".h1")
-               .fontFamily("Ubuntu Light")
-               .fontSize(hugeText)
-               .lineHeight(hugeText);
+               .fontFamily(t.light.name)
+               .fontSize(t.huge)
+               .lineHeight(t.huge);
 
         manager->style(".h2")
-               .fontFamily("Ubuntu Light")
-               .fontSize(bigText)
-               .lineHeight(bigText);
+               .fontFamily(t.light.name)
+               .fontSize(t.big)
+               .lineHeight(t.big);
 
         manager->style(".h3")
-               .fontFamily("Ubuntu Light")
-               .fontSize(largeText)
-               .lineHeight(largeText);
+               .fontFamily(t.light.name)
+               .fontSize(t.large)
+               .lineHeight(t.large);
 
         manager->style(".h4")
-               .fontFamily("Ubuntu Regular")
-               .fontSize(mediumText)
-               .lineHeight(mediumText);
+               .fontFamily(t.regular.name)
+               .fontSize(t.medium)
+               .lineHeight(t.medium);
 
         manager->style(".h5")
-               .fontFamily("Ubuntu Regular")
-               .fontSize(text)
-               .lineHeight(text);
+               .fontFamily(t.regular.name)
+               .fontSize(t.text)
+               .lineHeight(t.text);
 
         manager->style(".h6")
-               .fontFamily("Ubuntu Regular")
-               .fontSize(smallText)
-               .lineHeight(smallText);
+               .fontFamily(t.regular.name)
+               .fontSize(t.small)
+               .lineHeight(t.small);
 
         // endregion
 
         // region Window
         manager->style("Window")
-               .color(themeForegroundColor)
-               .backgroundColor(themeBackgroundColor)
-               .border(1)
-               .borderColor(themeSeparatorColor);
+               .color(p.text)
+               .backgroundColor(p.background)
+               .border(m.border)
+               .borderColor(p.separator);
         // endregion
 
         // region Title Bar
         manager->style("TitleBar")
                .alignItems(Align::Center)
                .height(48)
-               .padding(12)
-               .backgroundColor(themeBaseColor)
-               .borderBottom(1)
-               .borderColor(themeSeparatorColor);
+               .padding(m.spaceMd)
+               .backgroundColor(p.surface)
+               .borderBottom(m.border)
+               .borderColor(p.separator);
 
         manager->style("TitleBar Label.title")
-               .fontFamily("Ubuntu Light")
-               .fontSize(largeText)
-               .marginLeft(12)
+               .fontFamily(t.light.name)
+               .fontSize(t.large)
+               .marginLeft(m.spaceMd)
                .grow(1);
 
         manager->style("TitleBar Button")
@@ -251,11 +227,11 @@ public:
 
         manager->style("TextInput")
                .skin("default-text-input-skin")
-               .padding(6);
+               .padding(m.spaceSm);
 
         manager->style("TextArea")
                .skin("default-text-area-skin")
-               .padding(6);
+               .padding(m.spaceSm);
 
         // endregion
 
@@ -265,36 +241,36 @@ public:
                .skin("default-scrollbar-skin");
 
         manager->style("ScrollBar.vertical")
-               .width(scrollBarSize);
+               .width(m.scrollBar);
 
         manager->style("ScrollBar.horizontal")
-               .height(scrollBarSize);
+               .height(m.scrollBar);
 
         manager->style("ScrollBar .track")
-               .backgroundColor(themeBackgroundColor);
+               .backgroundColor(p.background);
 
         manager->style("ScrollBar .thumb")
-               .backgroundColor(themeLowContrastColor);
+               .backgroundColor(p.muted);
 
         manager->style("ScrollBar.vertical .thumb")
                .marginLeft(1)
-               .minHeight(24);
+               .minHeight(m.control);
 
         manager->style("ScrollBar.horizontal .thumb")
                .marginTop(1)
-               .minWidth(24);
+               .minWidth(m.control);
 
         manager->style("ScrollBar:hover .thumb")
-               .backgroundColor(themeMediumContrastColor);
+               .backgroundColor(p.control);
 
         manager->style("ScrollBar:active .thumb")
-               .backgroundColor(themeHighlightColor);
+               .backgroundColor(p.accent);
 
         manager->style("ScrollBar:disabled .thumb")
-               .backgroundColor(themeBaseColor);
+               .backgroundColor(p.surface);
 
         manager->style("Scroller ScrollBar.horizontal")
-               .marginRight(scrollBarSize);
+               .marginRight(m.scrollBar);
 
         // endregion
 
@@ -304,28 +280,28 @@ public:
                .cursor(Cursor::Hand)
                .direction(Direction::Row)
                .alignItems(Align::Center)
-               .padding(12)
-               .fontSize(mediumText)
-               .lineHeight(mediumText)
-               .color(themeForegroundColor)
-               .backgroundColor(themeMediumContrastColor);
+               .padding(m.spaceMd)
+               .fontSize(t.medium)
+               .lineHeight(t.medium)
+               .color(p.text)
+               .backgroundColor(p.control);
 
         manager->style("Button:hover")
-               .backgroundColor(themeHighContrastColor);
+               .backgroundColor(p.controlHover);
 
         manager->style("Button:active")
-               .color(palette::base00)
-               .backgroundColor(themeHighlightColor);
+               .color(p.onAccent)
+               .backgroundColor(p.accent);
 
         manager->style("Button:disabled")
-               .backgroundColor(themeLowContrastColor);
+               .backgroundColor(p.muted);
 
         manager->style("Button:disabled:hover")
-               .backgroundColor(themeLowContrastColor);
+               .backgroundColor(p.muted);
 
         manager->style("Button:disabled:active")
-               .color(palette::base00)
-               .backgroundColor(themeHighlightColor); // TODO: Fade
+               .color(p.onAccent)
+               .backgroundColor(p.accent); // TODO: Fade
 
         // endregion
 
@@ -334,29 +310,29 @@ public:
                .skin("default-checkbox-skin")
                .direction(Direction::Row)
                .alignItems(Align::Center)
-               .padding(12)
-               .color(themeForegroundColor)
-               .fontSize(mediumText)
-               .lineHeight(mediumText);
+               .padding(m.spaceMd)
+               .color(p.text)
+               .fontSize(t.medium)
+               .lineHeight(t.medium);
 
         manager->style("CheckBox Shape")
-               .width(24)
-               .height(24)
-               .marginRight(6);
+               .width(m.control)
+               .height(m.control)
+               .marginRight(m.spaceSm);
 
         // endregion
 
         // region Menus
         // A translucent background rather than an opacity, which would fade the labels and highlights too
         manager->style("Menu")
-               .backgroundColor(Color(themeBackgroundColor).withAlpha(204))
+               .backgroundColor(p.background.withAlpha(204))
                .minWidth(200)
                .alignItems(Align::Stretch);
 
         manager->style("Menu MenuButton")
                .direction(Direction::Row)
-               .paddingHorizontal(6)
-               .paddingVertical(6)
+               .paddingHorizontal(m.spaceSm)
+               .paddingVertical(m.spaceSm)
                .borderRadius(0)
                .backgroundColor(Color{}); // Transparent, over the menu's background
 
@@ -368,41 +344,41 @@ public:
 
         manager->style("Menu MenuButton .label")
                .grow(1)
-               .fontFamily("Ubuntu Regular")
-               .fontSize(smallText)
-               .lineHeight(text);
+               .fontFamily(t.regular.name)
+               .fontSize(t.small)
+               .lineHeight(t.text);
 
         manager->style("Menu MenuButton .shortcut")
-               .fontSize(smallText)
-               .lineHeight(text)
-               .color(themeForegroundColor);
+               .fontSize(t.small)
+               .lineHeight(t.text)
+               .color(p.text);
 
         manager->style("Menu MenuButton.submenu .arrow")
                .width(6);
 
         manager->style("Menu MenuButton:hover")
-               .backgroundColor(themeHighlightColor);
+               .backgroundColor(p.accent);
 
         manager->style("Menu MenuButton:hover .label")
-               .color(palette::base00); // TODO: Contrasting text
+               .color(p.onAccent);
 
         manager->style("Menu MenuButton:hover .shortcut")
-               .color(palette::base03); // TODO: Contrasting text
+               .color(p.onAccentMuted);
 
         manager->style("Menu MenuButton.submenu:hover .arrow")
-               .color(palette::base00); // TODO: Contrasting text
+               .color(p.onAccent);
 
         manager->style("Menu MenuButton:active")
-               .backgroundColor(themeHighlightColor);
+               .backgroundColor(p.accent);
 
         manager->style("Menu MenuButton:active .label")
-               .color(palette::base00); // TODO: Contrasting text
+               .color(p.onAccent);
 
         manager->style("Menu MenuButton:active .shortcut")
-               .color(palette::base03); // TODO: Contrasting text
+               .color(p.onAccentMuted);
 
         manager->style("Menu MenuButton.submenu:active .arrow")
-               .color(palette::base00); // TODO: Contrasting text
+               .color(p.onAccent);
 
         // endregion
 
@@ -412,183 +388,105 @@ public:
                .skin("slider");
 
         manager->style("Range Slider")
-               .borderRadius(radius)
-               .fontFamily("Ubuntu Regular")
-               .fontSize(smallText)
-               .lineHeight(smallText)
-               .color(themeForegroundColor);
+               .borderRadius(m.radius)
+               .fontFamily(t.regular.name)
+               .fontSize(t.small)
+               .lineHeight(t.small)
+               .color(p.text);
 
         manager->style("Range Slider.horizontal")
-               .height(24);
+               .height(m.control);
 
         manager->style("Range Slider.vertical")
-               .width(24);
+               .width(m.control);
 
         manager->style("Range:hover Slider.inverted")
-               .color(palette::base00); // TODO: Contrasting text
+               .color(p.onAccent);
 
         manager->style("Range:hover Slider.normal")
-               .color(themeForegroundColor); // TODO: Contrasting text
+               .color(p.text);
 
         manager->style("Range:active Slider.normal")
-               .color(themeForegroundColor); // TODO: Contrasting text
+               .color(p.text);
 
         manager->style("Range:active Slider.inverted")
-               .color(palette::base00); // TODO: Contrasting text
+               .color(p.onAccent);
 
         // endregion
 
         // region Tabs
         manager->style("Tabs")
                .direction(Direction::Row)
-               .borderBottom(1)
-               .borderColor(themeSeparatorColor)
-               .backgroundColor(themeLowContrastColor);
+               .borderBottom(m.border)
+               .borderColor(p.separator)
+               .backgroundColor(p.muted);
 
         manager->style("Tabs button")
                .skin("default-basic-button-skin")
-               .fontSize(smallText)
-               .lineHeight(text)
-               .marginHorizontal(-1)
-               .paddingHorizontal(12)
-               .paddingVertical(6)
+               .fontSize(t.small)
+               .lineHeight(t.text)
+               .marginHorizontal(-m.border)
+               .paddingHorizontal(m.spaceMd)
+               .paddingVertical(m.spaceSm)
                .borderRadius(0)
-               .borderHorizontal(1)
-               .borderColor(themeSeparatorColor);
+               .borderHorizontal(m.border)
+               .borderColor(p.separator);
 
 //        manager->style("tabs button:firstChild")
-//               .borderRadiusLeft(radius);
+//               .borderRadiusLeft(m.radius);
 //
 //        manager->style("tabs button:lastChild")
-//               .borderRadiusRight(radius);
+//               .borderRadiusRight(m.radius);
 
         // endregion
 
         // region Tab Container
 
         manager->style("TabContainer")
-               .backgroundColor(themeBaseColor);
+               .backgroundColor(p.surface);
 
         // endregion
 
         // region MenuBar
         manager->style("MenuBar")
                .direction(Direction::Row)
-               .backgroundColor(themeBackgroundColor)
-               .borderBottom(1)
-               .borderColor(themeSeparatorColor);
+               .backgroundColor(p.background)
+               .borderBottom(m.border)
+               .borderColor(p.separator);
 
         manager->style("MenuBar Button")
                .skin("default-basic-button-skin")
-               .fontSize(smallText)
-               .lineHeight(smallText)
-               .paddingHorizontal(12)
-               .paddingVertical(6)
+               .fontSize(t.small)
+               .lineHeight(t.small)
+               .paddingHorizontal(m.spaceMd)
+               .paddingVertical(m.spaceSm)
                .borderRadius(0)
-               .backgroundColor(themeBackgroundColor);
+               .backgroundColor(p.background);
 
         manager->style("MenuBar Button:hover")
-               .color(themeHighlightColor);
+               .color(p.accent);
 
         manager->style("MenuBar Button:active")
-               .color(palette::base00) // TODO: Contrasting text
-               .backgroundColor(themeHighlightColor);
+               .color(p.onAccent) // TODO: Contrasting text
+               .backgroundColor(p.accent);
 
         // endregion
 
         // region ToolBar
         manager->style("ToolBar")
                .direction(Direction::Row)
-               .backgroundColor(themeLowContrastColor)
-               .borderBottom(1)
-               .borderColor(themeSeparatorColor);
+               .backgroundColor(p.muted)
+               .borderBottom(m.border)
+               .borderColor(p.separator);
 
         manager->style("ToolBar Button")
                .skin("default-basic-button-skin")
-               .marginHorizontal(-1)
-               .paddingHorizontal(18)
+               .marginHorizontal(-m.border)
+               .paddingHorizontal(m.spaceLg)
                .borderRadius(0)
-               .borderHorizontal(1)
-               .borderColor(themeSeparatorColor);
+               .borderHorizontal(m.border)
+               .borderColor(p.separator);
         // endregion
-    }
-};
-
-/**
- * Psychic UI Style
- */
-class PsychicStyleSheet : public PsychicUIStyleSheet {
-public:
-    PsychicStyleSheet() :
-        PsychicUIStyleSheet() {
-        themeSeparatorColor      = HSB{0x19181a};
-        themeBackgroundColor     = HSB{0x19181a};
-        themeBaseColor           = HSB{0x252426};
-        themeLowContrastColor    = HSB{0x313033};
-        themeMediumContrastColor = HSB{0x3d3c40};
-        themeHighContrastColor   = HSB{0x595959};
-        themeForegroundColor     = HSB{0xa4a1aa};
-        themeHighlightColor      = HSB{0x00FFEC};
-        themeCyanColor           = HSB{0x56B6C2};
-        themeBlueColor           = HSB{0x61AFEF};
-        themePurpleColor         = HSB{0xC678DD};
-        themeGreenColor          = HSB{0x98C379};
-        themeRedColor            = HSB{0xBE5046};
-        themeRedOrangeColor      = HSB{0xE06C75};
-        themeOrangeColor         = HSB{0xD19A66};
-        themeYellowColor         = HSB{0xE5C07B};
-    }
-};
-
-/**
- * One Dark UI Style
- */
-class OneDarkStyleSheet : public PsychicUIStyleSheet {
-public:
-    OneDarkStyleSheet() :
-        PsychicUIStyleSheet() {
-        themeSeparatorColor      = HSB{0x181A1F};
-        themeBackgroundColor     = HSB{0x1B1D23};
-        themeBaseColor           = HSB{0x21252B};
-        themeLowContrastColor    = HSB{0x282C34};
-        themeMediumContrastColor = HSB{0x383D48};
-        themeHighContrastColor   = HSB{0x3C414F};
-        themeForegroundColor     = HSB{0x9DA5B5};
-        themeHighlightColor      = HSB{0x0C83EB}; //{0xFF00FFEC}
-        themeCyanColor           = HSB{0x56B6C2};
-        themeBlueColor           = HSB{0x61AFEF};
-        themePurpleColor         = HSB{0xC678DD};
-        themeGreenColor          = HSB{0x98C379};
-        themeRedColor            = HSB{0xBE5046};
-        themeRedOrangeColor      = HSB{0xE06C75};
-        themeOrangeColor         = HSB{0xD19A66};
-        themeYellowColor         = HSB{0xE5C07B};
-    }
-};
-
-/**
- * One Light UI Style
- */
-class OneLightStyleSheet : public PsychicUIStyleSheet {
-public:
-    OneLightStyleSheet() :
-        PsychicUIStyleSheet() {
-        themeSeparatorColor      = HSB{0xc5cad3};
-        themeBackgroundColor     = HSB{0xc5cad3};//0xf3f4f6};
-        themeBaseColor           = HSB{0xd7dae1};
-        themeLowContrastColor    = HSB{0xe8eaed};
-        themeMediumContrastColor = HSB{0xebecef};
-        themeHighContrastColor   = HSB{0xf6f7f8};
-        themeForegroundColor     = HSB{0x2c313b};
-        themeHighlightColor      = HSB{0x5a8aed};
-        themeCyanColor           = HSB{0x56B6C2};
-        themeBlueColor           = HSB{0x61AFEF};
-        themePurpleColor         = HSB{0xC678DD};
-        themeGreenColor          = HSB{0x98C379};
-        themeRedColor            = HSB{0xBE5046};
-        themeRedOrangeColor      = HSB{0xE06C75};
-        themeOrangeColor         = HSB{0xD19A66};
-        themeYellowColor         = HSB{0xE5C07B};
     }
 };
 

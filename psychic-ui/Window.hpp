@@ -153,6 +153,20 @@ namespace psychic_ui {
             updateRuntimeStyles();
         }
 
+        /**
+         * The style manager's theme
+         */
+        const Theme &theme() const { return styleManager()->theme(); }
+
+        /**
+         * Switch the style manager's theme: its stylesheets load again with the new values
+         */
+        template<class Self>
+        Self &theme(this Self &self, const Theme &theme) {
+            static_cast<Window &>(self).updateTheme(theme);
+            return self;
+        }
+
         // endregion
 
         // region Focus
@@ -208,6 +222,8 @@ namespace psychic_ui {
 
 
     protected:
+
+        void updateTheme(const Theme &theme);
 
         // region Default DIVs
 

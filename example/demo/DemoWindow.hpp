@@ -39,8 +39,8 @@ namespace psychic_ui {
         Window("Demo Application") {
         _decorated = false;
 
-        loadStyleSheet<OneDarkStyleSheet>();
-        loadStyleSheet<DemoStyleSheet>();
+        loadStyleSheet<PsychicUIStyleSheet>(); // With the default theme, One Dark
+        loadStyleSheet<DemoStyleSheet>();      // Over the default look; both load again on a theme change
 
         app->add<TitleBar>();
 
@@ -72,24 +72,9 @@ namespace psychic_ui {
                 "View", {
                     Menu::item(
                         "Theme", {
-                            Menu::item(
-                                "Psychic", [this]() {
-                                    loadStyleSheet<PsychicStyleSheet>(true);
-                                    loadStyleSheet<DemoStyleSheet>();
-                                }
-                            ),
-                            Menu::item(
-                                "Dark", [this]() {
-                                    loadStyleSheet<OneDarkStyleSheet>(true);
-                                    loadStyleSheet<DemoStyleSheet>();
-                                }
-                            ),
-                            Menu::item(
-                                "Light", [this]() {
-                                    loadStyleSheet<OneLightStyleSheet>(true);
-                                    loadStyleSheet<DemoStyleSheet>();
-                                }
-                            )
+                            Menu::item("Psychic", [this]() { theme(themes::psychic); }),
+                            Menu::item("Dark", [this]() { theme(themes::oneDark); }),
+                            Menu::item("Light", [this]() { theme(themes::oneLight); })
                         }
                     ),
                     Menu::item(
@@ -129,7 +114,7 @@ namespace psychic_ui {
         std::vector<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Div>>>>> panels{};
         panels.emplace_back(std::make_pair("Divs", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Divs>(); })));
         panels.emplace_back(std::make_pair("Scroller", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Scrollers>(); })));
-        panels.emplace_back(std::make_pair("Typography", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Typography>(); })));
+        panels.emplace_back(std::make_pair("Typography", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<TypographyPanel>(); })));
         panels.emplace_back(std::make_pair("Text Input", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<TextInputs>(); })));
         panels.emplace_back(std::make_pair("Buttons", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Buttons>(); })));
         panels.emplace_back(std::make_pair("Ranges", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Ranges>(); })));

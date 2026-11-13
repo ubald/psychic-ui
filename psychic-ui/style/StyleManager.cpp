@@ -23,6 +23,11 @@ namespace psychic_ui {
         _fonts.clear();
         _fontCollection = nullptr;
         _skins.clear();
+        _styleSheets.clear();
+        clearRules();
+    }
+
+    void StyleManager::clearRules() {
         for (auto *rule: _rules) {
             rule->setActive(false);
             rule->style().clear();
@@ -34,6 +39,28 @@ namespace psychic_ui {
         _otherRules.clear();
         _universal = nullptr;
         _valid     = false;
+    }
+
+    void StyleManager::loadStyleSheet(const std::type_index type, const std::function<std::unique_ptr<StyleSheet>()> &make) {
+        auto it = std::find_if(
+            _styleSheets.begin(), _styleSheets.end(),
+            [type](const auto &loaded) { return loaded.first == type; }
+        );
+        StyleSheet *sheet = it != _styleSheets.end()
+                            ? it->second.get()
+                            : _styleSheets.emplace_back(type, make()).second.get();
+        sheet->load(this);
+        _valid = false;
+    }
+
+    StyleManager &StyleManager::theme(const Theme &theme) {
+        _theme = theme;
+        clearRules();
+        for (const auto &[type, sheet]: _styleSheets) {
+            sheet->load(this);
+        }
+        _valid = false;
+        return *this;
     }
 
     sk_sp<SkFontMgr> StyleManager::fontManager() {

@@ -1,15 +1,19 @@
 #pragma once
 
+#include <functional>
 #include <unordered_map>
 #include <vector>
 #include <string>
 #include <memory>
 #include <type_traits>
+#include <typeindex>
 #include <utility>
 #include "include/core/SkFontMgr.h"
 #include "include/core/SkTypeface.h"
 #include "modules/skparagraph/include/FontCollection.h"
 #include "psychic-ui/utils/Hatcher.hpp"
+#include "psychic-ui/themes/Theme.hpp"
+#include "psychic-ui/themes/one-dark.hpp"
 #include "Style.hpp"
 #include "StyleSelector.hpp"
 #include "StyleSheet.hpp"
@@ -37,21 +41,36 @@ namespace psychic_ui {
         StyleManager &operator=(const StyleManager &) = delete;
 
         /**
-         * Forget the fonts, the skins and every rule.
+         * Forget the fonts, the skins, the loaded stylesheets and every rule.
          * The rules' styles are emptied but stay allocated, so a `Style &` obtained from `style()` stays valid:
          * declaring the same selector again (usually by loading a stylesheet) brings that rule back.
          */
         void reset();
 
+        /**
+         * Load a stylesheet: its rules apply after (and over, on equal weight) those loaded before it.
+         * The style manager keeps it, to load it again when the theme changes; loading a stylesheet type
+         * that is already loaded runs it again in its place.
+         */
         template<typename T>
         void loadStyleSheet(bool reset = false) {
             static_assert(std::is_base_of<StyleSheet, T>::value, "T must extend StyleSheet");
             if (reset) {
                 this->reset();
             }
-            std::make_unique<T>()->load(this);
-            _valid = false;
+            loadStyleSheet(std::type_index(typeid(T)), [] { return std::make_unique<T>(); });
         }
+
+        /**
+         * The theme stylesheets read (`manager->theme().palette.accent`), One Dark until another is set
+         */
+        const Theme &theme() const { return _theme; }
+
+        /**
+         * Switch themes: the rules are cleared and the loaded stylesheets load again, in the same order, with the
+         * new values. Fonts and skins stay; the next style pass recomputes every div.
+         */
+        StyleManager &theme(const Theme &theme);
 
         bool valid() const { return _valid; };
 
@@ -133,6 +152,18 @@ namespace psychic_ui {
         sk_sp<skia::textlayout::FontCollection>                            _fontCollection{nullptr};
         std::unordered_map<std::string, SkinMaker>                         _skins{};
         bool                                                               _valid{false};
+        Theme                                                              _theme{themes::oneDark};
+        /**
+         * The loaded stylesheets, in load order, with their type so that each type is loaded once
+         */
+        std::vector<std::pair<std::type_index, std::unique_ptr<StyleSheet>>> _styleSheets{};
+
+        void loadStyleSheet(std::type_index type, const std::function<std::unique_ptr<StyleSheet>()> &make);
+
+        /**
+         * Drop every rule, keeping the fonts, the skins and the stylesheets
+         */
+        void clearRules();
 
         /**
          * Fill _matches with the rules matching a Div, in the order they apply

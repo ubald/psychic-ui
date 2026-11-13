@@ -450,6 +450,11 @@ namespace psychic_ui {
 
     // endregion
 
+    void Window::updateTheme(const Theme &theme) {
+        styleManager()->theme(theme);
+        updateRuntimeStyles(); // Clearing the rules dropped the runtime ones too
+    }
+
     // region Focus
 
     void Window::requestFocus(Div *component) {
