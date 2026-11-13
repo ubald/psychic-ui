@@ -3,7 +3,7 @@
 namespace psychic_ui {
     DefaultBasicButtonSkin::DefaultBasicButtonSkin() :
         ButtonSkin() {
-        setTag("DefaultBasicButtonSkin");
+        tag("DefaultBasicButtonSkin");
         _label = &add<Label>();
     }
 

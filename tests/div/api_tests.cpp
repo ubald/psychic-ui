@@ -14,7 +14,9 @@ namespace {
     // A component of the user's: chains through its own and every base's setters
     class Toolbar : public Button {
     public:
-        Toolbar() : Button("toolbar") {}
+        Toolbar() : Button("toolbar") {
+            tag("Toolbar").padding(2);
+        }
 
         template<class Self>
         Self &compact(this Self &self, bool compact) {
@@ -42,6 +44,7 @@ namespace {
     template<class D> concept EnabledFromString = requires(D d) { d.enabled("false"); };
     template<class D> concept ToggleFromInt = requires(D d) { d.toggle(1); };
     template<class D> concept MutableStyle = requires(D d) { d.style().padding(1); };
+    template<class D> concept PublicTag = requires(D d) { d.tag("x"); };
     template<class D> concept OldSetters = requires(D d) { d.setWidth(1); } || requires(D d) { d.setEnabled(true); };
 }
 
@@ -53,6 +56,10 @@ static_assert(std::is_same_v<decltype(std::declval<Toolbar &>().padding(1).toggl
 static_assert(std::is_same_v<decltype(std::declval<Range<int> &>().margin(12).range(0, 10).value(5)), Range<int> &>);
 static_assert(std::is_same_v<decltype(std::declval<Text &>().text("a").padding(2).multiline(true)), Text &>);
 static_assert(std::is_same_v<decltype(std::declval<Div &>().add<Label>("x")), Label &>);
+// A component's skin setters: the `skin` style property by name, or a skin built by hand
+static_assert(std::is_same_v<decltype(std::declval<Toolbar &>().skin("flat").compact(true)), Toolbar &>);
+static_assert(std::is_same_v<decltype(std::declval<Toolbar &>().skin(std::shared_ptr<ButtonSkin>{}).compact(true)), Toolbar &>);
+static_assert(std::is_same_v<decltype(std::declval<const Button &>().skin()), std::shared_ptr<ButtonSkin>>);
 static_assert(std::is_same_v<decltype(std::declval<const Div &>().children()), const std::vector<std::shared_ptr<Div>> &>);
 
 // Misuse doesn't compile on Div either
@@ -64,6 +71,7 @@ static_assert(!EnabledFromString<Div>);
 static_assert(!ToggleFromInt<Button>);
 static_assert(!MutableStyle<Div>, "the inline style is set through the div's own setters");
 static_assert(!OldSetters<Div>);
+static_assert(!PublicTag<Div>, "a div's tags name its classes, set from their constructors");
 
 TEST_CASE("setters chain across the hierarchy", "[div][api]") {
     auto root = std::make_shared<Div>();
@@ -76,6 +84,8 @@ TEST_CASE("setters chain across the hierarchy", "[div][api]") {
 
     auto &toolbar = root->add<Toolbar>().padding(1).compact(true).enabled(false).direction(Direction::Row);
     REQUIRE(toolbar.compact());
+    REQUIRE(toolbar.tags().back() == "toolbar");
+    REQUIRE(toolbar.style().padding() == 1);
     REQUIRE(toolbar.style().direction() == Direction::Row);
 
     auto &range = root->add<Range<int>>().margin(12).range(0, 10).value(5);

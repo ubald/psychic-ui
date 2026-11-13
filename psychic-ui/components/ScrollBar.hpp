@@ -8,7 +8,7 @@ namespace psychic_ui {
     class ScrollBarSkin : public Skin<ScrollBar> {
     public:
         ScrollBarSkin() : Skin<ScrollBar>() {
-            setTag("ScrollBarSkin");
+            tag("ScrollBarSkin");
         }
 
         virtual void updateScrollBar(bool enabled, float scrollPosition, float contentRatio) = 0;

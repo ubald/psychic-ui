@@ -16,7 +16,7 @@ namespace psychic_ui {
         Div::Div(),
         _title(std::move(title)) {
         setStyleManager(StyleManager::getInstance()); // NOTE: Each window could get its own style manager
-        setTag("Window");
+        tag("Window");
         setWindowSize(1440, 900);
 
         _inlineStyle.position(Position::Absolute)

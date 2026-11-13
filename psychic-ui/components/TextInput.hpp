@@ -10,7 +10,7 @@ namespace psychic_ui {
     class TextInputSkin : public Skin<TextInput> {
     public:
         TextInputSkin() : Skin<TextInput>() {
-            setTag("TextInputSkin");
+            tag("TextInputSkin");
         }
 
         virtual void setText(const std::string &/*text*/) {};

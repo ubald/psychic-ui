@@ -4,7 +4,7 @@
 namespace psychic_ui {
     DefaultTextInputSkin::DefaultTextInputSkin() :
         TextInputSkin() {
-        setTag("DefaultTextInputSkin");
+        tag("DefaultTextInputSkin");
         addClassName("defaultSkinChrome");
     }
 

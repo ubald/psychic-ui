@@ -5,7 +5,7 @@ namespace psychic_ui {
 
     Button::Button(const std::string &label, ClickCallback onClickCallback) :
         Component() {
-        setTag("Button");
+        tag("Button");
 
         _mouseChildren = false; // !important
 

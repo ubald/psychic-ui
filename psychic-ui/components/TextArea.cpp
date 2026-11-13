@@ -7,7 +7,7 @@ namespace psychic_ui {
         _text(text),
         _textDisplay(std::make_shared<Text>(_text)),
         _textScroller(std::make_shared<Scroller>(_textDisplay)) {
-        setTag("TextArea");
+        tag("TextArea");
 
         _focusEnabled = true;
 

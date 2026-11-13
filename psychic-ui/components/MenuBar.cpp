@@ -9,7 +9,7 @@ namespace psychic_ui {
             items,
             [this](const std::shared_ptr<MenuItem> &item) { return getItemDiv(item); }
         ) {
-        setTag("MenuBar");
+        tag("MenuBar");
 
         _defaultStyle.shrink(0);
     }

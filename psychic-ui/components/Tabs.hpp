@@ -44,7 +44,7 @@ namespace psychic_ui {
         DataContainer<T>(data, [this](const T &item) { return getTab(item); }),
         _getLabel(getLabel),
         _tabChanged(tabChanged) {
-        this->setTag("Tabs");
+        this->tag("Tabs");
         this->_defaultStyle.shrink(0);
     }
 

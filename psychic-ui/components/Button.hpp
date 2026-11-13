@@ -13,7 +13,7 @@ namespace psychic_ui {
     class ButtonSkin : public Skin<Button> {
     public:
         ButtonSkin() : Skin<Button>() {
-            setTag("ButtonSkin");
+            tag("ButtonSkin");
         }
 
         virtual void setLabel(const std::string &/*label*/) {};

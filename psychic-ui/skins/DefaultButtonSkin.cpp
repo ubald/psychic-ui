@@ -4,7 +4,7 @@
 namespace psychic_ui {
     DefaultButtonSkin::DefaultButtonSkin() :
         DefaultBasicButtonSkin() {
-        setTag("DefaultButtonSkin");
+        tag("DefaultButtonSkin");
         addClassName("defaultSkinChrome");
     }
 

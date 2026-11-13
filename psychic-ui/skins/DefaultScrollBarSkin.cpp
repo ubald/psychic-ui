@@ -5,7 +5,7 @@ namespace psychic_ui {
 
     DefaultScrollBarSkin::DefaultScrollBarSkin() :
         ScrollBarSkin() {
-        setTag("DefaultScrollBarSkin");
+        tag("DefaultScrollBarSkin");
 
         _track = &add<Div>();
         _track->addClassName("track")

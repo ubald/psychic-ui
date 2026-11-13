@@ -5,7 +5,7 @@ namespace psychic_ui {
 
     DefaultTextAreaSkin::DefaultTextAreaSkin() :
         TextAreaSkin() {
-        setTag("DefaultTextAreaSkin");
+        tag("DefaultTextAreaSkin");
         addClassName("defaultSkinChrome");
     }
 

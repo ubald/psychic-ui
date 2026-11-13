@@ -5,7 +5,7 @@ namespace psychic_ui {
         Component(),
         _direction(direction),
         _viewport(viewport.shared_from_this()) {
-        setTag("ScrollBar");
+        tag("ScrollBar");
         if (_direction == ScrollDirection::Vertical) {
             addClassName("vertical");
         } else {

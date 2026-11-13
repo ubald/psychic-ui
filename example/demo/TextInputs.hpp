@@ -16,10 +16,9 @@ namespace psychic_ui {
 
 
     TextInputs::TextInputs() : Div() {
-        setTag("TextInputs");
-        classNames({"demo-panel"});
-
-        direction(Direction::Row)
+        tag("TextInputs")
+            .classNames({"demo-panel"})
+            .direction(Direction::Row)
             .padding(0); // We're using a scroller so no padding
 
         auto &scroller = add<Div>()

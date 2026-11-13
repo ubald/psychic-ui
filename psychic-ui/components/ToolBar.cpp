@@ -4,7 +4,7 @@ namespace psychic_ui {
 
     ToolBar::ToolBar() :
         Div() {
-        setTag("ToolBar");
+        tag("ToolBar");
         _defaultStyle.height(48)
             .shrink(0);
     }

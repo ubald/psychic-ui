@@ -4,7 +4,7 @@
 namespace psychic_ui {
     TitleBarButtonSkin::TitleBarButtonSkin() :
         ButtonSkin() {
-        setTag("TitleBarButtonSkin");
+        tag("TitleBarButtonSkin");
         _inlineStyle.width(100_pct)
             .height(100_pct);
     }

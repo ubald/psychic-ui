@@ -21,7 +21,7 @@ namespace psychic_ui {
     class RangeSkin : public Skin<internal::RangeBase> {
     protected:
         RangeSkin() : Skin<internal::RangeBase>() {
-            setTag("RangeSkin");
+            tag("RangeSkin");
         }
 
     public:
@@ -145,7 +145,7 @@ namespace psychic_ui {
     template<class T>
     Range<T>::Range(T min, T max, T value, std::function<void(T)> onChangeCallback) :
         internal::RangeBase(), _min(min), _max(max), _value(value) {
-        setTag("Range");
+        tag("Range");
         if (onChangeCallback) {
             changed.subscribe(std::forward<std::function<void(T)>>(onChangeCallback));
         }

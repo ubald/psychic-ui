@@ -4,7 +4,7 @@ namespace psychic_ui {
 
     Box::Box(Direction direction, Length gap) :
         Div() {
-        setTag("Box");
+        tag("Box");
         _defaultStyle
             .direction(direction)
             .gap(gap);
@@ -12,11 +12,11 @@ namespace psychic_ui {
 
     HBox::HBox(Length gap) :
         Box(Direction::Row, gap) {
-        setTag("HBox");
+        tag("HBox");
     }
 
     VBox::VBox(Length gap) :
         Box(Direction::Column, gap) {
-        setTag("VBox");
+        tag("VBox");
     }
 }

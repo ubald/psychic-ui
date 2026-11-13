@@ -10,8 +10,8 @@ namespace psychic_ui {
     class Ranges : public Div {
     public:
         Ranges() {
-            setTag("Ranges");
-            classNames({"demo-panel"});
+            tag("Ranges")
+                .classNames({"demo-panel"});
 
             auto &container = add<HBox>();
 

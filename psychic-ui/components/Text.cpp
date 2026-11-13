@@ -5,7 +5,7 @@
 namespace psychic_ui {
     Text::Text(const std::string &text) :
         TextBase::TextBase() {
-        setTag("Text");
+        tag("Text");
 
         _textBox.setPaint(_textPaint);
         _textBox.setMode(_multiline ? TextBoxMode::LineBreak : TextBoxMode::OneLine);

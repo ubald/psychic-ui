@@ -134,10 +134,9 @@ namespace psychic_ui {
     };
 
     Colors::Colors() : Div() {
-        setTag("Colors");
-        classNames({"demo-panel"});
-
-        direction(Direction::Row)
+        tag("Colors")
+            .classNames({"demo-panel"})
+            .direction(Direction::Row)
             .padding(0); // We're using a scroller so no padding
 
         auto &scroller = add<Div>()

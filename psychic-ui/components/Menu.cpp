@@ -11,7 +11,7 @@ namespace psychic_ui {
                 items,
                 [this](const std::shared_ptr<MenuItem> &item) { return getItemDiv(item); }
             )) {
-        setTag("Menu");
+        tag("Menu");
         _inlineStyle.position(Position::Absolute);
         add(menuContainer);
     }

@@ -18,14 +18,14 @@ namespace psychic_ui {
          */
         std::shared_ptr<T> skin() const { return _skin; };
 
-        // The `skin` style property's setter, which the getter above would hide
+        // The `skin` style property's setter (by name), which the getter above would hide
         using Div::skin;
 
         /**
          * Replace the skin with one built by hand, until the `skin` style property changes
          */
         template<class Self>
-        Self &setSkin(this Self &self, std::shared_ptr<T> skin) {
+        Self &skin(this Self &self, std::shared_ptr<T> skin) {
             static_cast<Component &>(self).updateSkin(std::move(skin));
             return self;
         }
@@ -51,7 +51,7 @@ namespace psychic_ui {
     template<class T>
     Component<T>::Component():
         Div() {
-        setTag("Component");
+        tag("Component");
         // Our skin will inherit all of our styles but the external ones (margin)
         // But we should do our part and ignore any internal layout styling
         _ignoreInternalLayoutContraints = true;

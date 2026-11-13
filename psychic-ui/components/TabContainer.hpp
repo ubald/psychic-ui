@@ -34,7 +34,7 @@ namespace psychic_ui {
     TabContainer<T>::TabContainer(const TabContainerData &data, LabelCallback getLabel, ComponentCallback getComponent) :
         Div(),
         _getTabComponentCallback(getComponent) {
-        this->setTag("TabContainer");
+        this->tag("TabContainer");
         _defaultStyle.overflow(Overflow::Hidden);
 
         // Make the tabs component

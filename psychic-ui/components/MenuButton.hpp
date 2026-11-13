@@ -13,7 +13,7 @@ namespace psychic_ui {
     class MenuButtonSkin : public Skin<MenuButton> {
     public:
         MenuButtonSkin() : Skin<MenuButton>() {
-            setTag("MenuButtonSkin");
+            tag("MenuButtonSkin");
         }
     };
 

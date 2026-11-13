@@ -14,7 +14,7 @@ namespace psychic_ui {
     class CheckBoxSkin : public Skin<CheckBox> {
     public:
         CheckBoxSkin() : Skin<CheckBox>() {
-            setTag("CheckBoxSkin");
+            tag("CheckBoxSkin");
         }
 
         virtual void setLabel(const std::string &/*label*/) {};

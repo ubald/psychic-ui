@@ -3,7 +3,7 @@
 namespace psychic_ui {
 
     Modal::Modal() : Div() {
-        setTag("Modal");
+        tag("Modal");
         _inlineStyle.position(Position::Absolute)
             .width(100_pct)
             .height(100_pct)

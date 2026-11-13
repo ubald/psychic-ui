@@ -8,7 +8,7 @@ namespace psychic_ui {
     MenuButton::MenuButton(const MenuItem *menuItem) :
         Component(),
         _menuItem(menuItem) {
-        setTag("MenuButton");
+        tag("MenuButton");
 
         _mouseChildren = false; // !important
     }

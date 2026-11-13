@@ -14,10 +14,9 @@ namespace psychic_ui {
     };
 
     Scrollers::Scrollers() : Div() {
-        setTag("Scroller");
-        classNames({"demo-panel"});
-
-        padding(48);
+        tag("Scroller")
+            .classNames({"demo-panel"})
+            .padding(48);
 
         add<Label>("Boxes")
             .addClassName("h2");

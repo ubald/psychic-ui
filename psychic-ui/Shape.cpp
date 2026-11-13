@@ -6,7 +6,7 @@ namespace psychic_ui {
 
     Shape::Shape(std::function<void(Shape *, SkCanvas *)> drawFunc) :
         _drawFunc(std::move(drawFunc)) {
-        setTag("Shape");
+        tag("Shape");
     }
 
     void Shape::draw(SkCanvas *canvas) {

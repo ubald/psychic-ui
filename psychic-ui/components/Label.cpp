@@ -5,7 +5,7 @@ namespace psychic_ui {
 
     Label::Label(const std::string &text) :
         TextBase::TextBase() {
-        setTag("Label");
+        tag("Label");
         updateText(text);
     }
 

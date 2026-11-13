@@ -5,7 +5,7 @@ namespace psychic_ui {
 
     TextBase::TextBase() :
         Div::Div() {
-        setTag("TextBase");
+        tag("TextBase");
 
         _defaultStyle.shrink(0)
             .grow(0);

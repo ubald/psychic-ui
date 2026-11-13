@@ -44,7 +44,7 @@ namespace psychic_ui {
         Div(),
         _data(data),
         _getDiv(getDiv) {
-        setTag("DataContainer");
+        tag("DataContainer");
     }
 
     template<class T>

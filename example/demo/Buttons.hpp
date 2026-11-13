@@ -11,10 +11,9 @@ namespace psychic_ui {
     };
 
     Buttons::Buttons() : Div() {
-        setTag("Buttons");
-        classNames({"demo-panel"});
-
-        wrap(Wrap::Wrap)
+        tag("Buttons")
+            .classNames({"demo-panel"})
+            .wrap(Wrap::Wrap)
             .direction(Direction::Row)
             .alignItems(Align::Start);
 

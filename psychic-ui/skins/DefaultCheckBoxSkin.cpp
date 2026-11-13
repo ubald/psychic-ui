@@ -4,7 +4,7 @@
 namespace psychic_ui {
     DefaultCheckBoxSkin::DefaultCheckBoxSkin() :
         CheckBoxSkin() {
-        setTag("DefaultCheckBoxSkin");
+        tag("DefaultCheckBoxSkin");
 
         _box = &add<Shape>(
             [this](Shape *shape, SkCanvas *canvas) {

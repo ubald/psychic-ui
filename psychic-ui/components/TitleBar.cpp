@@ -6,7 +6,7 @@ namespace psychic_ui {
 
     TitleBar::TitleBar() :
         Div() {
-        setTag("TitleBar");
+        tag("TitleBar");
         _defaultStyle.direction(Direction::Row)
             .shrink(0);
 

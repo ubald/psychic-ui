@@ -5,7 +5,7 @@
 namespace psychic_ui {
     SliderRangeSkin::SliderRangeSkin() :
         RangeSkin() {
-        setTag("Slider");
+        tag("Slider");
         addClassName("defaultSkinChrome");
 
         onMouseDown(

@@ -11,7 +11,7 @@ namespace psychic_ui {
     class TextAreaSkin : public Skin<TextArea> {
     public:
         TextAreaSkin() : Skin<TextArea>() {
-            setTag("TextAreaSkin");
+            tag("TextAreaSkin");
         }
 
         virtual void setText(const std::string &/*text*/) {};

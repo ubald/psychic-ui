@@ -692,12 +692,17 @@ namespace psychic_ui {
         // region Style
 
         /**
-         * Set the component tag, it wil be appended to _componentTag in order to get a type hierarchy for styling.
-         * Obviously this should be static and/or use Reflection but in order to progress in other parts of the library
-         * it will stay local for the time being, until a better technique is implemented.
-         * @param tag
+         * Add a tag to the chain read by `tags()`: each class in the hierarchy adds its own, so selectors can match
+         * any of them. Obviously this should be static and/or use Reflection but in order to progress in other parts
+         * of the library it will stay local for the time being, until a better technique is implemented.
          */
-        void setTag(std::string tag);
+        template<class Self>
+        Self &tag(this Self &self, std::string tag) {
+            static_cast<Div &>(self).addTag(std::move(tag));
+            return self;
+        }
+
+        void addTag(std::string tag);
 
         /**
          * Chain of tags from the inheritance chain

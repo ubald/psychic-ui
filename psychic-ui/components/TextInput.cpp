@@ -7,7 +7,7 @@ namespace psychic_ui {
         Component<TextInputSkin>(),
         _text(text),
         _textDisplay(std::make_shared<Text>(_text)) {
-        setTag("TextInput");
+        tag("TextInput");
 
         _focusEnabled = true;
 

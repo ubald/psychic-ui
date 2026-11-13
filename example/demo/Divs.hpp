@@ -11,10 +11,9 @@ namespace psychic_ui {
     };
 
     Divs::Divs() : Div() {
-        setTag("Divs");
-        classNames({"demo-panel"});
-
-        direction(Direction::Row)
+        tag("Divs")
+            .classNames({"demo-panel"})
+            .direction(Direction::Row)
             .padding(0); // We're using a scroller so no padding
 
         auto &scroller = add<Div>()

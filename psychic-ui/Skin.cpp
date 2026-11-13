@@ -30,7 +30,7 @@ namespace psychic_ui {
 
         SkinBase::SkinBase() :
             Div() {
-            setTag("Skin");
+            tag("Skin");
             _inlineStyle.shrink(1)
                 .grow(1);
         }

@@ -44,7 +44,7 @@ namespace psychic_ui {
         _defaultStyle([](void *div) { static_cast<Div *>(div)->invalidateStyle(); }, this),
         _inlineStyle([](void *div) { static_cast<Div *>(div)->invalidateStyle(); }, this),
         _yogaNode(YGNodeNewWithConfig(yogaConfig())) {
-        setTag("div");
+        tag("div");
 
         YGNodeSetContext(_yogaNode, this);
     }
@@ -369,7 +369,7 @@ namespace psychic_ui {
         return _computedStyle;
     }
 
-    void Div::setTag(std::string tag) {
+    void Div::addTag(std::string tag) {
         std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
         _tags.push_back(tag);
         invalidateStyle();
