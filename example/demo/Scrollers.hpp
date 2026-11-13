@@ -4,6 +4,7 @@
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/Text.hpp>
 #include <psychic-ui/components/Scroller.hpp>
+#include <psychic-ui/themes/palette.hpp>
 #include <example/demo.hpp>
 
 namespace psychic_ui {

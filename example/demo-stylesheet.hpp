@@ -2,6 +2,7 @@
 
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/style/StyleSheet.hpp>
+#include <psychic-ui/themes/palette.hpp>
 
 using namespace psychic_ui;
 

@@ -11,7 +11,7 @@
 #include "include/core/SkFontMgr.h"
 #include "include/core/SkTypeface.h"
 #include "modules/skparagraph/include/FontCollection.h"
-#include "psychic-ui/utils/Hatcher.hpp"
+#include "psychic-ui/skins/SkinSet.hpp"
 #include "psychic-ui/themes/Theme.hpp"
 #include "psychic-ui/themes/one-dark.hpp"
 #include "Style.hpp"
@@ -21,13 +21,6 @@
 
 namespace psychic_ui {
     class Div;
-
-    namespace internal {
-        class SkinBase;
-    }
-
-    using SkinType = Hatcher<std::shared_ptr<internal::SkinBase>>;
-    using SkinMaker = std::shared_ptr<SkinType>;
 
     class StyleManager {
     public:
@@ -41,7 +34,7 @@ namespace psychic_ui {
         StyleManager &operator=(const StyleManager &) = delete;
 
         /**
-         * Forget the fonts, the skins, the loaded stylesheets and every rule.
+         * Forget the fonts, the skin set, the loaded stylesheets and every rule.
          * The rules' styles are emptied but stay allocated, so a `Style &` obtained from `style()` stays valid:
          * declaring the same selector again (usually by loading a stylesheet) brings that rule back.
          */
@@ -58,8 +51,44 @@ namespace psychic_ui {
             if (reset) {
                 this->reset();
             }
-            loadStyleSheet(std::type_index(typeid(T)), [] { return std::make_unique<T>(); });
+            if constexpr (std::is_base_of_v<SkinSet, T>) {
+                skinSet<T>();
+            } else {
+                loadStyleSheet(std::type_index(typeid(T)), [] { return std::make_unique<T>(); });
+            }
         }
+
+        /**
+         * Use a skin set, with its default theme: its skins (and its fallback sets') replace the current set's,
+         * its rules load first, under the other stylesheets, and every component hatches a new skin on the next
+         * style pass. Loading a skin set with `loadStyleSheet` does the same.
+         */
+        template<class S>
+        StyleManager &skinSet() {
+            static_assert(std::is_base_of_v<SkinSet, S>, "S must extend SkinSet");
+            return skinSet(std::make_unique<S>());
+        }
+
+        StyleManager &skinSet(std::unique_ptr<SkinSet> skinSet);
+
+        /**
+         * The skin set in use, nullptr before one is set
+         */
+        const SkinSet *skinSet() const { return _skinSets.empty() ? nullptr : _skinSets.back().get(); }
+
+        /**
+         * A new skin implementing SkinT from the skin set: the variant (from the set, else its fallback sets),
+         * else SkinT's default. nullptr only without a skin set, or when no set in the chain implements SkinT.
+         */
+        template<class SkinT>
+        std::shared_ptr<SkinT> skin(std::string_view variant = "") const {
+            return _skins.make<SkinT>(variant);
+        }
+
+        /**
+         * Bumped every time the skin set changes: components hatch a new skin when it does
+         */
+        std::size_t skinsGeneration() const { return _skinsGeneration; }
 
         /**
          * The theme stylesheets read (`manager->theme().palette.accent`), One Dark until another is set
@@ -97,9 +126,6 @@ namespace psychic_ui {
          * which also fill in the characters a font lacks. Remade after a font is loaded.
          */
         sk_sp<skia::textlayout::FontCollection> fontCollection();
-
-        StyleManager &registerSkin(const std::string &name, SkinMaker hatcher);
-        std::shared_ptr<internal::SkinBase> skin(const std::string &name);
 
         /**
          * Get the rule for a selector, declaring it if needed. Selectors are case insensitive.
@@ -150,7 +176,12 @@ namespace psychic_ui {
         std::vector<std::pair<int, std::size_t>>                           _matches{};
         std::unordered_map<std::string, sk_sp<SkTypeface>>                 _fonts{};
         sk_sp<skia::textlayout::FontCollection>                            _fontCollection{nullptr};
-        std::unordered_map<std::string, SkinMaker>                         _skins{};
+        /**
+         * The skin set in use, last, after the sets it falls back on
+         */
+        std::vector<std::unique_ptr<SkinSet>>                              _skinSets{};
+        SkinRegistry                                                       _skins{};
+        std::size_t                                                        _skinsGeneration{0};
         bool                                                               _valid{false};
         Theme                                                              _theme{themes::oneDark};
         /**
@@ -164,6 +195,11 @@ namespace psychic_ui {
          * Drop every rule, keeping the fonts, the skins and the stylesheets
          */
         void clearRules();
+
+        /**
+         * Clear the rules, then load the skin sets' rules and the stylesheets', in order
+         */
+        void reloadRules();
 
         /**
          * Fill _matches with the rules matching a Div, in the order they apply

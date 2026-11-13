@@ -8,7 +8,11 @@
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Tabs.hpp>
 #include <psychic-ui/components/TabContainer.hpp>
-#include <psychic-ui/themes/default.hpp>
+#include <psychic-ui/skins/default/DefaultSkins.hpp>
+#include <psychic-ui/themes/one-dark.hpp>
+#include <psychic-ui/themes/one-light.hpp>
+#include <psychic-ui/themes/psychic.hpp>
+#include <psychic-ui/utils/Hatcher.hpp>
 #include <psychic-ui/components/TitleBar.hpp>
 #include <psychic-ui/components/ToolBar.hpp>
 #include <psychic-ui/components/MenuBar.hpp>
@@ -39,8 +43,8 @@ namespace psychic_ui {
         Window("Demo Application") {
         _decorated = false;
 
-        loadStyleSheet<PsychicUIStyleSheet>(); // With the default theme, One Dark
-        loadStyleSheet<DemoStyleSheet>();      // Over the default look; both load again on a theme change
+        skinSet<DefaultSkins>();          // With its theme, One Dark
+        loadStyleSheet<DemoStyleSheet>(); // Over the skin set's rules; both load again on a theme change
 
         app->add<TitleBar>();
 

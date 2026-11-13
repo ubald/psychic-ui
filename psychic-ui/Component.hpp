@@ -14,7 +14,8 @@ namespace psychic_ui {
     public:
 
         /**
-         * The skin drawing this component, hatched from the `skin` style property
+         * The skin drawing this component: the active skin set's, in the variant the `skin` style property
+         * names ("" for the default)
          */
         std::shared_ptr<T> skin() const { return _skin; };
 
@@ -22,11 +23,13 @@ namespace psychic_ui {
         using Div::skin;
 
         /**
-         * Replace the skin with one built by hand, until the `skin` style property changes
+         * Replace the skin with one built by hand, until the `skin` style property or the skin set changes
          */
         template<class Self>
         Self &skin(this Self &self, std::shared_ptr<T> skin) {
-            static_cast<Component &>(self).updateSkin(std::move(skin));
+            auto &component = static_cast<Component &>(self);
+            component.updateSkin(std::move(skin));
+            component._skinByHand = true;
             return self;
         }
 
@@ -40,6 +43,8 @@ namespace psychic_ui {
         void styleUpdated() override;
 
         Atom               _skinName{};
+        std::size_t        _skinsGeneration{0};
+        bool               _skinByHand{false}; // Until the next style update, which records what it was chosen against
         std::shared_ptr<T> _skin{nullptr};
 
         // Make some of div's stuff protected since we manage our content
@@ -78,10 +83,16 @@ namespace psychic_ui {
     template<class T>
     void Component<T>::styleUpdated() {
         Div::styleUpdated();
-        const Atom &skinName = _computedStyle.skin();
-        if (skinName != _skinName) {
-            _skinName = skinName;
-            updateSkin(std::dynamic_pointer_cast<T>(styleManager()->skin(_skinName.str())));
+        // The `skin` property names a variant of the skin set's skin for T; "" is the default one
+        const Atom        &variant    = _computedStyle.skin();
+        const std::size_t generation = styleManager()->skinsGeneration(); // Bumped when the skin set changes
+        if (_skinByHand) {
+            _skinByHand = false;
+        } else if (variant != _skinName || generation != _skinsGeneration) {
+            // Typed: the variant from the set or its fallbacks, else the default; never null once a set is in use
+            updateSkin(styleManager()->template skin<T>(variant.str()));
         }
+        _skinName        = variant;
+        _skinsGeneration = generation;
     }
 }

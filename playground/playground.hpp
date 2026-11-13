@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <psychic-ui/Window.hpp>
-#include <psychic-ui/themes/default.hpp>
+#include <psychic-ui/skins/default/DefaultSkins.hpp>
 
 using namespace psychic_ui;
 
@@ -18,7 +18,7 @@ namespace psychic_ui_playground {
         Window("Playground Application") {
         _decorated = false;
 
-        loadStyleSheet<PsychicUIStyleSheet>();
+        skinSet<DefaultSkins>();
         //loadStyleSheet<PlaygroundStyleSheet>();
 
         Div::debugLayout = true;

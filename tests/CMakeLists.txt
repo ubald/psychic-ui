@@ -17,6 +17,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
     add_executable(psychic-ui-tests
         style/style_manager_tests.cpp
         style/theme_tests.cpp
+        skins/skin_set_tests.cpp
         style/style_tests.cpp
         style/style_rule_tests.cpp
         style/cascade_tests.cpp

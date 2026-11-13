@@ -1,67 +1,54 @@
-#pragma once
-
-#include <psychic-ui/style/StyleManager.hpp>
-#include <psychic-ui/style/StyleSheet.hpp>
-#include <psychic-ui/themes/one-dark.hpp>
-#include <psychic-ui/themes/one-light.hpp>
-#include <psychic-ui/themes/psychic.hpp>
-#include <psychic-ui/skins/SliderRangeSkin.hpp>
-#include <psychic-ui/skins/DefaultButtonSkin.hpp>
-#include <psychic-ui/skins/DefaultScrollBarSkin.hpp>
-#include <psychic-ui/skins/DefaultCheckBoxSkin.hpp>
-#include <psychic-ui/skins/DefaultMenuButtonSkin.hpp>
-#include <psychic-ui/skins/TitleBarButtonSkin.hpp>
-#include <psychic-ui/skins/DefaultBasicButtonSkin.hpp>
-#include <psychic-ui/skins/DefaultTextInputSkin.hpp>
-#include <psychic-ui/skins/DefaultTextAreaSkin.hpp>
+#include <string>
+#include <utility>
+#include "psychic-ui/style/StyleManager.hpp"
+#include "psychic-ui/themes/one-dark.hpp"
+#include "DefaultSkins.hpp"
+#include "DefaultBasicButtonSkin.hpp"
+#include "DefaultButtonSkin.hpp"
+#include "DefaultCheckBoxSkin.hpp"
+#include "DefaultMenuButtonSkin.hpp"
+#include "DefaultScrollBarSkin.hpp"
+#include "DefaultSliderSkin.hpp"
+#include "DefaultTextAreaSkin.hpp"
+#include "DefaultTextInputSkin.hpp"
+#include "TitleBarButtonSkin.hpp"
 
 namespace psychic_ui {
+    namespace {
+        /**
+         * Where the default chrome goes: a component and, inside it, the part carrying the chrome
+         */
+        constexpr std::pair<const char *, const char *> chromes[]{
+            {"Button", "DefaultButtonSkin"},
+            {"CheckBox", ".box"},
+            {"Range", "DefaultSliderSkin"},
+            {"TextInput", "DefaultTextInputSkin"},
+            {"TextArea", "DefaultTextAreaSkin"},
+        };
+    }
 
-/**
- * Named colors: a base16 gray scale and accents, and the One Dark palette
- */
-namespace palette {
-    inline constexpr Color base00 = argb(0xFF151515);
-    inline constexpr Color base01 = argb(0xFF202020);
-    inline constexpr Color base02 = argb(0xFF303030);
-    inline constexpr Color base03 = argb(0xFF505050);
-    inline constexpr Color base04 = argb(0xFFB0B0B0);
-    inline constexpr Color base05 = argb(0xFFD0D0D0);
-    inline constexpr Color base06 = argb(0xFFE0E0E0);
-    inline constexpr Color base07 = argb(0xFFF5F5F5);
+    std::string_view DefaultSkins::name() const {
+        return "Default";
+    }
 
-    inline constexpr Color baseRed       = argb(0xFFAC4142);
-    inline constexpr Color baseOrange    = argb(0xFFD28445);
-    inline constexpr Color baseYellow    = argb(0xFFF4BF75);
-    inline constexpr Color baseGreen     = argb(0xFF90A959);
-    inline constexpr Color baseTurquoise = argb(0xFF75B5AA);
-    inline constexpr Color baseBlue      = argb(0xFF6A9FB5);
-    inline constexpr Color baseViolet    = argb(0xFFAA759F);
-    inline constexpr Color baseBrown     = argb(0xFF8F5536);
+    const Theme &DefaultSkins::defaultTheme() const {
+        return themes::oneDark;
+    }
 
-    inline constexpr Color oneLight      = argb(0xFFABB2BF);
-    inline constexpr Color oneMedium     = argb(0xFF828997);
-    inline constexpr Color oneDark       = argb(0xFF5C6370);
-    inline constexpr Color oneCyan       = argb(0xFF56B6C2);
-    inline constexpr Color oneBlue       = argb(0xFF61AFEF);
-    inline constexpr Color onePurple     = argb(0xFFC678DD);
-    inline constexpr Color oneGreen      = argb(0xFF98C379);
-    inline constexpr Color oneRedFaded   = argb(0xFFE06C75);
-    inline constexpr Color oneRed        = argb(0xFFBE5046);
-    inline constexpr Color oneOrange     = argb(0xFFD19A66);
-    inline constexpr Color oneYellow     = argb(0xFFE5C07B);
-    inline constexpr Color oneForeground = argb(0xFFABB2BF);
-    inline constexpr Color oneBackground = argb(0xFF282C34);
-    inline constexpr Color oneGutter     = argb(0xFF636D83);
-    inline constexpr Color oneBlueAccent = argb(0xFF528BFF);
-}
+    void DefaultSkins::registerSkins(SkinRegistry &skins) const {
+        skins.add<ButtonSkin, DefaultButtonSkin>()
+             .add<ButtonSkin, DefaultBasicButtonSkin>("basic")
+             .add<ButtonSkin, TitleBarButtonSkin>("title-bar")
+             .add<CheckBoxSkin, DefaultCheckBoxSkin>()
+             .add<RangeSkin, DefaultSliderSkin>()
+             .add<ScrollBarSkin, DefaultScrollBarSkin>()
+             .add<TextInputSkin, DefaultTextInputSkin>()
+             .add<TextAreaSkin, DefaultTextAreaSkin>()
+             .add<MenuButtonSkin, DefaultMenuButtonSkin>()
+             .add<MenuButtonSkin, DefaultSubMenuButtonSkin>("submenu");
+    }
 
-/**
- * Psychic UI's look, from the style manager's theme
- */
-class PsychicUIStyleSheet : public StyleSheet {
-public:
-    void load(StyleManager *manager) override {
+    void DefaultSkins::load(StyleManager *manager) {
         const Theme      &theme = manager->theme();
         const Palette    &p     = theme.palette;
         const Typography &t     = theme.type;
@@ -69,17 +56,6 @@ public:
 
         manager->loadFont(std::string{t.light.name}, std::string{t.light.path});
         manager->loadFont(std::string{t.regular.name}, std::string{t.regular.path});
-
-        manager->registerSkin("default-text-input-skin", SkinType::make([]() { return std::make_shared<DefaultTextInputSkin>(); }));
-        manager->registerSkin("default-text-area-skin", SkinType::make([]() { return std::make_shared<DefaultTextAreaSkin>(); }));
-        manager->registerSkin("default-basic-button-skin", SkinType::make([]() { return std::make_shared<DefaultBasicButtonSkin>(); }));
-        manager->registerSkin("default-button-skin", SkinType::make([]() { return std::make_shared<DefaultButtonSkin>(); }));
-        manager->registerSkin("default-checkbox-skin", SkinType::make([]() { return std::make_shared<DefaultCheckBoxSkin>(); }));
-        manager->registerSkin("default-scrollbar-skin", SkinType::make([]() { return std::make_shared<DefaultScrollBarSkin>(); }));
-        manager->registerSkin("menu-button-skin", SkinType::make([]() { return std::make_shared<DefaultMenuButtonSkin>(); }));
-        manager->registerSkin("sub-menu-button-skin", SkinType::make([]() { return std::make_shared<DefaultSubMenuButtonSkin>(); }));
-        manager->registerSkin("title-bar-button", SkinType::make([]() { return std::make_shared<TitleBarButtonSkin>(); }));
-        manager->registerSkin("slider", SkinType::make([]() { return std::make_shared<SliderRangeSkin>(); }));
 
         // region Defaults
         manager->style("*")
@@ -93,40 +69,43 @@ public:
                .antiAlias(true)
                .textAntiAlias(true);
 
-        manager->style("Component .defaultSkinChrome")
-               .borderRadius(m.radius)
-               .border(m.border)
-               .margin(m.focusWidth - m.border) // Keeps the size when focused
-                   //.color(p.text)
-               .borderColor(p.muted.withAlpha(0x40))
-               .backgroundColor(p.control)
-               .contentBackgroundColor(p.background);
+        // The default chrome (see DefaultChrome.hpp), on the skins that draw it and on a check box's box.
+        // Its border thickens when focused, eating its margin, so the content doesn't move.
+        for (const auto &[component, part]: chromes) {
+            const auto rule = [&](const std::string &state) -> Style & {
+                return manager->style(std::string{component} + state + " " + part);
+            };
 
-        manager->style("Component:hover .defaultSkinChrome")
-               .borderColor(p.muted.withAlpha(0x80))
-               .backgroundColor(p.controlHover);
+            rule("")
+                .borderRadius(m.radius)
+                .border(m.border)
+                .margin(m.focusWidth - m.border)
+                .borderColor(p.muted.withAlpha(0x40))
+                .backgroundColor(p.control)
+                .contentBackgroundColor(p.background);
 
-        manager->style("Component:active .defaultSkinChrome")
-               .borderColor(p.muted.withAlpha(0xC0))
-               .backgroundColor(p.accent);
+            rule(":hover")
+                .borderColor(p.muted.withAlpha(0x80))
+                .backgroundColor(p.controlHover);
 
-        manager->style("Component:focus .defaultSkinChrome")
-               .border(m.focusWidth)
-               .margin(0)
-               .borderColor(p.accent);
+            rule(":active")
+                .borderColor(p.muted.withAlpha(0xC0))
+                .backgroundColor(p.accent);
 
-        //manager->style("Component:focus .defaultSkinChrome")
-        //        .border(m.focusWidth)
-        //        .borderColor(p.accent);
+            rule(":focus")
+                .border(m.focusWidth)
+                .margin(0)
+                .borderColor(p.accent);
 
-        manager->style("Component:disabled .defaultSkinChrome")
-               .backgroundColor(p.muted);
+            rule(":disabled")
+                .backgroundColor(p.muted);
 
-        manager->style("Component:disabled:hover .defaultSkinChrome")
-               .backgroundColor(p.muted);
+            rule(":disabled:hover")
+                .backgroundColor(p.muted);
 
-        manager->style("Component:disabled:active .defaultSkinChrome")
-               .backgroundColor(p.accent); // TODO: Fade
+            rule(":disabled:active")
+                .backgroundColor(p.accent); // TODO: Fade
+        }
 
         // endregion
 
@@ -188,7 +167,7 @@ public:
                .grow(1);
 
         manager->style("TitleBar Button")
-               .skin("title-bar-button")
+               .skin("title-bar")
                .width(18)
                .height(18)
                .margin(3)
@@ -215,30 +194,17 @@ public:
 
         // endregion
 
-        // region Boxes
-
-        // endregion
-
-        // region Typography
-
-        // endregion
-
         // region Text Input
 
         manager->style("TextInput")
-               .skin("default-text-input-skin")
                .padding(m.spaceSm);
 
         manager->style("TextArea")
-               .skin("default-text-area-skin")
                .padding(m.spaceSm);
 
         // endregion
 
         // region ScrollBars
-
-        manager->style("ScrollBar")
-               .skin("default-scrollbar-skin");
 
         manager->style("ScrollBar.vertical")
                .width(m.scrollBar);
@@ -276,7 +242,6 @@ public:
 
         // region Buttons
         manager->style("Button")
-               .skin("default-button-skin")
                .cursor(Cursor::Hand)
                .direction(Direction::Row)
                .alignItems(Align::Center)
@@ -307,7 +272,6 @@ public:
 
         // region CheckBox
         manager->style("CheckBox")
-               .skin("default-checkbox-skin")
                .direction(Direction::Row)
                .alignItems(Align::Center)
                .padding(m.spaceMd)
@@ -315,7 +279,7 @@ public:
                .fontSize(t.medium)
                .lineHeight(t.medium);
 
-        manager->style("CheckBox Shape")
+        manager->style("CheckBox .box")
                .width(m.control)
                .height(m.control)
                .marginRight(m.spaceSm);
@@ -336,11 +300,8 @@ public:
                .borderRadius(0)
                .backgroundColor(Color{}); // Transparent, over the menu's background
 
-        manager->style("Menu MenuButton.simple")
-               .skin("menu-button-skin");
-
         manager->style("Menu MenuButton.submenu")
-               .skin("sub-menu-button-skin");
+               .skin("submenu");
 
         manager->style("Menu MenuButton .label")
                .grow(1)
@@ -384,32 +345,32 @@ public:
 
         // region Ranges
 
-        manager->style("Range")
-               .skin("slider");
-
-        manager->style("Range Slider")
+        manager->style("Range DefaultSliderSkin")
                .borderRadius(m.radius)
                .fontFamily(t.regular.name)
                .fontSize(t.small)
                .lineHeight(t.small)
                .color(p.text);
 
-        manager->style("Range Slider.horizontal")
+        manager->style("Range DefaultSliderSkin.horizontal")
                .height(m.control);
 
-        manager->style("Range Slider.vertical")
+        manager->style("Range DefaultSliderSkin.vertical")
                .width(m.control);
 
-        manager->style("Range:hover Slider.inverted")
+        manager->style("Range DefaultSliderSkin.vertical .value")
+               .visible(false); // No room
+
+        manager->style("Range:hover DefaultSliderSkin.inverted")
                .color(p.onAccent);
 
-        manager->style("Range:hover Slider.normal")
+        manager->style("Range:hover DefaultSliderSkin.normal")
                .color(p.text);
 
-        manager->style("Range:active Slider.normal")
+        manager->style("Range:active DefaultSliderSkin.normal")
                .color(p.text);
 
-        manager->style("Range:active Slider.inverted")
+        manager->style("Range:active DefaultSliderSkin.inverted")
                .color(p.onAccent);
 
         // endregion
@@ -422,7 +383,7 @@ public:
                .backgroundColor(p.muted);
 
         manager->style("Tabs button")
-               .skin("default-basic-button-skin")
+               .skin("basic")
                .fontSize(t.small)
                .lineHeight(t.text)
                .marginHorizontal(-m.border)
@@ -431,12 +392,6 @@ public:
                .borderRadius(0)
                .borderHorizontal(m.border)
                .borderColor(p.separator);
-
-//        manager->style("tabs button:firstChild")
-//               .borderRadiusLeft(m.radius);
-//
-//        manager->style("tabs button:lastChild")
-//               .borderRadiusRight(m.radius);
 
         // endregion
 
@@ -455,7 +410,7 @@ public:
                .borderColor(p.separator);
 
         manager->style("MenuBar Button")
-               .skin("default-basic-button-skin")
+               .skin("basic")
                .fontSize(t.small)
                .lineHeight(t.small)
                .paddingHorizontal(m.spaceMd)
@@ -467,7 +422,7 @@ public:
                .color(p.accent);
 
         manager->style("MenuBar Button:active")
-               .color(p.onAccent) // TODO: Contrasting text
+               .color(p.onAccent)
                .backgroundColor(p.accent);
 
         // endregion
@@ -480,7 +435,7 @@ public:
                .borderColor(p.separator);
 
         manager->style("ToolBar Button")
-               .skin("default-basic-button-skin")
+               .skin("basic")
                .marginHorizontal(-m.border)
                .paddingHorizontal(m.spaceLg)
                .borderRadius(0)
@@ -488,6 +443,4 @@ public:
                .borderColor(p.separator);
         // endregion
     }
-};
-
 }

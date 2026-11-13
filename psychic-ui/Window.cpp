@@ -455,6 +455,11 @@ namespace psychic_ui {
         updateRuntimeStyles(); // Clearing the rules dropped the runtime ones too
     }
 
+    void Window::updateSkinSet(std::unique_ptr<SkinSet> skinSet) {
+        styleManager()->skinSet(std::move(skinSet));
+        updateRuntimeStyles(); // Clearing the rules dropped the runtime ones too
+    }
+
     // region Focus
 
     void Window::requestFocus(Div *component) {

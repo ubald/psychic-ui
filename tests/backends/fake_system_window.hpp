@@ -4,7 +4,7 @@
 #include "include/core/SkSurface.h"
 #include <psychic-ui/SystemWindow.hpp>
 #include <psychic-ui/Window.hpp>
-#include <psychic-ui/themes/default.hpp>
+#include <psychic-ui/skins/default/DefaultSkins.hpp>
 
 namespace psychic_ui_tests {
     using namespace psychic_ui;
@@ -16,7 +16,7 @@ namespace psychic_ui_tests {
         std::vector<std::string> dropped{};
 
         TestWindow() : Window("Test") {
-            loadStyleSheet<PsychicUIStyleSheet>();
+            skinSet<DefaultSkins>();
         }
 
         bool dropEvent(const std::vector<std::string> &filenames) override {

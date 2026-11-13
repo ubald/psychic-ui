@@ -22,6 +22,7 @@ namespace psychic_ui {
     void StyleManager::reset() {
         _fonts.clear();
         _fontCollection = nullptr;
+        _skinSets.clear();
         _skins.clear();
         _styleSheets.clear();
         clearRules();
@@ -55,12 +56,39 @@ namespace psychic_ui {
 
     StyleManager &StyleManager::theme(const Theme &theme) {
         _theme = theme;
+        reloadRules();
+        return *this;
+    }
+
+    StyleManager &StyleManager::skinSet(std::unique_ptr<SkinSet> skinSet) {
+        // The chain, from the last fallback to the set itself: a set's skins and rules go over its fallback's
+        _skinSets.clear();
+        while (skinSet) {
+            std::unique_ptr<SkinSet> fallback = skinSet->fallback();
+            _skinSets.insert(_skinSets.begin(), std::move(skinSet));
+            skinSet = std::move(fallback);
+        }
+        _skins.clear();
+        for (const auto &set: _skinSets) {
+            set->registerSkins(_skins);
+        }
+        ++_skinsGeneration;
+        if (!_skinSets.empty()) {
+            _theme = _skinSets.back()->defaultTheme();
+        }
+        reloadRules();
+        return *this;
+    }
+
+    void StyleManager::reloadRules() {
         clearRules();
+        for (const auto &set: _skinSets) {
+            set->load(this);
+        }
         for (const auto &[type, sheet]: _styleSheets) {
             sheet->load(this);
         }
         _valid = false;
-        return *this;
     }
 
     sk_sp<SkFontMgr> StyleManager::fontManager() {
@@ -107,17 +135,6 @@ namespace psychic_ui {
             _fontCollection->enableFontFallback();
         }
         return _fontCollection;
-    }
-
-    StyleManager &StyleManager::registerSkin(const std::string &name, SkinMaker hatcher) {
-        _skins.insert(std::make_pair(name, std::move(hatcher)));
-        _valid = false;
-        return *this;
-    }
-
-    std::shared_ptr<internal::SkinBase> StyleManager::skin(const std::string &name) {
-        auto skin = _skins.find(name);
-        return skin != _skins.cend() ? skin->second->hatch() : nullptr;
     }
 
     Style &StyleManager::style(std::string selectorString) {

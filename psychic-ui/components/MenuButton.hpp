@@ -9,6 +9,7 @@
 
 namespace psychic_ui {
     class MenuButton;
+    class MenuItem;
 
     class MenuButtonSkin : public Skin<MenuButton> {
     public:

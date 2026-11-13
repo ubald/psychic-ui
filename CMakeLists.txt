@@ -226,20 +226,45 @@ set(SOURCE_FILES
     psychic-ui/signals/Observer.hpp
     psychic-ui/signals/Signal.hpp
     psychic-ui/signals/Slot.hpp
-    psychic-ui/skins/DefaultBasicButtonSkin.cpp
-    psychic-ui/skins/DefaultBasicButtonSkin.hpp
-    psychic-ui/skins/DefaultButtonSkin.cpp
-    psychic-ui/skins/DefaultButtonSkin.hpp
-    psychic-ui/skins/DefaultCheckBoxSkin.cpp
-    psychic-ui/skins/DefaultCheckBoxSkin.hpp
-    psychic-ui/skins/DefaultMenuButtonSkin.cpp
-    psychic-ui/skins/DefaultMenuButtonSkin.hpp
-    psychic-ui/skins/DefaultScrollBarSkin.cpp
-    psychic-ui/skins/DefaultScrollBarSkin.hpp
-    psychic-ui/skins/SliderRangeSkin.cpp
-    psychic-ui/skins/SliderRangeSkin.hpp
-    psychic-ui/skins/TitleBarButtonSkin.cpp
-    psychic-ui/skins/TitleBarButtonSkin.hpp
+    psychic-ui/skins/SkinSet.hpp
+    psychic-ui/skins/base/ButtonSkinBase.cpp
+    psychic-ui/skins/base/ButtonSkinBase.hpp
+    psychic-ui/skins/base/CheckBoxSkinBase.cpp
+    psychic-ui/skins/base/CheckBoxSkinBase.hpp
+    psychic-ui/skins/base/MenuButtonSkinBase.cpp
+    psychic-ui/skins/base/MenuButtonSkinBase.hpp
+    psychic-ui/skins/base/RangeSkinBase.cpp
+    psychic-ui/skins/base/RangeSkinBase.hpp
+    psychic-ui/skins/base/ScrollBarSkinBase.cpp
+    psychic-ui/skins/base/ScrollBarSkinBase.hpp
+    psychic-ui/skins/base/SkinState.hpp
+    psychic-ui/skins/base/TextFieldSkinBase.cpp
+    psychic-ui/skins/base/TextFieldSkinBase.hpp
+    psychic-ui/skins/default/DefaultBasicButtonSkin.cpp
+    psychic-ui/skins/default/DefaultBasicButtonSkin.hpp
+    psychic-ui/skins/default/DefaultButtonSkin.cpp
+    psychic-ui/skins/default/DefaultButtonSkin.hpp
+    psychic-ui/skins/default/DefaultCheckBoxSkin.cpp
+    psychic-ui/skins/default/DefaultCheckBoxSkin.hpp
+    psychic-ui/skins/default/DefaultChrome.hpp
+    psychic-ui/skins/default/DefaultMenuButtonSkin.cpp
+    psychic-ui/skins/default/DefaultMenuButtonSkin.hpp
+    psychic-ui/skins/default/DefaultScrollBarSkin.cpp
+    psychic-ui/skins/default/DefaultScrollBarSkin.hpp
+    psychic-ui/skins/default/DefaultSkins.cpp
+    psychic-ui/skins/default/DefaultSkins.hpp
+    psychic-ui/skins/default/DefaultSliderSkin.cpp
+    psychic-ui/skins/default/DefaultSliderSkin.hpp
+    psychic-ui/skins/default/DefaultTextAreaSkin.cpp
+    psychic-ui/skins/default/DefaultTextAreaSkin.hpp
+    psychic-ui/skins/default/DefaultTextInputSkin.cpp
+    psychic-ui/skins/default/DefaultTextInputSkin.hpp
+    psychic-ui/skins/default/TitleBarButtonSkin.cpp
+    psychic-ui/skins/default/TitleBarButtonSkin.hpp
+    psychic-ui/skins/paint/Box.cpp
+    psychic-ui/skins/paint/Box.hpp
+    psychic-ui/skins/paint/Marks.cpp
+    psychic-ui/skins/paint/Marks.hpp
     psychic-ui/style/Properties.hpp
     psychic-ui/style/Style.cpp
     psychic-ui/style/Style.hpp
@@ -253,9 +278,9 @@ set(SOURCE_FILES
     psychic-ui/style/StyleSheet.hpp
     psychic-ui/style/Values.cpp
     psychic-ui/style/Values.hpp
-    psychic-ui/themes/default.hpp
     psychic-ui/themes/one-dark.hpp
     psychic-ui/themes/one-light.hpp
+    psychic-ui/themes/palette.hpp
     psychic-ui/themes/psychic.hpp
     psychic-ui/themes/Theme.hpp
     psychic-ui/utils/ColorUtils.hpp
@@ -279,15 +304,10 @@ set(SOURCE_FILES
     psychic-ui/components/Box.hpp
     psychic-ui/SystemWindow.cpp
     psychic-ui/SystemWindow.hpp
-    psychic-ui/skins/DefaultSkin.hpp
     psychic-ui/components/TextInput.cpp
     psychic-ui/components/TextInput.hpp
     psychic-ui/components/TextArea.cpp
     psychic-ui/components/TextArea.hpp
-    psychic-ui/skins/DefaultTextInputSkin.cpp
-    psychic-ui/skins/DefaultTextInputSkin.hpp
-    psychic-ui/skins/DefaultTextAreaSkin.cpp
-    psychic-ui/skins/DefaultTextAreaSkin.hpp
     psychic-ui/utils/TextLayout.cpp
     psychic-ui/utils/TextLayout.hpp
     psychic-ui/components/Text.cpp

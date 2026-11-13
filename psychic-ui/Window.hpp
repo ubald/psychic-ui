@@ -154,6 +154,16 @@ namespace psychic_ui {
         }
 
         /**
+         * Use a skin set for the style manager, with its default theme: every component hatches a new skin
+         */
+        template<class S, class Self>
+        Self &skinSet(this Self &self) {
+            static_assert(std::is_base_of_v<SkinSet, S>, "S must extend SkinSet");
+            static_cast<Window &>(self).updateSkinSet(std::make_unique<S>());
+            return self;
+        }
+
+        /**
          * The style manager's theme
          */
         const Theme &theme() const { return styleManager()->theme(); }
@@ -224,6 +234,7 @@ namespace psychic_ui {
     protected:
 
         void updateTheme(const Theme &theme);
+        void updateSkinSet(std::unique_ptr<SkinSet> skinSet);
 
         // region Default DIVs
 

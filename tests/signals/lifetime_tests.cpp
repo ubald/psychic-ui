@@ -8,7 +8,7 @@
 #include <psychic-ui/components/Menu.hpp>
 #include <psychic-ui/components/MenuBar.hpp>
 #include <psychic-ui/components/MenuButton.hpp>
-#include <psychic-ui/themes/default.hpp>
+#include <psychic-ui/skins/default/DefaultSkins.hpp>
 
 using namespace psychic_ui;
 
@@ -19,7 +19,7 @@ namespace {
 
         HeadlessWindow() : Window("Headless") {
             setWindowSize(1440, 900);
-            loadStyleSheet<PsychicUIStyleSheet>();
+            skinSet<DefaultSkins>();
         }
 
         void layout() {
