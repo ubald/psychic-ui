@@ -56,6 +56,9 @@ namespace psychic_ui {
 
         manager->loadFont(std::string{t.light.name}, std::string{t.light.path});
         manager->loadFont(std::string{t.regular.name}, std::string{t.regular.path});
+        for (const Font &font: {t.sans, t.sansMedium, t.sansSemiBold}) {
+            manager->loadFont(std::string{font.name}, std::string{font.path});
+        }
 
         // region Defaults
         manager->style("*")

@@ -34,6 +34,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         icons/icon_tests.cpp
         backends/system_window_tests.cpp
         text/text_layout_tests.cpp
+        text/font_tests.cpp
         signals/signal_tests.cpp
         signals/lifetime_tests.cpp)
 
@@ -51,7 +52,8 @@ if (PSYCHIC_UI_BUILD_TESTS)
     # yogacore too: some tests check the Yoga nodes directly
     target_link_libraries(psychic-ui-tests PRIVATE psychic-ui yogacore Catch2::Catch2WithMain)
     target_compile_definitions(psychic-ui-tests PRIVATE
-        PSYCHIC_UI_TEST_FONTS="${PROJECT_SOURCE_DIR}/res/fonts/Ubuntu/")
+        PSYCHIC_UI_TEST_FONTS="${PROJECT_SOURCE_DIR}/res/fonts/Ubuntu/"
+        PSYCHIC_UI_TEST_RES="${PROJECT_SOURCE_DIR}/res/")
 
     add_test(NAME psychic-ui-tests COMMAND psychic-ui-tests)
 

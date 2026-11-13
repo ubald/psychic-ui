@@ -36,6 +36,10 @@ namespace psychic_ui {
     struct Typography {
         Font  regular{"Ubuntu Regular", "../res/fonts/Ubuntu/Ubuntu-Regular.ttf"};
         Font  light{"Ubuntu Light", "../res/fonts/Ubuntu/Ubuntu-Light.ttf"};
+        // Inter 4.1 (res/fonts/Inter, OFL 1.1), Pivotal's typeface, in the weights it uses (400, 500, 600)
+        Font  sans{"Inter", "../res/fonts/Inter/Inter-Regular.ttf"};
+        Font  sansMedium{"Inter Medium", "../res/fonts/Inter/Inter-Medium.ttf"};
+        Font  sansSemiBold{"Inter SemiBold", "../res/fonts/Inter/Inter-SemiBold.ttf"};
         float small{10};
         float text{12};
         float medium{14};

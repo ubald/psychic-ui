@@ -49,6 +49,8 @@ ctest --preset debug                                       # all tests, through 
 
 Resources (`res/`, `example/fonts/`) are copied into the build directory, and fonts load by relative path, so run binaries from their build directory.
 
+Bundled fonts live in `res/fonts/<family>/`, each with its license: Ubuntu (`UFL.txt`) and Inter 4.1 (`OFL.txt`, SIL OFL 1.1), Pivotal's typeface: the hinted static TTFs `Inter-Regular.ttf`, `Inter-Medium.ttf` and `Inter-SemiBold.ttf` from `extras/ttf/` of the official release `Inter-4.1.zip` (github.com/rsms/inter, SHA-256 `9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e`; its `InterVariable.ttf` and `Inter.ttc` match nixpkgs' `inter` 4.1 byte for byte). The theme's `Typography` names them `sans` ("Inter"), `sansMedium` ("Inter Medium") and `sansSemiBold` ("Inter SemiBold"), and `DefaultSkins` loads them with the Ubuntu ones, so any style can use `fontFamily("Inter")`. The tests load fonts from the sources (`PSYCHIC_UI_TEST_FONTS`, `PSYCHIC_UI_TEST_RES`).
+
 - `SDL_LOGGING=app=debug` makes the SDL3 runner print the video driver, GL renderer, samples, stencil bits, hit testing and pixel density it got.
 - SDL picks the video driver (decision D4). Under WSLg it falls back to XWayland by itself (the compositor lacks fifo-v1); `SDL_VIDEO_DRIVER=wayland` forces Wayland, which works too. Nix's Mesa only finds WSL's GPU driver with `LD_LIBRARY_PATH=/usr/lib/wsl/lib` and `GALLIUM_DRIVER=d3d12`, which the dev shell sets when `/usr/lib/wsl/lib` exists; otherwise GL is llvmpipe (software).
 - Under Xvfb, unset `WAYLAND_DISPLAY` and point `XDG_RUNTIME_DIR` at an empty directory: otherwise GLFW (and SDL when forced) connects to WSLg's `wayland-0` socket and opens windows on the real display.
