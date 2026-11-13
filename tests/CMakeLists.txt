@@ -31,6 +31,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         div/event_tests.cpp
         div/opacity_tests.cpp
         div/outline_shadow_tests.cpp
+        icons/icon_tests.cpp
         backends/system_window_tests.cpp
         text/text_layout_tests.cpp
         signals/signal_tests.cpp

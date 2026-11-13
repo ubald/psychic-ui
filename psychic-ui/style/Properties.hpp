@@ -46,8 +46,12 @@
     X(lineHeight,               Length,        Length,             Auto,                   true,  false) \
     X(textAlign,                TextAlign,     TextAlign,          TextAlign::Start,       true,  false) \
     X(textAntiAlias,            bool,          detail::BoolArg,    false,                  false, false) \
+    /* Icons (Icon, paint::icon), drawn in `color`: the side of the square, and the stroke in units of a 16-unit */ \
+    /* grid whatever the icon's (Pivotal's 1.3), so every icon has the same weight at the same size */ \
+    X(iconSize,                 float,         detail::FloatArg,   14.0f,                  true,  false) \
+    X(iconStrokeWidth,          float,         detail::FloatArg,   1.3f,                   true,  false) \
     /* Painting */ \
-    X(antiAlias,                bool,          detail::BoolArg,    false,                  false, false) \
+    X(antiAlias,               bool,          detail::BoolArg,    false,                  false, false) \
     X(opacity,                  float,         detail::FloatArg,   1.0f,                   false, false) \
     /* A line around the border box, outlineOffset away from it (inside if negative), over the div and its children; */ \
     /* none at width 0 */ \

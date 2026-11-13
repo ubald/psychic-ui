@@ -199,6 +199,8 @@ set(SOURCE_FILES
     psychic-ui/components/CheckBox.hpp
     psychic-ui/components/DataContainer.cpp
     psychic-ui/components/DataContainer.hpp
+    psychic-ui/components/Icon.cpp
+    psychic-ui/components/Icon.hpp
     psychic-ui/components/Label.cpp
     psychic-ui/components/Label.hpp
     psychic-ui/components/Menu.cpp
@@ -223,6 +225,10 @@ set(SOURCE_FILES
     psychic-ui/components/TitleBar.hpp
     psychic-ui/components/ToolBar.cpp
     psychic-ui/components/ToolBar.hpp
+    psychic-ui/icons/IconRegistry.cpp
+    psychic-ui/icons/IconRegistry.hpp
+    psychic-ui/icons/IconSet.hpp
+    psychic-ui/icons/PivotalIcons.cpp
     psychic-ui/signals/Observer.hpp
     psychic-ui/signals/Signal.hpp
     psychic-ui/signals/Slot.hpp
@@ -263,6 +269,8 @@ set(SOURCE_FILES
     psychic-ui/skins/default/TitleBarButtonSkin.hpp
     psychic-ui/skins/paint/Box.cpp
     psychic-ui/skins/paint/Box.hpp
+    psychic-ui/skins/paint/Icon.cpp
+    psychic-ui/skins/paint/Icon.hpp
     psychic-ui/skins/paint/Marks.cpp
     psychic-ui/skins/paint/Marks.hpp
     psychic-ui/style/Properties.hpp

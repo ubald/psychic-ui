@@ -1,0 +1,87 @@
+#include <iostream>
+#include "include/utils/SkParsePath.h"
+#include "IconRegistry.hpp"
+
+namespace psychic_ui {
+
+    IconRegistry &IconRegistry::shared() {
+        static IconRegistry registry{icons::pivotalIcons};
+        return registry;
+    }
+
+    IconRegistry::IconRegistry(std::initializer_list<std::span<const IconDefinition>> sets) {
+        for (auto set: sets) {
+            add(set);
+        }
+    }
+
+    IconRegistry &IconRegistry::add(const IconDefinition &definition) {
+        Entry entry{std::string{definition.name}, definition.grid, {}};
+        entry.elements.reserve(definition.elements.size());
+        for (const auto &element: definition.elements) {
+            entry.elements.emplace_back(element.paint, std::string{element.d});
+        }
+        auto found = _index.find(entry.name);
+        if (found != _index.end()) {
+            _icons[found->second] = std::move(entry);
+        } else {
+            _index.emplace(entry.name, _icons.size());
+            _icons.push_back(std::move(entry));
+        }
+        return *this;
+    }
+
+    IconRegistry &IconRegistry::add(std::span<const IconDefinition> set) {
+        _icons.reserve(_icons.size() + set.size());
+        for (const auto &definition: set) {
+            add(definition);
+        }
+        return *this;
+    }
+
+    bool IconRegistry::has(std::string_view name) const {
+        return _index.contains(std::string{name});
+    }
+
+    std::vector<std::string_view> IconRegistry::names() const {
+        std::vector<std::string_view> names;
+        names.reserve(_icons.size());
+        for (const auto &icon: _icons) {
+            names.emplace_back(icon.name);
+        }
+        return names;
+    }
+
+    const IconShape *IconRegistry::shape(std::string_view name) {
+        auto found = _index.find(std::string{name});
+        if (found == _index.end()) {
+            report(name, "unknown icon");
+            return nullptr;
+        }
+        Entry &entry = _icons[found->second];
+        if (entry.invalid) {
+            return nullptr;
+        }
+        if (!entry.shape) {
+            IconShape shape{entry.grid, {}};
+            shape.paths.reserve(entry.elements.size());
+            for (const auto &[paint, d]: entry.elements) {
+                auto path = SkParsePath::FromSVGString(d.c_str());
+                if (!path || path->isEmpty()) {
+                    entry.invalid = true;
+                    report(name, "icon path data doesn't parse");
+                    return nullptr;
+                }
+                shape.paths.emplace_back(paint, std::move(*path));
+            }
+            entry.shape = std::move(shape);
+        }
+        return &*entry.shape;
+    }
+
+    void IconRegistry::report(std::string_view name, std::string_view problem) {
+        if (_reported.emplace(name).second) {
+            std::cerr << "Psychic UI: " << problem << " \"" << name << "\"" << std::endl;
+        }
+    }
+}
