@@ -5,6 +5,7 @@
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/themes/one-dark.hpp>
 #include <psychic-ui/themes/one-light.hpp>
+#include <psychic-ui/themes/pivotal.hpp>
 #include <psychic-ui/Div.hpp>
 
 using namespace psychic_ui;
@@ -19,9 +20,9 @@ namespace {
         void load(StyleManager *manager) override {
             loads.emplace_back("look");
             manager->style(".thing")
-                   .backgroundColor(manager->theme().palette.control)
+                   .backgroundColor(manager->theme().palette.raised)
                    .color(manager->theme().palette.text)
-                   .padding(manager->theme().metrics.spaceMd);
+                   .padding(manager->theme().metrics.gutter);
         }
     };
 
@@ -63,7 +64,7 @@ TEST_CASE("switching themes loads the stylesheets again, in order, with the new 
     Style light = manager.computeStyle(div.get());
     REQUIRE(light.backgroundColor() == themes::oneLight.palette.accent); // Still the app's rule
     REQUIRE(light.color() == themes::oneLight.palette.text);             // The look's, with the new values
-    REQUIRE(light.padding() == Length{themes::oneLight.metrics.spaceMd});
+    REQUIRE(light.padding() == Length{themes::oneLight.metrics.gutter});
 }
 
 TEST_CASE("a theme switch drops rules declared outside the stylesheets", "[style][theme]") {
@@ -93,10 +94,34 @@ TEST_CASE("loading a stylesheet type again runs it in its place", "[style][theme
 }
 
 TEST_CASE("theme groups mix", "[style][theme]") {
-    constexpr Theme mixed{.name = "Mixed", .palette = themes::oneLight.palette, .metrics = {.radius = 2}};
+    constexpr Theme mixed{.name = "Mixed", .palette = themes::oneLight.palette, .metrics = {.border = 2}};
     StyleManager manager;
     manager.theme(mixed);
     REQUIRE(manager.theme().palette.accent == themes::oneLight.palette.accent);
-    REQUIRE(manager.theme().metrics.radius == 2.0f);
-    REQUIRE(manager.theme().type.text == 12.0f);
+    REQUIRE(manager.theme().metrics.border == 2.0f);
+    REQUIRE(manager.theme().type.sm.size == 12.0f);
+}
+
+TEST_CASE("the Pivotal themes are Pivotal's tokens", "[style][theme]") {
+    // tokens.css, dark (its default) and light
+    CHECK(themes::pivotalDark.scheme == ColorScheme::Dark);
+    CHECK(themes::pivotalDark.palette.base == rgb(0x08090A));
+    CHECK(themes::pivotalDark.palette.accent == rgb(0x5E6AD2));
+    CHECK(themes::pivotalDark.palette.line == argb(0x12FFFFFF)); // rgb(255 255 255 / 7%)
+    CHECK(themes::pivotalDark.palette.frame == themes::pivotalDark.palette.surface);
+    CHECK(themes::pivotalDark.palette.page == themes::pivotalDark.palette.base);
+    CHECK(themes::pivotalLight.scheme == ColorScheme::Light);
+    CHECK(themes::pivotalLight.palette.base == rgb(0xFBFBFC));
+    CHECK(themes::pivotalLight.palette.overlay == rgb(0xFFFFFF));
+    // --shadow-overlay: 0 12px 32px -8px, then 0 2px 6px
+    CHECK(themes::pivotalDark.elevation.overlay.spread == -8.0f);
+    CHECK(themes::pivotalDark.elevation.overlayContact.blur == 6.0f);
+    // The scales: body text 12/18, rows 32, pill buttons
+    const Theme &theme = themes::pivotalDark;
+    CHECK(theme.type.regular.name == "Inter");
+    CHECK(theme.type.sm.size == 12.0f);
+    CHECK(theme.type.sm.leading == 18.0f);
+    CHECK(theme.metrics.pointer.rowSm == 32.0f);
+    CHECK(theme.metrics.space(2.5f) == 10.0f);
+    CHECK(theme.metrics.radius.button > theme.metrics.pointer.controlMd);
 }

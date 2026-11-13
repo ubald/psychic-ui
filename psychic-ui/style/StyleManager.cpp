@@ -111,6 +111,9 @@ namespace psychic_ui {
     }
 
     StyleManager &StyleManager::loadFont(const std::string &name, const std::string &path) {
+        if (_fonts.contains(name)) {
+            return *this; // Stylesheets load their fonts again on every replay: once is enough
+        }
         _fonts.insert({name, fontManager()->makeFromFile(path.c_str())});
         _fontCollection = nullptr;
         _valid          = false;

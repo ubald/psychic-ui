@@ -290,8 +290,10 @@ set(SOURCE_FILES
     psychic-ui/themes/one-dark.hpp
     psychic-ui/themes/one-light.hpp
     psychic-ui/themes/palette.hpp
+    psychic-ui/themes/pivotal.hpp
     psychic-ui/themes/psychic.hpp
     psychic-ui/themes/Theme.hpp
+    psychic-ui/themes/ubuntu-type.hpp
     psychic-ui/utils/ColorUtils.hpp
     psychic-ui/utils/Hatcher.hpp
     psychic-ui/utils/StringUtils.hpp

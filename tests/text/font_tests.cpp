@@ -23,7 +23,7 @@ namespace {
     std::shared_ptr<StyleManager> withInter() {
         auto manager = std::make_shared<StyleManager>();
         const Typography type{};
-        for (const Font &font: {type.sans, type.sansMedium, type.sansSemiBold}) {
+        for (const Font &font: {type.regular, type.medium, type.semiBold}) {
             manager->loadFont(std::string{font.name}, resource(font.path));
         }
         return manager;

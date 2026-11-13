@@ -50,7 +50,7 @@ namespace {
         }
 
         void load(StyleManager *manager) override {
-            manager->style("Button").padding(manager->theme().metrics.spaceSm);
+            manager->style("Button").padding(manager->theme().metrics.gutterCard);
         }
     };
 
@@ -116,9 +116,10 @@ TEST_CASE("a skin set's rules load over its fallback's", "[skins][registry]") {
     auto button = std::make_shared<Button>("Button");
     StyleManager manager;
     manager.skinSet<DefaultSkins>();
-    CHECK(manager.computeStyle(button.get()).padding() == Length{themes::oneDark.metrics.spaceMd});
+    const Length defaultPadding = manager.computeStyle(button.get()).padding();
+    REQUIRE(defaultPadding != Length{themes::oneLight.metrics.gutterCard});
     manager.skinSet<PartialSkins>();
-    CHECK(manager.computeStyle(button.get()).padding() == Length{themes::oneLight.metrics.spaceSm});
+    CHECK(manager.computeStyle(button.get()).padding() == Length{themes::oneLight.metrics.gutterCard});
 }
 
 TEST_CASE("switching skin sets hatches every component again", "[skins][switch]") {

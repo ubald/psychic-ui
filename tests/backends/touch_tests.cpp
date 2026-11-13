@@ -371,7 +371,7 @@ namespace {
      */
     struct SizedSheet : StyleSheet {
         void load(StyleManager *manager) override {
-            manager->style(".sized").width(manager->sizes().control);
+            manager->style(".sized").width(manager->sizes().controlSm);
         }
     };
 }
@@ -379,7 +379,7 @@ namespace {
 TEST_CASE("Density: the style manager follows the window's input mode", "[backend][touch][theme]") {
     auto window = std::make_shared<TestWindow>();
     FakeSystemWindow systemWindow(window);
-    window->theme(Theme{.metrics = {.touch = {.control = 40, .hitSlop = 12}}});
+    window->theme(Theme{.metrics = {.touch = {.controlSm = 40, .hitSlop = 12}}});
     window->loadStyleSheet<SizedSheet>();
     auto &sized = window->appContainer().add<Div>().addClassName("sized");
     systemWindow.layout();

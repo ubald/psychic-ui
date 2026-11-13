@@ -2,6 +2,7 @@
 #include <utility>
 #include "psychic-ui/style/StyleManager.hpp"
 #include "psychic-ui/themes/one-dark.hpp"
+#include "psychic-ui/themes/ubuntu-type.hpp"
 #include "DefaultSkins.hpp"
 #include "DefaultBasicButtonSkin.hpp"
 #include "DefaultButtonSkin.hpp"
@@ -55,18 +56,19 @@ namespace psychic_ui {
         const Metrics    &m     = theme.metrics;
         const Sizes      &s     = manager->sizes();
 
-        manager->loadFont(std::string{t.light.name}, std::string{t.light.path});
-        manager->loadFont(std::string{t.regular.name}, std::string{t.regular.path});
-        for (const Font &font: {t.sans, t.sansMedium, t.sansSemiBold}) {
-            manager->loadFont(std::string{font.name}, std::string{font.path});
+        // Inter (Pivotal's) and Ubuntu are always there, so any style can name them; then the theme's own
+        for (const Typography &type: {Typography{}, themes::ubuntuType, t}) {
+            for (const Font &font: {type.regular, type.medium, type.semiBold}) {
+                manager->loadFont(std::string{font.name}, std::string{font.path});
+            }
         }
 
         // region Defaults
         manager->style("*")
                .overflow(Overflow::Visible)
                .fontFamily(t.regular.name)
-               .fontSize(t.text)
-               .lineHeight(t.lineHeight)
+               .fontSize(t.sm.size)
+               .lineHeight(t.sm.leading)
                .color(p.text)
                .selectionColor(p.onAccent)
                .selectionBackgroundColor(p.accent)
@@ -81,31 +83,31 @@ namespace psychic_ui {
             };
 
             rule("")
-                .borderRadius(m.radius)
+                .borderRadius(m.radius.control)
                 .border(m.border)
-                .margin(m.focusWidth - m.border)
-                .borderColor(p.muted.withAlpha(0x40))
-                .backgroundColor(p.control)
-                .contentBackgroundColor(p.background);
+                .margin(m.focusRing - m.border)
+                .borderColor(p.raised.withAlpha(0x40))
+                .backgroundColor(p.raised)
+                .contentBackgroundColor(p.base);
 
             rule(":hover")
-                .borderColor(p.muted.withAlpha(0x80))
-                .backgroundColor(p.controlHover);
+                .borderColor(p.raised.withAlpha(0x80))
+                .backgroundColor(p.hover);
 
             rule(":active")
-                .borderColor(p.muted.withAlpha(0xC0))
+                .borderColor(p.raised.withAlpha(0xC0))
                 .backgroundColor(p.accent);
 
             rule(":focus")
-                .border(m.focusWidth)
+                .border(m.focusRing)
                 .margin(0)
                 .borderColor(p.accent);
 
             rule(":disabled")
-                .backgroundColor(p.muted);
+                .backgroundColor(p.raised);
 
             rule(":disabled:hover")
-                .backgroundColor(p.muted);
+                .backgroundColor(p.raised);
 
             rule(":disabled:active")
                 .backgroundColor(p.accent); // TODO: Fade
@@ -121,58 +123,58 @@ namespace psychic_ui {
         // region Typography
 
         manager->style(".h1")
-               .fontFamily(t.light.name)
-               .fontSize(t.huge)
-               .lineHeight(t.huge);
+               .fontFamily(t.regular.name)
+               .fontSize(t.xxl.size)
+               .lineHeight(t.xxl.size);
 
         manager->style(".h2")
-               .fontFamily(t.light.name)
-               .fontSize(t.big)
-               .lineHeight(t.big);
+               .fontFamily(t.regular.name)
+               .fontSize(t.xxl.size)
+               .lineHeight(t.xxl.size);
 
         manager->style(".h3")
-               .fontFamily(t.light.name)
-               .fontSize(t.large)
-               .lineHeight(t.large);
+               .fontFamily(t.regular.name)
+               .fontSize(t.xl.size)
+               .lineHeight(t.xl.size);
 
         manager->style(".h4")
                .fontFamily(t.regular.name)
-               .fontSize(t.medium)
-               .lineHeight(t.medium);
+               .fontSize(t.md.size)
+               .lineHeight(t.md.size);
 
         manager->style(".h5")
                .fontFamily(t.regular.name)
-               .fontSize(t.text)
-               .lineHeight(t.text);
+               .fontSize(t.sm.size)
+               .lineHeight(t.sm.size);
 
         manager->style(".h6")
                .fontFamily(t.regular.name)
-               .fontSize(t.small)
-               .lineHeight(t.small);
+               .fontSize(t.xxs.size)
+               .lineHeight(t.xxs.size);
 
         // endregion
 
         // region Window
         manager->style("Window")
                .color(p.text)
-               .backgroundColor(p.background)
+               .backgroundColor(p.base)
                .border(m.border)
-               .borderColor(p.separator);
+               .borderColor(p.line);
         // endregion
 
         // region Title Bar
         manager->style("TitleBar")
                .alignItems(Align::Center)
                .height(48)
-               .padding(m.spaceMd)
+               .padding(m.space(3))
                .backgroundColor(p.surface)
                .borderBottom(m.border)
-               .borderColor(p.separator);
+               .borderColor(p.line);
 
         manager->style("TitleBar Label.title")
-               .fontFamily(t.light.name)
-               .fontSize(t.large)
-               .marginLeft(m.spaceMd)
+               .fontFamily(t.regular.name)
+               .fontSize(t.xl.size)
+               .marginLeft(m.space(3))
                .grow(1);
 
         manager->style("TitleBar Button")
@@ -206,10 +208,10 @@ namespace psychic_ui {
         // region Text Input
 
         manager->style("TextInput")
-               .padding(m.spaceSm);
+               .padding(m.space(1.5f));
 
         manager->style("TextArea")
-               .padding(m.spaceSm);
+               .padding(m.space(1.5f));
 
         // endregion
 
@@ -222,21 +224,21 @@ namespace psychic_ui {
                .height(m.scrollBar);
 
         manager->style("ScrollBar .track")
-               .backgroundColor(p.background);
+               .backgroundColor(p.base);
 
         manager->style("ScrollBar .thumb")
-               .backgroundColor(p.muted);
+               .backgroundColor(p.raised);
 
         manager->style("ScrollBar.vertical .thumb")
                .marginLeft(1)
-               .minHeight(s.control);
+               .minHeight(s.controlSm);
 
         manager->style("ScrollBar.horizontal .thumb")
                .marginTop(1)
-               .minWidth(s.control);
+               .minWidth(s.controlSm);
 
         manager->style("ScrollBar:hover .thumb")
-               .backgroundColor(p.control);
+               .backgroundColor(p.raised);
 
         manager->style("ScrollBar:active .thumb")
                .backgroundColor(p.accent);
@@ -254,24 +256,24 @@ namespace psychic_ui {
                .cursor(Cursor::Hand)
                .direction(Direction::Row)
                .alignItems(Align::Center)
-               .padding(m.spaceMd)
-               .fontSize(t.medium)
-               .lineHeight(t.medium)
+               .padding(m.space(3))
+               .fontSize(t.md.size)
+               .lineHeight(t.md.size)
                .color(p.text)
-               .backgroundColor(p.control);
+               .backgroundColor(p.raised);
 
         manager->style("Button:hover")
-               .backgroundColor(p.controlHover);
+               .backgroundColor(p.hover);
 
         manager->style("Button:active")
                .color(p.onAccent)
                .backgroundColor(p.accent);
 
         manager->style("Button:disabled")
-               .backgroundColor(p.muted);
+               .backgroundColor(p.raised);
 
         manager->style("Button:disabled:hover")
-               .backgroundColor(p.muted);
+               .backgroundColor(p.raised);
 
         manager->style("Button:disabled:active")
                .color(p.onAccent)
@@ -283,29 +285,29 @@ namespace psychic_ui {
         manager->style("CheckBox")
                .direction(Direction::Row)
                .alignItems(Align::Center)
-               .padding(m.spaceMd)
+               .padding(m.space(3))
                .color(p.text)
-               .fontSize(t.medium)
-               .lineHeight(t.medium);
+               .fontSize(t.md.size)
+               .lineHeight(t.md.size);
 
         manager->style("CheckBox .box")
-               .width(s.control)
-               .height(s.control)
-               .marginRight(m.spaceSm);
+               .width(s.controlSm)
+               .height(s.controlSm)
+               .marginRight(m.space(1.5f));
 
         // endregion
 
         // region Menus
         // A translucent background rather than an opacity, which would fade the labels and highlights too
         manager->style("Menu")
-               .backgroundColor(p.background.withAlpha(204))
+               .backgroundColor(p.base.withAlpha(204))
                .minWidth(200)
                .alignItems(Align::Stretch);
 
         manager->style("Menu MenuButton")
                .direction(Direction::Row)
-               .paddingHorizontal(m.spaceSm)
-               .paddingVertical(m.spaceSm)
+               .paddingHorizontal(m.space(1.5f))
+               .paddingVertical(m.space(1.5f))
                .borderRadius(0)
                .backgroundColor(Color{}); // Transparent, over the menu's background
 
@@ -315,12 +317,12 @@ namespace psychic_ui {
         manager->style("Menu MenuButton .label")
                .grow(1)
                .fontFamily(t.regular.name)
-               .fontSize(t.small)
-               .lineHeight(t.text);
+               .fontSize(t.xxs.size)
+               .lineHeight(t.sm.size);
 
         manager->style("Menu MenuButton .shortcut")
-               .fontSize(t.small)
-               .lineHeight(t.text)
+               .fontSize(t.xxs.size)
+               .lineHeight(t.sm.size)
                .color(p.text);
 
         manager->style("Menu MenuButton.submenu .arrow")
@@ -333,7 +335,7 @@ namespace psychic_ui {
                .color(p.onAccent);
 
         manager->style("Menu MenuButton:hover .shortcut")
-               .color(p.onAccentMuted);
+               .color(p.onAccent.withAlpha(0xB0));
 
         manager->style("Menu MenuButton.submenu:hover .arrow")
                .color(p.onAccent);
@@ -345,7 +347,7 @@ namespace psychic_ui {
                .color(p.onAccent);
 
         manager->style("Menu MenuButton:active .shortcut")
-               .color(p.onAccentMuted);
+               .color(p.onAccent.withAlpha(0xB0));
 
         manager->style("Menu MenuButton.submenu:active .arrow")
                .color(p.onAccent);
@@ -355,17 +357,17 @@ namespace psychic_ui {
         // region Ranges
 
         manager->style("Range DefaultSliderSkin")
-               .borderRadius(m.radius)
+               .borderRadius(m.radius.control)
                .fontFamily(t.regular.name)
-               .fontSize(t.small)
-               .lineHeight(t.small)
+               .fontSize(t.xxs.size)
+               .lineHeight(t.xxs.size)
                .color(p.text);
 
         manager->style("Range DefaultSliderSkin.horizontal")
-               .height(s.control);
+               .height(s.controlSm);
 
         manager->style("Range DefaultSliderSkin.vertical")
-               .width(s.control);
+               .width(s.controlSm);
 
         manager->style("Range DefaultSliderSkin.vertical .value")
                .visible(false); // No room
@@ -388,19 +390,19 @@ namespace psychic_ui {
         manager->style("Tabs")
                .direction(Direction::Row)
                .borderBottom(m.border)
-               .borderColor(p.separator)
-               .backgroundColor(p.muted);
+               .borderColor(p.line)
+               .backgroundColor(p.raised);
 
         manager->style("Tabs button")
                .skin("basic")
-               .fontSize(t.small)
-               .lineHeight(t.text)
+               .fontSize(t.xxs.size)
+               .lineHeight(t.sm.size)
                .marginHorizontal(-m.border)
-               .paddingHorizontal(m.spaceMd)
-               .paddingVertical(m.spaceSm)
+               .paddingHorizontal(m.space(3))
+               .paddingVertical(m.space(1.5f))
                .borderRadius(0)
                .borderHorizontal(m.border)
-               .borderColor(p.separator);
+               .borderColor(p.line);
 
         // endregion
 
@@ -414,18 +416,18 @@ namespace psychic_ui {
         // region MenuBar
         manager->style("MenuBar")
                .direction(Direction::Row)
-               .backgroundColor(p.background)
+               .backgroundColor(p.base)
                .borderBottom(m.border)
-               .borderColor(p.separator);
+               .borderColor(p.line);
 
         manager->style("MenuBar Button")
                .skin("basic")
-               .fontSize(t.small)
-               .lineHeight(t.small)
-               .paddingHorizontal(m.spaceMd)
-               .paddingVertical(m.spaceSm)
+               .fontSize(t.xxs.size)
+               .lineHeight(t.xxs.size)
+               .paddingHorizontal(m.space(3))
+               .paddingVertical(m.space(1.5f))
                .borderRadius(0)
-               .backgroundColor(p.background);
+               .backgroundColor(p.base);
 
         manager->style("MenuBar Button:hover")
                .color(p.accent);
@@ -439,17 +441,17 @@ namespace psychic_ui {
         // region ToolBar
         manager->style("ToolBar")
                .direction(Direction::Row)
-               .backgroundColor(p.muted)
+               .backgroundColor(p.raised)
                .borderBottom(m.border)
-               .borderColor(p.separator);
+               .borderColor(p.line);
 
         manager->style("ToolBar Button")
                .skin("basic")
                .marginHorizontal(-m.border)
-               .paddingHorizontal(m.spaceLg)
+               .paddingHorizontal(m.space(4.5f))
                .borderRadius(0)
                .borderHorizontal(m.border)
-               .borderColor(p.separator);
+               .borderColor(p.line);
         // endregion
     }
 }
