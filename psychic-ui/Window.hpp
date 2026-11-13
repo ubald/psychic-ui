@@ -173,6 +173,67 @@ namespace psychic_ui {
 
         // endregion
 
+        // region Touch
+
+        /**
+         * When a touch event happened: a monotonic clock's reading (the backend's event timestamps, the
+         * system window's `gestureTime()` for frames). Only differences matter.
+         */
+        using GestureTime = std::chrono::nanoseconds;
+
+        /**
+         * How far a finger moves (window units) before a press becomes a drag or a pan
+         */
+        static constexpr float touchSlop = 8.0f;
+
+        /**
+         * How long a finger stays down, within the slop, to raise a context press (a right button press)
+         */
+        static constexpr GestureTime longPressDelay = std::chrono::milliseconds(500);
+
+        /**
+         * Kinetic scrolling: the speed (window units per second) a pan must have when the finger lifts to keep
+         * scrolling, the share of its speed it keeps every millisecond, and the speed where it stops
+         */
+        static constexpr float flingMinVelocity  = 50.0f;
+        static constexpr float flingDecay        = 0.998f;
+        static constexpr float flingStopVelocity = 10.0f;
+
+        /**
+         * A pan that rests this long before the finger lifts doesn't fling
+         */
+        static constexpr GestureTime flingRestDelay = std::chrono::milliseconds(100);
+
+        /**
+         * The primary finger of a direct touch screen, from the backends (window coordinates), which turns
+         * the input mode to touch. The window makes mouse events of it: a tap clicks where the finger
+         * landed; past `touchSlop` it pans the scrollable div under the finger when it can scroll along the
+         * drag's main axis (with kinetic scrolling after), otherwise it presses where the finger landed and
+         * drags; held `longPressDelay` without moving is a right button press, released when the finger lifts.
+         * A finger landing while kinetic scrolling runs only stops it.
+         */
+        void handleTouchPress(float x, float y, GestureTime time);
+        void handleTouchMove(float x, float y, GestureTime time);
+        void handleTouchRelease(float x, float y, GestureTime time);
+
+        /**
+         * The system took the touch away: a press in progress is released without a click, no fling
+         */
+        void handleTouchCancel(GestureTime time);
+
+        /**
+         * Advance what goes on without events: a long press fires, kinetic scrolling moves and slows down.
+         * `drawAll` calls it every frame with the system window's `gestureTime()`; tests call it with theirs.
+         */
+        void updateGestures(GestureTime now);
+
+        /**
+         * Whether kinetic scrolling is moving a div
+         */
+        bool flinging() const { return _flinging; }
+
+        // endregion
+
         // region Style
 
         /**
@@ -306,6 +367,47 @@ namespace psychic_ui {
         Cursor _cursor{Cursor::Arrow};
 
         InputMode _inputMode{InputMode::Pointer};
+
+        // endregion
+
+        // region Touch
+
+        enum class TouchPhase {
+            None,     // No finger down
+            Pending,  // Down, within the slop: a tap, a long press, a drag or a pan
+            Pressing, // Pressing a mouse button (_touchButton): a drag or a long press
+            Panning,  // Scrolling _panTarget
+            Ignored   // Stopped kinetic scrolling: nothing more until it lifts
+        };
+
+        TouchPhase                _touchPhase{TouchPhase::None};
+        MouseButton               _touchButton{MouseButton::LEFT};
+        float                     _touchStartX{0};
+        float                     _touchStartY{0};
+        float                     _touchX{0};
+        float                     _touchY{0};
+        GestureTime               _touchStart{};
+        GestureTime               _touchTime{};
+        std::weak_ptr<Div>        _panTarget{};
+        float                     _panVelocityX{0};
+        float                     _panVelocityY{0};
+        float                     _panRemainderX{0};
+        float                     _panRemainderY{0};
+        bool                      _flinging{false};
+        GestureTime               _flingTime{};
+
+        void touchPressButton(MouseButton button);
+        void touchEnd();
+        /**
+         * Scroll the pan target, keeping the fractions for the next move
+         * @return Whether it couldn't move at all (at the end of its content)
+         */
+        bool panBy(float dx, float dy);
+
+        /**
+         * The deepest div under a point that can scroll along that axis, the way a press would find it
+         */
+        Div *scrollTargetAt(int x, int y, bool horizontal);
 
         //int _mouseX{0};
         //int _mouseY{0};

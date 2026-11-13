@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <iostream>
@@ -1606,6 +1607,22 @@ namespace psychic_ui {
         if (moved) {
             scrolled.emit(_scrollX, _scrollY);
         }
+    }
+
+    bool Div::scrollBy(const int deltaX, const int deltaY) {
+        int sx = _scrollX;
+        int sy = _scrollY;
+        if (_width < contentWidth()) {
+            sx = std::clamp(_scrollX + deltaX, _width - contentWidth(), 0);
+        }
+        if (_height < contentHeight()) {
+            sy = std::clamp(_scrollY + deltaY, _height - contentHeight(), 0);
+        }
+        if (sx == _scrollX && sy == _scrollY) {
+            return false;
+        }
+        scrollTo(sx, sy);
+        return true;
     }
 
     MouseEventStatus Div::handleMouseScroll(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {

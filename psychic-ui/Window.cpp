@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstring>
 #include <iostream>
 #include <utility>
@@ -388,6 +389,8 @@ namespace psychic_ui {
             return;
         }
 
+        updateGestures(_systemWindow->gestureTime());
+
         updateStylesAndLayout();
 
         // Skia is set up here rather than in `open` because a GL context is only known to be current
@@ -476,6 +479,230 @@ namespace psychic_ui {
     }
 
     // endregion
+
+    // region Touch
+
+    namespace {
+        int coordinate(const float value) {
+            return static_cast<int>(std::floor(value));
+        }
+
+        float seconds(const Window::GestureTime time) {
+            return std::chrono::duration<float>(time).count();
+        }
+
+        /**
+         * The divs a press at this point (in `div`'s parent's coordinates) goes through, outermost first,
+         * found the way the mouse events are dispatched
+         */
+        bool hitPath(Div *div, const int x, const int y, std::vector<Div *> &path) {
+            if (!div->visible() || !div->boundsContains(x, y)) {
+                return false;
+            }
+            path.push_back(div);
+            if (div->mouseChildren()) {
+                const int localX = x - div->x() - div->scrollX();
+                const int localY = y - div->y() - div->scrollY();
+                const auto &children = div->children();
+                for (auto child = children.rbegin(); child != children.rend(); ++child) {
+                    if (hitPath(child->get(), localX, localY, path)) {
+                        break;
+                    }
+                }
+            }
+            return true;
+        }
+    }
+
+    Div *Window::scrollTargetAt(const int x, const int y, const bool horizontal) {
+        std::vector<Div *> path{};
+        hitPath(this, x, y, path);
+        for (auto div = path.rbegin(); div != path.rend(); ++div) {
+            if ((*div)->computedStyle().overflow() == Overflow::Scroll
+                && (horizontal ? (*div)->getWidth() < (*div)->contentWidth() : (*div)->getHeight() < (*div)->contentHeight())) {
+                return *div;
+            }
+        }
+        return nullptr;
+    }
+
+    void Window::handleTouchPress(const float x, const float y, const GestureTime time) {
+        handleInputModeChange(InputMode::Touch);
+        if (_touchPhase != TouchPhase::None) {
+            return; // One finger at a time
+        }
+        _touchStartX = _touchX = x;
+        _touchStartY = _touchY = y;
+        _touchStart  = _touchTime = time;
+        if (_flinging) {
+            // A finger stops kinetic scrolling, and does nothing else
+            _flinging   = false;
+            _touchPhase = TouchPhase::Ignored;
+            return;
+        }
+        _touchPhase = TouchPhase::Pending;
+    }
+
+    void Window::touchPressButton(const MouseButton button) {
+        // Where the finger landed, getting there first as a mouse would
+        const int x = coordinate(_touchStartX);
+        const int y = coordinate(_touchStartY);
+        handleMouseMove(x, y, 0, Mod{}, false);
+        _touchPhase  = TouchPhase::Pressing;
+        _touchButton = button;
+        handleMouseButtonChange(x, y, button, true, Mod{});
+    }
+
+    void Window::touchEnd() {
+        // Nothing stays under the mouse once the finger is gone
+        handleMouseExit(coordinate(_touchX), coordinate(_touchY), 0, Mod{});
+        _touchPhase = TouchPhase::None;
+    }
+
+    bool Window::panBy(const float dx, const float dy) {
+        auto target = _panTarget.lock();
+        if (!target) {
+            return true;
+        }
+        _panRemainderX += dx;
+        _panRemainderY += dy;
+        const float stepX = std::trunc(_panRemainderX);
+        const float stepY = std::trunc(_panRemainderY);
+        _panRemainderX -= stepX;
+        _panRemainderY -= stepY;
+        if (stepX == 0 && stepY == 0) {
+            return false;
+        }
+        // The content follows the finger
+        return !target->scrollBy(static_cast<int>(stepX), static_cast<int>(stepY));
+    }
+
+    void Window::handleTouchMove(const float x, const float y, const GestureTime time) {
+        if (_touchPhase == TouchPhase::None || _touchPhase == TouchPhase::Ignored) {
+            return;
+        }
+        updateGestures(time); // A long press may be due first
+
+        const float dx = x - _touchX;
+        const float dy = y - _touchY;
+        const float dt = seconds(time - _touchTime);
+        _touchX    = x;
+        _touchY    = y;
+        _touchTime = time;
+
+        switch (_touchPhase) {
+            case TouchPhase::Pending: {
+                const float fromStartX = x - _touchStartX;
+                const float fromStartY = y - _touchStartY;
+                if (std::hypot(fromStartX, fromStartY) < touchSlop) {
+                    break;
+                }
+                const bool horizontal = std::abs(fromStartX) > std::abs(fromStartY);
+                if (Div *target = scrollTargetAt(coordinate(_touchStartX), coordinate(_touchStartY), horizontal)) {
+                    _touchPhase    = TouchPhase::Panning;
+                    _panTarget     = target->weak_from_this();
+                    _panVelocityX  = 0;
+                    _panVelocityY  = 0;
+                    _panRemainderX = 0;
+                    _panRemainderY = 0;
+                    panBy(fromStartX, fromStartY);
+                } else {
+                    touchPressButton(MouseButton::LEFT);
+                    handleMouseMove(coordinate(x), coordinate(y), _touchButton, Mod{}, false);
+                }
+                break;
+            }
+
+            case TouchPhase::Pressing:
+                handleMouseMove(coordinate(x), coordinate(y), _touchButton, Mod{}, false);
+                break;
+
+            case TouchPhase::Panning:
+                panBy(dx, dy);
+                if (dt > 0) {
+                    // Mostly the latest movement's speed, smoothed a little
+                    _panVelocityX = 0.6f * dx / dt + 0.4f * _panVelocityX;
+                    _panVelocityY = 0.6f * dy / dt + 0.4f * _panVelocityY;
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    void Window::handleTouchRelease(const float x, const float y, const GestureTime time) {
+        if (_touchPhase == TouchPhase::None) {
+            return;
+        }
+        if (x != _touchX || y != _touchY) {
+            handleTouchMove(x, y, time);
+        }
+        updateGestures(time); // A long press may be due first
+
+        switch (_touchPhase) {
+            case TouchPhase::Pending:
+                // A tap: a click where the finger landed
+                touchPressButton(MouseButton::LEFT);
+                handleMouseButtonChange(coordinate(_touchStartX), coordinate(_touchStartY), MouseButton::LEFT, false, Mod{});
+                break;
+
+            case TouchPhase::Pressing:
+                handleMouseButtonChange(coordinate(_touchX), coordinate(_touchY), _touchButton, false, Mod{});
+                break;
+
+            case TouchPhase::Panning:
+                if (time - _touchTime <= flingRestDelay
+                    && std::hypot(_panVelocityX, _panVelocityY) >= flingMinVelocity) {
+                    _flinging  = true;
+                    _flingTime = time;
+                }
+                break;
+
+            default:
+                break;
+        }
+        touchEnd();
+    }
+
+    void Window::handleTouchCancel(const GestureTime /*time*/) {
+        if (_touchPhase == TouchPhase::Pressing) {
+            // Released, without a click
+            Div::handleMouseRelease(coordinate(_touchX), coordinate(_touchY), _touchButton, Mod{});
+        }
+        if (_touchPhase != TouchPhase::None) {
+            touchEnd();
+        }
+    }
+
+    void Window::updateGestures(const GestureTime now) {
+        if (_touchPhase == TouchPhase::Pending && now - _touchStart >= longPressDelay) {
+            // A long press: the context press, a right button press, released when the finger lifts
+            touchPressButton(MouseButton::RIGHT);
+        }
+
+        if (!_flinging) {
+            return;
+        }
+        const float dt = seconds(now - _flingTime);
+        if (dt <= 0) {
+            return;
+        }
+        _flingTime = now;
+        // The velocity decays exponentially, v(t) = v0 * flingDecay^(t in ms), so the distance is its integral
+        const float rate     = -std::log(flingDecay) * 1000.0f; // Per second
+        const float kept     = std::exp(-rate * dt);
+        const float distance = (1.0f - kept) / rate;
+        const bool  blocked  = panBy(_panVelocityX * distance, _panVelocityY * distance);
+        _panVelocityX *= kept;
+        _panVelocityY *= kept;
+        if (blocked || std::hypot(_panVelocityX, _panVelocityY) < flingStopVelocity) {
+            _flinging = false;
+        }
+    }
+
+    // endregion
+
 
     // region Focus
 

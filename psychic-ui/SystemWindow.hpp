@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include "psychic-ui.hpp"
@@ -74,6 +75,12 @@ namespace psychic_ui {
         virtual bool supportsDrag() const;
         virtual void setSize(int width, int height) = 0;
         virtual void setPosition(int x, int y) = 0;
+
+        /**
+         * The clock the backend's touch events are timed with, for `Window::updateGestures`: the steady clock
+         * unless the platform has its own
+         */
+        virtual std::chrono::nanoseconds gestureTime() const;
 
         virtual void startTextInput();
         virtual void stopTextInput();

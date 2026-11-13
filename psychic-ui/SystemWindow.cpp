@@ -75,6 +75,10 @@ namespace psychic_ui {
         return true;
     }
 
+    std::chrono::nanoseconds SystemWindow::gestureTime() const {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch());
+    }
+
     void SystemWindow::startTextInput() {}
 
     void SystemWindow::stopTextInput() {}

@@ -394,6 +394,13 @@ namespace psychic_ui {
         }
 
         void scroll(double scrollX, double scrollY);
+
+        /**
+         * Scroll by a number of window units, within the content (touch panning)
+         * @return Whether the scroll position changed
+         */
+        bool scrollBy(int deltaX, int deltaY);
+
         Signal<int, int> scrolled{};
 
         // endregion
