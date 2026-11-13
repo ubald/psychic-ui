@@ -73,7 +73,7 @@
     /* Hidden divs are still laid out, they are only skipped when painting and hit testing */ \
     X(visible,                  bool,          detail::BoolArg,    true,                   false, false) \
     X(cursor,                   Cursor,        Cursor,             Cursor::Arrow,          true,  false) \
-    /* Components: the name of the skin to hatch (see StyleManager::registerSkin), slider orientation */ \
+    /* Components: the variant of the skin set's skin to hatch ("" for the default, see SkinRegistry), slider orientation */ \
     X(skin,                     Atom,          detail::StringArg,  Atom{},                 false, false) \
     X(orientation,              Orientation,   Orientation,        Orientation::Horizontal, false, false) \
     /* Space between children: gap sets both, rowGap is between rows (lines), columnGap between columns */ \
