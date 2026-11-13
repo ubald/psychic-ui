@@ -90,26 +90,4 @@ namespace psychic_ui {
         }
 
     }
-
-//    void DefaultScrollBarSkin::draw(SkCanvas *canvas) {
-//        SkPaint paint;
-//        paint.setAntiAlias(_computedStyle.antiAlias());
-//        if (_computedStyle.has(Property::opacity)) {
-//            paint.setAlpha((unsigned int) (_computedStyle.opacity() * 255.f));
-//        }
-//        paint.setStyle(SkPaint::kFill_Style);
-//        paint.setColor(_computedStyle.backgroundColor());
-//        canvas->drawRect(_rect, paint);
-//
-//        paint.setColor(_computedStyle.color());
-//
-//        int minSize = 24;
-//        SkRect rect;
-//        if (component()->flexDirection() == Horizontal) {
-//            int avail = _width - minSize;
-//            int w = ( component()->div()->getHeight() * avail ) / (component()->div()->boundsBottom() - component()->div()->boundsTop());
-//            int p = component()->div()->scro
-//            rect.set( , , _y, _y + _height);
-//        }
-//    }
 }

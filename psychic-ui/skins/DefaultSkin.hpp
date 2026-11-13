@@ -37,9 +37,6 @@ namespace psychic_ui {
             paint.setAntiAlias(style.antiAlias());
             paint.setStyle(SkPaint::kFill_Style);
             paint.setColor(style.contentBackgroundColor().argb());
-            if (style.opacity() < 1.0f) {
-                paint.setAlpha((unsigned int) (paint.getAlpha() * style.opacity())); // Fades, keeping the color's own alpha
-            }
 
             // Paint background
             SkRRect inside = rect;

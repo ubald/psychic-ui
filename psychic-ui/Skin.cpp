@@ -22,7 +22,7 @@ namespace psychic_ui {
                 P::paddingVertical, P::paddingTop, P::paddingBottom,
                 P::border, P::borderHorizontal, P::borderLeft, P::borderRight, P::borderVertical, P::borderTop, P::borderBottom,
                 // Painting
-                P::opacity, P::antiAlias, P::cursor,
+                P::antiAlias, P::cursor, // Not opacity: the component's layer already fades its skin
                 P::borderRadius, P::borderRadiusTop, P::borderRadiusBottom, P::borderRadiusLeft, P::borderRadiusRight,
                 P::borderRadiusTopLeft, P::borderRadiusTopRight, P::borderRadiusBottomLeft, P::borderRadiusBottomRight
             });

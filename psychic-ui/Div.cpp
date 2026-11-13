@@ -931,11 +931,18 @@ namespace psychic_ui {
 
     void Div::render(SkCanvas *canvas) {
         // Paint only: styles and layout were updated by the window before rendering
-        if (!layoutReady || !_visible || canvas->quickReject(_rect)) {
+        const float opacity = _computedStyle.opacity();
+        if (!layoutReady || !_visible || opacity <= 0.0f || canvas->quickReject(_rect)) {
             return;
         }
 
-        canvas->save();
+        if (opacity < 1.0f) {
+            // CSS opacity: the div and its children are drawn into a layer, which is then blended as one group, so
+            // overlapping parts don't show through each other and nested opacities multiply
+            canvas->saveLayerAlpha(&_boundsRect, static_cast<U8CPU>(std::lround(opacity * 255.0f)));
+        } else {
+            canvas->save();
+        }
 
         draw(canvas);
 
@@ -1034,10 +1041,6 @@ namespace psychic_ui {
             paint.setStyle(SkPaint::kFill_Style);
             paint.setColor(_computedStyle.backgroundColor().argb());
             paint.setAntiAlias(_computedStyle.antiAlias());
-            if (_computedStyle.opacity() < 1.0f) {
-                // Fades the color, keeping its own transparency
-                paint.setAlpha((unsigned int) (paint.getAlpha() * _computedStyle.opacity()));
-            }
 
             float hb = _computedStyle.border() / 2;
             if (_drawComplexRoundRect) {
