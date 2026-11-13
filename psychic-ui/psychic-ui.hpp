@@ -21,6 +21,16 @@ namespace psychic_ui {
         RIGHT = 4
     };
 
+    /**
+     * What the user is pointing with, as the window last saw it (`Window::inputMode()`): a mouse or trackpad,
+     * a finger on a touch screen, or a pen. Touch makes the style manager switch to touch density.
+     */
+    enum class InputMode {
+        Pointer,
+        Touch,
+        Pen
+    };
+
     struct Mod {
         bool shift{false};
         bool ctrl{false};

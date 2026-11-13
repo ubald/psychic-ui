@@ -33,6 +33,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         div/outline_shadow_tests.cpp
         icons/icon_tests.cpp
         backends/system_window_tests.cpp
+        backends/touch_tests.cpp
         text/text_layout_tests.cpp
         text/font_tests.cpp
         signals/signal_tests.cpp

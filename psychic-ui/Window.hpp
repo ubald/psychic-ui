@@ -140,6 +140,39 @@ namespace psychic_ui {
 
         // endregion
 
+        // region Input Mode
+
+        /**
+         * What the user points with, as last seen: `Pointer` until a backend reports a finger on a touch screen
+         * (`Touch`, until the next real mouse motion) or a pen (`Pen`). In touch mode the `:touch` pseudo-class
+         * matches every div of the window.
+         */
+        InputMode inputMode() const { return _inputMode; }
+
+        /**
+         * Set the input mode, as the backends do: see `handleInputModeChange`
+         */
+        template<class Self>
+        Self &inputMode(this Self &self, InputMode mode) {
+            static_cast<Window &>(self).handleInputModeChange(mode);
+            return self;
+        }
+
+        /**
+         * Emitted with the new mode when the input mode changes
+         */
+        Signal<InputMode> inputModeChanged{};
+
+        PSYCHIC_UI_EVENT(onInputModeChange, inputModeChanged)
+
+        /**
+         * Called by the backends with the device each input event came from: a change restyles the window
+         * (`:touch`) and emits `inputModeChanged`, the same mode again does nothing
+         */
+        virtual void handleInputModeChange(InputMode mode);
+
+        // endregion
+
         // region Style
 
         /**
@@ -271,6 +304,8 @@ namespace psychic_ui {
          * Cursor to use when this component has the mouse focus
          */
         Cursor _cursor{Cursor::Arrow};
+
+        InputMode _inputMode{InputMode::Pointer};
 
         //int _mouseX{0};
         //int _mouseY{0};

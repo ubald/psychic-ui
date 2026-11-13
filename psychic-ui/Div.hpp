@@ -545,8 +545,8 @@ namespace psychic_ui {
 
         // endregion
 
-        inline bool contains(int x, int y) const;
-        inline bool boundsContains(int x, int y) const;
+        bool contains(int x, int y) const;
+        bool boundsContains(int x, int y) const;
 
         // region External Event Triggers
 

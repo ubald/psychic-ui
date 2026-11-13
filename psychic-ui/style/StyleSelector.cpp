@@ -1,6 +1,7 @@
 #include <algorithm>
 #include "StyleSelector.hpp"
 #include "psychic-ui/Div.hpp"
+#include "psychic-ui/Window.hpp"
 #include "../utils/StringUtils.hpp"
 
 namespace psychic_ui {
@@ -73,6 +74,8 @@ namespace psychic_ui {
                                     r->_pseudo.insert(Pseudo::FirstChild);
                                 } else if (pseudo == "lastchild" || pseudo == "last-child") {
                                     r->_pseudo.insert(Pseudo::LastChild);
+                                } else if (pseudo == "touch") {
+                                    r->_pseudo.insert(Pseudo::Touch);
                                 }
                                 break;
                         }
@@ -161,6 +164,11 @@ namespace psychic_ui {
                     case Pseudo::LastChild:
                         return component->parent()
                                && component->parent()->childIndex(component) == (int) component->parent()->childCount() - 1;
+                    case Pseudo::Touch: {
+                        // The window's input mode: `Window:touch Button` and `Button:touch` both work
+                        const Window *window = const_cast<Div *>(component)->window();
+                        return window && window->inputMode() == InputMode::Touch;
+                    }
                 }
                 return false; // Just to remove the warning...
             }
@@ -231,6 +239,9 @@ namespace psychic_ui {
                     w += 1;
                     break;
                 case Pseudo::LastChild:
+                    w += 1;
+                    break;
+                case Pseudo::Touch:
                     w += 1;
                     break;
             }

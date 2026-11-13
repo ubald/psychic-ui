@@ -106,6 +106,11 @@ namespace psychic_ui {
         void setValid() { _valid = true; }
 
         /**
+         * Recompute every div's style on the next style pass, without touching the rules
+         */
+        void invalidate() { _valid = false; }
+
+        /**
          * The platform's font manager (Fontconfig on Linux, CoreText on macOS), shared by every
          * style manager: it loads font files and finds the system's fonts
          */

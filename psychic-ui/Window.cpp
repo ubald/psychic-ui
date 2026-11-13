@@ -460,6 +460,23 @@ namespace psychic_ui {
         updateRuntimeStyles(); // Clearing the rules dropped the runtime ones too
     }
 
+    // region Input Mode
+
+    void Window::handleInputModeChange(const InputMode mode) {
+        if (mode == _inputMode) {
+            return;
+        }
+        const bool touchChanged = (mode == InputMode::Touch) != (_inputMode == InputMode::Touch);
+        _inputMode = mode;
+        if (touchChanged) {
+            // `:touch` may match differently anywhere in the window
+            styleManager()->invalidate();
+        }
+        inputModeChanged.emit(_inputMode);
+    }
+
+    // endregion
+
     // region Focus
 
     void Window::requestFocus(Div *component) {

@@ -15,7 +15,8 @@ namespace psychic_ui {
         Disabled,
         Empty,
         FirstChild,
-        LastChild
+        LastChild,
+        Touch
     };
 
     enum class Token {
