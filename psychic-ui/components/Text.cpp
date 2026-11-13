@@ -1,3 +1,4 @@
+#include <cmath>
 #include "include/core/SkPathBuilder.h"
 #include "psychic-ui/Window.hpp"
 #include "Text.hpp"
@@ -189,7 +190,11 @@ namespace psychic_ui {
     }
 
     void Text::subscribeToEdition() {
-        _onFocus     = focused.subscribe([this]() { window()->startTextInput(); });
+        _onFocus     = focused.subscribe([this]() {
+            window()->startTextInput();
+            updateTextInputArea();
+        });
+        _onCaretMove = caretMoved.subscribe([this](unsigned int /*caret*/) { updateTextInputArea(); });
         _onBlur      = blurred.subscribe([this]() { window()->stopTextInput(); });
         _onKeyPress  = keyPressed.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); });
         _onKeyRepeat = keyRepeated.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); });
@@ -215,6 +220,7 @@ namespace psychic_ui {
             _onBlur->disconnect();
             _onBlur = nullptr;
         }
+        _onCaretMove.disconnect();
         if (_onKeyPress) {
             _onKeyPress->disconnect();
             _onKeyPress = nullptr;
@@ -477,4 +483,27 @@ namespace psychic_ui {
             canvas->drawRect(caretRect, _textPaint);
         }
     }
+
+    void Text::updateTextInputArea() {
+        Window *window = this->window();
+        if (!window || !_focused || !_editable || window->inputMode() != InputMode::Touch) {
+            return;
+        }
+        // The caret's line, across the text, in window coordinates
+        const auto caret = _textLayout.posFromIndex(_caret);
+        int        x     = 0;
+        int        y     = 0;
+        localToGlobal(
+            x, y,
+            static_cast<int>(_paddedRect.fLeft) - _x,
+            static_cast<int>(_paddedRect.fTop + static_cast<float>(caret.first) * _lineHeight) - _y
+        );
+        window->setTextInputArea(
+            x, y,
+            static_cast<int>(std::ceil(_paddedRect.width())),
+            static_cast<int>(std::ceil(_lineHeight)),
+            static_cast<int>(caret.second)
+        );
+    }
 }
+

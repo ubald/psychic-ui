@@ -86,6 +86,12 @@ namespace psychic_ui {
         virtual void stopTextInput();
 
         /**
+         * Where text is being typed (window coordinates), with the caret `cursor` from its left, so that an
+         * on-screen keyboard or an input method's candidates stay clear of it. Adapters without either ignore it.
+         */
+        virtual void setTextInputArea(int x, int y, int width, int height, int cursor);
+
+        /**
          * The system clipboard's text, in UTF-8. Without a system clipboard (this default), a clipboard
          * that only lives in this system window.
          */

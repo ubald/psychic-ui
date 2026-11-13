@@ -3,6 +3,7 @@
 #include <psychic-ui/applications/SDL3SystemWindow.hpp>
 #include <psychic-ui/components/Range.hpp>
 #include <psychic-ui/components/Scroller.hpp>
+#include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/components/TitleBar.hpp>
 #include "fake_system_window.hpp"
 
@@ -542,4 +543,38 @@ TEST_CASE("SDL3: a pen works like a mouse, in pen mode", "[backend][sdl3][touch]
     sdl.adapter->handleEvent(barrel);
     CHECK(presses == std::vector{MouseButton::LEFT, MouseButton::RIGHT});
     CHECK(sdl.window->inputMode() == InputMode::Pen);
+}
+
+TEST_CASE("SDL3: a text field focused by touch tells SDL where its caret is", "[backend][sdl3][touch]") {
+    SDL3Fixture sdl;
+    auto &input = sdl.window->appContainer().add<TextInput>("Hello");
+    input.width(200.0f);
+    sdl.layout();
+    int left = 0;
+    int top  = 0;
+    input.localToGlobal(left, top);
+    const float x = static_cast<float>(left + 100);
+    const float y = static_cast<float>(top + input.getHeight() / 2);
+
+    // With a mouse, nothing to avoid
+    sdl.mouse(SDL_EVENT_MOUSE_MOTION, x, y, 1);
+    sdl.mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, x, y, 1);
+    sdl.mouse(SDL_EVENT_MOUSE_BUTTON_UP, x, y, 1);
+    SDL_Rect area{};
+    int      cursor = -1;
+    REQUIRE(SDL_GetTextInputArea(sdl.sdlWindow, &area, &cursor));
+    CHECK(area.w == 0);
+
+    // Blurred, then focused again by a tap
+    sdl.mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, 700.0f, 500.0f, 1);
+    sdl.mouse(SDL_EVENT_MOUSE_BUTTON_UP, 700.0f, 500.0f, 1);
+    sdl.finger(SDL_EVENT_FINGER_DOWN, x, y, 1000);
+    sdl.finger(SDL_EVENT_FINGER_UP, x, y, 1050);
+    REQUIRE(SDL_GetTextInputArea(sdl.sdlWindow, &area, &cursor));
+    CHECK(area.w > 0);
+    CHECK(area.h > 0);
+    CHECK(area.x >= left);
+    CHECK(area.y >= top);
+    CHECK(area.y + area.h <= top + input.getHeight());
+    CHECK(cursor > 0); // After "Hello"
 }

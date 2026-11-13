@@ -83,6 +83,8 @@ namespace psychic_ui {
 
     void SystemWindow::stopTextInput() {}
 
+    void SystemWindow::setTextInputArea(int /*x*/, int /*y*/, int /*width*/, int /*height*/, int /*cursor*/) {}
+
     std::string SystemWindow::getClipboardText() const {
         return _clipboardText;
     }

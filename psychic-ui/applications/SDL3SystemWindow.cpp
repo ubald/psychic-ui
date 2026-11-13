@@ -219,6 +219,11 @@ namespace psychic_ui {
         SDL_StopTextInput(_sdlWindow);
     }
 
+    void SDL3SystemWindow::setTextInputArea(const int x, const int y, const int width, const int height, const int cursor) {
+        const SDL_Rect rect{x, y, width, height};
+        SDL_SetTextInputArea(_sdlWindow, &rect, cursor);
+    }
+
     std::chrono::nanoseconds SDL3SystemWindow::gestureTime() const {
         return std::chrono::nanoseconds{SDL_GetTicksNS()};
     }

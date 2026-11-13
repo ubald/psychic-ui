@@ -68,6 +68,7 @@ namespace psychic_ui {
 
         void startTextInput() override;
         void stopTextInput() override;
+        void setTextInputArea(int x, int y, int width, int height, int cursor) override;
 
         /**
          * SDL's clock, which times its events

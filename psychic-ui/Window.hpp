@@ -327,6 +327,12 @@ namespace psychic_ui {
         void startTextInput();
         void stopTextInput();
 
+        /**
+         * Where text is being typed, for the system window (`SystemWindow::setTextInputArea`): text fields
+         * tell it in touch mode, so that the on-screen keyboard leaves their caret visible
+         */
+        void setTextInputArea(int x, int y, int width, int height, int cursor);
+
         bool handleKeyPress(Key key, Mod mod);
         bool handleKeyRepeat(Key key, Mod mod);
         bool handleKeyRelease(Key key, Mod mod);

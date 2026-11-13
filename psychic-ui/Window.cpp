@@ -913,6 +913,12 @@ namespace psychic_ui {
         }
     }
 
+    void Window::setTextInputArea(const int x, const int y, const int width, const int height, const int cursor) {
+        if (_systemWindow) {
+            _systemWindow->setTextInputArea(x, y, width, height, cursor);
+        }
+    }
+
     bool Window::handleKeyPress(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {

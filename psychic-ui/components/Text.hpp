@@ -142,6 +142,12 @@ namespace psychic_ui {
         Div::CharSlot             _onType{nullptr};
         Div::FocusSlot            _onFocus{nullptr};
         Div::FocusSlot            _onBlur{nullptr};
+        ScopedSlot                _onCaretMove{};
+
+        /**
+         * In touch mode, tell the window where the caret's line is, for the on-screen keyboard
+         */
+        void updateTextInputArea();
 
         void updateText(const std::string &text) override;
         void updateSelectable(bool selectable);
