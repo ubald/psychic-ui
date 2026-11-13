@@ -1,9 +1,7 @@
 #pragma once
 
 #include <string>
-#include "include/core/SkTextBlob.h"
 #include <unicode/unistr.h>
-#include "psychic-ui/utils/TextBox.hpp"
 #include "psychic-ui/TextBase.hpp"
 #include "psychic-ui/Div.hpp"
 
@@ -126,11 +124,8 @@ namespace psychic_ui {
         unsigned int       _selectBegin{0};
         unsigned int       _selectEnd{0};
         unsigned int       _caret{0};
-        unsigned int       _targetXPos{0};
+        float              _targetXPos{0.0f};
         icu::UnicodeString _text{};
-        TextBox            _textBox{};
-        sk_sp<SkTextBlob>  _blob{nullptr};
-        SkPaint            _selectionPaint{};
         SkPaint            _selectionBackgroundPaint{};
 
         /**
@@ -193,5 +188,10 @@ namespace psychic_ui {
         void textEdited(unsigned int caret);
 
         void handleKey(Key key, Mod mod);
+
+        /**
+         * The caret index at a point in the Div's own coordinates
+         */
+        unsigned int indexAt(int x, int y) const;
     };
 }

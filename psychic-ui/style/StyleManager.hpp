@@ -8,6 +8,7 @@
 #include <utility>
 #include "include/core/SkFontMgr.h"
 #include "include/core/SkTypeface.h"
+#include "modules/skparagraph/include/FontCollection.h"
 #include "psychic-ui/utils/Hatcher.hpp"
 #include "Style.hpp"
 #include "StyleSelector.hpp"
@@ -72,6 +73,12 @@ namespace psychic_ui {
          */
         sk_sp<SkTypeface> font(const std::string &name) const;
 
+        /**
+         * What text layout finds fonts in: the loaded fonts by name, then the system's fonts,
+         * which also fill in the characters a font lacks. Remade after a font is loaded.
+         */
+        sk_sp<skia::textlayout::FontCollection> fontCollection();
+
         StyleManager &registerSkin(const std::string &name, SkinMaker hatcher);
         std::shared_ptr<internal::SkinBase> skin(const std::string &name);
 
@@ -123,6 +130,7 @@ namespace psychic_ui {
          */
         std::vector<std::pair<int, std::size_t>>                           _matches{};
         std::unordered_map<std::string, sk_sp<SkTypeface>>                 _fonts{};
+        sk_sp<skia::textlayout::FontCollection>                            _fontCollection{nullptr};
         std::unordered_map<std::string, SkinMaker>                         _skins{};
         bool                                                               _valid{false};
 

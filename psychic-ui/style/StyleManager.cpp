@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include "StyleManager.hpp"
 #include "../Div.hpp"
+#include "modules/skparagraph/include/TypefaceFontProvider.h"
 
 #if defined(__APPLE__)
 #include "include/ports/SkFontMgr_mac_ct.h"
@@ -20,6 +21,7 @@ namespace psychic_ui {
 
     void StyleManager::reset() {
         _fonts.clear();
+        _fontCollection = nullptr;
         _skins.clear();
         for (auto *rule: _rules) {
             rule->setActive(false);
@@ -46,7 +48,8 @@ namespace psychic_ui {
 
     StyleManager &StyleManager::loadFont(const std::string &name, const std::string &path) {
         _fonts.insert({name, fontManager()->makeFromFile(path.c_str())});
-        _valid = false;
+        _fontCollection = nullptr;
+        _valid          = false;
         return *this;
     }
 
@@ -61,6 +64,22 @@ namespace psychic_ui {
             return system;
         }
         return fontManager()->legacyMakeTypeface(nullptr, SkFontStyle());
+    }
+
+    sk_sp<skia::textlayout::FontCollection> StyleManager::fontCollection() {
+        if (!_fontCollection) {
+            auto provider = sk_make_sp<skia::textlayout::TypefaceFontProvider>();
+            for (const auto &[name, typeface]: _fonts) {
+                if (typeface) {
+                    provider->registerTypeface(typeface, SkString(name.c_str()));
+                }
+            }
+            _fontCollection = sk_make_sp<skia::textlayout::FontCollection>();
+            _fontCollection->setAssetFontManager(std::move(provider));
+            _fontCollection->setDefaultFontManager(fontManager());
+            _fontCollection->enableFontFallback();
+        }
+        return _fontCollection;
     }
 
     StyleManager &StyleManager::registerSkin(const std::string &name, SkinMaker hatcher) {

@@ -58,19 +58,25 @@ namespace psychic_ui {
                                     : SkFont::Edging::kAntiAlias
         );
         _font.setSubpixel(antiAlias && _subPixelText);
+        _font.setHinting(fontHinting(_font.isSubpixel()));
         _font.setTypeface(styleManager()->font(_computedStyle.fontFamily().str()));
         _font.setSize(_fontSize);
 
-        // Yoga caches measures: re-measure when anything changing the text metrics changes
-        FontKey fontKey{
-            _font.getTypeface(),
+        TextLayoutStyle layoutStyle{
+            styleManager()->fontCollection(),
+            _computedStyle.fontFamily().str(),
             _fontSize,
-            _computedStyle.letterSpacing(),
             _lineHeight,
-            _font.isSubpixel()
+            _computedStyle.letterSpacing(),
+            _font.getEdging(),
+            _font.isSubpixel(),
+            _computedStyle.textAlign()
         };
-        if (fontKey != _fontKey) {
-            _fontKey = fontKey;
+        // Yoga caches measures: re-measure when anything changing the text metrics changes
+        bool remeasure = !(layoutStyle == _layoutStyle);
+        _layoutStyle = layoutStyle;
+        _textLayout.setStyle(layoutStyle, _computedStyle.color().argb(), _computedStyle.selectionColor().argb());
+        if (remeasure) {
             invalidate();
         }
     }

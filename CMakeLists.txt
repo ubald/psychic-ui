@@ -283,8 +283,8 @@ set(SOURCE_FILES
     psychic-ui/skins/DefaultTextInputSkin.hpp
     psychic-ui/skins/DefaultTextAreaSkin.cpp
     psychic-ui/skins/DefaultTextAreaSkin.hpp
-    psychic-ui/utils/TextBox.cpp
-    psychic-ui/utils/TextBox.hpp
+    psychic-ui/utils/TextLayout.cpp
+    psychic-ui/utils/TextLayout.hpp
     psychic-ui/components/Text.cpp
     psychic-ui/components/Text.hpp
     psychic-ui/TextBase.cpp

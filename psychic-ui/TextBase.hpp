@@ -1,10 +1,10 @@
 #pragma once
 
-#include <tuple>
 #include "include/core/SkFont.h"
 #include "include/core/SkFontMetrics.h"
 #include "include/core/SkPaint.h"
 #include "Div.hpp"
+#include "psychic-ui/utils/TextLayout.hpp"
 
 namespace psychic_ui {
 
@@ -49,8 +49,13 @@ namespace psychic_ui {
         bool    _subPixelText{true};
         float   _fontSize{0.0f};
         float   _lineHeight{0.0f};
-        SkFont  _font{};
+        SkFont  _font{};      // The font family's primary font, for its metrics
         SkPaint _textPaint{};
+        /**
+         * The text's layout (SkParagraph). Mutable: its queries lay the text out on demand.
+         */
+        mutable TextLayout _textLayout{};
+
         void styleUpdated() override;
         virtual void updateText(const std::string &text) = 0;
         void updateTextFlags(bool lcdRender, bool subPixelText);
@@ -64,11 +69,7 @@ namespace psychic_ui {
         float linesHeight(size_t lines) const;
 
     private:
-        /**
-         * What changes the text metrics: typeface, size, letter spacing, line height, subpixel positioning
-         */
-        using FontKey = std::tuple<const SkTypeface *, float, float, float, bool>;
-        FontKey _fontKey{};
+        TextLayoutStyle _layoutStyle{}; // What the text was last measured with
     };
 }
 

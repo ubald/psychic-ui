@@ -7,8 +7,7 @@ namespace psychic_ui {
         TextBase::TextBase() {
         tag("Text");
 
-        _textBox.setFont(_font);
-        _textBox.setMode(_multiline ? TextBoxMode::LineBreak : TextBoxMode::OneLine);
+        _textLayout.setMultiline(_multiline);
 
         updateText(text);
 
@@ -29,7 +28,7 @@ namespace psychic_ui {
 
     void Text::updateText(const std::string &text) {
         _text = icu::UnicodeString::fromUTF8(text);
-        _textBox.setText(_text);
+        _textLayout.setText(_text);
         _caret       = 0;
         _selectBegin = 0;
         _selectEnd   = 0;
@@ -75,7 +74,7 @@ namespace psychic_ui {
     void Text::updateMultiline(const bool multiline) {
         if (_multiline != multiline) {
             _multiline = multiline;
-            _textBox.setMode(_multiline ? TextBoxMode::LineBreak : TextBoxMode::OneLine);
+            _textLayout.setMultiline(_multiline);
             invalidate();
         }
     }
@@ -105,7 +104,7 @@ namespace psychic_ui {
         _selectBegin = _caret;
         _selectEnd   = _caret;
         if (saveX) {
-            _targetXPos = _textBox.posFromIndex(_caret).second;
+            _targetXPos = _textLayout.posFromIndex(_caret).second;
         }
         if (isValid()) {
             caretMoved.emit(_caret);
@@ -117,7 +116,7 @@ namespace psychic_ui {
     }
 
     unsigned int Text::getCaretLine() const {
-        return _textBox.lineFromIndex(_caret);
+        return _textLayout.lineFromIndex(_caret);
     }
 
     unsigned int Text::getLineY(unsigned int line) const {
@@ -127,14 +126,14 @@ namespace psychic_ui {
     void Text::subscribeToSelection() {
         _onMousePress = mousePressed.subscribe(
             [this](const int mouseX, const int mouseY, const int /*button*/, const Mod /*modifiers*/) {
-                unsigned int initialBegin = _textBox.indexFromPos(mouseX, mouseY);
+                unsigned int initialBegin = indexAt(mouseX, mouseY);
                 moveCaret(initialBegin);
                 _onMouseMove = window()->mouseMoved.subscribe(
                     [this, initialBegin](const int mouseX, const int mouseY, int /*button*/, Mod /*modifiers*/) {
                         int lx = 0;
                         int ly = 0;
                         globalToLocal(lx, ly, mouseX, mouseY);
-                        _caret = _textBox.indexFromPos(lx, ly);
+                        _caret = indexAt(lx, ly);
                         if (_caret >= initialBegin) {
                             _selectBegin = initialBegin;
                             _selectEnd   = _caret;
@@ -158,11 +157,11 @@ namespace psychic_ui {
         _onDoubleClick = doubleClicked.subscribe(
             [this](const unsigned int clickCount) {
                 if (clickCount == 2) {
-                    auto word = _textBox.wordAtIndex(_caret);
+                    auto word = _textLayout.wordAtIndex(_caret);
                     _selectBegin = word.first;
                     _selectEnd   = word.second;
                 } else if (clickCount == 3) {
-                    auto sentence = _textBox.sentenceAtIndex(_caret);
+                    auto sentence = _textLayout.sentenceAtIndex(_caret);
                     _selectBegin = sentence.first;
                     _selectEnd   = sentence.second;
                 } else { // if (clickCount == 4) {
@@ -236,7 +235,7 @@ namespace psychic_ui {
     }
 
     void Text::textChanged() {
-        _textBox.updateText();
+        _textLayout.setText(_text);
         invalidate();
         changed.emit(text());
     }
@@ -244,6 +243,14 @@ namespace psychic_ui {
     void Text::textEdited(unsigned int caret) {
         textChanged(); // Before setCaret so that `onCaret` has access to computed lines
         moveCaret(caret);
+    }
+
+    unsigned int Text::indexAt(int x, int y) const {
+        // The text starts inside the padding and border
+        return _textLayout.indexFromPos(
+            static_cast<float>(x) - (_paddedRect.fLeft - _rect.fLeft),
+            static_cast<float>(y) - (_paddedRect.fTop - _rect.fTop)
+        );
     }
 
     void Text::handleKey(Key key, Mod mod) {
@@ -292,7 +299,7 @@ namespace psychic_ui {
                 if (mod.ctrl) {
                     moveCaret(0);
                 } else {
-                    moveCaret(_textBox.lineStart(_textBox.lineFromIndex(_caret)));
+                    moveCaret(_textLayout.lineStart(_textLayout.lineFromIndex(_caret)));
                 }
                 break;
 
@@ -300,31 +307,31 @@ namespace psychic_ui {
                 if (mod.ctrl) {
                     moveCaret(static_cast<unsigned int>(_text.length()));
                 } else {
-                    moveCaret(_textBox.lineEnd(_textBox.lineFromIndex(_caret)));
+                    moveCaret(_textLayout.lineEnd(_textLayout.lineFromIndex(_caret)));
                 }
                 break;
 
             case Key::UP: {
-                auto pos = _textBox.posFromIndex(_caret);
+                auto pos = _textLayout.posFromIndex(_caret);
                 if (pos.first == 0) {
                     // On the first line, so reach beginning of line
                     moveCaret(0);
                 } else {
                     // Otherwise go one line up
-                    auto index = _textBox.indexFromPos(_targetXPos, static_cast<unsigned int>((pos.first - 1) * _lineHeight));
+                    auto index = _textLayout.indexFromPos(_targetXPos, (static_cast<float>(pos.first) - 0.5f) * _lineHeight);
                     moveCaret(index, false);
                 }
                 break;
             }
 
             case Key::DOWN: {
-                auto pos = _textBox.posFromIndex(_caret);
-                if (pos.first == _textBox.lineCount() - 1) {
+                auto pos = _textLayout.posFromIndex(_caret);
+                if (pos.first == _textLayout.lineCount() - 1) {
                     // On the last line, so reach end of line
                     moveCaret(static_cast<unsigned int>(_text.length()));
                 } else {
                     // Otherwise go one line down
-                    auto index = _textBox.indexFromPos(_targetXPos, static_cast<unsigned int>((pos.first + 1) * _lineHeight));
+                    auto index = _textLayout.indexFromPos(_targetXPos, (static_cast<float>(pos.first) + 1.5f) * _lineHeight);
                     moveCaret(index, false);
                 }
                 break;
@@ -333,7 +340,7 @@ namespace psychic_ui {
             case Key::LEFT:
                 if (_caret > 0) {
                     if (mod.ctrl) {
-                        moveCaret(_textBox.previousWordBoundary(_caret));
+                        moveCaret(_textLayout.previousWordBoundary(_caret));
                     } else {
                         moveCaret(--_caret);
                     }
@@ -343,7 +350,7 @@ namespace psychic_ui {
             case Key::RIGHT:
                 if (_caret < _text.length()) {
                     if (mod.ctrl) {
-                        moveCaret(_textBox.nextWordBoundary(_caret));
+                        moveCaret(_textLayout.nextWordBoundary(_caret));
                     } else {
                         moveCaret(++_caret);
                     }
@@ -358,7 +365,7 @@ namespace psychic_ui {
                         textEdited(_selectBegin);
                     } else if (mod.ctrl) {
                         // Remove preceding word
-                        auto from = _textBox.previousWordBoundary(_caret);
+                        auto from = _textLayout.previousWordBoundary(_caret);
                         _text.removeBetween(from, _caret);
                         textEdited(from);
                     } else {
@@ -377,7 +384,7 @@ namespace psychic_ui {
                         textEdited(_selectBegin);
                     } else if (mod.ctrl) {
                         // Delete following word
-                        _text.removeBetween(_caret, _textBox.nextWordBoundary(_caret));
+                        _text.removeBetween(_caret, _textLayout.nextWordBoundary(_caret));
                         textChanged();
                     } else {
                         // Delete following character
@@ -408,27 +415,21 @@ namespace psychic_ui {
     void Text::styleUpdated() {
         TextBase::styleUpdated();
 
-        _textBox.setSpacing(_fontSize / _font.getSpacing(), _lineHeight - _fontSize);
-
-        _selectionPaint.setStyle(SkPaint::kFill_Style);
-        _selectionPaint.setColor(_computedStyle.selectionColor().argb());
-
         _selectionBackgroundPaint = _textPaint;
         _selectionBackgroundPaint.setColor(_computedStyle.selectionBackgroundColor().argb());
     }
 
     Size Text::measure(Constraint width, Constraint height) {
         // Pure: the layout caches measures and calls this with various constraints,
-        // so the drawing state (_textBox's box and lines) is left untouched.
-        float contentWidth = width.apply(std::ceil(_textBox.maxContentWidth()));
-        auto  lines        = std::max<size_t>(1, _textBox.lineStartsAt(contentWidth).size());
+        // so the layout used for painting (at the box's width) is left as it is.
+        float contentWidth = width.apply(std::ceil(_textLayout.maxContentWidth()));
+        auto  lines        = std::max<size_t>(1, _textLayout.lineCountAt(contentWidth));
         return Size{contentWidth, height.apply(linesHeight(lines))};
     }
 
     void Text::layoutUpdated() {
         TextBase::layoutUpdated();
-        _textBox.setBox(0.0f, 0.0f, _paddedRect.width(), _paddedRect.height());
-        _blob = _textBox.snapshotTextBlob();
+        _textLayout.layout(_paddedRect.width());
         if (_pendingCaretSignal) {
             caretMoved.emit(_caret);
             _pendingCaretSignal = false;
@@ -437,12 +438,12 @@ namespace psychic_ui {
 
     void Text::draw(SkCanvas *canvas) {
         Div::draw(canvas);
-        if (!_text.isEmpty() && _blob) {
-            canvas->drawTextBlob(_blob, _paddedRect.fLeft, _paddedRect.fTop, _textPaint);
+        if (!_text.isEmpty()) {
+            _textLayout.paint(canvas, _paddedRect.fLeft, _paddedRect.fTop);
 
             if (_selectable && _focused && _selectBegin != _selectEnd) {
-                auto begin = _textBox.posFromIndex(_selectBegin);
-                auto end   = _textBox.posFromIndex(_selectEnd);
+                auto begin = _textLayout.posFromIndex(_selectBegin);
+                auto end   = _textLayout.posFromIndex(_selectEnd);
 
                 SkPathBuilder builder{};
                 for (unsigned int i = begin.first; i <= end.first; ++i) {
@@ -458,16 +459,15 @@ namespace psychic_ui {
                 SkPath path = builder.detach();
 
                 canvas->drawPath(path, _selectionBackgroundPaint);
-                // TODO: Doing like this is probably not performant at all, it all depends on how skia draws clipped text blobs
                 canvas->save();
                 canvas->clipPath(path);
-                canvas->drawTextBlob(_blob, _paddedRect.fLeft, _paddedRect.fTop, _selectionPaint);
+                _textLayout.paintSelected(canvas, _paddedRect.fLeft, _paddedRect.fTop);
                 canvas->restore();
             }
         }
 
         if (_editable && _focused) {
-            auto   caret = _textBox.posFromIndex(_caret);
+            auto   caret = _textLayout.posFromIndex(_caret);
             SkRect caretRect{
                 _paddedRect.fLeft + caret.second - 1.0f,
                 _paddedRect.fTop + (caret.first * _lineHeight),

@@ -19,9 +19,7 @@ namespace psychic_ui {
         void updateText(const std::string &text) override;
     private:
         std::string _text;
-        float       _yOffset{0.0f};
-        std::string _drawText{};
-        void styleUpdated() override;
+        float       _visibleWidth{0.0f}; // Where the text is cut when it doesn't fit
         Size measure(Constraint width, Constraint height) override;
         void layoutUpdated() override;
         void draw(SkCanvas *canvas) override;
