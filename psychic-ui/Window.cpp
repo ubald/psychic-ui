@@ -27,6 +27,9 @@ namespace psychic_ui {
         Div::Div(),
         _title(std::move(title)) {
         setStyleManager(StyleManager::getInstance()); // NOTE: Each window could get its own style manager
+        // A window starts in pointer mode. The style manager is shared: its density follows the window that changed
+        // its input mode last.
+        styleManager()->density(Density::Pointer);
         tag("Window");
         setWindowSize(1440, 900);
 
@@ -474,7 +477,10 @@ namespace psychic_ui {
         const bool touchChanged = (mode == InputMode::Touch) != (_inputMode == InputMode::Touch);
         _inputMode = mode;
         if (touchChanged) {
-            // `:touch` may match differently anywhere in the window
+            // The stylesheets size controls for fingers or for a pointer, and `:touch` matches differently
+            if (styleManager()->density(mode == InputMode::Touch ? Density::Touch : Density::Pointer)) {
+                updateRuntimeStyles(); // Reloading the stylesheets dropped the runtime rules
+            }
             styleManager()->invalidate();
         }
         inputModeChanged.emit(_inputMode);

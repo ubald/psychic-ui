@@ -101,6 +101,23 @@ namespace psychic_ui {
          */
         StyleManager &theme(const Theme &theme);
 
+        /**
+         * The density the stylesheets size controls for: `Pointer` until a window goes to touch mode
+         */
+        Density density() const { return _density; }
+
+        /**
+         * Switch densities, like themes: the stylesheets load again and read the new `sizes()`.
+         * Nothing happens when the density doesn't change.
+         * @return Whether it changed
+         */
+        bool density(Density density);
+
+        /**
+         * The theme's sizes for the current density
+         */
+        const Sizes &sizes() const { return _theme.metrics.sizes(_density); }
+
         bool valid() const { return _valid; };
 
         void setValid() { _valid = true; }
@@ -189,6 +206,7 @@ namespace psychic_ui {
         std::size_t                                                        _skinsGeneration{0};
         bool                                                               _valid{false};
         Theme                                                              _theme{themes::oneDark};
+        Density                                                            _density{Density::Pointer};
         /**
          * The loaded stylesheets, in load order, with their type so that each type is loaded once
          */

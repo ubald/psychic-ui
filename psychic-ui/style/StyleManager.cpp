@@ -60,6 +60,15 @@ namespace psychic_ui {
         return *this;
     }
 
+    bool StyleManager::density(const Density density) {
+        if (density == _density) {
+            return false;
+        }
+        _density = density;
+        reloadRules();
+        return true;
+    }
+
     StyleManager &StyleManager::skinSet(std::unique_ptr<SkinSet> skinSet) {
         // The chain, from the last fallback to the set itself: a set's skins and rules go over its fallback's
         _skinSets.clear();

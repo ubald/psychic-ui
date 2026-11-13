@@ -1,4 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
+#include <psychic-ui/components/Button.hpp>
+#include <psychic-ui/components/CheckBox.hpp>
+#include <psychic-ui/components/Range.hpp>
+#include <psychic-ui/themes/one-dark.hpp>
 #include "fake_system_window.hpp"
 
 using namespace psychic_ui;
@@ -19,13 +23,24 @@ TEST_CASE("The window starts in pointer mode and reports changes once", "[backen
     CHECK(window->inputMode() == InputMode::Pointer);
 }
 
+namespace {
+    /**
+     * In a stylesheet, which a density switch loads again
+     */
+    struct ProbeSheet : StyleSheet {
+        void load(StyleManager *manager) override {
+            manager->style(".probe").padding(1);
+            manager->style("Window:touch .probe").padding(4);
+            manager->style(".probe:touch").paddingLeft(8);
+        }
+    };
+}
+
 TEST_CASE("The :touch pseudo-class follows the input mode", "[backend][touch][style]") {
     auto window = std::make_shared<TestWindow>();
     FakeSystemWindow systemWindow(window);
     auto &div = window->appContainer().add<Div>().addClassName("probe");
-    window->styleManager()->style(".probe").padding(1);
-    window->styleManager()->style("Window:touch .probe").padding(4);
-    window->styleManager()->style(".probe:touch").paddingLeft(8);
+    window->loadStyleSheet<ProbeSheet>();
     systemWindow.layout();
     CHECK(div.computedStyle().padding() == Length{1});
     CHECK(div.computedStyle().paddingLeft() == Length{});
@@ -345,4 +360,77 @@ TEST_CASE("Hit slop: a tap near a div clicks it", "[backend][touch][hitslop]") {
     f.window->handleTouchRelease(static_cast<float>(f.aLeft + 30), static_cast<float>(f.aTop - 5), 1s + 50ms);
     CHECK(f.bClicks == 1);
     CHECK(f.aClicks == 0);
+}
+
+namespace {
+    /**
+     * Sizes `.sized` from the current density
+     */
+    struct SizedSheet : StyleSheet {
+        void load(StyleManager *manager) override {
+            manager->style(".sized").width(manager->sizes().control);
+        }
+    };
+}
+
+TEST_CASE("Density: the style manager follows the window's input mode", "[backend][touch][theme]") {
+    auto window = std::make_shared<TestWindow>();
+    FakeSystemWindow systemWindow(window);
+    window->theme(Theme{.metrics = {.touch = {.control = 40, .hitSlop = 12}}});
+    window->loadStyleSheet<SizedSheet>();
+    auto &sized = window->appContainer().add<Div>().addClassName("sized");
+    systemWindow.layout();
+    CHECK(window->styleManager()->density() == Density::Pointer);
+    CHECK(sized.getWidth() == 24);
+
+    window->handleInputModeChange(InputMode::Touch);
+    CHECK(window->styleManager()->density() == Density::Touch);
+    CHECK(window->styleManager()->sizes().hitSlop == 12);
+    systemWindow.layout();
+    CHECK(sized.getWidth() == 40);
+
+    // A pen is a pointer
+    window->handleInputModeChange(InputMode::Pen);
+    CHECK(window->styleManager()->density() == Density::Pointer);
+    systemWindow.layout();
+    CHECK(sized.getWidth() == 24);
+}
+
+TEST_CASE("Density: the default skins look the same in touch mode, with hit slop", "[backend][touch][theme]") {
+    auto window = std::make_shared<TestWindow>();
+    FakeSystemWindow systemWindow(window);
+    auto &button   = window->appContainer().add<Button>("Button");
+    auto &checkBox = window->appContainer().add<CheckBox>("Check");
+    auto &range    = window->appContainer().add<Range<float>>();
+    systemWindow.layout();
+    const auto layoutOf = [&]() {
+        return std::vector{
+            button.getWidth(), button.getHeight(), checkBox.getWidth(), checkBox.getHeight(), range.getWidth(), range.getHeight()
+        };
+    };
+    const auto pointerLayout = layoutOf();
+    CHECK(button.computedStyle().hitSlop() == 0.0f);
+
+    window->handleInputModeChange(InputMode::Touch);
+    systemWindow.layout();
+    CHECK(layoutOf() == pointerLayout);
+    CHECK(button.computedStyle().hitSlop() == themes::oneDark.metrics.touch.hitSlop);
+    CHECK(checkBox.computedStyle().hitSlop() == themes::oneDark.metrics.touch.hitSlop);
+    CHECK(range.computedStyle().hitSlop() == themes::oneDark.metrics.touch.hitSlop);
+
+    // Back with the next mouse motion
+    window->handleInputModeChange(InputMode::Pointer);
+    systemWindow.layout();
+    CHECK(layoutOf() == pointerLayout);
+    CHECK(button.computedStyle().hitSlop() == 0.0f);
+}
+
+TEST_CASE("Density: a new window starts with the pointer density", "[backend][touch][theme]") {
+    {
+        auto window = std::make_shared<TestWindow>();
+        window->handleInputModeChange(InputMode::Touch);
+        CHECK(window->styleManager()->density() == Density::Touch);
+    }
+    auto window = std::make_shared<TestWindow>();
+    CHECK(window->styleManager()->density() == Density::Pointer);
 }

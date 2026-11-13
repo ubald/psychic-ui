@@ -53,6 +53,7 @@ namespace psychic_ui {
         const Palette    &p     = theme.palette;
         const Typography &t     = theme.type;
         const Metrics    &m     = theme.metrics;
+        const Sizes      &s     = manager->sizes();
 
         manager->loadFont(std::string{t.light.name}, std::string{t.light.path});
         manager->loadFont(std::string{t.regular.name}, std::string{t.regular.path});
@@ -111,6 +112,11 @@ namespace psychic_ui {
         }
 
         // endregion
+
+        // Fingers reach the controls from around them (none with a pointer); they look the same
+        for (const char *control: {"Button", "CheckBox", "Range", "ScrollBar", "TextInput", "TextArea", "MenuButton"}) {
+            manager->style(control).hitSlop(s.hitSlop);
+        }
 
         // region Typography
 
@@ -223,11 +229,11 @@ namespace psychic_ui {
 
         manager->style("ScrollBar.vertical .thumb")
                .marginLeft(1)
-               .minHeight(m.control);
+               .minHeight(s.control);
 
         manager->style("ScrollBar.horizontal .thumb")
                .marginTop(1)
-               .minWidth(m.control);
+               .minWidth(s.control);
 
         manager->style("ScrollBar:hover .thumb")
                .backgroundColor(p.control);
@@ -283,8 +289,8 @@ namespace psychic_ui {
                .lineHeight(t.medium);
 
         manager->style("CheckBox .box")
-               .width(m.control)
-               .height(m.control)
+               .width(s.control)
+               .height(s.control)
                .marginRight(m.spaceSm);
 
         // endregion
@@ -356,10 +362,10 @@ namespace psychic_ui {
                .color(p.text);
 
         manager->style("Range DefaultSliderSkin.horizontal")
-               .height(m.control);
+               .height(s.control);
 
         manager->style("Range DefaultSliderSkin.vertical")
-               .width(m.control);
+               .width(s.control);
 
         manager->style("Range DefaultSliderSkin.vertical .value")
                .visible(false); // No room

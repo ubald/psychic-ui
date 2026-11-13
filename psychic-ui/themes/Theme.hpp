@@ -49,20 +49,45 @@ namespace psychic_ui {
         float lineHeight{16}; // Of body text
     };
 
+    /**
+     * How dense the controls are: for a mouse, trackpad or pen (`Pointer`), or for fingers (`Touch`), which the style
+     * manager switches to while the window is in touch mode
+     */
+    enum class Density {
+        Pointer,
+        Touch
+    };
+
+    /**
+     * The sizes that follow the density: a skin set reads the current ones with `manager->sizes()`
+     */
+    struct Sizes {
+        float control{24};  // Thickness of small controls: a slider, a check box, a scroll thumb's minimum length
+        float row{24};      // Height of a row in a list or a menu
+        float textStep{0};  // Added to the text sizes
+        float hitSlop{0};   // How far around a control a press still reaches it (the `hitSlop` style)
+    };
+
     struct Metrics {
         float radius{7};
         float border{1};
         float focusWidth{2};
         float scrollBar{12};
-        float control{24}; // Thickness of small controls: a slider, a check box, a scroll thumb's minimum length
         float spaceSm{6};
         float spaceMd{12};
         float spaceLg{18};
+        Sizes pointer{};
+        Sizes touch{.hitSlop = 10}; // A 24 px control reaches 44 px for a finger, and looks the same
+
+        constexpr const Sizes &sizes(Density density) const {
+            return density == Density::Touch ? touch : pointer;
+        }
     };
 
     /**
      * What a skin set and app stylesheets draw with: values only, so any theme works with any skin set.
-     * Read it with `manager->theme()` in `StyleSheet::load`; switching themes replays the loaded stylesheets.
+     * Read it with `manager->theme()` in `StyleSheet::load` (and the sizes of the current density with
+     * `manager->sizes()`); switching themes or densities replays the loaded stylesheets.
      * Groups mix with designated initializers: `Theme{.palette = themes::oneLight.palette}`.
      */
     struct Theme {
