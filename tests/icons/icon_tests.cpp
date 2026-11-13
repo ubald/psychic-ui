@@ -59,13 +59,20 @@ namespace {
 TEST_CASE("the shared registry has the bundled icons", "[icons]") {
     auto &registry = IconRegistry::shared();
 
-    REQUIRE(registry.size() >= icons::pivotalIcons.size());
+    // No name in both sets
+    REQUIRE(registry.size() == icons::pivotalIcons.size() + icons::lucideIcons.size());
     REQUIRE(registry.has("check"));
     REQUIRE(registry.has("chevron-down"));
     REQUIRE(registry.has("star-filled"));
+    REQUIRE(registry.has("chevron-up"));
+    REQUIRE(registry.has("eye-off"));
     REQUIRE_FALSE(registry.has("no-such-icon"));
-    // Pivotal's set comes first, in its order
-    REQUIRE(registry.names().front() == icons::pivotalIcons.front().name);
+    // Pivotal's set comes first, in its order, then Lucide's
+    auto names = registry.names();
+    REQUIRE(names.front() == icons::pivotalIcons.front().name);
+    REQUIRE(names[icons::pivotalIcons.size()] == icons::lucideIcons.front().name);
+    REQUIRE(registry.shape("chevron-up")->grid == 24.0f);
+    REQUIRE(registry.shape("chevron-down")->grid == 16.0f);
 }
 
 TEST_CASE("every bundled icon parses to paths inside its grid", "[icons]") {
@@ -136,7 +143,7 @@ TEST_CASE("path data that doesn't parse draws nothing and is reported once", "[i
 TEST_CASE("an icon is drawn inside its box at any size", "[icons]") {
     for (float size: {14.0f, 16.0f, 20.0f}) {
         for (float scale: {1.0f, 2.0f}) {
-            for (auto name: {"search", "check", "settings", "more", "star-filled"}) {
+            for (auto name: {"search", "check", "settings", "more", "star-filled", "chevron-up", "circle-alert", "grip-vertical"}) {
                 INFO(name << " at " << size << " px, scale " << scale);
                 auto surface = whiteSurface(64, 64);
                 SkCanvas *canvas = surface->getCanvas();

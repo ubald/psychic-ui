@@ -14,8 +14,14 @@ deterministic, so an unchanged source gives an unchanged file.
 """
 
 import argparse
+import base64
+import hashlib
+import io
+import json
 import re
 import sys
+import tarfile
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -151,6 +157,60 @@ def pivotal(source):
 # endregion
 
 
+# region Lucide
+
+LUCIDE_VERSION = "1.64.0"
+LUCIDE_URL = f"https://registry.npmjs.org/lucide-static/-/lucide-static-{LUCIDE_VERSION}.tgz"
+# The npm registry's `dist.integrity` of that release
+LUCIDE_INTEGRITY = "sha512-UxWmMteOXbKHI5E4f2qVtxCAAsI9gsInYK1lNw0nrOA0w4FkJeOVZ+UOV6aGA2377FZe3qyiFYq3lqjBKZ6OuA=="
+LUCIDE_GRID = 24
+LUCIDE_STROKE = 2
+LUCIDE_LIST = Path(__file__).resolve().parent / "lucide.txt"
+
+
+def lucide_package(directory):
+    """(icon-nodes.json, LICENSE) of the package: from an extracted one, or the pinned release, checked"""
+    if directory:
+        package = Path(directory)
+        return json.loads((package / "icon-nodes.json").read_text()), (package / "LICENSE").read_text()
+    with urllib.request.urlopen(LUCIDE_URL) as response:
+        data = response.read()
+    integrity = "sha512-" + base64.b64encode(hashlib.sha512(data).digest()).decode()
+    if integrity != LUCIDE_INTEGRITY:
+        raise SystemExit(f"{LUCIDE_URL}: integrity {integrity}, expected {LUCIDE_INTEGRITY}")
+    # Only read the two files needed, never extracted to disk
+    with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as archive:
+        nodes = archive.extractfile("package/icon-nodes.json").read().decode()
+        license = archive.extractfile("package/LICENSE").read().decode()
+    return json.loads(nodes), license
+
+
+def lucide_names():
+    names = []
+    for raw in LUCIDE_LIST.read_text().splitlines():
+        name = raw.split("#", 1)[0].strip()
+        if name:
+            names.append(name)
+    return names
+
+
+def lucide(directory):
+    """[(name, [(paint, d)])] of the listed icons, and the package's license"""
+    nodes, license = lucide_package(directory)
+    pivotal_names = set(re.findall(r'^\s*\{"([^"]+)", ', (OUT_DIR / "PivotalIcons.cpp").read_text(), re.M))
+    icons = []
+    for name in lucide_names():
+        if name not in nodes:
+            raise SystemExit(f"lucide-static {LUCIDE_VERSION} has no icon \"{name}\"")
+        if name in pivotal_names:
+            raise SystemExit(f"\"{name}\" is in Pivotal's set already: remove it from {LUCIDE_LIST.name}")
+        # Lucide only strokes (fill="none" on the svg)
+        icons.append((name, [("Stroke", to_path(tag, attrs)) for tag, attrs in nodes[name]]))
+    return icons, license
+
+# endregion
+
+
 # region C++ output
 
 def cpp_string(text):
@@ -187,7 +247,7 @@ def write(path, symbol, header, icons, grid, stroke):
         f"        constexpr IconDefinition definitions[]{{",
     ]
     for name, _ in icons:
-        lines.append(f"            {{{cpp_string(name)}, {num(grid)}.0f, {num(stroke)}f, {identifier(name)}}},")
+        lines.append(f"            {{{cpp_string(name)}, {float(grid)!r}f, {float(stroke)!r}f, {identifier(name)}}},")
     lines += [
         "        };",
         "    }",
@@ -207,6 +267,8 @@ def main():
     sets = parser.add_subparsers(dest="set", required=True)
     p = sets.add_parser("pivotal", help="Pivotal's icons, from its icons.tsx")
     p.add_argument("source", help="packages/ui/src/icons/icons.tsx in the Pivotal repository")
+    l = sets.add_parser("lucide", help="the Lucide icons listed in lucide.txt")
+    l.add_argument("--package", help="an extracted lucide-static package, instead of downloading the pinned release")
     args = parser.parse_args()
 
     if args.set == "pivotal":
@@ -217,6 +279,21 @@ def main():
             "Names are Pivotal's component names in kebab case, without \"Icon\" (ChevronDownIcon is \"chevron-down\");",
             "StarIcon's filled form is \"star-filled\".",
         ], icons, PIVOTAL_GRID, PIVOTAL_STROKE)
+
+    if args.set == "lucide":
+        icons, license = lucide(args.package)
+        (OUT_DIR / "LICENSE-Lucide.txt").write_text(license)
+        write(OUT_DIR / "LucideIcons.cpp", "lucideIcons", [
+            f"Lucide icons (https://lucide.dev), lucide-static {LUCIDE_VERSION}: the ones listed in tools/icons/lucide.txt,",
+            "for what Pivotal's set lacks, under Lucide's names. A 24-unit grid, stroked 2 units wide with round caps and",
+            "joins; drawn with the same weight as Pivotal's (see IconDefinition).",
+            "",
+            "ISC License, Copyright (c) 2026 Lucide Icons and Contributors; some icons derive from Feather",
+            "(MIT License, Copyright (c) 2013-present Cole Bemis). Full text: LICENSE-Lucide.txt, next to this file.",
+            "",
+            "Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is",
+            "hereby granted, provided that the above copyright notice and this permission notice appear in all copies.",
+        ], icons, LUCIDE_GRID, LUCIDE_STROKE)
 
 
 if __name__ == "__main__":

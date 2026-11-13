@@ -228,6 +228,7 @@ set(SOURCE_FILES
     psychic-ui/icons/IconRegistry.cpp
     psychic-ui/icons/IconRegistry.hpp
     psychic-ui/icons/IconSet.hpp
+    psychic-ui/icons/LucideIcons.cpp
     psychic-ui/icons/PivotalIcons.cpp
     psychic-ui/signals/Observer.hpp
     psychic-ui/signals/Signal.hpp

@@ -5,7 +5,7 @@
 namespace psychic_ui {
 
     IconRegistry &IconRegistry::shared() {
-        static IconRegistry registry{icons::pivotalIcons};
+        static IconRegistry registry{icons::pivotalIcons, icons::lucideIcons};
         return registry;
     }
 

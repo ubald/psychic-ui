@@ -1,0 +1,62 @@
+# The Lucide icons generate.py puts in psychic-ui/icons/LucideIcons.cpp, by their Lucide name
+# (https://lucide.dev/icons): what Pivotal's set lacks. Add a name and run `tools/icons/generate.py lucide`.
+
+# Disclosure, steppers, selects, pagination
+chevron-up
+chevrons-up-down
+chevrons-left
+chevrons-right
+arrow-left
+arrow-right
+corner-down-left
+
+# Sorting
+arrow-up-down
+arrow-up-narrow-wide
+arrow-down-wide-narrow
+
+# Status
+circle-check
+circle-x
+circle-alert
+circle-plus
+circle-minus
+loader-circle
+
+# Fields and toggles
+eye-off
+lock-open
+square
+square-check
+circle
+
+# Files
+folder-open
+file-text
+save
+copy
+clipboard
+external-link
+log-in
+
+# Appearance
+sun
+moon
+monitor
+
+# Handles and overflow
+grip-vertical
+grip-horizontal
+ellipsis-vertical
+
+# Views and actions
+list
+funnel
+refresh-cw
+undo-2
+redo-2
+zoom-in
+zoom-out
+maximize-2
+minimize-2
+command

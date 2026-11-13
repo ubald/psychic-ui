@@ -46,5 +46,10 @@ namespace psychic_ui {
          * Pivotal's set (PivotalIcons.cpp), registered first
          */
         extern const std::span<const IconDefinition> pivotalIcons;
+
+        /**
+         * The Lucide icons Pivotal's set lacks (LucideIcons.cpp), registered after it
+         */
+        extern const std::span<const IconDefinition> lucideIcons;
     }
 }
