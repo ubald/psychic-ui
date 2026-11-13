@@ -64,7 +64,7 @@ namespace psychic_ui {
         \
         return ret;\
 
-    MouseEventStatus Modal::handleMouseMoved(const int mouseX, const int mouseY, const int buttons, const Mod modifiers, bool handled) {
+    MouseEventStatus Modal::handleMouseMove(const int mouseX, const int mouseY, const int buttons, const Mod modifiers, bool handled) {
         if (!_visible) {
             return Out;
         }
@@ -82,7 +82,7 @@ namespace psychic_ui {
                 if (child->parent()) {
                     child->parent()->globalToLocal(mx, my, gx, gy);
                 }
-                auto res = child->handleMouseMoved(mx, my, buttons, modifiers, handled);
+                auto res = child->handleMouseMove(mx, my, buttons, modifiers, handled);
                 if (res != Out) {
                     handled = true;
                     if (ret != Handled) {
@@ -92,7 +92,7 @@ namespace psychic_ui {
             }
         }
 
-        auto res = Div::handleMouseMoved(mouseX, mouseY, buttons, modifiers, handled);
+        auto res = Div::handleMouseMove(mouseX, mouseY, buttons, modifiers, handled);
         if ( res != Out && ret != Handled) {
             ret = res;
         }
@@ -100,15 +100,15 @@ namespace psychic_ui {
         return ret;
     }
 
-    MouseEventStatus Modal::handleMouseButton(const int mouseX, const int mouseY, const MouseButton button, const bool down, const Mod modifiers) {
-        MODAL_MOUSE_EVENT_PROXY(handleMouseButton, button, down, modifiers)
+    MouseEventStatus Modal::handleMouseButtonChange(const int mouseX, const int mouseY, const MouseButton button, const bool down, const Mod modifiers) {
+        MODAL_MOUSE_EVENT_PROXY(handleMouseButtonChange, button, down, modifiers)
     }
 
-    MouseEventStatus Modal::handleMouseDown(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
-        MODAL_MOUSE_EVENT_PROXY(handleMouseDown, button, modifiers)
+    MouseEventStatus Modal::handleMousePress(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
+        MODAL_MOUSE_EVENT_PROXY(handleMousePress, button, modifiers)
     }
 
-    MouseEventStatus Modal::handleMouseUp(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
+    MouseEventStatus Modal::handleMouseRelease(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
         if (!_visible) {
             return Out;
         }
@@ -126,7 +126,7 @@ namespace psychic_ui {
                 if (child->parent()) {
                     child->parent()->globalToLocal(mx, my, gx, gy);
                 }
-                auto res = child->handleMouseUp(mx, my, button, modifiers);
+                auto res = child->handleMouseRelease(mx, my, button, modifiers);
                 if (res != Out && ret != Handled) {
                     ret = res;
                 }
@@ -134,7 +134,7 @@ namespace psychic_ui {
         }
 
         if (ret == Out) {
-            ret = Div::handleMouseUp(mouseX, mouseY, button, modifiers);
+            ret = Div::handleMouseRelease(mouseX, mouseY, button, modifiers);
         }
 
         return ret;
@@ -148,7 +148,7 @@ namespace psychic_ui {
         MODAL_MOUSE_EVENT_PROXY(handleDoubleClick, clickCount, modifiers)
     }
 
-    MouseEventStatus Modal::handleMouseScrolled(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
-        MODAL_MOUSE_EVENT_PROXY(handleMouseScrolled, scrollX, scrollY)
+    MouseEventStatus Modal::handleMouseScroll(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
+        MODAL_MOUSE_EVENT_PROXY(handleMouseScroll, scrollX, scrollY)
     }
 }

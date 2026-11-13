@@ -480,11 +480,11 @@ namespace psychic_ui {
 
     // region MouseEvents
 
-    MouseEventStatus Window::handleMouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) {
-        auto res = Div::handleMouseButton(mouseX, mouseY, button, down, modifiers);
+    MouseEventStatus Window::handleMouseButtonChange(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) {
+        auto res = Div::handleMouseButtonChange(mouseX, mouseY, button, down, modifiers);
 
         if (down) {
-            handleMouseDown(mouseX, mouseY, button, modifiers);
+            handleMousePress(mouseX, mouseY, button, modifiers);
         } else {
             handleClick(mouseX, mouseY, button, modifiers);
 
@@ -500,7 +500,7 @@ namespace psychic_ui {
                 _lastClick = now;
             }
 
-            handleMouseUp(mouseX, mouseY, button, modifiers);
+            handleMouseRelease(mouseX, mouseY, button, modifiers);
         }
 
         return res;
@@ -536,7 +536,7 @@ namespace psychic_ui {
         }
     }
 
-    bool Window::handleKeyDown(Key key, Mod mod) {
+    bool Window::handleKeyPress(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
             // Everyone in the focus path gets the key events, focusEnabled or not
@@ -562,7 +562,7 @@ namespace psychic_ui {
         return false;
     }
 
-    bool Window::handleKeyUp(Key key, Mod mod) {
+    bool Window::handleKeyRelease(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
             // Everyone in the focus path gets the key events, focusEnabled or not
@@ -575,7 +575,7 @@ namespace psychic_ui {
         return false;
     }
 
-    bool Window::handleCharacter(const icu::UnicodeString &character) {
+    bool Window::handleType(const icu::UnicodeString &character) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
             // Only the focusEnabled divs get the character events

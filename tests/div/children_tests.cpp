@@ -213,7 +213,7 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
     layout();
 
     SECTION("the last child added is hit") {
-        REQUIRE(root->handleMouseButton(50, 50, LEFT, true, Mod{}) == Handled);
+        REQUIRE(root->handleMouseButtonChange(50, 50, LEFT, true, Mod{}) == Handled);
         REQUIRE(hits == "c");
     }
 
@@ -223,13 +223,13 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
         d->position(Position::Absolute).width(100).height(100);
         d->mouseButtonChanged.subscribe([&hits](const int, const int, const MouseButton, const bool, const Mod) { hits += "d"; });
         layout();
-        root->handleMouseButton(50, 50, LEFT, true, Mod{});
+        root->handleMouseButtonChange(50, 50, LEFT, true, Mod{});
         REQUIRE(hits == "c");
         root->remove(children[2]);
         root->remove(children[1]);
         root->remove(children[0]);
         layout();
-        root->handleMouseButton(50, 50, LEFT, true, Mod{});
+        root->handleMouseButtonChange(50, 50, LEFT, true, Mod{});
         REQUIRE(hits == "cd");
     }
 
@@ -247,7 +247,7 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
         children[1]->mouseMoved.subscribe([&](const int, const int, const int, const Mod) { moves += "b"; });
         children[0]->mouseMoved.subscribe([&](const int, const int, const int, const Mod) { moves += "a"; });
 
-        root->handleMouseMoved(50, 50, 0, Mod{}, true);
+        root->handleMouseMove(50, 50, 0, Mod{}, true);
         REQUIRE(moves == "c");
         REQUIRE(order(*root) == "e");
     }

@@ -22,12 +22,12 @@ namespace {
         }
 
         void press(int x, int y) const {
-            window->handleMouseButton(x, y, MouseButton::LEFT, true, Mod{});
+            window->handleMouseButtonChange(x, y, MouseButton::LEFT, true, Mod{});
             window->updateStylesAndLayout();
         }
 
         void release(int x, int y) const {
-            window->handleMouseButton(x, y, MouseButton::LEFT, false, Mod{});
+            window->handleMouseButtonChange(x, y, MouseButton::LEFT, false, Mod{});
             window->updateStylesAndLayout();
         }
     };

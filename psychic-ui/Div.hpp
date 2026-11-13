@@ -550,14 +550,14 @@ namespace psychic_ui {
 
         // region External Event Triggers
 
-        virtual MouseEventStatus handleMouseMoved(int mouseX, int mouseY, int buttons, Mod modifiers, bool handled);
-        virtual bool handleMouseExited(int mouseX, int mouseY, int buttons, Mod modifiers);
-        virtual MouseEventStatus handleMouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers);
-        virtual MouseEventStatus handleMouseDown(int mouseX, int mouseY, MouseButton button, Mod modifiers);
-        virtual MouseEventStatus handleMouseUp(int mouseX, int mouseY, MouseButton button, Mod modifiers);
+        virtual MouseEventStatus handleMouseMove(int mouseX, int mouseY, int buttons, Mod modifiers, bool handled);
+        virtual bool handleMouseExit(int mouseX, int mouseY, int buttons, Mod modifiers);
+        virtual MouseEventStatus handleMouseButtonChange(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers);
+        virtual MouseEventStatus handleMousePress(int mouseX, int mouseY, MouseButton button, Mod modifiers);
+        virtual MouseEventStatus handleMouseRelease(int mouseX, int mouseY, MouseButton button, Mod modifiers);
         virtual MouseEventStatus handleClick(int mouseX, int mouseY, MouseButton button, Mod modifiers);
         virtual MouseEventStatus handleDoubleClick(int mouseX, int mouseY, const unsigned int clickCount, Mod modifiers);
-        virtual MouseEventStatus handleMouseScrolled(int mouseX, int mouseY, double scrollX, double scrollY);
+        virtual MouseEventStatus handleMouseScroll(int mouseX, int mouseY, double scrollX, double scrollY);
 
         using KeySlot = std::shared_ptr<Slot<Key, Mod>>;
         using CharSlot = std::shared_ptr<Slot<icu::UnicodeString>>;

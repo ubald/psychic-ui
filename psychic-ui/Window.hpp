@@ -178,7 +178,7 @@ namespace psychic_ui {
 
         // region Mouse
 
-        MouseEventStatus handleMouseButton(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) override;
+        MouseEventStatus handleMouseButtonChange(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) override;
         std::chrono::time_point<std::chrono::high_resolution_clock> _lastClick{};
         unsigned int _clickCount{0};
 
@@ -199,10 +199,10 @@ namespace psychic_ui {
         void startTextInput();
         void stopTextInput();
 
-        bool handleKeyDown(Key key, Mod mod);
+        bool handleKeyPress(Key key, Mod mod);
         bool handleKeyRepeat(Key key, Mod mod);
-        bool handleKeyUp(Key key, Mod mod);
-        bool handleCharacter(const icu::UnicodeString &character);
+        bool handleKeyRelease(Key key, Mod mod);
+        bool handleType(const icu::UnicodeString &character);
 
         // endregion
 

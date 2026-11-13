@@ -32,10 +32,10 @@ namespace {
 
         void clickAt(int x, int y) {
             layout();
-            handleMouseMoved(x, y, 0, Mod{}, false);
-            handleMouseButton(x, y, MouseButton::LEFT, true, Mod{});
+            handleMouseMove(x, y, 0, Mod{}, false);
+            handleMouseButtonChange(x, y, MouseButton::LEFT, true, Mod{});
             layout();
-            handleMouseButton(x, y, MouseButton::LEFT, false, Mod{});
+            handleMouseButtonChange(x, y, MouseButton::LEFT, false, Mod{});
             layout();
         }
 
@@ -178,7 +178,7 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
         auto recent = findButton(window->menuContainer(), "Recent");
         REQUIRE(recent != nullptr);
         HeadlessWindow::center(recent, x, y);
-        window->handleMouseMoved(x, y, 0, Mod{}, false);
+        window->handleMouseMove(x, y, 0, Mod{}, false);
         window->layout();
         REQUIRE(findButton(window->menuContainer(), "Nothing") != nullptr);
         std::weak_ptr<Div> weakRecent = recent;
