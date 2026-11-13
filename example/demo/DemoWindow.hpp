@@ -24,6 +24,7 @@
 #include "Scrollers.hpp"
 #include "Ranges.hpp"
 #include "Colors.hpp"
+#include "Icons.hpp"
 #include "../demo-stylesheet.hpp"
 
 namespace psychic_ui {
@@ -123,6 +124,7 @@ namespace psychic_ui {
         panels.emplace_back(std::make_pair("Buttons", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Buttons>(); })));
         panels.emplace_back(std::make_pair("Ranges", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Ranges>(); })));
         panels.emplace_back(std::make_pair("Colors", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<Colors>(); })));
+        panels.emplace_back(std::make_pair("Icons", Hatcher<std::shared_ptr<Div>>::make([]() { return std::make_shared<IconsPanel>(); })));
 
         app->add<TabContainer<std::pair<std::string, std::shared_ptr<Hatcher<std::shared_ptr<Div>>>>>>(
                panels,

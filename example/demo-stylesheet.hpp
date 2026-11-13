@@ -49,5 +49,41 @@ public:
 
         manager->style("Colors .column Range")
             .shrink(0);
+
+        // In a scroller: keep their content height
+        manager->style("Icons .inter-samples")
+            .shrink(0)
+            .direction(Direction::Row)
+            .gap(32)
+            .marginBottom(16);
+
+        manager->style("Icons .inter-samples .column")
+            .gap(4);
+
+        manager->style("Icons .icon-grid")
+            .shrink(0)
+            .gap(4);
+
+        manager->style("Icons .icon-row")
+            .direction(Direction::Row)
+            .gap(8);
+
+        manager->style("Icons .icon-cell")
+            .width(116.0f)
+            .padding(4)
+            .gap(4)
+            .alignItems(Align::Center);
+
+        manager->style("Icons .icon-cell .icons")
+            .direction(Direction::Row)
+            .alignItems(Align::Center)
+            .gap(12);
+
+        manager->style("Icons .icon-cell Icon")
+            .color(manager->theme().palette.text);
+
+        manager->style("Icons .icon-cell Label")
+            .fontSize(10)
+            .color(manager->theme().palette.textMuted);
     }
 };

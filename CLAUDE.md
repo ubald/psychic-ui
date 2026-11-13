@@ -44,7 +44,7 @@ ctest --preset debug                                       # all tests, through 
 
 ## Executables
 
-- `example/` builds `psychic-ui-demo` (SDL3): the demo app, where new components are developed before they move into the library. It also builds `psychic-ui-glfw-host`, a GLFW application that embeds a Psychic UI window through the GLFW adapter (Escape quits).
+- `example/` builds `psychic-ui-demo` (SDL3): the demo app, where new components are developed before they move into the library. Its last tab, Icons (`example/demo/Icons.hpp`), shows every registered icon at 14 and 20 px with its name, under Inter samples at 11 to 14 px. It also builds `psychic-ui-glfw-host`, a GLFW application that embeds a Psychic UI window through the GLFW adapter (Escape quits).
 - `playground/` builds `psychic-ui-playground` (SDL3), a scratch app.
 
 Resources (`res/`, `example/fonts/`) are copied into the build directory, and fonts load by relative path, so run binaries from their build directory.
