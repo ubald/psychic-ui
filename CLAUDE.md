@@ -51,7 +51,7 @@ ctest --preset debug                                       # all tests, through 
 Resources (`res/`, `example/fonts/`) are copied into the build directory, and fonts load by relative path, so run binaries from their build directory.
 
 - `SDL_LOGGING=app=debug` makes the SDL3 runner print the video driver, GL renderer, samples, stencil bits, hit testing and pixel density it got.
-- SDL picks the video driver (decision D4). Under WSLg it falls back to XWayland by itself (the compositor lacks fifo-v1); `SDL_VIDEO_DRIVER=wayland` forces Wayland, which works too. Nix's Mesa only finds WSL's GPU driver with `LD_LIBRARY_PATH=/usr/lib/wsl/lib`; otherwise GL is llvmpipe (software).
+- SDL picks the video driver (decision D4). Under WSLg it falls back to XWayland by itself (the compositor lacks fifo-v1); `SDL_VIDEO_DRIVER=wayland` forces Wayland, which works too. Nix's Mesa only finds WSL's GPU driver with `LD_LIBRARY_PATH=/usr/lib/wsl/lib` and `GALLIUM_DRIVER=d3d12`, which the dev shell sets when `/usr/lib/wsl/lib` exists; otherwise GL is llvmpipe (software).
 - Under Xvfb, unset `WAYLAND_DISPLAY` and point `XDG_RUNTIME_DIR` at an empty directory: otherwise GLFW (and SDL when forced) connects to WSLg's `wayland-0` socket and opens windows on the real display.
 
 ## Architecture

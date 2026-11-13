@@ -54,6 +54,14 @@
           libxext
           libxxf86vm
         ];
+
+        # Under WSL, Nix's Mesa only reaches the GPU through WSL's D3D12 libraries; otherwise GL is llvmpipe
+        shellHook = ''
+          if [ -d /usr/lib/wsl/lib ]; then
+            export LD_LIBRARY_PATH="/usr/lib/wsl/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+            export GALLIUM_DRIVER=d3d12
+          fi
+        '';
       };
     };
 }
