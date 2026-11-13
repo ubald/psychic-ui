@@ -296,7 +296,17 @@ namespace psychic_ui {
 
         // region Mouse
 
+        /**
+         * A press on nothing that takes presses goes to the nearest div whose `hitSlop` reaches it, as if it
+         * landed on its edge, and so does its release while still within that slop
+         */
         MouseEventStatus handleMouseButtonChange(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) override;
+
+        /**
+         * The div a press here goes to through its `hitSlop`, and the point on it the press moves to; nullptr
+         * when the press lands on something that takes presses, or no slop reaches it
+         */
+        Div *hitSlopTarget(int x, int y, int &targetX, int &targetY);
         std::chrono::time_point<std::chrono::high_resolution_clock> _lastClick{};
         unsigned int _clickCount{0};
 
@@ -367,6 +377,11 @@ namespace psychic_ui {
         Cursor _cursor{Cursor::Arrow};
 
         InputMode _inputMode{InputMode::Pointer};
+
+        /**
+         * The div the last press went to through its hit slop, for its release
+         */
+        std::weak_ptr<Div> _slopTarget{};
 
         // endregion
 

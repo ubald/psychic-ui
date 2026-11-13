@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <cmath>
+#include <limits>
 #include <cstring>
 #include <iostream>
 #include <utility>
@@ -736,7 +738,120 @@ namespace psychic_ui {
 
     // region MouseEvents
 
+    namespace {
+        /**
+         * Whether a div handles presses itself
+         */
+        bool takesPresses(const Div &div) {
+            return div.mouseEnabled()
+                   && (div.mouseButtonChanged.hasSubscriptions() || div.mousePressed.hasSubscriptions()
+                       || div.mouseReleased.hasSubscriptions() || div.clicked.hasSubscriptions());
+        }
+
+        struct SlopSearch {
+            int   x;
+            int   y;
+            Div   *target{nullptr};
+            float distance{0};
+            // The target's visible part (window coordinates), where the press moves to
+            int   left{0};
+            int   top{0};
+            int   right{0};
+            int   bottom{0};
+        };
+
+        /**
+         * Find the div with a hit slop reaching the point whose center is nearest, among `div` (whose parent's
+         * content starts at originX, originY in window coordinates) and its descendants, within the clip of the
+         * divs that clip their children
+         */
+        void findSlopTarget(Div *div, int originX, int originY, int clipLeft, int clipTop, int clipRight, int clipBottom, SlopSearch &search) {
+            if (!div->visible()) {
+                return;
+            }
+            const int left   = originX + div->x();
+            const int top    = originY + div->y();
+            const int right  = left + div->getWidth();
+            const int bottom = top + div->getHeight();
+
+            const float slop = div->computedStyle().hitSlop();
+            if (slop > 0 && div->mouseEnabled() && div->enabled()) {
+                const int visibleLeft   = std::max(left, clipLeft);
+                const int visibleTop    = std::max(top, clipTop);
+                const int visibleRight  = std::min(right, clipRight);
+                const int visibleBottom = std::min(bottom, clipBottom);
+                const auto reach = static_cast<int>(std::ceil(slop));
+                if (visibleLeft < visibleRight && visibleTop < visibleBottom
+                    && search.x >= std::max(left - reach, clipLeft) && search.x < std::min(right + reach, clipRight)
+                    && search.y >= std::max(top - reach, clipTop) && search.y < std::min(bottom + reach, clipBottom)) {
+                    const float distance = std::hypot(
+                        static_cast<float>(search.x) - static_cast<float>(left + right) / 2.0f,
+                        static_cast<float>(search.y) - static_cast<float>(top + bottom) / 2.0f
+                    );
+                    // On equal distances, the one on top (later in the tree)
+                    if (!search.target || distance <= search.distance) {
+                        search.target   = div;
+                        search.distance = distance;
+                        search.left     = visibleLeft;
+                        search.top      = visibleTop;
+                        search.right    = visibleRight;
+                        search.bottom   = visibleBottom;
+                    }
+                }
+            }
+
+            if (div->mouseChildren()) {
+                if (div->computedStyle().overflow() != Overflow::Visible) {
+                    clipLeft   = std::max(clipLeft, left);
+                    clipTop    = std::max(clipTop, top);
+                    clipRight  = std::min(clipRight, right);
+                    clipBottom = std::min(clipBottom, bottom);
+                }
+                for (const auto &child : div->children()) {
+                    findSlopTarget(child.get(), left + div->scrollX(), top + div->scrollY(), clipLeft, clipTop, clipRight, clipBottom, search);
+                }
+            }
+        }
+    }
+
+    Div *Window::hitSlopTarget(const int x, const int y, int &targetX, int &targetY) {
+        // What the press lands on keeps it, if anything there takes presses
+        std::vector<Div *> path{};
+        hitPath(this, x, y, path);
+        if (std::any_of(path.begin(), path.end(), [](const Div *div) { return takesPresses(*div); })) {
+            return nullptr;
+        }
+
+        SlopSearch search{x, y};
+        constexpr int unbounded = std::numeric_limits<int>::max() / 2;
+        findSlopTarget(this, 0, 0, -unbounded, -unbounded, unbounded, unbounded, search);
+        if (!search.target) {
+            return nullptr;
+        }
+        targetX = std::clamp(x, search.left, search.right - 1);
+        targetY = std::clamp(y, search.top, search.bottom - 1);
+        return search.target;
+    }
+
     MouseEventStatus Window::handleMouseButtonChange(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) {
+        // Through hit slop, the press and its release land on the target's edge
+        if (down) {
+            int   targetX = mouseX;
+            int   targetY = mouseY;
+            Div *target   = hitSlopTarget(mouseX, mouseY, targetX, targetY);
+            _slopTarget   = target ? target->weak_from_this() : std::weak_ptr<Div>{};
+            mouseX        = targetX;
+            mouseY        = targetY;
+        } else if (auto target = _slopTarget.lock()) {
+            _slopTarget = {};
+            int targetX = mouseX;
+            int targetY = mouseY;
+            if (hitSlopTarget(mouseX, mouseY, targetX, targetY) == target.get()) {
+                mouseX = targetX;
+                mouseY = targetY;
+            }
+        }
+
         auto res = Div::handleMouseButtonChange(mouseX, mouseY, button, down, modifiers);
 
         if (down) {

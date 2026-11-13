@@ -77,6 +77,9 @@
     /* Hidden divs are still laid out, they are only skipped when painting and hit testing */ \
     X(visible,                  bool,          detail::BoolArg,    true,                   false, false) \
     X(cursor,                   Cursor,        Cursor,             Cursor::Arrow,          true,  false) \
+    /* How far around its border box a press still reaches the div (window units), when it lands on nothing that */ \
+    /* takes presses; the nearest center wins between overlapping ones (Window::handleMouseButtonChange) */ \
+    X(hitSlop,                  float,         detail::FloatArg,   0.0f,                   false, false) \
     /* Components: the variant of the skin set's skin to hatch ("" for the default, see SkinRegistry), slider orientation */ \
     X(skin,                     Atom,          detail::StringArg,  Atom{},                 false, false) \
     X(orientation,              Orientation,   Orientation,        Orientation::Horizontal, false, false) \

@@ -256,3 +256,93 @@ TEST_CASE("Touch: a drag across a vertical scroller drags what is under the fing
     CHECK(f.viewport.scrollY() == 0);
     f.window->handleTouchRelease(80.0f, 52.0f, 1s + 40ms);
 }
+
+namespace {
+    /**
+     * Two 24 x 24 targets with 10 px of hit slop, 8 px apart, in a row padded by 20 px
+     */
+    struct SlopFixture {
+        std::shared_ptr<TestWindow> window{std::make_shared<TestWindow>()};
+        FakeSystemWindow            systemWindow{window};
+        Div                         &row{window->appContainer().add<Div>()};
+        Div                         &a{row.add<Div>()};
+        Div                         &b{row.add<Div>()};
+        int                         aClicks{0};
+        int                         bClicks{0};
+        int                         aLeft{0};
+        int                         aTop{0};
+
+        SlopFixture() {
+            row.direction(Direction::Row).padding(20).gap(8).alignItems(Align::Start);
+            for (Div *target : {&a, &b}) {
+                target->width(24.0f).height(24.0f).hitSlop(10);
+            }
+            a.onClick([this]() { ++aClicks; });
+            b.onClick([this]() { ++bClicks; });
+            systemWindow.layout();
+            a.localToGlobal(aLeft, aTop);
+        }
+
+        /**
+         * A press and release at a point relative to a's top left corner
+         */
+        void click(int x, int y) {
+            window->handleMouseButtonChange(aLeft + x, aTop + y, MouseButton::LEFT, true, Mod{});
+            window->handleMouseButtonChange(aLeft + x, aTop + y, MouseButton::LEFT, false, Mod{});
+        }
+    };
+}
+
+TEST_CASE("Hit slop: a press near a div reaches it", "[backend][touch][hitslop]") {
+    SlopFixture f;
+    f.click(12, 12);
+    CHECK(f.aClicks == 1);
+    f.click(-6, 12); // Left of it
+    CHECK(f.aClicks == 2);
+    f.click(12, -9); // Above it
+    CHECK(f.aClicks == 3);
+    f.click(-12, 12); // Too far
+    f.click(12, 40);
+    CHECK(f.aClicks == 3);
+    CHECK(f.bClicks == 0);
+}
+
+TEST_CASE("Hit slop: between two divs, the nearest center wins", "[backend][touch][hitslop]") {
+    SlopFixture f;
+    // a spans 0-24, b 32-56: centers at 12 and 44
+    f.click(27, 12);
+    CHECK(f.aClicks == 1);
+    f.click(29, 12);
+    CHECK(f.bClicks == 1);
+    f.click(27, 30); // Below the gap, still nearer a
+    CHECK(f.aClicks == 2);
+}
+
+TEST_CASE("Hit slop: what takes presses keeps them", "[backend][touch][hitslop]") {
+    SlopFixture f;
+    int coverClicks = 0;
+    auto &cover = f.window->appContainer().add<Div>();
+    cover.position(Position::Absolute).left(0).top(0).width(static_cast<float>(f.aLeft - 2)).height(100.0f);
+    cover.onClick([&]() { ++coverClicks; });
+    f.systemWindow.layout();
+    f.click(-4, 12); // On the cover, within a's slop
+    CHECK(coverClicks == 1);
+    CHECK(f.aClicks == 0);
+}
+
+TEST_CASE("Hit slop: a release away from the slop doesn't click", "[backend][touch][hitslop]") {
+    SlopFixture f;
+    f.window->handleMouseButtonChange(f.aLeft - 6, f.aTop + 12, MouseButton::LEFT, true, Mod{});
+    f.window->handleMouseButtonChange(f.aLeft - 60, f.aTop + 12, MouseButton::LEFT, false, Mod{});
+    CHECK(f.aClicks == 0);
+    CHECK_FALSE(f.a.getMouseDown());
+}
+
+TEST_CASE("Hit slop: a tap near a div clicks it", "[backend][touch][hitslop]") {
+    using namespace std::chrono_literals;
+    SlopFixture f;
+    f.window->handleTouchPress(static_cast<float>(f.aLeft + 30), static_cast<float>(f.aTop - 5), 1s);
+    f.window->handleTouchRelease(static_cast<float>(f.aLeft + 30), static_cast<float>(f.aTop - 5), 1s + 50ms);
+    CHECK(f.bClicks == 1);
+    CHECK(f.aClicks == 0);
+}
