@@ -347,9 +347,9 @@ public:
         // endregion
 
         // region Menus
+        // A translucent background rather than an opacity, which would fade the labels and highlights too
         manager->style("Menu")
-               .backgroundColor(themeBackgroundColor)
-               .opacity(0.8f)
+               .backgroundColor(Color(themeBackgroundColor).withAlpha(204))
                .minWidth(200)
                .alignItems(Align::Stretch);
 
@@ -358,7 +358,7 @@ public:
                .paddingHorizontal(6)
                .paddingVertical(6)
                .borderRadius(0)
-               .backgroundColor(themeBackgroundColor);
+               .backgroundColor(Color{}); // Transparent, over the menu's background
 
         manager->style("Menu MenuButton.simple")
                .skin("menu-button-skin");
