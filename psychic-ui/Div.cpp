@@ -274,7 +274,7 @@ namespace psychic_ui {
         return _focusEnabled;
     }
 
-    bool Div::focused() const {
+    bool Div::hasFocus() const {
         return _focused;
     }
 
@@ -1237,8 +1237,8 @@ namespace psychic_ui {
             }
         }
 
-        if (_mouseEnabled && ret != Handled && mouseButton.hasSubscriptions()) {
-            mouseButton.emit(localMouseX, localMouseY, button, down, modifiers);
+        if (_mouseEnabled && ret != Handled && mouseButtonChanged.hasSubscriptions()) {
+            mouseButtonChanged.emit(localMouseX, localMouseY, button, down, modifiers);
             ret = Handled;
         }
 
@@ -1276,8 +1276,8 @@ namespace psychic_ui {
             window()->requestFocus(this);
         }
 
-        if (_mouseEnabled && ret != Handled && mouseDown.hasSubscriptions()) {
-            mouseDown.emit(localMouseX, localMouseY, button, modifiers);
+        if (_mouseEnabled && ret != Handled && mousePressed.hasSubscriptions()) {
+            mousePressed.emit(localMouseX, localMouseY, button, modifiers);
             ret = Handled;
         }
 
@@ -1319,15 +1319,15 @@ namespace psychic_ui {
             return isOver ? (ret == Out ? Over : ret) : Out;
         }
 
-        // A press that started here ends here, wherever it is released (a drag stops even outside): mouseUp once,
-        // and mouseUpOutside first when released outside. A release over us without a press here is ours unless
-        // a child handled it.
-        const bool hadSubscriptions = mouseUp.hasSubscriptions();
+        // A press that started here ends here, wherever it is released (a drag stops even outside): mouseReleased
+        // once, and mouseReleasedOutside first when released outside. A release over us without a press here is ours
+        // unless a child handled it.
+        const bool hadSubscriptions = mouseReleased.hasSubscriptions();
         if (wasDown && !isOver) {
-            mouseUpOutside.emit(localMouseX, localMouseY, button, modifiers);
+            mouseReleasedOutside.emit(localMouseX, localMouseY, button, modifiers);
         }
         if (wasDown || (isOver && ret != Handled)) {
-            mouseUp.emit(localMouseX, localMouseY, button, modifiers);
+            mouseReleased.emit(localMouseX, localMouseY, button, modifiers);
             if (isOver && hadSubscriptions) {
                 ret = Handled;
             }

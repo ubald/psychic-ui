@@ -197,7 +197,7 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
              .top(0)
              .width(100)
              .height(100);
-        child->mouseButton.subscribe(
+        child->mouseButtonChanged.subscribe(
             [&hits, name](const int, const int, const MouseButton, const bool, const Mod) {
                 hits += name;
             }
@@ -221,7 +221,7 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
         auto d = make("d");
         root->add(0, d);
         d->position(Position::Absolute).width(100).height(100);
-        d->mouseButton.subscribe([&hits](const int, const int, const MouseButton, const bool, const Mod) { hits += "d"; });
+        d->mouseButtonChanged.subscribe([&hits](const int, const int, const MouseButton, const bool, const Mod) { hits += "d"; });
         layout();
         root->handleMouseButton(50, 50, LEFT, true, Mod{});
         REQUIRE(hits == "c");

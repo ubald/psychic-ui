@@ -81,7 +81,7 @@ TEST_CASE("SDL3: mouse events reach the div under the pointer", "[backend][sdl3]
     int clicks = 0;
     int downX  = -1;
     int downY  = -1;
-    div.onMouseDown([&](int x, int y, MouseButton button, Mod) {
+    div.onMousePress([&](int x, int y, MouseButton button, Mod) {
         ++downs;
         downX = x;
         downY = y;
@@ -141,10 +141,10 @@ TEST_CASE("SDL3: keys and text reach the focused div", "[backend][sdl3]") {
     Mod                lastMod{};
     icu::UnicodeString typed{};
     int                characters = 0;
-    div.onKeyDown([&](Key key, Mod mod) { downs.push_back(key); lastMod = mod; });
+    div.onKeyPress([&](Key key, Mod mod) { downs.push_back(key); lastMod = mod; });
     div.onKeyRepeat([&](Key, Mod) { ++repeats; });
-    div.onKeyUp([&](Key, Mod) { ++ups; });
-    div.onCharacterType([&](const icu::UnicodeString &character) { typed += character; ++characters; });
+    div.onKeyRelease([&](Key, Mod) { ++ups; });
+    div.onType([&](const icu::UnicodeString &character) { typed += character; ++characters; });
 
     auto key = sdl.event(SDL_EVENT_KEY_DOWN);
     key.key.key = SDLK_A;

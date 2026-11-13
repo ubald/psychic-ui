@@ -125,7 +125,7 @@ namespace psychic_ui {
     }
 
     void Text::subscribeToSelection() {
-        _onMouseDown = mouseDown.subscribe(
+        _onMousePress = mousePressed.subscribe(
             [this](const int mouseX, const int mouseY, const int /*button*/, const Mod /*modifiers*/) {
                 unsigned int initialBegin = _textBox.indexFromPos(mouseX, mouseY);
                 moveCaret(initialBegin);
@@ -149,7 +149,7 @@ namespace psychic_ui {
             }
         );
 
-        _onMouseUp = mouseUp.subscribe(
+        _onMouseRelease = mouseReleased.subscribe(
             [this](const int /*mouseX*/, const int /*mouseY*/, int /*button*/, Mod /*modifiers*/) {
                 _onMouseMove.disconnect();
             }
@@ -175,13 +175,13 @@ namespace psychic_ui {
     }
 
     void Text::unsubscribeFromSelection() {
-        if (_onMouseDown) {
-            _onMouseDown->disconnect();
-            _onMouseDown = nullptr;
+        if (_onMousePress) {
+            _onMousePress->disconnect();
+            _onMousePress = nullptr;
         }
-        if (_onMouseUp) {
-            _onMouseUp->disconnect();
-            _onMouseUp = nullptr;
+        if (_onMouseRelease) {
+            _onMouseRelease->disconnect();
+            _onMouseRelease = nullptr;
         }
         if (_onDoubleClick) {
             _onDoubleClick->disconnect();
@@ -190,11 +190,11 @@ namespace psychic_ui {
     }
 
     void Text::subscribeToEdition() {
-        _onFocus     = focusGained.subscribe([this]() { window()->startTextInput(); });
-        _onBlur      = focusLost.subscribe([this]() { window()->stopTextInput(); });
-        _onKeyDown   = keyDown.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); });
+        _onFocus     = focused.subscribe([this]() { window()->startTextInput(); });
+        _onBlur      = blurred.subscribe([this]() { window()->stopTextInput(); });
+        _onKeyPress  = keyPressed.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); });
         _onKeyRepeat = keyRepeated.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); });
-        _onCharacter = characterTyped.subscribe(
+        _onType = typed.subscribe(
             [this](icu::UnicodeString character) {
                 if (_selectBegin != _selectEnd) {
                     _text.replace(_selectBegin, _selectEnd - _selectBegin, character);
@@ -216,17 +216,17 @@ namespace psychic_ui {
             _onBlur->disconnect();
             _onBlur = nullptr;
         }
-        if (_onKeyDown) {
-            _onKeyDown->disconnect();
-            _onKeyDown = nullptr;
+        if (_onKeyPress) {
+            _onKeyPress->disconnect();
+            _onKeyPress = nullptr;
         }
         if (_onKeyRepeat) {
             _onKeyRepeat->disconnect();
             _onKeyRepeat = nullptr;
         }
-        if (_onCharacter) {
-            _onCharacter->disconnect();
-            _onCharacter = nullptr;
+        if (_onType) {
+            _onType->disconnect();
+            _onType = nullptr;
         }
     }
 

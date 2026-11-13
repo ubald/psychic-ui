@@ -140,12 +140,12 @@ namespace psychic_ui {
         bool _pendingCaretSignal{false};
 
         ScopedSlot                _onMouseMove{}; // On the window, only while selecting
-        Div::MouseSlot            _onMouseDown{nullptr};
-        Div::MouseSlot            _onMouseUp{nullptr};
+        Div::MouseSlot            _onMousePress{nullptr};
+        Div::MouseSlot            _onMouseRelease{nullptr};
         Div::MouseDoubleClickSlot _onDoubleClick{nullptr};
-        Div::KeySlot              _onKeyDown{nullptr};
+        Div::KeySlot              _onKeyPress{nullptr};
         Div::KeySlot              _onKeyRepeat{nullptr};
-        Div::CharSlot             _onCharacter{nullptr};
+        Div::CharSlot             _onType{nullptr};
         Div::FocusSlot            _onFocus{nullptr};
         Div::FocusSlot            _onBlur{nullptr};
 

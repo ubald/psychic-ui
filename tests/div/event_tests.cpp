@@ -42,8 +42,8 @@ TEST_CASE("mouse up fires once per release", "[div][events]") {
     int  ups     = 0;
     int  outside = 0;
     int  clicks  = 0;
-    t.box->onMouseUp([&](int, int, MouseButton, Mod) { ++ups; })
-          .onMouseUpOutside([&](int, int, MouseButton, Mod) { ++outside; })
+    t.box->onMouseRelease([&](int, int, MouseButton, Mod) { ++ups; })
+          .onMouseReleaseOutside([&](int, int, MouseButton, Mod) { ++outside; })
           .onClick([&] { ++clicks; });
 
     SECTION("pressed and released over the div") {

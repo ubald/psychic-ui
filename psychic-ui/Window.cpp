@@ -36,7 +36,7 @@ namespace psychic_ui {
         menu = &add<Modal>()
             .id("menu")
             .visible(false);
-        menu->mouseDown.subscribe(
+        menu->mousePressed.subscribe(
             [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const Mod /*modifiers*/) {
                 closeMenu();
             }
@@ -287,8 +287,8 @@ namespace psychic_ui {
                 || localX < 0 || localY < 0 || localX >= child->getWidth() || localY >= child->getHeight()) {
                 continue;
             }
-            if (child->mouseButton.hasSubscriptions() || child->mouseDown.hasSubscriptions()
-                || child->mouseUp.hasSubscriptions() || child->clicked.hasSubscriptions()
+            if (child->mouseButtonChanged.hasSubscriptions() || child->mousePressed.hasSubscriptions()
+                || child->mouseReleased.hasSubscriptions() || child->clicked.hasSubscriptions()
                 || interactiveChildAt(*child, localX, localY)) {
                 return true;
             }
@@ -460,19 +460,19 @@ namespace psychic_ui {
         }
 
         // Compare with current and unfocus
-        for (const auto &focused: _focusPath) {
-            auto it = std::find(path.cbegin(), path.cend(), focused);
+        for (Div *div: _focusPath) {
+            auto it = std::find(path.cbegin(), path.cend(), div);
             if (it == path.cend()) {
-                focused->setFocused(false);
-                focused->focusLost.emit();
+                div->setFocused(false);
+                div->blurred.emit();
             }
         }
 
         // Set new focus path
         _focusPath = std::move(path);
-        for (const auto &focused: _focusPath) {
-            focused->setFocused(true);
-            focused->focusGained.emit();
+        for (Div *div: _focusPath) {
+            div->setFocused(true);
+            div->focused.emit();
         }
     }
 
@@ -541,8 +541,8 @@ namespace psychic_ui {
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
             // Everyone in the focus path gets the key events, focusEnabled or not
             Div *div = (*focused);
-            if (div->keyDown.hasSubscriptions()) {
-                div->keyDown.emit(key, mod);
+            if (div->keyPressed.hasSubscriptions()) {
+                div->keyPressed.emit(key, mod);
                 return true;
             }
         }
@@ -567,8 +567,8 @@ namespace psychic_ui {
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
             // Everyone in the focus path gets the key events, focusEnabled or not
             Div *div = (*focused);
-            if (div->keyUp.hasSubscriptions()) {
-                div->keyUp.emit(key, mod);
+            if (div->keyReleased.hasSubscriptions()) {
+                div->keyReleased.emit(key, mod);
                 return true;
             }
         }
@@ -580,8 +580,8 @@ namespace psychic_ui {
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
             // Only the focusEnabled divs get the character events
             Div *div = (*focused);
-            if (div->characterTyped.hasSubscriptions()) {
-                div->characterTyped.emit(character);
+            if (div->typed.hasSubscriptions()) {
+                div->typed.emit(character);
                 return true;
             }
         }

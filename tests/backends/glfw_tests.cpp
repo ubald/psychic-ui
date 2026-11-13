@@ -74,12 +74,12 @@ TEST_CASE("GLFW: the adapter chains to the host's callbacks and gives them back"
 
     int keys  = 0;
     int downs = 0;
-    div.onKeyDown([&](Key key, Mod mod) {
+    div.onKeyPress([&](Key key, Mod mod) {
         ++keys;
         CHECK(key == Key::A);
         CHECK(mod.ctrl);
     });
-    div.onMouseDown([&](int, int, MouseButton, Mod) { ++downs; });
+    div.onMousePress([&](int, int, MouseButton, Mod) { ++downs; });
 
     {
         GLFWSystemWindow adapter(host.window, host.glfwWindow);

@@ -18,7 +18,7 @@ namespace psychic_ui {
         _thumb->addClassName("thumb")
               .position(Position::Absolute);
 
-        _thumb->onMouseDown(
+        _thumb->onMousePress(
             [this](const int mouseX, const int mouseY, MouseButton /*button*/, Mod /*modifiers*/) {
                 if (_direction == ScrollDirection::Vertical) {
                     dragOffset = mouseY;
@@ -40,7 +40,7 @@ namespace psychic_ui {
             }
         );
 
-        _thumb->onMouseUp(
+        _thumb->onMouseRelease(
             [this](const int /*mouseX*/, const int /*mouseY*/, MouseButton /*button*/, Mod /*modifiers*/) {
                 _onMouseMove.disconnect();
             }

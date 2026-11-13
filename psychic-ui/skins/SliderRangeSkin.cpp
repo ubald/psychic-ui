@@ -8,7 +8,7 @@ namespace psychic_ui {
         tag("Slider");
         addClassName("defaultSkinChrome");
 
-        onMouseDown(
+        onMousePress(
             [this](const int mouseX, const int mouseY, MouseButton /*button*/, Mod /*modifiers*/) {
                 sendMouseValue(mouseX, mouseY);
                 _onMouseMove = window()->mouseMoved.subscribe(
@@ -22,7 +22,7 @@ namespace psychic_ui {
             }
         );
 
-        onMouseUp(
+        onMouseRelease(
             [this](const int /*mouseX*/, const int /*mouseY*/, MouseButton /*button*/, Mod /*modifiers*/) {
                 _onMouseMove.disconnect();
             }

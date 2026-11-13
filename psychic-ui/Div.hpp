@@ -319,7 +319,7 @@ namespace psychic_ui {
             return self;
         }
 
-        bool focused() const;
+        bool hasFocus() const;
 
         /**
          * Used by the window, which manages the focus path
@@ -532,10 +532,10 @@ namespace psychic_ui {
         using MouseDoubleClickSlot = std::shared_ptr<Slot<unsigned int>>;
         using MouseScrollSlot = std::shared_ptr<Slot<int, int, double, double>>;
 
-        Signal<int, int, MouseButton, bool, Mod> mouseButton{};
-        Signal<int, int, MouseButton, Mod>       mouseDown{};
-        Signal<int, int, MouseButton, Mod>       mouseUp{};
-        Signal<int, int, MouseButton, Mod>       mouseUpOutside{};
+        Signal<int, int, MouseButton, bool, Mod> mouseButtonChanged{};
+        Signal<int, int, MouseButton, Mod>       mousePressed{};
+        Signal<int, int, MouseButton, Mod>       mouseReleased{};
+        Signal<int, int, MouseButton, Mod>       mouseReleasedOutside{};
         Signal<int, int, int, Mod>               mouseMoved{};
         Signal<>                                 mouseEntered{};
         Signal<>                                 mouseExited{};
@@ -563,20 +563,20 @@ namespace psychic_ui {
         using CharSlot = std::shared_ptr<Slot<icu::UnicodeString>>;
         using FocusSlot = std::shared_ptr<Slot<>>;
 
-        Signal<Key, Mod>           keyDown{};
+        Signal<Key, Mod>           keyPressed{};
         Signal<Key, Mod>           keyRepeated{};
-        Signal<Key, Mod>           keyUp{};
-        Signal<icu::UnicodeString> characterTyped{};
-        Signal<>                   focusGained{};
-        Signal<>                   focusLost{};
+        Signal<Key, Mod>           keyReleased{};
+        Signal<icu::UnicodeString> typed{};
+        Signal<>                   focused{};
+        Signal<>                   blurred{};
 
         // endregion
 
         // region Events
 
-        // Each event is a Signal member named for what happened (`clicked`, `mouseDown`, `resized`; components add
-        // `changed` and others), and a chainable connector, `on` + the verb in the present tense (`onClick` for
-        // `clicked`, `onChange` for `changed`), that subscribes to it and returns this div:
+        // Each event is a chainable connector, `on` + a verb in the present tense (`onClick`, `onMousePress`,
+        // `onFocus`), that subscribes to a Signal member named with the same verb in the past tense (`clicked`,
+        // `mousePressed`, `focused`; components add `onChange`/`changed` and others), and returns this div:
         //
         //     add<Button>("Save").onClick([this] { save(); });
         //
@@ -593,22 +593,22 @@ namespace psychic_ui {
                 return self; \
             }
 
-        PSYCHIC_UI_EVENT(onMouseButton, mouseButton)
-        PSYCHIC_UI_EVENT(onMouseDown, mouseDown)
-        PSYCHIC_UI_EVENT(onMouseUp, mouseUp)
-        PSYCHIC_UI_EVENT(onMouseUpOutside, mouseUpOutside)
+        PSYCHIC_UI_EVENT(onMouseButtonChange, mouseButtonChanged)
+        PSYCHIC_UI_EVENT(onMousePress, mousePressed)
+        PSYCHIC_UI_EVENT(onMouseRelease, mouseReleased)
+        PSYCHIC_UI_EVENT(onMouseReleaseOutside, mouseReleasedOutside)
         PSYCHIC_UI_EVENT(onMouseMove, mouseMoved)
         PSYCHIC_UI_EVENT(onMouseEnter, mouseEntered)
         PSYCHIC_UI_EVENT(onMouseExit, mouseExited)
         PSYCHIC_UI_EVENT(onMouseScroll, mouseScrolled)
         PSYCHIC_UI_EVENT(onClick, clicked)
         PSYCHIC_UI_EVENT(onDoubleClick, doubleClicked)
-        PSYCHIC_UI_EVENT(onKeyDown, keyDown)
+        PSYCHIC_UI_EVENT(onKeyPress, keyPressed)
         PSYCHIC_UI_EVENT(onKeyRepeat, keyRepeated)
-        PSYCHIC_UI_EVENT(onKeyUp, keyUp)
-        PSYCHIC_UI_EVENT(onCharacterType, characterTyped)
-        PSYCHIC_UI_EVENT(onFocusGain, focusGained)
-        PSYCHIC_UI_EVENT(onFocusLose, focusLost)
+        PSYCHIC_UI_EVENT(onKeyRelease, keyReleased)
+        PSYCHIC_UI_EVENT(onType, typed)
+        PSYCHIC_UI_EVENT(onFocus, focused)
+        PSYCHIC_UI_EVENT(onBlur, blurred)
         PSYCHIC_UI_EVENT(onScroll, scrolled)
         PSYCHIC_UI_EVENT(onResize, resized)
 
