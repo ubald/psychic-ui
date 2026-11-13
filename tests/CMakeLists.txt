@@ -3,14 +3,60 @@ add_feature_info("psychic-ui-tests" PSYCHIC_UI_BUILD_TESTS "Psychic UI tests")
 
 if (PSYCHIC_UI_BUILD_TESTS)
 
-    # An installed Catch2 3 if there is one, otherwise this release, built static
+    # An installed Catch2 3 if there is one that works here, otherwise this
+    # release, built static. Catch2's library only defines the std::string_view
+    # StringMaker when it was itself compiled as C++17 or newer (Homebrew's
+    # isn't), while the tests' C++23 build of its headers expects it, so the
+    # installed one must first link a program that stringifies a string_view.
+    # catch2-check is a project of its own (try_compile), so the installed
+    # Catch2's imported targets don't clash with a download when it fails.
+    set(_catch2_find_args)
+    if (NOT CMAKE_DISABLE_FIND_PACKAGE_Catch2)
+        set(_catch2_check_key "${CMAKE_CXX_COMPILER}|${CMAKE_CXX_FLAGS}|${CMAKE_BUILD_TYPE}|${CMAKE_PREFIX_PATH}|$ENV{CMAKE_PREFIX_PATH}|${Catch2_DIR}|${CMAKE_OSX_ARCHITECTURES}|${CMAKE_OSX_SYSROOT}")
+        if (NOT DEFINED PSYCHIC_UI_CATCH2_INSTALLED OR NOT _catch2_check_key STREQUAL PSYCHIC_UI_CATCH2_CHECK_KEY)
+            set(_catch2_check_flags)
+            foreach (_var CMAKE_TOOLCHAIN_FILE CMAKE_CXX_COMPILER CMAKE_BUILD_TYPE CMAKE_CXX_FLAGS CMAKE_EXE_LINKER_FLAGS
+                    CMAKE_PREFIX_PATH Catch2_DIR CMAKE_OSX_ARCHITECTURES CMAKE_OSX_SYSROOT CMAKE_OSX_DEPLOYMENT_TARGET)
+                if (DEFINED ${_var})
+                    string(REPLACE ";" "\\;" _value "${${_var}}")
+                    list(APPEND _catch2_check_flags "-D${_var}=${_value}")
+                endif ()
+            endforeach ()
+            set(_catch2_check_dir "${CMAKE_CURRENT_BINARY_DIR}/catch2-check")
+            file(REMOVE_RECURSE "${_catch2_check_dir}")
+            try_compile(_catch2_check_ok "${_catch2_check_dir}" "${CMAKE_CURRENT_SOURCE_DIR}/catch2-check" catch2-check
+                CMAKE_FLAGS ${_catch2_check_flags}
+                OUTPUT_VARIABLE _catch2_check_output)
+            if (_catch2_check_ok)
+                set(_catch2_state "usable")
+            elseif (_catch2_check_output MATCHES "PSYCHIC_UI_CATCH2_NOT_FOUND")
+                set(_catch2_state "missing")
+            else ()
+                set(_catch2_state "unusable")
+                file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/catch2-check.log" "${_catch2_check_output}")
+            endif ()
+            set(PSYCHIC_UI_CATCH2_INSTALLED "${_catch2_state}" CACHE INTERNAL "Whether the installed Catch2 3 is usable")
+            set(PSYCHIC_UI_CATCH2_CHECK_KEY "${_catch2_check_key}" CACHE INTERNAL "What the Catch2 check ran with")
+        endif ()
+        if (PSYCHIC_UI_CATCH2_INSTALLED STREQUAL "usable")
+            message(STATUS "Catch2: using the installed Catch2 3")
+            set(_catch2_find_args FIND_PACKAGE_ARGS 3)
+        elseif (PSYCHIC_UI_CATCH2_INSTALLED STREQUAL "missing")
+            message(STATUS "Catch2: no installed Catch2 3, downloading v3.16.1")
+        else ()
+            message(STATUS "Catch2: the installed Catch2 3 can't link a test that stringifies a "
+                "std::string_view (its library was likely built before C++17), downloading v3.16.1; "
+                "see ${CMAKE_CURRENT_BINARY_DIR}/catch2-check.log")
+        endif ()
+    endif ()
+
     set(BUILD_SHARED_LIBS OFF)
     include(FetchContent)
     FetchContent_Declare(Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
         GIT_TAG v3.16.1
         GIT_SHALLOW TRUE
-        FIND_PACKAGE_ARGS 3
+        ${_catch2_find_args}
         )
     FetchContent_MakeAvailable(Catch2)
 
