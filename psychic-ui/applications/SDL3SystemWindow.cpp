@@ -219,6 +219,10 @@ namespace psychic_ui {
         SDL_StopTextInput(_sdlWindow);
     }
 
+    std::chrono::nanoseconds SDL3SystemWindow::gestureTime() const {
+        return std::chrono::nanoseconds{SDL_GetTicksNS()};
+    }
+
     // endregion
 
     // region Events
@@ -230,6 +234,69 @@ namespace psychic_ui {
             case SDL_BUTTON_RIGHT: return MouseButton::RIGHT;
             default: return static_cast<MouseButton>(0);
         }
+    }
+
+    SDL_TouchDeviceType SDL3SystemWindow::touchDeviceType(const SDL_TouchID touchID) const {
+        return SDL_GetTouchDeviceType(touchID);
+    }
+
+    /**
+     * Where a mouse event came from: SDL makes mouse events of touches and pens too, which we make our own
+     */
+    static bool fromMouse(const SDL_MouseID which) {
+        return which != SDL_TOUCH_MOUSEID && which != SDL_PEN_MOUSEID;
+    }
+
+    void SDL3SystemWindow::handleFingerEvent(const SDL_TouchFingerEvent &finger) {
+        // Trackpads move the mouse too, a pen's touches come as pen events and the mouse's (SDL's hint) as mouse events
+        if (finger.touchID == SDL_PEN_TOUCHID || finger.touchID == SDL_MOUSE_TOUCHID
+            || touchDeviceType(finger.touchID) != SDL_TOUCH_DEVICE_DIRECT) {
+            return;
+        }
+
+        const auto  time = std::chrono::nanoseconds{finger.timestamp};
+        const float x    = finger.x * static_cast<float>(_width);
+        const float y    = finger.y * static_cast<float>(_height);
+
+        if (finger.type == SDL_EVENT_FINGER_DOWN) {
+            if (_fingerDown) {
+                return; // Only the first finger down counts
+            }
+            _fingerDown = true;
+            _finger     = finger.fingerID;
+            _window->handleTouchPress(x, y, time);
+            return;
+        }
+
+        if (!_fingerDown || finger.fingerID != _finger) {
+            return;
+        }
+        switch (finger.type) {
+            case SDL_EVENT_FINGER_MOTION:
+                _window->handleTouchMove(x, y, time);
+                break;
+            case SDL_EVENT_FINGER_UP:
+                _fingerDown = false;
+                _window->handleTouchRelease(x, y, time);
+                break;
+            case SDL_EVENT_FINGER_CANCELED:
+                _fingerDown = false;
+                _window->handleTouchCancel(time);
+                break;
+            default:
+                break;
+        }
+    }
+
+    void SDL3SystemWindow::handlePenButton(const MouseButton button, const bool down, const float x, const float y) {
+        _window->handleInputModeChange(InputMode::Pen);
+        if (button == 0 || ((_penButtons & button) != 0) == down) {
+            return;
+        }
+        _penButtons = down ? (_penButtons | button) : (_penButtons & ~button);
+        _mouseX     = static_cast<int>(x);
+        _mouseY     = static_cast<int>(y);
+        _window->handleMouseButtonChange(_mouseX, _mouseY, button, down, mapMods(SDL_GetModState()));
     }
 
     bool SDL3SystemWindow::handleEvent(const SDL_Event &e) {
@@ -314,6 +381,11 @@ namespace psychic_ui {
             }
 
             case SDL_EVENT_MOUSE_MOTION:
+                if (!fromMouse(e.motion.which)) {
+                    break; // Made of a touch or a pen, which we follow ourselves
+                }
+                // A real mouse moved: back to the pointer density
+                _window->handleInputModeChange(InputMode::Pointer);
                 _mouseX = static_cast<int>(e.motion.x);
                 _mouseY = static_cast<int>(e.motion.y);
 
@@ -334,9 +406,10 @@ namespace psychic_ui {
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
             case SDL_EVENT_MOUSE_BUTTON_UP: {
                 const MouseButton button = mapButton(e.button.button);
-                if (button == 0) {
+                if (button == 0 || !fromMouse(e.button.which)) {
                     break;
                 }
+                _window->handleInputModeChange(InputMode::Pointer);
                 const bool down = e.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
                 _mouseX = static_cast<int>(e.button.x);
                 _mouseY = static_cast<int>(e.button.y);
@@ -367,6 +440,9 @@ namespace psychic_ui {
                 break;
 
             case SDL_EVENT_MOUSE_WHEEL: {
+                if (e.wheel.which == SDL_TOUCH_MOUSEID) {
+                    break;
+                }
                 const float direction = e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1.0f : 1.0f;
                 _window->handleMouseScroll(
                     static_cast<int>(e.wheel.mouse_x),
@@ -376,6 +452,41 @@ namespace psychic_ui {
                 );
                 break;
             }
+
+            case SDL_EVENT_FINGER_DOWN:
+            case SDL_EVENT_FINGER_MOTION:
+            case SDL_EVENT_FINGER_UP:
+            case SDL_EVENT_FINGER_CANCELED:
+                handleFingerEvent(e.tfinger);
+                break;
+
+            // A pen works like a mouse, its tip being the left button, but reports the pen mode
+            case SDL_EVENT_PEN_PROXIMITY_IN:
+            case SDL_EVENT_PEN_PROXIMITY_OUT:
+            case SDL_EVENT_PEN_AXIS:
+                _window->handleInputModeChange(InputMode::Pen);
+                break;
+
+            case SDL_EVENT_PEN_DOWN:
+            case SDL_EVENT_PEN_UP:
+                handlePenButton(MouseButton::LEFT, e.ptouch.down, e.ptouch.x, e.ptouch.y);
+                break;
+
+            case SDL_EVENT_PEN_BUTTON_DOWN:
+            case SDL_EVENT_PEN_BUTTON_UP:
+                // The barrel buttons: the first one is the right button, the second the middle one
+                handlePenButton(
+                    e.pbutton.button == 1 ? MouseButton::RIGHT : e.pbutton.button == 2 ? MouseButton::MIDDLE : static_cast<MouseButton>(0),
+                    e.pbutton.down, e.pbutton.x, e.pbutton.y
+                );
+                break;
+
+            case SDL_EVENT_PEN_MOTION:
+                _window->handleInputModeChange(InputMode::Pen);
+                _mouseX = static_cast<int>(e.pmotion.x);
+                _mouseY = static_cast<int>(e.pmotion.y);
+                _window->handleMouseMove(_mouseX, _mouseY, _penButtons, mapMods(SDL_GetModState()), false);
+                break;
 
             default:
                 break;

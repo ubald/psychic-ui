@@ -69,6 +69,11 @@ namespace psychic_ui {
         void startTextInput() override;
         void stopTextInput() override;
 
+        /**
+         * SDL's clock, which times its events
+         */
+        std::chrono::nanoseconds gestureTime() const override;
+
         std::string getClipboardText() const override;
         void setClipboardText(const std::string &text) override;
 
@@ -106,6 +111,26 @@ namespace psychic_ui {
         float _dragOffsetY{0};
 
         bool _hitTestInstalled{false};
+
+        /**
+         * The finger the window follows (the first one down on a touch screen), while one is down
+         */
+        bool         _fingerDown{false};
+        SDL_FingerID _finger{0};
+
+        /**
+         * Buttons held with the pen, mouse style (the tip is the left button)
+         */
+        int _penButtons{0};
+
+        /**
+         * What kind of touch device sent finger events: only touch screens (direct) are followed,
+         * trackpads also move the mouse. Virtual so that tests can make up touch screens.
+         */
+        virtual SDL_TouchDeviceType touchDeviceType(SDL_TouchID touchID) const;
+
+        void handleFingerEvent(const SDL_TouchFingerEvent &finger);
+        void handlePenButton(MouseButton button, bool down, float x, float y);
 
         /**
          * Files of the drop in progress, dispatched together when it completes

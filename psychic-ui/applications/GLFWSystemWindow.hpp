@@ -31,7 +31,9 @@ namespace psychic_ui {
      *
      * Limits are GLFW's: no input method composition (characters arrive as typed), and on Wayland the
      * window can't be moved from inside (`supportsDrag()` is false), so use system decorations there
-     * rather than a custom title bar.
+     * rather than a custom title bar. GLFW has no touch input either: the window stays in pointer mode,
+     * whatever the system makes of fingers, and the adapter never changes the mode, so a host with touch
+     * input of its own can hand it to `Window::handleTouchPress` and the others.
      */
     class GLFWSystemWindow : public SystemWindow {
     public:

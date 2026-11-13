@@ -132,6 +132,22 @@ TEST_CASE("GLFW: drops, clipboard and window dragging", "[backend][glfw]") {
     CHECK(host.window->supportsDrag());
 }
 
+TEST_CASE("GLFW: no touch input, the window stays in pointer mode", "[backend][glfw][touch]") {
+    GLFWHost host;
+    GLFWSystemWindow adapter(host.window, host.glfwWindow);
+    host.layout();
+    host.cursorCallback()(host.glfwWindow, 50.0, 50.0);
+    host.buttonCallback()(host.glfwWindow, GLFW_MOUSE_BUTTON_LEFT, GLFW_PRESS, 0);
+    host.buttonCallback()(host.glfwWindow, GLFW_MOUSE_BUTTON_LEFT, GLFW_RELEASE, 0);
+    CHECK(host.window->inputMode() == InputMode::Pointer);
+
+    // A host with touch input of its own hands it to the window; the adapter leaves the mode alone
+    host.window->handleTouchPress(50.0f, 50.0f, std::chrono::seconds(1));
+    host.window->handleTouchRelease(50.0f, 50.0f, std::chrono::seconds(1));
+    host.cursorCallback()(host.glfwWindow, 50.0, 50.0);
+    CHECK(host.window->inputMode() == InputMode::Touch);
+}
+
 TEST_CASE("GLFW keys map to Psychic UI keys", "[keyboard][glfw]") {
     CHECK(GLFWSystemWindow::mapKey(GLFW_KEY_A) == Key::A);
     CHECK(GLFWSystemWindow::mapKey(GLFW_KEY_Z) == Key::Z);

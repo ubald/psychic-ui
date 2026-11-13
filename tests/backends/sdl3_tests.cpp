@@ -11,6 +11,23 @@ using namespace psychic_ui_tests;
 
 namespace {
     /**
+     * Touch devices the dummy driver doesn't have: SDL can't make them up, so the adapter is told
+     * that touch device 1 is a touch screen and 2 a trackpad
+     */
+    constexpr SDL_TouchID touchScreen = 1;
+    constexpr SDL_TouchID trackpad    = 2;
+
+    struct TouchAdapter : SDL3SystemWindow {
+        using SDL3SystemWindow::SDL3SystemWindow;
+
+        SDL_TouchDeviceType touchDeviceType(SDL_TouchID touchID) const override {
+            return touchID == touchScreen ? SDL_TOUCH_DEVICE_DIRECT
+                   : touchID == trackpad ? SDL_TOUCH_DEVICE_INDIRECT_ABSOLUTE
+                   : SDL_TOUCH_DEVICE_INVALID;
+        }
+    };
+
+    /**
      * SDL on its dummy video driver: real SDL windows, no display, no GL. Events are made up and
      * handed to the adapter, as a host or the runner would.
      */
@@ -25,7 +42,7 @@ namespace {
             REQUIRE(SDL_Init(SDL_INIT_VIDEO));
             sdlWindow = SDL_CreateWindow("Test", 800, 600, flags);
             REQUIRE(sdlWindow != nullptr);
-            adapter = std::make_unique<SDL3SystemWindow>(window, sdlWindow, nullptr);
+            adapter = std::make_unique<TouchAdapter>(window, sdlWindow, nullptr);
         }
 
         ~SDL3Fixture() {
@@ -45,6 +62,40 @@ namespace {
             // windowID is at the same place in every event that has one
             e.window.windowID = SDL_GetWindowID(sdlWindow);
             return e;
+        }
+
+        /**
+         * A finger event, at window coordinates, timed in milliseconds
+         */
+        bool finger(SDL_EventType type, float x, float y, Uint64 milliseconds, SDL_TouchID device = touchScreen, SDL_FingerID id = 1) {
+            SDL_Event e{};
+            e.type              = type;
+            e.tfinger.timestamp = milliseconds * 1'000'000;
+            e.tfinger.windowID  = SDL_GetWindowID(sdlWindow);
+            e.tfinger.touchID   = device;
+            e.tfinger.fingerID  = id;
+            e.tfinger.x         = x / 800.0f;
+            e.tfinger.y         = y / 600.0f;
+            return adapter->handleEvent(e);
+        }
+
+        /**
+         * The mouse events SDL makes of a touch (or of a pen, or a real mouse's, by `which`)
+         */
+        void mouse(SDL_EventType type, float x, float y, SDL_MouseID which) {
+            auto e = event(type);
+            if (type == SDL_EVENT_MOUSE_MOTION) {
+                e.motion.which = which;
+                e.motion.x     = x;
+                e.motion.y     = y;
+            } else {
+                e.button.which  = which;
+                e.button.button = SDL_BUTTON_LEFT;
+                e.button.down   = type == SDL_EVENT_MOUSE_BUTTON_DOWN;
+                e.button.x      = x;
+                e.button.y      = y;
+            }
+            adapter->handleEvent(e);
         }
 
         bool button(SDL_EventType type, float x, float y) {
@@ -369,4 +420,126 @@ TEST_CASE("SDL3: dragging a scroll bar's thumb scrolls its viewport", "[backend]
     CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, grab.x(), grab.y() + 10 * free));
     moveTo(sdl, grab.x(), grab.y());
     CHECK(scroller.viewport()->scrollY() == -contentScroll);
+}
+
+TEST_CASE("SDL3: a tap on a touch screen clicks once, without SDL's mouse events", "[backend][sdl3][touch]") {
+    SDL3Fixture sdl;
+    auto &div = sdl.window->appContainer().add<Div>();
+    div.width(100.0f).height(100.0f);
+    sdl.layout();
+    int presses = 0;
+    int clicks  = 0;
+    div.onMousePress([&](int, int, MouseButton, Mod) { ++presses; });
+    div.onClick([&]() { ++clicks; });
+
+    // What SDL sends for a tap: the finger, and the mouse events it makes of it
+    CHECK(sdl.finger(SDL_EVENT_FINGER_DOWN, 40.0f, 40.0f, 1000));
+    sdl.mouse(SDL_EVENT_MOUSE_MOTION, 40.0f, 40.0f, SDL_TOUCH_MOUSEID);
+    sdl.mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, 40.0f, 40.0f, SDL_TOUCH_MOUSEID);
+    CHECK(sdl.window->inputMode() == InputMode::Touch);
+    CHECK(sdl.finger(SDL_EVENT_FINGER_UP, 40.0f, 40.0f, 1080));
+    sdl.mouse(SDL_EVENT_MOUSE_BUTTON_UP, 40.0f, 40.0f, SDL_TOUCH_MOUSEID);
+
+    CHECK(presses == 1);
+    CHECK(clicks == 1);
+    CHECK(sdl.window->inputMode() == InputMode::Touch); // SDL's mouse events don't switch back
+
+    // A real mouse does
+    sdl.mouse(SDL_EVENT_MOUSE_MOTION, 300.0f, 300.0f, 1);
+    CHECK(sdl.window->inputMode() == InputMode::Pointer);
+    sdl.mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, 40.0f, 40.0f, 1);
+    sdl.mouse(SDL_EVENT_MOUSE_BUTTON_UP, 40.0f, 40.0f, 1);
+    CHECK(clicks == 2);
+}
+
+TEST_CASE("SDL3: a trackpad's fingers don't switch to touch", "[backend][sdl3][touch]") {
+    SDL3Fixture sdl;
+    auto &div = sdl.window->appContainer().add<Div>();
+    div.width(100.0f).height(100.0f);
+    sdl.layout();
+    int presses = 0;
+    div.onMousePress([&](int, int, MouseButton, Mod) { ++presses; });
+
+    sdl.finger(SDL_EVENT_FINGER_DOWN, 40.0f, 40.0f, 1000, trackpad);
+    sdl.finger(SDL_EVENT_FINGER_UP, 40.0f, 40.0f, 1080, trackpad);
+    CHECK(sdl.window->inputMode() == InputMode::Pointer);
+    CHECK(presses == 0); // The mouse it moves does the clicking
+}
+
+TEST_CASE("SDL3: touch drags, long presses and a second finger", "[backend][sdl3][touch]") {
+    SDL3Fixture sdl;
+    auto &div = sdl.window->appContainer().add<Div>();
+    div.width(100.0f).height(100.0f);
+    sdl.layout();
+    std::vector<MouseButton> presses{};
+    int                      moves = 0;
+    div.onMousePress([&](int, int, MouseButton button, Mod) { presses.push_back(button); });
+    sdl.window->onMouseMove([&](int, int, int, Mod) { ++moves; });
+
+    // Past the slop, a drag
+    sdl.finger(SDL_EVENT_FINGER_DOWN, 20.0f, 20.0f, 1000);
+    sdl.finger(SDL_EVENT_FINGER_MOTION, 24.0f, 20.0f, 1010);
+    CHECK(presses.empty());
+    sdl.finger(SDL_EVENT_FINGER_MOTION, 60.0f, 20.0f, 1020);
+    CHECK(presses == std::vector{MouseButton::LEFT});
+    const int movesBefore = moves;
+    // A second finger is ignored
+    sdl.finger(SDL_EVENT_FINGER_DOWN, 80.0f, 80.0f, 1025, touchScreen, 2);
+    sdl.finger(SDL_EVENT_FINGER_MOTION, 90.0f, 90.0f, 1030, touchScreen, 2);
+    CHECK(moves == movesBefore);
+    sdl.finger(SDL_EVENT_FINGER_UP, 60.0f, 20.0f, 1040);
+    sdl.finger(SDL_EVENT_FINGER_UP, 90.0f, 90.0f, 1045, touchScreen, 2);
+
+    // Held, a right button press, timed by SDL's timestamps
+    sdl.finger(SDL_EVENT_FINGER_DOWN, 20.0f, 20.0f, 2000);
+    sdl.window->updateGestures(std::chrono::milliseconds(2400));
+    CHECK(presses.size() == 1);
+    sdl.window->updateGestures(std::chrono::milliseconds(2500));
+    CHECK(presses == std::vector{MouseButton::LEFT, MouseButton::RIGHT});
+    sdl.finger(SDL_EVENT_FINGER_CANCELED, 20.0f, 20.0f, 2600);
+    CHECK(presses.size() == 2);
+}
+
+TEST_CASE("SDL3: a pen works like a mouse, in pen mode", "[backend][sdl3][touch]") {
+    SDL3Fixture sdl;
+    auto &div = sdl.window->appContainer().add<Div>();
+    div.width(100.0f).height(100.0f);
+    sdl.layout();
+    std::vector<MouseButton> presses{};
+    int                      clicks = 0;
+    div.onMousePress([&](int, int, MouseButton button, Mod) { presses.push_back(button); });
+    div.onClick([&]() { ++clicks; });
+
+    auto motion = sdl.event(SDL_EVENT_PEN_MOTION);
+    motion.pmotion.windowID = SDL_GetWindowID(sdl.sdlWindow);
+    motion.pmotion.x        = 40.0f;
+    motion.pmotion.y        = 40.0f;
+    sdl.adapter->handleEvent(motion);
+    CHECK(sdl.window->inputMode() == InputMode::Pen);
+    CHECK(div.mouseOver());
+
+    auto tip = sdl.event(SDL_EVENT_PEN_DOWN);
+    tip.ptouch.windowID = SDL_GetWindowID(sdl.sdlWindow);
+    tip.ptouch.x        = 40.0f;
+    tip.ptouch.y        = 40.0f;
+    tip.ptouch.down     = true;
+    sdl.adapter->handleEvent(tip);
+    sdl.mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, 40.0f, 40.0f, SDL_PEN_MOUSEID); // SDL's copy, ignored
+    tip.type        = SDL_EVENT_PEN_UP;
+    tip.ptouch.down = false;
+    sdl.adapter->handleEvent(tip);
+    sdl.mouse(SDL_EVENT_MOUSE_BUTTON_UP, 40.0f, 40.0f, SDL_PEN_MOUSEID);
+    CHECK(presses == std::vector{MouseButton::LEFT});
+    CHECK(clicks == 1);
+
+    // The barrel button is the right button
+    auto barrel = sdl.event(SDL_EVENT_PEN_BUTTON_DOWN);
+    barrel.pbutton.windowID = SDL_GetWindowID(sdl.sdlWindow);
+    barrel.pbutton.button   = 1;
+    barrel.pbutton.down     = true;
+    barrel.pbutton.x        = 40.0f;
+    barrel.pbutton.y        = 40.0f;
+    sdl.adapter->handleEvent(barrel);
+    CHECK(presses == std::vector{MouseButton::LEFT, MouseButton::RIGHT});
+    CHECK(sdl.window->inputMode() == InputMode::Pen);
 }
