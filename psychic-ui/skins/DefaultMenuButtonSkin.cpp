@@ -1,5 +1,5 @@
-#include <SkPaint.h>
-#include <SkPath.h>
+#include "include/core/SkPaint.h"
+#include "include/core/SkPathBuilder.h"
 #include <psychic-ui/components/Menu.hpp>
 #include "DefaultMenuButtonSkin.hpp"
 
@@ -28,11 +28,12 @@ namespace psychic_ui {
                 paint.setAntiAlias(true);
                 paint.setStyle(SkPaint::kFill_Style);
                 paint.setColor(shape->computedStyle().color().argb());
-                SkPath path;
-                path.moveTo(0, 0);
-                path.lineTo(shape->getWidth(), shape->getHeight() / 2);
-                path.lineTo(0, shape->getHeight());
-                path.lineTo(0, 0);
+                SkPath path = SkPathBuilder()
+                    .moveTo(0, 0)
+                    .lineTo(shape->getWidth(), shape->getHeight() / 2)
+                    .lineTo(0, shape->getHeight())
+                    .close()
+                    .detach();
                 canvas->drawPath(path, paint);
             }
         );

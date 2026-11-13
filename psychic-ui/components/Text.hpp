@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <SkTextBlob.h>
+#include "include/core/SkTextBlob.h"
 #include <unicode/unistr.h>
 #include "psychic-ui/utils/TextBox.hpp"
 #include "psychic-ui/TextBase.hpp"
@@ -119,7 +119,6 @@ namespace psychic_ui {
         PSYCHIC_UI_EVENT(onChange, changed)
 
     protected:
-        using BlobPtr = std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>>;
 
         bool               _selectable{true};
         bool               _editable{false};
@@ -130,7 +129,7 @@ namespace psychic_ui {
         unsigned int       _targetXPos{0};
         icu::UnicodeString _text{};
         TextBox            _textBox{};
-        BlobPtr            _blob{nullptr};
+        sk_sp<SkTextBlob>  _blob{nullptr};
         SkPaint            _selectionPaint{};
         SkPaint            _selectionBackgroundPaint{};
 

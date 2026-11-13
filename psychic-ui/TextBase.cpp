@@ -39,7 +39,7 @@ namespace psychic_ui {
     }
 
     float TextBase::linesHeight(size_t lines) const {
-        return std::max(lines * _lineHeight, std::ceil(_textPaint.getFontSpacing()));
+        return std::max(lines * _lineHeight, std::ceil(_font.getSpacing()));
     }
 
     void TextBase::styleUpdated() {
@@ -51,19 +51,23 @@ namespace psychic_ui {
         _lineHeight = _computedStyle.lineHeight().resolve(_fontSize, _fontSize * 1.5f);
 
         _textPaint.setAntiAlias(antiAlias);
-        _textPaint.setLCDRenderText(antiAlias && _lcdRender);
-        _textPaint.setSubpixelText(antiAlias && _subPixelText);
-        _textPaint.setTypeface(styleManager()->font(_computedStyle.fontFamily().str()));
-        _textPaint.setTextSize(_fontSize);
         _textPaint.setColor(_computedStyle.color().argb());
+        _font.setEdging(
+            !antiAlias ? SkFont::Edging::kAlias
+                       : _lcdRender ? SkFont::Edging::kSubpixelAntiAlias
+                                    : SkFont::Edging::kAntiAlias
+        );
+        _font.setSubpixel(antiAlias && _subPixelText);
+        _font.setTypeface(styleManager()->font(_computedStyle.fontFamily().str()));
+        _font.setSize(_fontSize);
 
         // Yoga caches measures: re-measure when anything changing the text metrics changes
         FontKey fontKey{
-            _textPaint.getTypeface(),
+            _font.getTypeface(),
             _fontSize,
             _computedStyle.letterSpacing(),
             _lineHeight,
-            _textPaint.isSubpixelText()
+            _font.isSubpixel()
         };
         if (fontKey != _fontKey) {
             _fontKey = fontKey;

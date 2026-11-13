@@ -54,13 +54,13 @@ set(CPACK_SOURCE_IGNORE_FILES "/.git/;/.idea/;/build/;/cmake-build-debug/;${CPAC
 # BUILDING
 #
 
-# Homebrew's keg-only packages (ICU, jpeg-turbo) aren't on the default search
+# Homebrew's keg-only ICU isn't on the default search
 # path; ask brew where it lives rather than assuming /usr/local or /opt/homebrew.
 if (APPLE)
     find_program(BREW brew)
     if (BREW)
         execute_process(COMMAND ${BREW} --prefix OUTPUT_VARIABLE HOMEBREW_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
-        list(APPEND CMAKE_PREFIX_PATH "${HOMEBREW_PREFIX}/opt/icu4c" "${HOMEBREW_PREFIX}/opt/jpeg-turbo" "${HOMEBREW_PREFIX}")
+        list(APPEND CMAKE_PREFIX_PATH "${HOMEBREW_PREFIX}/opt/icu4c" "${HOMEBREW_PREFIX}")
     endif ()
 endif ()
 
@@ -92,12 +92,9 @@ add_feature_info("psychic-ui-glfw-adapter" PSYCHIC_UI_BUILD_GLFW_ADAPTER "Build 
 
 find_package(OpenGL REQUIRED)
 find_package(Threads REQUIRED)
-find_package(ZLIB REQUIRED)
-find_package(PNG REQUIRED)
-find_package(JPEG REQUIRED)
-find_package(Freetype REQUIRED)
 find_package(ICU REQUIRED COMPONENTS uc data)
 if (CMAKE_SYSTEM_NAME MATCHES "Linux|BSD")
+    find_package(Freetype REQUIRED)
     find_package(Fontconfig REQUIRED)
 endif ()
 

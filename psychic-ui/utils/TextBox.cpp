@@ -11,6 +11,28 @@
 
 namespace psychic_ui {
 
+    size_t breakText(const SkFont &font, const char *text, size_t length, float width) {
+        size_t glyphCount = font.countText(text, length, SkTextEncoding::kUTF8);
+        std::vector<SkGlyphID> glyphs(glyphCount);
+        std::vector<SkScalar>  widths(glyphCount);
+        font.textToGlyphs(text, length, SkTextEncoding::kUTF8, glyphs);
+        font.getWidths(glyphs, widths);
+
+        // One glyph per code point: walk both together
+        size_t bytes = 0;
+        float  total = 0.0f;
+        for (size_t i = 0; i < glyphCount && bytes < length; ++i) {
+            total += widths[i];
+            if (total > width) {
+                break;
+            }
+            auto   lead = static_cast<unsigned char>(text[bytes]);
+            size_t size = lead < 0x80 ? 1 : lead < 0xE0 ? 2 : lead < 0xF0 ? 3 : 4;
+            bytes = std::min(length, bytes + size);
+        }
+        return bytes;
+    }
+
     TextBox::TextBox() {
         // TODO: Maybe this can be static
         UErrorCode status = U_ZERO_ERROR;
@@ -35,7 +57,7 @@ namespace psychic_ui {
     }
 
     void TextBox::setBox(float left, float top, float right, float bottom) {
-        _box.set(left, top, right, bottom);
+        _box.setLTRB(left, top, right, bottom);
         calculate();
     }
 
@@ -44,8 +66,8 @@ namespace psychic_ui {
         _spacingAdd  = add;
     }
 
-    void TextBox::setPaint(const SkPaint &paint) {
-        _paint = &paint;
+    void TextBox::setFont(const SkFont &font) {
+        _font = &font;
     }
 
     // endregion
@@ -120,7 +142,7 @@ namespace psychic_ui {
             end = end == -1 ? length : end + 1;
             std::string str{};
             _text->tempSubStringBetween(start, end).toUTF8String(str);
-            maxWidth = std::max(maxWidth, _paint->measureText(str.c_str(), str.size()));
+            maxWidth = std::max(maxWidth, _font->measureText(str.c_str(), str.size(), SkTextEncoding::kUTF8));
             start    = end;
         }
         return maxWidth;
@@ -154,7 +176,7 @@ namespace psychic_ui {
     }
 
     float TextBox::getTextHeight() const {
-        return _lineStarts.size() * (_paint->getFontSpacing() * _spacingMult + _spacingAdd);
+        return _lineStarts.size() * (_font->getSpacing() * _spacingMult + _spacingAdd);
     }
 
     unsigned int TextBox::nextLineBreak(int start) const {
@@ -167,9 +189,7 @@ namespace psychic_ui {
         remaining.toUTF8String(str);
 
         // Start by finding where the text would cut at max if we were not to use UnicodeString
-        // TODO: Fix deprecated thing
-        SkFont font    = SkFont::LEGACY_ExtractFromPaint(*_paint);
-        auto   advance = static_cast<unsigned int>(font.breakText(str.c_str(), str.size(), SkTextEncoding::kUTF8, width));
+        auto advance = static_cast<unsigned int>(breakText(*_font, str.c_str(), str.size(), width));
 
         if (_mode == TextBoxMode::OneLine || advance == 0) {
             return advance;
@@ -215,7 +235,7 @@ namespace psychic_ui {
 
         x += _box.fLeft;
 
-        float fontHeight    = _paint->getFontMetrics(&metrics);
+        float fontHeight    = _font->getMetrics(&metrics);
         float scaledSpacing = fontHeight * _spacingMult + _spacingAdd;
         float height        = _box.height();
 
@@ -329,7 +349,7 @@ namespace psychic_ui {
             return 0;
         }
 
-        float lineHeight = _paint->getFontSpacing() * _spacingMult + _spacingAdd;
+        float lineHeight = _font->getSpacing() * _spacingMult + _spacingAdd;
         auto  line       = static_cast<int>(std::floor((static_cast<float>(y) - _box.fTop) / lineHeight));
 
         if (line < 0) {
@@ -344,8 +364,10 @@ namespace psychic_ui {
         std::string str{};
         _text->tempSubStringBetween(lineStart, lineEnd).toUTF8String(str);
 
-        std::vector<SkScalar> widths(str.size());
-        _paint->getTextWidths(str.c_str(), str.size(), &widths.front());
+        std::vector<SkGlyphID> glyphs(_font->countText(str.c_str(), str.size(), SkTextEncoding::kUTF8));
+        std::vector<SkScalar>  widths(glyphs.size());
+        _font->textToGlyphs(str.c_str(), str.size(), SkTextEncoding::kUTF8, glyphs);
+        _font->getWidths(glyphs, widths);
         unsigned int pos    = 0;
         float        xCheck = x + _box.fLeft;
         float        acc    = 0.0f;
@@ -375,33 +397,22 @@ namespace psychic_ui {
 
         std::string str{};
         _text->tempSubStringBetween(lineStart, index).toUTF8String(str);
-        auto x = static_cast<int>(std::round(_paint->measureText(str.c_str(), str.size())));
+        auto x = static_cast<int>(std::round(_font->measureText(str.c_str(), str.size(), SkTextEncoding::kUTF8)));
 
         return std::make_pair(line, x);
     }
 
-    // CANVAS VISITOR
-
-    void TextBox::draw(SkCanvas *canvas) {
-        visit(
-            [this, canvas](const char text[], size_t len, float x, float y) {
-                canvas->drawText(text, len, x, y, *_paint);
-            }
-        );
-    }
-
     // TEXT BLOB VISITOR
 
-    std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>> TextBox::snapshotTextBlob() {
+    sk_sp<SkTextBlob> TextBox::snapshotTextBlob() {
         SkTextBlobBuilder builder{};
-        // TODO: Get rid of legacy
-        SkFont           font = SkFont::LEGACY_ExtractFromPaint(*_paint);
-        //p.setTextEncoding(SkTextEncoding::kGlyphID);
         visit(
-            [this, &builder, &font](const char text[], size_t len, float x, float y) {
-                _paint->textToGlyphs(text, len, builder.allocRun(font, _paint->countText(text, len), x, y).glyphs);
+            [this, &builder](const char text[], size_t len, float x, float y) {
+                auto count = static_cast<int>(_font->countText(text, len, SkTextEncoding::kUTF8));
+                auto &run  = builder.allocRun(*_font, count, x, y);
+                _font->textToGlyphs(text, len, SkTextEncoding::kUTF8, {run.glyphs, static_cast<size_t>(count)});
             }
         );
-        return std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>>(builder.make().release(), [](SkTextBlob *ptr) { ptr->unref(); });
+        return builder.make();
     }
 }

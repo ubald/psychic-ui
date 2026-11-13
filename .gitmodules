@@ -1,9 +1,6 @@
 [submodule "extlib/external/yoga"]
 	path = extlib/external/yoga
 	url = https://github.com/ubald/yoga.git
-[submodule "extlib/external/depot_tools"]
-	path = extlib/external/depot_tools
-	url = https://chromium.googlesource.com/chromium/tools/depot_tools.git
 [submodule "extlib/external/skia"]
 	path = extlib/external/skia
 	url = https://skia.googlesource.com/skia.git

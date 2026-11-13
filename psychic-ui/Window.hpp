@@ -4,10 +4,10 @@
 #include <chrono>
 #include <memory>
 #include <unordered_map>
-#include <unicode/unistr.h>
-#include "GrContext.h"
-#include "SkSurface.h"
-#include "SkCanvas.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSurface.h"
+#include "include/gpu/ganesh/GrDirectContext.h"
 #include "Div.hpp"
 #include "Modal.hpp"
 #include "style/StyleManager.hpp"
@@ -221,9 +221,9 @@ namespace psychic_ui {
         // region Rendering
 
         SystemWindow *_systemWindow{nullptr};
-        GrContext    *_sk_context{nullptr};
-        SkSurface    *_sk_surface{nullptr};
-        SkCanvas     *_sk_canvas{nullptr};
+        sk_sp<GrDirectContext> _sk_context{nullptr};
+        sk_sp<SkSurface>       _sk_surface{nullptr};
+        SkCanvas               *_sk_canvas{nullptr};
 
         // endregion
 

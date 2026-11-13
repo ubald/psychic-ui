@@ -4,7 +4,7 @@
 #include <yoga/Yoga.h>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
-#include <SkPaint.h>
+#include "include/core/SkFont.h"
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/style/Style.hpp>
 #include <psychic-ui/Div.hpp>
@@ -56,21 +56,18 @@ namespace {
     }
 
     /**
-     * Width of the widest line, measured with the same paint settings as TextBase
+     * Width of the widest line, measured with the same font settings as TextBase
      */
     float textWidth(const std::shared_ptr<StyleManager> &styleManager, const std::string &text, float size = 14.0f, const std::string &font = FONT) {
-        SkPaint paint{};
-        paint.setAntiAlias(true);
-        paint.setLCDRenderText(true);
-        paint.setSubpixelText(true);
-        paint.setTypeface(styleManager->font(font));
-        paint.setTextSize(size);
+        SkFont skFont{styleManager->font(font), size};
+        skFont.setEdging(SkFont::Edging::kSubpixelAntiAlias);
+        skFont.setSubpixel(true);
         float       width = 0.0f;
         size_t      start = 0;
         while (start <= text.size()) {
             size_t end = text.find('\n', start);
             end = end == std::string::npos ? text.size() : end + 1;
-            width = std::max(width, paint.measureText(text.c_str() + start, end - start));
+            width = std::max(width, skFont.measureText(text.c_str() + start, end - start, SkTextEncoding::kUTF8));
             if (end == text.size()) {
                 break;
             }

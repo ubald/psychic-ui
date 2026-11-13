@@ -3,6 +3,13 @@
 #include "StyleManager.hpp"
 #include "../Div.hpp"
 
+#if defined(__APPLE__)
+#include "include/ports/SkFontMgr_mac_ct.h"
+#else
+#include "include/ports/SkFontMgr_fontconfig.h"
+#include "include/ports/SkFontScanner_FreeType.h"
+#endif
+
 namespace psychic_ui {
 
     std::shared_ptr<StyleManager> StyleManager::getInstance() {
@@ -27,15 +34,33 @@ namespace psychic_ui {
         _valid     = false;
     }
 
+    sk_sp<SkFontMgr> StyleManager::fontManager() {
+        static sk_sp<SkFontMgr> manager =
+            #if defined(__APPLE__)
+            SkFontMgr_New_CoreText(nullptr);
+            #else
+            SkFontMgr_New_FontConfig(nullptr, SkFontScanner_Make_FreeType());
+            #endif
+        return manager;
+    }
+
     StyleManager &StyleManager::loadFont(const std::string &name, const std::string &path) {
-        _fonts.insert({name, SkTypeface::MakeFromFile(path.c_str())});
+        _fonts.insert({name, fontManager()->makeFromFile(path.c_str())});
         _valid = false;
         return *this;
     }
 
     sk_sp<SkTypeface> StyleManager::font(const std::string &name) const {
         auto font = _fonts.find(name);
-        return font != _fonts.cend() ? font->second : nullptr;
+        if (font != _fonts.cend() && font->second) {
+            return font->second;
+        }
+        // Not loaded (or its file didn't load): the system's font of that family, or its default font. Skia draws nothing
+        // with a null typeface.
+        if (auto system = fontManager()->matchFamilyStyle(name.c_str(), SkFontStyle())) {
+            return system;
+        }
+        return fontManager()->legacyMakeTypeface(nullptr, SkFontStyle());
     }
 
     StyleManager &StyleManager::registerSkin(const std::string &name, SkinMaker hatcher) {

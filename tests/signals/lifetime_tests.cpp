@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <memory>
 #include <string>
-#include <SkSurface.h>
+#include "include/core/SkSurface.h"
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Button.hpp>
@@ -15,7 +15,7 @@ using namespace psychic_ui;
 namespace {
     // A Window that runs the passes of `drawAll` on a raster canvas, without a GL context
     struct HeadlessWindow : Window {
-        sk_sp<SkSurface> surface{SkSurface::MakeRasterN32Premul(1440, 900)};
+        sk_sp<SkSurface> surface{SkSurfaces::Raster(SkImageInfo::MakeN32Premul(1440, 900))};
 
         HeadlessWindow() : Window("Headless") {
             setWindowSize(1440, 900);

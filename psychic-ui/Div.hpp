@@ -9,8 +9,8 @@
 #include <unordered_set>
 #include "psychic-ui/Measure.hpp"
 #include <unicode/unistr.h>
-#include <SkCanvas.h>
-#include <SkRRect.h>
+#include "include/core/SkCanvas.h"
+#include "include/core/SkRRect.h"
 #include "psychic-ui.hpp"
 #include "psychic-ui/style/Style.hpp"
 #include "psychic-ui/style/StyleManager.hpp"

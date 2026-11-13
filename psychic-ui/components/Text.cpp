@@ -1,4 +1,4 @@
-#include <SkRegion.h>
+#include "include/core/SkPathBuilder.h"
 #include "psychic-ui/Window.hpp"
 #include "Text.hpp"
 
@@ -7,7 +7,7 @@ namespace psychic_ui {
         TextBase::TextBase() {
         tag("Text");
 
-        _textBox.setPaint(_textPaint);
+        _textBox.setFont(_font);
         _textBox.setMode(_multiline ? TextBoxMode::LineBreak : TextBoxMode::OneLine);
 
         updateText(text);
@@ -408,7 +408,7 @@ namespace psychic_ui {
     void Text::styleUpdated() {
         TextBase::styleUpdated();
 
-        _textBox.setSpacing(_fontSize / _textPaint.getFontSpacing(), _lineHeight - _fontSize);
+        _textBox.setSpacing(_fontSize / _font.getSpacing(), _lineHeight - _fontSize);
 
         _selectionPaint.setStyle(SkPaint::kFill_Style);
         _selectionPaint.setColor(_computedStyle.selectionColor().argb());
@@ -438,15 +438,15 @@ namespace psychic_ui {
     void Text::draw(SkCanvas *canvas) {
         Div::draw(canvas);
         if (!_text.isEmpty() && _blob) {
-            canvas->drawTextBlob(_blob.get(), _paddedRect.fLeft, _paddedRect.fTop, _textPaint);
+            canvas->drawTextBlob(_blob, _paddedRect.fLeft, _paddedRect.fTop, _textPaint);
 
             if (_selectable && _focused && _selectBegin != _selectEnd) {
                 auto begin = _textBox.posFromIndex(_selectBegin);
                 auto end   = _textBox.posFromIndex(_selectEnd);
 
-                SkPath   path{};
-                for (int i = begin.first; i <= end.first; ++i) {
-                    path.addRect(
+                SkPathBuilder builder{};
+                for (unsigned int i = begin.first; i <= end.first; ++i) {
+                    builder.addRect(
                         SkRect{
                             _paddedRect.fLeft + (i == begin.first ? begin.second : 0.0f),
                             _paddedRect.fTop + (i * _lineHeight),
@@ -455,12 +455,13 @@ namespace psychic_ui {
                         }
                     );
                 }
+                SkPath path = builder.detach();
 
                 canvas->drawPath(path, _selectionBackgroundPaint);
                 // TODO: Doing like this is probably not performant at all, it all depends on how skia draws clipped text blobs
                 canvas->save();
                 canvas->clipPath(path);
-                canvas->drawTextBlob(_blob.get(), _paddedRect.fLeft, _paddedRect.fTop, _selectionPaint);
+                canvas->drawTextBlob(_blob, _paddedRect.fLeft, _paddedRect.fTop, _selectionPaint);
                 canvas->restore();
             }
         }

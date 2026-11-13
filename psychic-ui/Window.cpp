@@ -2,12 +2,20 @@
 #include <iostream>
 #include <utility>
 #include <yoga/Yoga.h>
-#include "GrBackendSurface.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkSurface.h"
+#include "include/gpu/ganesh/GrBackendSurface.h"
+#include "include/gpu/ganesh/SkSurfaceGanesh.h"
+#include "include/gpu/ganesh/gl/GrGLAssembleInterface.h"
+#include "include/gpu/ganesh/gl/GrGLBackendSurface.h"
+#include "include/gpu/ganesh/gl/GrGLDirectContext.h"
+#include "include/gpu/ganesh/gl/GrGLInterface.h"
 #include "Window.hpp"
-#include "SkSurface.h"
-#include "gl/GrGLAssembleInterface.h"
-#include "gl/GrGLInterface.h"
-#include "gl/GrGLUtil.h"
+
+namespace {
+    // GL_RGBA8, the default framebuffer's format
+    constexpr GrGLenum GL_RGBA8_FORMAT = 0x8058;
+}
 
 
 namespace psychic_ui {
@@ -92,7 +100,7 @@ namespace psychic_ui {
         if (!interface) {
             throw std::runtime_error("Could not get the OpenGL functions Skia needs");
         }
-        _sk_context = GrContext::MakeGL(interface).release();
+        _sk_context = GrDirectContexts::MakeGL(interface);
         if (!_sk_context) {
             throw std::runtime_error("Could not create a Skia OpenGL context");
         }
@@ -100,10 +108,9 @@ namespace psychic_ui {
     }
 
     void Window::releaseSkia() {
-        delete _sk_surface;
-        _sk_surface = nullptr;
-        _sk_canvas  = nullptr;
-        delete _sk_context;
+        // The surface before the context it was made with
+        _sk_surface   = nullptr;
+        _sk_canvas    = nullptr;
         _sk_context   = nullptr;
         _surfaceStale = true;
     }
@@ -113,18 +120,16 @@ namespace psychic_ui {
             throw std::runtime_error("Skia surface requested without a context");
         }
 
-        delete _sk_surface;
         _sk_surface   = nullptr;
         _sk_canvas    = nullptr;
         _surfaceStale = false;
 
         GrGLFramebufferInfo framebufferInfo{};
-        framebufferInfo.fFBOID = 0;  // assume default framebuffer
-        framebufferInfo.fFormat = GR_GL_RGBA8;
-
+        framebufferInfo.fFBOID  = 0; // The default framebuffer
+        framebufferInfo.fFormat = GL_RGBA8_FORMAT;
 
         // In pixels; `drawAll` scales the canvas to the window's units
-        GrBackendRenderTarget backendRenderTarget(
+        GrBackendRenderTarget backendRenderTarget = GrBackendRenderTargets::MakeGL(
             _systemWindow->getFramebufferWidth(),
             _systemWindow->getFramebufferHeight(),
             _systemWindow->getSamples(),
@@ -132,22 +137,19 @@ namespace psychic_ui {
             framebufferInfo
         );
 
-        // setup SkSurface
-        // To use distance field text, use commented out SkSurfaceProps instead
-        // SkSurfaceProps props(SkSurfaceProps::kUseDeviceIndependentFonts_Flag,
-        //                      SkSurfaceProps::kLegacyFontHost_InitType);
-        SkSurfaceProps props(SkSurfaceProps::kLegacyFontHost_InitType);
+        // Horizontal RGB subpixels, for LCD text
+        SkSurfaceProps props(0, kRGB_H_SkPixelGeometry);
 
-        _sk_surface = SkSurface::MakeFromBackendRenderTarget(
-            _sk_context,
+        _sk_surface = SkSurfaces::WrapBackendRenderTarget(
+            _sk_context.get(),
             backendRenderTarget,
             kBottomLeft_GrSurfaceOrigin,
             kRGBA_8888_SkColorType,
             nullptr,
             &props
-        ).release();
+        );
         if (!_sk_surface) {
-            SkDebugf("SkSurface::MakeFromBackendRenderTarget returned null\n");
+            std::cerr << "Psychic UI: Skia could not wrap the window's framebuffer" << std::endl;
             return;
         }
         _sk_canvas = _sk_surface->getCanvas();
@@ -410,7 +412,7 @@ namespace psychic_ui {
         _sk_canvas->scale(pixelRatio, pixelRatio);
         render(_sk_canvas);
         _sk_canvas->restore();
-        _sk_canvas->flush();
+        _sk_context->flushAndSubmit();
 
         // Performance
         ++frames;

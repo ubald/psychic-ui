@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SkCanvas.h>
+#include "include/core/SkCanvas.h"
 #include "psychic-ui/Div.hpp"
 
 namespace psychic_ui {

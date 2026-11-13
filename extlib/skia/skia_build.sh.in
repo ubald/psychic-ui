@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
+# Builds Skia's static libraries. Run from the Skia checkout; needs network
+# the first time, to download the gn (and ninja, when none is installed) that this Skia pins.
 set -e
 
-python tools/git-sync-deps
+python3=@Python3_EXECUTABLE@
+ninja=@SKIA_NINJA@
 
-bin/gn gen @SKIA_OUTPUT@ --args='is_official_build=true @SKIA_ARGS@'
-@NINJA@ -C @SKIA_OUTPUT@
+"$python3" bin/fetch-gn
+if [ -z "$ninja" ]; then
+    "$python3" bin/fetch-ninja
+    ninja=third_party/ninja/ninja
+fi
+
+bin/gn gen "@SKIA_OUTPUT@" --args='@SKIA_ARGS@'
+"$ninja" -C "@SKIA_OUTPUT@" skia modules/skparagraph modules/skshaper modules/skunicode

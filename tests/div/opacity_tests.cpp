@@ -1,8 +1,8 @@
 #include <cstdlib>
 #include <memory>
 #include <catch2/catch_test_macros.hpp>
-#include <SkCanvas.h>
-#include <SkSurface.h>
+#include "include/core/SkCanvas.h"
+#include "include/core/SkSurface.h"
 #include <psychic-ui/Window.hpp>
 
 using namespace psychic_ui;
@@ -16,7 +16,7 @@ namespace {
     // A window without stylesheets, rendered over white into a raster surface
     struct Scene {
         std::shared_ptr<RenderWindow> window = std::make_shared<RenderWindow>();
-        sk_sp<SkSurface>              surface = SkSurface::MakeRasterN32Premul(200, 200);
+        sk_sp<SkSurface>              surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(200, 200));
         Div                           *box{nullptr};
 
         Scene() {

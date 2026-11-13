@@ -6,7 +6,8 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
-#include <SkTypeface.h>
+#include "include/core/SkFontMgr.h"
+#include "include/core/SkTypeface.h"
 #include "psychic-ui/utils/Hatcher.hpp"
 #include "Style.hpp"
 #include "StyleSelector.hpp"
@@ -55,7 +56,20 @@ namespace psychic_ui {
 
         void setValid() { _valid = true; }
 
+        /**
+         * The platform's font manager (Fontconfig on Linux, CoreText on macOS), shared by every
+         * style manager: it loads font files and finds the system's fonts
+         */
+        static sk_sp<SkFontMgr> fontManager();
+
+        /**
+         * Loads a font file under a name, which `fontFamily` styles use
+         */
         StyleManager &loadFont(const std::string &name, const std::string &path);
+        /**
+         * The font loaded under that name, otherwise the system font of that family, otherwise
+         * the system default
+         */
         sk_sp<SkTypeface> font(const std::string &name) const;
 
         StyleManager &registerSkin(const std::string &name, SkinMaker hatcher);

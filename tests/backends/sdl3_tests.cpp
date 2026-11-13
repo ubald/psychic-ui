@@ -15,7 +15,7 @@ namespace {
         SDL_Window                        *sdlWindow{nullptr};
         std::shared_ptr<TestWindow>       window{std::make_shared<TestWindow>()};
         std::unique_ptr<SDL3SystemWindow> adapter{};
-        sk_sp<SkSurface>                  surface{SkSurface::MakeRasterN32Premul(800, 600)};
+        sk_sp<SkSurface>                  surface{SkSurfaces::Raster(SkImageInfo::MakeN32Premul(800, 600))};
 
         explicit SDL3Fixture(SDL_WindowFlags flags = 0) {
             SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "dummy");

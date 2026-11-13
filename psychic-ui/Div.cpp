@@ -1,8 +1,8 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
-#include <SkPaint.h>
-#include <SkDashPathEffect.h>
+#include "include/core/SkPaint.h"
+#include "include/effects/SkDashPathEffect.h"
 #include "yoga/Yoga.h"
 #include "Div.hpp"
 #include "Window.hpp"
@@ -859,7 +859,7 @@ namespace psychic_ui {
         _width  = (int) std::ceil(YGNodeLayoutGetWidth(_yogaNode));
         _height = (int) std::ceil(YGNodeLayoutGetHeight(_yogaNode));
 
-        _rect.set(_x, _y, _x + _width, _y + _height);
+        _rect.setLTRB(_x, _y, _x + _width, _y + _height);
         _roundRect.setRectRadii(_rect, _radii);
 
         _marginLeft   = YGNodeLayoutGetMargin(_yogaNode, YGEdgeLeft);
@@ -867,7 +867,7 @@ namespace psychic_ui {
         _marginRight  = YGNodeLayoutGetMargin(_yogaNode, YGEdgeRight);
         _marginBottom = YGNodeLayoutGetMargin(_yogaNode, YGEdgeBottom);
 
-        _marginRect.set(
+        _marginRect.setLTRB(
             _x - _marginLeft,
             _y - _marginTop,
             _x + _width + _marginRight,
@@ -879,7 +879,7 @@ namespace psychic_ui {
         _borderRight  = YGNodeLayoutGetBorder(_yogaNode, YGEdgeRight);
         _borderBottom = YGNodeLayoutGetBorder(_yogaNode, YGEdgeBottom);
 
-        _paddedRect.set(
+        _paddedRect.setLTRB(
             _x + YGNodeLayoutGetPadding(_yogaNode, YGEdgeLeft) + _borderLeft,
             _y + YGNodeLayoutGetPadding(_yogaNode, YGEdgeTop) + _borderTop,
             _x + _width - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeRight) + _borderRight),
@@ -912,7 +912,7 @@ namespace psychic_ui {
             _boundsBottom = std::max(_boundsBottom, _y + child->boundsBottom());
         }
         SkRect previousBoundsRect = _boundsRect;
-        _boundsRect.set(_boundsLeft, _boundsTop, _boundsRight, _boundsBottom);
+        _boundsRect.setLTRB(_boundsLeft, _boundsTop, _boundsRight, _boundsBottom);
 
         layoutReady = true;
 
@@ -931,8 +931,10 @@ namespace psychic_ui {
 
     void Div::render(SkCanvas *canvas) {
         // Paint only: styles and layout were updated by the window before rendering
+        // Skia rejects empty rects, but an empty div still renders (a data container builds its
+        // children when it renders): outset, only what's off-screen is rejected, as with Skia m73.
         const float opacity = _computedStyle.opacity();
-        if (!layoutReady || !_visible || opacity <= 0.0f || canvas->quickReject(_rect)) {
+        if (!layoutReady || !_visible || opacity <= 0.0f || canvas->quickReject(_rect.makeOutset(1.0f, 1.0f))) {
             return;
         }
 
@@ -958,7 +960,7 @@ namespace psychic_ui {
             paint.setStyle(SkPaint::kStroke_Style);
             if (dashed) {
                 const SkScalar intervals[] = {1.0f, 1.0f};
-                paint.setPathEffect(SkDashPathEffect::Make(intervals, 2, 0));
+                paint.setPathEffect(SkDashPathEffect::Make(intervals, 0));
             }
             paint.setStrokeWidth(SkIntToScalar(1));
 

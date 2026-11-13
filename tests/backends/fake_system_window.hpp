@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <SkSurface.h>
+#include "include/core/SkSurface.h"
 #include <psychic-ui/SystemWindow.hpp>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/themes/default.hpp>
@@ -40,7 +40,7 @@ namespace psychic_ui_tests {
      * and a raster canvas to run the frame's passes on
      */
     struct FakeSystemWindow : SystemWindow {
-        sk_sp<SkSurface> surface{SkSurface::MakeRasterN32Premul(800, 600)};
+        sk_sp<SkSurface> surface{SkSurfaces::Raster(SkImageInfo::MakeN32Premul(800, 600))};
         int              dragsStarted{0};
 
         std::shared_ptr<TestWindow> testWindow;

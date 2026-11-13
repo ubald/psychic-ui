@@ -1,8 +1,9 @@
 #pragma once
 
 #include <tuple>
-#include <SkPaint.h>
-#include <SkFont.h>
+#include "include/core/SkFont.h"
+#include "include/core/SkFontMetrics.h"
+#include "include/core/SkPaint.h"
 #include "Div.hpp"
 
 namespace psychic_ui {
@@ -48,6 +49,7 @@ namespace psychic_ui {
         bool    _subPixelText{true};
         float   _fontSize{0.0f};
         float   _lineHeight{0.0f};
+        SkFont  _font{};
         SkPaint _textPaint{};
         void styleUpdated() override;
         virtual void updateText(const std::string &text) = 0;

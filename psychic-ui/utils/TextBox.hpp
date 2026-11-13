@@ -9,15 +9,23 @@
  * found in Skia's LICENSE file.
  */
 
+#include <functional>
 #include <memory>
 #include <vector>
 #include <unicode/unistr.h>
 #include <unicode/brkiter.h>
-#include <SkCanvas.h>
-#include <SkPaint.h>
-#include <SkTextBlob.h>
+#include "include/core/SkCanvas.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontMetrics.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkTextBlob.h"
 
 namespace psychic_ui {
+
+    /**
+     * How many bytes of UTF-8 text fit in the width, whole characters only
+     */
+    size_t breakText(const SkFont &font, const char *text, size_t length, float width);
 
     /**
      * TextBox mode values
@@ -113,12 +121,12 @@ namespace psychic_ui {
         void setSpacing(float mul, float add);
 
         /**
-         * Set the SkPaint used when drawing or computing the TextBlob
+         * Set the SkFont used when measuring or computing the TextBlob
          * of this TextBox
          *
-         * @param paint
+         * @param font
          */
-        void setPaint(const SkPaint &paint);
+        void setFont(const SkFont &font);
 
         /**
          * Set the text on which this TextBox makes its calculations
@@ -291,21 +299,12 @@ namespace psychic_ui {
         std::pair<unsigned int, unsigned int> sentenceAtIndex(unsigned int index) const;
 
         /**
-         * Draw the text on the passed canvas
-         *
-         * This will cache line starts for the other methods
-         *
-         * @param canvas
-         */
-        void draw(SkCanvas *canvas);
-
-        /**
          * Get a TextBlob snapshot for the TextBox
          * This will cache line starts for the other methods
          *
-         * @return Unique pointer to a TextBlob
+         * @return The TextBlob, null when there is nothing to draw
          */
-        std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>> snapshotTextBlob();
+        sk_sp<SkTextBlob> snapshotTextBlob();
 
     private:
         std::unique_ptr<icu::BreakIterator> lineIterator{nullptr};
@@ -317,7 +316,7 @@ namespace psychic_ui {
         TextBoxAlign                        _align{TextBoxAlign::Start};
         TextBoxMode                         _mode{TextBoxMode::LineBreak};
         const icu::UnicodeString            *_text{nullptr};
-        const SkPaint                       *_paint{nullptr};
+        const SkFont                        *_font{nullptr};
 
         void visit(const TextBoxVisitor &visitor) const;
 

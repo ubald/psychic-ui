@@ -62,7 +62,9 @@ It can be built with the rest of the library with the CMake option `PSYCHIC_UI_B
 
 #### Linux
 
-    sudo apt install xorg-dev libjpeg-dev libturbojpeg libpng12-dev libgl1-mesa-dev libfreetype6-dev fontconfig
+    sudo apt install python3 ninja-build libgl-dev libicu-dev libharfbuzz-dev libfreetype-dev libfontconfig-dev
+
+Skia is built from source the first time: its build downloads the `gn` it pins (and `ninja` when none is installed).
     
 SDL3 and GLFW are found with CMake's `find_package` when installed (SDL3 3.2+, GLFW 3.4+), otherwise CMake
 downloads and builds them. Building them needs their X11 and Wayland development packages, on Ubuntu:
@@ -73,7 +75,7 @@ downloads and builds them. Building them needs their X11 and Wayland development
 
 #### Mac
 
-    brew install cmake sdl3 glfw libpng jpeg jpeg-turbo icu4c freetype
+    brew install cmake ninja sdl3 glfw icu4c harfbuzz
     
 ### Building
 

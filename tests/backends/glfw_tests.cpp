@@ -22,7 +22,7 @@ namespace {
     struct GLFWHost {
         GLFWwindow                  *glfwWindow{nullptr};
         std::shared_ptr<TestWindow> window{std::make_shared<TestWindow>()};
-        sk_sp<SkSurface>            surface{SkSurface::MakeRasterN32Premul(800, 600)};
+        sk_sp<SkSurface>            surface{SkSurfaces::Raster(SkImageInfo::MakeN32Premul(800, 600))};
 
         GLFWHost() {
             hostKeys    = 0;

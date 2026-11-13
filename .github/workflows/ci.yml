@@ -5,19 +5,18 @@ on:
   pull_request:
   workflow_dispatch:
 
-# Builds without Nix, from system packages only. Ubuntu 22.04 packages neither
+# Builds without Nix, from system packages only. Ubuntu 24.04 packages neither
 # SDL3 nor GLFW 3.4, so CMake fetches and builds them: the X11, Wayland, EGL
 # and IBus development packages are theirs.
 #
-# The pinned Skia (m73) runs `tools/git-sync-deps` and gn scripts that need
-# Python 2 as `python`, syncs ~25 repos and takes ~420 ninja steps, so its
-# output directory is cached per Skia commit and build script.
+# Skia takes ICU, HarfBuzz, FreeType and Fontconfig from the system and
+# downloads its pinned gn (and ninja, when none is installed). Its build is
+# long, so its output directory is cached per Skia commit and build script.
 
 jobs:
   linux:
     name: Linux
-    # 22.04 is the last Ubuntu that packages Python 2 (`python2`)
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:
@@ -27,33 +26,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            python2 \
+            g++-14 \
+            ninja-build \
             libgl-dev \
             libicu-dev \
+            libharfbuzz-dev \
             libfreetype-dev \
             libfontconfig-dev \
-            libpng-dev \
-            libjpeg-dev \
-            zlib1g-dev \
             libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
             libxext-dev libxfixes-dev libxkbcommon-dev \
             libwayland-dev libdecor-0-dev libegl-dev libdbus-1-dev libibus-1.0-dev
-
-      # Psychic UI needs C++23 deducing this (GCC 14+) and jammy's default is
-      # GCC 11; the Ubuntu toolchain PPA has GCC 14 for it. Only CMake gets it
-      # (Configure below): Skia's gn build keeps the default `cc`/`c++`.
-      - name: Install GCC 14
-        run: |
-          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends g++-14
-
-      # The image's python-is-python3 makes `python` Python 3
-      - name: Make `python` Python 2
-        run: |
-          mkdir -p "$RUNNER_TEMP/python2"
-          ln -s /usr/bin/python2 "$RUNNER_TEMP/python2/python"
-          echo "$RUNNER_TEMP/python2" >> "$GITHUB_PATH"
 
       - name: Find the Skia commit
         id: skia
@@ -66,6 +48,8 @@ jobs:
           path: build/debug/extlib/skia/build
           key: skia-${{ runner.os }}-${{ runner.arch }}-${{ steps.skia.outputs.commit }}-${{ hashFiles('extlib/skia/CMakeLists.txt', 'extlib/skia/skia_build.sh.in') }}
 
+      # Psychic UI needs C++23 deducing this (GCC 14+); noble's default is GCC 13.
+      # Skia's gn build gets the same compilers from CMake.
       - name: Configure
         run: cmake --preset debug -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14
 
@@ -90,9 +74,8 @@ jobs:
   macos:
     name: macOS
     runs-on: macos-latest
-    # Allowed to fail until Skia is upgraded: the 2018 Skia isn't expected to
-    # build on Apple Silicon with current Xcode. The job still exercises the
-    # macOS CMake branches (brew --prefix, Skia's extra flags).
+    # Allowed to fail until a run passes: the Skia upgrade (CoreText fonts,
+    # Homebrew's ICU and HarfBuzz) hasn't been built on macOS yet.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v7
@@ -100,13 +83,7 @@ jobs:
           submodules: recursive
 
       - name: Install dependencies
-        run: brew install icu4c sdl3 glfw freetype jpeg-turbo libpng pyenv
-
-      # Homebrew has no Python 2; pyenv builds it from source
-      - name: Install Python 2
-        run: |
-          pyenv install 2.7.18
-          echo "$(pyenv root)/versions/2.7.18/bin" >> "$GITHUB_PATH"
+        run: brew install icu4c harfbuzz sdl3 glfw ninja
 
       - name: Find the Skia commit
         id: skia
