@@ -14,13 +14,13 @@ namespace psychic_ui {
         _inlineStyle.grow(0)
             .shrink(0);
 
-        onResized(
+        onResize(
             [this](int /*width*/, int /*height*/) {
                 updateSkin();
             }
         );
 
-        onMouseScrolled(
+        onMouseScroll(
             [this](const int /*mouseX*/, const int /*mouseY*/, const double scrollX, const double scrollY) {
                 if (_direction == ScrollDirection::Vertical) {
                     _viewport->scroll(0, scrollY);

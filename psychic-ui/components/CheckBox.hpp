@@ -50,7 +50,7 @@ namespace psychic_ui {
          * The checked state changed, with the new state
          */
         Signal<bool> changed{};
-        PSYCHIC_UI_EVENT(onChanged, changed)
+        PSYCHIC_UI_EVENT(onChange, changed)
 
     protected:
         std::string _label{};

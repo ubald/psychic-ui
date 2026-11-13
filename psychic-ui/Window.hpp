@@ -135,8 +135,8 @@ namespace psychic_ui {
         Signal<> menuOpened{};
         Signal<> menuClosed{};
 
-        PSYCHIC_UI_EVENT(onMenuOpened, menuOpened)
-        PSYCHIC_UI_EVENT(onMenuClosed, menuClosed)
+        PSYCHIC_UI_EVENT(onMenuOpen, menuOpened)
+        PSYCHIC_UI_EVENT(onMenuClose, menuClosed)
 
         // endregion
 

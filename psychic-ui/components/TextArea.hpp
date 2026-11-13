@@ -34,7 +34,7 @@ namespace psychic_ui {
          * The text changed, with the new text
          */
         Signal<std::string> changed{};
-        PSYCHIC_UI_EVENT(onChanged, changed)
+        PSYCHIC_UI_EVENT(onChange, changed)
 
     protected:
         void updateText(const std::string &text);

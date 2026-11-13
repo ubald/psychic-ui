@@ -33,9 +33,9 @@ namespace {
     };
 }
 
-static_assert(std::is_same_v<decltype(std::declval<Button &>().onClicked([] {})), Button &>);
-static_assert(std::is_same_v<decltype(std::declval<Button &>().onChanged([](bool) {}).toggle(true)), Button &>);
-static_assert(std::is_same_v<decltype(std::declval<Range<int> &>().onChanged([](int) {}).range(0, 1)), Range<int> &>);
+static_assert(std::is_same_v<decltype(std::declval<Button &>().onClick([] {})), Button &>);
+static_assert(std::is_same_v<decltype(std::declval<Button &>().onChange([](bool) {}).toggle(true)), Button &>);
+static_assert(std::is_same_v<decltype(std::declval<Range<int> &>().onChange([](int) {}).range(0, 1)), Range<int> &>);
 
 TEST_CASE("mouse up fires once per release", "[div][events]") {
     Tree t;
@@ -44,7 +44,7 @@ TEST_CASE("mouse up fires once per release", "[div][events]") {
     int  clicks  = 0;
     t.box->onMouseUp([&](int, int, MouseButton, Mod) { ++ups; })
           .onMouseUpOutside([&](int, int, MouseButton, Mod) { ++outside; })
-          .onClicked([&] { ++clicks; });
+          .onClick([&] { ++clicks; });
 
     SECTION("pressed and released over the div") {
         t.press(50, 50);
@@ -81,7 +81,7 @@ TEST_CASE("mouse up fires once per release", "[div][events]") {
 TEST_CASE("a connector's callback lives as long as its div", "[div][events]") {
     auto marker = std::make_shared<int>(0);
     auto parent = std::make_shared<Div>();
-    auto &child = parent->add<Div>().onClicked([marker] { ++*marker; });
+    auto &child = parent->add<Div>().onClick([marker] { ++*marker; });
     REQUIRE(marker.use_count() == 2);
 
     child.clicked.emit();
@@ -96,7 +96,7 @@ TEST_CASE("components report changes the same way", "[div][events]") {
 
     SECTION("Button") {
         std::vector<bool> changes;
-        auto &button = root->add<Button>("b").toggle(true).onChanged([&](bool selected) { changes.push_back(selected); });
+        auto &button = root->add<Button>("b").toggle(true).onChange([&](bool selected) { changes.push_back(selected); });
         button.selected(true).selected(true).selected(false);
         REQUIRE(changes == std::vector<bool>{true, false});
         button.clicked.emit(); // A toggle button selects itself when clicked
@@ -106,20 +106,20 @@ TEST_CASE("components report changes the same way", "[div][events]") {
     SECTION("Button, several listeners") {
         int a = 0;
         int b = 0;
-        root->add<Button>("b").onChanged([&](bool) { ++a; }).onChanged([&](bool) { ++b; }).selected(true);
+        root->add<Button>("b").onChange([&](bool) { ++a; }).onChange([&](bool) { ++b; }).selected(true);
         REQUIRE(a == 1);
         REQUIRE(b == 1);
     }
 
     SECTION("CheckBox") {
         std::vector<bool> changes;
-        root->add<CheckBox>("c").onChanged([&](bool checked) { changes.push_back(checked); }).checked(true);
+        root->add<CheckBox>("c").onChange([&](bool checked) { changes.push_back(checked); }).checked(true);
         REQUIRE(changes == std::vector<bool>{true});
     }
 
     SECTION("Range") {
         std::vector<int> changes;
-        root->add<Range<int>>().range(0, 10).onChanged([&](int value) { changes.push_back(value); }).value(4).value(40);
+        root->add<Range<int>>().range(0, 10).onChange([&](int value) { changes.push_back(value); }).value(4).value(40);
         REQUIRE(changes == std::vector<int>{4, 10});
     }
 
@@ -127,7 +127,7 @@ TEST_CASE("components report changes the same way", "[div][events]") {
         bool seen = false;
         auto &button = root->add<Button>("b", [&] { seen = true; }).toggle(true);
         bool selectedInCallback = false;
-        button.onClicked([&] { selectedInCallback = button.selected(); });
+        button.onClick([&] { selectedInCallback = button.selected(); });
         button.clicked.emit();
         REQUIRE(seen);
         REQUIRE(selectedInCallback);

@@ -25,7 +25,7 @@ namespace psychic_ui {
             auto menuItem = std::make_shared<Button>(sub->label);
             menuItem->toggle(true);
             // The button owns these slots: a raw pointer to it, as a shared_ptr would keep it alive forever
-            menuItem->onClicked(
+            menuItem->onClick(
                 [this, sub, button = menuItem.get()]() {
                     if (sub.get() == currentMenuItem) {
                         window()->closeMenu();
@@ -34,7 +34,7 @@ namespace psychic_ui {
                     }
                 }
             );
-            menuItem->onMouseEntered(
+            menuItem->onMouseEnter(
                 [this, sub, button = menuItem.get()]() {
                     if (_menuOpen) {
                         openMenu(button, sub.get());

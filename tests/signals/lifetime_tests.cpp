@@ -95,7 +95,7 @@ TEST_CASE("A div clicked through dispatch removes itself", "[signals][lifetime]"
     // Only owners: their parents
     auto &item  = root.add<Div>().width(100).height(100).add<Div>().width(100).height(100);
     int  clicked = 0;
-    item.onClicked([&, raw = &item]() {
+    item.onClick([&, raw = &item]() {
         ++clicked;
         root.removeAll(); // Destroys the dispatching div and its parent
         REQUIRE(raw->clicked.subscriptionCount() == 1); // Still alive while dispatching
@@ -108,7 +108,7 @@ TEST_CASE("A div clicked through dispatch removes itself", "[signals][lifetime]"
 }
 
 TEST_CASE("An observer child outlives its parent's signal at teardown", "[signals][lifetime]") {
-    // Window's members, onMenuClosed included, die before its children (MenuBar subscribes to menuClosed)
+    // Window's members, onMenuClose included, die before its children (MenuBar subscribes to menuClosed)
     auto window = std::make_shared<FakeWindow>();
     auto &bar   = window->add<FakeMenuBar>();
     bar.listen(*window);
@@ -187,7 +187,7 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
         REQUIRE(weakRecent.expired());
     }
 
-    SECTION("window teardown with the menu bar subscribed to onMenuClosed") {
+    SECTION("window teardown with the menu bar subscribed to onMenuClose") {
         // Members (menuClosed) die before the children (MenuBar)
         file.reset();
         window.reset();

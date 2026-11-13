@@ -114,9 +114,9 @@ namespace psychic_ui {
         Signal<unsigned int>               caretMoved{};
         Signal<std::string>                changed{};
 
-        PSYCHIC_UI_EVENT(onSelectionChanged, selectionChanged)
-        PSYCHIC_UI_EVENT(onCaretMoved, caretMoved)
-        PSYCHIC_UI_EVENT(onChanged, changed)
+        PSYCHIC_UI_EVENT(onSelectionChange, selectionChanged)
+        PSYCHIC_UI_EVENT(onCaretMove, caretMoved)
+        PSYCHIC_UI_EVENT(onChange, changed)
 
     protected:
         using BlobPtr = std::unique_ptr<SkTextBlob, std::function<void(SkTextBlob *)>>;

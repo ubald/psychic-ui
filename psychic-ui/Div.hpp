@@ -146,7 +146,7 @@ namespace psychic_ui {
          * Construct a child of type T and add it last. The parent owns the child:
          *
          *     auto &row = add<Div>().row().gap(12);
-         *     row.add<Button>("Save").onClicked([this] { save(); });
+         *     row.add<Button>("Save").onClick([this] { save(); });
          *
          * @return The child, valid while this div holds it
          */
@@ -575,9 +575,10 @@ namespace psychic_ui {
         // region Events
 
         // Each event is a Signal member named for what happened (`clicked`, `mouseDown`, `resized`; components add
-        // `changed` and others), and a chainable `on<Event>(callback)` that subscribes to it and returns this div:
+        // `changed` and others), and a chainable connector, `on` + the verb in the present tense (`onClick` for
+        // `clicked`, `onChange` for `changed`), that subscribes to it and returns this div:
         //
-        //     add<Button>("Save").onClicked([this] { save(); });
+        //     add<Button>("Save").onClick([this] { save(); });
         //
         // The signal belongs to the div, so the callback lives as long as the div. Capture `this` (the div that
         // creates the child, which outlives it) or raw pointers, never a shared_ptr to the div the signal belongs
@@ -596,20 +597,20 @@ namespace psychic_ui {
         PSYCHIC_UI_EVENT(onMouseDown, mouseDown)
         PSYCHIC_UI_EVENT(onMouseUp, mouseUp)
         PSYCHIC_UI_EVENT(onMouseUpOutside, mouseUpOutside)
-        PSYCHIC_UI_EVENT(onMouseMoved, mouseMoved)
-        PSYCHIC_UI_EVENT(onMouseEntered, mouseEntered)
-        PSYCHIC_UI_EVENT(onMouseExited, mouseExited)
-        PSYCHIC_UI_EVENT(onMouseScrolled, mouseScrolled)
-        PSYCHIC_UI_EVENT(onClicked, clicked)
-        PSYCHIC_UI_EVENT(onDoubleClicked, doubleClicked)
+        PSYCHIC_UI_EVENT(onMouseMove, mouseMoved)
+        PSYCHIC_UI_EVENT(onMouseEnter, mouseEntered)
+        PSYCHIC_UI_EVENT(onMouseExit, mouseExited)
+        PSYCHIC_UI_EVENT(onMouseScroll, mouseScrolled)
+        PSYCHIC_UI_EVENT(onClick, clicked)
+        PSYCHIC_UI_EVENT(onDoubleClick, doubleClicked)
         PSYCHIC_UI_EVENT(onKeyDown, keyDown)
-        PSYCHIC_UI_EVENT(onKeyRepeated, keyRepeated)
+        PSYCHIC_UI_EVENT(onKeyRepeat, keyRepeated)
         PSYCHIC_UI_EVENT(onKeyUp, keyUp)
-        PSYCHIC_UI_EVENT(onCharacterTyped, characterTyped)
-        PSYCHIC_UI_EVENT(onFocusGained, focusGained)
-        PSYCHIC_UI_EVENT(onFocusLost, focusLost)
-        PSYCHIC_UI_EVENT(onScrolled, scrolled)
-        PSYCHIC_UI_EVENT(onResized, resized)
+        PSYCHIC_UI_EVENT(onCharacterType, characterTyped)
+        PSYCHIC_UI_EVENT(onFocusGain, focusGained)
+        PSYCHIC_UI_EVENT(onFocusLose, focusLost)
+        PSYCHIC_UI_EVENT(onScroll, scrolled)
+        PSYCHIC_UI_EVENT(onResize, resized)
 
         // endregion
 

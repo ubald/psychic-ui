@@ -124,7 +124,7 @@ namespace psychic_ui {
          * The value changed, with the new value
          */
         Signal<T> changed{};
-        PSYCHIC_UI_EVENT(onChanged, changed)
+        PSYCHIC_UI_EVENT(onChange, changed)
 
     protected:
         RangeMode _mode{RangeMode::Linear};

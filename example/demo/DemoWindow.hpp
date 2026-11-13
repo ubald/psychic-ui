@@ -122,7 +122,7 @@ namespace psychic_ui {
         #ifdef DEBUG_LAYOUT
         toolBar.add<Button>("Debug Layout")
             .toggle(true)
-            .onChanged([](bool selected) { Div::debugLayout = selected; });
+            .onChange([](bool selected) { Div::debugLayout = selected; });
         #endif
         toolBar.add<Button>("Help");
 
