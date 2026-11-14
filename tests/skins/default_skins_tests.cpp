@@ -6,6 +6,7 @@
 #include <psychic-ui/components/Menu.hpp>
 #include <psychic-ui/components/Range.hpp>
 #include <psychic-ui/components/TextInput.hpp>
+#include <psychic-ui/components/WindowControls.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include "../backends/fake_system_window.hpp"
 
@@ -254,3 +255,46 @@ TEST_CASE("Default skins: menus float on the theme's two-layer shadow", "[skins]
     CHECK(menu.shadow2Color() == f.theme.elevation.overlayContact.color);
     CHECK(menu.shadow2Blur() == f.theme.elevation.overlayContact.blur);
 }
+
+TEST_CASE("Default skins: the window controls are grey until the pointer is over them", "[skins][default][window-controls]") {
+    Fixture f;
+    auto &controls = f.window->appContainer().add<WindowControls>();
+    f.layout();
+    Button *dots[] = {&controls.closeButton(), &controls.minimizeButton(), &controls.maximizeButton()};
+    const Palette &p = f.theme.palette;
+
+    const auto colors = [&]() {
+        return std::vector{
+            dots[0]->computedStyle().backgroundColor(),
+            dots[1]->computedStyle().backgroundColor(),
+            dots[2]->computedStyle().backgroundColor()
+        };
+    };
+    const auto moveTo = [&](int x, int y) {
+        f.window->handleMouseMove(x, y, 0, Mod{}, false);
+        f.layout();
+    };
+    const std::vector grey{p.lineStrong, p.lineStrong, p.lineStrong};
+    const std::vector lit{p.danger, p.warning, p.success};
+
+    CHECK(colors() == grey);
+
+    // Over one of them, all three light up, like macOS's
+    int x = 0;
+    int y = 0;
+    dots[2]->localToGlobal(x, y, dots[2]->getWidth() / 2, dots[2]->getHeight() / 2);
+    moveTo(x, y);
+    CHECK(colors() == lit);
+
+    // Between two of them, still over the group
+    dots[1]->localToGlobal(x, y, -2, dots[1]->getHeight() / 2);
+    moveTo(x, y);
+    CHECK_FALSE(dots[0]->mouseOver());
+    CHECK_FALSE(dots[1]->mouseOver());
+    CHECK(colors() == lit);
+
+    // Away from them
+    moveTo(x, y + 100);
+    CHECK(colors() == grey);
+}
+

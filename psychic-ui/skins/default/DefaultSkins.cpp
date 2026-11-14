@@ -170,7 +170,7 @@ namespace psychic_ui {
             .color(p.text)
             .grow(1);
 
-        // The three dots, in the theme's semantic colors
+        // The three dots: neutral at rest, all three in the theme's semantic colors while the pointer is over the group
         rule("WindowControls").gap(7);
 
         rule("WindowControls Button")
@@ -178,11 +178,12 @@ namespace psychic_ui {
             .width(11)
             .height(11)
             .paddingHorizontal(0) // Over the button's
-            .border(0);
+            .border(0)
+            .backgroundColor(p.lineStrong);
 
-        rule("WindowControls Button.close").backgroundColor(p.danger);
-        rule("WindowControls Button.minimize").backgroundColor(p.warning);
-        rule("WindowControls Button.maximize").backgroundColor(p.success);
+        rule("WindowControls:hover Button.close").backgroundColor(p.danger);
+        rule("WindowControls:hover Button.minimize").backgroundColor(p.warning);
+        rule("WindowControls:hover Button.maximize").backgroundColor(p.success);
 
         // endregion
 
