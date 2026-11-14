@@ -146,8 +146,12 @@ namespace psychic_ui {
             framebufferInfo
         );
 
-        // Horizontal RGB subpixels, for LCD text
-        SkSurfaceProps props(0, kRGB_H_SkPixelGeometry);
+        // Horizontal RGB subpixels, for LCD text. Skia's default text gamma (sRGB, contrast 0.5) thickens light text on
+        // dark and thins dark text on light, so the same font looked a weight heavier in a dark theme; Chrome's values
+        // on Linux (contrast 0.2, gamma 1.2) keep the weight the same both ways, as Pivotal looks in a browser.
+        constexpr SkScalar textContrast = 0.2f;
+        constexpr SkScalar textGamma    = 1.2f;
+        SkSurfaceProps props(0, kRGB_H_SkPixelGeometry, textContrast, textGamma);
 
         _sk_surface = SkSurfaces::WrapBackendRenderTarget(
             _sk_context.get(),
