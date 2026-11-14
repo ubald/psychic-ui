@@ -41,6 +41,7 @@ namespace psychic_ui::themes {
             .scrollThumb      = argb(0x17FFFFFF), // 9%
             .scrollThumbHover = argb(0x29FFFFFF), // 16%
             .scrim            = argb(0x80000000), // 50%
+            .switchOff        = rgb(0x151619), // --color-raised
         },
         .elevation = {
             // --shadow-overlay: 0 12px 32px -8px rgb(0 0 0 / 55%), 0 2px 6px rgb(0 0 0 / 30%)
@@ -84,6 +85,7 @@ namespace psychic_ui::themes {
             .scrollThumb      = argb(0x24000000), // 14%
             .scrollThumbHover = argb(0x3D000000), // 24%
             .scrim            = argb(0x3D000000), // 24%
+            .switchOff        = rgb(0xC4C8CD),
         },
         .elevation = {
             .overlay        = {.color = argb(0x29000000), .blur = 32, .offsetY = 12, .spread = -8},

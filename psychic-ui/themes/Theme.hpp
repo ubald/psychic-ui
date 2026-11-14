@@ -55,6 +55,7 @@ namespace psychic_ui {
         Color scrollThumb{};
         Color scrollThumbHover{};
         Color scrim{}; // Behind a dialog
+        Color switchOff{}; // A switch's track when off
     };
 
     /**

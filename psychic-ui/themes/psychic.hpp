@@ -36,6 +36,7 @@ namespace psychic_ui::themes {
             .scrollThumb      = argb(0x17FFFFFF),
             .scrollThumbHover = argb(0x29FFFFFF),
             .scrim            = argb(0x80000000),
+            .switchOff        = rgb(0x313033),
         },
         .elevation = {
             .overlay        = {.color = argb(0x8C000000), .blur = 32, .offsetY = 12, .spread = -8},
