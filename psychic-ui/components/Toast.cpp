@@ -36,7 +36,7 @@ namespace psychic_ui {
 
         if (options.showIcon) {
             auto &tile = add<Div>();
-            tile.addClassName("icon")
+            tile.addClassName("icon-tile")
                 .alignItems(Align::Center)
                 .justify(Justify::Center)
                 .shrink(0);

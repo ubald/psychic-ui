@@ -725,7 +725,7 @@ namespace psychic_ui {
             .gap(m.space(1.5f))
             .paddingTop(m.space(3))
             .paddingHorizontal(m.gutterCard);
-        text(rule("Dialog .header .title"), t.sm, t.medium, s).color(p.text);
+        text(rule("Dialog .header .title"), t.sm, t.regular, s).color(p.text);
         rule("Dialog .header .icon").color(p.textSecondary);
 
         rule("Dialog .body")
@@ -764,15 +764,15 @@ namespace psychic_ui {
             .backgroundColor(p.overlay)
             .color(p.text);
 
-        rule("Toast .icon")
+        rule("Toast .icon-tile")
             .width(s.controlSm)
             .height(s.controlSm)
             .borderRadius(r.row)
             .color(p.accentText)
             .backgroundColor(p.accentSoft);
-        rule("Toast.success .icon").color(p.success).backgroundColor(p.success.withAlpha(0x1A)); // 10%
-        rule("Toast.warning .icon").color(p.warningText).backgroundColor(p.warning.withAlpha(0x1A));
-        rule("Toast.danger .icon").color(p.dangerText).backgroundColor(p.danger.withAlpha(0x1A));
+        rule("Toast.success .icon-tile").color(p.success).backgroundColor(p.success.withAlpha(0x1A)); // 10%
+        rule("Toast.warning .icon-tile").color(p.warningText).backgroundColor(p.warning.withAlpha(0x1A));
+        rule("Toast.danger .icon-tile").color(p.dangerText).backgroundColor(p.danger.withAlpha(0x1A));
 
         rule("Toast .text").gap(m.space(0.5f));
         text(rule("Toast .title"), t.sm, t.medium, s).color(p.text);

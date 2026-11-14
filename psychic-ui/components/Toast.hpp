@@ -47,7 +47,7 @@ namespace psychic_ui {
     /**
      * @class Toast
      *
-     * Short news in the toasts' stack (Pivotal's): an icon on a tile in its variant's color (`.icon`), a title
+     * Short news in the toasts' stack (Pivotal's): an icon on a tile in its variant's color (`.icon-tile`), a title
      * (`.title`) and a description (`.description`) with action buttons under them (`.actions`), and a close button
      * (`.close`). Its variant is a class: `info`, `success`, `warning` or `danger`. It closes after its timeout, which
      * doesn't run while the mouse is over the stack, when one of its actions is clicked, or with its close button.
