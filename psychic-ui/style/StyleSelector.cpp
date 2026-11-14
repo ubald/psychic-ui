@@ -62,6 +62,8 @@ namespace psychic_ui {
                                 std::string pseudo = selectorItem.substr(lastTokenPos, pos - lastTokenPos);
                                 if (pseudo == "focus") {
                                     r->_pseudo.insert(Pseudo::Focus);
+                                } else if (pseudo == "focus-visible") {
+                                    r->_pseudo.insert(Pseudo::FocusVisible);
                                 } else if (pseudo == "hover") {
                                     r->_pseudo.insert(Pseudo::Hover);
                                 } else if (pseudo == "active") {
@@ -153,6 +155,14 @@ namespace psychic_ui {
                         return component->mouseOver();
                     case Pseudo::Focus:
                         return component->focusEnabled() && component->hasFocus();
+                    case Pseudo::FocusVisible: {
+                        // Focused from the keyboard, as CSS's: a focus ring for the keyboard, none for a click
+                        if (!component->focusEnabled() || !component->hasFocus()) {
+                            return false;
+                        }
+                        const Window *window = const_cast<Div *>(component)->window();
+                        return window && window->focusVisible();
+                    }
                     case Pseudo::Active:
                         return component->active();
                     case Pseudo::Disabled:

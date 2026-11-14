@@ -4,12 +4,10 @@
 
 namespace psychic_ui {
     /**
-     * The default text input: the default chrome around the text
+     * The default text input, Pivotal's: a raised field in a hairline, the accent's border when focused
      */
     class DefaultTextInputSkin : public TextInputSkinBase {
     public:
         DefaultTextInputSkin();
-    protected:
-        void drawChrome(SkCanvas *canvas, const paint::Box &box, SkinState state) override;
     };
 }

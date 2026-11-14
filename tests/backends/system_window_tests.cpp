@@ -54,17 +54,11 @@ TEST_CASE("Drag areas", "[backend][drag]") {
     CHECK(window->isDragArea(barX, barY));
 
     // Its buttons still take presses
-    std::shared_ptr<Div> close;
-    for (const auto &child : titleBar.children()) {
-        if (std::dynamic_pointer_cast<Button>(child)) {
-            close = child;
-            break;
-        }
-    }
-    REQUIRE(close != nullptr);
+    Button &close = titleBar.controls().closeButton();
+    REQUIRE(close.getWidth() > 0);
     int closeX = 0;
     int closeY = 0;
-    close->localToGlobal(closeX, closeY, close->getWidth() / 2, close->getHeight() / 2);
+    close.localToGlobal(closeX, closeY, close.getWidth() / 2, close.getHeight() / 2);
     CHECK_FALSE(window->isDragArea(closeX, closeY));
 
     // Outside of it

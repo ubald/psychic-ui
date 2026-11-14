@@ -4,17 +4,11 @@
 
 namespace psychic_ui {
     /**
-     * The default range: the default chrome as the track, filled from the start up to the value. The skin gets the
-     * `.inverted` class once the fill reaches its middle, under the centered value label (`.normal` before).
+     * The default range, Pivotal's slider: a thin rounded track, the accent filling it up to the value, a round thumb
+     * with a soft shadow on it, and the value after the track. The parts paint themselves from the set's rules.
      */
     class DefaultSliderSkin : public RangeSkinBase {
     public:
         DefaultSliderSkin();
-
-        float valueAt(int x, int y) const override;
-
-    protected:
-        void valueChanged() override;
-        void drawChrome(SkCanvas *canvas, const paint::Box &box, SkinState state) override;
     };
 }

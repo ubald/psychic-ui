@@ -8,6 +8,36 @@ namespace psychic_ui {
 
         RangeBase::RangeBase() :
             Component<RangeSkin>() {
+            _focusEnabled = true; // Tab reaches it; the arrows, Home and End move it
+
+            const auto key = [this](const Key key, const Mod modifiers) {
+                if (!_enabled) {
+                    return;
+                }
+                const float step  = modifiers.shift ? 0.1f : 0.01f;
+                const float value = getLinearPercentage();
+                switch (key) {
+                    case Key::RIGHT:
+                    case Key::UP:
+                        setLinearPercentage(std::clamp(value + step, 0.0f, 1.0f));
+                        break;
+                    case Key::LEFT:
+                    case Key::DOWN:
+                        setLinearPercentage(std::clamp(value - step, 0.0f, 1.0f));
+                        break;
+                    case Key::HOME:
+                        setLinearPercentage(0.0f);
+                        break;
+                    case Key::END:
+                        setLinearPercentage(1.0f);
+                        break;
+                    default:
+                        break;
+                }
+            };
+            keyPressed.subscribe(key);
+            keyRepeated.subscribe(key);
+
             onMousePress(
                 [this](const int mouseX, const int mouseY, MouseButton /*button*/, Mod /*modifiers*/) {
                     int windowX = 0;

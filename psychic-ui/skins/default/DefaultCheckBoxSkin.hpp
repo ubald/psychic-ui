@@ -4,8 +4,8 @@
 
 namespace psychic_ui {
     /**
-     * The default check box: the default chrome on the box, filled with the box's background color when checked
-     * or under the mouse
+     * The default check box, Pivotal's: a small rounded box, its background and border from its style
+     * (`CheckBox.checked .box` fills it with the accent), and a check mark in the box's `color` when checked
      */
     class DefaultCheckBoxSkin : public CheckBoxSkinBase {
     public:

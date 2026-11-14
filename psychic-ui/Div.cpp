@@ -494,12 +494,14 @@ namespace psychic_ui {
 
         // A Gaussian reaches about 3 sigmas, 1.5 blur radii
         const Style &paint = _computedStyle;
-        _paintOutset = std::max(
+        const auto shadowReach = [](Color color, float blur, float x, float y, float spread) {
+            return color.alpha() > 0 ? std::max(0.0f, blur * 1.5f + std::max(std::abs(x), std::abs(y)) + spread) : 0.0f;
+        };
+        _paintOutset = std::max({
             paint.outlineWidth() > 0.0f ? std::max(0.0f, paint.outlineOffset() + paint.outlineWidth()) : 0.0f,
-            paint.shadowColor().alpha() > 0
-            ? paint.shadowBlur() * 1.5f + std::max(std::abs(paint.shadowOffsetX()), std::abs(paint.shadowOffsetY()))
-            : 0.0f
-        );
+            shadowReach(paint.shadowColor(), paint.shadowBlur(), paint.shadowOffsetX(), paint.shadowOffsetY(), paint.shadowSpread()),
+            shadowReach(paint.shadow2Color(), paint.shadow2Blur(), paint.shadow2OffsetX(), paint.shadow2OffsetY(), paint.shadow2Spread())
+        });
 
         // region Radius
         // The most specific radius set wins: corner, then side, then all
@@ -793,13 +795,15 @@ namespace psychic_ui {
 
         // Enumerated values are always pushed, unset is their default
         if (has(P::textDirection)) { YGNodeStyleSetDirection(n, toYoga(s.textDirection())); }
-        if (has(P::direction)) { YGNodeStyleSetFlexDirection(n, toYoga(s.direction())); }
-        if (has(P::justify)) { YGNodeStyleSetJustifyContent(n, toYoga(s.justify())); }
-        if (has(P::alignContent)) { YGNodeStyleSetAlignContent(n, toYoga(s.alignContent())); }
-        if (has(P::alignItems)) { YGNodeStyleSetAlignItems(n, toYoga(s.alignItems())); }
+        // A component lays out its skin alone, filling it: how content is laid out goes to the skin, which inherits it
+        const bool content = !_ignoreInternalLayoutContraints;
+        if (content && has(P::direction)) { YGNodeStyleSetFlexDirection(n, toYoga(s.direction())); }
+        if (content && has(P::justify)) { YGNodeStyleSetJustifyContent(n, toYoga(s.justify())); }
+        if (content && has(P::alignContent)) { YGNodeStyleSetAlignContent(n, toYoga(s.alignContent())); }
+        if (content && has(P::alignItems)) { YGNodeStyleSetAlignItems(n, toYoga(s.alignItems())); }
         if (has(P::alignSelf)) { YGNodeStyleSetAlignSelf(n, toYoga(s.alignSelf())); }
         if (has(P::position)) { YGNodeStyleSetPositionType(n, toYoga(s.position())); }
-        if (has(P::wrap)) { YGNodeStyleSetFlexWrap(n, toYoga(s.wrap())); }
+        if (content && has(P::wrap)) { YGNodeStyleSetFlexWrap(n, toYoga(s.wrap())); }
         if (has(P::overflow)) { YGNodeStyleSetOverflow(n, toYoga(s.overflow())); }
         if (has(P::display)) { YGNodeStyleSetDisplay(n, toYoga(s.display())); }
         if (has(P::boxSizing)) { YGNodeStyleSetBoxSizing(n, toYoga(s.boxSizing())); }
@@ -810,9 +814,9 @@ namespace psychic_ui {
         if (has(P::basis)) { setLength(n, s, P::basis, s.basis(), YGNodeStyleSetFlexBasis, YGNodeStyleSetFlexBasisPercent, YGNodeStyleSetFlexBasisAuto); }
         if (has(P::aspectRatio)) { setFloat(n, s, P::aspectRatio, s.aspectRatio(), YGNodeStyleSetAspectRatio); }
 
-        if (has(P::gap)) { setGap(n, s, P::gap, YGGutterAll, s.gap()); }
-        if (has(P::rowGap)) { setGap(n, s, P::rowGap, YGGutterRow, s.rowGap()); }
-        if (has(P::columnGap)) { setGap(n, s, P::columnGap, YGGutterColumn, s.columnGap()); }
+        if (content && has(P::gap)) { setGap(n, s, P::gap, YGGutterAll, s.gap()); }
+        if (content && has(P::rowGap)) { setGap(n, s, P::rowGap, YGGutterRow, s.rowGap()); }
+        if (content && has(P::columnGap)) { setGap(n, s, P::columnGap, YGGutterColumn, s.columnGap()); }
 
         // Insets: auto is the same as none
         if (has(P::left)) { setEdge(n, s, P::left, YGEdgeLeft, s.left(), YGNodeStyleSetPosition, YGNodeStyleSetPositionPercent, nullptr); }
@@ -1041,19 +1045,31 @@ namespace psychic_ui {
 
     void Div::drawShadow(SkCanvas *canvas) {
         const Style &style = _computedStyle;
-        if (style.shadowColor().alpha() == 0) {
+        if (style.shadowColor().alpha() == 0 && style.shadow2Color().alpha() == 0) {
             return;
         }
-        SkPaint paint;
-        paint.setAntiAlias(true);
-        paint.setColor(style.shadowColor().argb());
-        if (style.shadowBlur() > 0.0f) {
-            paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, style.shadowBlur() / 2.0f));
-        }
+        const auto layer = [&](Color color, float blur, float x, float y, float spread) {
+            if (color.alpha() == 0) {
+                return;
+            }
+            SkPaint paint;
+            paint.setAntiAlias(true);
+            paint.setColor(color.argb());
+            if (blur > 0.0f) {
+                paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, blur / 2.0f));
+            }
+            SkRRect shape = _roundRect.makeOffset(x, y);
+            if (spread != 0.0f) {
+                shape.outset(spread, spread); // Insets when negative; the radii follow, as in CSS
+            }
+            canvas->drawRRect(shape, paint);
+        };
         // Only outside the box, as in CSS: a translucent background doesn't show it
         canvas->save();
         canvas->clipRRect(_roundRect, SkClipOp::kDifference, true);
-        canvas->drawRRect(_roundRect.makeOffset(style.shadowOffsetX(), style.shadowOffsetY()), paint);
+        // The second layer under the first
+        layer(style.shadow2Color(), style.shadow2Blur(), style.shadow2OffsetX(), style.shadow2OffsetY(), style.shadow2Spread());
+        layer(style.shadowColor(), style.shadowBlur(), style.shadowOffsetX(), style.shadowOffsetY(), style.shadowSpread());
         canvas->restore();
     }
 

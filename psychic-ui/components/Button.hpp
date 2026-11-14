@@ -17,6 +17,11 @@ namespace psychic_ui {
         }
 
         virtual void setLabel(const std::string &/*label*/) {};
+
+        /**
+         * The button's icon, by its registered name ("" for none)
+         */
+        virtual void setIcon(const std::string &/*icon*/) {};
     };
 
     class Button : public Component<ButtonSkin> {
@@ -35,6 +40,17 @@ namespace psychic_ui {
         template<class Self>
         Self &label(this Self &self, const std::string &label) {
             static_cast<Button &>(self).updateLabel(label);
+            return self;
+        }
+
+        /**
+         * The icon before the label, by its registered name (IconRegistry); "" for none
+         */
+        const std::string &icon() const { return _icon; }
+
+        template<class Self>
+        Self &icon(this Self &self, detail::StringArg icon) {
+            static_cast<Button &>(self).updateIcon(std::string{icon.value});
             return self;
         }
 
@@ -78,11 +94,13 @@ namespace psychic_ui {
 
     protected:
         std::string               _label{};
+        std::string               _icon{};
         bool                      _toggle{false};
         bool                      _autoToggle{true};
         bool                      _selected{false};
 
         void updateLabel(const std::string &label);
+        void updateIcon(const std::string &icon);
         void updateSelected(bool selected);
         void skinChanged() override;
     };

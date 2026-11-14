@@ -150,3 +150,33 @@ TEST_CASE("a component paints its own outline, its skin doesn't repeat it", "[sk
     CHECK(button.skin()->computedStyle().outlineWidth() == 0.0f);
     CHECK(button.skin()->computedStyle().shadowColor().alpha() == 0);
 }
+
+TEST_CASE("a shadow spreads, and a second layer goes under the first", "[div][shadow]") {
+    Scene scene;
+    scene.box->backgroundColor(argb(0xFF0000FF));
+
+    SECTION("a negative spread shrinks the copy: a hard shadow offset less than the inset shows nothing") {
+        scene.box->shadowColor(argb(0xFF000000)).shadowOffsetY(6).shadowSpread(-8);
+        scene.render();
+        CHECK(white(scene.at(*scene.box, 50, 103)));
+    }
+
+    SECTION("a positive spread grows it on every side") {
+        scene.box->shadowColor(argb(0xFF000000)).shadowSpread(4);
+        scene.render();
+        CHECK(near(scene.at(*scene.box, -2, 50), 0, 0, 0));
+        CHECK(near(scene.at(*scene.box, 50, 102), 0, 0, 0));
+        CHECK(white(scene.at(*scene.box, -6, 50)));
+    }
+
+    SECTION("the second layer, alone or under the first") {
+        scene.box->shadow2Color(argb(0xFFFF0000)).shadow2OffsetY(10);
+        scene.render();
+        CHECK(near(scene.at(*scene.box, 50, 105), 255, 0, 0));
+
+        scene.box->shadowColor(argb(0xFF000000)).shadowOffsetY(6);
+        scene.render();
+        CHECK(near(scene.at(*scene.box, 50, 103), 0, 0, 0));   // The first, over the second
+        CHECK(near(scene.at(*scene.box, 50, 108), 255, 0, 0)); // The second, past the first
+    }
+}

@@ -78,6 +78,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         style/style_manager_tests.cpp
         style/theme_tests.cpp
         skins/skin_set_tests.cpp
+        skins/default_skins_tests.cpp
         style/style_tests.cpp
         style/style_rule_tests.cpp
         style/cascade_tests.cpp

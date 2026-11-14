@@ -4,6 +4,9 @@
 namespace psychic_ui {
     MenuButtonSkinBase::MenuButtonSkinBase() :
         MenuButtonSkin() {
+        _icon = &add<Icon>();
+        _icon->addClassName("icon")
+             .display(Display::None);
         _label = &add<Label>();
         _label->addClassName("label");
         _shortcut = &add<Label>();
@@ -11,8 +14,12 @@ namespace psychic_ui {
     }
 
     void MenuButtonSkinBase::added() {
-        _label->text(component()->menuItem()->label);
-        _shortcut->text(component()->menuItem()->shortcut);
+        const MenuItem *item = component()->menuItem();
+        _icon->name(item->icon)
+             .display(item->icon.empty() ? Display::None : Display::Flex);
+        _label->text(item->label);
+        _shortcut->text(item->shortcut)
+                 .display(item->shortcut.empty() ? Display::None : Display::Flex);
     }
 
     void MenuButtonSkinBase::draw(SkCanvas *canvas) {

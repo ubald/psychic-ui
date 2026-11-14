@@ -763,7 +763,14 @@ namespace psychic_ui {
 
     // region Focus
 
-    void Window::requestFocus(Div *component) {
+    void Window::requestFocus(Div *component, const bool visible) {
+        if (visible != _focusVisible) {
+            _focusVisible = visible;
+            for (Div *div: _focusPath) {
+                div->setFocused(false); // Restyled as it is focused again below: `:focus-visible` changed
+            }
+        }
+
         // Build the path
         std::vector<Div *> path{};
         Div                *c = component;
@@ -968,7 +975,60 @@ namespace psychic_ui {
         }
     }
 
+    namespace {
+        /**
+         * The divs that take the focus, in document order
+         */
+        void focusables(Div *div, std::vector<Div *> &list) {
+            if (!div->enabled() || !div->visible() || div->computedStyle().display() == Display::None) {
+                return;
+            }
+            if (div->focusEnabled()) {
+                list.push_back(div);
+            }
+            for (auto &child: div->children()) {
+                focusables(child.get(), list);
+            }
+        }
+    }
+
+    bool Window::focusNext(const bool backwards) {
+        std::vector<Div *> list{};
+        // The open menu first, then the modals, otherwise the app
+        if (menu->visible() && !menu->children().empty()) {
+            focusables(menu, list);
+        } else if (!modal->children().empty()) {
+            focusables(modal, list);
+        } else {
+            focusables(app, list);
+        }
+        if (list.empty()) {
+            return false;
+        }
+        Div *current = nullptr;
+        for (auto it = _focusPath.rbegin(); it != _focusPath.rend(); ++it) {
+            if ((*it)->focusEnabled()) {
+                current = *it;
+                break;
+            }
+        }
+        auto       found = std::find(list.begin(), list.end(), current);
+        const auto count = static_cast<std::ptrdiff_t>(list.size());
+        std::ptrdiff_t index;
+        if (found == list.end()) {
+            index = backwards ? count - 1 : 0;
+        } else {
+            index = (std::distance(list.begin(), found) + (backwards ? count - 1 : 1)) % count;
+        }
+        requestFocus(list[static_cast<std::size_t>(index)], true);
+        return true;
+    }
+
     bool Window::handleKeyPress(Key key, Mod mod) {
+        // Tab moves the focus, before anyone else sees it
+        if (key == Key::TAB && !mod.ctrl && !mod.alt && !mod.super) {
+            return focusNext(mod.shift);
+        }
         // Go backwards since we want to cancel as soon as possible when a child handles it
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
             // Everyone in the focus path gets the key events, focusEnabled or not

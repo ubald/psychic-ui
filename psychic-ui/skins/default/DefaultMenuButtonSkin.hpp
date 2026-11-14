@@ -1,11 +1,11 @@
 #pragma once
 
-#include "psychic-ui/Shape.hpp"
 #include "psychic-ui/skins/base/MenuButtonSkinBase.hpp"
 
 namespace psychic_ui {
     /**
-     * A menu item: its label and shortcut over the background its style gives it
+     * A menu item, Pivotal's: its icon, label and shortcut over the background its style gives it (raised while
+     * highlighted)
      */
     class DefaultMenuButtonSkin : public MenuButtonSkinBase {
     public:
@@ -13,12 +13,12 @@ namespace psychic_ui {
     };
 
     /**
-     * A menu item opening a submenu (the "submenu" variant): an `.arrow` part after the label
+     * A menu item opening a submenu (the "submenu" variant): an `.arrow` part after the label, a chevron icon
      */
     class DefaultSubMenuButtonSkin : public DefaultMenuButtonSkin {
     public:
         DefaultSubMenuButtonSkin();
     protected:
-        Shape *_arrow{nullptr}; // The `.arrow` part, a child, which we own
+        Icon *_arrow{nullptr}; // The `.arrow` part, a child, which we own
     };
 }

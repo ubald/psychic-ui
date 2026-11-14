@@ -59,11 +59,18 @@
     X(outlineWidth,             float,         detail::FloatArg,   0.0f,                   false, false) \
     X(outlineOffset,            float,         detail::FloatArg,   0.0f,                   false, false) \
     /* A blurred copy of the border box under the div, outside it, like CSS's box-shadow; none while transparent. */ \
-    /* shadowBlur is the blur radius (twice the Gaussian's sigma, as in CSS) */ \
+    /* shadowBlur is the blur radius (twice the Gaussian's sigma, as in CSS), shadowSpread grows (or, negative, */ \
+    /* shrinks) the copy before the blur. shadow2* is a second layer, under the first, as in a CSS shadow list. */ \
     X(shadowColor,              Color,         Color,              argb(0x00000000),       false, false) \
     X(shadowBlur,               float,         detail::FloatArg,   0.0f,                   false, false) \
     X(shadowOffsetX,            float,         detail::FloatArg,   0.0f,                   false, false) \
     X(shadowOffsetY,            float,         detail::FloatArg,   0.0f,                   false, false) \
+    X(shadowSpread,             float,         detail::FloatArg,   0.0f,                   false, false) \
+    X(shadow2Color,             Color,         Color,              argb(0x00000000),       false, false) \
+    X(shadow2Blur,              float,         detail::FloatArg,   0.0f,                   false, false) \
+    X(shadow2OffsetX,           float,         detail::FloatArg,   0.0f,                   false, false) \
+    X(shadow2OffsetY,           float,         detail::FloatArg,   0.0f,                   false, false) \
+    X(shadow2Spread,            float,         detail::FloatArg,   0.0f,                   false, false) \
     /* Radii: the most specific one set wins (corner, then side, then all) */ \
     X(borderRadius,             float,         detail::FloatArg,   0.0f,                   false, false) \
     X(borderRadiusTop,          float,         detail::FloatArg,   0.0f,                   false, false) \

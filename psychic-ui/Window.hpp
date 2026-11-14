@@ -321,7 +321,23 @@ namespace psychic_ui {
 
         // region Focus
 
-        void requestFocus(Div *component);
+        /**
+         * Focus a div (and the path to it). `visible` is whether the focus should show (`:focus-visible`):
+         * true when it moved with the keyboard, false for a press.
+         */
+        void requestFocus(Div *component, bool visible = false);
+
+        /**
+         * Whether the focus moved with the keyboard, so that the focused div shows a focus ring (`:focus-visible`)
+         */
+        bool focusVisible() const { return _focusVisible; }
+
+        /**
+         * Move the focus to the next div that takes it (focusEnabled, enabled, visible), in document order,
+         * or the previous one with `backwards`; wraps around. Tab and Shift+Tab do it.
+         * @return Whether a div took the focus
+         */
+        bool focusNext(bool backwards = false);
 
         // endregion
 
@@ -432,6 +448,8 @@ namespace psychic_ui {
         Cursor _cursor{Cursor::Arrow};
 
         InputMode _inputMode{InputMode::Pointer};
+
+        bool _focusVisible{false};
 
         ColorScheme          _colorScheme{ColorScheme::Unknown};
         bool                 _followSystemTheme{true};

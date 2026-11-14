@@ -4,7 +4,7 @@
 
 namespace psychic_ui {
     /**
-     * A title bar's window button (the "title-bar" variant): a ringed dot of the button's background color.
+     * A window control (the "title-bar" variant): a dot of the button's background color.
      * It has no label, so it skips ButtonSkinBase.
      */
     class TitleBarButtonSkin : public ButtonSkin {

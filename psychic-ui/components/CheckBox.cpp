@@ -8,8 +8,17 @@ namespace psychic_ui {
         tag("CheckBox");
 
         _mouseChildren = false; // !important
+        _focusEnabled  = true;  // Tab reaches it; Space toggles it
 
         _label = label;
+
+        keyPressed.subscribe(
+            [this](const Key key, const Mod /*modifiers*/) {
+                if (_enabled && key == Key::SPACE) {
+                    updateChecked(!_checked);
+                }
+            }
+        );
 
         if (onChangeCallback) {
             changed.subscribe(std::move(onChangeCallback));
@@ -42,6 +51,11 @@ namespace psychic_ui {
     void CheckBox::updateChecked(const bool checked) {
         if (_checked != checked) {
             _checked = checked;
+            if (_checked) {
+                addClassName("checked");
+            } else {
+                removeClassName("checked");
+            }
             invalidateStyle();
             changed.emit(_checked);
         }

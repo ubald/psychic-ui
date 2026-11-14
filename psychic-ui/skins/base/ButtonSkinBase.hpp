@@ -1,22 +1,26 @@
 #pragma once
 
 #include "psychic-ui/components/Button.hpp"
+#include "psychic-ui/components/Icon.hpp"
 #include "psychic-ui/components/Label.hpp"
 #include "psychic-ui/skins/paint/Box.hpp"
 #include "SkinState.hpp"
 
 namespace psychic_ui {
     /**
-     * What every button skin shares: the `.label` part, which shows the button's label.
-     * A skin set's button only paints its chrome, behind the label.
+     * What every button skin shares: the `.icon` part, showing the button's icon (not displayed without one),
+     * then the `.label` part, showing its label (not displayed when empty).
+     * A skin set's button only paints its chrome, behind them.
      */
     class ButtonSkinBase : public ButtonSkin {
     public:
         ButtonSkinBase();
 
         void setLabel(const std::string &label) override;
+        void setIcon(const std::string &icon) override;
 
     protected:
+        Icon  *_icon{nullptr};  // The `.icon` part, a child, which we own
         Label *_label{nullptr}; // The `.label` part, a child, which we own
 
         void draw(SkCanvas *canvas) final;

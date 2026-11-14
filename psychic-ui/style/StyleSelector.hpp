@@ -10,6 +10,7 @@ namespace psychic_ui {
 
     enum class Pseudo {
         Focus,
+        FocusVisible,
         Hover,
         Active,
         Disabled,

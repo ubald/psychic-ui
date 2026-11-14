@@ -1,5 +1,4 @@
 #include <string>
-#include <utility>
 #include "psychic-ui/style/StyleManager.hpp"
 #include "psychic-ui/themes/pivotal.hpp"
 #include "psychic-ui/themes/ubuntu-type.hpp"
@@ -16,16 +15,49 @@
 
 namespace psychic_ui {
     namespace {
+        constexpr Color transparent{};
+
         /**
-         * Where the default chrome goes: a component and, inside it, the part carrying the chrome
+         * A step of the type scale on a style, in a font of the theme
          */
-        constexpr std::pair<const char *, const char *> chromes[]{
-            {"Button", "DefaultButtonSkin"},
-            {"CheckBox", ".box"},
-            {"Range", "DefaultSliderSkin"},
-            {"TextInput", "DefaultTextInputSkin"},
-            {"TextArea", "DefaultTextAreaSkin"},
-        };
+        Style &text(Style &style, const TextStep &step, const Font &font, const Sizes &sizes) {
+            return style.fontFamily(font.name)
+                        .fontSize(step.size + sizes.textStep)
+                        .lineHeight(step.leading + sizes.textStep);
+        }
+
+        /**
+         * A shadow as the first layer of a style
+         */
+        Style &shadow(Style &style, const Shadow &shadow) {
+            return style.shadowColor(shadow.color)
+                        .shadowBlur(shadow.blur)
+                        .shadowOffsetX(shadow.offsetX)
+                        .shadowOffsetY(shadow.offsetY)
+                        .shadowSpread(shadow.spread);
+        }
+
+        /**
+         * Pivotal's one elevation, for everything that floats: two layers
+         */
+        Style &floating(Style &style, const Elevation &elevation) {
+            const Shadow &contact = elevation.overlayContact;
+            return shadow(style, elevation.overlay)
+                .shadow2Color(contact.color)
+                .shadow2Blur(contact.blur)
+                .shadow2OffsetX(contact.offsetX)
+                .shadow2OffsetY(contact.offsetY)
+                .shadow2Spread(contact.spread);
+        }
+
+        /**
+         * Pivotal's focus ring: one for every focusable thing, shown for the keyboard
+         */
+        Style &focusRing(Style &style, const Palette &p, const Metrics &m) {
+            return style.outlineColor(p.accent)
+                        .outlineWidth(m.focusRing)
+                        .outlineOffset(m.focusRingOffset);
+        }
     }
 
     std::string_view DefaultSkins::name() const {
@@ -42,6 +74,12 @@ namespace psychic_ui {
 
     void DefaultSkins::registerSkins(SkinRegistry &skins) const {
         skins.add<ButtonSkin, DefaultButtonSkin>()
+             .add<ButtonSkin, DefaultButtonSkin>("secondary")
+             .add<ButtonSkin, DefaultPrimaryButtonSkin>("primary")
+             .add<ButtonSkin, DefaultGhostButtonSkin>("ghost")
+             .add<ButtonSkin, DefaultQuietButtonSkin>("quiet")
+             .add<ButtonSkin, DefaultDangerButtonSkin>("danger")
+             .add<ButtonSkin, DefaultTabButtonSkin>("tab")
              .add<ButtonSkin, DefaultBasicButtonSkin>("basic")
              .add<ButtonSkin, TitleBarButtonSkin>("title-bar")
              .add<CheckBoxSkin, DefaultCheckBoxSkin>()
@@ -58,6 +96,7 @@ namespace psychic_ui {
         const Palette    &p     = theme.palette;
         const Typography &t     = theme.type;
         const Metrics    &m     = theme.metrics;
+        const Radii      &r     = m.radius;
         const Sizes      &s     = manager->sizes();
 
         // Inter (Pivotal's) and Ubuntu are always there, so any style can name them; then the theme's own
@@ -67,395 +106,395 @@ namespace psychic_ui {
             }
         }
 
+        const auto rule = [manager](const char *selector) -> Style & {
+            return manager->style(selector);
+        };
+
         // region Defaults
-        manager->style("*")
-               .overflow(Overflow::Visible)
-               .fontFamily(t.regular.name)
-               .fontSize(t.sm.size)
-               .lineHeight(t.sm.leading)
-               .color(p.text)
-               .selectionColor(p.onAccent)
-               .selectionBackgroundColor(p.accent)
-               .antiAlias(true)
-               .textAntiAlias(true);
 
-        // The default chrome (see DefaultChrome.hpp), on the skins that draw it and on a check box's box.
-        // Its border thickens when focused, eating its margin, so the content doesn't move.
-        for (const auto &[component, part]: chromes) {
-            const auto rule = [&](const std::string &state) -> Style & {
-                return manager->style(std::string{component} + state + " " + part);
-            };
+        // Body text: 12 px on 18, primary text; the selection is the accent, softly
+        text(rule("*"), t.sm, t.regular, s)
+            .overflow(Overflow::Visible)
+            .color(p.text)
+            .selectionColor(p.text)
+            .selectionBackgroundColor(p.accentSoft)
+            .iconSize(m.iconMd)
+            .iconStrokeWidth(m.iconStroke)
+            .antiAlias(true)
+            .textAntiAlias(true);
 
-            rule("")
-                .borderRadius(m.radius.control)
-                .border(m.border)
-                .margin(m.focusRing - m.border)
-                .borderColor(p.raised.withAlpha(0x40))
-                .backgroundColor(p.raised)
-                .contentBackgroundColor(p.base);
+        // Three levels of text, by descending importance (TextRole)
+        rule(".text-primary").color(p.text);
+        rule(".text-secondary").color(p.textSecondary);
+        rule(".text-tertiary").color(p.textMuted);
 
-            rule(":hover")
-                .borderColor(p.raised.withAlpha(0x80))
-                .backgroundColor(p.hover);
-
-            rule(":active")
-                .borderColor(p.raised.withAlpha(0xC0))
-                .backgroundColor(p.accent);
-
-            rule(":focus")
-                .border(m.focusRing)
-                .margin(0)
-                .borderColor(p.accent);
-
-            rule(":disabled")
-                .backgroundColor(p.raised);
-
-            rule(":disabled:hover")
-                .backgroundColor(p.raised);
-
-            rule(":disabled:active")
-                .backgroundColor(p.accent); // TODO: Fade
-        }
-
-        // endregion
+        // Headings: Pivotal's titles are medium weight, small; only the largest is semibold
+        text(rule(".h1"), t.xxl, t.semiBold, s).letterSpacing(-0.2f);
+        text(rule(".h2"), t.xl, t.medium, s);
+        text(rule(".h3"), t.md, t.medium, s);
+        text(rule(".h4"), t.base, t.medium, s);
+        text(rule(".h5"), t.sm, t.medium, s);
+        text(rule(".h6"), t.xs, t.medium, s).color(p.textMuted);
 
         // Fingers reach the controls from around them (none with a pointer); they look the same
         for (const char *control: {"Button", "CheckBox", "Range", "ScrollBar", "TextInput", "TextArea", "MenuButton"}) {
-            manager->style(control).hitSlop(s.hitSlop);
+            rule(control).hitSlop(s.hitSlop);
         }
-
-        // region Typography
-
-        manager->style(".h1")
-               .fontFamily(t.regular.name)
-               .fontSize(t.xxl.size)
-               .lineHeight(t.xxl.size);
-
-        manager->style(".h2")
-               .fontFamily(t.regular.name)
-               .fontSize(t.xxl.size)
-               .lineHeight(t.xxl.size);
-
-        manager->style(".h3")
-               .fontFamily(t.regular.name)
-               .fontSize(t.xl.size)
-               .lineHeight(t.xl.size);
-
-        manager->style(".h4")
-               .fontFamily(t.regular.name)
-               .fontSize(t.md.size)
-               .lineHeight(t.md.size);
-
-        manager->style(".h5")
-               .fontFamily(t.regular.name)
-               .fontSize(t.sm.size)
-               .lineHeight(t.sm.size);
-
-        manager->style(".h6")
-               .fontFamily(t.regular.name)
-               .fontSize(t.xxs.size)
-               .lineHeight(t.xxs.size);
 
         // endregion
 
         // region Window
-        manager->style("Window")
-               .color(p.text)
-               .backgroundColor(p.base)
-               .border(m.border)
-               .borderColor(p.line);
-        // endregion
 
-        // region Title Bar
-        manager->style("TitleBar")
-               .alignItems(Align::Center)
-               .height(48)
-               .padding(m.space(3))
-               .backgroundColor(p.surface)
-               .borderBottom(m.border)
-               .borderColor(p.line);
-
-        manager->style("TitleBar Label.title")
-               .fontFamily(t.regular.name)
-               .fontSize(t.xl.size)
-               .marginLeft(m.space(3))
-               .grow(1);
-
-        manager->style("TitleBar Button")
-               .skin("title-bar")
-               .width(18)
-               .height(18)
-               .margin(3)
-               .padding(0)
-               .border(0);
-
-        manager->style("TitleBar Button.close")
-               .backgroundColor(argb(0xffff5f57));
-
-        manager->style("TitleBar Button.close:hover")
-               .backgroundColor(argb(0xffff5f57));
-
-        manager->style("TitleBar Button.minimize")
-               .backgroundColor(argb(0xffffbd2f));
-
-        manager->style("TitleBar Button.minimize:hover")
-               .backgroundColor(argb(0xffffbd2f));
-
-        manager->style("TitleBar Button.maximize")
-               .backgroundColor(argb(0xff28c940));
-
-        manager->style("TitleBar Button.maximize:hover")
-               .backgroundColor(argb(0xff28c940));
+        rule("Window")
+            .color(p.text)
+            .backgroundColor(p.base)
+            .border(m.border)
+            .borderColor(p.line);
 
         // endregion
 
-        // region Text Input
+        // region Title bar and window controls
 
-        manager->style("TextInput")
-               .padding(m.space(1.5f));
+        rule("TitleBar")
+            .alignItems(Align::Center)
+            .gap(m.space(2.5f))
+            .height(m.barHeader)
+            .paddingLeft(m.space(3.5f))
+            .paddingRight(m.space(2.5f))
+            .backgroundColor(p.frame)
+            .borderBottom(m.border)
+            .borderColor(p.line);
 
-        manager->style("TextArea")
-               .padding(m.space(1.5f));
+        text(rule("TitleBar Label.title"), t.md, t.semiBold, s)
+            .letterSpacing(-0.14f) // -0.01em
+            .color(p.text)
+            .grow(1);
 
-        // endregion
+        // The three dots, in the theme's semantic colors
+        rule("WindowControls").gap(7);
 
-        // region ScrollBars
+        rule("WindowControls Button")
+            .skin("title-bar")
+            .width(11)
+            .height(11)
+            .padding(0)
+            .border(0);
 
-        manager->style("ScrollBar.vertical")
-               .width(m.scrollBar);
-
-        manager->style("ScrollBar.horizontal")
-               .height(m.scrollBar);
-
-        manager->style("ScrollBar .track")
-               .backgroundColor(p.base);
-
-        manager->style("ScrollBar .thumb")
-               .backgroundColor(p.raised);
-
-        manager->style("ScrollBar.vertical .thumb")
-               .marginLeft(1)
-               .minHeight(s.controlSm);
-
-        manager->style("ScrollBar.horizontal .thumb")
-               .marginTop(1)
-               .minWidth(s.controlSm);
-
-        manager->style("ScrollBar:hover .thumb")
-               .backgroundColor(p.raised);
-
-        manager->style("ScrollBar:active .thumb")
-               .backgroundColor(p.accent);
-
-        manager->style("ScrollBar:disabled .thumb")
-               .backgroundColor(p.surface);
-
-        manager->style("Scroller ScrollBar.horizontal")
-               .marginRight(m.scrollBar);
+        rule("WindowControls Button.close").backgroundColor(p.danger);
+        rule("WindowControls Button.minimize").backgroundColor(p.warning);
+        rule("WindowControls Button.maximize").backgroundColor(p.success);
 
         // endregion
 
         // region Buttons
-        manager->style("Button")
-               .cursor(Cursor::Hand)
-               .direction(Direction::Row)
-               .alignItems(Align::Center)
-               .padding(m.space(3))
-               .fontSize(t.md.size)
-               .lineHeight(t.md.size)
-               .color(p.text)
-               .backgroundColor(p.raised);
 
-        manager->style("Button:hover")
-               .backgroundColor(p.hover);
+        // The secondary button, Pivotal's default: a raised pill in a hairline
+        text(rule("Button"), t.sm, t.medium, s)
+            .direction(Direction::Row)
+            .alignItems(Align::Center)
+            .justify(Justify::Center)
+            .gap(m.space(1.5f))
+            .height(s.controlMd)
+            .paddingHorizontal(m.space(2.5f))
+            .border(m.border)
+            .borderRadius(r.button)
+            .color(p.text)
+            .backgroundColor(p.raised)
+            .borderColor(p.line)
+            .iconSize(m.iconSm);
 
-        manager->style("Button:active")
-               .color(p.onAccent)
-               .backgroundColor(p.accent);
+        rule("Button:hover").borderColor(p.lineStrong);
+        rule("Button:active").borderColor(p.textMuted); // Pressed, or selected (a toggle)
+        rule("Button:disabled").opacity(0.45f);
+        focusRing(rule("Button:focus-visible"), p, m);
 
-        manager->style("Button:disabled")
-               .backgroundColor(p.raised);
+        // Smaller, for tool bars and fields' sides (Pivotal's sm)
+        text(rule("Button.small"), t.xs, t.medium, s)
+            .height(s.controlSm)
+            .paddingHorizontal(m.space(2));
 
-        manager->style("Button:disabled:hover")
-               .backgroundColor(p.raised);
+        // An icon alone, on a square
+        rule("Button.icon-button")
+            .width(s.controlSm)
+            .height(s.controlSm)
+            .padding(0)
+            .iconSize(m.iconMd)
+            .color(p.textMuted)
+            .backgroundColor(transparent)
+            .borderColor(transparent);
+        rule("Button.icon-button:hover").color(p.text).backgroundColor(p.raised);
+        rule("Button.icon-button:active").color(p.text).backgroundColor(p.raised);
 
-        manager->style("Button:disabled:active")
-               .color(p.onAccent)
-               .backgroundColor(p.accent); // TODO: Fade
+        // The variants, on the skin (`button.skin("primary")`)
+        rule("Button DefaultButtonSkin.primary")
+            .color(p.onAccent)
+            .backgroundColor(p.accent)
+            .borderColor(transparent);
+        rule("Button:hover DefaultButtonSkin.primary").backgroundColor(p.accentHover);
+        rule("Button:active DefaultButtonSkin.primary").backgroundColor(p.accentHover);
+
+        rule("Button DefaultButtonSkin.ghost")
+            .color(p.textSecondary)
+            .backgroundColor(transparent)
+            .borderColor(transparent);
+        rule("Button:hover DefaultButtonSkin.ghost").backgroundColor(p.raised);
+        rule("Button:active DefaultButtonSkin.ghost").color(p.text).backgroundColor(p.raised);
+
+        rule("Button DefaultButtonSkin.quiet")
+            .color(p.textMuted)
+            .backgroundColor(transparent)
+            .borderColor(transparent);
+        rule("Button:hover DefaultButtonSkin.quiet").color(p.text).backgroundColor(p.raised);
+        rule("Button:active DefaultButtonSkin.quiet").color(p.text).backgroundColor(p.raised);
+
+        rule("Button DefaultButtonSkin.danger")
+            .color(p.dangerText)
+            .backgroundColor(transparent)
+            .borderColor(p.danger.withAlpha(0x4D)); // 30%
+        rule("Button:hover DefaultButtonSkin.danger").backgroundColor(p.danger.withAlpha(0x14)); // 8%
+        rule("Button:active DefaultButtonSkin.danger").backgroundColor(p.danger.withAlpha(0x14));
 
         // endregion
 
-        // region CheckBox
-        manager->style("CheckBox")
-               .direction(Direction::Row)
-               .alignItems(Align::Center)
-               .padding(m.space(3))
-               .color(p.text)
-               .fontSize(t.md.size)
-               .lineHeight(t.md.size);
+        // region Check box
 
-        manager->style("CheckBox .box")
-               .width(s.controlSm)
-               .height(s.controlSm)
-               .marginRight(m.space(1.5f));
+        text(rule("CheckBox"), t.sm, t.regular, s)
+            .direction(Direction::Row)
+            .alignItems(Align::Center)
+            .gap(m.space(2))
+            .color(p.text);
+
+        rule("CheckBox .box")
+            .width(14)
+            .height(14)
+            .shrink(0)
+            .border(m.border)
+            .borderRadius(r.check)
+            .borderColor(p.lineStrong)
+            .backgroundColor(p.page)
+            .color(p.onAccent) // The check mark
+            .iconStrokeWidth(1.8f);
+
+        rule("CheckBox:hover .box").borderColor(p.textSecondary);
+        rule("CheckBox.checked .box")
+            .borderColor(p.accent)
+            .backgroundColor(p.accent);
+        rule("CheckBox:disabled").opacity(0.5f);
+        focusRing(rule("CheckBox:focus-visible .box"), p, m);
+
+        // endregion
+
+        // region Slider
+
+        // A thin track filled with the accent, a white thumb, the value after it
+        rule("Range DefaultSliderSkin.horizontal")
+            .direction(Direction::Row)
+            .alignItems(Align::Center)
+            .gap(m.space(2.5f))
+            .height(s.controlSm);
+
+        rule("Range DefaultSliderSkin.vertical")
+            .direction(Direction::Column)
+            .alignItems(Align::Center)
+            .width(s.controlSm);
+
+        rule("Range .track")
+            .grow(1)
+            .borderRadius(r.button)
+            .backgroundColor(p.lineStrong);
+        rule("Range DefaultSliderSkin.horizontal .track").height(4);
+        rule("Range DefaultSliderSkin.vertical .track").width(4);
+
+        rule("Range .fill")
+            .borderRadius(r.button)
+            .backgroundColor(p.accent);
+
+        shadow(rule("Range .thumb"), theme.elevation.thumb)
+            .width(14)
+            .height(14)
+            .borderRadius(r.button)
+            .backgroundColor(p.onAccent);
+        focusRing(rule("Range:focus-visible .thumb"), p, m);
+
+        text(rule("Range .value"), t.xs, t.regular, s)
+            .width(34)
+            .shrink(0)
+            .textAlign(TextAlign::End)
+            .color(p.text);
+        rule("Range DefaultSliderSkin.vertical .value").display(Display::None); // No room
+
+        rule("Range:disabled").opacity(0.5f);
+
+        // endregion
+
+        // region Text fields
+
+        // A raised field in a hairline; focus shows as the accent's border, not a ring
+        for (const char *field: {"TextInput", "TextArea"}) {
+            text(rule(field), t.base, t.regular, s)
+                .paddingHorizontal(m.space(2.5f))
+                .border(m.border)
+                .borderRadius(r.control)
+                .borderColor(p.line)
+                .backgroundColor(p.raised)
+                .color(p.text)
+                .cursor(Cursor::IBeam)
+                .overflow(Overflow::Hidden);
+        }
+        rule("TextInput")
+            .height(s.controlMd)
+            .justify(Justify::Center);
+        rule("TextArea")
+            .minHeight(s.controlMd * 2)
+            .paddingVertical(m.space(1.5f));
+
+        rule("TextInput:focus").borderColor(p.accent);
+        rule("TextArea:focus").borderColor(p.accent);
+        rule("TextInput:disabled").opacity(0.5f);
+        rule("TextArea:disabled").opacity(0.5f);
+
+        // endregion
+
+        // region Scroll bars
+
+        // Thin and self-effacing: a translucent pill, inset in a transparent track
+        rule("ScrollBar.vertical").width(m.scrollBar);
+        rule("ScrollBar.horizontal").height(m.scrollBar);
+
+        rule("ScrollBar .thumb")
+            .borderRadius(r.button)
+            .backgroundColor(p.scrollThumb);
+        rule("ScrollBar.vertical .thumb")
+            .marginHorizontal(m.scrollThumbInset)
+            .minHeight(s.controlSm);
+        rule("ScrollBar.horizontal .thumb")
+            .marginVertical(m.scrollThumbInset)
+            .minWidth(s.controlSm);
+
+        rule("ScrollBar:hover .thumb").backgroundColor(p.scrollThumbHover);
+        rule("ScrollBar:active .thumb").backgroundColor(p.scrollThumbHover);
+        rule("ScrollBar:disabled .thumb").visible(false);
+
+        rule("Scroller ScrollBar.horizontal").marginRight(m.scrollBar);
 
         // endregion
 
         // region Menus
-        // A translucent background rather than an opacity, which would fade the labels and highlights too
-        manager->style("Menu")
-               .backgroundColor(p.base.withAlpha(204))
-               .minWidth(200)
-               .alignItems(Align::Stretch);
 
-        manager->style("Menu MenuButton")
-               .direction(Direction::Row)
-               .paddingHorizontal(m.space(1.5f))
-               .paddingVertical(m.space(1.5f))
-               .borderRadius(0)
-               .backgroundColor(Color{}); // Transparent, over the menu's background
+        // The floating surface: overlay color, strong hairline, the popup radius, the one shadow
+        floating(rule("Menu"), theme.elevation)
+            .backgroundColor(p.overlay)
+            .border(m.border)
+            .borderColor(p.lineStrong)
+            .borderRadius(r.popup)
+            .padding(m.space(1))
+            .minWidth(m.menuWidth)
+            .alignItems(Align::Stretch)
+            .color(p.text);
 
-        manager->style("Menu MenuButton.submenu")
-               .skin("submenu");
+        // Rows: 32 px, 13 px text, raised grey while highlighted
+        text(rule("Menu MenuButton"), t.base, t.regular, s)
+            .direction(Direction::Row)
+            .alignItems(Align::Center)
+            .gap(m.space(2))
+            .minHeight(s.rowSm)
+            .paddingVertical(m.space(1.5f))
+            .paddingHorizontal(m.space(2))
+            .borderRadius(r.row)
+            .color(p.textSecondary)
+            .backgroundColor(transparent);
 
-        manager->style("Menu MenuButton .label")
-               .grow(1)
-               .fontFamily(t.regular.name)
-               .fontSize(t.xxs.size)
-               .lineHeight(t.sm.size);
+        rule("Menu MenuButton.submenu").skin("submenu");
+        rule("Menu MenuButton .icon").color(p.textMuted);
+        rule("Menu MenuButton .label").grow(1);
 
-        manager->style("Menu MenuButton .shortcut")
-               .fontSize(t.xxs.size)
-               .lineHeight(t.sm.size)
-               .color(p.text);
+        text(rule("Menu MenuButton .shortcut"), t.xs, t.regular, s)
+            .paddingLeft(m.space(4))
+            .color(p.textMuted);
 
-        manager->style("Menu MenuButton.submenu .arrow")
-               .width(6);
+        rule("Menu MenuButton .arrow")
+            .iconSize(m.iconSm)
+            .marginLeft(m.space(2))
+            .color(p.textMuted);
 
-        manager->style("Menu MenuButton:hover")
-               .backgroundColor(p.accent);
-
-        manager->style("Menu MenuButton:hover .label")
-               .color(p.onAccent);
-
-        manager->style("Menu MenuButton:hover .shortcut")
-               .color(p.onAccent.withAlpha(0xB0));
-
-        manager->style("Menu MenuButton.submenu:hover .arrow")
-               .color(p.onAccent);
-
-        manager->style("Menu MenuButton:active")
-               .backgroundColor(p.accent);
-
-        manager->style("Menu MenuButton:active .label")
-               .color(p.onAccent);
-
-        manager->style("Menu MenuButton:active .shortcut")
-               .color(p.onAccent.withAlpha(0xB0));
-
-        manager->style("Menu MenuButton.submenu:active .arrow")
-               .color(p.onAccent);
+        for (const char *state: {"Menu MenuButton:hover", "Menu MenuButton:active"}) {
+            rule(state)
+                .color(p.text)
+                .backgroundColor(p.raised);
+        }
+        rule("Menu MenuButton:hover .icon").color(p.text);
+        rule("Menu MenuButton:active .icon").color(p.text);
 
         // endregion
 
-        // region Ranges
+        // region Menu bar
 
-        manager->style("Range DefaultSliderSkin")
-               .borderRadius(m.radius.control)
-               .fontFamily(t.regular.name)
-               .fontSize(t.xxs.size)
-               .lineHeight(t.xxs.size)
-               .color(p.text);
+        // Its menus' triggers: ghost pills
+        rule("MenuBar")
+            .direction(Direction::Row)
+            .alignItems(Align::Center)
+            .gap(m.space(0.5f));
 
-        manager->style("Range DefaultSliderSkin.horizontal")
-               .height(s.controlSm);
+        text(rule("MenuBar Button"), t.sm, t.medium, s)
+            .skin("ghost")
+            .height(s.controlSm)
+            .paddingHorizontal(m.space(2));
 
-        manager->style("Range DefaultSliderSkin.vertical")
-               .width(s.controlSm);
+        // endregion
 
-        manager->style("Range DefaultSliderSkin.vertical .value")
-               .visible(false); // No room
+        // region Tool bar
 
-        manager->style("Range:hover DefaultSliderSkin.inverted")
-               .color(p.onAccent);
+        // A strip under a header: Pivotal's toolbar band, with quiet small buttons
+        rule("ToolBar")
+            .direction(Direction::Row)
+            .alignItems(Align::Center)
+            .gap(m.space(1.5f))
+            .height(m.barToolbar)
+            .paddingLeft(m.gutter)
+            .paddingRight(m.space(3))
+            .borderBottom(m.border)
+            .borderColor(p.line);
 
-        manager->style("Range:hover DefaultSliderSkin.normal")
-               .color(p.text);
-
-        manager->style("Range:active DefaultSliderSkin.normal")
-               .color(p.text);
-
-        manager->style("Range:active DefaultSliderSkin.inverted")
-               .color(p.onAccent);
+        text(rule("ToolBar Button"), t.xs, t.medium, s)
+            .skin("quiet")
+            .height(s.controlSm)
+            .paddingHorizontal(m.space(2));
 
         // endregion
 
         // region Tabs
-        manager->style("Tabs")
-               .direction(Direction::Row)
-               .borderBottom(m.border)
-               .borderColor(p.line)
-               .backgroundColor(p.raised);
 
-        manager->style("Tabs button")
-               .skin("basic")
-               .fontSize(t.xxs.size)
-               .lineHeight(t.sm.size)
-               .marginHorizontal(-m.border)
-               .paddingHorizontal(m.space(3))
-               .paddingVertical(m.space(1.5f))
-               .borderRadius(0)
-               .borderHorizontal(m.border)
-               .borderColor(p.line);
+        // Tabs on a hairline: the selected one underlined in the text color, never the accent
+        rule("Tabs")
+            .direction(Direction::Row)
+            .alignItems(Align::End)
+            .gap(m.space(1))
+            .minHeight(m.barToolbar)
+            .paddingHorizontal(m.gutter)
+            .borderBottom(m.border)
+            .borderColor(p.line);
 
-        // endregion
+        text(rule("Tabs Button"), t.base, t.medium, s)
+            .skin("tab")
+            .height(s.rowMd)
+            .marginBottom(-m.border) // Over the line, so the underline covers it
+            .paddingHorizontal(m.space(2.5f))
+            .border(0)
+            .borderRadius(0)
+            .color(p.textMuted)
+            .backgroundColor(transparent)
+            .borderColor(transparent);
 
-        // region Tab Container
+        rule("Tabs Button:hover")
+            .color(p.text)
+            .borderColor(p.lineStrong);
 
-        manager->style("TabContainer")
-               .backgroundColor(p.surface);
+        rule("Tabs Button:active")
+            .color(p.text)
+            .borderColor(p.text);
 
-        // endregion
+        rule("TabContainer").backgroundColor(p.page);
 
-        // region MenuBar
-        manager->style("MenuBar")
-               .direction(Direction::Row)
-               .backgroundColor(p.base)
-               .borderBottom(m.border)
-               .borderColor(p.line);
-
-        manager->style("MenuBar Button")
-               .skin("basic")
-               .fontSize(t.xxs.size)
-               .lineHeight(t.xxs.size)
-               .paddingHorizontal(m.space(3))
-               .paddingVertical(m.space(1.5f))
-               .borderRadius(0)
-               .backgroundColor(p.base);
-
-        manager->style("MenuBar Button:hover")
-               .color(p.accent);
-
-        manager->style("MenuBar Button:active")
-               .color(p.onAccent)
-               .backgroundColor(p.accent);
-
-        // endregion
-
-        // region ToolBar
-        manager->style("ToolBar")
-               .direction(Direction::Row)
-               .backgroundColor(p.raised)
-               .borderBottom(m.border)
-               .borderColor(p.line);
-
-        manager->style("ToolBar Button")
-               .skin("basic")
-               .marginHorizontal(-m.border)
-               .paddingHorizontal(m.space(4.5f))
-               .borderRadius(0)
-               .borderHorizontal(m.border)
-               .borderColor(p.line);
         // endregion
     }
 }

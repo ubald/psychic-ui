@@ -8,8 +8,17 @@ namespace psychic_ui {
         tag("Button");
 
         _mouseChildren = false; // !important
+        _focusEnabled  = true;  // Tab reaches it; Space or Enter clicks it
 
         _label = label;
+
+        keyPressed.subscribe(
+            [this](const Key key, const Mod /*modifiers*/) {
+                if (_enabled && (key == Key::SPACE || key == Key::ENTER || key == Key::KP_ENTER)) {
+                    clicked.emit();
+                }
+            }
+        );
 
         mouseReleased.subscribe(
             [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const Mod /*modifiers*/) {
@@ -52,6 +61,13 @@ namespace psychic_ui {
         }
     }
 
+    void Button::updateIcon(const std::string &icon) {
+        _icon = icon;
+        if (_skin) {
+            _skin->setIcon(_icon);
+        }
+    }
+
     bool Button::selected() const {
         return _selected;
     }
@@ -70,6 +86,7 @@ namespace psychic_ui {
 
     void Button::skinChanged() {
         if (_skin) {
+            _skin->setIcon(_icon);
             _skin->setLabel(_label);
         }
     }

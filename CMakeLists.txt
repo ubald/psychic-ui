@@ -223,6 +223,8 @@ set(SOURCE_FILES
     psychic-ui/components/Tabs.hpp
     psychic-ui/components/TitleBar.cpp
     psychic-ui/components/TitleBar.hpp
+    psychic-ui/components/WindowControls.cpp
+    psychic-ui/components/WindowControls.hpp
     psychic-ui/components/ToolBar.cpp
     psychic-ui/components/ToolBar.hpp
     psychic-ui/icons/IconRegistry.cpp
@@ -253,7 +255,6 @@ set(SOURCE_FILES
     psychic-ui/skins/default/DefaultButtonSkin.hpp
     psychic-ui/skins/default/DefaultCheckBoxSkin.cpp
     psychic-ui/skins/default/DefaultCheckBoxSkin.hpp
-    psychic-ui/skins/default/DefaultChrome.hpp
     psychic-ui/skins/default/DefaultMenuButtonSkin.cpp
     psychic-ui/skins/default/DefaultMenuButtonSkin.hpp
     psychic-ui/skins/default/DefaultScrollBarSkin.cpp

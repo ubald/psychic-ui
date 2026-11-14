@@ -354,10 +354,10 @@ TEST_CASE("SDL3: hit testing", "[backend][sdl3][drag]") {
 
     // The title bar's empty part moves the window, its buttons don't
     CHECK(sdl.adapter->hitTest(700, titleBar.getHeight() / 2) == SDL_HITTEST_DRAGGABLE);
-    const auto close = titleBar.children().front();
+    Button &close = titleBar.controls().closeButton();
     int closeX = 0;
     int closeY = 0;
-    close->localToGlobal(closeX, closeY, close->getWidth() / 2, close->getHeight() / 2);
+    close.localToGlobal(closeX, closeY, close.getWidth() / 2, close.getHeight() / 2);
     CHECK(sdl.adapter->hitTest(closeX, closeY) == SDL_HITTEST_NORMAL);
     CHECK(sdl.adapter->hitTest(400, 300) == SDL_HITTEST_NORMAL);
 
@@ -416,17 +416,19 @@ TEST_CASE("SDL3: dragging a range follows the mouse, through its skin's geometry
     sdl.layout();
     auto skin = range.skin();
     REQUIRE(skin);
-    const float width = static_cast<float>(skin->getWidth());
+    // The default slider's values are along its `.track` part, its first child
+    const Div  &track  = *skin->children().front();
+    REQUIRE(track.classNames().contains("track"));
+    const float trackX = static_cast<float>(track.x());
+    const float width  = static_cast<float>(track.getWidth());
     REQUIRE(width > 100.0f);
-
-    // The default slider's track is its inside, 2 px from each end
-    const SkPoint quarter = inWindow(*skin, 2.0f + (width - 4.0f) * 0.25f, 10.0f);
+    const SkPoint quarter = inWindow(*skin, trackX + width * 0.25f, 10.0f);
     CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, quarter.x(), quarter.y()));
     CHECK(range.value() == Catch::Approx(0.25f).margin(0.01f));
     CHECK(range.active());
 
     // Dragging, even off the range, keeps following the mouse
-    const SkPoint threeQuarters = inWindow(*skin, 2.0f + (width - 4.0f) * 0.75f, 300.0f);
+    const SkPoint threeQuarters = inWindow(*skin, trackX + width * 0.75f, 300.0f);
     moveTo(sdl, threeQuarters.x(), threeQuarters.y());
     CHECK(range.value() == Catch::Approx(0.75f).margin(0.01f));
     moveTo(sdl, quarter.x() - 500.0f, quarter.y());

@@ -3,17 +3,34 @@
 namespace psychic_ui {
     RangeSkinBase::RangeSkinBase() :
         RangeSkin() {
-        auto &center = add<Div>()
-            .mouseEnabled(false)
-            .mouseChildren(false)
-            .position(Position::Absolute)
-            .alignItems(Align::Center)
-            .justify(Justify::Center)
-            .width(100_pct)
-            .height(100_pct);
+        _track = &add<Div>();
+        _track->addClassName("track")
+              .mouseEnabled(false);
 
-        _valueLabel = &center.add<Label>();
-        _valueLabel->addClassName("value");
+        _fill = &_track->add<Div>();
+        _fill->addClassName("fill")
+             .mouseEnabled(false)
+             .position(Position::Absolute);
+
+        // A point: the thumb, bigger, overflows it evenly on every side
+        _thumbAnchor = &_track->add<Div>();
+        _thumbAnchor->mouseEnabled(false)
+                    .position(Position::Absolute)
+                    .width(0)
+                    .height(0)
+                    .alignItems(Align::Center)
+                    .justify(Justify::Center);
+
+        _thumb = &_thumbAnchor->add<Div>();
+        _thumb->addClassName("thumb")
+              .mouseEnabled(false)
+              .shrink(0);
+
+        _valueLabel = &add<Label>();
+        _valueLabel->addClassName("value")
+                   .mouseEnabled(false);
+
+        placeParts();
     }
 
     void RangeSkinBase::added() {
@@ -22,19 +39,46 @@ namespace psychic_ui {
 
     void RangeSkinBase::styleUpdated() {
         RangeSkin::styleUpdated();
-        if (_computedStyle.orientation() == Orientation::Vertical) {
+        const bool vertical = _computedStyle.orientation() == Orientation::Vertical;
+        if (vertical) {
             addClassName("vertical");
             removeClassName("horizontal");
         } else {
             addClassName("horizontal");
             removeClassName("vertical");
         }
+        if (vertical != _vertical) {
+            _vertical = vertical;
+            placeParts();
+        }
     }
 
     void RangeSkinBase::setValue(const float value) {
         _value = value;
-        _valueLabel->text(component()->valueString());
+        _valueLabel->text(component() ? component()->valueString() : "");
+        placeParts();
         valueChanged();
+    }
+
+    void RangeSkinBase::placeParts() {
+        const Length at = Length::percent(_value * 100.0f);
+        if (_vertical) {
+            _fill->left(0).right(0).bottom(0).top(Auto).width(Auto).height(at);
+            _thumbAnchor->left(50_pct).bottom(at).top(Auto);
+        } else {
+            _fill->left(0).top(0).bottom(0).right(Auto).height(Auto).width(at);
+            _thumbAnchor->left(at).top(50_pct).bottom(Auto);
+        }
+    }
+
+    float RangeSkinBase::valueAt(const int x, const int y) const {
+        // The track is our child: its position is in our coordinates
+        if (_vertical) {
+            const float height = _track->getHeight();
+            return height > 0 ? 1.0f - (static_cast<float>(y) - _track->y()) / height : 0.0f;
+        }
+        const float width = _track->getWidth();
+        return width > 0 ? (static_cast<float>(x) - _track->x()) / width : 0.0f;
     }
 
     void RangeSkinBase::draw(SkCanvas *canvas) {

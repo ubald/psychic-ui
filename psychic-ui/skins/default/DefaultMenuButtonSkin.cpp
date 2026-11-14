@@ -1,4 +1,3 @@
-#include "psychic-ui/skins/paint/Marks.hpp"
 #include "DefaultMenuButtonSkin.hpp"
 
 namespace psychic_ui {
@@ -9,15 +8,7 @@ namespace psychic_ui {
 
     DefaultSubMenuButtonSkin::DefaultSubMenuButtonSkin() :
         DefaultMenuButtonSkin() {
-        _arrow = &add<Shape>(
-            [](Shape *shape, SkCanvas *canvas) {
-                paint::arrow(
-                    canvas,
-                    SkRect::MakeWH(static_cast<float>(shape->getWidth()), static_cast<float>(shape->getHeight())),
-                    shape->computedStyle().color()
-                );
-            }
-        );
+        _arrow = &add<Icon>("chevron-right");
         _arrow->addClassName("arrow");
     }
 }

@@ -36,6 +36,9 @@ namespace psychic_ui {
             return self;
         }
 
+        /**
+         * Whether it is checked; the check box has the `checked` class while it is (`CheckBox.checked .box`)
+         */
         bool checked() const;
 
         template<class Self>
