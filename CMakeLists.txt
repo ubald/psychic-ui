@@ -227,6 +227,25 @@ set(SOURCE_FILES
     psychic-ui/components/AppShell.hpp
     psychic-ui/components/Sidebar.cpp
     psychic-ui/components/Sidebar.hpp
+    psychic-ui/components/Avatar.cpp
+    psychic-ui/components/Avatar.hpp
+    psychic-ui/components/Badge.cpp
+    psychic-ui/components/Badge.hpp
+    psychic-ui/components/DataGrid.cpp
+    psychic-ui/components/DataGrid.hpp
+    psychic-ui/components/EmptyState.cpp
+    psychic-ui/components/EmptyState.hpp
+    psychic-ui/components/Inspector.cpp
+    psychic-ui/components/Inspector.hpp
+    psychic-ui/components/Kbd.cpp
+    psychic-ui/components/Kbd.hpp
+    psychic-ui/components/List.cpp
+    psychic-ui/components/List.hpp
+    psychic-ui/components/Rows.cpp
+    psychic-ui/components/Rows.hpp
+    psychic-ui/components/Tree.cpp
+    psychic-ui/components/Tree.hpp
+    psychic-ui/components/Tone.hpp
     psychic-ui/components/WindowControls.cpp
     psychic-ui/components/WindowControls.hpp
     psychic-ui/components/ToolBar.cpp
@@ -240,6 +259,8 @@ set(SOURCE_FILES
     psychic-ui/signals/Signal.hpp
     psychic-ui/signals/Slot.hpp
     psychic-ui/skins/SkinSet.hpp
+    psychic-ui/skins/base/AvatarSkinBase.cpp
+    psychic-ui/skins/base/AvatarSkinBase.hpp
     psychic-ui/skins/base/ButtonSkinBase.cpp
     psychic-ui/skins/base/ButtonSkinBase.hpp
     psychic-ui/skins/base/CheckBoxSkinBase.cpp
@@ -253,6 +274,8 @@ set(SOURCE_FILES
     psychic-ui/skins/base/SkinState.hpp
     psychic-ui/skins/base/TextFieldSkinBase.cpp
     psychic-ui/skins/base/TextFieldSkinBase.hpp
+    psychic-ui/skins/default/DefaultAvatarSkin.cpp
+    psychic-ui/skins/default/DefaultAvatarSkin.hpp
     psychic-ui/skins/default/DefaultBasicButtonSkin.cpp
     psychic-ui/skins/default/DefaultBasicButtonSkin.hpp
     psychic-ui/skins/default/DefaultButtonSkin.cpp

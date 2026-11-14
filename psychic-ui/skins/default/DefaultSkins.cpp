@@ -5,6 +5,7 @@
 #include "DefaultSkins.hpp"
 #include "DefaultBasicButtonSkin.hpp"
 #include "DefaultButtonSkin.hpp"
+#include "DefaultAvatarSkin.hpp"
 #include "DefaultCheckBoxSkin.hpp"
 #include "DefaultMenuButtonSkin.hpp"
 #include "DefaultScrollBarSkin.hpp"
@@ -89,6 +90,9 @@ namespace psychic_ui {
              .add<TextAreaSkin, DefaultTextAreaSkin>()
              .add<MenuButtonSkin, DefaultMenuButtonSkin>()
              .add<MenuButtonSkin, DefaultSubMenuButtonSkin>("submenu");
+
+        // Lists
+        skins.add<AvatarSkin, DefaultAvatarSkin>();
     }
 
     void DefaultSkins::load(StyleManager *manager) {
@@ -607,6 +611,338 @@ namespace psychic_ui {
 
         rule("PageHeader .icon").color(p.textMuted);
         text(rule("PageHeader .title"), t.md, t.medium, s).color(p.text);
+
+        // endregion
+
+        // region Lists
+
+        // Shared by the rows of lists and grids: raised under the mouse, the selection raised with an accent bar at
+        // its start (a 2 px left border, transparent until then, so that nothing moves), the focus ring inside
+        const auto selectableRow = [&](const std::string &row) {
+            rule(row.c_str())
+                .paddingLeft(m.gutter - 2)
+                .paddingRight(m.gutter)
+                .borderLeft(2)
+                .borderBottom(m.border)
+                .borderColor(p.line)
+                .borderLeftColor(transparent)
+                .color(p.text);
+            rule((row + ":last-child").c_str()).borderBottom(0);
+            rule((row + ":hover").c_str()).backgroundColor(p.raised);
+            rule((row + ".selected").c_str())
+                .backgroundColor(p.raised)
+                .borderLeftColor(p.accent);
+            rule((row + ":disabled").c_str()).opacity(0.45f);
+            focusRing(rule((row + ":focus-visible").c_str()), p, m).outlineOffset(-m.focusRing);
+        };
+
+        // Rows edge to edge on the page's gutter, between hairlines: 48 px (Pivotal's default), `.md` 40, `.sm` 32
+        rule("List")
+            .borderTop(m.border)
+            .borderColor(p.line);
+
+        selectableRow("ListRow");
+        text(rule("ListRow"), t.sm, t.regular, s)
+            .gap(m.space(3))
+            .minHeight(s.rowMd + m.space(2))
+            .paddingVertical(m.space(2));
+        rule("List.md ListRow")
+            .minHeight(s.rowMd)
+            .paddingVertical(m.space(1.5f));
+        rule("List.sm ListRow")
+            .minHeight(s.rowSm)
+            .paddingVertical(m.space(1));
+
+        rule("ListRow .leading")
+            .direction(Direction::Row)
+            .alignItems(Align::Center)
+            .shrink(0)
+            .color(p.textMuted);
+        rule("ListRow .text").gap(m.space(0.5f));
+        rule("ListRow .title").color(p.text);
+        text(rule("ListRow .secondary"), t.xs, t.regular, s).color(p.textMuted);
+        rule("ListRow .trailing")
+            .direction(Direction::Row)
+            .alignItems(Align::Center)
+            .gap(m.space(1.5f))
+            .shrink(0);
+        text(rule("ListRow .meta"), t.xs, t.regular, s).color(p.textMuted);
+
+        // A data grid: a header row a tool bar's height in small muted text, then rows of cells 16 px apart
+        text(rule("DataGrid .header"), t.xs, t.regular, s)
+            .gap(m.space(4))
+            .height(m.barToolbar)
+            .paddingHorizontal(m.gutter)
+            .borderBottom(m.border)
+            .borderColor(p.line)
+            .color(p.textMuted);
+
+        rule("DataGrid .header .cell").gap(m.space(1));
+        rule("DataGrid .header .sortable")
+            .cursor(Cursor::Hand)
+            .borderRadius(r.small);
+        rule("DataGrid .header .sortable:hover").color(p.textSecondary);
+        rule("DataGrid .header .sorted").color(p.text);
+        rule("DataGrid .header .sorted:hover").color(p.text);
+        focusRing(rule("DataGrid .header .sortable:focus-visible"), p, m);
+
+        // The arrow: hidden, faint (the next order) under the mouse or the keyboard's focus, plain when sorted
+        rule("DataGrid .sort-icon")
+            .iconSize(m.iconSm)
+            .opacity(0);
+        rule("DataGrid .sortable:hover .sort-icon").opacity(0.6f);
+        rule("DataGrid .sortable:focus-visible .sort-icon").opacity(0.6f);
+        rule("DataGrid .sorted .sort-icon").opacity(1);
+
+        selectableRow("DataGridRow");
+        text(rule("DataGridRow"), t.sm, t.regular, s)
+            .gap(m.space(4))
+            .minHeight(s.rowMd)
+            .paddingVertical(m.space(1.5f));
+        rule("DataGrid.sm DataGridRow")
+            .minHeight(s.rowSm)
+            .paddingVertical(m.space(1));
+        rule("DataGridRow .cell").gap(m.space(1.5f));
+        rule("DataGridRow .cell.end").color(p.textSecondary);
+
+        rule("DataGrid ScrollBar.vertical").marginVertical(m.space(0.5f));
+
+        // A tree: the sidebar's rows (32 px, 13 px text), indented a step per level; the selection raised in a
+        // strong hairline, as Pivotal's
+        rule("Tree").gap(1);
+
+        text(rule("TreeRow"), t.base, t.regular, s)
+            .gap(m.space(1.5f))
+            .height(s.rowSm)
+            .paddingLeft(m.space(1))
+            .paddingRight(m.space(2))
+            .border(m.border)
+            .borderRadius(r.row)
+            .borderColor(transparent)
+            .color(p.textSecondary);
+
+        rule("TreeRow:hover")
+            .color(p.text)
+            .backgroundColor(p.hover);
+        rule("TreeRow.selected")
+            .color(p.text)
+            .backgroundColor(p.raised)
+            .borderColor(p.lineStrong);
+        rule("TreeRow:disabled").opacity(0.45f);
+        focusRing(rule("TreeRow:focus-visible"), p, m).outlineOffset(-m.focusRing);
+
+        // The chevron's column is an icon wide, kept on leaves
+        rule("TreeRow .disclosure")
+            .width(m.iconMd)
+            .iconSize(m.iconSm)
+            .color(p.textMuted);
+        rule("TreeRow .icon").color(p.textMuted);
+        rule("TreeRow.selected .icon").color(p.text);
+        text(rule("TreeRow .trailing"), t.xs, t.regular, s).color(p.textMuted);
+
+        // An inspector: a panel on the surface layer, sections between hairlines, fields in two columns
+        text(rule("Inspector"), t.sm, t.regular, s)
+            .backgroundColor(p.surface)
+            .borderLeft(m.border)
+            .borderColor(p.line);
+
+        rule("Inspector .heading")
+            .gap(m.space(2.5f))
+            .paddingVertical(m.space(3))
+            .paddingHorizontal(m.gutter)
+            .borderBottom(m.border)
+            .borderColor(p.line);
+        rule("Inspector .media")
+            .width(32)
+            .height(32)
+            .borderRadius(r.control)
+            .backgroundColor(p.raised)
+            .color(p.textSecondary)
+            .iconSize(16);
+        rule("Inspector .titles").gap(m.space(0.5f));
+        text(rule("Inspector .heading .title"), t.md, t.medium, s).color(p.text);
+        text(rule("Inspector .heading .subtitle"), t.sm, t.regular, s).color(p.textMuted);
+
+        rule("InspectorSection")
+            .borderBottom(m.border)
+            .borderColor(p.line);
+        rule("InspectorSection:last-child").borderBottom(0);
+
+        rule("InspectorSection .header")
+            .gap(m.space(2))
+            .minHeight(s.controlMd)
+            .paddingTop(m.space(3))
+            .paddingHorizontal(m.gutter)
+            .paddingBottom(m.space(1));
+        text(rule("InspectorSection .header .title"), t.sm, t.medium, s).color(p.textSecondary);
+
+        rule("InspectorSection .body")
+            .gap(m.space(2))
+            .paddingTop(m.space(1))
+            .paddingHorizontal(m.gutter)
+            .paddingBottom(m.space(4));
+
+        rule("InspectorField").gap(m.space(3));
+        rule("InspectorField .label")
+            .width(104)
+            .color(p.textMuted);
+        rule("InspectorField .value").gap(m.space(1.5f));
+        rule("InspectorField .text").color(p.text);
+
+        // endregion
+
+        // region Badges, status dots, chips
+
+        // Pills outlined in their tone, the border its color at a third or so
+        const Color accentBorder  = p.accent.withAlpha(0x73);  // 45%
+        const Color successBorder = p.success.withAlpha(0x59); // 35%
+        const Color warningBorder = p.warning.withAlpha(0x59); // 35%
+        const Color dangerBorder  = p.danger.withAlpha(0x4D);  // 30%
+
+        text(rule("Badge"), t.xs, t.regular, s)
+            .gap(m.space(1))
+            .height(s.controlXs)
+            .paddingHorizontal(m.space(2))
+            .border(m.border)
+            .borderRadius(r.button)
+            .color(p.textSecondary)
+            .borderColor(p.lineStrong);
+        text(rule("Badge.small"), t.xxs, t.regular, s)
+            .height(16)
+            .paddingHorizontal(m.space(1.5f));
+        rule("Badge.accent").color(p.accentText).borderColor(accentBorder);
+        rule("Badge.success").color(p.success).borderColor(successBorder);
+        rule("Badge.warning").color(p.warningText).borderColor(warningBorder);
+        rule("Badge.danger").color(p.dangerText).borderColor(dangerBorder);
+
+        rule("StatusDot")
+            .width(6)
+            .height(6)
+            .borderRadius(r.button)
+            .backgroundColor(p.textMuted);
+        rule("StatusDot.accent").backgroundColor(p.accent);
+        rule("StatusDot.success").backgroundColor(p.success);
+        rule("StatusDot.warning").backgroundColor(p.warning);
+        rule("StatusDot.danger").backgroundColor(p.danger);
+
+        // Quiet pills: secondary text in a hairline, raised under the mouse or when selected
+        text(rule("Chip"), t.sm, t.regular, s)
+            .gap(m.space(1.5f))
+            .height(s.controlMd)
+            .paddingHorizontal(m.space(2.5f))
+            .border(m.border)
+            .borderRadius(r.button)
+            .borderColor(p.line)
+            .color(p.textSecondary)
+            .hitSlop(s.hitSlop);
+        rule("Chip.removable").paddingRight(m.space(1.5f));
+        for (const char *state: {"Chip:hover", "Chip.selected"}) {
+            rule(state)
+                .color(p.text)
+                .backgroundColor(p.raised)
+                .borderColor(p.lineStrong);
+        }
+        rule("Chip:disabled").opacity(0.45f);
+        focusRing(rule("Chip:focus-visible"), p, m);
+        rule("Chip .icon").iconSize(m.iconSm);
+        rule("Chip .remove")
+            .iconSize(m.iconSm)
+            .color(p.textMuted)
+            .cursor(Cursor::Hand);
+        rule("Chip .remove:hover").color(p.text);
+
+        // Toned chips: their text and outline tinted, softly filled when chosen or pointed at
+        rule("Chip.accent").color(p.accentText).borderColor(accentBorder);
+        rule("Chip.success").color(p.success).borderColor(successBorder);
+        rule("Chip.warning").color(p.warningText).borderColor(warningBorder);
+        rule("Chip.danger").color(p.dangerText).borderColor(dangerBorder);
+        for (const char *state: {"Chip.accent:hover", "Chip.accent.selected"}) {
+            rule(state).backgroundColor(p.accentSoft);
+        }
+        for (const char *state: {"Chip.success:hover", "Chip.success.selected"}) {
+            rule(state).backgroundColor(p.success.withAlpha(0x1A)); // 10%
+        }
+        for (const char *state: {"Chip.warning:hover", "Chip.warning.selected"}) {
+            rule(state).backgroundColor(p.warning.withAlpha(0x14)); // 8%
+        }
+        for (const char *state: {"Chip.danger:hover", "Chip.danger.selected"}) {
+            rule(state).backgroundColor(p.danger.withAlpha(0x14)); // 8%
+        }
+
+        // endregion
+
+        // region Avatars, keyboard hints, empty states
+
+        // Initials on the raised layer in a hairline, medium weight; 16, 20, 24 (the default) or 32 px
+        rule("Avatar")
+            .alignItems(Align::Center)
+            .justify(Justify::Center)
+            .border(m.border)
+            .borderRadius(r.button)
+            .borderColor(p.line)
+            .backgroundColor(p.raised)
+            .color(p.textSecondary);
+        rule("Avatar.xs").width(16).height(16);
+        rule("Avatar.sm").width(s.controlXs).height(s.controlXs);
+        rule("Avatar.md").width(s.controlSm).height(s.controlSm);
+        rule("Avatar.lg").width(32).height(32);
+        rule("Avatar .initials").textAlign(TextAlign::Center);
+        rule("Avatar.xs .initials")
+            .fontFamily(t.medium.name)
+            .fontSize(8 + s.textStep)
+            .lineHeight(10 + s.textStep);
+        text(rule("Avatar.sm .initials"), t.xxs, t.medium, s);
+        text(rule("Avatar.md .initials"), t.xs, t.medium, s);
+        text(rule("Avatar.lg .initials"), t.sm, t.medium, s);
+
+        // The status at the bottom right, ringed in the page's color so it reads over the circle
+        rule("Avatar .status")
+            .width(8)
+            .height(8)
+            .right(-1)
+            .bottom(-1)
+            .border(1.5f)
+            .borderColor(p.page);
+        rule("Avatar.lg .status")
+            .width(10)
+            .height(10);
+
+        // Key caps: tiny text on the surface layer in a strong hairline
+        rule("Kbd").gap(m.space(0.5f));
+        text(rule("Kbd .key"), t.xxs, t.regular, s)
+            .minWidth(18)
+            .height(18)
+            .lineHeight(16 + s.textStep) // The cap's inside, so that the key sits in its middle
+            .paddingHorizontal(m.space(1))
+            .border(m.border)
+            .borderRadius(r.small)
+            .borderColor(p.lineStrong)
+            .backgroundColor(p.surface)
+            .color(p.textSecondary)
+            .textAlign(TextAlign::Center);
+
+        // Nothing to show: centered, an icon tile, a medium title, muted text, the way forward
+        rule("EmptyState")
+            .gap(m.space(1.5f))
+            .paddingVertical(80)
+            .paddingHorizontal(m.space(6));
+        rule("EmptyState .icon-tile")
+            .width(40)
+            .height(40)
+            .marginBottom(m.space(1.5f))
+            .border(m.border)
+            .borderRadius(r.control)
+            .borderColor(p.line)
+            .backgroundColor(p.raised)
+            .color(p.textSecondary)
+            .iconSize(20);
+        text(rule("EmptyState .title"), t.md, t.medium, s).color(p.text);
+        text(rule("EmptyState .description"), t.sm, t.regular, s)
+            .lineHeight(19.5f + s.textStep) // 1.625
+            .maxWidth(384)
+            .textAlign(TextAlign::Center)
+            .color(p.textMuted);
+        rule("EmptyState .action").marginTop(m.space(2.5f));
 
         // endregion
     }
