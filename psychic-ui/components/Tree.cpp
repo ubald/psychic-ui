@@ -11,7 +11,6 @@ namespace psychic_ui {
     TreeRow::TreeRow() :
         SelectableRow() {
         tag("TreeRow");
-        addClassName("row");
 
         _indent = &add<Div>();
         _indent->addClassName("indent")

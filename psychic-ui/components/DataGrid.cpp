@@ -173,33 +173,38 @@ namespace psychic_ui {
         }
 
         _header->removeAll();
-        _headerCells.clear();
+        _sortButtons.clear();
         for (std::size_t i = 0; i < _columns.size(); ++i) {
             const DataGridColumn &column = _columns[i];
             auto &cell = _header->add<Div>();
             cell.addClassName("cell");
             styleCell(cell, i);
-            if (column.align == TextAlign::End) {
-                cell.direction(Direction::RowReverse) // The arrow before the title
-                    .justify(Justify::Start);          // Which starts on the right
+            if (!column.sortable) {
+                cell.add<Label>(column.title).addClassName("title");
+                _sortButtons.push_back(nullptr);
+                continue;
             }
-            cell.add<Label>(column.title).addClassName("title");
-            if (column.sortable) {
-                cell.addClassName("sortable")
-                    .mouseChildren(false)
-                    .focusEnabled(true)
-                    .add<Icon>("arrow-up").addClassName("sort-icon");
-                const int index = static_cast<int>(i);
-                cell.onClick([this, index]() { cycleSort(index); });
-                cell.onKeyPress(
-                    [this, index](const Key key, Mod) {
-                        if (key == Key::ENTER || key == Key::KP_ENTER || key == Key::SPACE) {
-                            cycleSort(index);
-                        }
+            // A button as wide as its title and arrow, so that the pointer and the focus ring fit them
+            auto &sort = cell.add<Div>();
+            sort.addClassName("sort")
+                .direction(column.align == TextAlign::End ? Direction::RowReverse : Direction::Row) // The arrow first
+                .alignItems(Align::Center)
+                .shrink(1)
+                .minWidth(0)
+                .mouseChildren(false)
+                .focusEnabled(true);
+            sort.add<Label>(column.title).addClassName("title");
+            sort.add<Icon>("arrow-up").addClassName("sort-icon");
+            const int index = static_cast<int>(i);
+            sort.onClick([this, index]() { cycleSort(index); });
+            sort.onKeyPress(
+                [this, index](const Key key, Mod) {
+                    if (key == Key::ENTER || key == Key::KP_ENTER || key == Key::SPACE) {
+                        cycleSort(index);
                     }
-                );
-            }
-            _headerCells.push_back(&cell);
+                }
+            );
+            _sortButtons.push_back(&sort);
         }
         for (DataGridRow *row: dataRows()) {
             for (std::size_t i = 0; i < row->cellCount(); ++i) {
@@ -265,15 +270,18 @@ namespace psychic_ui {
     }
 
     void DataGrid::updateHeader() {
-        for (std::size_t i = 0; i < _headerCells.size(); ++i) {
-            Div        &cell   = *_headerCells[i];
+        for (std::size_t i = 0; i < _sortButtons.size(); ++i) {
+            if (!_sortButtons[i]) {
+                continue;
+            }
+            Div        &sort   = *_sortButtons[i];
             const bool sorted = static_cast<int>(i) == _sortColumn;
             if (sorted) {
-                cell.addClassName("sorted");
+                sort.addClassName("sorted");
             } else {
-                cell.removeClassName("sorted");
+                sort.removeClassName("sorted");
             }
-            for (const auto &child: cell.children()) {
+            for (const auto &child: sort.children()) {
                 if (auto icon = std::dynamic_pointer_cast<Icon>(child)) {
                     // The current order, else the one a click gives
                     icon->name(sorted && _sortOrder == SortOrder::Descending ? "arrow-down" : "arrow-up");

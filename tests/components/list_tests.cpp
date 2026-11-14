@@ -243,9 +243,10 @@ TEST_CASE("DataGrid: clicking a header sorts, ascending, descending, then as add
     std::vector<std::pair<int, SortOrder>> sorts{};
     grid.onSortChange([&](int column, SortOrder order) { sorts.emplace_back(column, order); });
 
-    Div &name = *grid.header().children()[0];
-    Div &size = *grid.header().children()[1];
-    Div &kind = *grid.header().children()[2];
+    // The sort buttons in the header's cells
+    Div &name = *grid.header().children()[0]->children()[0];
+    Div &size = *grid.header().children()[1]->children()[0];
+    Div &kind = *grid.header().children()[2]; // Not sortable: its title only
 
     f.click(name);
     CHECK(values(grid, 0) == std::vector<std::string>{"Alpha.png", "beta.txt", "gamma.wav"}); // Without case

@@ -13,7 +13,7 @@ namespace psychic_ui {
             .alignItems(Align::Start)
             .shrink(0);
         _label = &add<Label>(label);
-        _label->addClassName("label")
+        _label->addClassName("name")
               .shrink(0);
         _value = &add<Div>();
         _value->addClassName("value")

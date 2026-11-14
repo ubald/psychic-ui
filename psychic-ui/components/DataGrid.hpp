@@ -81,7 +81,8 @@ namespace psychic_ui {
      * beside the grid), with a single selection (see RowGroup). The rows scroll inside (the `.body` part, with an
      * overlaid scroll bar) under the header, which stays in view. Clicking a sortable column's header sorts by it,
      * ascending, then descending, then back to the order the rows were added in; its `.sort-icon` arrow shows the
-     * order (faintly, the next one, under the mouse). Sorting compares the cells' text, as numbers when both start
+     * order (faintly, the next one, under the mouse); the title and the arrow are the header cell's
+     * `.sort` button, which takes the focus (Enter or Space sorts). Sorting compares the cells' text, as numbers when both start
      * with one, otherwise without case.
      *
      * Its events: `onSelectionChange`/`selectionChanged` (not `onSelect`/`selected`, the rows' state getter) and
@@ -171,7 +172,7 @@ namespace psychic_ui {
         std::vector<DataGridColumn> _columns{};
         Div                         *_header{nullptr}; // Children, which we own
         Div                         *_body{nullptr};
-        std::vector<Div *>          _headerCells{};
+        std::vector<Div *>          _sortButtons{}; // In the header's cells, nullptr for a column that doesn't sort
         int                         _sortColumn{-1};
         SortOrder                   _sortOrder{SortOrder::None};
         std::size_t                 _added{0}; // Rows added so far, for their order

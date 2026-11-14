@@ -10,8 +10,9 @@ namespace psychic_ui {
     /**
      * @class InspectorField
      *
-     * A label/value row of an inspector section: the `.label` (a fixed width, muted), then the `.value`, which
-     * shows its text (`.text`) or holds what is added to `value()` (a check box, a badge, a field)
+     * A label/value row of an inspector section: the `.name` (a fixed width, muted; not `.label`, which would also
+     * match the labels of what the value holds), then the `.value`, which shows its text (`.text`) or holds what is
+     * added to `value()` (a check box, a badge, a field)
      */
     class InspectorField : public Div {
     public:

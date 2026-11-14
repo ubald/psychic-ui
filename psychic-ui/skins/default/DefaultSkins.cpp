@@ -677,21 +677,23 @@ namespace psychic_ui {
             .borderColor(p.line)
             .color(p.textMuted);
 
-        rule("DataGrid .header .cell").gap(m.space(1));
-        rule("DataGrid .header .sortable")
+        rule("DataGrid .header .sort").gap(m.space(1));
+        rule("DataGrid .header .sort")
+            .paddingHorizontal(m.space(1)) // Room for the focus ring, taken back from the cell
+            .marginHorizontal(-m.space(1))
             .cursor(Cursor::Hand)
             .borderRadius(r.small);
-        rule("DataGrid .header .sortable:hover").color(p.textSecondary);
+        rule("DataGrid .header .sort:hover").color(p.textSecondary);
         rule("DataGrid .header .sorted").color(p.text);
         rule("DataGrid .header .sorted:hover").color(p.text);
-        focusRing(rule("DataGrid .header .sortable:focus-visible"), p, m);
+        focusRing(rule("DataGrid .header .sort:focus-visible"), p, m);
 
         // The arrow: hidden, faint (the next order) under the mouse or the keyboard's focus, plain when sorted
         rule("DataGrid .sort-icon")
             .iconSize(m.iconSm)
             .opacity(0);
-        rule("DataGrid .sortable:hover .sort-icon").opacity(0.6f);
-        rule("DataGrid .sortable:focus-visible .sort-icon").opacity(0.6f);
+        rule("DataGrid .sort:hover .sort-icon").opacity(0.6f);
+        rule("DataGrid .sort:focus-visible .sort-icon").opacity(0.6f);
         rule("DataGrid .sorted .sort-icon").opacity(1);
 
         selectableRow("DataGridRow");
@@ -783,7 +785,7 @@ namespace psychic_ui {
             .paddingBottom(m.space(4));
 
         rule("InspectorField").gap(m.space(3));
-        rule("InspectorField .label")
+        rule("InspectorField .name")
             .width(104)
             .color(p.textMuted);
         rule("InspectorField .value").gap(m.space(1.5f));
