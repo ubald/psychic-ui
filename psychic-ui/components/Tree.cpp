@@ -26,6 +26,7 @@ namespace psychic_ui {
                 }
             }
         );
+        _disclosure->onDoubleClick([](unsigned int /*count*/) {}); // Two clicks on it are two toggles, not three
         _icon = &add<Icon>();
         _icon->addClassName("icon")
              .display(Display::None);

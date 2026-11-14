@@ -658,7 +658,7 @@ namespace psychic_ui {
             .alignItems(Align::Center)
             .shrink(0)
             .color(p.textMuted);
-        rule("ListRow .text").gap(m.space(0.5f));
+        rule("ListRow .text").gap(m.space(1));
         rule("ListRow .title").color(p.text);
         text(rule("ListRow .secondary"), t.xs, t.regular, s).color(p.textMuted);
         rule("ListRow .trailing")

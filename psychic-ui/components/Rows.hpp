@@ -58,7 +58,7 @@ namespace psychic_ui {
      *
      * What List, DataGrid and Tree share: a single selection among their rows (SelectableRow descendants), and the
      * keyboard. Up and Down move the focus and the selection to the previous or next row, Home and End to the first
-     * and last; the row moved to is scrolled into view in the nearest scrolling ancestor. A subclass emits its own
+     * and last, Space selects the focused row; the row moved to is scrolled into view in the nearest scrolling ancestor. A subclass emits its own
      * typed signal from `selectionUpdated` and may handle more keys (`handleRowKey`).
      */
     class RowGroup : public Div {

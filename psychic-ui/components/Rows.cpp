@@ -253,6 +253,11 @@ namespace psychic_ui {
             case Key::HOME:
                 moveTo(all.front());
                 return true;
+            case Key::SPACE:
+                if (it != all.end()) {
+                    moveTo(row);
+                }
+                return true;
             case Key::END:
                 moveTo(all.back());
                 return true;
@@ -289,7 +294,9 @@ namespace psychic_ui {
         const int top    = divY - (viewportY - viewport->scrollY());
         const int bottom = top + div.getHeight();
         if (top < 0) {
-            viewport->scrollY(viewport->scrollY() - top);
+            // Up to the start when only what is above the first rows would be left out (a border, a header)
+            const int fromStart = top - viewport->scrollY();
+            viewport->scrollY(fromStart < div.getHeight() ? 0 : viewport->scrollY() - top);
         } else if (bottom > viewport->getHeight()) {
             viewport->scrollY(viewport->scrollY() - (bottom - viewport->getHeight()));
         }
