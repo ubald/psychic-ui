@@ -623,13 +623,173 @@ namespace psychic_ui {
             .marginLeft(m.space(2))
             .color(p.textMuted);
 
-        for (const char *state: {"Menu MenuButton:hover", "Menu MenuButton:active"}) {
-            rule(state)
-                .color(p.text)
-                .backgroundColor(p.raised);
-        }
-        rule("Menu MenuButton:hover .icon").color(p.text);
+        // Highlighted (the menu's one row, by the mouse or the keyboard)
+        rule("Menu MenuButton:active")
+            .color(p.text)
+            .backgroundColor(p.raised);
         rule("Menu MenuButton:active .icon").color(p.text);
+
+        // Check marks keep their column, in the primary color; a select's after the label
+        rule("Menu MenuButton .check")
+            .shrink(0)
+            .color(p.text);
+        rule("Menu MenuButton .indicator")
+            .shrink(0)
+            .marginLeft(m.space(2))
+            .color(p.text);
+        rule("Menu.listbox MenuButton.checked").color(p.text);
+
+        rule("Menu MenuButton:disabled").opacity(0.45f);
+
+        // Actions that destroy, in the danger color, softly tinted while highlighted
+        rule("Menu MenuButton.danger").color(p.dangerText);
+        rule("Menu MenuButton.danger .icon").color(p.dangerText);
+        rule("Menu MenuButton.danger:active")
+            .color(p.dangerText)
+            .backgroundColor(p.danger.withAlpha(0x14)); // 8%
+        rule("Menu MenuButton.danger:active .icon").color(p.dangerText);
+
+        // A hairline across the menu, its padding included
+        rule("Menu .separator")
+            .height(m.border)
+            .shrink(0)
+            .marginVertical(m.space(1))
+            .marginHorizontal(-m.space(1))
+            .backgroundColor(p.line);
+
+        text(rule("Menu .group-label"), t.xs, t.medium, s)
+            .paddingTop(m.space(1.5f))
+            .paddingHorizontal(m.space(2))
+            .paddingBottom(m.space(1))
+            .color(p.textMuted);
+
+        // endregion
+
+        // region Select
+
+        // A closed field like a text input: the value, the chevron at the end; the accent's border while open
+        text(rule("Select"), t.base, t.regular, s)
+            .gap(m.space(2))
+            .height(s.controlMd)
+            .paddingLeft(m.space(2.5f))
+            .paddingRight(m.space(2))
+            .border(m.border)
+            .borderRadius(r.control)
+            .borderColor(p.line)
+            .backgroundColor(p.raised)
+            .color(p.text)
+            .hitSlop(s.hitSlop);
+
+        rule("Select:hover").borderColor(p.lineStrong);
+        rule("Select:focus-visible").borderColor(p.accent);
+        rule("Select.open").borderColor(p.accent);
+        rule("Select:disabled").opacity(0.5f);
+        rule("Select .value.placeholder").color(p.textMuted);
+        rule("Select .chevron").color(p.textMuted);
+
+        // endregion
+
+        // region Tooltips
+
+        // A small label on the overlay color, in a strong hairline, with an arrow
+        floating(text(rule("Tooltip"), t.xs, t.regular, s), theme.elevation)
+            .paddingVertical(m.space(1))
+            .paddingHorizontal(m.space(2))
+            .maxWidth(m.popoverWidth)
+            .border(m.border)
+            .borderColor(p.lineStrong)
+            .borderRadius(r.row)
+            .backgroundColor(p.overlay)
+            .color(p.text);
+
+        // endregion
+
+        // region Dialogs
+
+        // The scrim over the page, the panel on it: the floating surface, a header, a body, a footer after a hairline
+        rule("Dialog").backgroundColor(p.scrim);
+
+        floating(rule("Dialog .panel"), theme.elevation)
+            .width(m.dialogSm)
+            .maxWidth(100_pct)
+            .maxHeight(80_pct)
+            .border(m.border)
+            .borderColor(p.lineStrong)
+            .borderRadius(r.popup)
+            .backgroundColor(p.overlay)
+            .color(p.text)
+            .overflow(Overflow::Hidden);
+        rule("Dialog.wide .panel").width(m.dialogMd);
+
+        rule("Dialog .header")
+            .gap(m.space(1.5f))
+            .paddingTop(m.space(3))
+            .paddingHorizontal(m.gutterCard);
+        text(rule("Dialog .header .title"), t.sm, t.medium, s).color(p.text);
+        rule("Dialog .header .icon").color(p.textSecondary);
+
+        rule("Dialog .body")
+            .gap(m.space(3))
+            .padding(m.gutterCard);
+
+        text(rule("Dialog .description"), t.sm, t.regular, s)
+            .lineHeight(t.sm.size * 1.625f + s.textStep)
+            .color(p.textMuted);
+
+        rule("Dialog .footer")
+            .gap(m.space(1.5f))
+            .paddingVertical(m.space(3))
+            .paddingHorizontal(m.gutterCard)
+            .borderTop(m.border)
+            .borderColor(p.line);
+
+        // endregion
+
+        // region Toasts
+
+        // Stacked in the bottom right corner, the newest at the bottom
+        rule("ToastStack")
+            .right(m.viewportMargin)
+            .bottom(m.viewportMargin)
+            .width(m.toastWidth)
+            .gap(m.space(2));
+
+        // The floating surface: an icon on a tile in the variant's color, the title and description, the actions
+        floating(text(rule("Toast"), t.sm, t.regular, s), theme.elevation)
+            .gap(m.space(2.5f))
+            .padding(m.space(3))
+            .border(m.border)
+            .borderColor(p.lineStrong)
+            .borderRadius(r.popup)
+            .backgroundColor(p.overlay)
+            .color(p.text);
+
+        rule("Toast .icon")
+            .width(s.controlSm)
+            .height(s.controlSm)
+            .borderRadius(r.row)
+            .color(p.accentText)
+            .backgroundColor(p.accentSoft);
+        rule("Toast.success .icon").color(p.success).backgroundColor(p.success.withAlpha(0x1A)); // 10%
+        rule("Toast.warning .icon").color(p.warningText).backgroundColor(p.warning.withAlpha(0x1A));
+        rule("Toast.danger .icon").color(p.dangerText).backgroundColor(p.danger.withAlpha(0x1A));
+
+        rule("Toast .text").gap(m.space(0.5f));
+        text(rule("Toast .title"), t.sm, t.medium, s).color(p.text);
+        rule("Toast .description").color(p.textSecondary);
+
+        rule("Toast .actions")
+            .gap(m.space(1.5f))
+            .marginTop(m.space(1.5f));
+        text(rule("Toast .actions Button"), t.xs, t.medium, s)
+            .height(s.controlXs)
+            .paddingHorizontal(m.space(2));
+
+        rule("Toast Button.close")
+            .width(s.controlXs)
+            .height(s.controlXs)
+            .marginTop(-m.space(0.5f))
+            .marginRight(-m.space(0.5f));
 
         // endregion
 

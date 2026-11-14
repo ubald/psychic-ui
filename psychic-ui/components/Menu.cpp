@@ -170,6 +170,13 @@ namespace psychic_ui {
         _submenuRow = index;
         highlight(index);
         w->overlay().open(menu);
+        if (focus) {
+            // Moved into from the keyboard (or a click): at its first row
+            w->requestFocus(menu.get(), w->focusVisible());
+            if (menu->_highlighted < 0) {
+                menu->move(1);
+            }
+        }
     }
 
     void Menu::closeSubmenu() {

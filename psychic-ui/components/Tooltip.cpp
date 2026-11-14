@@ -58,6 +58,10 @@ namespace psychic_ui {
                 break;
         }
 
+        // `draw` paints in the parent's coordinates
+        canvas->save();
+        canvas->translate(static_cast<float>(x()), static_cast<float>(y()));
+
         SkPaint paint{};
         paint.setAntiAlias(true);
         paint.setColor(_computedStyle.backgroundColor().argb());
@@ -69,5 +73,6 @@ namespace psychic_ui {
             paint.setStrokeWidth(border);
             canvas->drawPath(SkPathBuilder().moveTo(base1).lineTo(tip).lineTo(base2).detach(), paint);
         }
+        canvas->restore();
     }
 }

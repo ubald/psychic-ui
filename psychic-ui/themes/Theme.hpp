@@ -161,6 +161,11 @@ namespace psychic_ui {
         float barHeader{52};      // A page's title bar, the sidebar's header
         float sidebarWidth{224};
         float menuWidth{192};     // A menu's least width
+        float popoverWidth{320};  // A tooltip's most width
+        float toastWidth{352};
+        float dialogSm{400};      // A dialog's width, and a wide one's
+        float dialogMd{560};
+        float viewportMargin{16}; // What floats keeps this far from the window's edges (the toasts' corner)
         float scrollBar{10};      // Thin, self-effacing scroll bars
         float scrollThumbInset{3};
         float iconSm{12};

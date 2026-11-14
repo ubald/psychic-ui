@@ -166,10 +166,11 @@ namespace psychic_ui {
 
         Window     *w        = window();
         const bool hadFocus  = popup.hasFocus();
+        const bool visible   = w && w->focusVisible(); // Removing it focuses the overlay, as a press would
         auto       before    = popup._focusBefore.lock();
         remove(popup); // The focus, if it was inside, moves to the overlay
         if (w && hadFocus && popup._restoreFocus && before && before->window() == w) {
-            w->requestFocus(before.get(), w->focusVisible());
+            w->requestFocus(before.get(), visible);
         }
         popup.closed.emit();
     }
