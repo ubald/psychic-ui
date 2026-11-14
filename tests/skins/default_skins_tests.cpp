@@ -298,3 +298,41 @@ TEST_CASE("Default skins: the window controls are grey until the pointer is over
     CHECK(colors() == grey);
 }
 
+TEST_CASE("Default skins: a menu's labels line up when some rows have an icon", "[skins][default][menu]") {
+    Fixture f;
+
+    const auto labelsLeft = [&](const std::vector<std::shared_ptr<MenuItem>> &items) {
+        f.window->openMenu(items, 10, 10);
+        f.layout();
+        std::vector<float> lefts{};
+        REQUIRE(f.window->menuContainer().children().size() == 1);
+        Div &menu = *f.window->menuContainer().children().front();
+        for (auto &row: menu.children().front()->children()) {
+            Div *label = part(*row, "label");
+            REQUIRE(label);
+            lefts.push_back(left(*label) - left(*row));
+        }
+        f.window->closeMenu();
+        f.layout();
+        return lefts;
+    };
+
+    const std::vector<float> mixed = labelsLeft({
+        Menu::item("Copy", []() {}, "Ctrl+C", "copy"),
+        Menu::item("Save As…", []() {}, "Ctrl+Shift+S"),
+        Menu::item("More", {Menu::item("Nothing", []() {})})
+    });
+    REQUIRE(mixed.size() == 3);
+    CHECK(mixed[1] == mixed[0]);
+    CHECK(mixed[2] == mixed[0]);
+
+    // Without icons, no column: the labels start at the row's padding
+    const std::vector<float> plain = labelsLeft({
+        Menu::item("Save", []() {}, "Ctrl+S"),
+        Menu::item("Save As…", []() {}, "Ctrl+Shift+S")
+    });
+    REQUIRE(plain.size() == 2);
+    CHECK(plain[0] == plain[1]);
+    CHECK(plain[0] == f.theme.metrics.space(2));
+    CHECK(mixed[0] == plain[0] + f.theme.metrics.iconMd + f.theme.metrics.space(2));
+}

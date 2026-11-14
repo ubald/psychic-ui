@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Menu.hpp"
 #include <psychic-ui/components/MenuButton.hpp>
 #include <psychic-ui/Window.hpp>
@@ -17,10 +18,19 @@ namespace psychic_ui {
     }
 
     std::shared_ptr<Div> Menu::getItemDiv(const std::shared_ptr<MenuItem> &item) {
+        // When a row has an icon, they all keep its column, so that their labels line up
+        const bool iconColumn = std::ranges::any_of(
+            menuContainer->data(),
+            [](const std::shared_ptr<MenuItem> &it) { return it && !it->icon.empty(); }
+        );
+
         auto simple = std::dynamic_pointer_cast<SimpleMenuItem>(item);
         if (simple) {
             auto simpleMenuButton = std::make_shared<MenuButton>(simple.get());
             simpleMenuButton->addClassName("simple");
+            if (iconColumn) {
+                simpleMenuButton->addClassName("icon-column");
+            }
             simpleMenuButton->onClick([this, simple](){
                 if (simple->callback) {
                     simple->callback();
@@ -34,6 +44,9 @@ namespace psychic_ui {
         if (sub) {
             auto subMenuButton = std::make_shared<MenuButton>(sub.get());
             subMenuButton->addClassName("submenu");
+            if (iconColumn) {
+                subMenuButton->addClassName("icon-column");
+            }
             // The button owns this slot: a raw pointer to it, as a shared_ptr would keep it alive forever
             subMenuButton->onMouseEnter(
                 [this, sub, button = subMenuButton.get()]() {

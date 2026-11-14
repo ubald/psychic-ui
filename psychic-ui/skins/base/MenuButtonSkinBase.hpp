@@ -8,8 +8,10 @@
 
 namespace psychic_ui {
     /**
-     * What every menu item skin shares: the `.icon` part (not displayed when the item has none), the `.label` part,
-     * then the `.shortcut` part (not displayed when empty), from the item. A submenu's skin adds an `.arrow` part.
+     * What every menu item skin shares: the `.icon` part, the `.label` part, then the `.shortcut` part (not displayed
+     * when empty), from the item. A submenu's skin adds an `.arrow` part. When the item has no icon, its `.icon` part
+     * draws nothing and has the `blank` class, so the skin set's rules decide whether it keeps its column: the menu
+     * gives its rows the `icon-column` class when any of them has an icon.
      */
     class MenuButtonSkinBase : public MenuButtonSkin {
     public:
