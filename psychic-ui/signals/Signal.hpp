@@ -15,7 +15,7 @@ namespace psychic_ui {
     /**
      * Signal
      * Create a signal with template arguments matching the arguments required for `emit` and parameters that will be
-     * used in the callback/lambda. Callbacks receive the arguments as `const T &`.
+     * used in the callback/lambda. Callbacks receive the arguments as `const T &`, or take no parameters to ignore them.
      *
      * Handlers may connect, disconnect (themselves or others) and destroy the signal while it is emitting:
      * - a slot connected during an emission is first called by the next emission;
@@ -60,12 +60,20 @@ namespace psychic_ui {
          * ScopedSlot.
          */
         template<class F>
-        requires std::invocable<F &, const T &...>
+        requires std::invocable<F &, const T &...> || std::invocable<F &>
         SlotPtr subscribe(F &&callback) {
             if (!_core) {
                 _core = std::make_shared<detail::SignalCore<T...>>();
             }
-            auto slot = std::make_shared<Slot<T...>>(_core, std::forward<F>(callback));
+            SlotPtr slot;
+            if constexpr (std::invocable<F &, const T &...>) {
+                slot = std::make_shared<Slot<T...>>(_core, std::forward<F>(callback));
+            } else {
+                // A callback that takes nothing ignores the arguments: `onClick([] { ... })`
+                slot = std::make_shared<Slot<T...>>(
+                    _core, [callback = std::forward<F>(callback)](const T &...) mutable { callback(); }
+                );
+            }
             _core->slots.push_back(slot);
             return slot;
         }
@@ -74,7 +82,7 @@ namespace psychic_ui {
          * Subscription () operator, same as `subscribe`
          */
         template<class F>
-        requires std::invocable<F &, const T &...>
+        requires std::invocable<F &, const T &...> || std::invocable<F &>
         SlotPtr operator()(F &&callback) {
             return subscribe(std::forward<F>(callback));
         }

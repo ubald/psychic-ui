@@ -340,3 +340,14 @@ TEST_CASE("Disconnected and orphaned slots release their callbacks", "[signals]"
         REQUIRE(destroyed == 1);
     }
 }
+
+TEST_CASE("A callback that takes nothing ignores the arguments", "[signals]") {
+    Signal<int, std::string> signal;
+    int ran = 0;
+    signal.subscribe([&] { ++ran; });
+    int sum = 0;
+    signal.subscribe([&](int value, const std::string &) { sum += value; });
+    signal.emit(3, "three");
+    CHECK(ran == 1);
+    CHECK(sum == 3);
+}
