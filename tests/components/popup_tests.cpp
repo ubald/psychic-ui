@@ -5,6 +5,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Dialog.hpp>
+#include <psychic-ui/components/List.hpp>
+#include <psychic-ui/components/NumberStepper.hpp>
+#include <psychic-ui/components/SearchField.hpp>
+#include <psychic-ui/components/Switch.hpp>
 #include <psychic-ui/components/Menu.hpp>
 #include <psychic-ui/components/MenuBar.hpp>
 #include <psychic-ui/components/MenuButton.hpp>
@@ -682,6 +686,79 @@ TEST_CASE("A touch long press shows the tooltip when it opens nothing", "[popup]
     f.window->handleTouchRelease(static_cast<float>(x), static_cast<float>(y), Window::longPressDelay + 100ms);
     CHECK(f.window->tooltip() == nullptr);
     CHECK(f.firstClicks == 0); // A long press never clicks
+}
+
+// endregion
+
+// region With the lists and inputs
+
+TEST_CASE("In a dialog, Tab hands the focus to the text fields' text and stays inside", "[popup][dialog][focus][inputs]") {
+    Popups f{};
+    f.key(Key::TAB);
+    REQUIRE(f.window->focusedDiv() == &f.first);
+
+    auto &dialog  = f.window->overlay().open<Dialog>("Find");
+    auto &search  = dialog.body().add<SearchField>();
+    auto &stepper = dialog.body().add<NumberStepper>(4);
+    auto &cancel  = dialog.action("Cancel");
+    f.layout();
+
+    std::vector<Div *> visited{};
+    for (int i = 0; i < 5; ++i) {
+        f.key(Key::TAB);
+        visited.push_back(f.window->focusedDiv());
+    }
+    // The close button, then the search field's text, the stepper's (both delegated), Cancel, the close button
+    CHECK(visited[1] == search.focusDelegate());
+    CHECK(visited[2] == stepper.focusDelegate());
+    CHECK(visited[3] == &cancel);
+    CHECK(visited[4] == visited[0]);
+
+    f.key(Key::ESCAPE);
+    CHECK(f.popupCount() == 0);
+    CHECK(f.window->focusedDiv() == &f.first);
+}
+
+TEST_CASE("A select in a dialog closes first, and gives the focus back to itself", "[popup][dialog][select][focus]") {
+    Popups f{};
+    auto &dialog = f.window->overlay().open<Dialog>("Curve");
+    auto &select = dialog.body().add<Select>(std::vector<std::string>{"Linear", "Snap"}, 0);
+    f.layout();
+    f.click(select);
+    REQUIRE(select.isOpen());
+    f.key(Key::ESCAPE);
+    CHECK(!select.isOpen());
+    CHECK(f.popupCount() == 1); // The dialog stays
+    CHECK(select.hasFocus());
+}
+
+TEST_CASE("A list scrolling in a dialog ends with its padding after the last row", "[popup][dialog][lists]") {
+    Popups f{};
+    auto &dialog = f.window->overlay().open<Dialog>("People");
+    auto &list   = dialog.body().add<List>();
+    list.height(120.0f).padding(8.0f).overflow(Overflow::Scroll);
+    ListRow *last = nullptr;
+    for (int i = 0; i < 12; ++i) {
+        last = &list.row("Row " + std::to_string(i));
+    }
+    f.layout();
+    REQUIRE(list.contentHeight() > list.getHeight());
+    list.scrollBy(0, -100000);
+    f.layout();
+    // Scrolled to the end, the last row's bottom sits the padding above the list's
+    CHECK(last->y() + last->getHeight() + list.scrollY() == list.getHeight() - 8);
+}
+
+TEST_CASE("Tooltips show on the new controls", "[popup][tooltip][inputs]") {
+    Popups f{};
+    auto &toggle = f.window->appContainer().add<Switch>("Blackout");
+    toggle.tooltip("Blackout on start");
+    f.layout();
+    f.hover(toggle);
+    f.window->updatePopups(1000ms);
+    f.window->updatePopups(1000ms + Window::tooltipDelay);
+    REQUIRE(f.window->tooltip() != nullptr);
+    CHECK(f.window->tooltip()->text() == "Blackout on start");
 }
 
 // endregion
