@@ -8,21 +8,24 @@
 
 namespace psychic_ui {
     /**
-     * What every menu item skin shares: the `.icon` part, the `.label` part, then the `.shortcut` part (not displayed
-     * when empty), from the item. A submenu's skin adds an `.arrow` part. When the item has no icon, its `.icon` part
-     * draws nothing and has the `blank` class, so the skin set's rules decide whether it keeps its column: the menu
-     * gives its rows the `icon-column` class when any of them has an icon.
+     * What every menu item skin shares: the `.check` part (a check mark, drawn when the item is checked, displayed when
+     * its menu keeps a check column), the `.icon` part (displayed when the item has one or its menu keeps an icon
+     * column), the `.label` part, the `.shortcut` part (not displayed when empty), then the `.indicator` part (the
+     * check mark after the label instead, in a select's list), from the item. A submenu's skin adds an `.arrow` part.
      */
     class MenuButtonSkinBase : public MenuButtonSkin {
     public:
         MenuButtonSkinBase();
 
     protected:
+        Icon  *_check{nullptr};     // The `.check` part, a child, which we own
         Icon  *_icon{nullptr};     // The `.icon` part, a child, which we own
         Label *_label{nullptr};    // The `.label` part, a child, which we own
         Label *_shortcut{nullptr}; // The `.shortcut` part, a child, which we own
+        Icon  *_indicator{nullptr}; // The `.indicator` part, a child, which we own
 
         void added() override;
+        void itemChanged() override;
         void draw(SkCanvas *canvas) final;
 
         /**

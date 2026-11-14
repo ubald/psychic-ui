@@ -52,14 +52,10 @@ namespace psychic_ui {
             return;
         }
 
-        int x, y;
-        menuItemButton->localToGlobal(x, y);
-        y += menuItemButton->getHeight();
-        window()->openMenu(sub->items, x, y);
-
-        if (!_menuOpen) {
-            window()->menuContainer().addMouseEnabledDiv(shared_from_this());
-        }
+        // Under its trigger; the bar still takes the mouse, so that hovering another trigger switches menus
+        Menu &menu = window()->openMenu(sub->items, *menuItemButton, Side::Bottom, PopupAlign::Start);
+        menu.passThrough(*this);
+        menu.navigatedOut = [this](const int step) { openNeighbor(step); };
 
         for (auto &child: _children) {
             auto menuButton = std::dynamic_pointer_cast<Button>(child);
@@ -72,6 +68,26 @@ namespace psychic_ui {
         _menuOpen      = true;
     }
 
+    void MenuBar::openNeighbor(const int step) {
+        // The triggers that open menus, in order
+        std::vector<std::pair<Button *, SubMenuItem *>> triggers{};
+        for (std::size_t i = 0; i < _children.size() && i < _data.size(); ++i) {
+            auto button = std::dynamic_pointer_cast<Button>(_children[i]);
+            auto sub    = std::dynamic_pointer_cast<SubMenuItem>(_data[i]);
+            if (button && sub) {
+                triggers.emplace_back(button.get(), sub.get());
+            }
+        }
+        const auto count = static_cast<int>(triggers.size());
+        for (int i = 0; i < count; ++i) {
+            if (triggers[i].second == currentMenuItem) {
+                const auto &[button, sub] = triggers[(i + step + count) % count];
+                openMenu(button, sub);
+                return;
+            }
+        }
+    }
+
     void MenuBar::addedToRender() {
         DataContainer<std::shared_ptr<MenuItem>>::addedToRender();
         _menuClosedSlot = subscribeTo(
@@ -82,7 +98,6 @@ namespace psychic_ui {
 
                 _menuOpen      = false;
                 currentMenuItem = nullptr;
-                window()->menuContainer().removeMouseEnabledDiv(shared_from_this());
                 for (auto &child: _children) {
                     auto menuButton = std::dynamic_pointer_cast<Button>(child);
                     if (menuButton) {

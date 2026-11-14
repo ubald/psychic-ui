@@ -14,6 +14,8 @@
 #include "include/gpu/ganesh/gl/GrGLDirectContext.h"
 #include "include/gpu/ganesh/gl/GrGLInterface.h"
 #include "Window.hpp"
+#include "components/Toast.hpp"
+#include "components/Tooltip.hpp"
 
 namespace {
     // GL_RGBA8, the default framebuffer's format
@@ -43,18 +45,8 @@ namespace psychic_ui {
             .height(100_pct)
             .overflow(Overflow::Hidden);
 
-        modal = &add<Modal>()
-            .id("modal")
-            .visible(false);
-
-        menu = &add<Modal>()
-            .id("menu")
-            .visible(false);
-        menu->mousePressed.subscribe(
-            [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const Mod /*modifiers*/) {
-                closeMenu();
-            }
-        );
+        _overlay = &add<Overlay>();
+        _overlay->id("overlay");
     }
 
     Window::~Window() {
@@ -312,8 +304,8 @@ namespace psychic_ui {
     }
 
     bool Window::isDragArea(const int x, const int y) {
-        // An open menu or modal takes every press
-        if (menu->visible() || modal->visible()) {
+        // A modal popup takes every press, a popup the presses on it
+        if (_overlay->modal() || _overlay->popupAt(x, y)) {
             return false;
         }
 
@@ -394,6 +386,13 @@ namespace psychic_ui {
             YGNodeCalculateLayout(_yogaNode, width, height, YGDirectionLTR);
             layoutUpdated();
         }
+
+        // Popups go beside their anchors, which needs both laid out: then their new places are laid out
+        // (the popups are absolute, so the rest of the tree is cached)
+        if (_overlay->place()) {
+            YGNodeCalculateLayout(_yogaNode, width, height, YGDirectionLTR);
+            layoutUpdated();
+        }
     }
 
     void Window::drawAll() {
@@ -402,6 +401,7 @@ namespace psychic_ui {
         }
 
         updateGestures(_systemWindow->gestureTime());
+        updatePopups(_systemWindow->gestureTime());
 
         updateStylesAndLayout();
 
@@ -444,26 +444,139 @@ namespace psychic_ui {
 
     // endregion
 
-    // region Modals
+    // region Popups
 
-    void Window::openMenu(const std::vector<std::shared_ptr<MenuItem>> &items, const int x, const int y) {
-        menu->removeAll();
-        int lx, ly;
-        menu->globalToLocal(lx, ly, x, y);
-        menu->add<Menu>(items)
-            .left(lx)
-            .top(ly);
-        menu->visible(true);
+    Menu &Window::openMenu(const MenuItems &items, const int x, const int y) {
+        auto menu = std::make_shared<Menu>(items);
+        menu->anchor(x, y);
+        return openMenu(menu);
+    }
+
+    Menu &Window::openMenu(const MenuItems &items, Div &anchor, const Side side, const PopupAlign align) {
+        auto menu = std::make_shared<Menu>(items);
+        menu->anchor(anchor)
+            .side(side)
+            .alignment(align)
+            .sideOffset(6);
+        return openMenu(menu);
+    }
+
+    Menu &Window::openMenu(const std::shared_ptr<Menu> &menu) {
+        closeMenu();
+        hideTooltip(false);
+        _overlay->open(menu);
+        menu->onClose([this]() { menuClosed.emit(); });
         menuOpened.emit();
+        return *menu;
+    }
+
+    Menu &Window::openContextMenu(const MenuItems &items, const int x, const int y) {
+        Menu &menu = openMenu(items, x, y);
+        menu.addClassName("context");
+        return menu;
     }
 
     void Window::closeMenu() {
-        menu->removeAll();
-        menu->visible(false);
-        menuClosed.emit();
+        _overlay->closeAll<Menu>();
     }
 
-    // endregion
+    ToastStack &Window::toasts() {
+        if (!_toasts) {
+            _toasts = std::make_shared<ToastStack>();
+        }
+        if (!_toasts->isOpen()) {
+            _overlay->open(_toasts);
+        }
+        return *_toasts;
+    }
+
+    Toast &Window::toast(const ToastOptions &options) {
+        return toasts().add(options);
+    }
+
+    namespace {
+        /**
+         * The divs a press at this point (in `div`'s parent's coordinates) goes through, outermost first,
+         * found the way the mouse events are dispatched. The overlay is only on the path where a popup takes the
+         * mouse, or everywhere under a modal popup.
+         */
+        bool hitPath(Div *div, int x, int y, std::vector<Div *> &path);
+    }
+
+    Div *Window::tooltipTargetAt(const int x, const int y) {
+        std::vector<Div *> path{};
+        hitPath(this, x, y, path);
+        for (auto div = path.rbegin(); div != path.rend(); ++div) {
+            if (!(*div)->tooltip().empty()) {
+                return *div;
+            }
+        }
+        return nullptr;
+    }
+
+    MouseEventStatus Window::handleMouseMove(const int mouseX, const int mouseY, const int buttons, const Mod modifiers, const bool handled) {
+        auto res = Div::handleMouseMove(mouseX, mouseY, buttons, modifiers, handled);
+        if (_inputMode == InputMode::Touch) {
+            return res; // A finger shows tooltips by a long press
+        }
+        Div *target  = buttons == 0 ? tooltipTargetAt(mouseX, mouseY) : nullptr; // Not while dragging
+        auto current = _tooltipTarget.lock();
+        if (target != current.get()) {
+            if (_tooltip) {
+                hideTooltip(true);
+            }
+            _tooltipTarget     = target ? target->weak_from_this() : std::weak_ptr<Div>{};
+            _tooltipSince      = std::nullopt;
+            _tooltipSuppressed = false;
+        }
+        return res;
+    }
+
+    void Window::showTooltip(Div &target) {
+        hideTooltip(false);
+        _tooltip = std::make_shared<Tooltip>(target.tooltip());
+        _tooltip->anchor(target);
+        _overlay->open(_tooltip);
+    }
+
+    void Window::hideTooltip(const bool warm) {
+        if (_tooltip) {
+            auto tooltip = std::move(_tooltip);
+            tooltip->close();
+            _tooltipWarm = warm;
+            _warmSince   = std::nullopt;
+        }
+        _touchTooltip = false;
+    }
+
+    void Window::updatePopups(const std::chrono::nanoseconds now) {
+        auto target = _tooltipTarget.lock();
+        if (target && (target->window() != this || target->tooltip().empty() || !target->visible())) {
+            hideTooltip(false);
+            _tooltipTarget.reset();
+            target = nullptr;
+        }
+        if (_tooltip && !_tooltip->isOpen()) {
+            _tooltip = nullptr; // Closed by a press or with its anchor
+        }
+        if (target && !_tooltip && !_tooltipSuppressed) {
+            if (!_tooltipSince) {
+                _tooltipSince = now;
+            }
+            if (_tooltipWarm || now - *_tooltipSince >= tooltipDelay) {
+                showTooltip(*target);
+            }
+        } else if (!target && _tooltipWarm) {
+            if (!_warmSince) {
+                _warmSince = now;
+            } else if (now - *_warmSince >= tooltipWarmTime) {
+                _tooltipWarm = false;
+                _warmSince   = std::nullopt;
+            }
+        }
+
+        _overlay->update(now);
+    }
 
     void Window::updateTheme(const Theme &theme) {
         _followSystemTheme = false;
@@ -552,18 +665,34 @@ namespace psychic_ui {
             return std::chrono::duration<float>(time).count();
         }
 
-        /**
-         * The divs a press at this point (in `div`'s parent's coordinates) goes through, outermost first,
-         * found the way the mouse events are dispatched
-         */
+    }
+
+    namespace {
         bool hitPath(Div *div, const int x, const int y, std::vector<Div *> &path) {
             if (!div->visible() || !div->boundsContains(x, y)) {
                 return false;
             }
+            const int localX = x - div->x() - div->scrollX();
+            const int localY = y - div->y() - div->scrollY();
+            if (auto overlay = dynamic_cast<Overlay *>(div)) {
+                // Only where a popup takes the mouse, or under a modal popup
+                const std::size_t size = path.size();
+                path.push_back(div);
+                const auto &children = overlay->children();
+                for (auto child = children.rbegin(); child != children.rend(); ++child) {
+                    auto *popup = static_cast<Popup *>(child->get());
+                    if ((popup->mouseEnabled() || popup->mouseChildren()) && hitPath(popup, localX, localY, path)) {
+                        return true;
+                    }
+                    if (popup->modal()) {
+                        return true;
+                    }
+                }
+                path.resize(size);
+                return false;
+            }
             path.push_back(div);
             if (div->mouseChildren()) {
-                const int localX = x - div->x() - div->scrollX();
-                const int localY = y - div->y() - div->scrollY();
                 const auto &children = div->children();
                 for (auto child = children.rbegin(); child != children.rend(); ++child) {
                     if (hitPath(child->get(), localX, localY, path)) {
@@ -611,13 +740,31 @@ namespace psychic_ui {
         handleMouseMove(x, y, 0, Mod{}, false);
         _touchPhase  = TouchPhase::Pressing;
         _touchButton = button;
+        const std::size_t popups = _overlay->children().size();
+        Popup *top = popups ? static_cast<Popup *>(_overlay->children().back().get()) : nullptr;
         handleMouseButtonChange(x, y, button, true, Mod{});
+
+        // A long press is the context press first: when it opened nothing (no new popup on top), the tooltip of what
+        // is under the finger shows instead, until the finger lifts
+        const bool opened = _overlay->children().size() > popups
+                            || (!_overlay->children().empty() && _overlay->children().back().get() != top);
+        if (button == MouseButton::RIGHT && !opened) {
+            if (Div *target = tooltipTargetAt(x, y)) {
+                showTooltip(*target);
+                _tooltipTarget = target->weak_from_this();
+                _touchTooltip  = true;
+            }
+        }
     }
 
     void Window::touchEnd() {
         // Nothing stays under the mouse once the finger is gone
         handleMouseExit(coordinate(_touchX), coordinate(_touchY), 0, Mod{});
         _touchPhase = TouchPhase::None;
+        if (_touchTooltip) {
+            hideTooltip(false);
+            _tooltipTarget.reset();
+        }
     }
 
     bool Window::panBy(const float dx, const float dy) {
@@ -916,6 +1063,21 @@ namespace psychic_ui {
     }
 
     MouseEventStatus Window::handleMouseButtonChange(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) {
+        // A press hides the tooltip (a touch long press shows it after this) and closes the popups it is outside of:
+        // when that closed a modal one, the press (and its release) went to it
+        if (down) {
+            hideTooltip(false);
+            _tooltipSuppressed = true;
+            if (_overlay->pressOutside(mouseX, mouseY)) {
+                _pressSwallowed  = true;
+                _swallowedButton = button;
+                return Handled;
+            }
+        } else if (_pressSwallowed && button == _swallowedButton) {
+            _pressSwallowed = false;
+            return Handled;
+        }
+
         // Through hit slop, the press and its release land on the target's edge
         if (down) {
             int   targetX = mouseX;
@@ -1014,11 +1176,9 @@ namespace psychic_ui {
 
     bool Window::focusNext(const bool backwards) {
         std::vector<Div *> list{};
-        // The open menu first, then the modals, otherwise the app
-        if (menu->visible() && !menu->children().empty()) {
-            focusables(menu, list);
-        } else if (!modal->children().empty()) {
-            focusables(modal, list);
+        // Within the topmost popup that traps the focus (a menu, a dialog), otherwise the app
+        if (Popup *scope = _overlay->focusScope()) {
+            focusables(scope, list);
         } else {
             focusables(app, list);
         }
@@ -1045,6 +1205,12 @@ namespace psychic_ui {
     }
 
     bool Window::handleKeyPress(Key key, Mod mod) {
+        hideTooltip(false);
+        _tooltipSuppressed = true;
+        // Escape closes the topmost popup, before anyone else sees it
+        if (key == Key::ESCAPE && _overlay->dismissTop()) {
+            return true;
+        }
         // Tab moves the focus, before anyone else sees it
         if (key == Key::TAB && !mod.ctrl && !mod.alt && !mod.super) {
             return focusNext(mod.shift);

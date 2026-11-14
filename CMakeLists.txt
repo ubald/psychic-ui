@@ -260,6 +260,14 @@ set(SOURCE_FILES
     psychic-ui/components/SegmentedControl.hpp
     psychic-ui/components/Switch.cpp
     psychic-ui/components/Switch.hpp
+    psychic-ui/components/Dialog.cpp
+    psychic-ui/components/Dialog.hpp
+    psychic-ui/components/Select.cpp
+    psychic-ui/components/Select.hpp
+    psychic-ui/components/Toast.cpp
+    psychic-ui/components/Toast.hpp
+    psychic-ui/components/Tooltip.cpp
+    psychic-ui/components/Tooltip.hpp
     psychic-ui/icons/IconRegistry.cpp
     psychic-ui/icons/IconRegistry.hpp
     psychic-ui/icons/IconSet.hpp
@@ -353,6 +361,8 @@ set(SOURCE_FILES
     psychic-ui/Measure.hpp
     psychic-ui/Modal.cpp
     psychic-ui/Modal.hpp
+    psychic-ui/Overlay.cpp
+    psychic-ui/Overlay.hpp
     psychic-ui/opengl.hpp
     psychic-ui/psychic-ui.hpp
     psychic-ui/Shape.cpp

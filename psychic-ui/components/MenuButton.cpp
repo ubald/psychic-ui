@@ -11,6 +11,12 @@ namespace psychic_ui {
         tag("MenuButton");
 
         _mouseChildren = false; // !important
+        if (_menuItem) {
+            if (_menuItem->danger) {
+                addClassName("danger");
+            }
+            _enabled = _menuItem->enabled;
+        }
     }
 
     const MenuItem *MenuButton::menuItem() const {
@@ -30,5 +36,35 @@ namespace psychic_ui {
 
     bool MenuButton::active() const {
         return Component::active() || _selected;
-    };
+    }
+
+    bool MenuButton::checked() const {
+        if (auto check = dynamic_cast<const CheckMenuItem *>(_menuItem)) {
+            return check->checked;
+        }
+        if (auto radio = dynamic_cast<const RadioMenuItem *>(_menuItem)) {
+            return radio->checked();
+        }
+        return false;
+    }
+
+    void MenuButton::setColumns(const bool icon, const bool check, const bool checkTrailing) {
+        _iconColumn    = icon;
+        _checkColumn   = check;
+        _checkTrailing = checkTrailing;
+        itemChanged();
+    }
+
+    void MenuButton::itemChanged() {
+        updateClassName("checked", checked());
+        if (_skin) {
+            _skin->itemChanged();
+        }
+    }
+
+    void MenuButton::skinChanged() {
+        if (_skin) {
+            _skin->itemChanged();
+        }
+    }
 }

@@ -13,6 +13,11 @@ namespace psychic_ui {
         std::shared_ptr<Div> getItemDiv(const std::shared_ptr<MenuItem> &item);
         void openMenu(Button *menuItemButton, SubMenuItem *sub);
 
+        /**
+         * Open the menu before (-1) or after (1) the open one, wrapping around (Left and Right in a menu)
+         */
+        void openNeighbor(int step);
+
         void addedToRender() override;
         void removedFromRender() override;
         Window::MenuClosedSlot _menuClosedSlot{nullptr};

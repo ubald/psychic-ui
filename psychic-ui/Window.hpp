@@ -10,7 +10,7 @@
 #include "include/core/SkSurface.h"
 #include "include/gpu/ganesh/GrDirectContext.h"
 #include "Div.hpp"
-#include "Modal.hpp"
+#include "Overlay.hpp"
 #include "style/StyleManager.hpp"
 #include "style/Style.hpp"
 #include "components/Menu.hpp"
@@ -18,6 +18,11 @@
 #include "SystemWindow.hpp"
 
 namespace psychic_ui {
+
+    class Toast;
+    struct ToastOptions;
+    class ToastStack;
+    class Tooltip;
 
     class Window : public Div {
     public:
@@ -108,8 +113,7 @@ namespace psychic_ui {
          */
         static constexpr int maxStylePasses = 4;
 
-        void openMenu(const std::vector<std::shared_ptr<MenuItem>> &items, int x, int y);
-        void closeMenu();
+        // region Popups
 
         /**
          * Where the application's content goes, filling the window
@@ -118,13 +122,70 @@ namespace psychic_ui {
             return *app;
         };
 
-        Modal &modalContainer() const {
-            return *modal;
+        /**
+         * The layer above the content where popups go (menus, select lists, tooltips, dialogs, toasts): see `Popup`
+         */
+        Overlay &overlay() const {
+            return *_overlay;
         }
 
-        Modal &menuContainer() const {
-            return *menu;
-        }
+        /**
+         * Open a menu (closing the open one), at a point in window coordinates: below it and to its right, flipped and
+         * shifted to stay inside the window
+         */
+        Menu &openMenu(const MenuItems &items, int x, int y);
+
+        /**
+         * Open a menu beside a div, on a side of it (below by default), lined up with its start
+         */
+        Menu &openMenu(const MenuItems &items, Div &anchor, Side side = Side::Bottom, PopupAlign align = PopupAlign::Start);
+
+        /**
+         * Open a menu made by hand (closing the open one)
+         */
+        Menu &openMenu(const std::shared_ptr<Menu> &menu);
+
+        /**
+         * Open a context menu at a point (window coordinates), like `openMenu` there.
+         * HOOK: nothing calls it yet; the context-menu request (a right press, a touch long press, the Menu key or
+         * Shift+F10) is to call it once that event exists.
+         */
+        Menu &openContextMenu(const MenuItems &items, int x, int y);
+
+        /**
+         * Close the open menu, with its submenus
+         */
+        void closeMenu();
+
+        /**
+         * Show a toast in the bottom right corner, over the ones already there (see `ToastOptions`)
+         */
+        Toast &toast(const ToastOptions &options);
+
+        /**
+         * The toasts' stack, made on the first toast
+         */
+        ToastStack &toasts();
+
+        /**
+         * The tooltip showing now, or nullptr
+         */
+        Tooltip *tooltip() const { return _tooltip.get(); }
+
+        /**
+         * How long the mouse rests on a div with a `tooltip` before it shows, and how soon after one hides the next
+         * one shows at once (Pivotal's)
+         */
+        static constexpr std::chrono::nanoseconds tooltipDelay    = std::chrono::milliseconds(300);
+        static constexpr std::chrono::nanoseconds tooltipWarmTime = std::chrono::milliseconds(400);
+
+        /**
+         * Advance the popups with time: a tooltip's delay, the toasts' timers. `drawAll` calls it every frame with the
+         * system window's `gestureTime()`; tests call it with theirs.
+         */
+        void updatePopups(std::chrono::nanoseconds now);
+
+        // endregion
 
         void setCursor(Cursor cursor);
 
@@ -322,6 +383,11 @@ namespace psychic_ui {
         // region Focus
 
         /**
+         * The deepest div of the focus path, or nullptr
+         */
+        Div *focusedDiv() const { return _focusPath.empty() ? nullptr : _focusPath.back(); }
+
+        /**
          * Focus a div (and the path to it). `visible` is whether the focus should show (`:focus-visible`):
          * true when it moved with the keyboard, false for a press.
          */
@@ -334,7 +400,8 @@ namespace psychic_ui {
 
         /**
          * Move the focus to the next div that takes it (focusEnabled, enabled, visible), in document order,
-         * or the previous one with `backwards`; wraps around. Tab and Shift+Tab do it.
+         * or the previous one with `backwards`; wraps around. Tab and Shift+Tab do it. While a popup that traps the
+         * focus is open (a menu, a dialog), only among its divs.
          * @return Whether a div took the focus
          */
         bool focusNext(bool backwards = false);
@@ -359,6 +426,8 @@ namespace psychic_ui {
         // region Mouse
 
         /**
+         * A press first closes the popups it is outside of (`Overlay::pressOutside`); one that closed a modal popup
+         * goes no further, and neither does its release.
          * A press on nothing that takes presses goes to the nearest div whose `hitSlop` reaches it, as if it
          * landed on its edge, and so does its release while still within that slop
          */
@@ -369,6 +438,16 @@ namespace psychic_ui {
          * when the press lands on something that takes presses, or no slop reaches it
          */
         Div *hitSlopTarget(int x, int y, int &targetX, int &targetY);
+
+        /**
+         * Also follows the div under the mouse with a `tooltip`, to show it after `tooltipDelay`
+         */
+        MouseEventStatus handleMouseMove(int mouseX, int mouseY, int buttons, Mod modifiers, bool handled) override;
+
+        /**
+         * The deepest div with a tooltip under a point (window coordinates), as a press would find it
+         */
+        Div *tooltipTargetAt(int x, int y);
         std::chrono::time_point<std::chrono::high_resolution_clock> _lastClick{};
         unsigned int _clickCount{0};
 
@@ -414,9 +493,26 @@ namespace psychic_ui {
         // region Default DIVs
 
         // Children of the window, which owns them
-        Div   *app{nullptr};
-        Modal *modal{nullptr};
-        Modal *menu{nullptr};
+        Div     *app{nullptr};
+        Overlay *_overlay{nullptr};
+
+        // endregion
+
+        // region Popups
+
+        std::shared_ptr<ToastStack> _toasts{};
+        std::shared_ptr<Tooltip>    _tooltip{};     // Open, or nullptr
+        std::weak_ptr<Div>          _tooltipTarget{}; // The div under the mouse with a tooltip
+        std::optional<std::chrono::nanoseconds> _tooltipSince{}; // When the mouse came to rest on it (the next frame)
+        bool                        _tooltipSuppressed{false}; // Pressed or typed: none until the mouse moves to another
+        bool                        _tooltipWarm{false};       // One just hid: the next one shows at once
+        std::optional<std::chrono::nanoseconds> _warmSince{};
+        bool                        _touchTooltip{false};      // Shown by a long press, until the finger lifts
+        bool                        _pressSwallowed{false};    // A press closed a modal popup: its release goes nowhere
+        MouseButton                 _swallowedButton{MouseButton::LEFT};
+
+        void showTooltip(Div &target);
+        void hideTooltip(bool warm);
 
         // endregion
 

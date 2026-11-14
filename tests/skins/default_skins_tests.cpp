@@ -246,8 +246,8 @@ TEST_CASE("Default skins: menus float on the theme's two-layer shadow", "[skins]
     Fixture f;
     f.window->openMenu({Menu::item("Copy", []() {}, "Ctrl+C", "copy")}, 10, 10);
     f.layout();
-    REQUIRE(f.window->menuContainer().children().size() == 1);
-    const Style &menu = f.window->menuContainer().children().front()->computedStyle();
+    REQUIRE(f.window->overlay().children().size() == 1);
+    const Style &menu = f.window->overlay().children().front()->computedStyle();
     CHECK(menu.backgroundColor() == f.theme.palette.overlay);
     CHECK(menu.borderRadius() == f.theme.metrics.radius.popup);
     CHECK(menu.shadowColor() == f.theme.elevation.overlay.color);
@@ -305,9 +305,9 @@ TEST_CASE("Default skins: a menu's labels line up when some rows have an icon", 
         f.window->openMenu(items, 10, 10);
         f.layout();
         std::vector<float> lefts{};
-        REQUIRE(f.window->menuContainer().children().size() == 1);
-        Div &menu = *f.window->menuContainer().children().front();
-        for (auto &row: menu.children().front()->children()) {
+        REQUIRE(f.window->overlay().children().size() == 1);
+        Div &menu = *f.window->overlay().children().front();
+        for (auto &row: menu.children()) {
             Div *label = part(*row, "label");
             REQUIRE(label);
             lefts.push_back(left(*label) - left(*row));

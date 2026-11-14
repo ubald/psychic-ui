@@ -140,7 +140,7 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
         int x = 0, y = 0;
         HeadlessWindow::center(file, x, y);
         window->clickAt(x, y);
-        auto item = findButton(window->menuContainer(), "New");
+        auto item = findButton(window->overlay(), "New");
         REQUIRE(item != nullptr);
         REQUIRE(std::static_pointer_cast<Button>(file)->selected());
 
@@ -150,20 +150,20 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
         window->clickAt(x, y);
         REQUIRE(newClicked == 1);
         REQUIRE(weakItem.expired());
-        REQUIRE(window->menuContainer().childCount() == 0);
+        REQUIRE(window->overlay().childCount() == 0);
         REQUIRE_FALSE(std::static_pointer_cast<Button>(file)->selected());
 
         // The focus moved to the removed item: clicking again must not reach it
         HeadlessWindow::center(file, x, y);
         window->clickAt(x, y);
-        REQUIRE(findButton(window->menuContainer(), "New") != nullptr);
+        REQUIRE(findButton(window->overlay(), "New") != nullptr);
     }
 
     SECTION("an item's own onClick emitted directly") {
         int x = 0, y = 0;
         HeadlessWindow::center(file, x, y);
         window->clickAt(x, y);
-        auto item = findButton(window->menuContainer(), "New");
+        auto item = findButton(window->overlay(), "New");
         REQUIRE(item != nullptr);
         Div *raw = item.get();
         item.reset();
@@ -175,12 +175,12 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
         int x = 0, y = 0;
         HeadlessWindow::center(file, x, y);
         window->clickAt(x, y);
-        auto recent = findButton(window->menuContainer(), "Recent");
+        auto recent = findButton(window->overlay(), "Recent");
         REQUIRE(recent != nullptr);
         HeadlessWindow::center(recent, x, y);
         window->handleMouseMove(x, y, 0, Mod{}, false);
         window->layout();
-        REQUIRE(findButton(window->menuContainer(), "Nothing") != nullptr);
+        REQUIRE(findButton(window->overlay(), "Nothing") != nullptr);
         std::weak_ptr<Div> weakRecent = recent;
         recent.reset();
         window->closeMenu();

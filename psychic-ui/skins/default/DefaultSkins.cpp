@@ -612,9 +612,6 @@ namespace psychic_ui {
 
         rule("Menu MenuButton.submenu").skin("submenu");
         rule("Menu MenuButton .icon").color(p.textMuted);
-        // A row without an icon keeps its column when another row has one, so the labels line up
-        rule("Menu MenuButton .icon.blank").display(Display::None);
-        rule("Menu MenuButton.icon-column .icon.blank").display(Display::Flex);
         rule("Menu MenuButton .label").grow(1);
 
         text(rule("Menu MenuButton .shortcut"), t.xs, t.regular, s)

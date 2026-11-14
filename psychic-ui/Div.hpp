@@ -335,6 +335,22 @@ namespace psychic_ui {
 
         // endregion
 
+        // region Tooltip
+
+        /**
+         * A short text the window shows in a tooltip above the div (below when there's no room) after the mouse rests
+         * on it, or after a touch long press that opens nothing else; "" for none
+         */
+        const std::string &tooltip() const { return _tooltip; }
+
+        template<class Self>
+        Self &tooltip(this Self &self, const std::string &text) {
+            static_cast<Div &>(self)._tooltip = text;
+            return self;
+        }
+
+        // endregion
+
         // region Position & Dimensions
 
         // The setters are style properties (`left`, `top`, `width`, `height`, ...), which go through the computed
@@ -630,6 +646,7 @@ namespace psychic_ui {
         // endregion
 
     protected:
+        std::string _tooltip{};
         bool _enabled{true};
         bool _visible{true};
         int  _x{0};
