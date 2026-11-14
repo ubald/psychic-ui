@@ -236,3 +236,25 @@ SCENARIO("the root is laid out at the window size", "[layout]") {
         }
     }
 }
+
+TEST_CASE("a scrolling div's content ends with its end padding, as in CSS", "[layout]") {
+    auto styleManager = std::make_shared<StyleManager>();
+    auto window       = makeWindow(styleManager);
+    auto &scroller    = window->appContainer().add<Div>()
+                                .width(100.0f)
+                                .height(100.0f)
+                                .padding(10.0f)
+                                .overflow(Overflow::Scroll);
+    scroller.add<Div>().height(300.0f).shrink(0);
+    window->updateStylesAndLayout();
+
+    // 10 above, 300 of content, 10 below
+    CHECK(scroller.contentHeight() == 320);
+    scroller.scrollBy(0, -1000);
+    CHECK(scroller.scrollY() == 100 - 320);
+
+    // Without scrolling, the padding isn't added to what overflows
+    scroller.overflow(Overflow::Hidden);
+    window->updateStylesAndLayout();
+    CHECK(scroller.contentHeight() == 310);
+}

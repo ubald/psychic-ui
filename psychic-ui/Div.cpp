@@ -919,13 +919,18 @@ namespace psychic_ui {
         _boundsTop    = _y;
         _boundsRight  = _x + _width;
         _boundsBottom = _y + _height;
+        // A scrolling div's content ends with its end padding, as CSS's scrollable overflow area does, so that the last
+        // child doesn't touch its edge once scrolled to the end
+        const bool scrolls     = _computedStyle.overflow() == Overflow::Scroll;
+        const int  endPaddingX = scrolls ? static_cast<int>(YGNodeLayoutGetPadding(_yogaNode, YGEdgeRight)) : 0;
+        const int  endPaddingY = scrolls ? static_cast<int>(YGNodeLayoutGetPadding(_yogaNode, YGEdgeBottom)) : 0;
         for (auto &child: _children) {
             child->layoutUpdated();
 
             _boundsLeft   = std::min(_boundsLeft, _x + child->boundsLeft());
             _boundsTop    = std::min(_boundsTop, _y + child->boundsTop());
-            _boundsRight  = std::max(_boundsRight, _x + child->boundsRight());
-            _boundsBottom = std::max(_boundsBottom, _y + child->boundsBottom());
+            _boundsRight  = std::max(_boundsRight, _x + child->boundsRight() + endPaddingX);
+            _boundsBottom = std::max(_boundsBottom, _y + child->boundsBottom() + endPaddingY);
         }
         SkRect previousBoundsRect = _boundsRect;
         _boundsRect.setLTRB(_boundsLeft, _boundsTop, _boundsRight, _boundsBottom);

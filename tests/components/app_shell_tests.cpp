@@ -212,8 +212,8 @@ TEST_CASE("AppShell: a page's scroller ends with the page panel, so its content'
     CHECK(scrollerY == pageY + static_cast<int>(s.theme.metrics.barHeader));
     CHECK(scrollerY + scroller.getHeight() == pageY + page.getHeight());
 
-    // Scrolled all the way, the content's end meets the scroller's
+    // Scrolled all the way, the content's end shows, with the scroller's bottom padding after it
     scroller.scroll(0, -100000);
     s.layout();
-    CHECK(scroller.scrollY() == static_cast<int>(scroller.getHeight()) - (24 + 2000));
+    CHECK(scroller.scrollY() == static_cast<int>(scroller.getHeight()) - (24 + 2000 + 24));
 }
