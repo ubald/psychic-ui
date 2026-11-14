@@ -29,6 +29,7 @@
 #include "Icons.hpp"
 #include "Lists.hpp"
 #include "Inputs.hpp"
+#include "Popups.hpp"
 #include "../demo-stylesheet.hpp"
 
 namespace psychic_ui {
@@ -55,6 +56,11 @@ namespace psychic_ui {
          * Show or hide the frame rate counter
          */
         void showFps(bool show);
+
+        /**
+         * Show the Popups page and open one of its popups (see `Popups::openPopup`); false for an unknown name
+         */
+        bool openPopup(const std::string &name);
 
     protected:
         void render(SkCanvas *canvas) override;
@@ -124,6 +130,7 @@ namespace psychic_ui {
             {"Icons", "star", page([] { return std::make_shared<IconsPanel>(); })},
             {"Inputs", "settings", page([] { return std::make_shared<Inputs>(); })}, // In Controls, after Text Input
             {"Lists", "list", page([] { return std::make_shared<Lists>(); })},
+            {"Popups", "layout", page([] { return std::make_shared<Popups>(); })},
         };
 
         auto &controls = sidebar.section("Controls");
@@ -286,13 +293,15 @@ namespace psychic_ui {
         for (const NamedTheme &named: _themes) {
             items.push_back(Menu::item(named.label, [this, key = named.key]() { useTheme(key); }));
         }
-        // Beside the item, its last row level with it: the menu's rows and its padding and border above
-        const Metrics &m      = theme().metrics;
-        const int     height = static_cast<int>(items.size() * m.pointer.rowSm + 2 * (m.space(1) + m.border));
-        int           x      = 0;
-        int           y      = 0;
-        _themeItem->localToGlobal(x, y, _themeItem->getWidth() + 8, _themeItem->getHeight() - height);
-        openMenu(items, x, y);
+        // Beside the item, its bottom level with the item's
+        openMenu(items, *_themeItem, Side::Right, PopupAlign::End).sideOffset(8);
+    }
+
+    bool DemoWindow::openPopup(const std::string &name) {
+        showPage("Popups");
+        updateStylesAndLayout(); // The page's anchors are laid out first
+        auto popups = std::dynamic_pointer_cast<Popups>(_panel);
+        return popups && popups->openPopup(name);
     }
 
     void DemoWindow::showFps(const bool show) {

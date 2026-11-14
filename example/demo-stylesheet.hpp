@@ -43,6 +43,35 @@ public:
 
         // endregion
 
+        // region Popups
+
+        manager->style("Popups")
+               .gap(m.space(8));
+
+        manager->style("Popups .group")
+               .shrink(0)
+               .gap(m.space(1));
+
+        manager->style("Popups .group .row")
+               .wrap(Wrap::Wrap)
+               .alignItems(Align::Center)
+               .gap(m.space(2))
+               .marginTop(m.space(2));
+
+        // Where a context menu opens
+        manager->style("Popups .context-area")
+               .width(280)
+               .height(64)
+               .marginLeft(m.space(4))
+               .border(m.border)
+               .borderRadius(m.radius.surface)
+               .borderColor(p.lineStrong);
+
+        manager->style("Popups .status")
+               .marginTop(-m.space(4));
+
+        // endregion
+
         // region Ranges
 
         manager->style("Ranges .columns")

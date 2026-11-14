@@ -8,6 +8,7 @@ using namespace psychic_ui;
 
 /**
  * psychic-ui-demo [--theme <system|pivotal-dark|pivotal-light|one-dark|one-light|psychic>] [--page <name>] [--no-fps]
+ *                 [--open <menu|submenu|context|select|dialog|confirm|toasts|tooltip>]
  */
 int main(int argc, char **argv) {
     try {
@@ -25,6 +26,11 @@ int main(int argc, char **argv) {
             } else if (arg == "--page" && more) {
                 if (!window->showPage(argv[++i])) {
                     std::cerr << "Unknown page: " << argv[i] << std::endl;
+                }
+            } else if (arg == "--open" && more) {
+                // On the Popups page, for screenshots
+                if (!window->openPopup(argv[++i])) {
+                    std::cerr << "Unknown popup: " << argv[i] << std::endl;
                 }
             } else if (arg == "--no-fps") {
                 window->showFps(false);
