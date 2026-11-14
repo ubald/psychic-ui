@@ -74,9 +74,6 @@ jobs:
   macos:
     name: macOS
     runs-on: macos-latest
-    # Allowed to fail until a run passes: the Skia upgrade (CoreText fonts,
-    # Homebrew's ICU and HarfBuzz) hasn't been built on macOS yet.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
         with:
