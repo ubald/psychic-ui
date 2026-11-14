@@ -7,6 +7,7 @@
 #include "DefaultButtonSkin.hpp"
 #include "DefaultAvatarSkin.hpp"
 #include "DefaultCheckBoxSkin.hpp"
+#include "DefaultInputSkins.hpp"
 #include "DefaultMenuButtonSkin.hpp"
 #include "DefaultScrollBarSkin.hpp"
 #include "DefaultSliderSkin.hpp"
@@ -93,6 +94,13 @@ namespace psychic_ui {
 
         // Lists
         skins.add<AvatarSkin, DefaultAvatarSkin>();
+
+        // Inputs
+        skins.add<SwitchSkin, DefaultSwitchSkin>()
+             .add<SegmentedControlSkin, DefaultSegmentedControlSkin>()
+             .add<ColorSwatchesSkin, DefaultColorSwatchesSkin>()
+             .add<NumberStepperSkin, DefaultNumberStepperSkin>()
+             .add<SearchFieldSkin, DefaultSearchFieldSkin>();
     }
 
     void DefaultSkins::load(StyleManager *manager) {
@@ -357,6 +365,199 @@ namespace psychic_ui {
         rule("TextArea:focus").borderColor(p.accent);
         rule("TextInput:disabled").opacity(0.5f);
         rule("TextArea:disabled").opacity(0.5f);
+
+        // endregion
+
+        // region Inputs
+
+        // Fingers reach them from around them (none with a pointer), like the other controls
+        for (const char *control: {"Switch", "SegmentedControl", "ColorSwatches", "NumberStepper", "SearchField"}) {
+            rule(control).hitSlop(s.hitSlop);
+        }
+
+        rule("TextInput .placeholder").color(p.textMuted);
+
+        // Search field: a text input's field, a muted search icon before the text, a clear button after it
+        text(rule("SearchField"), t.base, t.regular, s)
+            .direction(Direction::Row)
+            .alignItems(Align::Center)
+            .gap(m.space(2))
+            .height(s.controlMd)
+            .paddingLeft(m.space(2.5f))
+            .paddingRight(m.space(1))
+            .border(m.border)
+            .borderRadius(r.control)
+            .borderColor(p.line)
+            .backgroundColor(p.raised)
+            .color(p.text)
+            .cursor(Cursor::IBeam);
+        rule("SearchField:focus").borderColor(p.accent);
+        rule("SearchField:disabled").opacity(0.5f);
+
+        rule("SearchField .icon")
+            .shrink(0)
+            .color(p.textMuted);
+
+        // The text input inside, bare: the field draws it
+        rule("SearchField .input")
+            .grow(1)
+            .shrink(1)
+            .alignSelf(Align::Stretch)
+            .height(Auto)
+            .paddingHorizontal(0)
+            .border(0)
+            .borderRadius(0)
+            .backgroundColor(transparent);
+
+        rule("SearchField .clear")
+            .width(s.controlXs)
+            .height(s.controlXs)
+            .shrink(0)
+            .alignItems(Align::Center)
+            .justify(Justify::Center)
+            .borderRadius(r.small)
+            .iconSize(m.iconSm)
+            .color(p.textMuted);
+        rule("SearchField .clear:hover")
+            .color(p.text)
+            .backgroundColor(p.line);
+
+        // Switch: a pill track in a strong hairline, the accent when on, a white thumb sliding 2 px inside it
+        text(rule("Switch"), t.sm, t.regular, s)
+            .direction(Direction::Row)
+            .alignItems(Align::Center)
+            .gap(m.space(2))
+            .color(p.textSecondary);
+
+        rule("Switch .track")
+            .width(30)
+            .height(18)
+            .paddingHorizontal(2)
+            .border(m.border)
+            .borderRadius(r.button)
+            .borderColor(p.lineStrong)
+            .backgroundColor(p.switchOff);
+        rule("Switch.checked .track")
+            .borderColor(p.accent)
+            .backgroundColor(p.accent);
+        focusRing(rule("Switch:focus-visible .track"), p, m);
+
+        shadow(rule("Switch .thumb"), theme.elevation.thumb)
+            .width(12)
+            .height(12)
+            .borderRadius(r.button)
+            .backgroundColor(p.onAccent);
+
+        rule("Switch:disabled").opacity(0.45f);
+
+        // Segmented control: a pill on the surface in a hairline; the selected segment raised, nested 1 px in
+        text(rule("SegmentedControl"), t.xs, t.regular, s)
+            .direction(Direction::Row)
+            .alignItems(Align::Stretch)
+            .height(s.controlMd)
+            .padding(1)
+            .border(m.border)
+            .borderRadius(r.button)
+            .borderColor(p.line)
+            .backgroundColor(p.surface)
+            .color(p.textMuted)
+            .iconSize(m.iconSm);
+        rule("SegmentedControl.small").height(s.controlSm);
+        rule("SegmentedControl:disabled").opacity(0.45f);
+
+        rule("SegmentedControl .segment")
+            .direction(Direction::Row)
+            .alignItems(Align::Center)
+            .gap(m.space(1.5f))
+            .paddingHorizontal(m.space(2))
+            .borderRadius(r.button - 1);
+        rule("SegmentedControl.small .segment").paddingHorizontal(m.space(1.5f));
+        rule("SegmentedControl .segment:hover").color(p.text);
+        text(rule("SegmentedControl .segment.selected"), t.xs, t.medium, s)
+            .color(p.text)
+            .backgroundColor(p.raised);
+        // Inside the segment, like a sidebar item's: outside it would cross the group's edge
+        focusRing(rule("SegmentedControl:focus-visible .segment.selected"), p, m).outlineOffset(-m.focusRing);
+
+        // Number stepper: a raised field four controls wide, − and + at its ends behind hairlines
+        text(rule("NumberStepper"), t.base, t.regular, s)
+            .direction(Direction::Row)
+            .alignItems(Align::Stretch)
+            .width(s.controlMd * 4)
+            .height(s.controlMd)
+            .border(m.border)
+            .borderRadius(r.control)
+            .borderColor(p.line)
+            .backgroundColor(p.raised)
+            .color(p.text);
+        text(rule("NumberStepper.small"), t.sm, t.regular, s)
+            .width(s.controlSm * 4)
+            .height(s.controlSm);
+        rule("NumberStepper:focus").borderColor(p.accent);
+        rule("NumberStepper:disabled").opacity(0.5f);
+
+        // The text input inside, bare and centered
+        rule("NumberStepper .value")
+            .grow(1)
+            .shrink(1)
+            .height(Auto)
+            .minWidth(0)
+            .paddingHorizontal(m.space(1))
+            .border(0)
+            .borderRadius(0)
+            .backgroundColor(transparent)
+            .textAlign(TextAlign::Center);
+        rule("NumberStepper .value:disabled").opacity(1.0f); // The stepper fades already
+
+        for (const char *button: {"NumberStepper .decrement", "NumberStepper .increment"}) {
+            rule(button)
+                .width(s.controlMd)
+                .shrink(0)
+                .alignItems(Align::Center)
+                .justify(Justify::Center)
+                .borderColor(p.line)
+                .iconSize(m.iconSm)
+                .color(p.textSecondary);
+        }
+        rule("NumberStepper.small .decrement").width(s.controlSm);
+        rule("NumberStepper.small .increment").width(s.controlSm);
+        rule("NumberStepper .decrement")
+            .borderRight(m.border)
+            .borderRadiusLeft(r.control - m.border);
+        rule("NumberStepper .increment")
+            .borderLeft(m.border)
+            .borderRadiusRight(r.control - m.border);
+        for (const char *hover: {"NumberStepper .decrement:hover", "NumberStepper .increment:hover"}) {
+            rule(hover)
+                .color(p.text)
+                .backgroundColor(p.line);
+        }
+        // At a bound: faded, and no hover
+        for (const char *bound: {"NumberStepper .decrement:disabled", "NumberStepper .increment:disabled"}) {
+            rule(bound)
+                .color(p.textMuted)
+                .backgroundColor(transparent);
+        }
+
+        // Color swatches: 20 px chips 4 px apart, wrapping; the selected one ringed in the text color, 2 px out
+        rule("ColorSwatches")
+            .direction(Direction::Row)
+            .wrap(Wrap::Wrap)
+            .gap(m.space(1));
+
+        rule("ColorSwatches .swatch")
+            .width(s.controlXs)
+            .height(s.controlXs)
+            .shrink(0)
+            .borderRadius(r.button);
+        rule("ColorSwatches .swatch.selected")
+            .outlineColor(p.text)
+            .outlineWidth(2)
+            .outlineOffset(2);
+        rule("ColorSwatches:focus-visible .swatch.selected")
+            .outlineColor(p.accent)
+            .outlineWidth(m.focusRing);
+        rule("ColorSwatches:disabled").opacity(0.45f);
 
         // endregion
 

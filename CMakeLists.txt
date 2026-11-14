@@ -250,6 +250,16 @@ set(SOURCE_FILES
     psychic-ui/components/WindowControls.hpp
     psychic-ui/components/ToolBar.cpp
     psychic-ui/components/ToolBar.hpp
+    psychic-ui/components/ColorSwatches.cpp
+    psychic-ui/components/ColorSwatches.hpp
+    psychic-ui/components/NumberStepper.cpp
+    psychic-ui/components/NumberStepper.hpp
+    psychic-ui/components/SearchField.cpp
+    psychic-ui/components/SearchField.hpp
+    psychic-ui/components/SegmentedControl.cpp
+    psychic-ui/components/SegmentedControl.hpp
+    psychic-ui/components/Switch.cpp
+    psychic-ui/components/Switch.hpp
     psychic-ui/icons/IconRegistry.cpp
     psychic-ui/icons/IconRegistry.hpp
     psychic-ui/icons/IconSet.hpp
@@ -274,6 +284,16 @@ set(SOURCE_FILES
     psychic-ui/skins/base/SkinState.hpp
     psychic-ui/skins/base/TextFieldSkinBase.cpp
     psychic-ui/skins/base/TextFieldSkinBase.hpp
+    psychic-ui/skins/base/ColorSwatchesSkinBase.cpp
+    psychic-ui/skins/base/ColorSwatchesSkinBase.hpp
+    psychic-ui/skins/base/NumberStepperSkinBase.cpp
+    psychic-ui/skins/base/NumberStepperSkinBase.hpp
+    psychic-ui/skins/base/SearchFieldSkinBase.cpp
+    psychic-ui/skins/base/SearchFieldSkinBase.hpp
+    psychic-ui/skins/base/SegmentedControlSkinBase.cpp
+    psychic-ui/skins/base/SegmentedControlSkinBase.hpp
+    psychic-ui/skins/base/SwitchSkinBase.cpp
+    psychic-ui/skins/base/SwitchSkinBase.hpp
     psychic-ui/skins/default/DefaultAvatarSkin.cpp
     psychic-ui/skins/default/DefaultAvatarSkin.hpp
     psychic-ui/skins/default/DefaultBasicButtonSkin.cpp
@@ -296,6 +316,8 @@ set(SOURCE_FILES
     psychic-ui/skins/default/DefaultTextInputSkin.hpp
     psychic-ui/skins/default/TitleBarButtonSkin.cpp
     psychic-ui/skins/default/TitleBarButtonSkin.hpp
+    psychic-ui/skins/default/DefaultInputSkins.cpp
+    psychic-ui/skins/default/DefaultInputSkins.hpp
     psychic-ui/skins/paint/Box.cpp
     psychic-ui/skins/paint/Box.hpp
     psychic-ui/skins/paint/Icon.cpp

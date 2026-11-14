@@ -1,0 +1,67 @@
+#include <cmath>
+#include <limits>
+#include "psychic-ui/components/Icon.hpp"
+#include "psychic-ui/components/Label.hpp"
+#include "SegmentedControlSkinBase.hpp"
+
+namespace psychic_ui {
+    SegmentedControlSkinBase::SegmentedControlSkinBase() :
+        SegmentedControlSkin() {}
+
+    void SegmentedControlSkinBase::setSegments(const std::vector<Segment> &segments) {
+        for (Div *segment: _segments) {
+            remove(*segment);
+        }
+        _segments.clear();
+        for (const Segment &s: segments) {
+            Div &segment = add<Div>();
+            segment.addClassName("segment");
+            if (!s.icon.empty()) {
+                segment.add<Icon>(s.icon).addClassName("icon").mouseEnabled(false);
+            }
+            if (!s.label.empty()) {
+                segment.add<Label>(s.label).addClassName("label").mouseEnabled(false);
+            }
+            _segments.push_back(&segment);
+        }
+        const int selected = _selected;
+        _selected = -1;
+        setSelected(selected);
+    }
+
+    void SegmentedControlSkinBase::setSelected(const int index) {
+        if (_selected >= 0 && _selected < static_cast<int>(_segments.size())) {
+            _segments[static_cast<std::size_t>(_selected)]->removeClassName("selected");
+        }
+        _selected = index;
+        if (_selected >= 0 && _selected < static_cast<int>(_segments.size())) {
+            _segments[static_cast<std::size_t>(_selected)]->addClassName("selected");
+        }
+    }
+
+    int SegmentedControlSkinBase::segmentAt(const int x, const int /*y*/) const {
+        // The segments are our children, in a row: the nearest horizontally (zero inside one)
+        int   nearest  = -1;
+        float distance = std::numeric_limits<float>::max();
+        for (std::size_t i = 0; i < _segments.size(); ++i) {
+            const Div  *segment = _segments[i];
+            const float left    = static_cast<float>(segment->x());
+            const float right   = left + static_cast<float>(segment->getWidth());
+            const float px      = static_cast<float>(x);
+            const float d       = px < left ? left - px : (px >= right ? px - right + 1 : 0.0f);
+            if (d < distance) {
+                distance = d;
+                nearest  = static_cast<int>(i);
+            }
+        }
+        return nearest;
+    }
+
+    void SegmentedControlSkinBase::draw(SkCanvas *canvas) {
+        drawChrome(canvas, paint::Box::of(*this), SkinState::of(component()));
+    }
+
+    void SegmentedControlSkinBase::drawChrome(SkCanvas *canvas, const paint::Box &/*box*/, SkinState /*state*/) {
+        Div::draw(canvas);
+    }
+}
