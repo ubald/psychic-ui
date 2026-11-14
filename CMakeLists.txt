@@ -359,8 +359,6 @@ set(SOURCE_FILES
     psychic-ui/Div.cpp
     psychic-ui/Div.hpp
     psychic-ui/Measure.hpp
-    psychic-ui/Modal.cpp
-    psychic-ui/Modal.hpp
     psychic-ui/Overlay.cpp
     psychic-ui/Overlay.hpp
     psychic-ui/opengl.hpp

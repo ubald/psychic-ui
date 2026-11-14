@@ -76,8 +76,6 @@ namespace psychic_ui {
     class Div : public Observer, public std::enable_shared_from_this<Div> {
         friend class StyleManager;
 
-        friend class Modal;
-
     public:
         Div();
 
