@@ -90,7 +90,7 @@ namespace psychic_ui {
 
         // region Menus
 
-        auto &menus = group("Menus", "Icons, shortcuts, groups, check marks, a radio group and submenus; arrows, Enter and Escape");
+        auto &menus = group("Menus", "Icons, shortcuts, groups, check marks, a radio group and submenus; arrows, Enter and Escape; the area's context menu by a right press, a long press or the Menu key");
         _menuButton = &menus.add<Button>("Cue actions").icon("more");
         _menuButton->onClick([this]() { window()->openMenu(_menuItems, *_menuButton); });
 
@@ -98,25 +98,20 @@ namespace psychic_ui {
         _contextArea->addClassName("context-area")
                      .alignItems(Align::Center)
                      .justify(Justify::Center);
-        _contextArea->add<Label>("Context menu: click here").role(TextRole::Tertiary);
-        // A context menu at the point would come from the context-menu request; until it lands, a click opens it
-        // in the middle of the area
-        _contextArea->onClick(
-            [this]() {
-                int x = 0;
-                int y = 0;
-                _contextArea->localToGlobal(x, y, _contextArea->getWidth() / 2, _contextArea->getHeight() / 2);
-                window()->openContextMenu(
-                    {
-                        Menu::item("Cut", [this]() { say("Cut"); }, "Ctrl+X"),
-                        Menu::item("Copy", [this]() { say("Copy"); }, "Ctrl+C"),
-                        Menu::item("Paste", [this]() { say("Paste"); }, "Ctrl+V"),
-                        Menu::separator(),
-                        Menu::item("Select all", [this]() { say("Select all"); }, "Ctrl+A"),
-                    }, x, y
-                );
-            }
-        );
+        _contextArea->add<Label>("Right-click or long-press here").role(TextRole::Tertiary);
+        // Opens where it is asked for: a right press, a touch long press, or the Menu key (Shift+F10) once focused,
+        // at the area's center and at its first item
+        _contextArea->focusEnabled(true)
+                     .tooltip("Right-click for the menu")
+                     .contextMenu(
+                         {
+                             Menu::item("Cut", [this]() { say("Cut"); }, "Ctrl+X"),
+                             Menu::item("Copy", [this]() { say("Copy"); }, "Ctrl+C"),
+                             Menu::item("Paste", [this]() { say("Paste"); }, "Ctrl+V"),
+                             Menu::separator(),
+                             Menu::item("Select all", [this]() { say("Select all"); }, "Ctrl+A"),
+                         }
+                     );
 
         // endregion
 
@@ -234,7 +229,9 @@ namespace psychic_ui {
                 menu.highlight(3, true); // "Move to", the fourth row
             }
         } else if (name == "context") {
-            _contextArea->clicked.emit(_contextArea->mouseEventAtCenter());
+            // As a right press in the area, left of its center
+            const MouseEvent center = _contextArea->mouseEventAtCenter();
+            w->openContextMenu(_contextArea->contextMenu(), center.windowX - 60, center.windowY);
         } else if (name == "select") {
             _select->open();
         } else if (name == "dialog") {

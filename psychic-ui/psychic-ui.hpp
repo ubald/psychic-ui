@@ -80,6 +80,11 @@ namespace psychic_ui {
          */
         InputMode   source{InputMode::Pointer};
         /**
+         * Made by a key in place of the mouse (`Div::mouseEventAtCenter`: a click by Enter or Space, a context menu by
+         * the Menu key or Shift+F10), so that what it opens can start at its first item, as from the keyboard
+         */
+        bool        fromKeyboard{false};
+        /**
          * How far the wheel turned, for `mouseScrolled`, in steps as SDL and GLFW report them (a positive `scrollY` is
          * away from the user, scrolling up)
          */

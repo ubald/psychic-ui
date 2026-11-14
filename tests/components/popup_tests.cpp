@@ -444,6 +444,115 @@ TEST_CASE("A context menu opens at a point, inside the window", "[popup][menu]")
 
 // endregion
 
+// region Context menus
+
+namespace {
+    /**
+     * An area with a context menu of three items (the first disabled), holding a button with one of its own
+     */
+    struct ContextMenus : Popups {
+        Div    &area{window->appContainer().add<Div>()};
+        Button &inner{area.add<Button>("Inner")};
+        int    chosen{0};
+
+        ContextMenus() {
+            auto disabled = Menu::item("Undo", []() {});
+            disabled->enabled = false;
+            area.size(300, 200).padding(20).focusEnabled(true);
+            area.contextMenu({disabled, Menu::item("Copy", [this]() { ++chosen; }), Menu::item("Paste", []() {})});
+            layout();
+        }
+
+        Menu *menu() const { return top<Menu>(); }
+    };
+}
+
+TEST_CASE("A right press opens a div's context menu where it pressed", "[popup][menu][context]") {
+    ContextMenus f{};
+    const auto [ax, ay] = Popups::origin(f.area);
+    const int x = ax + 250;
+    const int y = ay + 150;
+    f.press(x, y, MouseButton::RIGHT);
+    REQUIRE(f.menu() != nullptr);
+    CHECK(hasClass(*f.menu(), "context"));
+    CHECK(f.menu()->rows().size() == 3);
+    CHECK(f.menu()->highlighted() == -1); // From the mouse: nothing highlighted
+    const auto [mx, my] = Popups::origin(*f.menu());
+    CHECK(mx == x);
+    CHECK(my == y);
+    f.release(x, y, MouseButton::RIGHT);
+    CHECK(f.menu() != nullptr); // The release doesn't choose or close
+
+    // A left press does nothing of the kind, and no right press outside opens one
+    f.key(Key::ESCAPE);
+    REQUIRE(f.menu() == nullptr);
+    f.clickAt(x, y);
+    CHECK(f.menu() == nullptr);
+    const auto [bx, by] = Popups::center(f.first);
+    f.press(bx, by, MouseButton::RIGHT);
+    CHECK(f.menu() == nullptr);
+}
+
+TEST_CASE("The deepest div with a context menu opens its own", "[popup][menu][context]") {
+    ContextMenus f{};
+    f.inner.contextMenu({Menu::item("Rename", []() {})});
+    const auto [x, y] = Popups::center(f.inner);
+    f.press(x, y, MouseButton::RIGHT);
+    REQUIRE(f.menu() != nullptr);
+    REQUIRE(f.menu()->rows().size() == 1);
+    CHECK(f.menu()->rows()[0]->menuItem()->label == "Rename");
+}
+
+TEST_CASE("An empty context menu removes it", "[popup][menu][context]") {
+    ContextMenus f{};
+    f.area.contextMenu({});
+    CHECK(!f.area.contextMenuRequested.hasSubscriptions());
+    const auto [x, y] = Popups::center(f.area);
+    f.press(x + 100, y, MouseButton::RIGHT);
+    CHECK(f.menu() == nullptr);
+}
+
+TEST_CASE("The Menu key and Shift+F10 open the focused div's context menu at its first item", "[popup][menu][context][keyboard]") {
+    ContextMenus f{};
+    f.window->requestFocus(&f.area, false); // Even after a click: the keyboard asked for it
+    f.key(Key::MENU);
+    REQUIRE(f.menu() != nullptr);
+    CHECK(f.menu()->highlighted() == 1); // The first that can be chosen: Undo is disabled
+    CHECK(f.menu()->hasFocus());
+    CHECK(f.window->focusVisible());
+    const auto [mx, my] = Popups::origin(*f.menu());
+    const auto [cx, cy] = Popups::center(f.area);
+    CHECK(mx == cx);
+    CHECK(my == cy);
+
+    f.key(Key::ENTER);
+    CHECK(f.chosen == 1);
+    CHECK(f.menu() == nullptr);
+    CHECK(f.area.hasFocus()); // The focus came back
+
+    f.key(Key::F10, Mod{.shift = true});
+    CHECK(f.menu() != nullptr);
+}
+
+TEST_CASE("A touch long press opens the context menu instead of the tooltip", "[popup][menu][context][touch]") {
+    ContextMenus f{};
+    f.area.tooltip("Tip");
+    const auto [ax, ay] = Popups::origin(f.area);
+    const float x = static_cast<float>(ax + 250);
+    const float y = static_cast<float>(ay + 150);
+    f.window->handleTouchPress(x, y, 0ms);
+    f.window->updateGestures(Window::longPressDelay);
+    f.layout();
+    REQUIRE(f.menu() != nullptr);
+    CHECK(f.window->tooltip() == nullptr);
+    f.window->handleTouchRelease(x, y, Window::longPressDelay + 100ms);
+    f.layout();
+    CHECK(f.menu() != nullptr); // Lifting the finger leaves it open
+    CHECK(f.chosen == 0);
+}
+
+// endregion
+
 // region Select
 
 TEST_CASE("A select opens its options under it and changes by the keyboard", "[popup][select]") {

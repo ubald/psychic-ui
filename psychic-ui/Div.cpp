@@ -9,6 +9,7 @@
 #include "yoga/Yoga.h"
 #include "Div.hpp"
 #include "Window.hpp"
+#include "components/Menu.hpp"
 
 
 namespace psychic_ui {
@@ -1302,6 +1303,27 @@ namespace psychic_ui {
         return local;
     }
 
+    void Div::updateContextMenu(std::vector<std::shared_ptr<MenuItem>> items) {
+        _contextMenu = std::move(items);
+        if (_contextMenu.empty()) {
+            if (_contextMenuSlot) {
+                _contextMenuSlot->disconnect();
+                _contextMenuSlot = nullptr;
+            }
+            return;
+        }
+        if (!_contextMenuSlot) {
+            // Ours, torn down with us: the window opens the menu where it was asked for
+            _contextMenuSlot = contextMenuRequested.subscribe(
+                [this](const MouseEvent &event) {
+                    if (Window *w = window(); w && !_contextMenu.empty()) {
+                        w->openContextMenu(_contextMenu, event.windowX, event.windowY, event.fromKeyboard);
+                    }
+                }
+            );
+        }
+    }
+
     MouseEvent Div::mouseEventAtCenter() {
         int windowX = 0;
         int windowY = 0;
@@ -1312,6 +1334,7 @@ namespace psychic_ui {
         event.y       = static_cast<float>(_height) / 2.0f - static_cast<float>(_scrollY);
         event.windowX = static_cast<float>(windowX) + event.x;
         event.windowY = static_cast<float>(windowY) + event.y;
+        event.fromKeyboard = true;
         if (Window *w = window()) {
             event.source = w->inputMode();
         }

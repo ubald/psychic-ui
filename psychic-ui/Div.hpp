@@ -26,6 +26,8 @@ namespace psychic_ui {
 
     class Panel;
 
+    class MenuItem;
+
     /**
      * Return status of the mouse event methods
      */
@@ -334,6 +336,23 @@ namespace psychic_ui {
         template<class Self>
         Self &tooltip(this Self &self, const std::string &text) {
             static_cast<Div &>(self)._tooltip = text;
+            return self;
+        }
+
+        // endregion
+
+        // region Context menu
+
+        /**
+         * The menu the div opens where a context menu is asked for on it (`contextMenuRequested`: a right press, a
+         * touch long press, the Menu key or Shift+F10 while it or a descendant has the focus), unless a descendant
+         * opens its own; empty for none. From the keyboard, the menu starts at its first item.
+         */
+        const std::vector<std::shared_ptr<MenuItem>> &contextMenu() const { return _contextMenu; }
+
+        template<class Self>
+        Self &contextMenu(this Self &self, std::vector<std::shared_ptr<MenuItem>> items) {
+            static_cast<Div &>(self).updateContextMenu(std::move(items));
             return self;
         }
 
@@ -651,6 +670,9 @@ namespace psychic_ui {
 
     protected:
         std::string _tooltip{};
+        std::vector<std::shared_ptr<MenuItem>> _contextMenu{};
+        MouseSlot _contextMenuSlot{}; // Our subscription to contextMenuRequested while there is a context menu
+        void updateContextMenu(std::vector<std::shared_ptr<MenuItem>> items);
         bool _enabled{true};
         bool _visible{true};
         int  _x{0};

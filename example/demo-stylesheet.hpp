@@ -67,6 +67,11 @@ public:
                .borderRadius(m.radius.surface)
                .borderColor(p.lineStrong);
 
+        manager->style("Popups .context-area:focus-visible")
+               .outlineColor(p.accent)
+               .outlineWidth(m.focusRing)
+               .outlineOffset(m.focusRingOffset);
+
         manager->style("Popups .status")
                .marginTop(-m.space(4));
 

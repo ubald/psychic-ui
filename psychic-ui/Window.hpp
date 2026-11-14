@@ -146,11 +146,11 @@ namespace psychic_ui {
         Menu &openMenu(const std::shared_ptr<Menu> &menu);
 
         /**
-         * Open a context menu at a point (window coordinates), like `openMenu` there.
-         * HOOK: nothing calls it yet; the context-menu request (a right press, a touch long press, the Menu key or
-         * Shift+F10) is to call it once that event exists.
+         * Open a context menu at a point (window coordinates), like `openMenu` there, with the `context` class.
+         * `Div::contextMenu(items)` calls it when a context menu is asked for on the div; `fromKeyboard` (the Menu
+         * key, Shift+F10) gives the menu the focus with its first item highlighted.
          */
-        Menu &openContextMenu(const MenuItems &items, int x, int y);
+        Menu &openContextMenu(const MenuItems &items, float x, float y, bool fromKeyboard = false);
 
         /**
          * Close the open menu, with its submenus

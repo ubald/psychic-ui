@@ -14,6 +14,7 @@
 #include "include/gpu/ganesh/gl/GrGLDirectContext.h"
 #include "include/gpu/ganesh/gl/GrGLInterface.h"
 #include "Window.hpp"
+#include "components/MenuButton.hpp"
 #include "components/Toast.hpp"
 #include "components/Tooltip.hpp"
 
@@ -470,9 +471,19 @@ namespace psychic_ui {
         return *menu;
     }
 
-    Menu &Window::openContextMenu(const MenuItems &items, const int x, const int y) {
-        Menu &menu = openMenu(items, x, y);
+    Menu &Window::openContextMenu(const MenuItems &items, const float x, const float y, const bool fromKeyboard) {
+        Menu &menu = openMenu(items, static_cast<int>(x), static_cast<int>(y));
         menu.addClassName("context");
+        if (fromKeyboard) {
+            // As from the keyboard: the focus ring on the menu, at its first item that can be chosen
+            requestFocus(&menu, true);
+            const auto &rows = menu.rows();
+            for (std::size_t i = 0; i < rows.size() && menu.highlighted() < 0; ++i) {
+                if (rows[i]->enabled()) {
+                    menu.highlight(static_cast<int>(i));
+                }
+            }
+        }
         return menu;
     }
 
