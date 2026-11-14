@@ -5,18 +5,20 @@ if (PSYCHIC_UI_BUILD_TESTS)
 
     # An installed Catch2 3 if there is one that works here, otherwise this
     # release, built static. Catch2's library only defines the std::string_view
-    # StringMaker when it was itself compiled as C++17 or newer (Homebrew's
-    # isn't), while the tests' C++23 build of its headers expects it, so the
-    # installed one must first link a program that stringifies a string_view.
-    # catch2-check is a project of its own (try_compile), so the installed
-    # Catch2's imported targets don't clash with a download when it fails.
+    # StringMaker when it was itself compiled as C++17 or newer, while the
+    # tests' C++23 build of its headers expects it, so the installed one must
+    # first link a program that stringifies a string_view. catch2-check is a
+    # project of its own (try_compile), so the installed Catch2's imported
+    # targets don't clash with a download when it fails; without an installed
+    # Catch2 it fails to build with a marker, never to configure.
     set(_catch2_find_args)
     if (NOT CMAKE_DISABLE_FIND_PACKAGE_Catch2)
-        set(_catch2_check_key "${CMAKE_CXX_COMPILER}|${CMAKE_CXX_FLAGS}|${CMAKE_BUILD_TYPE}|${CMAKE_PREFIX_PATH}|$ENV{CMAKE_PREFIX_PATH}|${Catch2_DIR}|${CMAKE_OSX_ARCHITECTURES}|${CMAKE_OSX_SYSROOT}")
+        set(_catch2_check_key "${CMAKE_CXX_COMPILER}|${CMAKE_CXX_FLAGS}|${CMAKE_BUILD_TYPE}|${CMAKE_PREFIX_PATH}|$ENV{CMAKE_PREFIX_PATH}|${Catch2_DIR}|${CMAKE_IGNORE_PREFIX_PATH}|${CMAKE_IGNORE_PATH}|${CMAKE_OSX_ARCHITECTURES}|${CMAKE_OSX_SYSROOT}")
         if (NOT DEFINED PSYCHIC_UI_CATCH2_INSTALLED OR NOT _catch2_check_key STREQUAL PSYCHIC_UI_CATCH2_CHECK_KEY)
             set(_catch2_check_flags)
             foreach (_var CMAKE_TOOLCHAIN_FILE CMAKE_CXX_COMPILER CMAKE_BUILD_TYPE CMAKE_CXX_FLAGS CMAKE_EXE_LINKER_FLAGS
-                    CMAKE_PREFIX_PATH Catch2_DIR CMAKE_OSX_ARCHITECTURES CMAKE_OSX_SYSROOT CMAKE_OSX_DEPLOYMENT_TARGET)
+                    CMAKE_PREFIX_PATH Catch2_DIR CMAKE_IGNORE_PREFIX_PATH CMAKE_IGNORE_PATH
+                    CMAKE_OSX_ARCHITECTURES CMAKE_OSX_SYSROOT CMAKE_OSX_DEPLOYMENT_TARGET)
                 if (DEFINED ${_var})
                     string(REPLACE ";" "\\;" _value "${${_var}}")
                     list(APPEND _catch2_check_flags "-D${_var}=${_value}")
@@ -58,7 +60,19 @@ if (PSYCHIC_UI_BUILD_TESTS)
         GIT_SHALLOW TRUE
         ${_catch2_find_args}
         )
+    # A download builds as C++23 like the tests, whatever the compiler's
+    # default: Catch2 only asks for C++14, which AppleClang would then use,
+    # leaving out the string_view StringMaker for the same reason as above.
+    if (DEFINED CMAKE_CXX_STANDARD)
+        set(_catch2_saved_std "${CMAKE_CXX_STANDARD}")
+    endif ()
+    set(CMAKE_CXX_STANDARD 23)
     FetchContent_MakeAvailable(Catch2)
+    if (DEFINED _catch2_saved_std)
+        set(CMAKE_CXX_STANDARD "${_catch2_saved_std}")
+    else ()
+        unset(CMAKE_CXX_STANDARD)
+    endif ()
 
     add_executable(psychic-ui-tests
         style/style_manager_tests.cpp
