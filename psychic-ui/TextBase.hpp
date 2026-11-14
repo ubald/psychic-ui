@@ -9,6 +9,18 @@
 namespace psychic_ui {
 
     /**
+     * The three levels of text, by descending importance: titles, values and what was chosen (`Primary`), body text,
+     * labels and controls at rest (`Secondary`), metadata and placeholders (`Tertiary`). `Inherit` takes the
+     * parent's color.
+     */
+    enum class TextRole {
+        Inherit,
+        Primary,
+        Secondary,
+        Tertiary
+    };
+
+    /**
      * @class TextBase
      *
      * Base class for text displaying components
@@ -23,6 +35,17 @@ namespace psychic_ui {
         template<class Self>
         Self &text(this Self &self, const std::string &text) {
             static_cast<TextBase &>(self).updateText(text);
+            return self;
+        }
+
+        /**
+         * The text's level: its class, `text-primary`, `text-secondary` or `text-tertiary`, which the skin set colors
+         */
+        TextRole role() const { return _role; }
+
+        template<class Self>
+        Self &role(this Self &self, TextRole role) {
+            static_cast<TextBase &>(self).updateRole(role);
             return self;
         }
 
@@ -45,6 +68,9 @@ namespace psychic_ui {
         unsigned int getLineHeight() const;
 
     protected:
+        TextRole _role{TextRole::Inherit};
+        void updateRole(TextRole role);
+
         bool    _lcdRender{true};
         bool    _subPixelText{true};
         float   _fontSize{0.0f};

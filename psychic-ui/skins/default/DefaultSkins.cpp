@@ -496,5 +496,114 @@ namespace psychic_ui {
         rule("TabContainer").backgroundColor(p.page);
 
         // endregion
+
+        // region App shell
+
+        // The frame: the sidebar's color around the page panel, inset in it
+        rule("AppShell").backgroundColor(p.frame);
+
+        rule("AppShell .main")
+            .paddingTop(m.frameInset)
+            .paddingRight(m.frameInset)
+            .paddingBottom(m.frameInset);
+
+        rule("AppShell .page")
+            .backgroundColor(p.page)
+            .borderRadius(r.page)
+            .overflow(Overflow::Hidden);
+
+        rule("Sidebar")
+            .width(m.sidebarWidth)
+            .backgroundColor(p.frame);
+
+        // The header: the window controls, then the app's mark and name, lit like the rows
+        rule("SidebarHeader")
+            .gap(m.space(2.5f))
+            .height(m.barHeader)
+            .paddingLeft(m.space(3.5f))
+            .paddingRight(m.space(2.5f));
+
+        rule("SidebarHeader .brand")
+            .direction(Direction::Row)
+            .alignItems(Align::Center)
+            .gap(m.space(2))
+            .grow(1)
+            .shrink(1)
+            .height(s.controlMd)
+            .paddingHorizontal(m.space(1.5f))
+            .borderRadius(r.row);
+
+        text(rule("SidebarHeader .mark"), t.xs, t.semiBold, s)
+            .width(20)
+            .height(20)
+            .shrink(0)
+            .alignItems(Align::Center)
+            .justify(Justify::Center)
+            .borderRadius(r.small)
+            .backgroundColor(p.accent)
+            .color(p.onAccent);
+
+        text(rule("SidebarHeader .title"), t.md, t.semiBold, s)
+            .letterSpacing(-0.14f) // -0.01em
+            .shrink(1)
+            .color(p.text);
+
+        rule("SidebarHeader .chevron")
+            .iconSize(m.iconSm)
+            .color(p.textMuted);
+
+        // Sections, set apart by a hairline
+        rule("SidebarSection")
+            .gap(m.space(0.5f))
+            .padding(m.space(2))
+            .paddingTop(m.space(1.5f))
+            .borderTop(m.border)
+            .borderColor(p.line);
+
+        rule("SidebarSection:first-child")
+            .paddingTop(m.space(2))
+            .borderTop(0);
+
+        text(rule("SidebarSection .heading"), t.xs, t.medium, s)
+            .paddingTop(m.space(1))
+            .paddingHorizontal(m.space(2))
+            .paddingBottom(m.space(0.5f))
+            .color(p.textMuted);
+
+        // Rows: 32 px, 13 px text in the secondary color, the current one raised with an accent icon
+        text(rule("SidebarItem"), t.base, t.regular, s)
+            .gap(m.space(2))
+            .height(s.rowSm)
+            .paddingHorizontal(m.space(2))
+            .borderRadius(r.row)
+            .color(p.textSecondary);
+
+        rule("SidebarItem .icon").color(p.textMuted);
+        rule("SidebarItem .label").grow(1).shrink(1);
+        text(rule("SidebarItem .count"), t.xs, t.regular, s).color(p.textMuted);
+
+        rule("SidebarItem:hover")
+            .color(p.text)
+            .backgroundColor(p.hover);
+
+        rule("SidebarItem.current")
+            .color(p.text)
+            .backgroundColor(p.raised);
+        rule("SidebarItem.current .icon").color(p.accent);
+        focusRing(rule("SidebarItem:focus-visible"), p, m).outlineOffset(-m.focusRing);
+
+        // A page's title bar: the sidebar header's height, so that their lines meet
+        rule("PageHeader")
+            .gap(m.space(2))
+            .height(m.barHeader)
+            .paddingLeft(m.gutter)
+            .paddingRight(m.space(3))
+            .borderBottom(m.border)
+            .borderColor(p.line);
+
+        rule("PageHeader .icon").color(p.textMuted);
+        text(rule("PageHeader .title"), t.md, t.medium, s).color(p.text);
+
+        // endregion
     }
 }

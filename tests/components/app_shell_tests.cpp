@@ -1,0 +1,181 @@
+#include <memory>
+#include <vector>
+#include <catch2/catch_test_macros.hpp>
+#include <psychic-ui/components/AppShell.hpp>
+#include <psychic-ui/components/Label.hpp>
+#include <psychic-ui/themes/pivotal.hpp>
+#include "../backends/fake_system_window.hpp"
+
+using namespace psychic_ui;
+using namespace psychic_ui_tests;
+
+namespace {
+    struct Shell {
+        std::shared_ptr<TestWindow> window{std::make_shared<TestWindow>()};
+        FakeSystemWindow            systemWindow{window, 1000, 700};
+        const Theme                 &theme{themes::pivotalDark};
+        AppShell                    &shell{window->appContainer().add<AppShell>()};
+        SidebarItem                 *inbox{nullptr};
+        SidebarItem                 *cues{nullptr};
+        SidebarItem                 *fixtures{nullptr};
+
+        Shell() {
+            shell.sidebar().title("Lights").mark("L");
+            auto &top = shell.sidebar().section();
+            inbox = &top.item("Inbox", "inbox").count("3");
+            auto &show = shell.sidebar().section("Show");
+            cues     = &show.item("Cues", "list-detail").count("42");
+            fixtures = &show.item("Fixtures", "bulb");
+            layout();
+        }
+
+        void layout() { systemWindow.layout(); }
+
+        void click(Div &div) {
+            const auto [x, y] = center(div);
+            window->handleMouseButtonChange(x, y, MouseButton::LEFT, true, Mod{});
+            window->handleMouseButtonChange(x, y, MouseButton::LEFT, false, Mod{});
+            layout();
+        }
+
+        void key(Key key) {
+            window->handleKeyPress(key, Mod{});
+            layout();
+        }
+
+        static std::pair<int, int> center(const Div &div) {
+            int x = 0;
+            int y = 0;
+            div.localToGlobal(x, y, div.getWidth() / 2, div.getHeight() / 2);
+            return {x, y};
+        }
+
+        static std::pair<int, int> origin(const Div &div) {
+            int x = 0;
+            int y = 0;
+            div.localToGlobal(x, y);
+            return {x, y};
+        }
+    };
+}
+
+TEST_CASE("AppShell: the sidebar the window's height, the page inset beside it", "[components][appshell]") {
+    Shell s;
+    const Sidebar &sidebar = s.shell.sidebar();
+    const Div     &page    = s.shell.page();
+    const float   inset    = s.theme.metrics.frameInset;
+
+    CHECK(s.shell.getWidth() == s.window->appContainer().getWidth());
+    CHECK(s.shell.getHeight() == s.window->appContainer().getHeight());
+    CHECK(sidebar.getWidth() == s.theme.metrics.sidebarWidth);
+    CHECK(sidebar.getHeight() == s.shell.getHeight());
+    CHECK(sidebar.header().getHeight() == s.theme.metrics.barHeader);
+
+    // The page: flush with the sidebar, inset from the window's other edges, rounded, clipping
+    const auto [pageX, pageY] = Shell::origin(page);
+    const auto [shellX, shellY] = Shell::origin(s.shell);
+    CHECK(pageX == shellX + static_cast<int>(sidebar.getWidth()));
+    CHECK(pageY == shellY + static_cast<int>(inset));
+    CHECK(page.getWidth() == s.shell.getWidth() - sidebar.getWidth() - inset);
+    CHECK(page.getHeight() == s.shell.getHeight() - 2 * inset);
+    CHECK(page.computedStyle().borderRadius() == s.theme.metrics.radius.page);
+    CHECK(page.computedStyle().overflow() == Overflow::Hidden);
+    CHECK(page.computedStyle().backgroundColor() == s.theme.palette.page);
+    CHECK(s.shell.computedStyle().backgroundColor() == s.theme.palette.frame);
+
+    // Rows: 32 px, the count after the label
+    CHECK(s.cues->getHeight() == s.theme.metrics.pointer.rowSm);
+    CHECK(s.cues->count() == "42");
+    CHECK(s.fixtures->count().empty());
+}
+
+TEST_CASE("AppShell: one current item, picked by a click", "[components][appshell]") {
+    Shell s;
+    std::vector<SidebarItem *> changes{};
+    s.shell.sidebar().onChange([&](SidebarItem *item) { changes.push_back(item); });
+    CHECK(s.shell.sidebar().current() == nullptr);
+    CHECK(s.shell.sidebar().items() == std::vector{s.inbox, s.cues, s.fixtures});
+
+    s.click(*s.cues);
+    CHECK(s.shell.sidebar().current() == s.cues);
+    CHECK(s.cues->current());
+    CHECK(s.cues->classNames().contains("current"));
+    CHECK(s.cues->computedStyle().backgroundColor() == s.theme.palette.raised);
+    CHECK(s.cues->computedStyle().color() == s.theme.palette.text);
+
+    s.click(*s.fixtures);
+    CHECK(s.fixtures->current());
+    CHECK_FALSE(s.cues->current());
+    CHECK_FALSE(s.cues->classNames().contains("current"));
+
+    s.click(*s.fixtures); // Already current: no change
+    s.fixtures->current(false);
+    CHECK(s.shell.sidebar().current() == nullptr);
+    s.shell.sidebar().select(s.inbox);
+    CHECK(s.inbox->current());
+    CHECK(changes == std::vector<SidebarItem *>{s.cues, s.fixtures, nullptr, s.inbox});
+}
+
+TEST_CASE("AppShell: the keyboard moves along the items and picks one", "[components][appshell]") {
+    Shell s;
+    s.key(Key::TAB);
+    CHECK(s.inbox->hasFocus());
+    CHECK(s.inbox->computedStyle().outlineWidth() == s.theme.metrics.focusRing);
+    s.key(Key::DOWN);
+    CHECK(s.cues->hasFocus()); // Into the next section
+    s.key(Key::DOWN);
+    CHECK(s.fixtures->hasFocus());
+    s.key(Key::DOWN);
+    CHECK(s.fixtures->hasFocus()); // The last one
+    s.key(Key::UP);
+    CHECK(s.cues->hasFocus());
+    s.key(Key::ENTER);
+    CHECK(s.shell.sidebar().current() == s.cues);
+}
+
+TEST_CASE("AppShell: the sidebar's header moves the window, its controls and the items don't", "[components][appshell][drag]") {
+    Shell s;
+    const SidebarHeader &header = s.shell.sidebar().header();
+    int x = 0;
+    int y = 0;
+    header.localToGlobal(x, y, header.getWidth() - 4, header.getHeight() / 2);
+    CHECK(s.window->isDragArea(x, y));
+
+    const auto [closeX, closeY] = Shell::center(header.controls().closeButton());
+    CHECK_FALSE(s.window->isDragArea(closeX, closeY));
+    CHECK(header.controls().closeButton().computedStyle().backgroundColor() == s.theme.palette.danger);
+    CHECK(header.controls().maximizeButton().computedStyle().backgroundColor() == s.theme.palette.success);
+
+    const auto [itemX, itemY] = Shell::center(*s.inbox);
+    CHECK_FALSE(s.window->isDragArea(itemX, itemY));
+    CHECK(header.title() == "Lights");
+}
+
+TEST_CASE("Text roles: three levels of text, as classes the skin set colors", "[components][text]") {
+    Shell s;
+    auto &label = s.shell.page().add<Label>("Text");
+    s.layout();
+    CHECK(label.role() == TextRole::Inherit);
+    CHECK(label.computedStyle().color() == s.theme.palette.text);
+
+    label.role(TextRole::Secondary);
+    s.layout();
+    CHECK(label.classNames().contains("text-secondary"));
+    CHECK(label.computedStyle().color() == s.theme.palette.textSecondary);
+
+    label.role(TextRole::Tertiary);
+    s.layout();
+    CHECK_FALSE(label.classNames().contains("text-secondary"));
+    CHECK(label.computedStyle().color() == s.theme.palette.textMuted);
+
+    label.role(TextRole::Primary);
+    s.layout();
+    CHECK(label.computedStyle().color() == s.theme.palette.text);
+
+    // Under a secondary parent, inherited
+    auto &box   = s.shell.page().add<Div>();
+    auto &inner = box.add<Label>("Inner");
+    box.addClassName("text-secondary");
+    s.layout();
+    CHECK(inner.computedStyle().color() == s.theme.palette.textSecondary);
+}

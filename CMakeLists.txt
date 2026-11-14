@@ -223,6 +223,10 @@ set(SOURCE_FILES
     psychic-ui/components/Tabs.hpp
     psychic-ui/components/TitleBar.cpp
     psychic-ui/components/TitleBar.hpp
+    psychic-ui/components/AppShell.cpp
+    psychic-ui/components/AppShell.hpp
+    psychic-ui/components/Sidebar.cpp
+    psychic-ui/components/Sidebar.hpp
     psychic-ui/components/WindowControls.cpp
     psychic-ui/components/WindowControls.hpp
     psychic-ui/components/ToolBar.cpp
