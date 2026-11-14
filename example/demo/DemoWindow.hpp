@@ -27,6 +27,7 @@
 #include "Ranges.hpp"
 #include "Colors.hpp"
 #include "Icons.hpp"
+#include "Lists.hpp"
 #include "../demo-stylesheet.hpp"
 
 namespace psychic_ui {
@@ -120,6 +121,7 @@ namespace psychic_ui {
             {"Scroller", "arrow-up-down", page([] { return std::make_shared<Scrollers>(); })},
             {"Colors", "eyedropper", page([] { return std::make_shared<Colors>(); })},
             {"Icons", "star", page([] { return std::make_shared<IconsPanel>(); })},
+            {"Lists", "list", page([] { return std::make_shared<Lists>(); })},
         };
 
         auto &controls = sidebar.section("Controls");

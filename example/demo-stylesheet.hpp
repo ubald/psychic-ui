@@ -116,6 +116,54 @@ public:
 
         // endregion
 
+        // region Lists
+
+        manager->style("Lists .scroller")
+               .padding(m.space(6))
+               .gap(m.space(8));
+
+        manager->style("Lists .columns")
+               .shrink(0)
+               .alignItems(Align::Start)
+               .gap(m.space(8));
+
+        manager->style("Lists .group")
+               .shrink(0)
+               .gap(m.space(1));
+
+        manager->style("Lists .group .row")
+               .wrap(Wrap::Wrap)
+               .alignItems(Align::Center)
+               .gap(m.space(2))
+               .marginTop(m.space(2));
+
+        // Lists and grids sit edge to edge in a card, as on a page
+        manager->style("Lists .card")
+               .shrink(0)
+               .marginTop(m.space(3))
+               .border(m.border)
+               .borderColor(p.line)
+               .borderRadius(m.radius.surface)
+               .backgroundColor(p.page)
+               .overflow(Overflow::Hidden);
+
+        manager->style("Lists .card List")
+               .borderTop(0);
+
+        manager->style("Lists .tree-card")
+               .padding(m.space(2));
+
+        manager->style("Lists .grid-card")
+               .height(360)
+               .alignItems(Align::Stretch);
+
+        manager->style("Lists .dot-item")
+               .alignItems(Align::Center)
+               .gap(m.space(1.5f))
+               .marginRight(m.space(2));
+
+        // endregion
+
         // region Icons
 
         // In a scroller: keep their content height
