@@ -67,6 +67,33 @@ public:
 
         // endregion
 
+        // region Inputs
+
+        manager->style("Inputs")
+               .gap(m.space(8));
+
+        manager->style("Inputs .group")
+               .shrink(0)
+               .gap(m.space(1));
+
+        manager->style("Inputs .group .row")
+               .wrap(Wrap::Wrap)
+               .alignItems(Align::Center)
+               .gap(m.space(4))
+               .marginTop(m.space(2));
+
+        manager->style("Inputs SearchField")
+               .width(240);
+
+        // Ten chips a row: a grid
+        manager->style("Inputs ColorSwatches")
+               .maxWidth(10 * 20 + 9 * 4);
+
+        manager->style("Inputs .event")
+               .marginTop(m.space(1));
+
+        // endregion
+
         // region Divs and scrollers
 
         manager->style("Divs .demo-div")

@@ -28,6 +28,7 @@
 #include "Colors.hpp"
 #include "Icons.hpp"
 #include "Lists.hpp"
+#include "Inputs.hpp"
 #include "../demo-stylesheet.hpp"
 
 namespace psychic_ui {
@@ -121,6 +122,7 @@ namespace psychic_ui {
             {"Scroller", "arrow-up-down", page([] { return std::make_shared<Scrollers>(); })},
             {"Colors", "eyedropper", page([] { return std::make_shared<Colors>(); })},
             {"Icons", "star", page([] { return std::make_shared<IconsPanel>(); })},
+            {"Inputs", "settings", page([] { return std::make_shared<Inputs>(); })}, // In Controls, after Text Input
             {"Lists", "list", page([] { return std::make_shared<Lists>(); })},
         };
 
