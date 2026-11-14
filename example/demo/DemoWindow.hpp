@@ -9,6 +9,7 @@
 #include <psychic-ui/components/Tabs.hpp>
 #include <psychic-ui/components/TabContainer.hpp>
 #include <psychic-ui/skins/default/DefaultSkins.hpp>
+#include <psychic-ui/themes/pivotal.hpp>
 #include <psychic-ui/themes/one-dark.hpp>
 #include <psychic-ui/themes/one-light.hpp>
 #include <psychic-ui/themes/psychic.hpp>
@@ -44,7 +45,7 @@ namespace psychic_ui {
         Window("Demo Application") {
         _decorated = false;
 
-        skinSet<DefaultSkins>();          // With its theme, One Dark
+        skinSet<DefaultSkins>();          // Its theme follows the system: Pivotal Light or Pivotal Dark
         loadStyleSheet<DemoStyleSheet>(); // Over the skin set's rules; both load again on a theme change
 
         app->add<TitleBar>();
@@ -77,9 +78,12 @@ namespace psychic_ui {
                 "View", {
                     Menu::item(
                         "Theme", {
-                            Menu::item("Psychic", [this]() { theme(themes::psychic); }),
-                            Menu::item("Dark", [this]() { theme(themes::oneDark); }),
-                            Menu::item("Light", [this]() { theme(themes::oneLight); })
+                            Menu::item("System", [this]() { followSystemTheme(); }),
+                            Menu::item("Pivotal Dark", [this]() { theme(themes::pivotalDark); }),
+                            Menu::item("Pivotal Light", [this]() { theme(themes::pivotalLight); }),
+                            Menu::item("One Dark", [this]() { theme(themes::oneDark); }),
+                            Menu::item("One Light", [this]() { theme(themes::oneLight); }),
+                            Menu::item("Psychic", [this]() { theme(themes::psychic); })
                         }
                     ),
                     Menu::item(

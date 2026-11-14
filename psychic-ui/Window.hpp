@@ -3,6 +3,7 @@
 #include <string>
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include "include/core/SkCanvas.h"
 #include "include/core/SkRefCnt.h"
@@ -263,13 +264,58 @@ namespace psychic_ui {
         const Theme &theme() const { return styleManager()->theme(); }
 
         /**
-         * Switch the style manager's theme: its stylesheets load again with the new values
+         * Switch the style manager's theme: its stylesheets load again with the new values.
+         * The window stops following the system's light or dark mode.
          */
         template<class Self>
         Self &theme(this Self &self, const Theme &theme) {
             static_cast<Window &>(self).updateTheme(theme);
             return self;
         }
+
+        /**
+         * Follow the system's light or dark mode (what a new window does): the skin set's light theme while the
+         * system is light, its default theme (dark) while it is dark or doesn't say; switched live as the system
+         * changes (`handleColorSchemeChange`). With a pair, those two themes instead.
+         */
+        template<class Self>
+        Self &followSystemTheme(this Self &self) {
+            static_cast<Window &>(self).updateFollowSystemTheme(nullptr, nullptr);
+            return self;
+        }
+
+        template<class Self>
+        Self &followSystemTheme(this Self &self, const Theme &light, const Theme &dark) {
+            static_cast<Window &>(self).updateFollowSystemTheme(&light, &dark);
+            return self;
+        }
+
+        /**
+         * Whether the theme follows the system (until `theme(t)` picks one)
+         */
+        bool followsSystemTheme() const { return _followSystemTheme; }
+
+        /**
+         * The system's light or dark mode, as its system window last reported it (`Unknown` before, or when the
+         * platform doesn't say)
+         */
+        ColorScheme colorScheme() const { return _colorScheme; }
+
+        /**
+         * The theme following the system picks now
+         */
+        const Theme &systemTheme() const;
+
+        /**
+         * Called by the system window when the system goes light or dark (and when it attaches): a window
+         * following the system switches themes, then `colorSchemeChanged` is emitted. The same scheme again
+         * does nothing.
+         */
+        virtual void handleColorSchemeChange(ColorScheme scheme);
+
+        Signal<ColorScheme> colorSchemeChanged{};
+
+        PSYCHIC_UI_EVENT(onColorSchemeChange, colorSchemeChanged)
 
         // endregion
 
@@ -344,7 +390,10 @@ namespace psychic_ui {
     protected:
 
         void updateTheme(const Theme &theme);
+        void applyTheme(const Theme &theme);
         void updateSkinSet(std::unique_ptr<SkinSet> skinSet);
+        void updateFollowSystemTheme(const Theme *light, const Theme *dark);
+        void applySystemTheme();
 
         // region Default DIVs
 
@@ -383,6 +432,11 @@ namespace psychic_ui {
         Cursor _cursor{Cursor::Arrow};
 
         InputMode _inputMode{InputMode::Pointer};
+
+        ColorScheme          _colorScheme{ColorScheme::Unknown};
+        bool                 _followSystemTheme{true};
+        std::optional<Theme> _lightTheme{}; // The pair followSystemTheme was given, else the skin set's
+        std::optional<Theme> _darkTheme{};
 
         /**
          * The div the last press went to through its hit slop, for its release

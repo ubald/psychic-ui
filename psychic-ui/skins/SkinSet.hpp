@@ -80,7 +80,22 @@ namespace psychic_ui {
     public:
         virtual std::string_view name() const = 0;
 
+        /**
+         * The theme the set ships with, for a dark system or one that doesn't say
+         */
         virtual const Theme &defaultTheme() const = 0;
+
+        /**
+         * The set's theme for a light system: its default theme unless it has a light one
+         */
+        virtual const Theme &lightTheme() const { return defaultTheme(); }
+
+        /**
+         * The set's theme for a system color scheme: light for `Light`, the default otherwise (dark when unknown)
+         */
+        const Theme &theme(ColorScheme scheme) const {
+            return scheme == ColorScheme::Light ? lightTheme() : defaultTheme();
+        }
 
         virtual void registerSkins(SkinRegistry &skins) const = 0;
 

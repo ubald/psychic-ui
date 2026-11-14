@@ -5,6 +5,9 @@
 #include <psychic-ui/components/Scroller.hpp>
 #include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/components/TitleBar.hpp>
+#include <psychic-ui/themes/one-dark.hpp>
+#include <psychic-ui/themes/one-light.hpp>
+#include <psychic-ui/themes/pivotal.hpp>
 #include "fake_system_window.hpp"
 
 using namespace psychic_ui;
@@ -20,6 +23,15 @@ namespace {
 
     struct TouchAdapter : SDL3SystemWindow {
         using SDL3SystemWindow::SDL3SystemWindow;
+
+        /**
+         * The system's light or dark mode, made up: the dummy driver doesn't have one
+         */
+        std::optional<ColorScheme> scheme{};
+
+        ColorScheme colorScheme() const override {
+            return scheme ? *scheme : SDL3SystemWindow::colorScheme();
+        }
 
         SDL_TouchDeviceType touchDeviceType(SDL_TouchID touchID) const override {
             return touchID == touchScreen ? SDL_TOUCH_DEVICE_DIRECT
@@ -116,6 +128,75 @@ TEST_CASE("SDL3: the adapter reads the SDL window", "[backend][sdl3]") {
     CHECK(sdl.window->windowWidth() == 800);
     CHECK(sdl.window->windowHeight() == 600);
     CHECK(sdl.adapter->getFramebufferWidth() == 800);
+}
+
+TEST_CASE("SDL3: the theme follows the system's light and dark mode", "[backend][sdl3][theme]") {
+    SDL3Fixture sdl;
+    auto &adapter = static_cast<TouchAdapter &>(*sdl.adapter);
+    auto &div     = sdl.window->appContainer().add<Div>().addClassName("probe");
+    std::vector<ColorScheme> changes{};
+    sdl.window->onColorSchemeChange([&](ColorScheme scheme) { changes.push_back(scheme); });
+
+    const auto systemGoes = [&](ColorScheme scheme) {
+        adapter.scheme = scheme;
+        SDL_Event e{};
+        e.type = SDL_EVENT_SYSTEM_THEME_CHANGED; // Names no window
+        CHECK(sdl.adapter->handleEvent(e));
+        sdl.layout();
+    };
+
+    // The dummy driver doesn't say: dark
+    sdl.layout();
+    CHECK(sdl.window->followsSystemTheme());
+    CHECK(sdl.window->theme().name == themes::pivotalDark.name);
+    CHECK(div.computedStyle().color() == themes::pivotalDark.palette.text);
+
+    systemGoes(ColorScheme::Light);
+    CHECK(sdl.window->colorScheme() == ColorScheme::Light);
+    CHECK(sdl.window->theme().name == themes::pivotalLight.name);
+    CHECK(div.computedStyle().color() == themes::pivotalLight.palette.text); // Restyled live
+
+    systemGoes(ColorScheme::Dark);
+    CHECK(sdl.window->theme().name == themes::pivotalDark.name);
+
+    systemGoes(ColorScheme::Unknown);
+    CHECK(sdl.window->theme().name == themes::pivotalDark.name); // Dark when unknown
+    CHECK(changes == std::vector{ColorScheme::Light, ColorScheme::Dark, ColorScheme::Unknown});
+
+    // An explicit theme stops following
+    sdl.window->theme(themes::oneLight);
+    CHECK_FALSE(sdl.window->followsSystemTheme());
+    systemGoes(ColorScheme::Dark);
+    CHECK(sdl.window->theme().name == themes::oneLight.name);
+
+    // Following again picks the system's at once, and a pair of themes replaces the set's
+    sdl.window->followSystemTheme();
+    CHECK(sdl.window->theme().name == themes::pivotalDark.name);
+    sdl.window->followSystemTheme(themes::oneLight, themes::oneDark);
+    CHECK(sdl.window->theme().name == themes::oneDark.name);
+    systemGoes(ColorScheme::Light);
+    CHECK(sdl.window->theme().name == themes::oneLight.name);
+}
+
+TEST_CASE("SDL3: a window opening on a light system starts light", "[backend][sdl3][theme]") {
+    SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "dummy");
+    REQUIRE(SDL_Init(SDL_INIT_VIDEO));
+    SDL_Window *sdlWindow = SDL_CreateWindow("Test", 800, 600, 0);
+    auto       window     = std::make_shared<TestWindow>();
+    CHECK(window->theme().name == themes::pivotalDark.name); // Before it opens, it doesn't know
+
+    struct LightAdapter : SDL3SystemWindow {
+        using SDL3SystemWindow::SDL3SystemWindow;
+        ColorScheme colorScheme() const override { return ColorScheme::Light; }
+    };
+    {
+        LightAdapter adapter(window, sdlWindow, nullptr);
+        window->open(&adapter); // As the base constructor did, through the adapter's override this time
+        CHECK(window->theme().name == themes::pivotalLight.name);
+    }
+    window.reset();
+    SDL_DestroyWindow(sdlWindow);
+    SDL_Quit();
 }
 
 TEST_CASE("SDL3: events for another window are left alone", "[backend][sdl3]") {

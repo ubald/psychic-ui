@@ -13,7 +13,7 @@
 #include "modules/skparagraph/include/FontCollection.h"
 #include "psychic-ui/skins/SkinSet.hpp"
 #include "psychic-ui/themes/Theme.hpp"
-#include "psychic-ui/themes/one-dark.hpp"
+#include "psychic-ui/themes/pivotal.hpp"
 #include "Style.hpp"
 #include "StyleSelector.hpp"
 #include "StyleSheet.hpp"
@@ -69,7 +69,7 @@ namespace psychic_ui {
             return skinSet(std::make_unique<S>());
         }
 
-        StyleManager &skinSet(std::unique_ptr<SkinSet> skinSet);
+        StyleManager &skinSet(std::unique_ptr<SkinSet> skinSet, ColorScheme scheme = ColorScheme::Unknown);
 
         /**
          * The skin set in use, nullptr before one is set
@@ -91,7 +91,7 @@ namespace psychic_ui {
         std::size_t skinsGeneration() const { return _skinsGeneration; }
 
         /**
-         * The theme stylesheets read (`manager->theme().palette.accent`), One Dark until another is set
+         * The theme stylesheets read (`manager->theme().palette.accent`), Pivotal Dark until another is set
          */
         const Theme &theme() const { return _theme; }
 
@@ -205,7 +205,7 @@ namespace psychic_ui {
         SkinRegistry                                                       _skins{};
         std::size_t                                                        _skinsGeneration{0};
         bool                                                               _valid{false};
-        Theme                                                              _theme{themes::oneDark};
+        Theme                                                              _theme{themes::pivotalDark};
         Density                                                            _density{Density::Pointer};
         /**
          * The loaded stylesheets, in load order, with their type so that each type is loaded once

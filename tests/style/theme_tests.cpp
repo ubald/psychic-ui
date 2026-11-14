@@ -37,10 +37,10 @@ namespace {
     };
 }
 
-TEST_CASE("a style manager starts with One Dark", "[style][theme]") {
+TEST_CASE("a style manager starts with Pivotal Dark", "[style][theme]") {
     StyleManager manager;
-    REQUIRE(manager.theme().name == themes::oneDark.name);
-    REQUIRE(manager.theme().palette.accent == themes::oneDark.palette.accent);
+    REQUIRE(manager.theme().name == themes::pivotalDark.name);
+    REQUIRE(manager.theme().palette.accent == themes::pivotalDark.palette.accent);
 }
 
 TEST_CASE("switching themes loads the stylesheets again, in order, with the new values", "[style][theme]") {
@@ -54,8 +54,8 @@ TEST_CASE("switching themes loads the stylesheets again, in order, with the new 
     manager.setValid();
 
     Style dark = manager.computeStyle(div.get());
-    REQUIRE(dark.backgroundColor() == themes::oneDark.palette.accent); // The app's rule wins
-    REQUIRE(dark.color() == themes::oneDark.palette.text);
+    REQUIRE(dark.backgroundColor() == themes::pivotalDark.palette.accent); // The app's rule wins
+    REQUIRE(dark.color() == themes::pivotalDark.palette.text);
 
     manager.theme(themes::oneLight);
     REQUIRE(loads == std::vector<std::string>{"look", "app", "look", "app"});

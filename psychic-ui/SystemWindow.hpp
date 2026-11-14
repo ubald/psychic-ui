@@ -5,6 +5,7 @@
 #include <string>
 #include "psychic-ui.hpp"
 #include "style/Values.hpp"
+#include "themes/Theme.hpp"
 
 namespace psychic_ui {
     class Window;
@@ -81,6 +82,12 @@ namespace psychic_ui {
          * unless the platform has its own
          */
         virtual std::chrono::nanoseconds gestureTime() const;
+
+        /**
+         * Whether the system is in light or dark mode, `Unknown` when it doesn't say (this default). An adapter
+         * that knows calls `Window::handleColorSchemeChange` when it changes.
+         */
+        virtual ColorScheme colorScheme() const { return ColorScheme::Unknown; }
 
         virtual void startTextInput();
         virtual void stopTextInput();

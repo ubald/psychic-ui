@@ -147,6 +147,13 @@ namespace psychic_ui {
                     }
                     continue;
                 }
+                if (event.type == SDL_EVENT_SYSTEM_THEME_CHANGED) {
+                    // The system went light or dark: every window follows
+                    for (auto &owned: _windows) {
+                        owned->systemWindow->handleEvent(event);
+                    }
+                    continue;
+                }
                 if (auto owned = find(SDL_GetWindowFromEvent(&event))) {
                     owned->systemWindow->handleEvent(event);
                 }

@@ -1,7 +1,7 @@
 #include <string>
 #include <utility>
 #include "psychic-ui/style/StyleManager.hpp"
-#include "psychic-ui/themes/one-dark.hpp"
+#include "psychic-ui/themes/pivotal.hpp"
 #include "psychic-ui/themes/ubuntu-type.hpp"
 #include "DefaultSkins.hpp"
 #include "DefaultBasicButtonSkin.hpp"
@@ -33,7 +33,11 @@ namespace psychic_ui {
     }
 
     const Theme &DefaultSkins::defaultTheme() const {
-        return themes::oneDark;
+        return themes::pivotalDark;
+    }
+
+    const Theme &DefaultSkins::lightTheme() const {
+        return themes::pivotalLight;
     }
 
     void DefaultSkins::registerSkins(SkinRegistry &skins) const {

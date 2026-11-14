@@ -304,7 +304,24 @@ namespace psychic_ui {
         _window->handleMouseButtonChange(_mouseX, _mouseY, button, down, mapMods(SDL_GetModState()));
     }
 
+    ColorScheme SDL3SystemWindow::colorScheme() const {
+        switch (SDL_GetSystemTheme()) {
+            case SDL_SYSTEM_THEME_LIGHT:
+                return ColorScheme::Light;
+            case SDL_SYSTEM_THEME_DARK:
+                return ColorScheme::Dark;
+            default:
+                return ColorScheme::Unknown;
+        }
+    }
+
     bool SDL3SystemWindow::handleEvent(const SDL_Event &e) {
+        if (e.type == SDL_EVENT_SYSTEM_THEME_CHANGED) {
+            // For every window: it names none
+            _window->handleColorSchemeChange(colorScheme());
+            return true;
+        }
+
         if (SDL_GetWindowFromEvent(&e) != _sdlWindow) {
             return false;
         }

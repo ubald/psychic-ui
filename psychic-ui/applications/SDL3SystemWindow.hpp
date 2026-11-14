@@ -75,6 +75,12 @@ namespace psychic_ui {
          */
         std::chrono::nanoseconds gestureTime() const override;
 
+        /**
+         * SDL_GetSystemTheme. `handleEvent` passes SDL_EVENT_SYSTEM_THEME_CHANGED on to the window, whatever
+         * window the event names (it names none). Virtual so that tests can make up a system.
+         */
+        ColorScheme colorScheme() const override;
+
         std::string getClipboardText() const override;
         void setClipboardText(const std::string &text) override;
 

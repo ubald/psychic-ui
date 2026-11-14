@@ -75,6 +75,9 @@ namespace psychic_ui {
         // Skia's GPU objects belong to the previous system window's GL context
         releaseSkia();
         _systemWindow = systemWindow;
+        if (_systemWindow) {
+            handleColorSchemeChange(_systemWindow->colorScheme());
+        }
 
         // Performance
         lastReport = std::chrono::high_resolution_clock::now();
@@ -459,13 +462,59 @@ namespace psychic_ui {
     // endregion
 
     void Window::updateTheme(const Theme &theme) {
+        _followSystemTheme = false;
+        applyTheme(theme);
+    }
+
+    void Window::applyTheme(const Theme &theme) {
         styleManager()->theme(theme);
         updateRuntimeStyles(); // Clearing the rules dropped the runtime ones too
     }
 
     void Window::updateSkinSet(std::unique_ptr<SkinSet> skinSet) {
-        styleManager()->skinSet(std::move(skinSet));
+        // With its default theme, or its light one when following a light system
+        styleManager()->skinSet(std::move(skinSet), _followSystemTheme ? _colorScheme : ColorScheme::Unknown);
         updateRuntimeStyles(); // Clearing the rules dropped the runtime ones too
+        if (_followSystemTheme && (_lightTheme || _darkTheme)) {
+            applySystemTheme(); // The window's own pair rather than the set's
+        }
+    }
+
+    void Window::updateFollowSystemTheme(const Theme *light, const Theme *dark) {
+        _followSystemTheme = true;
+        _lightTheme        = light ? std::optional<Theme>{*light} : std::nullopt;
+        _darkTheme         = dark ? std::optional<Theme>{*dark} : std::nullopt;
+        applySystemTheme();
+    }
+
+    const Theme &Window::systemTheme() const {
+        if (_colorScheme == ColorScheme::Light) {
+            if (_lightTheme) {
+                return *_lightTheme;
+            }
+        } else if (_darkTheme) {
+            return *_darkTheme;
+        }
+        const SkinSet *set = styleManager()->skinSet();
+        return set ? set->theme(_colorScheme) : styleManager()->theme();
+    }
+
+    void Window::applySystemTheme() {
+        const Theme &theme = systemTheme();
+        if (theme.name != styleManager()->theme().name || theme.scheme != styleManager()->theme().scheme) {
+            applyTheme(Theme{theme}); // A copy: `theme` may be the style manager's own
+        }
+    }
+
+    void Window::handleColorSchemeChange(const ColorScheme scheme) {
+        if (scheme == _colorScheme) {
+            return;
+        }
+        _colorScheme = scheme;
+        if (_followSystemTheme) {
+            applySystemTheme();
+        }
+        colorSchemeChanged.emit(_colorScheme);
     }
 
     // region Input Mode
