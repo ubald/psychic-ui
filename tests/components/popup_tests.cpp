@@ -1,0 +1,715 @@
+#include <chrono>
+#include <memory>
+#include <string>
+#include <vector>
+#include <catch2/catch_test_macros.hpp>
+#include <psychic-ui/components/Button.hpp>
+#include <psychic-ui/components/Dialog.hpp>
+#include <psychic-ui/components/Menu.hpp>
+#include <psychic-ui/components/MenuBar.hpp>
+#include <psychic-ui/components/MenuButton.hpp>
+#include <psychic-ui/components/Select.hpp>
+#include <psychic-ui/components/Toast.hpp>
+#include <psychic-ui/components/Tooltip.hpp>
+#include "../backends/fake_system_window.hpp"
+
+using namespace psychic_ui;
+using namespace psychic_ui_tests;
+using namespace std::chrono_literals;
+
+// region Placement
+
+TEST_CASE("A popup goes on its side of the anchor, aligned and offset", "[popup][placement]") {
+    const SkRect bounds = SkRect::MakeWH(800, 600);
+    const SkRect anchor = SkRect::MakeXYWH(100, 100, 80, 20);
+
+    auto below = placePopup(anchor, 200, 100, bounds, Side::Bottom, PopupAlign::Start, 6);
+    CHECK(below.side == Side::Bottom);
+    CHECK(below.x == 100);
+    CHECK(below.y == 126);
+
+    auto above = placePopup(SkRect::MakeXYWH(100, 300, 80, 20), 200, 100, bounds, Side::Top, PopupAlign::Center, 6);
+    CHECK(above.side == Side::Top);
+    CHECK(above.x == 40); // 140 - 100
+    CHECK(above.y == 194); // 300 - 6 - 100
+
+    auto end = placePopup(SkRect::MakeXYWH(300, 100, 80, 20), 200, 100, bounds, Side::Bottom, PopupAlign::End, 0, 10);
+    CHECK(end.x == 170); // 380 - 200 - 10
+}
+
+TEST_CASE("A popup flips to the other side when it doesn't fit", "[popup][placement]") {
+    const SkRect bounds = SkRect::MakeXYWH(12, 12, 776, 576);
+
+    SECTION("below, at the bottom: above") {
+        auto p = placePopup(SkRect::MakeXYWH(100, 540, 80, 20), 200, 100, bounds, Side::Bottom, PopupAlign::Start, 6);
+        CHECK(p.side == Side::Top);
+        CHECK(p.y == 434); // 540 - 6 - 100
+    }
+
+    SECTION("above, at the top: below") {
+        auto p = placePopup(SkRect::MakeXYWH(100, 20, 80, 20), 200, 30, bounds, Side::Top, PopupAlign::Start, 6);
+        CHECK(p.side == Side::Bottom);
+        CHECK(p.y == 46);
+    }
+
+    SECTION("right, at the right edge: left (a submenu)") {
+        auto p = placePopup(SkRect::MakeXYWH(600, 100, 180, 32), 200, 100, bounds, Side::Right, PopupAlign::Start, 4, -5);
+        CHECK(p.side == Side::Left);
+        CHECK(p.x == 396); // 600 - 4 - 200
+        CHECK(p.y == 95);
+    }
+
+    SECTION("neither side fits: the one with more room, shifted inside") {
+        auto p = placePopup(SkRect::MakeXYWH(100, 200, 80, 20), 200, 500, bounds, Side::Bottom, PopupAlign::Start, 6);
+        CHECK(p.side == Side::Bottom); // 362 below, 182 above
+        CHECK(p.y == 88);               // 588 - 500
+    }
+}
+
+TEST_CASE("A popup shifts along its side to stay inside", "[popup][placement]") {
+    const SkRect bounds = SkRect::MakeXYWH(12, 12, 776, 576);
+
+    auto right = placePopup(SkRect::MakeXYWH(700, 100, 80, 20), 200, 100, bounds, Side::Bottom, PopupAlign::Start, 6);
+    CHECK(right.side == Side::Bottom);
+    CHECK(right.x == 588); // 788 - 200
+
+    auto left = placePopup(SkRect::MakeXYWH(0, 100, 20, 20), 200, 100, bounds, Side::Bottom, PopupAlign::Center, 6);
+    CHECK(left.x == 12);
+
+    auto wide = placePopup(SkRect::MakeXYWH(100, 100, 20, 20), 1000, 100, bounds, Side::Bottom, PopupAlign::Start, 6);
+    CHECK(wide.x == 12); // Larger than the bounds: at their start
+}
+
+// endregion
+
+namespace {
+    /**
+     * A window with a row of buttons at the top of the app container
+     */
+    struct Popups {
+        std::shared_ptr<TestWindow> window{std::make_shared<TestWindow>()};
+        FakeSystemWindow            systemWindow{window, 800, 600};
+        Div                         &bar{window->appContainer().add<Div>()};
+        Button                      &first{bar.add<Button>("First")};
+        Button                      &second{bar.add<Button>("Second")};
+        int                         firstClicks{0};
+        int                         secondClicks{0};
+
+        Popups() {
+            bar.direction(Direction::Row).padding(20).gap(10);
+            first.onClick([this]() { ++firstClicks; });
+            second.onClick([this]() { ++secondClicks; });
+            layout();
+        }
+
+        void layout() { systemWindow.layout(); }
+
+        void press(int x, int y, MouseButton button = MouseButton::LEFT) {
+            window->handleMouseButtonChange(x, y, button, true, Mod{});
+            layout();
+        }
+
+        void release(int x, int y, MouseButton button = MouseButton::LEFT) {
+            window->handleMouseButtonChange(x, y, button, false, Mod{});
+            layout();
+        }
+
+        void clickAt(int x, int y) {
+            press(x, y);
+            release(x, y);
+        }
+
+        void click(const Div &div) {
+            const auto [x, y] = center(div);
+            clickAt(x, y);
+        }
+
+        void moveTo(int x, int y) {
+            window->handleMouseMove(x, y, 0, Mod{}, false);
+            layout();
+        }
+
+        void hover(const Div &div) {
+            const auto [x, y] = center(div);
+            moveTo(x, y);
+        }
+
+        void key(Key key, Mod mod = Mod{}) {
+            window->handleKeyPress(key, mod);
+            layout();
+        }
+
+        static std::pair<int, int> origin(const Div &div) {
+            int x = 0;
+            int y = 0;
+            div.localToGlobal(x, y);
+            return {x - div.scrollX(), y - div.scrollY()};
+        }
+
+        static std::pair<int, int> center(const Div &div) {
+            const auto [x, y] = origin(div);
+            return {x + div.getWidth() / 2, y + div.getHeight() / 2};
+        }
+
+        std::size_t popupCount() const { return window->overlay().children().size(); }
+
+        template<class T>
+        T *top() const { return window->overlay().top<T>(); }
+    };
+
+    bool hasClass(const Div &div, const std::string &name) {
+        return div.classNames().contains(name);
+    }
+}
+
+// region Overlay
+
+TEST_CASE("A menu opens under its anchor, and above it at the window's bottom", "[popup][menu]") {
+    Popups f{};
+    Menu &menu = f.window->openMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, f.first);
+    f.layout();
+    const auto [ax, ay] = Popups::origin(f.first);
+    const auto [mx, my] = Popups::origin(menu);
+    CHECK(mx == ax);
+    CHECK(my == ay + f.first.getHeight() + 6);
+    CHECK(menu.placedSide() == Side::Bottom);
+
+    // An anchor at the bottom of the window
+    f.bar.marginTop(560);
+    f.layout();
+    f.layout();
+    CHECK(menu.placedSide() == Side::Top);
+    const auto [bx, by] = Popups::origin(f.first);
+    CHECK(Popups::origin(menu).second == by - 6 - menu.getHeight());
+}
+
+TEST_CASE("A popup whose anchor leaves the window closes", "[popup]") {
+    Popups f{};
+    f.window->openMenu({Menu::item("One", []() {})}, f.second);
+    f.layout();
+    REQUIRE(f.popupCount() == 1);
+    f.bar.remove(f.second);
+    f.layout();
+    CHECK(f.popupCount() == 0);
+}
+
+TEST_CASE("A press outside a menu closes it and goes no further", "[popup][menu][dismiss]") {
+    Popups f{};
+    int closed = 0;
+    f.window->onMenuClose([&]() { ++closed; });
+    f.window->openMenu({Menu::item("One", []() {})}, f.first);
+    f.layout();
+
+    // On the second button, under the modal menu's reach
+    f.click(f.second);
+    CHECK(f.popupCount() == 0);
+    CHECK(closed == 1);
+    CHECK(f.secondClicks == 0); // Swallowed with its release
+
+    // The next press goes through
+    f.click(f.second);
+    CHECK(f.secondClicks == 1);
+}
+
+TEST_CASE("A press inside a menu doesn't close it, Escape does", "[popup][menu][dismiss]") {
+    Popups f{};
+    Menu &menu = f.window->openMenu({Menu::check("Check", false)}, f.first);
+    f.layout();
+    f.click(*menu.rows()[0]); // A check item keeps the menu open
+    CHECK(f.popupCount() == 1);
+    f.key(Key::ESCAPE);
+    CHECK(f.popupCount() == 0);
+}
+
+TEST_CASE("A modal menu takes the mouse from the content, except its pass-through divs", "[popup][menu]") {
+    Popups f{};
+    Menu &menu = f.window->openMenu({Menu::item("One", []() {})}, f.first);
+    menu.passThrough(f.bar);
+    f.layout();
+    CHECK_FALSE(f.window->isDragArea(5, 5));
+    f.hover(f.second);
+    CHECK(f.second.mouseOver());
+    f.click(f.second); // Not outside: it reaches the button
+    CHECK(f.secondClicks == 1);
+}
+
+TEST_CASE("Non-modal popups let the mouse through around them", "[popup]") {
+    Popups f{};
+    auto &tooltip = f.window->overlay().open<Tooltip>("Tip");
+    tooltip.anchor(f.second);
+    f.layout();
+    REQUIRE(f.popupCount() == 1);
+    // A press anywhere closes a tooltip, and goes on
+    f.click(f.first);
+    CHECK(f.firstClicks == 1);
+    CHECK(f.popupCount() == 0);
+}
+
+// endregion
+
+// region Menus
+
+TEST_CASE("The keyboard moves along a menu's rows and chooses one", "[popup][menu][keyboard]") {
+    Popups f{};
+    int  chosen = 0;
+    auto disabled = Menu::item("Disabled", []() {});
+    disabled->enabled = false;
+    Menu &menu = f.window->openMenu(
+        {
+            Menu::group("Group"),
+            Menu::item("One", [&]() { chosen = 1; }),
+            disabled,
+            Menu::separator(),
+            Menu::item("Three", [&]() { chosen = 3; }),
+        }, f.first
+    );
+    f.layout();
+    REQUIRE(menu.rows().size() == 3); // Not the group label or the separator
+    CHECK(f.window->focusedDiv() == &menu);
+    CHECK(menu.highlighted() == -1); // Opened with the mouse
+
+    f.key(Key::DOWN);
+    CHECK(menu.highlighted() == 0);
+    CHECK(menu.rows()[0]->selected());
+    f.key(Key::DOWN); // Over the disabled one
+    CHECK(menu.highlighted() == 2);
+    f.key(Key::DOWN); // Wraps
+    CHECK(menu.highlighted() == 0);
+    f.key(Key::END);
+    CHECK(menu.highlighted() == 2);
+    f.key(Key::ENTER);
+    CHECK(chosen == 3);
+    CHECK(f.popupCount() == 0);
+}
+
+TEST_CASE("A menu opened from the keyboard highlights its first row; closing gives the focus back", "[popup][menu][focus]") {
+    Popups f{};
+    f.first.onClick([&]() { f.window->openMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, f.first); });
+    f.key(Key::TAB); // The first button, from the keyboard
+    REQUIRE(f.window->focusedDiv() == &f.first);
+    f.key(Key::ENTER);
+    auto *menu = f.top<Menu>();
+    REQUIRE(menu != nullptr);
+    CHECK(menu->highlighted() == 0);
+    f.key(Key::ESCAPE);
+    CHECK(f.popupCount() == 0);
+    CHECK(f.window->focusedDiv() == &f.first);
+    CHECK(f.window->focusVisible());
+}
+
+TEST_CASE("Submenus open by hover, Right and Enter, and close by Left and Escape", "[popup][menu][keyboard]") {
+    Popups f{};
+    int  chosen = 0;
+    Menu &menu = f.window->openMenu(
+        {
+            Menu::item("One", []() {}),
+            Menu::item("More", {Menu::item("Deep", [&]() { chosen = 1; }), Menu::item("Deeper", []() {})}),
+        }, f.first
+    );
+    f.layout();
+
+    SECTION("hover") {
+        f.hover(*menu.rows()[1]);
+        Menu *sub = menu.submenu();
+        REQUIRE(sub != nullptr);
+        CHECK(sub->owner() == &menu);
+        CHECK(f.window->focusedDiv() == &menu); // Hovering leaves the focus
+        CHECK(sub->placedSide() == Side::Right);
+        // Level with its row: its first row's top on the row's top
+        f.layout();
+        CHECK(Popups::origin(*sub->rows()[0]).second == Popups::origin(*menu.rows()[1]).second);
+        // Hovering another row closes it
+        f.hover(*menu.rows()[0]);
+        CHECK(menu.submenu() == nullptr);
+        CHECK(f.popupCount() == 1);
+    }
+
+    SECTION("keyboard") {
+        f.key(Key::DOWN);
+        f.key(Key::DOWN);
+        f.key(Key::RIGHT);
+        Menu *sub = menu.submenu();
+        REQUIRE(sub != nullptr);
+        CHECK(f.window->focusedDiv() == sub);
+        CHECK(sub->highlighted() == 0);
+        f.key(Key::LEFT);
+        CHECK(menu.submenu() == nullptr);
+        CHECK(f.window->focusedDiv() == &menu);
+        CHECK(f.popupCount() == 1);
+
+        f.key(Key::ENTER); // On "More" still
+        sub = menu.submenu();
+        REQUIRE(sub != nullptr);
+        f.key(Key::ESCAPE); // Only the submenu
+        CHECK(f.popupCount() == 1);
+        CHECK(f.window->focusedDiv() == &menu);
+
+        f.key(Key::RIGHT);
+        f.key(Key::ENTER); // "Deep"
+        CHECK(chosen == 1);
+        CHECK(f.popupCount() == 0);
+    }
+
+    SECTION("a press outside closes the whole chain") {
+        f.hover(*menu.rows()[1]);
+        REQUIRE(f.popupCount() == 2);
+        f.clickAt(790, 590);
+        CHECK(f.popupCount() == 0);
+    }
+}
+
+TEST_CASE("A submenu flips to the left at the window's right edge", "[popup][menu]") {
+    Popups f{};
+    f.bar.justify(Justify::End);
+    f.layout();
+    Menu &menu = f.window->openMenu({Menu::item("More", {Menu::item("Deep", []() {})})}, f.second, Side::Bottom, PopupAlign::End);
+    f.layout();
+    f.hover(*menu.rows()[0]);
+    Menu *sub = menu.submenu();
+    REQUIRE(sub != nullptr);
+    f.layout();
+    CHECK(sub->placedSide() == Side::Left);
+    CHECK(Popups::origin(*sub).first + sub->getWidth() == Popups::origin(*menu.rows()[0]).first - 4);
+}
+
+TEST_CASE("Check and radio items keep their state and the menu open", "[popup][menu]") {
+    Popups f{};
+    std::vector<bool> toggles{};
+    std::string       picked{};
+    auto group = std::make_shared<MenuRadioGroup>("a", [&](const std::string &value) { picked = value; });
+    MenuItems items{
+        Menu::check("Check", false, [&](bool on) { toggles.push_back(on); }),
+        Menu::radio(group, "A", "a"),
+        Menu::radio(group, "B", "b"),
+        Menu::item("Plain", []() {}),
+    };
+    Menu &menu = f.window->openMenu(items, f.first);
+    f.layout();
+    CHECK(menu.rows()[1]->checked());
+    CHECK(hasClass(*menu.rows()[1], "checked"));
+
+    f.click(*menu.rows()[0]);
+    f.click(*menu.rows()[2]);
+    CHECK(f.popupCount() == 1);
+    CHECK(toggles == std::vector<bool>{true});
+    CHECK(picked == "b");
+    CHECK(group->value == "b");
+    CHECK(menu.rows()[0]->checked());
+    CHECK_FALSE(menu.rows()[1]->checked());
+    CHECK(menu.rows()[2]->checked());
+
+    // Every row keeps the check column
+    for (MenuButton *button: menu.rows()) {
+        CHECK(button->checkColumn());
+    }
+
+    // The items remember, the next menu shows it
+    f.key(Key::ESCAPE);
+    Menu &again = f.window->openMenu(items, f.first);
+    f.layout();
+    CHECK(again.rows()[0]->checked());
+    CHECK(again.rows()[2]->checked());
+}
+
+TEST_CASE("Menu bars switch menus with Left and Right", "[popup][menu][keyboard]") {
+    Popups f{};
+    auto &bar = f.window->appContainer().add<MenuBar>(
+        MenuItems{
+            Menu::item("File", {Menu::item("New", []() {})}),
+            Menu::item("Edit", {Menu::item("Copy", []() {})}),
+        }
+    );
+    f.layout();
+    auto *file = static_cast<Button *>(bar.children()[0].get());
+    f.click(*file);
+    REQUIRE(f.top<Menu>() != nullptr);
+    CHECK(f.top<Menu>()->rows()[0]->menuItem()->label == "New");
+    f.key(Key::RIGHT);
+    REQUIRE(f.top<Menu>() != nullptr);
+    CHECK(f.top<Menu>()->rows()[0]->menuItem()->label == "Copy");
+    f.key(Key::RIGHT); // Wraps
+    CHECK(f.top<Menu>()->rows()[0]->menuItem()->label == "New");
+    CHECK(f.popupCount() == 1);
+}
+
+TEST_CASE("A context menu opens at a point, inside the window", "[popup][menu]") {
+    Popups f{};
+    Menu &menu = f.window->openContextMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, 790, 590);
+    f.layout();
+    CHECK(hasClass(menu, "context"));
+    const auto [x, y] = Popups::origin(menu);
+    CHECK(x + menu.getWidth() <= 800 - 12);
+    CHECK(y + menu.getHeight() <= 590); // Flipped above the point
+}
+
+// endregion
+
+// region Select
+
+TEST_CASE("A select opens its options under it and changes by the keyboard", "[popup][select]") {
+    Popups f{};
+    auto &select = f.window->appContainer().add<Select>(std::vector<std::string>{"Low", "Medium", "High"}, 1);
+    select.width(160);
+    std::vector<int> changes{};
+    select.onChange([&](int index) { changes.push_back(index); });
+    f.layout();
+    CHECK(select.value() == "Medium");
+
+    f.click(select);
+    Menu *list = select.menu();
+    REQUIRE(list != nullptr);
+    CHECK(hasClass(select, "open"));
+    CHECK(hasClass(*list, "listbox"));
+    CHECK(list->highlighted() == 1);
+    CHECK(list->getWidth() >= select.getWidth());
+    CHECK(list->rows()[1]->checked());
+    CHECK(list->rows()[1]->checkTrailing());
+
+    f.key(Key::DOWN);
+    f.key(Key::ENTER);
+    CHECK_FALSE(select.isOpen());
+    CHECK_FALSE(hasClass(select, "open"));
+    CHECK(select.selectedIndex() == 2);
+    CHECK(changes == std::vector<int>{2});
+    CHECK(f.window->focusedDiv() == &select);
+
+    // From the keyboard, then Escape changes nothing
+    f.key(Key::UP);
+    REQUIRE(select.isOpen());
+    f.key(Key::UP);
+    f.key(Key::ESCAPE);
+    CHECK_FALSE(select.isOpen());
+    CHECK(select.selectedIndex() == 2);
+
+    // Pressing the field again closes it
+    f.click(select);
+    REQUIRE(select.isOpen());
+    f.click(select);
+    CHECK_FALSE(select.isOpen());
+    CHECK(changes.size() == 1);
+}
+
+TEST_CASE("A select shows its placeholder until something is chosen", "[popup][select]") {
+    Popups f{};
+    auto &select = f.window->appContainer().add<Select>(std::vector<std::string>{"A", "B"});
+    select.placeholder("Pick one");
+    f.layout();
+    CHECK(select.selectedIndex() == -1);
+    CHECK(select.value().empty());
+    select.selectedIndex(0);
+    CHECK(select.value() == "A");
+}
+
+// endregion
+
+// region Tooltips
+
+TEST_CASE("A tooltip shows after the mouse rests, at once for the next one", "[popup][tooltip]") {
+    Popups f{};
+    f.first.tooltip("First");
+    f.second.tooltip("Second");
+    f.layout();
+
+    f.hover(f.first);
+    f.window->updatePopups(1000ms);
+    CHECK(f.window->tooltip() == nullptr);
+    f.window->updatePopups(1000ms + Window::tooltipDelay - 1ms);
+    CHECK(f.window->tooltip() == nullptr);
+    f.window->updatePopups(1000ms + Window::tooltipDelay);
+    REQUIRE(f.window->tooltip() != nullptr);
+    CHECK(f.window->tooltip()->text() == "First");
+    f.layout();
+    // Above its anchor, unless there is no room: the buttons are at the top, so below
+    CHECK(f.window->tooltip()->placedSide() == Side::Bottom);
+
+    // The next one, at once
+    f.hover(f.second);
+    CHECK(f.window->tooltip() == nullptr);
+    f.window->updatePopups(1400ms);
+    REQUIRE(f.window->tooltip() != nullptr);
+    CHECK(f.window->tooltip()->text() == "Second");
+
+    // A press hides it, and it doesn't come back until the mouse moves to another
+    f.click(f.second);
+    CHECK(f.window->tooltip() == nullptr);
+    f.window->updatePopups(5000ms);
+    CHECK(f.window->tooltip() == nullptr);
+
+    // Away, then long enough for the warmth to pass
+    f.moveTo(400, 500);
+    f.window->updatePopups(6000ms);
+    f.window->updatePopups(6000ms + Window::tooltipWarmTime);
+    f.hover(f.first);
+    f.window->updatePopups(7000ms);
+    CHECK(f.window->tooltip() == nullptr);
+}
+
+TEST_CASE("A tooltip sits above its anchor when there is room", "[popup][tooltip]") {
+    Popups f{};
+    f.bar.marginTop(200);
+    f.first.tooltip("Tip");
+    f.layout();
+    f.hover(f.first);
+    f.window->updatePopups(0ms);
+    f.window->updatePopups(Window::tooltipDelay);
+    REQUIRE(f.window->tooltip() != nullptr);
+    f.layout();
+    Tooltip &tooltip = *f.window->tooltip();
+    CHECK(tooltip.placedSide() == Side::Top);
+    CHECK(Popups::origin(tooltip).second + tooltip.getHeight() == Popups::origin(f.first).second - 6);
+    // It takes no mouse
+    CHECK(f.window->overlay().popupAt(Popups::center(tooltip).first, Popups::center(tooltip).second) == nullptr);
+}
+
+TEST_CASE("A touch long press shows the tooltip when it opens nothing", "[popup][tooltip][touch]") {
+    Popups f{};
+    f.first.tooltip("Tip");
+    f.layout();
+    const auto [x, y] = Popups::center(f.first);
+    f.window->handleTouchPress(static_cast<float>(x), static_cast<float>(y), 0ms);
+    f.window->updateGestures(Window::longPressDelay);
+    REQUIRE(f.window->tooltip() != nullptr);
+    CHECK(f.window->tooltip()->text() == "Tip");
+    f.window->handleTouchRelease(static_cast<float>(x), static_cast<float>(y), Window::longPressDelay + 100ms);
+    CHECK(f.window->tooltip() == nullptr);
+    CHECK(f.firstClicks == 0); // A long press never clicks
+}
+
+// endregion
+
+// region Dialogs
+
+TEST_CASE("A dialog traps the focus and gives it back", "[popup][dialog][focus]") {
+    Popups f{};
+    f.key(Key::TAB);
+    REQUIRE(f.window->focusedDiv() == &f.first);
+
+    int  renamed = 0;
+    auto &dialog = f.window->overlay().open<Dialog>("Rename");
+    dialog.description("Something");
+    auto &cancel = dialog.action("Cancel");
+    auto &ok     = dialog.action("Rename", [&]() { ++renamed; }, "primary");
+    f.layout();
+    CHECK(dialog.modal());
+    CHECK(f.window->focusedDiv() == &dialog.panel());
+
+    // Tab goes round the close button and the actions, never out
+    std::vector<Div *> visited{};
+    for (int i = 0; i < 4; ++i) {
+        f.key(Key::TAB);
+        visited.push_back(f.window->focusedDiv());
+    }
+    CHECK(visited[1] == &cancel);
+    CHECK(visited[2] == &ok);
+    CHECK(visited[3] == visited[0]); // The close button again
+    f.key(Key::TAB, Mod{.shift = true});
+    CHECK(f.window->focusedDiv() == &ok);
+
+    f.key(Key::ENTER);
+    CHECK(renamed == 1);
+    CHECK(f.popupCount() == 0);
+    CHECK(f.window->focusedDiv() == &f.first);
+}
+
+TEST_CASE("A dialog closes by Escape and the backdrop, unless it isn't dismissible", "[popup][dialog][dismiss]") {
+    Popups f{};
+    auto &dialog = f.window->overlay().open<Dialog>("One");
+    f.layout();
+    // A press on the panel doesn't close it
+    f.click(dialog.panel());
+    CHECK(f.popupCount() == 1);
+    f.clickAt(5, 5); // The backdrop
+    CHECK(f.popupCount() == 0);
+    CHECK(f.firstClicks == 0);
+
+    f.window->overlay().open<Dialog>("Two").dismissible(false);
+    f.layout();
+    f.clickAt(5, 5);
+    CHECK(f.popupCount() == 1);
+    f.key(Key::ESCAPE);
+    CHECK(f.popupCount() == 0);
+}
+
+TEST_CASE("A menu over a dialog closes first", "[popup][dialog][menu]") {
+    Popups f{};
+    auto &dialog = f.window->overlay().open<Dialog>("Dialog");
+    auto &button = dialog.action("Menu", nullptr, "secondary", false);
+    f.layout();
+    f.window->openMenu({Menu::item("One", []() {})}, button);
+    f.layout();
+    REQUIRE(f.popupCount() == 2);
+    f.key(Key::ESCAPE);
+    CHECK(f.popupCount() == 1);
+    CHECK(f.top<Dialog>() == &dialog);
+}
+
+// endregion
+
+// region Toasts
+
+TEST_CASE("Toasts time out, held while the mouse is over them", "[popup][toast]") {
+    Popups f{};
+    ToastOptions options{.title = "Saved", .timeout = 5s};
+    Toast &toast = f.window->toast(options);
+    f.layout();
+    ToastStack &stack = f.window->toasts();
+    CHECK(hasClass(toast, "info"));
+    // In the bottom right corner, inside the window's 1 px border
+    const auto [x, y] = Popups::origin(toast);
+    CHECK(x + toast.getWidth() == 800 - 1 - 16);
+    CHECK(y + toast.getHeight() == 600 - 1 - 16);
+
+    f.window->updatePopups(10s); // Shown from this frame
+    f.window->updatePopups(12s);
+    CHECK(toast.elapsed() == 2s);
+
+    // Held while the mouse is over the stack
+    f.hover(toast);
+    f.window->updatePopups(20s);
+    CHECK(toast.elapsed() == 2s);
+    f.moveTo(10, 300);
+    f.window->updatePopups(22s);
+    CHECK(stack.toasts().size() == 1);
+    f.window->updatePopups(23s);
+    CHECK(stack.toasts().empty());
+}
+
+TEST_CASE("A toast's actions and close button dismiss it; the stack keeps a few", "[popup][toast]") {
+    Popups f{};
+    int  retried = 0;
+    auto &toast  = f.window->toast({.title = "Offline", .variant = ToastVariant::Warning, .timeout = 0s,
+                                    .actions = {{"Retry", [&]() { ++retried; }, true}}});
+    f.layout();
+    CHECK(hasClass(toast, "warning"));
+    f.window->updatePopups(0s);
+    f.window->updatePopups(1000s);
+    CHECK(f.window->toasts().toasts().size() == 1); // No timeout
+
+    Button *retry = nullptr;
+    std::function<void(Div &)> find = [&](Div &div) {
+        for (auto &child: div.children()) {
+            if (auto button = dynamic_cast<Button *>(child.get()); button && button->label() == "Retry") {
+                retry = button;
+            }
+            find(*child);
+        }
+    };
+    find(toast);
+    REQUIRE(retry != nullptr);
+    f.click(*retry);
+    CHECK(retried == 1);
+    CHECK(f.window->toasts().toasts().empty());
+
+    for (int i = 0; i < 5; ++i) {
+        f.window->toast({.title = "Toast " + std::to_string(i)});
+    }
+    f.layout();
+    auto toasts = f.window->toasts().toasts();
+    REQUIRE(toasts.size() == ToastStack::limit);
+    CHECK(toasts.front()->options().title == "Toast 2");
+    CHECK(toasts.back()->options().title == "Toast 4");
+    // Toasts don't take the focus from the page, nor Escape
+    CHECK_FALSE(f.window->overlay().dismissTop());
+}
+
+// endregion
