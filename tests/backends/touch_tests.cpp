@@ -169,6 +169,7 @@ TEST_CASE("Touch: a long press is a right button press", "[backend][touch]") {
     f.window->handleTouchRelease(20.0f, 20.0f, 2s);
     CHECK(f.releases == 1);
     CHECK(f.buttons == std::vector{MouseButton::RIGHT}); // No tap after it
+    CHECK(f.clicks == 0); // Only the left button clicks
 }
 
 TEST_CASE("Touch: a long press is also noticed when the finger lifts", "[backend][touch]") {
@@ -176,6 +177,8 @@ TEST_CASE("Touch: a long press is also noticed when the finger lifts", "[backend
     f.window->handleTouchPress(20.0f, 20.0f, 1s);
     f.window->handleTouchRelease(20.0f, 20.0f, 2s); // No frame in between
     CHECK(f.buttons == std::vector{MouseButton::RIGHT});
+    CHECK(f.releases == 1);
+    CHECK(f.clicks == 0);
 }
 
 TEST_CASE("Touch: a cancelled drag releases without clicking", "[backend][touch]") {

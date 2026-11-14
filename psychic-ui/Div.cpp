@@ -1342,8 +1342,8 @@ namespace psychic_ui {
             ret = Handled;
         }
 
-        // onClick swallows mouse down events, otherwise a parent might hijack it
-        return ret == Handled || clicked.hasSubscriptions() ? Handled : Over;
+        // onClick swallows left button presses, otherwise a parent might hijack them
+        return ret == Handled || (button == MouseButton::LEFT && clicked.hasSubscriptions()) ? Handled : Over;
     }
 
     MouseEventStatus Div::handleMouseRelease(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
@@ -1407,7 +1407,8 @@ namespace psychic_ui {
             return Out;
         }
 
-        if (!_mouseDown) {
+        // Only the left button clicks: a right click (or a touch long press, which is one) is for mousePressed
+        if (!_mouseDown || button != MouseButton::LEFT) {
             return Over;
         }
 

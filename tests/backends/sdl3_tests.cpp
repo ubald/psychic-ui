@@ -543,6 +543,10 @@ TEST_CASE("SDL3: a pen works like a mouse, in pen mode", "[backend][sdl3][touch]
     sdl.adapter->handleEvent(barrel);
     CHECK(presses == std::vector{MouseButton::LEFT, MouseButton::RIGHT});
     CHECK(sdl.window->inputMode() == InputMode::Pen);
+    barrel.type         = SDL_EVENT_PEN_BUTTON_UP;
+    barrel.pbutton.down = false;
+    sdl.adapter->handleEvent(barrel);
+    CHECK(clicks == 1); // Only the tip clicks
 }
 
 TEST_CASE("SDL3: a text field focused by touch tells SDL where its caret is", "[backend][sdl3][touch]") {

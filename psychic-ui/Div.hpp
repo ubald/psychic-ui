@@ -547,6 +547,7 @@ namespace psychic_ui {
         Signal<>                                 mouseEntered{};
         Signal<>                                 mouseExited{};
         Signal<int, int, double, double>         mouseScrolled{};
+        // Left button only (a touch tap is one); the mouse button signals above report every button
         Signal<>                                 clicked{};
         Signal<unsigned int>                     doubleClicked{};
 

@@ -1,5 +1,6 @@
 #include <memory>
 #include <type_traits>
+#include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Button.hpp>
@@ -21,13 +22,13 @@ namespace {
             window->updateStylesAndLayout();
         }
 
-        void press(int x, int y) const {
-            window->handleMouseButtonChange(x, y, MouseButton::LEFT, true, Mod{});
+        void press(int x, int y, MouseButton button = MouseButton::LEFT) const {
+            window->handleMouseButtonChange(x, y, button, true, Mod{});
             window->updateStylesAndLayout();
         }
 
-        void release(int x, int y) const {
-            window->handleMouseButtonChange(x, y, MouseButton::LEFT, false, Mod{});
+        void release(int x, int y, MouseButton button = MouseButton::LEFT) const {
+            window->handleMouseButtonChange(x, y, button, false, Mod{});
             window->updateStylesAndLayout();
         }
     };
@@ -132,4 +133,74 @@ TEST_CASE("components report changes the same way", "[div][events]") {
         REQUIRE(seen);
         REQUIRE(selectedInCallback);
     }
+}
+
+TEST_CASE("only the left button clicks", "[div][events]") {
+    Tree                     t;
+    int                      clicks       = 0;
+    int                      doubleClicks = 0;
+    std::vector<MouseButton> pressed{};
+    std::vector<MouseButton> released{};
+    std::vector<MouseButton> changed{};
+    t.box->onClick([&] { ++clicks; })
+          .onDoubleClick([&](unsigned int) { ++doubleClicks; })
+          .onMousePress([&](int, int, MouseButton button, Mod) { pressed.push_back(button); })
+          .onMouseRelease([&](int, int, MouseButton button, Mod) { released.push_back(button); })
+          .onMouseButtonChange([&](int, int, MouseButton button, bool, Mod) { changed.push_back(button); });
+
+    t.press(50, 50, MouseButton::RIGHT);
+    t.release(50, 50, MouseButton::RIGHT);
+    t.press(50, 50, MouseButton::MIDDLE);
+    t.release(50, 50, MouseButton::MIDDLE);
+    t.press(50, 50, MouseButton::RIGHT); // Quickly again: still no double click
+    t.release(50, 50, MouseButton::RIGHT);
+    CHECK(clicks == 0);
+    CHECK(doubleClicks == 0);
+    // Every button still presses, releases and changes
+    CHECK(pressed == std::vector{MouseButton::RIGHT, MouseButton::MIDDLE, MouseButton::RIGHT});
+    CHECK(released == pressed);
+    CHECK(changed.size() == 6);
+
+    t.press(50, 50);
+    t.release(50, 50);
+    CHECK(clicks == 1);
+    t.press(50, 50);
+    t.release(50, 50);
+    CHECK(clicks == 2);
+    CHECK(doubleClicks == 1);
+}
+
+TEST_CASE("a right press on a clicked div reaches its parent", "[div][events]") {
+    Tree t;
+    t.box->add<Div>().size(50, 50).onClick([] {});
+    t.window->updateStylesAndLayout();
+    std::vector<MouseButton> parentPresses{};
+    t.box->onMousePress([&](int, int, MouseButton button, Mod) { parentPresses.push_back(button); });
+
+    t.press(10, 10);
+    t.release(10, 10);
+    t.press(10, 10, MouseButton::RIGHT);
+    t.release(10, 10, MouseButton::RIGHT);
+    CHECK(parentPresses == std::vector{MouseButton::RIGHT}); // The left one is the child's click
+}
+
+TEST_CASE("a button looks pressed and clicks for the left button only", "[div][events]") {
+    Tree t;
+    int  clicks = 0;
+    auto &button = t.window->appContainer().add<Button>("Go").size(100, 40).onClick([&] { ++clicks; });
+    t.window->updateStylesAndLayout();
+    int x = 0;
+    int y = 0;
+    button.localToGlobal(x, y);
+
+    t.press(x + 10, y + 10, MouseButton::RIGHT);
+    CHECK_FALSE(button.selected());
+    t.release(x + 10, y + 10, MouseButton::RIGHT);
+    CHECK(clicks == 0);
+
+    t.press(x + 10, y + 10);
+    CHECK(button.selected());
+    t.release(x + 10, y + 10);
+    CHECK_FALSE(button.selected());
+    CHECK(clicks == 1);
 }
