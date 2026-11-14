@@ -91,15 +91,15 @@ namespace psychic_ui {
         bool        _checked{false};
         bool        _pressed{false};  // The left button went down on us, and may drag
         bool        _dragging{false}; // Past the threshold: a release commits the thumb's side, not a click
-        int         _pressX{0};       // Where it went down, in window coordinates
-        int         _pressY{0};
+        float       _pressX{0};       // Where it went down, in window coordinates
+        float       _pressY{0};
         float       _pressPosition{0.0f}; // The skin's position under the press
         float       _dragPosition{0.0f};
         ScopedSlot  _onMouseMove{}; // On the window, only while pressed
 
         void updateLabel(const std::string &label);
         void updateChecked(bool checked);
-        void dragTo(int windowX, int windowY);
+        void dragTo(float windowX, float windowY);
         void endDrag();
         void skinChanged() override;
         void removedFromRender() override;

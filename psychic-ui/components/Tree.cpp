@@ -25,7 +25,7 @@ namespace psychic_ui {
                 }
             }
         );
-        _disclosure->onDoubleClick([](unsigned int /*count*/) {}); // Two clicks on it are two toggles, not three
+        _disclosure->onDoubleClick([]() {}); // Two clicks on it are two toggles, not three
         _icon = &add<Icon>();
         _icon->addClassName("icon")
              .display(Display::None);
@@ -38,7 +38,7 @@ namespace psychic_ui {
                  .display(Display::None);
 
         doubleClicked.subscribe(
-            [this](unsigned int /*count*/) {
+            [this]() {
                 if (TreeNode *n = node(); n && n->hasChildren()) {
                     n->toggle();
                 }

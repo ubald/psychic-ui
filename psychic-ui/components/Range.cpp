@@ -39,21 +39,18 @@ namespace psychic_ui {
             keyRepeated.subscribe(key);
 
             onMousePress(
-                [this](const int mouseX, const int mouseY, MouseButton /*button*/, Mod /*modifiers*/) {
-                    int windowX = 0;
-                    int windowY = 0;
-                    localToGlobal(windowX, windowY, mouseX, mouseY);
-                    dragTo(windowX, windowY);
+                [this](const MouseEvent &event) {
+                    dragTo(static_cast<int>(event.windowX), static_cast<int>(event.windowY));
                     _onMouseMove = window()->mouseMoved.subscribe(
-                        [this](const int mouseX, const int mouseY, int /*buttons*/, Mod /*modifiers*/) {
-                            dragTo(mouseX, mouseY);
+                        [this](const MouseEvent &move) {
+                            dragTo(static_cast<int>(move.windowX), static_cast<int>(move.windowY));
                         }
                     );
                 }
             );
 
             onMouseRelease(
-                [this](const int /*mouseX*/, const int /*mouseY*/, MouseButton /*button*/, Mod /*modifiers*/) {
+                [this] {
                     _onMouseMove.disconnect();
                 }
             );

@@ -54,17 +54,7 @@ namespace psychic_ui {
     /**
      * Shortcut type for mouse signal slot
      */
-    using MouseCallback = std::function<void(const int mouseX, const int mouseY, int button, int modifiers)>;
-
-    /**
-     * Shortcut type for mouse button signal slot
-     */
-    using MouseButtonCallback = std::function<void(const int mouseX, const int mouseY, int button, bool down, int modifiers)>;
-
-    /**
-     * Shortcut type for mouse scroll signal slot
-     */
-    using MouseScrollCallback = std::function<void(const int mouseX, const int mouseY, const double scrollX, const double scrollY)>;
+    using MouseCallback = std::function<void(const MouseEvent &event)>;
 
     /**
      * @class Div
@@ -553,40 +543,55 @@ namespace psychic_ui {
         bool getMouseDown() const;
         void setMouseDown(bool down); // Mostly for testing
 
-        using MouseButtonSlot = std::shared_ptr<Slot<int, int, MouseButton, bool, Mod>>;
-        using MouseMoveSlot = std::shared_ptr<Slot<int, int, int, Mod>>;
-        using MouseSlot = std::shared_ptr<Slot<int, int, MouseButton, Mod>>;
-        using MouseTriggerSlot = std::shared_ptr<Slot<>>;
-        using MouseDoubleClickSlot = std::shared_ptr<Slot<unsigned int>>;
-        using MouseScrollSlot = std::shared_ptr<Slot<int, int, double, double>>;
+        using MouseSlot = std::shared_ptr<Slot<MouseEvent>>;
 
-        Signal<int, int, MouseButton, bool, Mod> mouseButtonChanged{};
-        Signal<int, int, MouseButton, Mod>       mousePressed{};
-        Signal<int, int, MouseButton, Mod>       mouseReleased{};
-        Signal<int, int, MouseButton, Mod>       mouseReleasedOutside{};
-        Signal<int, int, int, Mod>               mouseMoved{};
-        Signal<>                                 mouseEntered{};
-        Signal<>                                 mouseExited{};
-        Signal<int, int, double, double>         mouseScrolled{};
+        // Every mouse signal passes a MouseEvent, in this div's content coordinates (see MouseEvent)
+        Signal<MouseEvent> mouseButtonChanged{}; // Press or release, `down` tells which
+        Signal<MouseEvent> mousePressed{};
+        Signal<MouseEvent> mouseReleased{};
+        Signal<MouseEvent> mouseReleasedOutside{};
+        Signal<MouseEvent> mouseMoved{};
+        Signal<MouseEvent> mouseEntered{}; // The move that entered, so a touch's can be told from the mouse's
+        Signal<MouseEvent> mouseExited{};
+        Signal<MouseEvent> mouseScrolled{};
         // Left button only (a touch tap is one); the mouse button signals above report every button
-        Signal<>                                 clicked{};
-        Signal<unsigned int>                     doubleClicked{};
+        Signal<MouseEvent> clicked{};
+        Signal<MouseEvent> doubleClicked{}; // On the release of the second press in a row, and the third...
+        /**
+         * Asks for a context menu here: a right button press (a touch long press is one), or the Menu key or
+         * Shift+F10 on the focused div (its center, `clickCount` 0). Goes to the deepest div with a subscriber.
+         */
+        Signal<MouseEvent> contextMenuRequested{};
 
         // endregion
 
-        bool contains(int x, int y) const;
-        bool boundsContains(int x, int y) const;
+        bool contains(float x, float y) const;
+        bool boundsContains(float x, float y) const;
 
         // region External Event Triggers
 
-        virtual MouseEventStatus handleMouseMove(int mouseX, int mouseY, int buttons, Mod modifiers, bool handled);
-        virtual bool handleMouseExit(int mouseX, int mouseY, int buttons, Mod modifiers);
-        virtual MouseEventStatus handleMouseButtonChange(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers);
-        virtual MouseEventStatus handleMousePress(int mouseX, int mouseY, MouseButton button, Mod modifiers);
-        virtual MouseEventStatus handleMouseRelease(int mouseX, int mouseY, MouseButton button, Mod modifiers);
-        virtual MouseEventStatus handleClick(int mouseX, int mouseY, MouseButton button, Mod modifiers);
-        virtual MouseEventStatus handleDoubleClick(int mouseX, int mouseY, const unsigned int clickCount, Mod modifiers);
-        virtual MouseEventStatus handleMouseScroll(int mouseX, int mouseY, double scrollX, double scrollY);
+        // Each takes the event in the parent's content coordinates (the window's for the window)
+        virtual MouseEventStatus handleMouseMove(const MouseEvent &event, bool handled);
+        virtual bool handleMouseExit(const MouseEvent &event);
+        virtual MouseEventStatus handleMouseButtonChange(const MouseEvent &event);
+        virtual MouseEventStatus handleMousePress(const MouseEvent &event);
+        virtual MouseEventStatus handleMouseRelease(const MouseEvent &event);
+        virtual MouseEventStatus handleClick(const MouseEvent &event);
+        virtual MouseEventStatus handleDoubleClick(const MouseEvent &event);
+        virtual MouseEventStatus handleMouseScroll(const MouseEvent &event);
+        virtual MouseEventStatus handleContextMenuRequest(const MouseEvent &event);
+
+        /**
+         * An event at this div's center, for what the keyboard does in place of the mouse (a click by Enter, a
+         * context menu by the Menu key): no button (set the one it stands for), `clickCount` 0, the window's input
+         * mode as source
+         */
+        MouseEvent mouseEventAtCenter();
+
+        /**
+         * The event moved from the parent's content coordinates into this div's
+         */
+        MouseEvent localMouseEvent(const MouseEvent &event) const;
 
         using KeySlot = std::shared_ptr<Slot<Key, Mod>>;
         using CharSlot = std::shared_ptr<Slot<icu::UnicodeString>>;
@@ -632,6 +637,7 @@ namespace psychic_ui {
         PSYCHIC_UI_EVENT(onMouseScroll, mouseScrolled)
         PSYCHIC_UI_EVENT(onClick, clicked)
         PSYCHIC_UI_EVENT(onDoubleClick, doubleClicked)
+        PSYCHIC_UI_EVENT(onContextMenuRequest, contextMenuRequested)
         PSYCHIC_UI_EVENT(onKeyPress, keyPressed)
         PSYCHIC_UI_EVENT(onKeyRepeat, keyRepeated)
         PSYCHIC_UI_EVENT(onKeyRelease, keyReleased)

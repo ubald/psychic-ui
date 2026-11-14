@@ -78,15 +78,15 @@ namespace {
         TouchFixture() {
             target.width(100.0f).height(100.0f);
             systemWindow.layout();
-            target.onMousePress([this](int x, int y, MouseButton button, Mod) {
+            target.onMousePress([this](const MouseEvent &event) {
                 ++presses;
-                buttons.push_back(button);
-                pressX = x;
-                pressY = y;
+                buttons.push_back(event.button);
+                pressX = static_cast<int>(event.x);
+                pressY = static_cast<int>(event.y);
             });
-            target.onMouseRelease([this](int, int, MouseButton, Mod) { ++releases; });
+            target.onMouseRelease([this]() { ++releases; });
             target.onClick([this]() { ++clicks; });
-            window->onMouseMove([this](int, int, int, Mod) { ++moves; });
+            window->onMouseMove([this]() { ++moves; });
         }
     };
 
@@ -104,7 +104,7 @@ namespace {
         explicit ScrollFixture(float height = 1000.0f) {
             viewport.width(100.0f).height(100.0f).overflow(Overflow::Scroll);
             content.width(100.0f).height(height).shrink(0);
-            content.onMousePress([this](int, int, MouseButton, Mod) { ++contentPresses; });
+            content.onMousePress([this]() { ++contentPresses; });
             systemWindow.layout();
         }
 
@@ -305,8 +305,8 @@ namespace {
          * A press and release at a point relative to a's top left corner
          */
         void click(int x, int y) {
-            window->handleMouseButtonChange(aLeft + x, aTop + y, MouseButton::LEFT, true, Mod{});
-            window->handleMouseButtonChange(aLeft + x, aTop + y, MouseButton::LEFT, false, Mod{});
+            window->handleMouseButtonChange({.x = static_cast<float>(aLeft + x), .y = static_cast<float>(aTop + y), .button = MouseButton::LEFT, .down = true});
+            window->handleMouseButtonChange({.x = static_cast<float>(aLeft + x), .y = static_cast<float>(aTop + y), .button = MouseButton::LEFT, .down = false});
         }
     };
 }
@@ -350,8 +350,8 @@ TEST_CASE("Hit slop: what takes presses keeps them", "[backend][touch][hitslop]"
 
 TEST_CASE("Hit slop: a release away from the slop doesn't click", "[backend][touch][hitslop]") {
     SlopFixture f;
-    f.window->handleMouseButtonChange(f.aLeft - 6, f.aTop + 12, MouseButton::LEFT, true, Mod{});
-    f.window->handleMouseButtonChange(f.aLeft - 60, f.aTop + 12, MouseButton::LEFT, false, Mod{});
+    f.window->handleMouseButtonChange({.x = static_cast<float>(f.aLeft - 6), .y = static_cast<float>(f.aTop + 12), .button = MouseButton::LEFT, .down = true});
+    f.window->handleMouseButtonChange({.x = static_cast<float>(f.aLeft - 60), .y = static_cast<float>(f.aTop + 12), .button = MouseButton::LEFT, .down = false});
     CHECK(f.aClicks == 0);
     CHECK_FALSE(f.a.getMouseDown());
 }

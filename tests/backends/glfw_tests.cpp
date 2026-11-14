@@ -79,7 +79,7 @@ TEST_CASE("GLFW: the adapter chains to the host's callbacks and gives them back"
         CHECK(key == Key::A);
         CHECK(mod.ctrl);
     });
-    div.onMousePress([&](int, int, MouseButton, Mod) { ++downs; });
+    div.onMousePress([&]() { ++downs; });
 
     {
         GLFWSystemWindow adapter(host.window, host.glfwWindow);
@@ -166,4 +166,35 @@ TEST_CASE("GLFW keys map to Psychic UI keys", "[keyboard][glfw]") {
     CHECK_FALSE(mod.ctrl);
     CHECK_FALSE(mod.alt);
     CHECK(mod.super);
+}
+
+TEST_CASE("GLFW: scrolls carry the modifiers of the last key or button event", "[backend][glfw][mouse]") {
+    GLFWHost host;
+    auto &div = host.window->appContainer().add<Div>();
+    div.width(100.0f).height(100.0f);
+    GLFWSystemWindow adapter(host.window, host.glfwWindow);
+    host.layout();
+    std::vector<MouseEvent> scrolls{};
+    std::vector<MouseEvent> presses{};
+    div.onMouseScroll([&](const MouseEvent &event) { scrolls.push_back(event); });
+    div.onMousePress([&](const MouseEvent &event) { presses.push_back(event); });
+
+    host.cursorCallback()(host.glfwWindow, 50.0, 50.0);
+    host.keyCallback()(host.glfwWindow, GLFW_KEY_LEFT_CONTROL, 0, GLFW_PRESS, GLFW_MOD_CONTROL);
+    auto scroll = glfwSetScrollCallback(host.glfwWindow, nullptr);
+    glfwSetScrollCallback(host.glfwWindow, scroll);
+    scroll(host.glfwWindow, 0.0, -1.0);
+    REQUIRE(scrolls.size() == 1);
+    CHECK(scrolls[0].modifiers.ctrl);
+    CHECK(scrolls[0].scrollY == -1.0);
+
+    // The window counts GLFW's clicks
+    for (int i = 0; i < 2; ++i) {
+        host.buttonCallback()(host.glfwWindow, GLFW_MOUSE_BUTTON_LEFT, GLFW_PRESS, 0);
+        host.buttonCallback()(host.glfwWindow, GLFW_MOUSE_BUTTON_LEFT, GLFW_RELEASE, 0);
+    }
+    REQUIRE(presses.size() == 2);
+    CHECK(presses[0].clickCount == 1);
+    CHECK(presses[1].clickCount == 2);
+    CHECK(presses[1].source == InputMode::Pointer);
 }

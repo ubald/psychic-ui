@@ -157,13 +157,13 @@ namespace psychic_ui {
         return _input->textDisplay().get();
     }
 
-    MouseEventStatus NumberStepper::handleMouseScroll(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
-        if (_enabled && hasFocus() && scrollY != 0 && boundsContains(mouseX, mouseY)) {
+    MouseEventStatus NumberStepper::handleMouseScroll(const MouseEvent &event) {
+        if (_enabled && hasFocus() && event.scrollY != 0 && boundsContains(event.x, event.y)) {
             commit();
-            stepBy(scrollY > 0 ? 1 : -1);
+            stepBy(event.scrollY > 0 ? 1 : -1);
             return Handled;
         }
-        return Component::handleMouseScroll(mouseX, mouseY, scrollX, scrollY);
+        return Component::handleMouseScroll(event);
     }
 
     void NumberStepper::commit() {

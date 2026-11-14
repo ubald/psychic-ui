@@ -299,9 +299,12 @@ namespace psychic_ui {
             return;
         }
         _penButtons = down ? (_penButtons | button) : (_penButtons & ~button);
-        _mouseX     = static_cast<int>(x);
-        _mouseY     = static_cast<int>(y);
-        _window->handleMouseButtonChange(_mouseX, _mouseY, button, down, mapMods(SDL_GetModState()));
+        _mouseX     = x;
+        _mouseY     = y;
+        _window->handleMouseButtonChange({
+            .x = _mouseX, .y = _mouseY, .button = button, .down = down, .modifiers = mapMods(SDL_GetModState()),
+            .source = InputMode::Pen
+        });
     }
 
     ColorScheme SDL3SystemWindow::colorScheme() const {
@@ -408,8 +411,8 @@ namespace psychic_ui {
                 }
                 // A real mouse moved: back to the pointer density
                 _window->handleInputModeChange(InputMode::Pointer);
-                _mouseX = static_cast<int>(e.motion.x);
-                _mouseY = static_cast<int>(e.motion.y);
+                _mouseX = e.motion.x;
+                _mouseY = e.motion.y;
 
                 if (_dragging) {
                     float mouseX = 0;
@@ -422,7 +425,7 @@ namespace psychic_ui {
                     );
                 }
 
-                _window->handleMouseMove(_mouseX, _mouseY, _mouseState, mapMods(SDL_GetModState()), false);
+                _window->handleMouseMove({.x = _mouseX, .y = _mouseY, .modifiers = mapMods(SDL_GetModState())}, false);
                 break;
 
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -433,14 +436,13 @@ namespace psychic_ui {
                 }
                 _window->handleInputModeChange(InputMode::Pointer);
                 const bool down = e.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
-                _mouseX = static_cast<int>(e.button.x);
-                _mouseY = static_cast<int>(e.button.y);
-                if (down) {
-                    _mouseState |= button;
-                } else {
-                    _mouseState &= ~button;
-                }
-                _window->handleMouseButtonChange(_mouseX, _mouseY, button, down, mapMods(SDL_GetModState()));
+                _mouseX = e.button.x;
+                _mouseY = e.button.y;
+                // SDL counts the clicks with the system's double click time and distance
+                _window->handleMouseButtonChange({
+                    .x = _mouseX, .y = _mouseY, .button = button, .down = down, .modifiers = mapMods(SDL_GetModState()),
+                    .clickCount = e.button.clicks
+                });
                 break;
             }
 
@@ -466,12 +468,10 @@ namespace psychic_ui {
                     break;
                 }
                 const float direction = e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1.0f : 1.0f;
-                _window->handleMouseScroll(
-                    static_cast<int>(e.wheel.mouse_x),
-                    static_cast<int>(e.wheel.mouse_y),
-                    e.wheel.x * direction,
-                    e.wheel.y * direction
-                );
+                _window->handleMouseScroll({
+                    .x = e.wheel.mouse_x, .y = e.wheel.mouse_y, .modifiers = mapMods(SDL_GetModState()),
+                    .scrollX = e.wheel.x * direction, .scrollY = e.wheel.y * direction
+                });
                 break;
             }
 
@@ -505,9 +505,11 @@ namespace psychic_ui {
 
             case SDL_EVENT_PEN_MOTION:
                 _window->handleInputModeChange(InputMode::Pen);
-                _mouseX = static_cast<int>(e.pmotion.x);
-                _mouseY = static_cast<int>(e.pmotion.y);
-                _window->handleMouseMove(_mouseX, _mouseY, _penButtons, mapMods(SDL_GetModState()), false);
+                _mouseX = e.pmotion.x;
+                _mouseY = e.pmotion.y;
+                _window->handleMouseMove({
+                    .x = _mouseX, .y = _mouseY, .modifiers = mapMods(SDL_GetModState()), .source = InputMode::Pen
+                }, false);
                 break;
 
             default:

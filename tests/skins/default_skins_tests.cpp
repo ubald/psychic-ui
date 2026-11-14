@@ -25,8 +25,8 @@ namespace {
             int x = 0;
             int y = 0;
             div.localToGlobal(x, y, div.getWidth() / 2, div.getHeight() / 2);
-            window->handleMouseButtonChange(x, y, MouseButton::LEFT, true, Mod{});
-            window->handleMouseButtonChange(x, y, MouseButton::LEFT, false, Mod{});
+            window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = true});
+            window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = false});
             layout();
         }
 
@@ -101,8 +101,8 @@ TEST_CASE("Default skins: the slider's track, fill and thumb follow the value", 
     int x = 0;
     int y = 0;
     track->localToGlobal(x, y, static_cast<int>(track->getWidth() / 2), 2);
-    f.window->handleMouseButtonChange(x, y, MouseButton::LEFT, true, Mod{});
-    f.window->handleMouseButtonChange(x, y, MouseButton::LEFT, false, Mod{});
+    f.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = true});
+    f.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = false});
     CHECK(range.value() == Catch::Approx(0.5f).margin(0.01f));
 }
 
@@ -271,7 +271,7 @@ TEST_CASE("Default skins: the window controls are grey until the pointer is over
         };
     };
     const auto moveTo = [&](int x, int y) {
-        f.window->handleMouseMove(x, y, 0, Mod{}, false);
+        f.window->handleMouseMove({.x = static_cast<float>(x), .y = static_cast<float>(y)}, false);
         f.layout();
     };
     const std::vector grey{p.lineStrong, p.lineStrong, p.lineStrong};

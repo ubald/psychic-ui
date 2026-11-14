@@ -94,6 +94,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         div/children_tests.cpp
         div/api_tests.cpp
         div/event_tests.cpp
+        div/mouse_event_tests.cpp
         div/opacity_tests.cpp
         div/outline_shadow_tests.cpp
         icons/icon_tests.cpp

@@ -22,16 +22,13 @@ namespace psychic_ui {
         );
 
         onMousePress(
-            [this](const int mouseX, const int mouseY, MouseButton /*button*/, Mod /*modifiers*/) {
+            [this](const MouseEvent &event) {
                 if (!_skin) {
                     return;
                 }
-                int windowX = 0;
-                int windowY = 0;
-                localToGlobal(windowX, windowY, mouseX, mouseY);
                 int x = 0;
                 int y = 0;
-                _skin->globalToLocal(x, y, windowX, windowY);
+                _skin->globalToLocal(x, y, static_cast<int>(event.windowX), static_cast<int>(event.windowY));
                 const SkRect thumb = _skin->thumbRect();
                 if (!thumb.contains(static_cast<float>(x), static_cast<float>(y))) {
                     return;
@@ -40,25 +37,25 @@ namespace psychic_ui {
                               ? static_cast<float>(y) - thumb.top()
                               : static_cast<float>(x) - thumb.left();
                 _onMouseMove = window()->mouseMoved.subscribe(
-                    [this](const int mouseX, const int mouseY, int /*buttons*/, Mod /*modifiers*/) {
-                        dragTo(mouseX, mouseY);
+                    [this](const MouseEvent &event) {
+                        dragTo(static_cast<int>(event.windowX), static_cast<int>(event.windowY));
                     }
                 );
             }
         );
 
         onMouseRelease(
-            [this](const int /*mouseX*/, const int /*mouseY*/, MouseButton /*button*/, Mod /*modifiers*/) {
+            [this] {
                 _onMouseMove.disconnect();
             }
         );
 
         onMouseScroll(
-            [this](const int /*mouseX*/, const int /*mouseY*/, const double scrollX, const double scrollY) {
+            [this](const MouseEvent &event) {
                 if (_direction == ScrollDirection::Vertical) {
-                    _viewport->scroll(0, scrollY);
+                    _viewport->scroll(0, event.scrollY);
                 } else {
-                    _viewport->scroll(scrollX, 0);
+                    _viewport->scroll(event.scrollX, 0);
                 }
             }
         );

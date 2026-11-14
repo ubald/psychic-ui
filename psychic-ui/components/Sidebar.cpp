@@ -38,7 +38,9 @@ namespace psychic_ui {
                     return;
                 }
                 if (key == Key::ENTER || key == Key::KP_ENTER || key == Key::SPACE) {
-                    clicked.emit();
+                    MouseEvent click = mouseEventAtCenter();
+                    click.button     = MouseButton::LEFT;
+                    clicked.emit(click);
                     return;
                 }
                 if (key != Key::UP && key != Key::DOWN) {

@@ -198,7 +198,7 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
              .width(100)
              .height(100);
         child->mouseButtonChanged.subscribe(
-            [&hits, name](const int, const int, const MouseButton, const bool, const Mod) {
+            [&hits, name]() {
                 hits += name;
             }
         );
@@ -213,7 +213,7 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
     layout();
 
     SECTION("the last child added is hit") {
-        REQUIRE(root->handleMouseButtonChange(50, 50, LEFT, true, Mod{}) == Handled);
+        REQUIRE(root->handleMouseButtonChange({.x = 50, .y = 50, .button = LEFT, .down = true}) == Handled);
         REQUIRE(hits == "c");
     }
 
@@ -221,15 +221,15 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
         auto d = make("d");
         root->add(0, d);
         d->position(Position::Absolute).width(100).height(100);
-        d->mouseButtonChanged.subscribe([&hits](const int, const int, const MouseButton, const bool, const Mod) { hits += "d"; });
+        d->mouseButtonChanged.subscribe([&hits]() { hits += "d"; });
         layout();
-        root->handleMouseButtonChange(50, 50, LEFT, true, Mod{});
+        root->handleMouseButtonChange({.x = 50, .y = 50, .button = LEFT, .down = true});
         REQUIRE(hits == "c");
         root->remove(children[2]);
         root->remove(children[1]);
         root->remove(children[0]);
         layout();
-        root->handleMouseButtonChange(50, 50, LEFT, true, Mod{});
+        root->handleMouseButtonChange({.x = 50, .y = 50, .button = LEFT, .down = true});
         REQUIRE(hits == "cd");
     }
 
@@ -237,17 +237,17 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
         // mouseMoved visits every child, topmost first. Pass handled = true so no Window is needed.
         std::string moves;
         children[2]->mouseMoved.subscribe(
-            [&](const int, const int, const int, const Mod) {
+            [&]() {
                 moves += "c";
                 root->remove(children[1]);  // Not visited yet, must be skipped
                 root->removeAll();          // Clear everything, including the node being dispatched
                 root->add(make("e"));       // Must not be visited during this dispatch
             }
         );
-        children[1]->mouseMoved.subscribe([&](const int, const int, const int, const Mod) { moves += "b"; });
-        children[0]->mouseMoved.subscribe([&](const int, const int, const int, const Mod) { moves += "a"; });
+        children[1]->mouseMoved.subscribe([&]() { moves += "b"; });
+        children[0]->mouseMoved.subscribe([&]() { moves += "a"; });
 
-        root->handleMouseMove(50, 50, 0, Mod{}, true);
+        root->handleMouseMove({.x = 50, .y = 50}, true);
         REQUIRE(moves == "c");
         REQUIRE(order(*root) == "e");
     }

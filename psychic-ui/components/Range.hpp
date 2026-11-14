@@ -178,7 +178,8 @@ namespace psychic_ui {
         checkRange();
 
         mouseScrolled.subscribe(
-            [this](const int /*mouseX*/, const int /*mouseY*/, const double /*scrollX*/, const double scrollY) {
+            [this](const MouseEvent &event) {
+                const double scrollY = event.scrollY;
                 if (std::is_floating_point<T>::value) {
                     updateValue(_value + (scrollY * _step));
                 } else {

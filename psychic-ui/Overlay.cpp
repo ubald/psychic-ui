@@ -336,38 +336,61 @@ namespace psychic_ui {
 
     // region Mouse
 
+    namespace {
+        /**
+         * The event at this point (in the receiving div's parent's coordinates)
+         */
+        MouseEvent movedTo(const MouseEvent &event, const float x, const float y) {
+            MouseEvent moved = event;
+            moved.x          = x;
+            moved.y          = y;
+            return moved;
+        }
+
+        /**
+         * The event in the coordinates of a div's parent (its content's, scrolled), from its window coordinates
+         */
+        MouseEvent inParentOf(const Div &div, const MouseEvent &event) {
+            int originX = 0;
+            int originY = 0;
+            div.parent()->localToGlobal(originX, originY);
+            return movedTo(
+                event,
+                event.windowX - static_cast<float>(originX - div.parent()->scrollX()),
+                event.windowY - static_cast<float>(originY - div.parent()->scrollY())
+            );
+        }
+    }
+
     template<class F>
-    MouseEventStatus Overlay::dispatch(const int mouseX, const int mouseY, F &&event) {
+    MouseEventStatus Overlay::dispatch(const MouseEvent &event, F &&handler) {
         const auto keepAlive = weak_from_this().lock(); // A handler may close popups
         if (!_visible) {
             return Out;
         }
-        const int localX = mouseX - _x - _scrollX;
-        const int localY = mouseY - _y - _scrollY;
+        const MouseEvent local = movedTo(
+            event,
+            event.x - static_cast<float>(_x + _scrollX),
+            event.y - static_cast<float>(_y + _scrollY)
+        );
         for (auto &child: childrenTopmostFirst()) {
             if (child->parent() != this) {
                 continue; // Closed by an earlier handler
             }
             auto *popup = static_cast<Popup *>(child.get());
             if (popup->mouseEnabled() || popup->mouseChildren()) {
-                auto res = event(*popup, localX, localY);
+                auto res = handler(*popup, local);
                 if (res != Out) {
                     return res;
                 }
             }
             if (popup->_modal) {
-                // The overlay is the window's child, at its origin: the point is in window coordinates
                 for (auto &weak: std::vector(popup->_passThrough)) {
                     auto div = weak.lock();
                     if (!div || !div->parent()) {
                         continue;
                     }
-                    int x = 0;
-                    int y = 0;
-                    div->parent()->globalToLocal(x, y, mouseX, mouseY);
-                    x += div->parent()->scrollX();
-                    y += div->parent()->scrollY();
-                    auto res = event(*div, x, y);
+                    auto res = handler(*div, inParentOf(*div, event));
                     if (res != Out) {
                         return res;
                     }
@@ -378,17 +401,20 @@ namespace psychic_ui {
         return Out;
     }
 
-    MouseEventStatus Overlay::handleMouseMove(const int mouseX, const int mouseY, const int buttons, const Mod modifiers, bool handled) {
+    MouseEventStatus Overlay::handleMouseMove(const MouseEvent &event, bool handled) {
         const auto keepAlive = weak_from_this().lock();
         if (!_visible) {
             return Out;
         }
-        const int        localX  = mouseX - _x - _scrollX;
-        const int        localY  = mouseY - _y - _scrollY;
+        const MouseEvent local = movedTo(
+            event,
+            event.x - static_cast<float>(_x + _scrollX),
+            event.y - static_cast<float>(_y + _scrollY)
+        );
         MouseEventStatus ret     = Out;
         bool             blocked = false;
-        const auto       move    = [&](Div &div, const int x, const int y) {
-            auto res = div.handleMouseMove(x, y, buttons, modifiers, handled);
+        const auto       move    = [&](Div &div, const MouseEvent &moved) {
+            auto res = div.handleMouseMove(moved, handled);
             if (res != Out) {
                 handled = true;
                 if (ret != Handled) {
@@ -404,17 +430,12 @@ namespace psychic_ui {
             if (!popup->mouseEnabled() && !popup->mouseChildren()) {
                 continue;
             }
-            move(*popup, localX, localY);
+            move(*popup, local);
             if (popup->_modal && !blocked) {
                 for (auto &weak: std::vector(popup->_passThrough)) {
                     auto div = weak.lock();
                     if (div && div->parent()) {
-                        int x = 0;
-                        int y = 0;
-                        div->parent()->globalToLocal(x, y, mouseX, mouseY);
-                        x += div->parent()->scrollX();
-                        y += div->parent()->scrollY();
-                        move(*div, x, y);
+                        move(*div, inParentOf(*div, event));
                     }
                 }
                 // What is under it still hears the mouse leave, never enter
@@ -425,34 +446,28 @@ namespace psychic_ui {
         return blocked ? Handled : ret;
     }
 
-    MouseEventStatus Overlay::handleMouseButtonChange(const int mouseX, const int mouseY, const MouseButton button, const bool down, const Mod modifiers) {
-        return dispatch(mouseX, mouseY, [&](Div &div, const int x, const int y) {
-            return div.handleMouseButtonChange(x, y, button, down, modifiers);
-        });
+    MouseEventStatus Overlay::handleMouseButtonChange(const MouseEvent &event) {
+        return dispatch(event, [](Div &div, const MouseEvent &e) { return div.handleMouseButtonChange(e); });
     }
 
-    MouseEventStatus Overlay::handleMousePress(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
-        return dispatch(mouseX, mouseY, [&](Div &div, const int x, const int y) {
-            return div.handleMousePress(x, y, button, modifiers);
-        });
+    MouseEventStatus Overlay::handleMousePress(const MouseEvent &event) {
+        return dispatch(event, [](Div &div, const MouseEvent &e) { return div.handleMousePress(e); });
     }
 
-    MouseEventStatus Overlay::handleClick(const int mouseX, const int mouseY, const MouseButton button, const Mod modifiers) {
-        return dispatch(mouseX, mouseY, [&](Div &div, const int x, const int y) {
-            return div.handleClick(x, y, button, modifiers);
-        });
+    MouseEventStatus Overlay::handleClick(const MouseEvent &event) {
+        return dispatch(event, [](Div &div, const MouseEvent &e) { return div.handleClick(e); });
     }
 
-    MouseEventStatus Overlay::handleDoubleClick(const int mouseX, const int mouseY, const unsigned int clickCount, const Mod modifiers) {
-        return dispatch(mouseX, mouseY, [&](Div &div, const int x, const int y) {
-            return div.handleDoubleClick(x, y, clickCount, modifiers);
-        });
+    MouseEventStatus Overlay::handleDoubleClick(const MouseEvent &event) {
+        return dispatch(event, [](Div &div, const MouseEvent &e) { return div.handleDoubleClick(e); });
     }
 
-    MouseEventStatus Overlay::handleMouseScroll(const int mouseX, const int mouseY, const double scrollX, const double scrollY) {
-        return dispatch(mouseX, mouseY, [&](Div &div, const int x, const int y) {
-            return div.handleMouseScroll(x, y, scrollX, scrollY);
-        });
+    MouseEventStatus Overlay::handleMouseScroll(const MouseEvent &event) {
+        return dispatch(event, [](Div &div, const MouseEvent &e) { return div.handleMouseScroll(e); });
+    }
+
+    MouseEventStatus Overlay::handleContextMenuRequest(const MouseEvent &event) {
+        return dispatch(event, [](Div &div, const MouseEvent &e) { return div.handleContextMenuRequest(e); });
     }
 
     // endregion

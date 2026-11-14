@@ -234,7 +234,7 @@ namespace psychic_ui {
                 menu.highlight(3, true); // "Move to", the fourth row
             }
         } else if (name == "context") {
-            _contextArea->clicked.emit();
+            _contextArea->clicked.emit(_contextArea->mouseEventAtCenter());
         } else if (name == "select") {
             _select->open();
         } else if (name == "dialog") {

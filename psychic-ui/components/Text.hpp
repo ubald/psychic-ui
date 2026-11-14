@@ -136,7 +136,7 @@ namespace psychic_ui {
         ScopedSlot                _onMouseMove{}; // On the window, only while selecting
         Div::MouseSlot            _onMousePress{nullptr};
         Div::MouseSlot            _onMouseRelease{nullptr};
-        Div::MouseDoubleClickSlot _onDoubleClick{nullptr};
+        Div::MouseSlot            _onDoubleClick{nullptr};
         Div::KeySlot              _onKeyPress{nullptr};
         Div::KeySlot              _onKeyRepeat{nullptr};
         Div::CharSlot             _onType{nullptr};

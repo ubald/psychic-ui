@@ -105,12 +105,12 @@ namespace {
         void layout() { systemWindow.layout(); }
 
         void press(int x, int y, MouseButton button = MouseButton::LEFT) {
-            window->handleMouseButtonChange(x, y, button, true, Mod{});
+            window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = button, .down = true});
             layout();
         }
 
         void release(int x, int y, MouseButton button = MouseButton::LEFT) {
-            window->handleMouseButtonChange(x, y, button, false, Mod{});
+            window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = button, .down = false});
             layout();
         }
 
@@ -125,7 +125,7 @@ namespace {
         }
 
         void moveTo(int x, int y) {
-            window->handleMouseMove(x, y, 0, Mod{}, false);
+            window->handleMouseMove({.x = static_cast<float>(x), .y = static_cast<float>(y)}, false);
             layout();
         }
 

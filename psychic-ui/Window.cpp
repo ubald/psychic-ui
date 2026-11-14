@@ -500,10 +500,10 @@ namespace psychic_ui {
          * found the way the mouse events are dispatched. The overlay is only on the path where a popup takes the
          * mouse, or everywhere under a modal popup.
          */
-        bool hitPath(Div *div, int x, int y, std::vector<Div *> &path);
+        bool hitPath(Div *div, float x, float y, std::vector<Div *> &path);
     }
 
-    Div *Window::tooltipTargetAt(const int x, const int y) {
+    Div *Window::tooltipTargetAt(const float x, const float y) {
         std::vector<Div *> path{};
         hitPath(this, x, y, path);
         for (auto div = path.rbegin(); div != path.rend(); ++div) {
@@ -514,12 +514,16 @@ namespace psychic_ui {
         return nullptr;
     }
 
-    MouseEventStatus Window::handleMouseMove(const int mouseX, const int mouseY, const int buttons, const Mod modifiers, const bool handled) {
-        auto res = Div::handleMouseMove(mouseX, mouseY, buttons, modifiers, handled);
+    MouseEventStatus Window::handleMouseMove(const MouseEvent &event, const bool handled) {
+        MouseEvent windowEvent = event;
+        windowEvent.windowX    = event.x;
+        windowEvent.windowY    = event.y;
+        windowEvent.buttons    = _buttons;
+        auto res = Div::handleMouseMove(windowEvent, handled);
         if (_inputMode == InputMode::Touch) {
             return res; // A finger shows tooltips by a long press
         }
-        Div *target  = buttons == 0 ? tooltipTargetAt(mouseX, mouseY) : nullptr; // Not while dragging
+        Div *target  = _buttons == 0 ? tooltipTargetAt(event.x, event.y) : nullptr; // Not while dragging
         auto current = _tooltipTarget.lock();
         if (target != current.get()) {
             if (_tooltip) {
@@ -657,23 +661,20 @@ namespace psychic_ui {
     // region Touch
 
     namespace {
-        int coordinate(const float value) {
-            return static_cast<int>(std::floor(value));
-        }
-
         float seconds(const Window::GestureTime time) {
             return std::chrono::duration<float>(time).count();
         }
 
-    }
-
-    namespace {
-        bool hitPath(Div *div, const int x, const int y, std::vector<Div *> &path) {
+        /**
+         * The divs a press at this point (in `div`'s parent's coordinates) goes through, outermost first,
+         * found the way the mouse events are dispatched
+         */
+        bool hitPath(Div *div, const float x, const float y, std::vector<Div *> &path) {
             if (!div->visible() || !div->boundsContains(x, y)) {
                 return false;
             }
-            const int localX = x - div->x() - div->scrollX();
-            const int localY = y - div->y() - div->scrollY();
+            const float localX = x - static_cast<float>(div->x() + div->scrollX());
+            const float localY = y - static_cast<float>(div->y() + div->scrollY());
             if (auto overlay = dynamic_cast<Overlay *>(div)) {
                 // Only where a popup takes the mouse, or under a modal popup
                 const std::size_t size = path.size();
@@ -704,7 +705,7 @@ namespace psychic_ui {
         }
     }
 
-    Div *Window::scrollTargetAt(const int x, const int y, const bool horizontal) {
+    Div *Window::scrollTargetAt(const float x, const float y, const bool horizontal) {
         std::vector<Div *> path{};
         hitPath(this, x, y, path);
         for (auto div = path.rbegin(); div != path.rend(); ++div) {
@@ -733,23 +734,41 @@ namespace psychic_ui {
         _touchPhase = TouchPhase::Pending;
     }
 
+    MouseEvent Window::touchEvent(const float x, const float y, const MouseButton button, const bool down) const {
+        MouseEvent event{};
+        event.x       = x;
+        event.y       = y;
+        event.windowX = x;
+        event.windowY = y;
+        event.button  = button;
+        event.down    = down;
+        event.buttons = _buttons;
+        event.source  = InputMode::Touch;
+        return event;
+    }
+
     void Window::touchPressButton(const MouseButton button) {
         // Where the finger landed, getting there first as a mouse would
-        const int x = coordinate(_touchStartX);
-        const int y = coordinate(_touchStartY);
-        handleMouseMove(x, y, 0, Mod{}, false);
+        handleMouseMove(touchEvent(_touchStartX, _touchStartY), false);
         _touchPhase  = TouchPhase::Pressing;
         _touchButton = button;
         const std::size_t popups = _overlay->children().size();
         Popup *top = popups ? static_cast<Popup *>(_overlay->children().back().get()) : nullptr;
-        handleMouseButtonChange(x, y, button, true, Mod{});
+
+        // Taps in a row count on the touch clock, with a finger's precision
+        MouseEvent press = touchEvent(_touchStartX, _touchStartY, button, true);
+        const bool again = button == _lastPressButton && _touchStart - _lastTap <= multiClickDelay
+                           && std::hypot(_touchStartX - _lastPressX, _touchStartY - _lastPressY) <= 2.0f * touchSlop;
+        press.clickCount = again ? _clickCount + 1 : 1;
+        _lastTap         = _touchStart;
+        handleMouseButtonChange(press);
 
         // A long press is the context press first: when it opened nothing (no new popup on top), the tooltip of what
         // is under the finger shows instead, until the finger lifts
         const bool opened = _overlay->children().size() > popups
                             || (!_overlay->children().empty() && _overlay->children().back().get() != top);
         if (button == MouseButton::RIGHT && !opened) {
-            if (Div *target = tooltipTargetAt(x, y)) {
+            if (Div *target = tooltipTargetAt(_touchStartX, _touchStartY)) {
                 showTooltip(*target);
                 _tooltipTarget = target->weak_from_this();
                 _touchTooltip  = true;
@@ -759,7 +778,7 @@ namespace psychic_ui {
 
     void Window::touchEnd() {
         // Nothing stays under the mouse once the finger is gone
-        handleMouseExit(coordinate(_touchX), coordinate(_touchY), 0, Mod{});
+        handleMouseExit(touchEvent(_touchX, _touchY));
         _touchPhase = TouchPhase::None;
         if (_touchTooltip) {
             hideTooltip(false);
@@ -806,7 +825,7 @@ namespace psychic_ui {
                     break;
                 }
                 const bool horizontal = std::abs(fromStartX) > std::abs(fromStartY);
-                if (Div *target = scrollTargetAt(coordinate(_touchStartX), coordinate(_touchStartY), horizontal)) {
+                if (Div *target = scrollTargetAt(_touchStartX, _touchStartY, horizontal)) {
                     _touchPhase    = TouchPhase::Panning;
                     _panTarget     = target->weak_from_this();
                     _panVelocityX  = 0;
@@ -816,13 +835,13 @@ namespace psychic_ui {
                     panBy(fromStartX, fromStartY);
                 } else {
                     touchPressButton(MouseButton::LEFT);
-                    handleMouseMove(coordinate(x), coordinate(y), _touchButton, Mod{}, false);
+                    handleMouseMove(touchEvent(x, y), false);
                 }
                 break;
             }
 
             case TouchPhase::Pressing:
-                handleMouseMove(coordinate(x), coordinate(y), _touchButton, Mod{}, false);
+                handleMouseMove(touchEvent(x, y), false);
                 break;
 
             case TouchPhase::Panning:
@@ -852,11 +871,11 @@ namespace psychic_ui {
             case TouchPhase::Pending:
                 // A tap: a click where the finger landed
                 touchPressButton(MouseButton::LEFT);
-                handleMouseButtonChange(coordinate(_touchStartX), coordinate(_touchStartY), MouseButton::LEFT, false, Mod{});
+                handleMouseButtonChange(touchEvent(_touchStartX, _touchStartY, MouseButton::LEFT, false));
                 break;
 
             case TouchPhase::Pressing:
-                handleMouseButtonChange(coordinate(_touchX), coordinate(_touchY), _touchButton, false, Mod{});
+                handleMouseButtonChange(touchEvent(_touchX, _touchY, _touchButton, false));
                 break;
 
             case TouchPhase::Panning:
@@ -876,7 +895,8 @@ namespace psychic_ui {
     void Window::handleTouchCancel(const GestureTime /*time*/) {
         if (_touchPhase == TouchPhase::Pressing) {
             // Released, without a click
-            Div::handleMouseRelease(coordinate(_touchX), coordinate(_touchY), _touchButton, Mod{});
+            _buttons &= ~static_cast<unsigned>(_touchButton);
+            Div::handleMouseRelease(touchEvent(_touchX, _touchY, _touchButton, false));
         }
         if (_touchPhase != TouchPhase::None) {
             touchEnd();
@@ -974,12 +994,13 @@ namespace psychic_ui {
         bool takesPresses(const Div &div) {
             return div.mouseEnabled()
                    && (div.mouseButtonChanged.hasSubscriptions() || div.mousePressed.hasSubscriptions()
-                       || div.mouseReleased.hasSubscriptions() || div.clicked.hasSubscriptions());
+                       || div.mouseReleased.hasSubscriptions() || div.clicked.hasSubscriptions()
+                       || div.contextMenuRequested.hasSubscriptions());
         }
 
         struct SlopSearch {
-            int   x;
-            int   y;
+            float x;
+            float y;
             Div   *target{nullptr};
             float distance{0};
             // The target's visible part (window coordinates), where the press moves to
@@ -1011,11 +1032,13 @@ namespace psychic_ui {
                 const int visibleBottom = std::min(bottom, clipBottom);
                 const auto reach = static_cast<int>(std::ceil(slop));
                 if (visibleLeft < visibleRight && visibleTop < visibleBottom
-                    && search.x >= std::max(left - reach, clipLeft) && search.x < std::min(right + reach, clipRight)
-                    && search.y >= std::max(top - reach, clipTop) && search.y < std::min(bottom + reach, clipBottom)) {
+                    && search.x >= static_cast<float>(std::max(left - reach, clipLeft))
+                    && search.x < static_cast<float>(std::min(right + reach, clipRight))
+                    && search.y >= static_cast<float>(std::max(top - reach, clipTop))
+                    && search.y < static_cast<float>(std::min(bottom + reach, clipBottom))) {
                     const float distance = std::hypot(
-                        static_cast<float>(search.x) - static_cast<float>(left + right) / 2.0f,
-                        static_cast<float>(search.y) - static_cast<float>(top + bottom) / 2.0f
+                        search.x - static_cast<float>(left + right) / 2.0f,
+                        search.y - static_cast<float>(top + bottom) / 2.0f
                     );
                     // On equal distances, the one on top (later in the tree)
                     if (!search.target || distance <= search.distance) {
@@ -1043,7 +1066,7 @@ namespace psychic_ui {
         }
     }
 
-    Div *Window::hitSlopTarget(const int x, const int y, int &targetX, int &targetY) {
+    Div *Window::hitSlopTarget(const float x, const float y, float &targetX, float &targetY) {
         // What the press lands on keeps it, if anything there takes presses
         std::vector<Div *> path{};
         hitPath(this, x, y, path);
@@ -1057,68 +1080,121 @@ namespace psychic_ui {
         if (!search.target) {
             return nullptr;
         }
-        targetX = std::clamp(x, search.left, search.right - 1);
-        targetY = std::clamp(y, search.top, search.bottom - 1);
+        targetX = std::clamp(x, static_cast<float>(search.left), static_cast<float>(search.right - 1));
+        targetY = std::clamp(y, static_cast<float>(search.top), static_cast<float>(search.bottom - 1));
         return search.target;
     }
 
-    MouseEventStatus Window::handleMouseButtonChange(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) {
+    MouseEventStatus Window::handleMouseScroll(const MouseEvent &event) {
+        MouseEvent windowEvent = event;
+        windowEvent.windowX    = event.x;
+        windowEvent.windowY    = event.y;
+        windowEvent.buttons    = _buttons;
+        return Div::handleMouseScroll(windowEvent);
+    }
+
+    MouseEventStatus Window::handleMouseButtonChange(const MouseEvent &event) {
+        MouseEvent e = event;
+
         // A press hides the tooltip (a touch long press shows it after this) and closes the popups it is outside of:
         // when that closed a modal one, the press (and its release) went to it
-        if (down) {
+        if (e.down) {
             hideTooltip(false);
             _tooltipSuppressed = true;
-            if (_overlay->pressOutside(mouseX, mouseY)) {
+            if (_overlay->pressOutside(static_cast<int>(e.x), static_cast<int>(e.y))) {
                 _pressSwallowed  = true;
-                _swallowedButton = button;
+                _swallowedButton = e.button;
                 return Handled;
             }
-        } else if (_pressSwallowed && button == _swallowedButton) {
+        } else if (_pressSwallowed && e.button == _swallowedButton) {
             _pressSwallowed = false;
             return Handled;
         }
 
         // Through hit slop, the press and its release land on the target's edge
-        if (down) {
-            int   targetX = mouseX;
-            int   targetY = mouseY;
-            Div *target   = hitSlopTarget(mouseX, mouseY, targetX, targetY);
+        if (e.down) {
+            float targetX = e.x;
+            float targetY = e.y;
+            Div  *target  = hitSlopTarget(e.x, e.y, targetX, targetY);
             _slopTarget   = target ? target->weak_from_this() : std::weak_ptr<Div>{};
-            mouseX        = targetX;
-            mouseY        = targetY;
+            e.x           = targetX;
+            e.y           = targetY;
         } else if (auto target = _slopTarget.lock()) {
-            _slopTarget = {};
-            int targetX = mouseX;
-            int targetY = mouseY;
-            if (hitSlopTarget(mouseX, mouseY, targetX, targetY) == target.get()) {
-                mouseX = targetX;
-                mouseY = targetY;
+            _slopTarget   = {};
+            float targetX = e.x;
+            float targetY = e.y;
+            if (hitSlopTarget(e.x, e.y, targetX, targetY) == target.get()) {
+                e.x = targetX;
+                e.y = targetY;
             }
         }
+        e.windowX = e.x;
+        e.windowY = e.y;
 
-        auto res = Div::handleMouseButtonChange(mouseX, mouseY, button, down, modifiers);
-
-        if (down) {
-            handleMousePress(mouseX, mouseY, button, modifiers);
-        } else {
-            handleClick(mouseX, mouseY, button, modifiers);
-
-            if (button == MouseButton::LEFT) {
-                auto   now   = std::chrono::high_resolution_clock::now();
-                double delta = std::chrono::duration_cast<std::chrono::milliseconds>(now - _lastClick).count();
-                if (delta <= 500) {
-                    ++_clickCount;
-                    handleDoubleClick(mouseX, mouseY, _clickCount, modifiers);
-                } else {
-                    _clickCount = 1;
-                }
-                _lastClick = now;
+        if (e.down) {
+            _buttons |= static_cast<unsigned>(e.button);
+            // Count the presses in a row, unless the backend did (SDL does, with the system's settings) or the touch
+            // gestures
+            if (e.clickCount == 0) {
+                const auto now   = std::chrono::steady_clock::now();
+                const bool again = e.button == _lastPressButton && now - _lastPress <= multiClickDelay
+                                   && std::hypot(event.x - _lastPressX, event.y - _lastPressY) <= multiClickDistance;
+                _clickCount = again ? _clickCount + 1 : 1;
+                _lastPress  = now;
+            } else {
+                _clickCount = e.clickCount;
             }
+            _lastPressButton = e.button;
+            _lastPressX      = event.x;
+            _lastPressY      = event.y;
+            e.clickCount     = _clickCount;
+        } else {
+            _buttons &= ~static_cast<unsigned>(e.button);
+            // The release and its click count as their press did
+            e.clickCount = e.button == _lastPressButton ? _clickCount : 1;
+        }
+        e.buttons = _buttons;
 
-            handleMouseRelease(mouseX, mouseY, button, modifiers);
+        auto res = Div::handleMouseButtonChange(e);
+
+        if (e.down) {
+            handleMousePress(e);
+            // On the press, as on macOS and Linux (Windows waits for the release); a touch long press is one
+            if (e.button == MouseButton::RIGHT) {
+                handleContextMenuRequest(e);
+            }
+        } else {
+            handleClick(e);
+            if (e.button == MouseButton::LEFT && e.clickCount >= 2) {
+                handleDoubleClick(e);
+            }
+            handleMouseRelease(e);
         }
 
         return res;
+    }
+
+    bool Window::requestContextMenuFromKeyboard() {
+        if (_focusPath.empty()) {
+            return false;
+        }
+        // At the focused div's center, for the deepest div of the focus path that asks for it
+        const MouseEvent center = _focusPath.back()->mouseEventAtCenter();
+        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
+            Div *div = *focused;
+            if (!div->mouseEnabled() || !div->contextMenuRequested.hasSubscriptions()) {
+                continue;
+            }
+            int originX = 0;
+            int originY = 0;
+            div->localToGlobal(originX, originY);
+            MouseEvent local = center;
+            local.x = center.windowX - static_cast<float>(originX);
+            local.y = center.windowY - static_cast<float>(originY);
+            div->contextMenuRequested.emit(local);
+            return true;
+        }
+        return false;
     }
 
     // endregion
@@ -1214,6 +1290,12 @@ namespace psychic_ui {
         // Tab moves the focus, before anyone else sees it
         if (key == Key::TAB && !mod.ctrl && !mod.alt && !mod.super) {
             return focusNext(mod.shift);
+        }
+        // So do the Menu key and Shift+F10, when something asks for a context menu
+        const bool noOtherMod = !mod.ctrl && !mod.alt && !mod.super;
+        if (((key == Key::MENU && !mod.shift) || (key == Key::F10 && mod.shift)) && noOtherMod
+            && requestContextMenuFromKeyboard()) {
+            return true;
         }
         // Go backwards since we want to cancel as soon as possible when a child handles it
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {

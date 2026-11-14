@@ -217,11 +217,11 @@ TEST_CASE("SDL3: mouse events reach the div under the pointer", "[backend][sdl3]
     int clicks = 0;
     int downX  = -1;
     int downY  = -1;
-    div.onMousePress([&](int x, int y, MouseButton button, Mod) {
+    div.onMousePress([&](const MouseEvent &event) {
         ++downs;
-        downX = x;
-        downY = y;
-        CHECK(button == MouseButton::LEFT);
+        downX = static_cast<int>(event.x);
+        downY = static_cast<int>(event.y);
+        CHECK(event.button == MouseButton::LEFT);
     });
     div.onClick([&]() { ++clicks; });
 
@@ -254,7 +254,7 @@ TEST_CASE("SDL3: wheel events scroll at the pointer", "[backend][sdl3]") {
     sdl.layout();
 
     double scrolledY = 0;
-    div.onMouseScroll([&](int, int, double, double y) { scrolledY = y; });
+    div.onMouseScroll([&](const MouseEvent &event) { scrolledY = event.scrollY; });
 
     auto wheel = sdl.event(SDL_EVENT_MOUSE_WHEEL);
     wheel.wheel.mouse_x   = 50;
@@ -513,7 +513,7 @@ TEST_CASE("SDL3: a tap on a touch screen clicks once, without SDL's mouse events
     sdl.layout();
     int presses = 0;
     int clicks  = 0;
-    div.onMousePress([&](int, int, MouseButton, Mod) { ++presses; });
+    div.onMousePress([&]() { ++presses; });
     div.onClick([&]() { ++clicks; });
 
     // What SDL sends for a tap: the finger, and the mouse events it makes of it
@@ -542,7 +542,7 @@ TEST_CASE("SDL3: a trackpad's fingers don't switch to touch", "[backend][sdl3][t
     div.width(100.0f).height(100.0f);
     sdl.layout();
     int presses = 0;
-    div.onMousePress([&](int, int, MouseButton, Mod) { ++presses; });
+    div.onMousePress([&]() { ++presses; });
 
     sdl.finger(SDL_EVENT_FINGER_DOWN, 40.0f, 40.0f, 1000, trackpad);
     sdl.finger(SDL_EVENT_FINGER_UP, 40.0f, 40.0f, 1080, trackpad);
@@ -557,8 +557,8 @@ TEST_CASE("SDL3: touch drags, long presses and a second finger", "[backend][sdl3
     sdl.layout();
     std::vector<MouseButton> presses{};
     int                      moves = 0;
-    div.onMousePress([&](int, int, MouseButton button, Mod) { presses.push_back(button); });
-    sdl.window->onMouseMove([&](int, int, int, Mod) { ++moves; });
+    div.onMousePress([&](const MouseEvent &event) { presses.push_back(event.button); });
+    sdl.window->onMouseMove([&]() { ++moves; });
 
     // Past the slop, a drag
     sdl.finger(SDL_EVENT_FINGER_DOWN, 20.0f, 20.0f, 1000);
@@ -591,7 +591,7 @@ TEST_CASE("SDL3: a pen works like a mouse, in pen mode", "[backend][sdl3][touch]
     sdl.layout();
     std::vector<MouseButton> presses{};
     int                      clicks = 0;
-    div.onMousePress([&](int, int, MouseButton button, Mod) { presses.push_back(button); });
+    div.onMousePress([&](const MouseEvent &event) { presses.push_back(event.button); });
     div.onClick([&]() { ++clicks; });
 
     auto motion = sdl.event(SDL_EVENT_PEN_MOTION);
@@ -664,4 +664,56 @@ TEST_CASE("SDL3: a text field focused by touch tells SDL where its caret is", "[
     CHECK(area.y >= top);
     CHECK(area.y + area.h <= top + input.getHeight());
     CHECK(cursor > 0); // After "Hello"
+}
+
+TEST_CASE("SDL3: mouse events say what made them, with SDL's click count and the modifiers", "[backend][sdl3][mouse]") {
+    SDL3Fixture sdl;
+    auto &div = sdl.window->appContainer().add<Div>();
+    div.width(100.0f).height(100.0f);
+    sdl.layout();
+    std::vector<MouseEvent> presses{};
+    std::vector<MouseEvent> scrolls{};
+    div.onMousePress([&](const MouseEvent &event) { presses.push_back(event); });
+    div.onMouseScroll([&](const MouseEvent &event) { scrolls.push_back(event); });
+
+    // SDL counts the clicks itself
+    auto press = sdl.event(SDL_EVENT_MOUSE_BUTTON_DOWN);
+    press.button.button = SDL_BUTTON_LEFT;
+    press.button.down   = true;
+    press.button.clicks = 2;
+    press.button.x      = 40.5f;
+    press.button.y      = 20.0f;
+    sdl.adapter->handleEvent(press);
+    REQUIRE(presses.size() == 1);
+    CHECK(presses[0].clickCount == 2);
+    CHECK(presses[0].source == InputMode::Pointer);
+    CHECK(presses[0].windowX == 40.5f); // Not rounded
+    sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, 40.5f, 20.0f);
+
+    // The wheel, with the keyboard's modifiers
+    SDL_SetModState(SDL_KMOD_LSHIFT);
+    auto wheel = sdl.event(SDL_EVENT_MOUSE_WHEEL);
+    wheel.wheel.mouse_x = 50;
+    wheel.wheel.mouse_y = 50;
+    wheel.wheel.y       = 1.0f;
+    sdl.adapter->handleEvent(wheel);
+    SDL_SetModState(SDL_KMOD_NONE);
+    REQUIRE(scrolls.size() == 1);
+    CHECK(scrolls[0].modifiers.shift);
+    CHECK(scrolls[0].scrollY == 1.0);
+
+    // A pen's tip
+    auto tip = sdl.event(SDL_EVENT_PEN_DOWN);
+    tip.ptouch.windowID = SDL_GetWindowID(sdl.sdlWindow);
+    tip.ptouch.x        = 30.0f;
+    tip.ptouch.y        = 30.0f;
+    tip.ptouch.down     = true;
+    sdl.adapter->handleEvent(tip);
+    REQUIRE(presses.size() == 2);
+    CHECK(presses[1].source == InputMode::Pen);
+    CHECK(presses[1].button == MouseButton::LEFT);
+    CHECK(presses[1].clickCount == 1); // Counted by the window
+    tip.type        = SDL_EVENT_PEN_UP;
+    tip.ptouch.down = false;
+    sdl.adapter->handleEvent(tip);
 }

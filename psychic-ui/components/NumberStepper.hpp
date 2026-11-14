@@ -121,7 +121,7 @@ namespace psychic_ui {
         /**
          * With the focus, the wheel steps it; otherwise it scrolls what is around it
          */
-        MouseEventStatus handleMouseScroll(int mouseX, int mouseY, double scrollX, double scrollY) override;
+        MouseEventStatus handleMouseScroll(const MouseEvent &event) override;
 
         /**
          * The value changed, with the new value

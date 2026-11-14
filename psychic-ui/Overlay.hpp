@@ -365,12 +365,13 @@ namespace psychic_ui {
 
         void update(std::chrono::nanoseconds now);
 
-        MouseEventStatus handleMouseMove(int mouseX, int mouseY, int buttons, Mod modifiers, bool handled) override;
-        MouseEventStatus handleMouseButtonChange(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) override;
-        MouseEventStatus handleMousePress(int mouseX, int mouseY, MouseButton button, Mod modifiers) override;
-        MouseEventStatus handleClick(int mouseX, int mouseY, MouseButton button, Mod modifiers) override;
-        MouseEventStatus handleDoubleClick(int mouseX, int mouseY, unsigned int clickCount, Mod modifiers) override;
-        MouseEventStatus handleMouseScroll(int mouseX, int mouseY, double scrollX, double scrollY) override;
+        MouseEventStatus handleMouseMove(const MouseEvent &event, bool handled) override;
+        MouseEventStatus handleMouseButtonChange(const MouseEvent &event) override;
+        MouseEventStatus handleMousePress(const MouseEvent &event) override;
+        MouseEventStatus handleClick(const MouseEvent &event) override;
+        MouseEventStatus handleDoubleClick(const MouseEvent &event) override;
+        MouseEventStatus handleMouseScroll(const MouseEvent &event) override;
+        MouseEventStatus handleContextMenuRequest(const MouseEvent &event) override;
 
     protected:
         friend class Popup;
@@ -387,6 +388,6 @@ namespace psychic_ui {
          * pass-through divs and no further
          */
         template<class F>
-        MouseEventStatus dispatch(int mouseX, int mouseY, F &&event);
+        MouseEventStatus dispatch(const MouseEvent &event, F &&handler);
     };
 }

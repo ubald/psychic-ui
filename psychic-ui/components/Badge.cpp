@@ -80,7 +80,7 @@ namespace psychic_ui {
                     return;
                 }
                 if (key == Key::ENTER || key == Key::KP_ENTER || key == Key::SPACE) {
-                    clicked.emit();
+                    clicked.emit(mouseEventAtCenter());
                 } else if (key == Key::BACKSPACE || key == Key::DELETE) {
                     dismiss();
                 }

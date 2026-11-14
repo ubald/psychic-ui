@@ -16,6 +16,7 @@
 namespace psychic_ui {
 
     enum MouseButton {
+        NONE = 0,
         LEFT = 1,
         MIDDLE = 2,
         RIGHT = 4
@@ -36,6 +37,54 @@ namespace psychic_ui {
         bool ctrl{false};
         bool alt{false};
         bool super{false};
+    };
+
+    /**
+     * What every mouse signal passes (`mousePressed`, `clicked`, `mouseScrolled`, `contextMenuRequested`...), also
+     * made of touches (`source` is `Touch`), pens and keys (a keyboard click or context menu, `clickCount` 0).
+     * Each div gets it in its own coordinates: the window fills it in window coordinates and every div on the way
+     * moves `x` and `y` into its own.
+     */
+    struct MouseEvent {
+        /**
+         * Where, in the receiving div's content coordinates (those its children's `x()` and `y()` are in): from its
+         * top-left corner, plus how far it is scrolled
+         */
+        float       x{0};
+        float       y{0};
+        /**
+         * Where, in window coordinates, whichever div receives it
+         */
+        float       windowX{0};
+        float       windowY{0};
+        /**
+         * The button that changed (press, release, button change, click, context menu); NONE for moves and scrolls
+         */
+        MouseButton button{MouseButton::NONE};
+        /**
+         * Whether `button` went down, for `mouseButtonChanged` (true for presses, false for releases and clicks)
+         */
+        bool        down{false};
+        /**
+         * Every button held (MouseButton bits), after this change
+         */
+        unsigned    buttons{0};
+        Mod         modifiers{};
+        /**
+         * Presses in a row of this button at this spot: 1, 2 for a double click, 3... Kept from the press for its
+         * release and click; 0 when no press made it (moves, scrolls, keyboard clicks and context menus)
+         */
+        unsigned    clickCount{0};
+        /**
+         * What made it: the mouse, a finger (the window's touch gestures) or a pen
+         */
+        InputMode   source{InputMode::Pointer};
+        /**
+         * How far the wheel turned, for `mouseScrolled`, in steps as SDL and GLFW report them (a positive `scrollY` is
+         * away from the user, scrolling up)
+         */
+        double      scrollX{0};
+        double      scrollY{0};
     };
 
     /**

@@ -46,15 +46,15 @@ namespace {
         }
 
         void press(int x, int y) {
-            window->handleMouseButtonChange(x, y, MouseButton::LEFT, true, Mod{});
+            window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = true});
         }
 
         void move(int x, int y) {
-            window->handleMouseMove(x, y, 1, Mod{}, false);
+            window->handleMouseMove({.x = static_cast<float>(x), .y = static_cast<float>(y)}, false);
         }
 
         void release(int x, int y) {
-            window->handleMouseButtonChange(x, y, MouseButton::LEFT, false, Mod{});
+            window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = false});
             layout();
         }
 

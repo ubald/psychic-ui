@@ -325,8 +325,8 @@ namespace psychic_ui {
     // region Events
 
     void GLFWSystemWindow::cursorPosEvent(double x, double y) {
-        _mouseX = static_cast<int>(x);
-        _mouseY = static_cast<int>(y);
+        _mouseX = static_cast<float>(x);
+        _mouseY = static_cast<float>(y);
 
         if (_dragging) {
             // The grabbed point follows the mouse; once moved, the cursor is back at it in window coordinates
@@ -336,7 +336,7 @@ namespace psychic_ui {
             glfwSetWindowPos(_glfwWindow, windowX + static_cast<int>(x - _dragX), windowY + static_cast<int>(y - _dragY));
         }
 
-        _window->handleMouseMove(_mouseX, _mouseY, _mouseState, _modifiers, false);
+        _window->handleMouseMove({.x = _mouseX, .y = _mouseY, .modifiers = _modifiers}, false);
     }
 
     void GLFWSystemWindow::mouseButtonEvent(int button, int action, int mods) {
@@ -350,17 +350,15 @@ namespace psychic_ui {
             default: return;
         }
 
-        const bool down = action == GLFW_PRESS;
-        if (down) {
-            _mouseState |= btn;
-        } else {
-            _mouseState &= ~btn;
-        }
-        _window->handleMouseButtonChange(_mouseX, _mouseY, btn, down, _modifiers);
+        // GLFW doesn't count clicks: the window does
+        _window->handleMouseButtonChange({
+            .x = _mouseX, .y = _mouseY, .button = btn, .down = action == GLFW_PRESS, .modifiers = _modifiers
+        });
     }
 
     void GLFWSystemWindow::scrollEvent(double x, double y) {
-        _window->handleMouseScroll(_mouseX, _mouseY, x, y);
+        // GLFW gives no modifiers with the scroll: the ones of the last key or button event
+        _window->handleMouseScroll({.x = _mouseX, .y = _mouseY, .modifiers = _modifiers, .scrollX = x, .scrollY = y});
     }
 
     void GLFWSystemWindow::keyEvent(int key, int /*scancode*/, int action, int mods) {

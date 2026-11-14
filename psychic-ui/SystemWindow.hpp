@@ -126,9 +126,8 @@ namespace psychic_ui {
 
         int    _stencilBits{8};
         int    _samples{0};
-        int    _mouseX{0};
-        int    _mouseY{0};
-        int    _mouseState{0};
+        float  _mouseX{0};
+        float  _mouseY{0};
         int    _x{0};
         int    _y{0};
         int    _width{0};

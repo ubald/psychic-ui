@@ -15,13 +15,15 @@ namespace psychic_ui {
         keyPressed.subscribe(
             [this](const Key key, const Mod /*modifiers*/) {
                 if (_enabled && (key == Key::SPACE || key == Key::ENTER || key == Key::KP_ENTER)) {
-                    clicked.emit();
+                    MouseEvent click = mouseEventAtCenter();
+                    click.button     = MouseButton::LEFT;
+                    clicked.emit(click);
                 }
             }
         );
 
         mouseReleased.subscribe(
-            [this](const int /*mouseX*/, const int /*mouseY*/, const int /*button*/, const Mod /*modifiers*/) {
+            [this] {
                 if (_enabled && !_toggle) {
                     updateSelected(false);
                 }
@@ -29,8 +31,8 @@ namespace psychic_ui {
         );
 
         mousePressed.subscribe(
-            [this](const int /*mouseX*/, const int /*mouseY*/, const int button, const Mod /*modifiers*/) {
-                if (_enabled && !_toggle && button == MouseButton::LEFT) { // Only the left button clicks
+            [this](const MouseEvent &event) {
+                if (_enabled && !_toggle && event.button == MouseButton::LEFT) { // Only the left button clicks
                     updateSelected(true);
                 }
             }

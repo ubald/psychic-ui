@@ -126,14 +126,14 @@ namespace psychic_ui {
 
     void Text::subscribeToSelection() {
         _onMousePress = mousePressed.subscribe(
-            [this](const int mouseX, const int mouseY, const int /*button*/, const Mod /*modifiers*/) {
-                unsigned int initialBegin = indexAt(mouseX, mouseY);
+            [this](const MouseEvent &event) {
+                unsigned int initialBegin = indexAt(static_cast<int>(event.x), static_cast<int>(event.y));
                 moveCaret(initialBegin);
                 _onMouseMove = window()->mouseMoved.subscribe(
-                    [this, initialBegin](const int mouseX, const int mouseY, int /*button*/, Mod /*modifiers*/) {
+                    [this, initialBegin](const MouseEvent &move) {
                         int lx = 0;
                         int ly = 0;
-                        globalToLocal(lx, ly, mouseX, mouseY);
+                        globalToLocal(lx, ly, static_cast<int>(move.windowX), static_cast<int>(move.windowY));
                         _caret = indexAt(lx, ly);
                         if (_caret >= initialBegin) {
                             _selectBegin = initialBegin;
@@ -150,13 +150,14 @@ namespace psychic_ui {
         );
 
         _onMouseRelease = mouseReleased.subscribe(
-            [this](const int /*mouseX*/, const int /*mouseY*/, int /*button*/, Mod /*modifiers*/) {
+            [this] {
                 _onMouseMove.disconnect();
             }
         );
 
         _onDoubleClick = doubleClicked.subscribe(
-            [this](const unsigned int clickCount) {
+            [this](const MouseEvent &event) {
+                const unsigned clickCount = event.clickCount;
                 if (clickCount == 2) {
                     auto word = _textLayout.wordAtIndex(_caret);
                     _selectBegin = word.first;

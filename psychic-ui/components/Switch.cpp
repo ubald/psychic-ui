@@ -27,20 +27,21 @@ namespace psychic_ui {
         }
 
         onMousePress(
-            [this](const int mouseX, const int mouseY, const MouseButton button, Mod /*modifiers*/) {
-                if (!_enabled || button != MouseButton::LEFT || !_skin) {
+            [this](const MouseEvent &event) {
+                if (!_enabled || event.button != MouseButton::LEFT || !_skin) {
                     return;
                 }
                 _pressed  = true;
                 _dragging = false;
-                localToGlobal(_pressX, _pressY, mouseX, mouseY);
+                _pressX   = event.windowX;
+                _pressY   = event.windowY;
                 int x = 0;
                 int y = 0;
-                _skin->globalToLocal(x, y, _pressX, _pressY);
+                _skin->globalToLocal(x, y, static_cast<int>(_pressX), static_cast<int>(_pressY));
                 _pressPosition = _skin->positionAt(x, y);
                 _onMouseMove   = window()->mouseMoved.subscribe(
-                    [this](const int mouseX, const int mouseY, int /*buttons*/, Mod /*modifiers*/) {
-                        dragTo(mouseX, mouseY);
+                    [this](const MouseEvent &move) {
+                        dragTo(move.windowX, move.windowY);
                     }
                 );
             }
@@ -57,8 +58,8 @@ namespace psychic_ui {
 
         // Wherever the button is released, a drag lands on the thumb's nearer side
         onMouseRelease(
-            [this](const int /*mouseX*/, const int /*mouseY*/, MouseButton button, Mod /*modifiers*/) {
-                if (button == MouseButton::LEFT) {
+            [this](const MouseEvent &event) {
+                if (event.button == MouseButton::LEFT) {
                     endDrag();
                 }
             }
@@ -104,7 +105,7 @@ namespace psychic_ui {
         return Component::active() || _checked;
     }
 
-    void Switch::dragTo(const int windowX, const int windowY) {
+    void Switch::dragTo(const float windowX, const float windowY) {
         if (!_pressed || !_skin) {
             return;
         }
@@ -115,7 +116,7 @@ namespace psychic_ui {
         // The thumb follows the mouse from where it was when pressed, whatever part of the switch was pressed
         int x = 0;
         int y = 0;
-        _skin->globalToLocal(x, y, windowX, windowY);
+        _skin->globalToLocal(x, y, static_cast<int>(windowX), static_cast<int>(windowY));
         const float start = _checked ? 1.0f : 0.0f;
         _dragPosition = std::clamp(start + _skin->positionAt(x, y) - _pressPosition, 0.0f, 1.0f);
         _skin->setThumbPosition(_dragPosition);

@@ -33,8 +33,8 @@ namespace {
 
         void click(Div &div) {
             const auto [x, y] = center(div);
-            window->handleMouseButtonChange(x, y, MouseButton::LEFT, true, Mod{});
-            window->handleMouseButtonChange(x, y, MouseButton::LEFT, false, Mod{});
+            window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = true});
+            window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = false});
             layout();
         }
 

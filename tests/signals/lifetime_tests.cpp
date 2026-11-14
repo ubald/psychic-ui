@@ -32,10 +32,10 @@ namespace {
 
         void clickAt(int x, int y) {
             layout();
-            handleMouseMove(x, y, 0, Mod{}, false);
-            handleMouseButtonChange(x, y, MouseButton::LEFT, true, Mod{});
+            handleMouseMove({.x = static_cast<float>(x), .y = static_cast<float>(y)}, false);
+            handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = true});
             layout();
-            handleMouseButtonChange(x, y, MouseButton::LEFT, false, Mod{});
+            handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = false});
             layout();
         }
 
@@ -84,7 +84,7 @@ TEST_CASE("A div's handler removes the div from its parent", "[signals][lifetime
     int  ran    = 0;
     item->clicked.subscribe([&]() { ++ran; menu->removeAll(); });
     item->clicked.subscribe([&]() { ++ran; }); // Its signal is gone, not called
-    item->clicked.emit();
+    item->clicked.emit(MouseEvent{});
     REQUIRE(ran == 1);
     REQUIRE(menu->childCount() == 0);
 }
@@ -167,7 +167,7 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
         REQUIRE(item != nullptr);
         Div *raw = item.get();
         item.reset();
-        raw->clicked.emit();
+        raw->clicked.emit(MouseEvent{});
         REQUIRE(newClicked == 1);
     }
 
@@ -178,7 +178,7 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
         auto recent = findButton(window->overlay(), "Recent");
         REQUIRE(recent != nullptr);
         HeadlessWindow::center(recent, x, y);
-        window->handleMouseMove(x, y, 0, Mod{}, false);
+        window->handleMouseMove({.x = static_cast<float>(x), .y = static_cast<float>(y)}, false);
         window->layout();
         REQUIRE(findButton(window->overlay(), "Nothing") != nullptr);
         std::weak_ptr<Div> weakRecent = recent;

@@ -22,13 +22,13 @@ namespace {
             window->updateStylesAndLayout();
         }
 
-        void press(int x, int y, MouseButton button = MouseButton::LEFT) const {
-            window->handleMouseButtonChange(x, y, button, true, Mod{});
+        void press(float x, float y, MouseButton button = MouseButton::LEFT) const {
+            window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = button, .down = true});
             window->updateStylesAndLayout();
         }
 
-        void release(int x, int y, MouseButton button = MouseButton::LEFT) const {
-            window->handleMouseButtonChange(x, y, button, false, Mod{});
+        void release(float x, float y, MouseButton button = MouseButton::LEFT) const {
+            window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = button, .down = false});
             window->updateStylesAndLayout();
         }
     };
@@ -43,8 +43,8 @@ TEST_CASE("mouse up fires once per release", "[div][events]") {
     int  ups     = 0;
     int  outside = 0;
     int  clicks  = 0;
-    t.box->onMouseRelease([&](int, int, MouseButton, Mod) { ++ups; })
-          .onMouseReleaseOutside([&](int, int, MouseButton, Mod) { ++outside; })
+    t.box->onMouseRelease([&]() { ++ups; })
+          .onMouseReleaseOutside([&]() { ++outside; })
           .onClick([&] { ++clicks; });
 
     SECTION("pressed and released over the div") {
@@ -85,7 +85,7 @@ TEST_CASE("a connector's callback lives as long as its div", "[div][events]") {
     auto &child = parent->add<Div>().onClick([marker] { ++*marker; });
     REQUIRE(marker.use_count() == 2);
 
-    child.clicked.emit();
+    child.clicked.emit(MouseEvent{});
     REQUIRE(*marker == 1);
 
     parent->removeAll();
@@ -100,7 +100,7 @@ TEST_CASE("components report changes the same way", "[div][events]") {
         auto &button = root->add<Button>("b").toggle(true).onChange([&](bool selected) { changes.push_back(selected); });
         button.selected(true).selected(true).selected(false);
         REQUIRE(changes == std::vector<bool>{true, false});
-        button.clicked.emit(); // A toggle button selects itself when clicked
+        button.clicked.emit(MouseEvent{}); // A toggle button selects itself when clicked
         REQUIRE(changes == std::vector<bool>{true, false, true});
     }
 
@@ -129,7 +129,7 @@ TEST_CASE("components report changes the same way", "[div][events]") {
         auto &button = root->add<Button>("b", [&] { seen = true; }).toggle(true);
         bool selectedInCallback = false;
         button.onClick([&] { selectedInCallback = button.selected(); });
-        button.clicked.emit();
+        button.clicked.emit(MouseEvent{});
         REQUIRE(seen);
         REQUIRE(selectedInCallback);
     }
@@ -143,10 +143,10 @@ TEST_CASE("only the left button clicks", "[div][events]") {
     std::vector<MouseButton> released{};
     std::vector<MouseButton> changed{};
     t.box->onClick([&] { ++clicks; })
-          .onDoubleClick([&](unsigned int) { ++doubleClicks; })
-          .onMousePress([&](int, int, MouseButton button, Mod) { pressed.push_back(button); })
-          .onMouseRelease([&](int, int, MouseButton button, Mod) { released.push_back(button); })
-          .onMouseButtonChange([&](int, int, MouseButton button, bool, Mod) { changed.push_back(button); });
+          .onDoubleClick([&] { ++doubleClicks; })
+          .onMousePress([&](const MouseEvent &event) { pressed.push_back(event.button); })
+          .onMouseRelease([&](const MouseEvent &event) { released.push_back(event.button); })
+          .onMouseButtonChange([&](const MouseEvent &event) { changed.push_back(event.button); });
 
     t.press(50, 50, MouseButton::RIGHT);
     t.release(50, 50, MouseButton::RIGHT);
@@ -175,7 +175,7 @@ TEST_CASE("a right press on a clicked div reaches its parent", "[div][events]") 
     t.box->add<Div>().size(50, 50).onClick([] {});
     t.window->updateStylesAndLayout();
     std::vector<MouseButton> parentPresses{};
-    t.box->onMousePress([&](int, int, MouseButton button, Mod) { parentPresses.push_back(button); });
+    t.box->onMousePress([&](const MouseEvent &event) { parentPresses.push_back(event.button); });
 
     t.press(10, 10);
     t.release(10, 10);

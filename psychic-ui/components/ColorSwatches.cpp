@@ -49,16 +49,13 @@ namespace psychic_ui {
 
         // The chip pressed is the one a click picks
         onMousePress(
-            [this](const int mouseX, const int mouseY, const MouseButton button, Mod /*modifiers*/) {
-                if (button != MouseButton::LEFT || !_skin) {
+            [this](const MouseEvent &event) {
+                if (event.button != MouseButton::LEFT || !_skin) {
                     return;
                 }
-                int windowX = 0;
-                int windowY = 0;
-                localToGlobal(windowX, windowY, mouseX, mouseY);
                 int x = 0;
                 int y = 0;
-                _skin->globalToLocal(x, y, windowX, windowY);
+                _skin->globalToLocal(x, y, static_cast<int>(event.windowX), static_cast<int>(event.windowY));
                 _pressed = _skin->swatchAt(x, y);
             }
         );

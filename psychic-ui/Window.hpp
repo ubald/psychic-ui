@@ -425,31 +425,42 @@ namespace psychic_ui {
 
         // region Mouse
 
+        // The backends call these with the event in window coordinates. The window fills in `windowX` and
+        // `windowY`, `buttons` (from the presses and releases it saw) and, on a press, `clickCount` when the
+        // backend left it 0. A press goes through mouseButtonChanged, mousePressed, then contextMenuRequested for
+        // the right button; a release through mouseButtonChanged, clicked (left button), doubleClicked (from
+        // the second press in a row), then mouseReleased.
+
+        /**
+         * Also follows the div under the mouse with a `tooltip`, to show it after `tooltipDelay`
+         */
+        MouseEventStatus handleMouseMove(const MouseEvent &event, bool handled) override;
+        MouseEventStatus handleMouseScroll(const MouseEvent &event) override;
+
         /**
          * A press first closes the popups it is outside of (`Overlay::pressOutside`); one that closed a modal popup
          * goes no further, and neither does its release.
          * A press on nothing that takes presses goes to the nearest div whose `hitSlop` reaches it, as if it
          * landed on its edge, and so does its release while still within that slop
          */
-        MouseEventStatus handleMouseButtonChange(int mouseX, int mouseY, MouseButton button, bool down, Mod modifiers) override;
+        MouseEventStatus handleMouseButtonChange(const MouseEvent &event) override;
 
         /**
          * The div a press here goes to through its `hitSlop`, and the point on it the press moves to; nullptr
          * when the press lands on something that takes presses, or no slop reaches it
          */
-        Div *hitSlopTarget(int x, int y, int &targetX, int &targetY);
-
-        /**
-         * Also follows the div under the mouse with a `tooltip`, to show it after `tooltipDelay`
-         */
-        MouseEventStatus handleMouseMove(int mouseX, int mouseY, int buttons, Mod modifiers, bool handled) override;
+        Div *hitSlopTarget(float x, float y, float &targetX, float &targetY);
 
         /**
          * The deepest div with a tooltip under a point (window coordinates), as a press would find it
          */
-        Div *tooltipTargetAt(int x, int y);
-        std::chrono::time_point<std::chrono::high_resolution_clock> _lastClick{};
-        unsigned int _clickCount{0};
+        Div *tooltipTargetAt(float x, float y);
+
+        /**
+         * Presses of the same button in a row count as one more click when this close in time and space
+         */
+        static constexpr std::chrono::milliseconds multiClickDelay{500};
+        static constexpr float                     multiClickDistance = 4.0f;
 
         // endregion
 
@@ -557,6 +568,25 @@ namespace psychic_ui {
          */
         std::weak_ptr<Div> _slopTarget{};
 
+        // The buttons held, and the last press, for counting clicks
+        unsigned                                           _buttons{0};
+        std::chrono::time_point<std::chrono::steady_clock> _lastPress{};
+        MouseButton                                        _lastPressButton{MouseButton::NONE};
+        float                                              _lastPressX{0};
+        float                                              _lastPressY{0};
+        unsigned                                           _clickCount{0};
+        GestureTime                                        _lastTap{}; // On the touch clock
+
+        /**
+         * The window's touch gestures as mouse events, from a finger at x, y
+         */
+        MouseEvent touchEvent(float x, float y, MouseButton button = MouseButton::NONE, bool down = false) const;
+
+        /**
+         * The Menu key or Shift+F10: a context menu request on the focused div, at its center
+         */
+        bool requestContextMenuFromKeyboard();
+
         // endregion
 
         // region Touch
@@ -596,7 +626,7 @@ namespace psychic_ui {
         /**
          * The deepest div under a point that can scroll along that axis, the way a press would find it
          */
-        Div *scrollTargetAt(int x, int y, bool horizontal);
+        Div *scrollTargetAt(float x, float y, bool horizontal);
 
         //int _mouseX{0};
         //int _mouseY{0};
