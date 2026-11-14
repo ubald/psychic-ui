@@ -159,8 +159,9 @@ TEST_CASE("AppShell: the sidebar's header moves the window, its controls and the
 
     const auto [closeX, closeY] = Shell::center(header.controls().closeButton());
     CHECK_FALSE(s.window->isDragArea(closeX, closeY));
-    CHECK(header.controls().closeButton().computedStyle().backgroundColor() == s.theme.palette.danger);
-    CHECK(header.controls().maximizeButton().computedStyle().backgroundColor() == s.theme.palette.success);
+    // Grey until the pointer is over them
+    CHECK(header.controls().closeButton().computedStyle().backgroundColor() == s.theme.palette.lineStrong);
+    CHECK(header.controls().maximizeButton().computedStyle().backgroundColor() == s.theme.palette.lineStrong);
 
     const auto [itemX, itemY] = Shell::center(*s.inbox);
     CHECK_FALSE(s.window->isDragArea(itemX, itemY));
