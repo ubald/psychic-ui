@@ -4,7 +4,6 @@
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/Text.hpp>
 #include <psychic-ui/components/Scroller.hpp>
-#include <psychic-ui/themes/palette.hpp>
 #include <example/demo.hpp>
 
 namespace psychic_ui {
@@ -15,7 +14,7 @@ namespace psychic_ui {
     };
 
     Scrollers::Scrollers() : Div() {
-        tag("Scroller")
+        tag("Scrollers")
             .classNames({"demo-panel"})
             .padding(48);
 
@@ -23,23 +22,15 @@ namespace psychic_ui {
             .addClassName("h2");
 
         auto contents0 = std::make_shared<Div>();
+        contents0->shrink(0); // Its own height, scrolled
         //contents0->style()
         //         .alignItems(Align::Start)
         //         .direction(Direction::Row)
         //         .padding(12);
         for (int i = 0; i < 30; ++i) {
-            auto &c = contents0->add<Div>()
-                .borderRadius(0)
-                .margin(12)
-                .width(128.0f)
-                .height(64.0f)
-                .backgroundColor(palette::base03)
-                .borderColor(palette::base06);
+            contents0->add<Div>().addClassName("box");
         }
-        auto &scroller0 = add<Scroller>(contents0)
-            .margin(12)
-            .border(1)
-            .borderColor(palette::base00);
+        add<Scroller>(contents0);
 
         add<Label>("Single Line Text")
             .addClassName("h2");
@@ -48,10 +39,7 @@ namespace psychic_ui {
         auto contents1 = std::make_shared<Text>(lorem + ' ' + lorem + ' ' + lorem);
         contents1->multiline(false)
                  .padding(12);
-        auto &scroller1 = add<Scroller>(contents1)
-            .margin(12)
-            .border(1)
-            .borderColor(palette::base00);
+        add<Scroller>(contents1);
 
 
         add<Label>("Single Line Text (viewport.style.flexDirection=row)")
@@ -64,9 +52,6 @@ namespace psychic_ui {
                  .padding(12);
         auto &scroller2 = add<Scroller>(contents2);
         scroller2.viewport()->direction(Direction::Row);
-        scroller2.margin(12)
-                 .border(1)
-                 .borderColor(palette::base00);
 
         add<Label>("Multiline Text")
             .addClassName("h2");
@@ -75,10 +60,7 @@ namespace psychic_ui {
         auto contents3 = std::make_shared<Text>(lorem + '\n' + lorem + '\n' + lorem);
         contents3->multiline(true)
                  .padding(12);
-        auto &scroller3 = add<Scroller>(contents3)
-            .margin(12)
-            .border(1)
-            .borderColor(palette::base00);
+        add<Scroller>(contents3);
 
 
         add<Label>("Multiline Text (viewport.style.flexDirection=row)")
@@ -92,9 +74,6 @@ namespace psychic_ui {
                  .padding(12);
         auto &scroller4 = add<Scroller>(contents4);
         scroller4.viewport()->direction(Direction::Row);
-        scroller4.margin(12)
-                 .border(1)
-                 .borderColor(palette::base00);
     }
 
 }

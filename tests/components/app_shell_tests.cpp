@@ -25,7 +25,7 @@ namespace {
             inbox = &top.item("Inbox", "inbox").count("3");
             auto &show = shell.sidebar().section("Show");
             cues     = &show.item("Cues", "list-detail").count("42");
-            fixtures = &show.item("Fixtures", "bulb");
+            fixtures = &show.item("Fixtures", "layers");
             layout();
         }
 
@@ -83,6 +83,12 @@ TEST_CASE("AppShell: the sidebar the window's height, the page inset beside it",
     CHECK(page.computedStyle().backgroundColor() == s.theme.palette.page);
     CHECK(s.shell.computedStyle().backgroundColor() == s.theme.palette.frame);
 
+    // Sections after the first set apart by a hairline
+    const Div *first  = s.inbox->parent();
+    const Div *second = s.cues->parent();
+    CHECK(first->computedStyle().borderTop() == 0.0f);
+    CHECK(second->computedStyle().borderTop() == s.theme.metrics.border);
+
     // Rows: 32 px, the count after the label
     CHECK(s.cues->getHeight() == s.theme.metrics.pointer.rowSm);
     CHECK(s.cues->count() == "42");
@@ -114,6 +120,16 @@ TEST_CASE("AppShell: one current item, picked by a click", "[components][appshel
     s.shell.sidebar().select(s.inbox);
     CHECK(s.inbox->current());
     CHECK(changes == std::vector<SidebarItem *>{s.cues, s.fixtures, nullptr, s.inbox});
+
+    // An item that acts instead of navigating only clicks
+    auto &action = s.shell.sidebar().section().item("Theme", "sun").selectable(false);
+    int  clicks  = 0;
+    action.onClick([&]() { ++clicks; });
+    s.layout();
+    s.click(action);
+    CHECK(clicks == 1);
+    CHECK_FALSE(action.current());
+    CHECK(s.inbox->current());
 }
 
 TEST_CASE("AppShell: the keyboard moves along the items and picks one", "[components][appshell]") {
@@ -178,4 +194,25 @@ TEST_CASE("Text roles: three levels of text, as classes the skin set colors", "[
     box.addClassName("text-secondary");
     s.layout();
     CHECK(inner.computedStyle().color() == s.theme.palette.textSecondary);
+}
+
+TEST_CASE("AppShell: a page's scroller ends with the page panel, so its content's end shows", "[components][appshell][scroll]") {
+    Shell s;
+    Div &page = s.shell.page();
+    page.add<PageHeader>("Long", "file");
+    auto &content  = page.add<Div>().grow(1).shrink(1).basis(0);
+    auto &scroller = content.add<Div>().height(100_pct).padding(24).overflow(Overflow::Scroll);
+    scroller.add<Div>().height(2000).shrink(0);
+    s.layout();
+
+    // Within the page, under its header: never taller than the window
+    const auto [pageX, pageY]         = Shell::origin(page);
+    const auto [scrollerX, scrollerY] = Shell::origin(scroller);
+    CHECK(scrollerY == pageY + static_cast<int>(s.theme.metrics.barHeader));
+    CHECK(scrollerY + scroller.getHeight() == pageY + page.getHeight());
+
+    // Scrolled all the way, the content's end meets the scroller's
+    scroller.scroll(0, -100000);
+    s.layout();
+    CHECK(scroller.scrollY() == static_cast<int>(scroller.getHeight()) - (24 + 2000));
 }

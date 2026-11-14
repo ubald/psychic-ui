@@ -214,6 +214,17 @@ TEST_CASE("Default skins: buttons are pills, their variants skins", "[skins][def
     CHECK(icon->computedStyle().display() == Display::Flex);
     CHECK(icon->getWidth() == f.theme.metrics.iconSm);
     CHECK(part(*secondary.skin(), "icon")->computedStyle().display() == Display::None);
+
+    // An icon alone, on a square
+    auto &iconButton = f.window->appContainer().add<Button>().icon("more").addClassName("icon-button");
+    f.layout();
+    CHECK(iconButton.getWidth() == f.theme.metrics.pointer.controlSm);
+    CHECK(iconButton.getHeight() == f.theme.metrics.pointer.controlSm);
+    Div *alone = part(*iconButton.skin(), "icon");
+    REQUIRE(alone);
+    CHECK(alone->getWidth() == f.theme.metrics.iconMd);
+    CHECK(alone->getHeight() == f.theme.metrics.iconMd);
+    CHECK(part(*iconButton.skin(), "label")->computedStyle().display() == Display::None);
 }
 
 TEST_CASE("Default skins: a checked check box fills its box with the accent", "[skins][default][checkbox]") {

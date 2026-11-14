@@ -70,6 +70,18 @@ namespace psychic_ui {
         }
 
         /**
+         * Whether clicking it makes it current (true): false for an item that acts instead of navigating
+         * (opening a menu, a dialog), which only emits `clicked`
+         */
+        bool selectable() const { return _selectable; }
+
+        template<class Self>
+        Self &selectable(this Self &self, detail::BoolArg selectable) {
+            static_cast<SidebarItem &>(self)._selectable = selectable.value;
+            return self;
+        }
+
+        /**
          * The sidebar it is in, or nullptr
          */
         Sidebar *sidebar() const;
@@ -82,6 +94,7 @@ namespace psychic_ui {
         Label *_label{nullptr};
         Label   *_count{nullptr};
         bool    _current{false};
+        bool    _selectable{true};
         Sidebar *_owner{nullptr}; // The sidebar it is current in, while it is
 
         void updateIcon(std::string_view icon);

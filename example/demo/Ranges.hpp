@@ -3,6 +3,7 @@
 #include <string>
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/components/Box.hpp>
+#include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/Range.hpp>
 
 namespace psychic_ui {
@@ -13,44 +14,33 @@ namespace psychic_ui {
             tag("Ranges")
                 .classNames({"demo-panel"});
 
-            auto &container = add<HBox>();
+            auto &container = add<HBox>().addClassName("columns");
 
-            auto &left = container.add<Div>()
-                .grow(1)
-                .shrink(1);
+            auto &left = container.add<VBox>().addClassName("column");
+            left.add<Label>("Horizontal").addClassName("h4");
+            left.add<Label>("A thin track, the accent up to the value, the value after it").role(TextRole::Tertiary);
 
-            left.add<Label>("Horizontal");
+            const auto field = [](Div &parent, const std::string &name) -> Div & {
+                auto &row = parent.add<HBox>().addClassName("field");
+                row.add<Label>(name).addClassName("name").role(TextRole::Tertiary);
+                return row;
+            };
 
-            auto &lcont = left.add<Div>();
+            field(left, "Intensity").add<Range<int>>(0, 100, 60, nullptr).grow(1);
+            field(left, "Zoom").add<Range<float>>(1.23f, 4.56f, 2.0f, nullptr).grow(1);
+            field(left, "Disabled").add<Range<int>>(0, 10, 3, nullptr).grow(1).enabled(false);
 
-            lcont.add<Range<int>>()
-                .range(0, 10);
+            auto &right = container.add<VBox>().addClassName("column");
+            right.add<Label>("Vertical").addClassName("h4");
+            right.add<Label>("Filled from the bottom; no room for the value").role(TextRole::Tertiary);
 
-            lcont.add<Range<float>>()
-                .range(1.23f, 4.56f);
+            auto &verticals = right.add<HBox>().addClassName("verticals");
 
-            auto &right = container.add<Div>()
-                .grow(1)
-                .shrink(1);
+            verticals.add<Range<int>>(0, 10, 7, nullptr)
+                     .orientation(Orientation::Vertical);
 
-            right.add<Label>("Vertical");
-
-            auto &rcont = right.add<HBox>()
-                .grow(1);
-
-            rcont.add<Range<int>>()
-                 .range(0, 10)
-                 .orientation(Orientation::Vertical);
-
-            rcont.add<Range<float>>()
-                 .range(1.23f, 4.56f)
-                 .orientation(Orientation::Vertical);
-
-//            add<Label>("Skinned");
-//            add<Range<int>>(std::make_shared<MySliderSkin>())
-//                ->range(0, 10);
-//            add<Range<float>>(std::make_shared<MySliderSkin>())
-//                ->range(1.23f, 4.56f);
+            verticals.add<Range<float>>(1.23f, 4.56f, 2.0f, nullptr)
+                     .orientation(Orientation::Vertical);
         }
     };
 }

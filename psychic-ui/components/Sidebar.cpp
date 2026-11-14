@@ -26,7 +26,7 @@ namespace psychic_ui {
 
         clicked.subscribe(
             [this]() {
-                if (_enabled) {
+                if (_enabled && _selectable) {
                     updateCurrent(true);
                 }
             }

@@ -177,7 +177,7 @@ namespace psychic_ui {
             .skin("title-bar")
             .width(11)
             .height(11)
-            .padding(0)
+            .paddingHorizontal(0) // Over the button's
             .border(0);
 
         rule("WindowControls Button.close").backgroundColor(p.danger);
@@ -217,7 +217,7 @@ namespace psychic_ui {
         rule("Button.icon-button")
             .width(s.controlSm)
             .height(s.controlSm)
-            .padding(0)
+            .paddingHorizontal(0) // Over the button's
             .iconSize(m.iconMd)
             .color(p.textMuted)
             .backgroundColor(transparent)

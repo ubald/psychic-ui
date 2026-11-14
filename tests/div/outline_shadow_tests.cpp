@@ -180,3 +180,15 @@ TEST_CASE("a shadow spreads, and a second layer goes under the first", "[div][sh
         CHECK(near(scene.at(*scene.box, 50, 108), 255, 0, 0)); // The second, past the first
     }
 }
+
+TEST_CASE("borders on some sides only are drawn on the div's own edges", "[div][border]") {
+    Scene scene;
+    scene.box->borderTop(2).borderLeft(2).borderColor(argb(0xFF000000));
+    scene.render();
+    CHECK(near(scene.at(*scene.box, 50, 0), 0, 0, 0));   // Its top edge
+    CHECK(near(scene.at(*scene.box, 0, 50), 0, 0, 0));   // Its left edge
+    CHECK(white(scene.at(*scene.box, 50, 50)));
+    CHECK(white(scene.at(*scene.box, 50, -50)));         // Not its parent's top edge
+    CHECK(white(scene.at(*scene.box, -50, 50)));         // Nor its left
+    CHECK(white(scene.at(*scene.box, 50, 99)));
+}

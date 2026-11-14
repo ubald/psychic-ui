@@ -35,8 +35,7 @@ namespace psychic_ui {
              .display(icon.empty() ? Display::None : Display::Flex);
 
         _title = &add<Label>(title);
-        _title->addClassName("title")
-              .grow(1); // Pushes what is added after it to the end
+        _title->addClassName("title");
     }
 
     void PageHeader::updateIcon(const std::string_view icon) {

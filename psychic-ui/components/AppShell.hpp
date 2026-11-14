@@ -41,7 +41,8 @@ namespace psychic_ui {
      * @class PageHeader
      *
      * A page's title bar, the height of the sidebar's header so that their lines meet: an optional icon and the
-     * title (the `.icon` and `.title` parts), then what is added to it (actions, a menu bar), pushed to the end.
+     * title (the `.icon` and `.title` parts), then what is added to it (a menu bar, actions; a Spacer pushes what
+     * follows it to the end).
      */
     class PageHeader : public Div {
     public:

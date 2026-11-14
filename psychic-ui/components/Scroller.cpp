@@ -6,6 +6,7 @@ namespace psychic_ui {
         Div(),
         _content(std::move(content)),
         _viewport(std::make_shared<Div>()) {
+        tag("Scroller");
         _viewport->add(_content);
         _viewport->width(100_pct)
                  .height(100_pct)

@@ -1168,7 +1168,7 @@ namespace psychic_ui {
         // endregion
         // region Individual Borders
 
-        // TODO: Optimize
+        // In the parent's coordinates, like _rect
         if (_drawComplexBorders && !_drawRoundRect) {
             SkPaint paint;
             paint.setAntiAlias(false);
@@ -1188,7 +1188,7 @@ namespace psychic_ui {
                 }
                 if (draw) {
                     float hw = _borderLeft / 2.0f;
-                    canvas->drawLine(hw, -0.5f, hw, _rect.bottom() + 0.5f, paint);
+                    canvas->drawLine(_rect.left() + hw, _rect.top() - 0.5f, _rect.left() + hw, _rect.bottom() + 0.5f, paint);
                 }
             }
 
@@ -1206,7 +1206,7 @@ namespace psychic_ui {
                 }
                 if (draw) {
                     float hw = _borderRight / 2.0f;
-                    canvas->drawLine(_rect.right() - hw, -0.5f, _rect.right() - hw, _rect.bottom() + 0.5f, paint);
+                    canvas->drawLine(_rect.right() - hw, _rect.top() - 0.5f, _rect.right() - hw, _rect.bottom() + 0.5f, paint);
                 }
             }
 
@@ -1224,7 +1224,7 @@ namespace psychic_ui {
                 }
                 if (draw) {
                     float hw = _borderTop / 2.0f;
-                    canvas->drawLine(-0.5f, hw, _rect.right() + 0.5f, hw, paint);
+                    canvas->drawLine(_rect.left() - 0.5f, _rect.top() + hw, _rect.right() + 0.5f, _rect.top() + hw, paint);
                 }
             }
 
@@ -1242,7 +1242,7 @@ namespace psychic_ui {
                 }
                 if (draw) {
                     float hw = _borderBottom / 2.0f;
-                    canvas->drawLine(-0.5f, _rect.bottom() - hw, _rect.right() + 0.5f, _rect.bottom() - hw, paint);
+                    canvas->drawLine(_rect.left() - 0.5f, _rect.bottom() - hw, _rect.right() + 0.5f, _rect.bottom() - hw, paint);
                 }
             }
         }

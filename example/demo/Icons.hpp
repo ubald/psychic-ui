@@ -45,7 +45,7 @@ namespace psychic_ui {
         }
 
         // Rows of a fixed count, which fit the demo window
-        constexpr std::size_t perRow = 11;
+        constexpr std::size_t perRow = 9;
         auto     &grid = scroller.add<Div>().addClassName("icon-grid");
         Div      *row  = nullptr;
         std::size_t index = 0;
