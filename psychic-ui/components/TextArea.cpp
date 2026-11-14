@@ -41,6 +41,10 @@ namespace psychic_ui {
         );
     }
 
+    Div *TextArea::focusDelegate() {
+        return _textDisplay.get();
+    }
+
     std::shared_ptr<Text> TextArea::textDisplay() {
         return _textDisplay;
     };

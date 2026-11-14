@@ -30,6 +30,12 @@ namespace psychic_ui {
 
         std::shared_ptr<Text> textDisplay();
         std::shared_ptr<Scroller> textScroller();
+
+        /**
+         * The text display: Tab, or a press beside the text, lets one type
+         */
+        Div *focusDelegate() override;
+
         /**
          * The text changed, with the new text
          */

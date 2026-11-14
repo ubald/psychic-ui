@@ -2,6 +2,25 @@
 
 namespace psychic_ui {
 
+    TextInputSkinBase::TextInputSkinBase() :
+        TextInputSkin() {
+        // Out of the layout: the skin's justify and alignment put it where the text starts
+        _placeholder = &add<Label>();
+        _placeholder->addClassName("placeholder")
+                    .mouseEnabled(false)
+                    .position(Position::Absolute)
+                    .visible(false);
+    }
+
+    void TextInputSkinBase::setText(const std::string &text) {
+        _placeholder->visible(text.empty() && !_placeholder->text().empty());
+    }
+
+    void TextInputSkinBase::setPlaceholder(const std::string &placeholder) {
+        _placeholder->text(placeholder);
+        setText(component() ? component()->text() : "");
+    }
+
     void TextInputSkinBase::addedToComponent() {
         add(component()->textDisplay());
     }

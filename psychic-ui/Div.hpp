@@ -322,6 +322,13 @@ namespace psychic_ui {
         bool hasFocus() const;
 
         /**
+         * Where the focus goes instead when this is the deepest div taking it on the path to the div being focused,
+         * unless that path already passes through it: a text field hands it to its text, so that Tab or a press beside
+         * the text lets one type. A descendant; none by default.
+         */
+        virtual Div *focusDelegate() { return nullptr; }
+
+        /**
          * Used by the window, which manages the focus path
          */
         void setFocused(bool focused);

@@ -776,11 +776,27 @@ namespace psychic_ui {
         }
 
         // Build the path
-        std::vector<Div *> path{};
-        Div                *c = component;
-        while (c != nullptr) {
-            path.insert(path.begin(), c);
-            c = c->parent();
+        const auto pathTo = [](Div *div) {
+            std::vector<Div *> path{};
+            for (Div *c = div; c != nullptr; c = c->parent()) {
+                path.insert(path.begin(), c);
+            }
+            return path;
+        };
+        std::vector<Div *> path = pathTo(component);
+
+        // The deepest div taking the focus may hand it on to a descendant (a text field to its text)
+        for (auto it = path.rbegin(); it != path.rend(); ++it) {
+            if ((*it)->focusEnabled()) {
+                Div *delegate = (*it)->focusDelegate();
+                if (delegate && std::find(path.cbegin(), path.cend(), delegate) == path.cend()) {
+                    std::vector<Div *> delegated = pathTo(delegate);
+                    if (std::find(delegated.cbegin(), delegated.cend(), *it) != delegated.cend()) {
+                        path = std::move(delegated);
+                    }
+                }
+                break;
+            }
         }
 
         // Compare with current and unfocus

@@ -171,7 +171,8 @@ TEST_CASE("switching skin sets hatches every component again", "[skins][switch]"
         // The text input's text display moved to its new skin, with its text
         REQUIRE(input.skin() != inputSkin);
         CHECK(input.textDisplay()->parent() == input.skin().get());
-        CHECK(inputSkin->children().empty());
+        REQUIRE(inputSkin->children().size() == 1); // Only its own part, the placeholder
+        CHECK(inputSkin->children()[0]->classNames().contains("placeholder"));
         CHECK(input.text() == "Some text");
         CHECK(input.textDisplay()->text() == "Some text");
         CHECK(area.textScroller()->parent() == area.skin().get());
