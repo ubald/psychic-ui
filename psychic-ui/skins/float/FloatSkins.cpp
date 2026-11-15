@@ -128,6 +128,7 @@ namespace psychic_ui {
             rule((name + ".selected").c_str())
                 .borderLeftColor(transparent)
                 .backgroundColor(p.accentSoft);
+            rule((name + ".sliding.selected").c_str()).backgroundColor(p.accentSoft.over(p.page)); // Opaque, as it slides
         }
         rule("ListRow.selected .title").color(p.accentText);
         rule("DataGridRow.selected").color(p.accentText);

@@ -1096,9 +1096,22 @@ namespace psychic_ui {
 
         canvas->translate(_x, _y);
 
-        // Back-to-front: children are in document order, the last one is on top
+        // Back-to-front: children are in document order, the last one is on top, except that those sliding to their
+        // layout places go over those that don't (rows crossing as they are sorted, or passing over children fading in)
+        bool sliding = false;
         for (auto &child: _children) {
-            child->render(canvas);
+            if (child->layoutSliding()) {
+                sliding = true;
+            } else {
+                child->render(canvas);
+            }
+        }
+        if (sliding) {
+            for (auto &child: _children) {
+                if (child->layoutSliding()) {
+                    child->render(canvas);
+                }
+            }
         }
 
         canvas->restore();

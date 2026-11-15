@@ -421,6 +421,8 @@ namespace psychic_ui {
         // What moved slides from where it was painted (layout transitions), before the paint
         if (laidOut) {
             slideLayout();
+            // What started or stopped sliding has its `sliding` class styled for this paint (paint only)
+            styles();
         }
     }
 

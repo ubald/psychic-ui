@@ -124,6 +124,24 @@ namespace psychic_ui {
             return fromARGB((static_cast<std::uint32_t>(alpha) << 24) | (_argb & 0x00FFFFFFu));
         }
 
+        /**
+         * This color painted over another (source over): what shows where a translucent fill lies on `below`
+         */
+        constexpr Color over(const Color &below) const {
+            const std::uint32_t a  = alpha();
+            const std::uint32_t ba = below.alpha() * (255u - a) / 255u; // What of the color below shows through
+            const std::uint32_t oa = a + ba;
+            if (oa == 0) {
+                return Color{};
+            }
+            const auto channel = [&](const int shift) {
+                const std::uint32_t c = (_argb >> shift) & 0xFFu;
+                const std::uint32_t b = (below._argb >> shift) & 0xFFu;
+                return ((c * a + b * ba + oa / 2) / oa) << shift;
+            };
+            return fromARGB((oa << 24) | channel(16) | channel(8) | channel(0));
+        }
+
         constexpr bool operator==(const Color &) const = default;
 
     private:

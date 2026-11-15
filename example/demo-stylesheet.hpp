@@ -370,6 +370,10 @@ public:
                .padding(m.space(2))
                .paddingTop(m.space(1));
 
+        // The layers' tree sits on the panel, not on a page: its sliding nodes hide what they pass over in its color
+        manager->style("CanvasPage .layers TreeNode.sliding")
+               .backgroundColor(p.surface);
+
         manager->style("CanvasPage .layers .heading")
                .fontSize(theme.type.xs.size)
                .lineHeight(theme.type.xs.leading)

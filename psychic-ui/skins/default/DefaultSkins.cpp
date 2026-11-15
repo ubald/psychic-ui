@@ -1086,7 +1086,9 @@ namespace psychic_ui {
         // region Lists
 
         // Shared by the rows of lists and grids: raised under the mouse, the selection raised with an accent bar at
-        // its start (a 2 px left border, transparent until then, so that nothing moves), the focus ring inside
+        // its start (a 2 px left border, transparent until then, so that nothing moves), the focus ring inside.
+        // Sliding to a new place (a sort), a row hides the rows it crosses: opaque at once (no blend) in the page's
+        // color, which lists sit on, so that it looks the same; the selection keeps its fill, made opaque
         const auto selectableRow = [&](const std::string &row) {
             rule(row.c_str())
                 .paddingLeft(m.gutter - 2)
@@ -1099,9 +1101,13 @@ namespace psychic_ui {
                 .transition({P::color, P::backgroundColor, P::borderLeftColor, P::outlineColor}, quick);
             rule((row + ":last-child").c_str()).borderBottom(0);
             rule((row + ":hover").c_str()).backgroundColor(p.raised);
+            rule((row + ".sliding").c_str())
+                .backgroundColor(p.page)
+                .transition({P::color, P::borderLeftColor, P::outlineColor}, quick);
             rule((row + ".selected").c_str())
                 .backgroundColor(p.raised)
                 .borderLeftColor(p.accent);
+            rule((row + ".sliding.selected").c_str()).backgroundColor(p.raised.over(p.page));
             rule((row + ":disabled").c_str()).opacity(0.45f);
             focusRing(rule((row + ":focus-visible").c_str()), p, m).outlineOffset(-m.focusRing);
         };
@@ -1182,6 +1188,10 @@ namespace psychic_ui {
         // A tree: the sidebar's rows (32 px, 13 px text), indented a step per level; the selection raised in a
         // strong hairline, as Pivotal's
         rule("Tree").gap(1);
+
+        // A node sliding down or up (one above it expands or collapses) hides what it passes over, the children fading
+        // in: opaque in the page's color, under its row's own fill
+        rule("TreeNode.sliding").backgroundColor(p.page);
 
         text(rule("TreeRow"), t.base, t.regular, s)
             .gap(m.space(1.5f))

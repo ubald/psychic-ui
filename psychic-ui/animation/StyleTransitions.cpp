@@ -387,6 +387,13 @@ namespace psychic_ui {
         return _layoutSlide && _layoutSlide->offset->tween.running();
     }
 
+    void Div::updateSlidingClass() {
+        static const std::string sliding{"sliding"};
+        if (layoutSliding() != _classNames.contains(sliding)) {
+            updateClassName(sliding, layoutSliding());
+        }
+    }
+
     void Div::updateLayoutSlides(const SlideWalk &walk) {
         if (_computedStyle.display() == Display::None) {
             return; // Not laid out: what it holds appears in place once it is shown again
@@ -402,7 +409,13 @@ namespace psychic_ui {
         } else {
             if (!_layoutSlide) {
                 _layoutSlide = std::make_unique<LayoutSlide>();
-                _layoutSlide->offset->tween = Tween{Channels{}, 2};
+                _layoutSlide->offset->tween  = Tween{Channels{}, 2};
+                // The tween ends (or jumps) as the window advances it: the class goes with it
+                _layoutSlide->offset->update = [weak = weak_from_this()](const Channels &) {
+                    if (const auto div = weak.lock()) {
+                        div->updateSlidingClass();
+                    }
+                };
             }
             LayoutSlide &slide = *_layoutSlide;
             Tween       &tween = slide.offset->tween;
@@ -427,6 +440,7 @@ namespace psychic_ui {
             slide.pass      = walk.pass;
             slide.container = _parent;
         }
+        updateSlidingClass();
 
         const Timing &timing = _computedStyle.layoutTransition();
         const SlideWalk next{

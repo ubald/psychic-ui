@@ -1,12 +1,14 @@
 #include <chrono>
 #include <cmath>
 #include <memory>
+#include <vector>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/DataGrid.hpp>
 #include <psychic-ui/components/Toast.hpp>
 #include <psychic-ui/components/Tree.hpp>
+#include <psychic-ui/skins/float/FloatSkins.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include "../backends/fake_system_window.hpp"
 
@@ -22,6 +24,22 @@ namespace {
             setStyleManager(std::make_shared<StyleManager>());
             setWindowSize(400, 300);
         }
+
+        void paint(SkCanvas *canvas) { render(canvas); }
+    };
+
+    /**
+     * A div that notes when it is painted
+     */
+    struct Painted : Div {
+        std::vector<const Div *> &log;
+
+        explicit Painted(std::vector<const Div *> &log) : log(log) {}
+
+        void draw(SkCanvas *canvas) override {
+            Div::draw(canvas);
+            log.push_back(this);
+        }
     };
 
     /**
@@ -34,14 +52,25 @@ namespace {
         Div                     *a{nullptr};
         Div                     *b{nullptr};
         Div                     *c{nullptr};
+        std::vector<const Div *> painted{};
 
         Column() {
             list = &window->appContainer().add<Div>();
             list->layoutTransition(slide);
-            a = &list->add<Div>().height(20).shrink(0);
-            b = &list->add<Div>().height(20).shrink(0);
-            c = &list->add<Div>().height(20).shrink(0);
+            a = &list->add<Painted>(painted).height(20).shrink(0);
+            b = &list->add<Painted>(painted).height(20).shrink(0);
+            c = &list->add<Painted>(painted).height(20).shrink(0);
             frame(0ms);
+        }
+
+        /**
+         * The order its rows are painted in
+         */
+        std::vector<const Div *> paint() {
+            painted.clear();
+            const auto surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(400, 300));
+            window->paint(surface->getCanvas());
+            return painted;
         }
 
         /**
@@ -98,6 +127,30 @@ TEST_CASE("A child that a layout moves slides from where it was painted, and the
     CHECK(f.b->layoutOffsetY() == 0.0f);
     CHECK(f.c->layoutOffsetY() == 0.0f);
     CHECK_FALSE(f.b->layoutSliding());
+    CHECK(f.settled());
+}
+
+TEST_CASE("Children have the `sliding` class while they slide, and paint over those that don't", "[animation][layout-transition]") {
+    Column f{};
+    CHECK(f.paint() == std::vector<const Div *>{f.a, f.b, f.c});
+
+    f.move(*f.a, 1); // b, a, c: b goes up, a down, c stays
+    f.frame(0ms);
+    // Styled with it before the paint that starts the slide
+    CHECK(f.b->classNames().contains("sliding"));
+    CHECK(f.a->classNames().contains("sliding"));
+    CHECK_FALSE(f.c->classNames().contains("sliding"));
+    CHECK(f.window->styleManager()->valid());
+    CHECK_FALSE(f.window->styleDirty());
+    // Those that don't slide first, then those that do, each in document order
+    CHECK(f.paint() == std::vector<const Div *>{f.c, f.b, f.a});
+
+    f.frame(50ms);
+    CHECK(f.a->classNames().contains("sliding"));
+    f.frame(100ms);
+    CHECK_FALSE(f.a->classNames().contains("sliding"));
+    CHECK_FALSE(f.b->classNames().contains("sliding"));
+    CHECK(f.paint() == std::vector<const Div *>{f.b, f.a, f.c});
     CHECK(f.settled());
 }
 
@@ -272,6 +325,13 @@ namespace {
             return !window->animating() && !window->needsFrame();
         }
 
+        /**
+         * Whether it paints a background
+         */
+        static bool filled(const Div &div) {
+            return div.computedStyle().has(Property::backgroundColor) && div.computedStyle().backgroundColor().alpha() > 0;
+        }
+
         static int windowY(const Div &div) {
             int x = 0;
             int y = 0;
@@ -318,7 +378,87 @@ TEST_CASE("A sorted grid's rows slide to their new places, keeping the selection
     f.frame(500ms + motion.medium);
     CHECK(a.layoutOffsetY() == 0.0f);
     CHECK(c.layoutOffsetY() == 0.0f);
+    // Their opaque background blends back to nothing over the page, which looks the same
+    f.frame(500ms + motion.medium + motion.fast);
     CHECK(f.settled());
+}
+
+TEST_CASE("Rows sliding are opaque in the page's color, the selection in its own fill", "[animation][layout-transition][datagrid]") {
+    Components f{};
+    const Palette &p = themes::pivotalDark.palette;
+    auto &grid = f.window->appContainer().add<DataGrid>()
+                  .height(300)
+                  .columns({{"Name"}, {"Size", 80}});
+    auto &c = grid.row({"c", "3"});
+    auto &b = grid.row({"b", "2"});
+    auto &a = grid.row({"a", "1"});
+    f.frame(0ms);
+    f.frame(500ms);
+    grid.select(&a);
+    f.frame(500ms);
+    f.frame(1000ms);
+    REQUIRE(f.settled());
+    REQUIRE_FALSE(Components::filled(c));
+
+    grid.sort(0, SortOrder::Ascending);
+    f.frame(1000ms);
+    REQUIRE(c.layoutSliding());
+    CHECK(c.classNames().contains("sliding"));
+    CHECK(c.computedStyle().backgroundColor() == p.page); // At once, from the first frame
+    CHECK(a.computedStyle().backgroundColor() == p.raised.over(p.page));
+    CHECK(a.computedStyle().borderLeftColor() == p.accent); // Its accent bar stays
+    CHECK_FALSE(b.layoutSliding());
+    CHECK_FALSE(Components::filled(b));
+
+    // There: the class goes, the fill blends back to nothing over the page
+    f.frame(2000ms);
+    CHECK_FALSE(c.classNames().contains("sliding"));
+    f.frame(2000ms + motion.fast);
+    CHECK_FALSE(Components::filled(c));
+    CHECK(f.settled());
+    CHECK(a.computedStyle().backgroundColor() == p.raised);
+}
+
+TEST_CASE("Float's selection, translucent, is made opaque while it slides", "[animation][layout-transition][datagrid][float]") {
+    Components f{};
+    f.window->skinSet<FloatSkins>();
+    const Palette &p = f.window->styleManager()->theme().palette;
+    REQUIRE(p.accentSoft.alpha() < 255);
+    auto &grid = f.window->appContainer().add<DataGrid>()
+                  .height(300)
+                  .columns({{"Name"}, {"Size", 80}});
+    auto &c = grid.row({"c", "3"});
+    grid.row({"b", "2"});
+    auto &a = grid.row({"a", "1"});
+    grid.select(&a);
+    f.frame(0ms);
+    f.frame(1000ms);
+    REQUIRE(f.settled());
+
+    grid.sort(0, SortOrder::Ascending);
+    f.frame(1000ms);
+    REQUIRE(a.layoutSliding());
+    CHECK(a.computedStyle().backgroundColor() == p.accentSoft.over(p.page));
+    CHECK(a.computedStyle().backgroundColor().alpha() == 255);
+    CHECK(c.computedStyle().backgroundColor() == p.page);
+}
+
+TEST_CASE("A tree's nodes sliding are opaque in the page's color, over the children fading in", "[animation][layout-transition][tree]") {
+    Components f{};
+    auto &tree   = f.window->appContainer().add<Tree>();
+    auto &src    = tree.node("src", "folder");
+    src.node("main.cpp", "file");
+    auto &readme = tree.node("README.md", "file");
+    f.frame(0ms);
+    f.frame(500ms);
+    REQUIRE(f.settled());
+
+    src.expanded(true);
+    f.frame(500ms);
+    REQUIRE(readme.layoutSliding());
+    CHECK(readme.computedStyle().backgroundColor() == themes::pivotalDark.palette.page);
+    CHECK_FALSE(src.classNames().contains("sliding"));
+    CHECK_FALSE(Components::filled(src));
 }
 
 TEST_CASE("A tree's rows below a node slide down as it expands, up as it collapses", "[animation][layout-transition][tree]") {

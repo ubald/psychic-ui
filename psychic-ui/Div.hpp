@@ -384,7 +384,9 @@ namespace psychic_ui {
         float layoutOffsetY() const;
 
         /**
-         * Whether it slides to its layout place (`layoutOffsetX/Y` aren't 0)
+         * Whether it slides to its layout place (`layoutOffsetX/Y` aren't 0). It has the `sliding` class meanwhile
+         * (styled before the paint that starts it; its rules should only paint, a row's opaque background), and is
+         * painted after its siblings that don't slide.
          */
         bool layoutSliding() const;
 
@@ -1008,6 +1010,11 @@ namespace psychic_ui {
          * After a layout (`Window::updateStylesAndLayout`), down the tree: start, retarget or drop the layout slides
          */
         void updateLayoutSlides(const SlideWalk &walk);
+
+        /**
+         * The `sliding` class while `layoutSliding()`
+         */
+        void updateSlidingClass();
 
         /**
          * Lose the starting class (the window lets it go): its next style transitions from it
