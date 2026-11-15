@@ -396,7 +396,9 @@ TEST_CASE("Toasts slide into the place of one that leaves, which fades where it 
     CHECK(first.layoutOffsetY() == 0.0f);
     CHECK(f.settled());
 
-    // The bottom one slides back under the edge, and the one above follows it down
+    // The bottom one slides back under the edge, and the one above follows it down (dismissed at 1000 ms: what it
+    // starts starts then)
+    f.frame(1000ms);
     const int thirdY = Components::windowY(third);
     third.dismiss();
     CHECK_FALSE(hasClass(third, "in-place"));
