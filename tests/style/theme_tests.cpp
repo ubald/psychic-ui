@@ -3,9 +3,11 @@
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/themes/float.hpp>
 #include <psychic-ui/themes/one-dark.hpp>
 #include <psychic-ui/themes/one-light.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
+#include <psychic-ui/themes/psychic.hpp>
 #include <psychic-ui/Div.hpp>
 
 using namespace psychic_ui;
@@ -124,4 +126,16 @@ TEST_CASE("the Pivotal themes are Pivotal's tokens", "[style][theme]") {
     CHECK(theme.metrics.pointer.rowSm == 32.0f);
     CHECK(theme.metrics.space(2.5f) == 10.0f);
     CHECK(theme.metrics.radius.button > theme.metrics.pointer.controlMd);
+}
+
+TEST_CASE("every named theme has a panel elevation, lower than its overlays'", "[style][theme]") {
+    for (const Theme *named: {&themes::pivotalDark, &themes::pivotalLight, &themes::oneDark, &themes::oneLight,
+                              &themes::psychic, &themes::floatLight, &themes::floatDark}) {
+        INFO(named->name);
+        const Elevation &e = named->elevation;
+        CHECK(e.panel.color.alpha() > 0);
+        CHECK(e.panelContact.color.alpha() > 0);
+        CHECK(e.panel.blur <= e.overlay.blur);
+        CHECK(e.panel.offsetY <= e.overlay.offsetY);
+    }
 }

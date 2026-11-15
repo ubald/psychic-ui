@@ -50,6 +50,10 @@ namespace psychic_ui::themes {
             .overlayContact = {.color = argb(0x4D000000), .blur = 6, .offsetY = 2},
             // --shadow-thumb: 0 1px 2px rgb(0 0 0 / 30%)
             .thumb          = {.color = argb(0x4D000000), .blur = 2, .offsetY = 1},
+            // Panels over a canvas, lower than overlays: 0 8px 24px -6px rgb(0 0 0 / 45%), ringed in the strong
+            // hairline, since the canvas (the frame) is their own color
+            .panel          = {.color = argb(0x73000000), .blur = 24, .offsetY = 8, .spread = -6},
+            .panelContact   = {.color = argb(0x1FFFFFFF), .spread = 1},
         },
     };
 
@@ -93,6 +97,8 @@ namespace psychic_ui::themes {
             .overlay        = {.color = argb(0x29000000), .blur = 32, .offsetY = 12, .spread = -8},
             .overlayContact = {.color = argb(0x14000000), .blur = 6, .offsetY = 2},
             .thumb          = {.color = argb(0x33000000), .blur = 2, .offsetY = 1},
+            .panel          = {.color = argb(0x1F000000), .blur = 24, .offsetY = 8, .spread = -6},
+            .panelContact   = {.color = argb(0x24000000), .spread = 1}, // The strong hairline
         },
     };
 }

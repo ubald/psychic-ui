@@ -77,7 +77,7 @@ namespace psychic_ui {
         Shadow overlay{};        // Menus, dialogs, tooltips
         Shadow overlayContact{}; // Their second layer, close under them
         Shadow thumb{};          // A slider's thumb
-        Shadow panel{};          // Panels floating over a canvas (the Float set's sidebar and page); none by default
+        Shadow panel{};          // Panels floating over a canvas (the Float set's sidebar and page), lower than overlays
         Shadow panelContact{};   // Their second layer, a hairline ring or a close contact
     };
 

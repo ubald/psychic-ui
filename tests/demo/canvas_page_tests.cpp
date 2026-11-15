@@ -7,7 +7,10 @@
 #include <psychic-ui/components/ToolBar.hpp>
 #include <psychic-ui/skins/float/FloatSkins.hpp>
 #include <psychic-ui/themes/float.hpp>
+#include <psychic-ui/themes/one-dark.hpp>
+#include <psychic-ui/themes/one-light.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
+#include <psychic-ui/themes/psychic.hpp>
 #include "../../example/demo-stylesheet.hpp"
 #include "../../example/demo/Canvas.hpp"
 #include "../backends/fake_system_window.hpp"
@@ -87,11 +90,14 @@ namespace {
         CHECK(std::abs(tools->x() + tools->getWidth() / 2 - width / 2) < 1);
         CHECK(tools->parent()->y() + tools->parent()->getHeight() == f.page->getHeight() - theme.metrics.space(5));
 
-        // With the panel elevation when the theme has one, else the popups' and a hairline
-        const bool hasPanel = theme.elevation.panel.color.alpha() > 0;
-        CHECK(inspector->computedStyle().shadowColor() ==
-              (hasPanel ? theme.elevation.panel.color : theme.elevation.overlay.color));
-        CHECK(inspector->computedStyle().border() == (hasPanel ? 0 : theme.metrics.border));
+        // With the theme's panel elevation, no border
+        CHECK(inspector->computedStyle().shadowColor() == theme.elevation.panel.color);
+        CHECK(inspector->computedStyle().shadowBlur() == theme.elevation.panel.blur);
+        CHECK(inspector->computedStyle().shadow2Color() == theme.elevation.panelContact.color);
+        CHECK(inspector->computedStyle().shadow2Spread() == theme.elevation.panelContact.spread);
+        CHECK(inspector->computedStyle().border() == 0);
+        CHECK(tools->computedStyle().shadowColor() == theme.elevation.panel.color);
+        CHECK(tools->computedStyle().border() == 0);
         CHECK(inspector->computedStyle().borderRadius() == theme.metrics.radius.surface);
 
         // One tool at a time, in the accent
@@ -107,9 +113,11 @@ TEST_CASE("the demo's Canvas page under both skin sets", "[demo][canvas]") {
 
     SECTION("the default set") {
         checkCanvas(f, themes::pivotalDark);
-        f.window->theme(themes::pivotalLight);
-        f.layout();
-        checkCanvas(f, themes::pivotalLight);
+        for (const Theme *theme: {&themes::pivotalLight, &themes::oneDark, &themes::oneLight, &themes::psychic}) {
+            f.window->theme(*theme);
+            f.layout();
+            checkCanvas(f, *theme);
+        }
     }
 
     SECTION("Float") {

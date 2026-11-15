@@ -237,25 +237,20 @@ public:
                .dotGridSpacing(16)
                .dotGridRadius(1);
 
-        // Panels float over it with the theme's panel elevation; a theme without one (only Float's have it) gets
-        // the popups' elevation and their strong hairline instead, so they still stand apart from the canvas
-        Style &floating = manager->style("CanvasPage .floating")
-                                 .backgroundColor(p.surface)
-                                 .borderRadius(m.radius.surface);
-        const bool   hasPanel = theme.elevation.panel.color.alpha() > 0;
-        const Shadow &soft    = hasPanel ? theme.elevation.panel : theme.elevation.overlay;
-        const Shadow &contact = hasPanel ? theme.elevation.panelContact : theme.elevation.overlayContact;
-        floating.shadowColor(soft.color)
-                .shadowBlur(soft.blur)
-                .shadowOffsetY(soft.offsetY)
-                .shadowSpread(soft.spread)
-                .shadow2Color(contact.color)
-                .shadow2Blur(contact.blur)
-                .shadow2OffsetY(contact.offsetY)
-                .shadow2Spread(contact.spread);
-        if (!hasPanel) {
-            floating.border(m.border).borderColor(p.lineStrong);
-        }
+        // Panels float over it with the theme's panel elevation
+        const Shadow &soft    = theme.elevation.panel;
+        const Shadow &contact = theme.elevation.panelContact;
+        manager->style("CanvasPage .floating")
+               .backgroundColor(p.surface)
+               .borderRadius(m.radius.surface)
+               .shadowColor(soft.color)
+               .shadowBlur(soft.blur)
+               .shadowOffsetY(soft.offsetY)
+               .shadowSpread(soft.spread)
+               .shadow2Color(contact.color)
+               .shadow2Blur(contact.blur)
+               .shadow2OffsetY(contact.offsetY)
+               .shadow2Spread(contact.spread);
 
         // Layers fill the canvas to place what they hold (the stage in the middle, the tool bar at the bottom)
         manager->style("CanvasPage .fill")
@@ -343,9 +338,6 @@ public:
                .padding(m.space(1.5f))
                .gap(m.space(1))
                .borderBottom(0);
-        if (!hasPanel) {
-            manager->style("CanvasPage ToolBar").border(m.border).borderColor(p.lineStrong);
-        }
 
         manager->style("CanvasPage ToolBar Button")
                .width(36)
