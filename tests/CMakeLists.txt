@@ -102,6 +102,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         div/transform_tests.cpp
         div/outline_shadow_tests.cpp
         icons/icon_tests.cpp
+        backends/post_tests.cpp
         backends/system_window_tests.cpp
         backends/touch_tests.cpp
         text/text_layout_tests.cpp

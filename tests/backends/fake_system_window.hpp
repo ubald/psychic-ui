@@ -44,6 +44,7 @@ namespace psychic_ui_tests {
     struct FakeSystemWindow : SystemWindow {
         sk_sp<SkSurface> surface{SkSurfaces::Raster(SkImageInfo::MakeN32Premul(800, 600))};
         int              dragsStarted{0};
+        int              wakes{0}; // `wake` calls: the window asking for a frame from outside the loop
 
         std::shared_ptr<TestWindow> testWindow;
 
@@ -80,6 +81,7 @@ namespace psychic_ui_tests {
         void setVisible(bool /*visible*/) override {}
         void setCursor(Cursor /*cursor*/) override {}
         void startDrag() override { ++dragsStarted; }
+        void wake() override { ++wakes; }
         void stopDrag() override {}
         void setSize(int /*width*/, int /*height*/) override {}
         void setPosition(int /*x*/, int /*y*/) override {}

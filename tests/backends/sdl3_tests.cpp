@@ -1,3 +1,4 @@
+#include <thread>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/applications/SDL3SystemWindow.hpp>
@@ -740,5 +741,16 @@ TEST_CASE("SDL3: a frame asked for wakes a loop waiting for events, once until t
     CHECK(sdl.window->untilNextFrame(sdl.adapter->gestureTime()) == std::nullopt);
     sdl.window->requestFrame();
     CHECK(SDL_PollEvent(&event));
+    CHECK(event.type == SDL3SystemWindow::wakeEventType());
+}
+
+TEST_CASE("SDL3: a post from another thread wakes a loop waiting for events", "[backend][sdl3][frames][post]") {
+    SDL3Fixture sdl;
+    sdl.layout();
+    SDL_FlushEvents(SDL_EVENT_FIRST, SDL_EVENT_LAST);
+
+    std::thread([&] { sdl.window->post([] {}); }).join();
+    SDL_Event event{};
+    REQUIRE(SDL_WaitEventTimeout(&event, 1000));
     CHECK(event.type == SDL3SystemWindow::wakeEventType());
 }

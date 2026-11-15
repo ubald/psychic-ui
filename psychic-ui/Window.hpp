@@ -3,9 +3,12 @@
 #include <atomic>
 #include <string>
 #include <chrono>
+#include <functional>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <unordered_map>
+#include <vector>
 #include "include/core/SkCanvas.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkSurface.h"
@@ -118,9 +121,9 @@ namespace psychic_ui {
 
         /**
          * Whether the window has something new to draw: a frame was asked for (`requestFrame`, the first one, a
-         * resize), styles or the layout are dirty, or something moves (`animating`). With `nextFrameTime`, what a
-         * runner needs to sleep while nothing changes; input events are the runner's own business (it draws after
-         * them).
+         * resize), a task was posted (`post`), styles or the layout are dirty, or something moves (`animating`). With
+         * `nextFrameTime`, what a runner needs to sleep while nothing changes; input events are the runner's own
+         * business (it draws after them).
          */
         bool needsFrame() const;
 
@@ -138,10 +141,26 @@ namespace psychic_ui {
 
         /**
          * Ask for a frame, for a change the window can't see: something a `draw` reads changing without input, a style
-         * or layout change. Wakes the system window's loop (`SystemWindow::wake`) the first time after a frame. The one
-         * call that may come from another thread.
+         * or layout change. Wakes the system window's loop (`SystemWindow::wake`) the first time after a frame. One of
+         * the two calls that may come from another thread, with `post`.
          */
         void requestFrame();
+
+        /**
+         * Hand a task to the UI thread, from any thread: it runs at the start of the next frame (`runPosted`, first in
+         * `drawAll`), after the tasks posted before it, and asks for that frame (`requestFrame`). The UI stays
+         * single-threaded: another thread changes the window and its divs only through a task. A hidden window runs
+         * its tasks once it draws again. Tasks still queued when the window is destroyed are destroyed without running;
+         * the caller must stop posting before that.
+         */
+        void post(std::function<void()> task);
+
+        /**
+         * Run the posted tasks, in posting order; UI thread only. `drawAll` calls it first; tests call it themselves.
+         * A task posted while they run waits for the next call. When a task throws, the rest of its batch goes back to
+         * the front of the queue and the exception propagates.
+         */
+        void runPosted();
 
         // endregion
 
@@ -680,6 +699,9 @@ namespace psychic_ui {
         bool                                  _animationClockFresh{false}; // From updateAnimations to the end of drawAll
         bool                                  _reducedMotion{false};
         std::atomic<bool>                     _frameRequested{true}; // Until the first frame
+        std::mutex                            _postedMutex{};
+        std::vector<std::function<void()>>    _posted{};          // `post`'s queue, under `_postedMutex`
+        std::atomic<bool>                     _hasPosted{false};  // `_posted` isn't empty, read by `needsFrame`
         std::vector<std::weak_ptr<Div>>       _startingDivs{};       // With their starting class (`Div::startingClass`)
         std::vector<std::weak_ptr<Div>>       _exitingDivs{};        // Leaving (`Div::exit`)
 

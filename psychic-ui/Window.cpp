@@ -51,6 +51,8 @@ namespace psychic_ui {
     }
 
     Window::~Window() {
+        // Whatever is still queued goes without running (the caller stopped posting)
+        _posted.clear();
         releaseSkia();
     }
 
@@ -480,6 +482,9 @@ namespace psychic_ui {
             return;
         }
 
+        // What other threads handed over first, so that the frame shows it
+        runPosted();
+
         const std::chrono::nanoseconds now = _systemWindow->gestureTime();
         updateGestures(now);
         updatePopups(now);
@@ -531,6 +536,9 @@ namespace psychic_ui {
 
     bool Window::needsFrame() const {
         return _frameRequested
+               // Not left to `_frameRequested`: the layout clears it after `runPosted`, so a post in between
+               // would go unseen
+               || _hasPosted
                || animating()
                || !_styleManager->valid()
                || styleDirty()
@@ -582,6 +590,36 @@ namespace psychic_ui {
     void Window::requestFrame() {
         if (!_frameRequested.exchange(true) && _systemWindow) {
             _systemWindow->wake();
+        }
+    }
+
+    void Window::post(std::function<void()> task) {
+        {
+            std::lock_guard lock(_postedMutex);
+            _posted.push_back(std::move(task));
+            _hasPosted = true;
+        }
+        requestFrame();
+    }
+
+    void Window::runPosted() {
+        std::vector<std::function<void()>> batch{};
+        {
+            std::lock_guard lock(_postedMutex);
+            batch.swap(_posted);
+            _hasPosted = false;
+        }
+        // Run outside the lock, so that a task may post
+        for (auto task = batch.begin(); task != batch.end(); ++task) {
+            try {
+                (*task)();
+            } catch (...) {
+                // The rest of the batch goes back in front of what was posted meanwhile
+                std::lock_guard lock(_postedMutex);
+                _posted.insert(_posted.begin(), std::make_move_iterator(task + 1), std::make_move_iterator(batch.end()));
+                _hasPosted = !_posted.empty();
+                throw;
+            }
         }
     }
 
