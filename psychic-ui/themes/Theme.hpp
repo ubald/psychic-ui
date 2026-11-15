@@ -137,6 +137,7 @@ namespace psychic_ui {
         float rowMd{40};     // List rows, tabs
         float textStep{0};   // Added to the text sizes
         float hitSlop{0};    // How far around a control a press still reaches it (the `hitSlop` style)
+        float iconStep{0};   // Added to the icon sizes (`Metrics::iconSm`, `iconMd`)
     };
 
     /**

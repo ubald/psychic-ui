@@ -119,6 +119,10 @@ namespace psychic_ui {
         const Sizes      &s     = manager->sizes();
         const Motion     &mo    = m.motion;
 
+        // Icons, a step larger where the density says so (`Sizes::iconStep`)
+        const float iconSm = m.iconSm + s.iconStep;
+        const float iconMd = m.iconMd + s.iconStep;
+
         // Motion, Pivotal's: colors blend quickly on hover, press, focus and selection; the focus ring fades in (and
         // goes at once: its width snaps to 0); a switch's thumb springs. What paints the colors transitions them: a
         // component's skin (which inherits the component's colors), rows, parts with colors of their own.
@@ -145,7 +149,7 @@ namespace psychic_ui {
             .color(p.text)
             .selectionColor(p.text)
             .selectionBackgroundColor(p.accentSoft)
-            .iconSize(m.iconMd)
+            .iconSize(iconMd)
             .iconStrokeWidth(m.iconStroke)
             .antiAlias(true)
             .textAntiAlias(true)
@@ -234,7 +238,7 @@ namespace psychic_ui {
             .color(p.text)
             .backgroundColor(p.raised)
             .borderColor(p.line)
-            .iconSize(m.iconSm);
+            .iconSize(iconSm);
 
         rule("Button:hover").borderColor(p.lineStrong);
         // Pressed, or selected (a toggle): held as a hover, filled with the strong hairline's color in its outline
@@ -254,7 +258,7 @@ namespace psychic_ui {
             .width(s.controlSm)
             .height(s.controlSm)
             .paddingHorizontal(0) // Over the button's
-            .iconSize(m.iconMd)
+            .iconSize(iconMd)
             .color(p.textMuted)
             .backgroundColor(transparent)
             .borderColor(transparent);
@@ -446,7 +450,7 @@ namespace psychic_ui {
             .alignItems(Align::Center)
             .justify(Justify::Center)
             .borderRadius(r.small)
-            .iconSize(m.iconSm)
+            .iconSize(iconSm)
             .color(p.textMuted);
         rule("SearchField .clear:hover")
             .color(p.text)
@@ -496,7 +500,7 @@ namespace psychic_ui {
             .borderColor(p.line)
             .backgroundColor(p.surface)
             .color(p.textMuted)
-            .iconSize(m.iconSm);
+            .iconSize(iconSm);
         rule("SegmentedControl.small").height(s.controlSm);
         rule("SegmentedControl:disabled").opacity(0.45f);
 
@@ -552,7 +556,7 @@ namespace psychic_ui {
                 .alignItems(Align::Center)
                 .justify(Justify::Center)
                 .borderColor(p.line)
-                .iconSize(m.iconSm)
+                .iconSize(iconSm)
                 .color(p.textSecondary);
         }
         rule("NumberStepper.small .decrement").width(s.controlSm);
@@ -661,7 +665,7 @@ namespace psychic_ui {
             .color(p.textMuted);
 
         rule("Menu MenuButton .arrow")
-            .iconSize(m.iconSm)
+            .iconSize(iconSm)
             .marginLeft(m.space(2))
             .color(p.textMuted);
 
@@ -1026,7 +1030,7 @@ namespace psychic_ui {
             .color(p.text);
 
         rule("SidebarHeader .chevron")
-            .iconSize(m.iconSm)
+            .iconSize(iconSm)
             .color(p.textMuted);
 
         // Sections, set apart by a hairline
@@ -1167,7 +1171,7 @@ namespace psychic_ui {
 
         // The arrow: hidden, faint (the next order) under the mouse or the keyboard's focus, plain when sorted
         rule("DataGrid .sort-icon")
-            .iconSize(m.iconSm)
+            .iconSize(iconSm)
             .opacity(0);
         rule("DataGrid .sort:hover .sort-icon").opacity(0.6f);
         rule("DataGrid .sort:focus-visible .sort-icon").opacity(0.6f);
@@ -1217,8 +1221,8 @@ namespace psychic_ui {
 
         // The chevron's column is an icon wide, kept on leaves
         rule("TreeRow .disclosure")
-            .width(m.iconMd)
-            .iconSize(m.iconSm)
+            .width(iconMd)
+            .iconSize(iconSm)
             .color(p.textMuted);
         rule("TreeRow .icon").color(p.textMuted);
         rule("TreeRow.selected .icon").color(p.text);
@@ -1329,9 +1333,9 @@ namespace psychic_ui {
         }
         rule("Chip:disabled").opacity(0.45f);
         focusRing(rule("Chip:focus-visible"), p, m);
-        rule("Chip .icon").iconSize(m.iconSm);
+        rule("Chip .icon").iconSize(iconSm);
         rule("Chip .remove")
-            .iconSize(m.iconSm)
+            .iconSize(iconSm)
             .color(p.textMuted)
             .cursor(Cursor::Hand);
         rule("Chip .remove:hover").color(p.text);
