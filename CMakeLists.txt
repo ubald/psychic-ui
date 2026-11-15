@@ -193,6 +193,9 @@ unset(BUILD_SHARED_LIBS)
 
 set(SOURCE_FILES
     ${LIBPSYCHIC_UI_EXTRA_SOURCE}
+    psychic-ui/animation/Timing.hpp
+    psychic-ui/animation/Tween.cpp
+    psychic-ui/animation/Tween.hpp
     psychic-ui/components/Button.cpp
     psychic-ui/components/Button.hpp
     psychic-ui/components/CheckBox.cpp

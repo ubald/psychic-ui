@@ -1,0 +1,116 @@
+#pragma once
+
+#include <chrono>
+#include <iosfwd>
+
+/**
+ * How a value moves to a new one: a duration along an easing curve, or a spring.
+ */
+namespace psychic_ui {
+
+    /**
+     * An easing curve: a cubic Bézier from (0, 0) to (1, 1) through two control points, like CSS's `cubic-bezier()`.
+     * `at(x)` is how far along its way a value is (y) at a share of the duration (x, 0 to 1). y may leave 0-1 (an
+     * overshoot); the control points' x may not.
+     *
+     *     Ease::Out                      // A named curve, CSS's `ease-out`
+     *     Ease{0.16f, 1.0f, 0.3f, 1.0f}  // Any other, as cubic-bezier(0.16, 1, 0.3, 1)
+     */
+    struct Ease {
+        float x1{0.0f};
+        float y1{0.0f};
+        float x2{1.0f};
+        float y2{1.0f};
+
+        /**
+         * The eased progress at a share of the duration (clamped to 0-1)
+         */
+        float at(float progress) const;
+
+        constexpr bool operator==(const Ease &) const = default;
+
+        // CSS's named curves
+        static const Ease Linear;   // linear
+        static const Ease Standard; // ease, CSS's default: a quick start, a long settle
+        static const Ease In;       // ease-in
+        static const Ease Out;      // ease-out
+        static const Ease InOut;    // ease-in-out
+    };
+
+    inline constexpr Ease Ease::Linear{0.0f, 0.0f, 1.0f, 1.0f};
+    inline constexpr Ease Ease::Standard{0.25f, 0.1f, 0.25f, 1.0f};
+    inline constexpr Ease Ease::In{0.42f, 0.0f, 1.0f, 1.0f};
+    inline constexpr Ease Ease::Out{0.0f, 0.0f, 0.58f, 1.0f};
+    inline constexpr Ease Ease::InOut{0.42f, 0.0f, 0.58f, 1.0f};
+
+    /**
+     * A damped spring pulling a value to its target: no duration, it settles when it gets there. Interrupted, it keeps
+     * its speed, so a value that reverses half-way turns smoothly. Below a damping of 2√(stiffness × mass) it
+     * overshoots and oscillates; at or above it, it doesn't.
+     *
+     *     Spring{.stiffness = 500, .damping = 30}
+     */
+    struct Spring {
+        float stiffness{170.0f};
+        float damping{26.0f};
+        float mass{1.0f};
+
+        /**
+         * Its damping ratio: below 1 it overshoots
+         */
+        float dampingRatio() const;
+
+        constexpr bool operator==(const Spring &) const = default;
+
+        static const Spring Gentle; // Settles in about half a second, without overshooting
+        static const Spring Snappy; // Quick, with a slight overshoot
+        static const Spring Bouncy; // Overshoots and swings back a few times
+    };
+
+    inline constexpr Spring Spring::Gentle{170.0f, 26.0f, 1.0f};
+    inline constexpr Spring Spring::Snappy{500.0f, 30.0f, 1.0f};
+    inline constexpr Spring Spring::Bouncy{400.0f, 14.0f, 1.0f};
+
+    /**
+     * How a value moves to a new one: a duration along an easing curve, or a spring. The default timing, and a
+     * duration of 0, are instant.
+     *
+     *     Timing{150ms}                 // CSS's default curve
+     *     Timing{100ms, Ease::Out}
+     *     Timing{Spring::Snappy}
+     */
+    class Timing {
+    public:
+        constexpr Timing() = default;
+
+        template<class Rep, class Period>
+        constexpr Timing(std::chrono::duration<Rep, Period> duration, Ease ease = Ease::Standard) : // NOLINT(google-explicit-constructor)
+            _duration(std::chrono::duration_cast<std::chrono::nanoseconds>(duration)), _ease(ease) {}
+
+        constexpr Timing(Spring spring) : // NOLINT(google-explicit-constructor)
+            _spring(spring), _isSpring(true) {}
+
+        /**
+         * Whether values jump to their end: no duration and no spring
+         */
+        constexpr bool instant() const { return !_isSpring && _duration <= std::chrono::nanoseconds::zero(); }
+
+        constexpr bool isSpring() const { return _isSpring; }
+
+        constexpr std::chrono::nanoseconds duration() const { return _duration; }
+
+        constexpr const Ease &ease() const { return _ease; }
+
+        constexpr const Spring &spring() const { return _spring; }
+
+        constexpr bool operator==(const Timing &) const = default;
+
+    private:
+        std::chrono::nanoseconds _duration{0};
+        Ease                     _ease{Ease::Standard};
+        Spring                   _spring{};
+        bool                     _isSpring{false};
+    };
+
+    std::ostream &operator<<(std::ostream &os, const Timing &timing);
+}
