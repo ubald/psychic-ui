@@ -836,6 +836,50 @@ namespace psychic_ui {
 
         // endregion
 
+        // region Entering and leaving
+
+        // Pivotal's floating motion: what floats fades and scales from 97% about its anchor (`Popup` puts its
+        // transform origin there) as it opens, and back as it closes, a little quicker. Popups have the `entering`
+        // class for their first style and `exiting` while they leave, so these rules are where they come from and go.
+        const Timing enter  = mo.enter();
+        const Timing leave  = mo.leave();
+        const auto   motion = {P::opacity, P::scale, P::translateX, P::translateY};
+
+        rule("Menu").transition(motion, enter).transition(P::outlineColor, quick);
+        rule("Menu.entering").opacity(0).scale(0.97f);
+        rule("Menu.exiting").opacity(0).scale(0.97f).transition(motion, leave);
+
+        // A tooltip fades in from a few pixels toward its anchor, and out the same way
+        const float nudge = m.space(1);
+        rule("Tooltip").transition(motion, enter);
+        rule("Tooltip.exiting").opacity(0).transition(motion, leave);
+        rule("Tooltip.entering").opacity(0);
+        rule("Tooltip.side-top.entering").translateY(nudge);
+        rule("Tooltip.side-top.exiting").translateY(nudge);
+        rule("Tooltip.side-bottom.entering").translateY(-nudge);
+        rule("Tooltip.side-bottom.exiting").translateY(-nudge);
+        rule("Tooltip.side-left.entering").translateX(nudge);
+        rule("Tooltip.side-left.exiting").translateX(nudge);
+        rule("Tooltip.side-right.entering").translateX(-nudge);
+        rule("Tooltip.side-right.exiting").translateX(-nudge);
+
+        // A dialog's scrim fades (and its panel with it), the panel scales from 97% about its middle
+        rule("Dialog").transition(P::opacity, enter);
+        rule("Dialog .panel").transition(P::scale, enter);
+        rule("Dialog.entering").opacity(0);
+        rule("Dialog.entering .panel").scale(0.97f);
+        rule("Dialog.exiting").opacity(0).transition(P::opacity, leave);
+        rule("Dialog.exiting .panel").scale(0.97f).transition(P::scale, leave);
+
+        // A toast slides in from under the stack's edge, and back out fading; one pushed out by a new one (the
+        // stack's `limit`) only fades, where it is
+        rule("Toast").transition(motion, Timing{mo.slow, mo.out});
+        rule("Toast.entering").opacity(0).translateY(150_pct);
+        rule("Toast.exiting").opacity(0).translateY(150_pct).transition(motion, Timing{mo.medium, mo.out});
+        rule("Toast.exiting.limited").translateY(0);
+
+        // endregion
+
         // region Menu bar
 
         // Its menus' triggers: ghost pills

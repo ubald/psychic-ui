@@ -161,7 +161,7 @@ namespace psychic_ui {
     struct Motion {
         std::chrono::milliseconds fast{100};   // Hover, press and focus: colors, borders, the focus ring
         std::chrono::milliseconds medium{150}; // A switch's track, a selection moving, a slider's thumb on a key
-        std::chrono::milliseconds slow{240};   // What enters and leaves (popups); not Pivotal's, which has two steps
+        std::chrono::milliseconds slow{240};   // What travels further: a toast sliding in; not Pivotal's, which has two steps
         Ease                      standard{Ease::Standard};    // CSS's default curve, Pivotal's color transitions'
         Ease                      out{0.16f, 1.0f, 0.3f, 1.0f}; // Things arriving (--ease-out-quick)
         Spring                    spring{500.0f, 40.0f};        // Things thrown or dragged: a switch's thumb, barely overshooting
@@ -171,6 +171,10 @@ namespace psychic_ui {
         constexpr Timing moderate() const { return {medium, standard}; }
 
         constexpr Timing arrive() const { return {medium, out}; }
+
+        constexpr Timing enter() const { return {medium, out}; } // A popup appearing (Pivotal's floating motion)
+
+        constexpr Timing leave() const { return {fast, out}; } // A popup going: a little quicker than it came
     };
 
     struct Metrics {
