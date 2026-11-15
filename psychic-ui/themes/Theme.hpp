@@ -56,6 +56,7 @@ namespace psychic_ui {
         Color scrollThumbHover{};
         Color scrim{}; // Behind a dialog
         Color switchOff{}; // A switch's track when off
+        Color canvasDot{}; // The dots of a canvas's grid (`dotGridColor`), over the frame color
     };
 
     /**

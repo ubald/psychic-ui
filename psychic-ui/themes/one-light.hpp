@@ -37,6 +37,7 @@ namespace psychic_ui::themes {
             .scrollThumbHover = argb(0x3D000000),
             .scrim            = argb(0x3D000000),
             .switchOff        = rgb(0xBDBDBE),
+            .canvasDot        = rgb(0xC5CAD3),   // The strong hairline
         },
         .elevation = {
             .overlay        = {.color = argb(0x29000000), .blur = 32, .offsetY = 12, .spread = -8},

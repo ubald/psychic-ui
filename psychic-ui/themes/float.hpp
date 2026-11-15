@@ -94,6 +94,7 @@ namespace psychic_ui::themes {
             .scrollThumbHover = argb(0x42141428), // 26%
             .scrim            = argb(0x33141428), // 20%
             .switchOff        = rgb(0xD4D4DA),
+            .canvasDot        = argb(0x24141428), // The strong hairline
         },
         .elevation = {
             // Menus: 0 12px 32px rgb(20 20 40 / 14%), 0 2px 6px rgb(20 20 40 / 6%)
@@ -141,6 +142,7 @@ namespace psychic_ui::themes {
             .scrollThumbHover = argb(0x4DF0F0FF), // 30%
             .scrim            = argb(0x73000000), // 45%
             .switchOff        = rgb(0x46464C),
+            .canvasDot        = argb(0x14F0F0FF), // The hairline: the strong one is busy on the dark canvas
         },
         .elevation = {
             // Menus: 0 14px 34px rgb(0 0 0 / 45%); their strong hairline is the ring

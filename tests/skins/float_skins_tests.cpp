@@ -11,6 +11,7 @@
 #include <psychic-ui/themes/one-dark.hpp>
 #include <psychic-ui/themes/one-light.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
+#include <psychic-ui/themes/psychic.hpp>
 #include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;
@@ -47,6 +48,15 @@ TEST_CASE("Float's themes", "[skins][float]") {
     CHECK(set.hasTheme(themes::floatDark));
     CHECK_FALSE(set.hasTheme(themes::pivotalDark));
 
+    // Every named theme has its canvas's dots; Float's are its hairlines, strong in light
+    for (const Theme *named: {&themes::pivotalDark, &themes::pivotalLight, &themes::oneDark, &themes::oneLight,
+                              &themes::psychic, &themes::floatLight, &themes::floatDark}) {
+        INFO(named->name);
+        CHECK(named->palette.canvasDot.alpha() > 0);
+    }
+    CHECK(themes::floatLight.palette.canvasDot == themes::floatLight.palette.lineStrong);
+    CHECK(themes::floatDark.palette.canvasDot == themes::floatDark.palette.line);
+
     // The default set keeps Pivotal Dark when the system doesn't say, and lists its other themes
     DefaultSkins defaults;
     CHECK(&defaults.theme(ColorScheme::Unknown) == &themes::pivotalDark);
@@ -72,13 +82,18 @@ TEST_CASE("Float installs over the default set", "[skins][float]") {
     // The canvas: dotted, the sidebar and the page floating over it
     const Theme &theme = themes::floatLight;
     CHECK(shell.computedStyle().backgroundColor() == theme.palette.frame);
-    CHECK(shell.computedStyle().dotGridColor().alpha() > 0);
+    CHECK(shell.computedStyle().dotGridColor() == theme.palette.canvasDot);
     CHECK(shell.sidebar().computedStyle().shadowColor() == theme.elevation.panel.color);
     CHECK(shell.sidebar().computedStyle().shadow2Spread() == 1);
     CHECK(shell.page().computedStyle().shadowColor() == theme.elevation.panel.color);
     CHECK(shell.page().computedStyle().borderRadius() == theme.metrics.radius.page);
     CHECK(shell.sidebar().getWidth() == theme.metrics.sidebarWidth);
     CHECK(shell.sidebar().x() == theme.metrics.frameInset);
+
+    // The dots are the theme's, dark too
+    f.window->theme(themes::floatDark);
+    f.layout();
+    CHECK(shell.computedStyle().dotGridColor() == themes::floatDark.palette.canvasDot);
 }
 
 TEST_CASE("switching to Float live re-hatches skins and keeps the components' state", "[skins][float][switch]") {

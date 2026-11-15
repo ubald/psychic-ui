@@ -67,10 +67,9 @@ namespace psychic_ui {
         // region The canvas and its floating panels
 
         // The frame is a canvas: its grey, dotted every 16 px like a design tool's
-        const Color dots = theme.scheme == ColorScheme::Light ? p.lineStrong : p.line;
         rule("AppShell")
             .backgroundColor(p.frame)
-            .dotGridColor(dots)
+            .dotGridColor(p.canvasDot)
             .dotGridSpacing(16)
             .dotGridRadius(1);
 
