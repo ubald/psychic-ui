@@ -115,6 +115,9 @@
     X(orientation,              Orientation,   Orientation,        Orientation::Horizontal, false, false, false) \
     /* Which properties blend to their new values when they change, and how (see Transition); not inherited */ \
     X(transition,               Transition,    Transition,         Transition{},           false, false, false) \
+    /* A container's children slide from where they were painted to where a new layout puts them, with this timing */ \
+    /* (a paint offset, FLIP: Div::layoutOffsetX/Y); instant, the default, leaves them where they are laid out */ \
+    X(layoutTransition,         Timing,        Timing,             Timing{},               false, false, false) \
     /* Space between children: gap sets both, rowGap is between rows (lines), columnGap between columns */ \
     X(gap,                      Length,        Length,             Length{},               false, true, true ) \
     X(rowGap,                   Length,        Length,             Length{},               false, true, true ) \

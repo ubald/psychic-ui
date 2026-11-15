@@ -1002,8 +1002,9 @@ namespace psychic_ui {
 
         // The paint transform, around everything below (CSS's translate, then scale about the origin): painting only,
         // the layout and hit testing don't see it
-        const float translateX = computed.translateX().resolve(_rect.width());
-        const float translateY = computed.translateY().resolve(_rect.height());
+        // A layout transition's offset (`layoutTransition`) adds to its translation
+        const float translateX = computed.translateX().resolve(_rect.width()) + layoutOffsetX();
+        const float translateY = computed.translateY().resolve(_rect.height()) + layoutOffsetY();
         const bool  transformed = translateX != 0.0f || translateY != 0.0f || scaleX != 1.0f || scaleY != 1.0f;
         SkAutoCanvasRestore transform(canvas, transformed);
         if (transformed) {

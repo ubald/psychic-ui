@@ -385,8 +385,10 @@ namespace psychic_ui {
         // it fills the size given here
         const int  width  = windowWidth();
         const int  height = windowHeight();
-        const auto layout = [this, width, height](const bool force) {
+        bool       laidOut = false;
+        const auto layout  = [this, width, height, &laidOut](const bool force) {
             if (force || YGNodeIsDirty(_yogaNode) || width != _width || height != _height) {
+                laidOut = true;
                 #ifdef DEBUG_LAYOUT
                 if (debugLayout) {
                     std::cout << "Layout dirty!" << std::endl;
@@ -415,6 +417,21 @@ namespace psychic_ui {
         settleExits();
 
         layout(placed);
+
+        // What moved slides from where it was painted (layout transitions), before the paint
+        if (laidOut) {
+            slideLayout();
+        }
+    }
+
+    void Window::slideLayout() {
+        const std::size_t generation = _styleManager->rulesGeneration();
+        const bool        snap       = _slidePass == 0 || generation != _slideGeneration
+                                       || _width != _slideWidth || _height != _slideHeight;
+        _slideGeneration = generation;
+        _slideWidth      = _width;
+        _slideHeight     = _height;
+        updateLayoutSlides({.pass = ++_slidePass, .snap = snap});
     }
 
     bool Window::releaseStartingClasses() {

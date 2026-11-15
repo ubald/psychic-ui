@@ -109,6 +109,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         signals/signal_tests.cpp
         signals/lifetime_tests.cpp
         animation/animation_tests.cpp
+        animation/layout_transition_tests.cpp
         components/reentrancy_tests.cpp
         # Known bugs ([!shouldfail]) and hidden use-after-free cases ([asan]) from docs/review-2026-11.md
         keyboard/key_routing_tests.cpp

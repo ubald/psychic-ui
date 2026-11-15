@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <type_traits>
 #include "StyleTransitions.hpp"
 #include "psychic-ui/Div.hpp"
@@ -368,6 +369,80 @@ namespace psychic_ui {
         return transitioning() || std::any_of(_children.begin(), _children.end(), [](const auto &child) {
             return child->subtreeTransitioning();
         });
+    }
+
+    // endregion
+
+    // region Layout transitions
+
+    float Div::layoutOffsetX() const {
+        return _layoutSlide ? _layoutSlide->offset->tween.value()[0] : 0.0f;
+    }
+
+    float Div::layoutOffsetY() const {
+        return _layoutSlide ? _layoutSlide->offset->tween.value()[1] : 0.0f;
+    }
+
+    bool Div::layoutSliding() const {
+        return _layoutSlide && _layoutSlide->offset->tween.running();
+    }
+
+    void Div::updateLayoutSlides(const SlideWalk &walk) {
+        if (_computedStyle.display() == Display::None) {
+            return; // Not laid out: what it holds appears in place once it is shown again
+        }
+        // Where its layout puts it in the window, scrolling aside (so scrolling never slides anything)
+        const float x        = walk.originX + static_cast<float>(_x);
+        const float y        = walk.originY + static_cast<float>(_y);
+        const float paintedX = layoutOffsetX();
+        const float paintedY = layoutOffsetY();
+
+        if (!walk.timing) {
+            _layoutSlide.reset(); // Its container has no layout transition (any more)
+        } else {
+            if (!_layoutSlide) {
+                _layoutSlide = std::make_unique<LayoutSlide>();
+                _layoutSlide->offset->tween = Tween{Channels{}, 2};
+            }
+            LayoutSlide &slide = *_layoutSlide;
+            Tween       &tween = slide.offset->tween;
+            // Laid out in this container by the previous pass too: otherwise it was just added, or shown again
+            const bool stayed = !walk.snap && slide.container == _parent && slide.pass + 1 == walk.pass;
+            if (!stayed) {
+                if (tween.running() || tween.value() != Channels{}) {
+                    tween.jump(Channels{});
+                }
+            } else {
+                // From where it was painted, relative to where its ancestors are painted from now on (an ancestor that
+                // starts sliding carries it already)
+                const float fromX = slide.x + paintedX + walk.paintedX - x - walk.offsetX;
+                const float fromY = slide.y + paintedY + walk.paintedY - y - walk.offsetY;
+                if (std::abs(fromX - paintedX) > 0.01f || std::abs(fromY - paintedY) > 0.01f) {
+                    tween.jump(Channels{fromX, fromY});
+                    detail::startTween(this, slide.offset, Channels{}, *walk.timing);
+                }
+            }
+            slide.x         = x;
+            slide.y         = y;
+            slide.pass      = walk.pass;
+            slide.container = _parent;
+        }
+
+        const Timing &timing = _computedStyle.layoutTransition();
+        const SlideWalk next{
+            .pass     = walk.pass,
+            .snap     = walk.snap,
+            .originX  = x,
+            .originY  = y,
+            .paintedX = walk.paintedX + paintedX,
+            .paintedY = walk.paintedY + paintedY,
+            .offsetX  = walk.offsetX + layoutOffsetX(),
+            .offsetY  = walk.offsetY + layoutOffsetY(),
+            .timing   = timing.instant() ? nullptr : &timing
+        };
+        for (const auto &child: _children) {
+            child->updateLayoutSlides(next);
+        }
     }
 
     // endregion

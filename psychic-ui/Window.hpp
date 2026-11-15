@@ -694,6 +694,16 @@ namespace psychic_ui {
          */
         void settleExits();
 
+        std::uint64_t _slidePass{0};       // Layout transitions: the passes after a layout (`Div::layoutOffsetX`)
+        std::size_t   _slideGeneration{0}; // The rules, and the window size, of the last one
+        int           _slideWidth{0};
+        int           _slideHeight{0};
+
+        /**
+         * After a layout: the layout transitions slide what moved, or snap with new rules or a new window size
+         */
+        void slideLayout();
+
         friend class Div;
 
         // endregion

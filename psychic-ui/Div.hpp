@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <cstdint>
 #include <utility>
 #include <iostream>
 #include <memory>
@@ -369,6 +370,23 @@ namespace psychic_ui {
          * Whether it or a descendant transitions
          */
         bool subtreeTransitioning() const;
+
+        /**
+         * Where it is painted from where its layout puts it, as it slides there: a layout transition, its parent's
+         * `layoutTransition` (FLIP). After a layout that moved it in the window, scrolling aside, it is painted from
+         * where it was (from where it was painted, when it was sliding already) and the offset goes to 0 with that
+         * timing; Yoga runs once. Composed with its `translateX`/`translateY`, painting only (hit testing finds it at
+         * its layout place). Nothing slides on its first layout in that container (an added child appears in place,
+         * and so does one shown again), on a window resize, with new rules (a theme, a density, a skin set) or with
+         * reduced motion. Its size doesn't animate.
+         */
+        float layoutOffsetX() const;
+        float layoutOffsetY() const;
+
+        /**
+         * Whether it slides to its layout place (`layoutOffsetX/Y` aren't 0)
+         */
+        bool layoutSliding() const;
 
         // endregion
 
@@ -956,6 +974,40 @@ namespace psychic_ui {
             bool                  mouseChildren;
         };
         std::unique_ptr<Exit> _exit{};
+
+        /**
+         * Its layout transition, made the first time it is laid out in a container that has one: where its last layout
+         * put it in the window (scrolling aside), in which of the window's slide passes and which container, and its
+         * paint offset sliding to 0 (two channels)
+         */
+        struct LayoutSlide {
+            std::shared_ptr<detail::TweenAnimation> offset{std::make_shared<detail::TweenAnimation>()};
+            float                                   x{0.0f};
+            float                                   y{0.0f};
+            std::uint64_t                           pass{0};
+            const Div                               *container{nullptr};
+        };
+        std::unique_ptr<LayoutSlide> _layoutSlide{};
+
+        /**
+         * A slide pass's walk down the tree: what a div needs from its ancestors
+         */
+        struct SlideWalk {
+            std::uint64_t pass{0};
+            bool          snap{false};      // Everything goes where it is laid out
+            float         originX{0.0f};    // The parent's place in the window, scrolling aside
+            float         originY{0.0f};
+            float         paintedX{0.0f};   // The ancestors' offsets as painted until now
+            float         paintedY{0.0f};
+            float         offsetX{0.0f};    // Their offsets from now on
+            float         offsetY{0.0f};
+            const Timing  *timing{nullptr}; // The parent's layout transition, nullptr when it has none
+        };
+
+        /**
+         * After a layout (`Window::updateStylesAndLayout`), down the tree: start, retarget or drop the layout slides
+         */
+        void updateLayoutSlides(const SlideWalk &walk);
 
         /**
          * Lose the starting class (the window lets it go): its next style transitions from it
