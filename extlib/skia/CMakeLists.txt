@@ -91,7 +91,9 @@ list(APPEND SKIA_ARGS_LIST "extra_cflags=[${SKIA_INCLUDE_FLAGS}]" "extra_ldflags
 list(JOIN SKIA_ARGS_LIST " " SKIA_ARGS)
 set(PSYCHIC_UI_SKIA_DIR "" CACHE PATH "Directory to build Skia into and link it from, to share one build between build directories (default: this build directory's extlib/skia/build)")
 if (PSYCHIC_UI_SKIA_DIR)
-    set(SKIA_OUTPUT ${PSYCHIC_UI_SKIA_DIR})
+    # A relative directory (set by a parent project or a preset) is the build directory's: CMake already made one given
+    # with -D absolute, from the working directory
+    cmake_path(ABSOLUTE_PATH PSYCHIC_UI_SKIA_DIR BASE_DIRECTORY ${CMAKE_BINARY_DIR} OUTPUT_VARIABLE SKIA_OUTPUT)
 else ()
     set(SKIA_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/build)
 endif ()
