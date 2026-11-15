@@ -1,6 +1,7 @@
 // Known bugs from docs/review-2026-11.md, tagged [!shouldfail]: remove the tag in the commit that fixes one.
 #include <stdexcept>
 #include <catch2/catch_test_macros.hpp>
+#include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/style/StyleSelector.hpp>
 #include "../backends/fake_system_window.hpp"
 
@@ -41,7 +42,25 @@ TEST_CASE("S2: :focus-visible weighs like any pseudo-class", "[style][selector][
 TEST_CASE("S3: an unknown pseudo-class is an invalid selector", "[style][selector][!shouldfail]") {
     auto window = std::make_shared<TestWindow>();
     CHECK_THROWS_AS(window->styleManager()->style(".probe:checked"), std::invalid_argument);
-    CHECK_THROWS_AS(window->styleManager()->style(".probe:focus-within"), std::invalid_argument);
+    CHECK_THROWS_AS(window->styleManager()->style(".probe:no-such-state"), std::invalid_argument);
+}
+
+// S3: :focus-within is the useful one to support, so that a group can show that one of its children has the focus
+TEST_CASE("S3: :focus-within matches while a descendant has the focus", "[style][selector][!shouldfail]") {
+    auto             window = std::make_shared<TestWindow>();
+    FakeSystemWindow sys{window, 800, 600};
+    auto            &group  = window->appContainer().add<Div>().addClassName("group");
+    auto            &button = group.add<Button>("Save");
+    window->styleManager()->style(".group:focus-within").paddingLeft(5);
+    window->styleManager()->invalidate();
+    sys.layout();
+    REQUIRE(group.computedStyle().paddingLeft() != Length{5});
+    window->requestFocus(&button);
+    sys.layout();
+    CHECK(group.computedStyle().paddingLeft() == Length{5});
+    window->requestFocus(&window->appContainer());
+    sys.layout();
+    CHECK(group.computedStyle().paddingLeft() != Length{5});
 }
 
 // S4: child combinators and selector lists parse as tags
