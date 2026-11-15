@@ -146,32 +146,27 @@ if (PSYCHIC_UI_BUILD_TESTS)
 
     add_test(NAME psychic-ui-tests COMMAND psychic-ui-tests)
 
-    # Another project building the library from source with add_subdirectory (tests/consumer): configured, built
-    # and run by CTest on this build's Skia and compilers, from a directory with no res/ (the library's build
-    # directory in it). Slow (the library builds again, static), so off by default; the Linux CI job turns it on.
-    # --build-noclean: a clean would delete the shared Skia's libraries (custom command outputs) and rebuild them.
-    # -UPSYCHIC_UI_* -UBUILD_SHARED_LIBS: the options' defaults are what is tested, so nothing stays cached from an
-    # earlier run.
+    # Another project building the library from source with add_subdirectory (tests/consumer), configured, built
+    # (in parallel) and run by run.cmake on this build's Skia and compilers, the app from a directory with no res/
+    # (the library's build directory in it). Slow (the library builds again, static), so off by default; the Linux
+    # CI job turns it on.
     option(PSYCHIC_UI_TEST_CONSUMER "Test building Psychic UI inside another project" OFF)
     if (PSYCHIC_UI_TEST_CONSUMER)
-        add_test(NAME psychic-ui-consumer
-            COMMAND ${CMAKE_CTEST_COMMAND}
-                --build-and-test ${PROJECT_SOURCE_DIR}/tests/consumer ${CMAKE_CURRENT_BINARY_DIR}/consumer
-                --build-generator ${CMAKE_GENERATOR}
-                --build-noclean
-                --build-options
-                    -UPSYCHIC_UI_* -UBUILD_SHARED_LIBS
-                    -DPSYCHIC_UI_SOURCE_DIR=${PROJECT_SOURCE_DIR}
-                    -DPSYCHIC_UI_SKIA_DIR=${PSYCHIC_UI_SKIA_OUTPUT}
-                    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                    -DCMAKE_BUILD_TYPE=Debug
-                --test-command ${CMAKE_COMMAND} -E chdir ${CMAKE_CURRENT_BINARY_DIR}/consumer/psychic-ui
-                    ${CMAKE_CURRENT_BINARY_DIR}/consumer/consumer-app)
         cmake_host_system_information(RESULT _cores QUERY NUMBER_OF_LOGICAL_CORES)
-        set_tests_properties(psychic-ui-consumer PROPERTIES
-            TIMEOUT 1800
-            ENVIRONMENT CMAKE_BUILD_PARALLEL_LEVEL=${_cores})
+        set(_consumer_dir ${CMAKE_CURRENT_BINARY_DIR}/consumer)
+        add_test(NAME psychic-ui-consumer
+            COMMAND ${CMAKE_COMMAND}
+                -DSOURCE_DIR=${PROJECT_SOURCE_DIR}/tests/consumer
+                -DBINARY_DIR=${_consumer_dir}
+                -DGENERATOR=${CMAKE_GENERATOR}
+                -DPSYCHIC_UI_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+                -DPSYCHIC_UI_SKIA_DIR=${PSYCHIC_UI_SKIA_OUTPUT}
+                -DC_COMPILER=${CMAKE_C_COMPILER}
+                -DCXX_COMPILER=${CMAKE_CXX_COMPILER}
+                -DPARALLEL=${_cores}
+                -DRUN_DIR=${_consumer_dir}/psychic-ui
+                -P ${PROJECT_SOURCE_DIR}/tests/consumer/run.cmake)
+        set_tests_properties(psychic-ui-consumer PROPERTIES TIMEOUT 1800)
     endif ()
 
 endif()

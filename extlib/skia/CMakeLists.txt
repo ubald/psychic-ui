@@ -89,7 +89,7 @@ list(JOIN SKIA_LIBRARY_FLAGS ", " SKIA_LIBRARY_FLAGS)
 list(APPEND SKIA_ARGS_LIST "extra_cflags=[${SKIA_INCLUDE_FLAGS}]" "extra_ldflags=[${SKIA_LIBRARY_FLAGS}]")
 
 list(JOIN SKIA_ARGS_LIST " " SKIA_ARGS)
-set(PSYCHIC_UI_SKIA_DIR "" CACHE PATH "Directory to build Skia into and link it from, to share one build between build directories (default: this build directory's extlib/skia/build)")
+set(PSYCHIC_UI_SKIA_DIR "" CACHE PATH "A prebuilt Skia to link from, read-only, to share one build between build directories (default: build it into this build directory's extlib/skia/build)")
 if (PSYCHIC_UI_SKIA_DIR)
     # A relative directory (set by a parent project or a preset) is the build directory's: CMake already made one given
     # with -D absolute, from the working directory
@@ -108,13 +108,25 @@ foreach (name ${SKIA_LIBRARY_NAMES})
     list(APPEND SKIA_STATIC_LIBS ${SKIA_OUTPUT}/${CMAKE_STATIC_LIBRARY_PREFIX}${name}${CMAKE_STATIC_LIBRARY_SUFFIX})
 endforeach ()
 
-add_custom_command(OUTPUT ${SKIA_STATIC_LIBS}
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_build.sh
-    WORKING_DIRECTORY ${SKIA_SOURCE_DIR}
-    USES_TERMINAL
-)
-
-add_custom_target(skia-build DEPENDS ${SKIA_STATIC_LIBS})
+if (PSYCHIC_UI_SKIA_DIR)
+    # A given Skia is a prebuilt, read-only input: its libraries are no build's outputs, so no clean deletes them, and
+    # skia-build does nothing
+    foreach (library ${SKIA_STATIC_LIBS})
+        if (NOT EXISTS "${library}")
+            message(FATAL_ERROR "PSYCHIC_UI_SKIA_DIR has no ${library}: it must hold a built Skia. Build the skia-build "
+                "target in a Psychic UI build directory configured without PSYCHIC_UI_SKIA_DIR, then point "
+                "PSYCHIC_UI_SKIA_DIR at that build directory's extlib/skia/build.")
+        endif ()
+    endforeach ()
+    add_custom_target(skia-build)
+else ()
+    add_custom_command(OUTPUT ${SKIA_STATIC_LIBS}
+        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_build.sh
+        WORKING_DIRECTORY ${SKIA_SOURCE_DIR}
+        USES_TERMINAL
+    )
+    add_custom_target(skia-build DEPENDS ${SKIA_STATIC_LIBS})
+endif ()
 
 # Skia's headers include each other from the source root ("include/core/SkCanvas.h"), and its
 # modules the same way ("modules/skparagraph/include/Paragraph.h")

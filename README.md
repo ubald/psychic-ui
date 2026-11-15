@@ -85,9 +85,9 @@ target_link_libraries(my-app PRIVATE psychic-ui::psychic-ui)
 psychic_ui_copy_resources(my-app)
 ```
 
-Skia's first build is long. `-DPSYCHIC_UI_SKIA_DIR=<dir>` builds it into that directory and links it from there,
-so several build directories share one build; point it at an existing one (such as another build's
-`extlib/skia/build`) to skip the build.
+Skia's first build is long. `-DPSYCHIC_UI_SKIA_DIR=<dir>` links an already built Skia from that directory
+instead of building one, and only reads it, so several build directories share one build: point it at the
+`extlib/skia/build` of a Psychic UI build directory configured without it, once its `skia-build` target is built.
 
 Relative font paths resolve against the style manager's `resourceRoot()`, the executable's directory by default.
 To keep the resources elsewhere, set it before installing a skin set, which loads the theme's fonts once:
