@@ -85,6 +85,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         components/list_tests.cpp
         components/input_tests.cpp
         components/popup_tests.cpp
+        components/popup_motion_tests.cpp
         style/style_tests.cpp
         style/style_rule_tests.cpp
         style/cascade_tests.cpp
