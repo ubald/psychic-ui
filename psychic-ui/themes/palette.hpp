@@ -1,11 +1,12 @@
 #pragma once
 
+#include <array>
 #include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
 
 /**
- * Named colors: a base16 gray scale and accents, and the One Dark palette
+ * Named colors: a base16 gray scale and accents, the One Dark palette, and Pivotal's swatches
  */
 namespace palette {
     inline constexpr Color base00 = argb(0xFF151515);
@@ -41,6 +42,22 @@ namespace palette {
     inline constexpr Color oneBackground = argb(0xFF282C34);
     inline constexpr Color oneGutter     = argb(0xFF636D83);
     inline constexpr Color oneBlueAccent = argb(0xFF528BFF);
+
+    /**
+     * Pivotal's swatches (`ColorPicker`'s `PALETTE`): eighteen hues around the color wheel, from red to pink, then a
+     * brown and a grey. `ColorSwatches` offers them by default, colorful avatars pick among the hues.
+     */
+    inline constexpr std::array<Color, 20> pivotalSwatches{
+        rgb(0xE5484D), rgb(0xF76B3C), rgb(0xF2994A), rgb(0xE8B339), rgb(0xF2C94C), rgb(0xA8C43F),
+        rgb(0x6CC26A), rgb(0x4CB782), rgb(0x2BB3A3), rgb(0x26B5CE), rgb(0x3FA5F0), rgb(0x4B8BF5),
+        rgb(0x5E6AD2), rgb(0x8E6CEF), rgb(0x8E4EC6), rgb(0xC054D8), rgb(0xD6409F), rgb(0xF0617E),
+        rgb(0xB07D56), rgb(0x95A2B3),
+    };
+
+    /**
+     * How many of `pivotalSwatches` are hues (the rest are a brown and a grey)
+     */
+    inline constexpr std::size_t pivotalHueCount = 18;
 }
 
 }

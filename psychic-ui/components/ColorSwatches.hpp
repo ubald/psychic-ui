@@ -36,7 +36,7 @@ namespace psychic_ui {
     class ColorSwatches : public Component<ColorSwatchesSkin> {
     public:
         /**
-         * Pivotal's palette (`ColorPicker`'s `PALETTE`): eighteen hues, then a brown and a grey
+         * Pivotal's palette (`palette::pivotalSwatches`): eighteen hues, then a brown and a grey
          */
         static const std::vector<Color> &pivotalPalette();
 

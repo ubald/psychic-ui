@@ -4,22 +4,25 @@
 #include "psychic-ui/skins/base/AvatarSkinBase.hpp"
 
 namespace psychic_ui {
-    struct Palette;
-
     /**
      * The default avatar, Pivotal's: a circle on its background color in a hairline, the initials in its `color`.
-     * A `colorful` avatar is tinted instead: a hue picked from its name among six spread around the accent's
-     * (skipping yellows, which don't read as text), at the accent text's saturation and brightness, so it reads on
-     * every layer of the theme; the circle is that hue, faintly, and the initials are in it.
+     * A `colorful` avatar is filled instead with one of the eighteen hues of Pivotal's swatches
+     * (`palette::pivotalSwatches`, red to pink), picked from its name, the initials in white or near black, whichever
+     * contrasts more with it, so they read on every hue in every theme.
      */
     class DefaultAvatarSkin : public AvatarSkinBase {
     public:
         DefaultAvatarSkin();
 
         /**
-         * The tint a colorful avatar with this name gets in a palette
+         * The color a colorful avatar with this name is filled with: the same for the same name, on every platform
          */
-        static Color tint(std::string_view name, const Palette &palette);
+        static Color tint(std::string_view name);
+
+        /**
+         * The initials' color on a fill: white or near black, whichever contrasts more (WCAG's contrast ratio)
+         */
+        static Color initialsOn(Color fill);
 
         void setInitials(const std::string &initials) override;
 

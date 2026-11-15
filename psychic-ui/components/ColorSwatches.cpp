@@ -1,15 +1,11 @@
 #include <algorithm>
 #include "ColorSwatches.hpp"
+#include "psychic-ui/themes/palette.hpp"
 
 namespace psychic_ui {
 
     const std::vector<Color> &ColorSwatches::pivotalPalette() {
-        static const std::vector<Color> palette{
-            rgb(0xE5484D), rgb(0xF76B3C), rgb(0xF2994A), rgb(0xE8B339), rgb(0xF2C94C), rgb(0xA8C43F),
-            rgb(0x6CC26A), rgb(0x4CB782), rgb(0x2BB3A3), rgb(0x26B5CE), rgb(0x3FA5F0), rgb(0x4B8BF5),
-            rgb(0x5E6AD2), rgb(0x8E6CEF), rgb(0x8E4EC6), rgb(0xC054D8), rgb(0xD6409F), rgb(0xF0617E),
-            rgb(0xB07D56), rgb(0x95A2B3),
-        };
+        static const std::vector<Color> palette(palette::pivotalSwatches.begin(), palette::pivotalSwatches.end());
         return palette;
     }
 
