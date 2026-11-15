@@ -2,6 +2,7 @@
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/AppShell.hpp>
+#include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include "../backends/fake_system_window.hpp"
@@ -139,14 +140,83 @@ TEST_CASE("AppShell: the keyboard moves along the items and picks one", "[compon
     CHECK(s.inbox->computedStyle().outlineWidth() == s.theme.metrics.focusRing);
     s.key(Key::DOWN);
     CHECK(s.cues->hasFocus()); // Into the next section
+    CHECK(s.cues->computedStyle().outlineWidth() == s.theme.metrics.focusRing);
+    CHECK(s.shell.sidebar().current() == nullptr); // The focus moves, not the current item
     s.key(Key::DOWN);
     CHECK(s.fixtures->hasFocus());
     s.key(Key::DOWN);
     CHECK(s.fixtures->hasFocus()); // The last one
+    s.key(Key::HOME);
+    CHECK(s.inbox->hasFocus());
+    s.key(Key::END);
+    CHECK(s.fixtures->hasFocus());
     s.key(Key::UP);
     CHECK(s.cues->hasFocus());
     s.key(Key::ENTER);
     CHECK(s.shell.sidebar().current() == s.cues);
+    s.key(Key::DOWN);
+    s.key(Key::SPACE);
+    CHECK(s.shell.sidebar().current() == s.fixtures);
+}
+
+TEST_CASE("AppShell: the sidebar is one Tab stop, the current item else the first", "[components][appshell]") {
+    Shell s;
+    auto &after = s.shell.page().add<Button>("After");
+    s.layout();
+    const auto items = s.shell.sidebar().items();
+    const auto inSidebar = [&]() {
+        for (SidebarItem *item: items) {
+            if (item->hasFocus()) {
+                return item;
+            }
+        }
+        return static_cast<SidebarItem *>(nullptr);
+    };
+    // Tab until the focus is on an item or the button after the sidebar (the window controls come first)
+    const auto tabToStop = [&](const Mod mod = Mod{}) {
+        for (int i = 0; i < 10; ++i) {
+            s.window->handleKeyPress(Key::TAB, mod);
+            s.layout();
+            if (inSidebar() || after.hasFocus()) {
+                return;
+            }
+        }
+    };
+
+    // Tab enters on the first item, and leaves the sidebar from it
+    tabToStop();
+    CHECK(s.inbox->hasFocus());
+    tabToStop();
+    CHECK(after.hasFocus());
+    tabToStop();
+    CHECK(s.inbox->hasFocus());
+
+    // With a current item, it is the stop
+    tabToStop();
+    CHECK(after.hasFocus());
+    s.shell.sidebar().select(s.cues);
+    s.layout();
+    CHECK(s.cues->focusEnabled());
+    CHECK_FALSE(s.inbox->focusEnabled());
+    CHECK_FALSE(s.fixtures->focusEnabled());
+    tabToStop();
+    CHECK(s.cues->hasFocus());
+
+    // Moving away and leaving: the stop goes back to the current item
+    s.key(Key::DOWN);
+    CHECK(s.fixtures->hasFocus());
+    tabToStop();
+    CHECK(after.hasFocus());
+    CHECK(s.cues->focusEnabled());
+    CHECK_FALSE(s.fixtures->focusEnabled());
+    tabToStop();
+    CHECK(s.cues->hasFocus());
+
+    // Shift+Tab from the page comes back to it too
+    tabToStop();
+    CHECK(after.hasFocus());
+    tabToStop(Mod{.shift = true});
+    CHECK(s.cues->hasFocus());
 }
 
 TEST_CASE("AppShell: the sidebar's header moves the window, its controls and the items don't", "[components][appshell][drag]") {

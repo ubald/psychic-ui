@@ -7,13 +7,9 @@ namespace psychic_ui {
     // region Item
 
     SidebarItem::SidebarItem(const std::string &label, const std::string &icon) :
-        Div() {
+        SelectableRow() {
         tag("SidebarItem");
-        _defaultStyle.direction(Direction::Row)
-            .alignItems(Align::Center)
-            .shrink(0);
         _mouseChildren = false;
-        _focusEnabled  = true; // Tab reaches it; Enter or Space picks it, the arrows move along the sidebar
 
         _icon = &add<Icon>(icon);
         _icon->addClassName("icon")
@@ -23,62 +19,10 @@ namespace psychic_ui {
         _count = &add<Label>();
         _count->addClassName("count")
               .display(Display::None);
-
-        clicked.subscribe(
-            [this]() {
-                if (_enabled && _selectable) {
-                    updateCurrent(true);
-                }
-            }
-        );
-
-        keyPressed.subscribe(
-            [this](const Key key, const Mod /*modifiers*/) {
-                if (!_enabled) {
-                    return;
-                }
-                if (key == Key::ENTER || key == Key::KP_ENTER || key == Key::SPACE) {
-                    MouseEvent click = mouseEventAtCenter();
-                    click.button     = MouseButton::LEFT;
-                    clicked.emit(click);
-                    return;
-                }
-                if (key != Key::UP && key != Key::DOWN) {
-                    return;
-                }
-                Sidebar *bar = sidebar();
-                if (!bar || !window()) {
-                    return;
-                }
-                // The next or previous item that can take the focus
-                auto items = bar->items();
-                std::erase_if(items, [this](SidebarItem *item) { return item != this && (!item->enabled() || !item->visible()); });
-                auto it = std::find(items.begin(), items.end(), this);
-                if (it == items.end()) {
-                    return;
-                }
-                if (key == Key::DOWN && std::next(it) != items.end()) {
-                    window()->requestFocus(*std::next(it), true);
-                } else if (key == Key::UP && it != items.begin()) {
-                    window()->requestFocus(*std::prev(it), true);
-                }
-            }
-        );
-    }
-
-    SidebarItem::~SidebarItem() {
-        if (_owner) {
-            _owner->forget(this);
-        }
     }
 
     Sidebar *SidebarItem::sidebar() const {
-        for (const Div *div = parent(); div; div = div->parent()) {
-            if (auto bar = dynamic_cast<const Sidebar *>(div)) {
-                return const_cast<Sidebar *>(bar);
-            }
-        }
-        return nullptr;
+        return dynamic_cast<Sidebar *>(group());
     }
 
     void SidebarItem::updateIcon(const std::string_view icon) {
@@ -89,31 +33,6 @@ namespace psychic_ui {
     void SidebarItem::updateCount(const std::string &count) {
         _count->text(count)
               .display(count.empty() ? Display::None : Display::Flex);
-    }
-
-    void SidebarItem::updateCurrent(const bool current) {
-        Sidebar *bar = sidebar();
-        if (!bar) {
-            setCurrent(current); // Not in a sidebar yet: only itself
-            return;
-        }
-        if (current) {
-            bar->updateCurrent(this);
-        } else if (bar->current() == this) {
-            bar->updateCurrent(nullptr);
-        }
-    }
-
-    void SidebarItem::setCurrent(const bool current) {
-        if (current == _current) {
-            return;
-        }
-        _current = current;
-        if (_current) {
-            addClassName("current");
-        } else {
-            removeClassName("current");
-        }
     }
 
     // endregion
@@ -177,7 +96,7 @@ namespace psychic_ui {
     // region Sidebar
 
     Sidebar::Sidebar() :
-        Div() {
+        RowGroup() {
         tag("Sidebar");
         _defaultStyle.direction(Direction::Column)
             .shrink(0);
@@ -186,12 +105,6 @@ namespace psychic_ui {
         _sections->addClassName("sections")
                  .grow(1)
                  .shrink(1);
-    }
-
-    Sidebar::~Sidebar() {
-        if (_current) {
-            _current->_owner = nullptr; // It goes after us
-        }
     }
 
     SidebarSection &Sidebar::section(const std::string &heading) {
@@ -216,26 +129,21 @@ namespace psychic_ui {
         return items;
     }
 
-    void Sidebar::updateCurrent(SidebarItem *item) {
-        if (item == _current) {
-            return;
-        }
-        if (_current) {
-            _current->setCurrent(false);
-            _current->_owner = nullptr;
-        }
-        _current = item;
-        if (_current) {
-            _current->setCurrent(true);
-            _current->_owner = this;
-        }
-        changed.emit(_current);
+    void Sidebar::selectionUpdated() {
+        changed.emit(current());
     }
 
-    void Sidebar::forget(SidebarItem *item) {
-        if (_current == item) {
-            _current = nullptr;
+    bool Sidebar::handleRowKey(SelectableRow *row, const Key key, const Mod mod) {
+        if (key == Key::ENTER || key == Key::KP_ENTER || key == Key::SPACE) {
+            // Clicks the focused item, at its center
+            if (row && row->enabled() && row->hasFocus()) {
+                MouseEvent click = row->mouseEventAtCenter();
+                click.button     = MouseButton::LEFT;
+                row->clicked.emit(click);
+            }
+            return true;
         }
+        return RowGroup::handleRowKey(row, key, mod);
     }
 
     // endregion

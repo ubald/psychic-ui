@@ -18,7 +18,11 @@ namespace psychic_ui {
                 if (!_enabled) {
                     return;
                 }
-                updateSelected(true);
+                if (selectsOnClick()) {
+                    updateSelected(true);
+                } else if (_owner) {
+                    _owner->updateTabStop(this); // Tab goes on from here, until the focus leaves the group
+                }
                 if (window()) {
                     window()->requestFocus(this); // The keyboard goes on from here; no ring for a click
                 }
@@ -75,9 +79,9 @@ namespace psychic_ui {
         }
         _selected = selected;
         if (_selected) {
-            addClassName("selected");
+            addClassName(selectionClass());
         } else {
-            removeClassName("selected");
+            removeClassName(selectionClass());
         }
     }
 
@@ -103,6 +107,15 @@ namespace psychic_ui {
                     }
                 }
                 handleRowKey(row ? row : _selection, key, mod);
+            }
+        );
+
+        // Where the keyboard only moves the focus, Tab comes back to the selection
+        blurred.subscribe(
+            [this]() {
+                if (!selectionFollowsFocus()) {
+                    updateTabStop();
+                }
             }
         );
     }
@@ -180,7 +193,8 @@ namespace psychic_ui {
         }
         if (!row) {
             const auto all = rows();
-            row = all.empty() ? nullptr : all.front();
+            const auto it  = std::find_if(all.begin(), all.end(), [](SelectableRow *r) { return r->enabled(); });
+            row = it != all.end() ? *it : all.empty() ? nullptr : all.front();
         }
         if (row == _tabStop) {
             return;
@@ -230,7 +244,7 @@ namespace psychic_ui {
 
     bool RowGroup::handleRowKey(SelectableRow *row, const Key key, const Mod /*mod*/) {
         auto all = rows();
-        std::erase_if(all, [row](SelectableRow *other) { return other != row && !other->enabled(); });
+        std::erase_if(all, [row](SelectableRow *other) { return other != row && (!other->enabled() || !other->visible()); });
         if (all.empty()) {
             return false;
         }
@@ -270,7 +284,11 @@ namespace psychic_ui {
         if (!row) {
             return;
         }
-        updateSelection(row);
+        if (selectionFollowsFocus()) {
+            updateSelection(row);
+        } else {
+            updateTabStop(row); // Focused rows take the focus ring: it has to be the Tab stop
+        }
         if (window()) {
             window()->requestFocus(row, true);
         }

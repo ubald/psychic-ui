@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "psychic-ui/Div.hpp"
+#include "Rows.hpp"
 #include "psychic-ui/signals/Signal.hpp"
 #include "Icon.hpp"
 #include "Label.hpp"
@@ -15,15 +16,14 @@ namespace psychic_ui {
      * @class SidebarItem
      *
      * A row of a sidebar's navigation: an icon, a label and a count after it (parts `.icon`, `.label`, `.count`).
-     * Clicking it (or Enter or Space while it has the focus) makes it its sidebar's current item, which has the
-     * `current` class; the up and down arrows move the focus along the sidebar's items.
+     * Clicking it (or Enter or Space while it has the focus) makes it its sidebar's current item (its selection, as
+     * a SelectableRow), which has the `current` class; the arrows move the focus along the sidebar's items.
      *
      *     section.add<SidebarItem>("Inbox", "inbox").count("3").onClick([] { ... });
      */
-    class SidebarItem : public Div {
+    class SidebarItem : public SelectableRow {
     public:
         explicit SidebarItem(const std::string &label = "", const std::string &icon = "");
-        ~SidebarItem();
 
         const std::string &label() const { return _label->text(); }
 
@@ -58,14 +58,14 @@ namespace psychic_ui {
         /**
          * Whether it is its sidebar's current item
          */
-        bool current() const { return _current; }
+        bool current() const { return _selected; }
 
         /**
          * Make it its sidebar's current item (the other one stops being it), or stop being it
          */
         template<class Self>
         Self &current(this Self &self, detail::BoolArg current) {
-            static_cast<SidebarItem &>(self).updateCurrent(current.value);
+            static_cast<SidebarItem &>(self).updateSelected(current.value);
             return self;
         }
 
@@ -87,24 +87,16 @@ namespace psychic_ui {
         Sidebar *sidebar() const;
 
     protected:
-        friend class Sidebar;
-
         // Children, which we own
         Icon  *_icon{nullptr};
         Label *_label{nullptr};
-        Label   *_count{nullptr};
-        bool    _current{false};
-        bool    _selectable{true};
-        Sidebar *_owner{nullptr}; // The sidebar it is current in, while it is
+        Label *_count{nullptr};
+        bool  _selectable{true};
 
         void updateIcon(std::string_view icon);
         void updateCount(const std::string &count);
-        void updateCurrent(bool current);
-
-        /**
-         * Only the state and the class: the sidebar keeps a single current item
-         */
-        void setCurrent(bool current);
+        bool selectsOnClick() const override { return _selectable; }
+        const char *selectionClass() const override { return "current"; }
     };
 
     /**
@@ -159,17 +151,18 @@ namespace psychic_ui {
      * @class Sidebar
      *
      * An app's navigation, the full height of the window on the left of an AppShell: its header (window controls and
-     * the app's name, the drag area), then sections of items. One item at a time is current.
+     * the app's name, the drag area), then sections of items. One item at a time is current. It is a RowGroup whose
+     * selection doesn't follow the focus: one item is in the Tab order (the current one, else the first), Up, Down,
+     * Home and End move the focus along every section's items, Enter or Space clicks the focused one.
      *
      *     auto &sidebar = shell.sidebar().title("Lights").mark("L");
      *     auto &show    = sidebar.section("Show");
      *     show.item("Cues", "list-detail").count("42");
      *     sidebar.onChange([](SidebarItem *item) { ... });
      */
-    class Sidebar : public Div {
+    class Sidebar : public RowGroup {
     public:
         Sidebar();
-        ~Sidebar();
 
         SidebarHeader &header() const { return *_header; }
 
@@ -204,16 +197,9 @@ namespace psychic_ui {
         /**
          * The current item, or nullptr
          */
-        SidebarItem *current() const { return _current; }
+        SidebarItem *current() const { return static_cast<SidebarItem *>(_selection); }
 
-        /**
-         * Make an item current (nullptr for none), emitting `changed` when it changes
-         */
-        template<class Self>
-        Self &select(this Self &self, SidebarItem *item) {
-            static_cast<Sidebar &>(self).updateCurrent(item);
-            return self;
-        }
+        // Make an item current (nullptr for none) with `select(item)`, emitting `changed` when it changes
 
         /**
          * The current item changed, to this one (nullptr for none)
@@ -222,17 +208,11 @@ namespace psychic_ui {
         PSYCHIC_UI_EVENT(onChange, changed)
 
     protected:
-        friend class SidebarItem;
-
         SidebarHeader *_header{nullptr};   // A child, which we own
         Div           *_sections{nullptr}; // A child, which we own
-        SidebarItem   *_current{nullptr};  // One of our descendants
 
-        void updateCurrent(SidebarItem *item);
-
-        /**
-         * An item is going away: it can't stay current
-         */
-        void forget(SidebarItem *item);
+        bool selectionFollowsFocus() const override { return false; }
+        void selectionUpdated() override;
+        bool handleRowKey(SelectableRow *row, Key key, Mod mod) override;
     };
 }
