@@ -230,6 +230,8 @@ namespace psychic_ui {
         int                       _highlighted{-1};
         std::weak_ptr<Menu>       _submenu{};
         int                       _submenuRow{-1};
+        std::weak_ptr<Menu>       _closedSubmenu{};     // The last one closed, while it fades out
+        int                       _closedSubmenuRow{-1};
         bool                      _iconColumn{false};
         bool                      _checkColumn{false};
         bool                      _takeFocus{true}; // A submenu opened by hovering leaves the focus where it is

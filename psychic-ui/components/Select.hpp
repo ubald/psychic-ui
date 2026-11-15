@@ -65,7 +65,10 @@ namespace psychic_ui {
         /**
          * Whether its list is open
          */
-        bool isOpen() const { return !_menu.expired(); }
+        bool isOpen() const {
+            auto menu = _menu.lock();
+            return menu && menu->isOpen(); // Not while it fades out
+        }
 
         void open();
         void close();

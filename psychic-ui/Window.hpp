@@ -632,6 +632,7 @@ namespace psychic_ui {
 
         std::shared_ptr<ToastStack> _toasts{};
         std::shared_ptr<Tooltip>    _tooltip{};     // Open, or nullptr
+        std::weak_ptr<Tooltip>      _hidTooltip{};  // The last one hidden, while it fades out
         std::weak_ptr<Div>          _tooltipTarget{}; // The div under the mouse with a tooltip
         std::optional<std::chrono::nanoseconds> _tooltipSince{}; // When the mouse came to rest on it (the next frame)
         bool                        _tooltipSuppressed{false}; // Pressed or typed: none until the mouse moves to another

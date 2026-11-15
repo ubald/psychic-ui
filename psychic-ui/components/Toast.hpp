@@ -65,12 +65,13 @@ namespace psychic_ui {
         std::chrono::nanoseconds elapsed() const { return _elapsed; }
 
         /**
-         * Take it out of its stack
+         * Take it out of its stack: it leaves once its exit transitions (the `exiting` class) are over, and no longer
+         * counts meanwhile (`ToastStack::toasts`, its limit)
          */
         void dismiss();
 
         /**
-         * After it left its stack
+         * When it was dismissed, as it starts leaving its stack
          */
         Signal<> dismissed{};
 
@@ -98,8 +99,9 @@ namespace psychic_ui {
      * @class ToastStack
      *
      * The corner the toasts stack in, bottom right in the overlay: the newest at the bottom, at most `limit` (adding
-     * one more closes the oldest). Non-modal: it only takes the mouse on the toasts. The window makes it
-     * (`Window::toasts()`).
+     * one more closes the oldest, with the `limited` class). Non-modal: it only takes the mouse on the toasts. The
+     * window makes it (`Window::toasts()`). A toast enters with the `entering` class (`Div::startingClass`) and
+     * leaves with `exiting`; those leaving aren't in `toasts()`.
      */
     class ToastStack : public Popup {
     public:
@@ -109,6 +111,9 @@ namespace psychic_ui {
 
         Toast &add(const ToastOptions &options);
 
+        /**
+         * The toasts shown, oldest first (not those leaving)
+         */
         std::vector<Toast *> toasts() const;
 
         std::optional<std::chrono::nanoseconds> nextUpdate() const override;

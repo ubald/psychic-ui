@@ -19,6 +19,7 @@ namespace {
 
         HeadlessWindow() : Window("Headless") {
             setWindowSize(1440, 900);
+            reducedMotion(true); // Popups close at once: the tests are about lifetimes, not motion
             skinSet<DefaultSkins>();
         }
 

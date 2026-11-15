@@ -62,6 +62,12 @@ namespace psychic_ui {
      * - `trapFocus(true)`: Tab stays among its divs. When it closes with the focus inside it, the focus goes back to
      *   what had it when it opened (`restoreFocus`, the default).
      * - A popup opened from another (`owner(popup)`, a submenu) closes with it.
+     * - It enters and leaves with transitions: it has the `entering` class for its first style
+     *   (`Div::startingClass`), so that its rules' transitions start from there, and its placed side as a class
+     *   (`side-bottom`, `side-top`, `side-right`, `side-left`) with its transform origin at its anchor once anchored.
+     *   `close()` gives it the `exiting` class (`Div::exit`): it is closed at once (not `isOpen`, not modal, no mouse,
+     *   no focus, `closed` emitted) but stays in the overlay until its and its descendants' transitions end; opening
+     *   it again meanwhile brings it back from where it is. With reduced motion it is removed at once.
      *
      * Its surface (`surface()`, itself by default) is the part that counts as inside: a dialog's panel, not its
      * backdrop.
@@ -150,7 +156,10 @@ namespace psychic_ui {
 
         // region Behavior
 
-        bool modal() const { return _modal; }
+        /**
+         * Whether it takes the mouse from what is under it: while it is open, not while it leaves
+         */
+        bool modal() const { return _modal && !exiting(); }
 
         template<class Self>
         Self &modal(this Self &self, detail::BoolArg modal) {
@@ -230,18 +239,19 @@ namespace psychic_ui {
         // endregion
 
         /**
-         * Whether it is in an overlay
+         * Whether it is in an overlay and not leaving it
          */
         bool isOpen() const;
 
         /**
-         * Close it, the popups it owns first; a no-op when it is closed. It is removed from the overlay: keep a
-         * shared_ptr to reuse it.
+         * Close it, the popups it owns first; a no-op when it is closed (or leaving). It leaves the overlay once its
+         * exit transitions end (at once with reduced motion): keep a shared_ptr to reuse it.
          */
         void close();
 
         /**
-         * After it closed (and the focus went back)
+         * When it closed (and the focus went back), as its exit starts: it may stay in the overlay a moment longer,
+         * fading out (its `removed()` is when it leaves)
          */
         Signal<> closed{};
 
@@ -277,6 +287,11 @@ namespace psychic_ui {
         bool                            _laidOut{false};    // `laidOut` was called since it opened
 
         void updateAnchor(Div *anchor, int x, int y);
+
+        /**
+         * It went on this side: `placedSide()`, and its class (`side-bottom`...)
+         */
+        void placed(Side side);
 
         /**
          * Called by the overlay once it is in it, after the focus it had was noted: take the focus (`opened`)
@@ -321,22 +336,22 @@ namespace psychic_ui {
         }
 
         /**
-         * Open an existing popup (on top again if it was open)
+         * Open an existing popup (on top again if it was open; back from where it is if it was leaving)
          */
         Popup &open(const std::shared_ptr<Popup> &popup);
 
         /**
-         * The open popups, bottom first
+         * The open popups, bottom first (not those leaving)
          */
         std::vector<Popup *> popups() const;
 
         /**
-         * The topmost popup that is a T, or nullptr
+         * The topmost open popup that is a T, or nullptr
          */
         template<class T>
         T *top() const {
             for (auto it = _children.rbegin(); it != _children.rend(); ++it) {
-                if (auto popup = dynamic_cast<T *>(it->get())) {
+                if (auto popup = dynamic_cast<T *>(it->get()); popup && !popup->exiting()) {
                     return popup;
                 }
             }
@@ -358,8 +373,8 @@ namespace psychic_ui {
         }
 
         /**
-         * Place the anchored popups beside their anchors (closing those whose anchor left the window), then call
-         * `laidOut` on those laid out for the first time
+         * Place the anchored popups beside their anchors (closing those whose anchor left the window; those leaving
+         * stay where they are), then call `laidOut` on those laid out for the first time
          * @return Whether one moved, so that the layout must run again
          */
         bool place();
@@ -412,6 +427,11 @@ namespace psychic_ui {
         friend class Popup;
 
         void close(Popup &popup);
+
+        /**
+         * Put an open popup on top without taking it out (it keeps its style and transitions)
+         */
+        void raise(Popup &popup);
 
         /**
          * Whether a point (window coordinates) is on a popup's surface

@@ -153,6 +153,22 @@ namespace psychic_ui {
         }
         closeSubmenu();
 
+        // Back onto the row whose submenu is still fading out: it comes back from where it is
+        if (auto closed = _closedSubmenu.lock(); closed && closed->exiting() && _closedSubmenuRow == index) {
+            closed->_takeFocus = focus;
+            _submenu    = closed;
+            _submenuRow = index;
+            highlight(index);
+            w->overlay().open(closed);
+            if (focus) {
+                w->requestFocus(closed.get(), w->focusVisible());
+                if (closed->_highlighted < 0) {
+                    closed->move(1);
+                }
+            }
+            return;
+        }
+
         // Beside its row, its first row level with it: up by the menu's padding and border, which are the first
         // child's offset. Not modal, so that the mouse still reaches this menu.
         const float inset = _children.empty() ? 0.0f : static_cast<float>(_children.front()->y());
@@ -184,6 +200,8 @@ namespace psychic_ui {
         if (auto open = _submenu.lock()) {
             _submenu.reset();
             open->close();
+            _closedSubmenu    = open;
+            _closedSubmenuRow = _submenuRow;
         }
         _submenuRow = -1;
     }

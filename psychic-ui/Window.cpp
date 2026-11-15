@@ -739,8 +739,14 @@ namespace psychic_ui {
 
     void Window::showTooltip(Div &target) {
         hideTooltip(false);
-        _tooltip = std::make_shared<Tooltip>(target.tooltip());
-        _tooltip->anchor(target);
+        // The one just hidden, still fading out, comes back from where it is when it says the same about the same div
+        auto hid = _hidTooltip.lock();
+        if (hid && hid->exiting() && hid->anchorDiv() == &target && hid->text() == target.tooltip()) {
+            _tooltip = std::move(hid);
+        } else {
+            _tooltip = std::make_shared<Tooltip>(target.tooltip());
+            _tooltip->anchor(target);
+        }
         _overlay->open(_tooltip);
     }
 
@@ -748,6 +754,7 @@ namespace psychic_ui {
         if (_tooltip) {
             auto tooltip = std::move(_tooltip);
             tooltip->close();
+            _hidTooltip = tooltip;
             _tooltipWarm = warm;
             _warmSince   = std::nullopt;
         }
