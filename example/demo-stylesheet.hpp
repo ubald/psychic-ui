@@ -11,8 +11,9 @@ using namespace psychic_ui;
 class DemoStyleSheet : public StyleSheet {
 public:
     void load(StyleManager *manager) override {
-        const Palette &p = manager->theme().palette;
-        const Metrics &m = manager->theme().metrics;
+        const Theme   &theme = manager->theme();
+        const Palette &p     = theme.palette;
+        const Metrics &m     = theme.metrics;
 
         manager->loadFont("stan0755", "fonts/stan0755.ttf");
 
@@ -222,6 +223,193 @@ public:
                .alignItems(Align::Center)
                .gap(m.space(1.5f))
                .marginRight(m.space(2));
+
+        // endregion
+
+        // region Canvas
+
+        // The page is the canvas: the frame's color, dotted every 16 px
+        manager->style("CanvasPage")
+               .position(Position::Relative)
+               .overflow(Overflow::Hidden)
+               .backgroundColor(p.frame)
+               .dotGridColor(p.canvasDot)
+               .dotGridSpacing(16)
+               .dotGridRadius(1);
+
+        // Panels float over it with the theme's panel elevation; a theme without one (only Float's have it) gets
+        // the popups' elevation and their strong hairline instead, so they still stand apart from the canvas
+        Style &floating = manager->style("CanvasPage .floating")
+                                 .backgroundColor(p.surface)
+                                 .borderRadius(m.radius.surface);
+        const bool   hasPanel = theme.elevation.panel.color.alpha() > 0;
+        const Shadow &soft    = hasPanel ? theme.elevation.panel : theme.elevation.overlay;
+        const Shadow &contact = hasPanel ? theme.elevation.panelContact : theme.elevation.overlayContact;
+        floating.shadowColor(soft.color)
+                .shadowBlur(soft.blur)
+                .shadowOffsetY(soft.offsetY)
+                .shadowSpread(soft.spread)
+                .shadow2Color(contact.color)
+                .shadow2Blur(contact.blur)
+                .shadow2OffsetY(contact.offsetY)
+                .shadow2Spread(contact.spread);
+        if (!hasPanel) {
+            floating.border(m.border).borderColor(p.lineStrong);
+        }
+
+        // Layers fill the canvas to place what they hold (the stage in the middle, the tool bar at the bottom)
+        manager->style("CanvasPage .fill")
+               .position(Position::Absolute)
+               .left(0).top(0).right(0).bottom(0)
+               .alignItems(Align::Center)
+               .justify(Justify::Center);
+
+        manager->style("CanvasPage .left")
+               .position(Position::Absolute)
+               .left(m.space(4))
+               .top(m.space(4))
+               .width(232)
+               .gap(m.space(2));
+
+        manager->style("CanvasPage .document")
+               .alignSelf(Align::Start)
+               .alignItems(Align::Center)
+               .gap(m.space(2))
+               .height(44)
+               .paddingLeft(m.space(2.5f))
+               .paddingRight(m.space(3))
+               .iconSize(m.iconSm)
+               .color(p.textMuted);
+
+        manager->style("CanvasPage .document .mark")
+               .width(24)
+               .height(24)
+               .textAlign(TextAlign::Center)
+               .lineHeight(24)
+               .borderRadius(m.radius.small)
+               .fontFamily(theme.type.semiBold.name)
+               .fontSize(theme.type.xs.size)
+               .backgroundColor(p.accent)
+               .color(p.onAccent);
+
+        manager->style("CanvasPage .document .name")
+               .fontFamily(theme.type.semiBold.name)
+               .fontSize(theme.type.md.size)
+               .lineHeight(theme.type.md.leading)
+               .color(p.text);
+
+        manager->style("CanvasPage .layers")
+               .padding(m.space(2))
+               .paddingTop(m.space(1));
+
+        manager->style("CanvasPage .layers .heading")
+               .fontSize(theme.type.xs.size)
+               .lineHeight(theme.type.xs.leading)
+               .paddingHorizontal(m.space(2))
+               .paddingTop(m.space(2))
+               .paddingBottom(m.space(1))
+               .color(p.textMuted);
+
+        manager->style("CanvasPage .inspector")
+               .position(Position::Absolute)
+               .right(m.space(4))
+               .top(m.space(4))
+               .width(300)
+               .overflow(Overflow::Hidden); // Its sections' hairlines end at its corners
+
+        manager->style("CanvasPage .inspector .actions")
+               .gap(m.space(2))
+               .padding(m.gutter)
+               .borderTop(m.border)
+               .borderColor(p.line);
+
+        manager->style("CanvasPage .inspector InspectorField")
+               .alignItems(Align::Center);
+
+        manager->style("CanvasPage .inspector InspectorField .name")
+               .width(80);
+
+        manager->style("CanvasPage .inspector NumberStepper")
+               .width(112);
+
+        manager->style("CanvasPage .dock")
+               .position(Position::Absolute)
+               .left(0).right(0).bottom(m.space(5))
+               .justify(Justify::Center);
+
+        // The tool bar: a floating strip of square quiet tools, not a band under a header
+        manager->style("CanvasPage ToolBar")
+               .height(Auto)
+               .padding(m.space(1.5f))
+               .gap(m.space(1))
+               .borderBottom(0);
+        if (!hasPanel) {
+            manager->style("CanvasPage ToolBar").border(m.border).borderColor(p.lineStrong);
+        }
+
+        manager->style("CanvasPage ToolBar Button")
+               .width(36)
+               .height(36)
+               .paddingHorizontal(0)
+               .iconSize(theme.metrics.iconMd + 3)
+               .borderRadius(m.radius.control);
+
+        // The current tool in the accent, whatever the set (Float's rule does the same for every tool bar)
+        manager->style("CanvasPage ToolBar Button:active DefaultButtonSkin.quiet")
+               .color(p.onAccent)
+               .backgroundColor(p.accent);
+
+        // The stage: a lighting plot in the middle of the canvas
+        manager->style("CanvasPage .stage")
+               .position(Position::Relative)
+               .width(468)
+               .height(300)
+               .border(m.border)
+               .borderColor(p.lineStrong)
+               .borderRadius(m.radius.control)
+               .backgroundColor(p.page.withAlpha(0x99)); // The canvas shows through, a little
+
+        manager->style("CanvasPage .truss")
+               .position(Position::Absolute)
+               .left(40).right(40).top(67)
+               .height(2)
+               .backgroundColor(p.lineStrong);
+
+        manager->style("CanvasPage .fixture")
+               .position(Position::Absolute)
+               .width(28)
+               .height(28)
+               .borderRadius(999)
+               .border(2)
+               .borderColor(p.lineStrong);
+
+        manager->style("CanvasPage .selection")
+               .position(Position::Absolute)
+               .left(284).top(46)
+               .width(124).height(44)
+               .border(1.5f)
+               .borderColor(p.accent)
+               .borderRadius(2)
+               .alignItems(Align::Center);
+
+        manager->style("CanvasPage .selection-label")
+               .position(Position::Absolute)
+               .top(-30)
+               .paddingHorizontal(m.space(2))
+               .height(24)
+               .borderRadius(m.radius.small)
+               .fontFamily(theme.type.medium.name)
+               .fontSize(theme.type.sm.size)
+               .lineHeight(24)
+               .backgroundColor(p.accent)
+               .color(p.onAccent);
+
+        manager->style("CanvasPage .caption")
+               .position(Position::Absolute)
+               .left(m.space(3))
+               .bottom(m.space(2))
+               .fontSize(theme.type.sm.size)
+               .color(p.textMuted);
 
         // endregion
 

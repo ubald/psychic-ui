@@ -23,6 +23,7 @@
 #include "Buttons.hpp"
 #include "Divs.hpp"
 #include "Scrollers.hpp"
+#include "Canvas.hpp"
 #include "Ranges.hpp"
 #include "Colors.hpp"
 #include "Icons.hpp"
@@ -41,7 +42,7 @@ namespace psychic_ui {
         DemoWindow();
 
         /**
-         * Show a page by its name ("Buttons"); false when there is none
+         * Show a page by its name ("Buttons", or its key, "text-input"); false when there is none
          */
         bool showPage(const std::string &name);
 
@@ -156,6 +157,7 @@ namespace psychic_ui {
             {"Typography", "file-text", page([] { return std::make_shared<TypographyPanel>(); })},
             {"Divs", "layers", page([] { return std::make_shared<Divs>(); })},
             {"Scroller", "arrow-up-down", page([] { return std::make_shared<Scrollers>(); })},
+            {"Canvas", "hash", page([] { return std::make_shared<CanvasPage>(); })},
             {"Colors", "eyedropper", page([] { return std::make_shared<Colors>(); })},
             {"Icons", "star", page([] { return std::make_shared<IconsPanel>(); })},
             {"Inputs", "settings", page([] { return std::make_shared<Inputs>(); })}, // In Controls, after Text Input
@@ -168,12 +170,14 @@ namespace psychic_ui {
         auto &assets   = sidebar.section("Assets");
         assets.grow(1); // Pushes the last section to the bottom
         for (Page &p: _pages) {
-            SidebarSection &section = p.name == "Divs" || p.name == "Scroller" || p.name == "Typography"
+            SidebarSection &section = p.name == "Divs" || p.name == "Scroller" || p.name == "Canvas" || p.name == "Typography"
                                       ? layout
                                       : p.name == "Colors" || p.name == "Icons" ? assets : controls;
             p.item = &section.item(p.name, p.icon);
+            if (p.name == "Icons") {
+                p.item->count(std::to_string(IconRegistry::shared().names().size()));
+            }
         }
-        _pages[7].item->count(std::to_string(IconRegistry::shared().names().size()));
 
         auto &bottom = sidebar.section();
         _themeItem = &bottom.item("Theme", "sun");
@@ -288,7 +292,7 @@ namespace psychic_ui {
 
     bool DemoWindow::showPage(const std::string &name) {
         for (Page &p: _pages) {
-            if (p.name == name) {
+            if (p.name == name || keyOf(p.name) == name) {
                 _shell->sidebar().select(p.item);
                 return true;
             }
