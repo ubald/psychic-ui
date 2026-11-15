@@ -130,8 +130,10 @@ namespace psychic_ui {
         _children->display(_expanded ? Display::Flex : Display::None);
         if (_expanded) {
             addClassName("expanded");
+            _children->addClassName("open");
         } else {
             removeClassName("expanded");
+            _children->removeClassName("open");
         }
         updateDisclosure();
         if (Tree *t = tree()) {

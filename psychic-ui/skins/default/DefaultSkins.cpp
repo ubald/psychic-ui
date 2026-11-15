@@ -871,12 +871,30 @@ namespace psychic_ui {
         rule("Dialog.exiting").opacity(0).transition(P::opacity, leave);
         rule("Dialog.exiting .panel").scale(0.97f).transition(P::scale, leave);
 
-        // A toast slides in from under the stack's edge, and back out fading; one pushed out by a new one (the
-        // stack's `limit`) only fades, where it is
+        // A toast slides in from under the stack's edge, and back out fading; one with another under it (dismissed
+        // from the middle, or pushed out by a new one, the stack's `limit`) only fades, where it is. The others slide
+        // into its place meanwhile (it left the stack's flow).
         rule("Toast").transition(motion, enter);
         rule("Toast.entering").opacity(0).translateY(150_pct);
         rule("Toast.exiting").opacity(0).translateY(150_pct).transition(motion, Timing{mo.medium, mo.out});
-        rule("Toast.exiting.limited").translateY(0);
+        rule("Toast.exiting.in-place").translateY(0);
+
+        // endregion
+
+        // region Layout transitions
+
+        // What a new layout moves slides from where it was painted (FLIP, a paint offset): the toasts as one comes or
+        // goes, rows when a list or a grid is sorted, the tree's rows below a node that expands or collapses, as its
+        // children fade in (they go at once), the sidebar's sections and items
+        const Timing slide = mo.arrive();
+        rule("ToastStack").layoutTransition(slide);
+        rule("List").layoutTransition(slide);
+        rule("DataGrid .body").layoutTransition(slide);
+        rule("Tree").layoutTransition(slide);
+        rule("Tree .children").layoutTransition(slide).opacity(0).transition(P::opacity, slide);
+        rule("Tree .children.open").opacity(1);
+        rule("Sidebar .sections").layoutTransition(slide);
+        rule("SidebarSection").layoutTransition(slide);
 
         // endregion
 

@@ -66,7 +66,9 @@ namespace psychic_ui {
 
         /**
          * Take it out of its stack: it leaves once its exit transitions (the `exiting` class) are over, and no longer
-         * counts meanwhile (`ToastStack::toasts`, its limit)
+         * counts meanwhile (`ToastStack::toasts`, its limit). It leaves the stack's flow at once, where it is (absolute),
+         * so that the others slide into its place as it goes (the stack's `layoutTransition`); one with a toast still
+         * under it also has the `in-place` class (it fades where it is rather than sliding over that one).
          */
         void dismiss();
 
@@ -99,7 +101,7 @@ namespace psychic_ui {
      * @class ToastStack
      *
      * The corner the toasts stack in, bottom right in the overlay: the newest at the bottom, at most `limit` (adding
-     * one more closes the oldest, with the `limited` class). Non-modal: it only takes the mouse on the toasts. The
+     * one more closes the oldest, with the `limited` class, and `in-place`). Non-modal: it only takes the mouse on the toasts. The
      * window makes it (`Window::toasts()`). A toast enters with the `entering` class (`Div::startingClass`) and
      * leaves with `exiting`; those leaving aren't in `toasts()`.
      */

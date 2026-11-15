@@ -1,8 +1,14 @@
 #include <chrono>
+#include <cmath>
 #include <memory>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/Window.hpp>
+#include <psychic-ui/components/DataGrid.hpp>
+#include <psychic-ui/components/Toast.hpp>
+#include <psychic-ui/components/Tree.hpp>
+#include <psychic-ui/themes/pivotal.hpp>
+#include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;
 using namespace std::chrono_literals;
@@ -236,3 +242,181 @@ TEST_CASE("Nothing slides with reduced motion, a new window size or new rules", 
         CHECK(f.b->layoutOffsetY() == 0.0f);
     }
 }
+
+// region Components
+
+namespace {
+    constexpr Motion motion = themes::pivotalDark.metrics.motion;
+
+    /**
+     * The default skin set's layout transitions, with motion, driven by frames at explicit times
+     */
+    struct Components {
+        std::shared_ptr<psychic_ui_tests::TestWindow> window{std::make_shared<psychic_ui_tests::TestWindow>()};
+        psychic_ui_tests::FakeSystemWindow            systemWindow{window, 800, 600};
+
+        Components() {
+            window->reducedMotion(false);
+        }
+
+        /**
+         * What drawAll does at `time`, then a raster render
+         */
+        void frame(std::chrono::nanoseconds time) {
+            window->updatePopups(time);
+            window->updateAnimations(time);
+            systemWindow.layout();
+        }
+
+        bool settled() const {
+            return !window->animating() && !window->needsFrame();
+        }
+
+        static int windowY(const Div &div) {
+            int x = 0;
+            int y = 0;
+            div.localToGlobal(x, y, 0, 0);
+            return y;
+        }
+    };
+
+    bool hasClass(const Div &div, const std::string &name) {
+        return div.classNames().contains(name);
+    }
+}
+
+TEST_CASE("A sorted grid's rows slide to their new places, keeping the selection and the focus", "[animation][layout-transition][datagrid]") {
+    Components f{};
+    auto &grid = f.window->appContainer().add<DataGrid>()
+                  .height(300)
+                  .columns({{"Name"}, {"Size", 80}});
+    auto &c = grid.row({"c", "3"});
+    auto &b = grid.row({"b", "2"});
+    auto &a = grid.row({"a", "1"});
+    f.frame(0ms);
+    f.frame(500ms);
+    REQUIRE(f.settled());
+    grid.select(&b);
+    f.window->requestFocus(&b);
+    const int cY = Components::windowY(c);
+    const int aY = Components::windowY(a);
+    f.frame(500ms);
+
+    grid.sort(0, SortOrder::Ascending);
+    f.frame(500ms);
+    // Laid out in their new places, painted in their old ones
+    CHECK(Components::windowY(a) == cY);
+    CHECK(a.layoutOffsetY() == Approx(static_cast<float>(aY - cY)));
+    CHECK(c.layoutOffsetY() == Approx(static_cast<float>(cY - aY)));
+    CHECK(b.layoutOffsetY() == 0.0f); // In the middle, where it was
+    CHECK(grid.selectedRow() == &b);
+    CHECK(b.hasFocus());
+
+    f.frame(500ms + motion.medium / 2);
+    CHECK(std::abs(a.layoutOffsetY()) > 0.0f);
+    CHECK(std::abs(a.layoutOffsetY()) < static_cast<float>(aY - cY));
+    f.frame(500ms + motion.medium);
+    CHECK(a.layoutOffsetY() == 0.0f);
+    CHECK(c.layoutOffsetY() == 0.0f);
+    CHECK(f.settled());
+}
+
+TEST_CASE("A tree's rows below a node slide down as it expands, up as it collapses", "[animation][layout-transition][tree]") {
+    Components f{};
+    auto &tree   = f.window->appContainer().add<Tree>();
+    auto &src    = tree.node("src", "folder");
+    auto &main   = src.node("main.cpp", "file");
+    src.node("util.cpp", "file");
+    auto &readme = tree.node("README.md", "file");
+    const Div &children = *src.children()[1];
+    f.frame(0ms);
+    f.frame(500ms);
+    REQUIRE(f.settled());
+    const int before = Components::windowY(readme);
+
+    src.expanded(true);
+    f.frame(500ms);
+    const int after = Components::windowY(readme);
+    REQUIRE(after > before);
+    CHECK(readme.layoutOffsetY() == Approx(static_cast<float>(before - after)));
+    // The children appear in place, fading in
+    CHECK(main.layoutOffsetY() == 0.0f);
+    CHECK(children.computedStyle().opacity() == 0.0f);
+    f.frame(500ms + motion.medium / 2);
+    CHECK(readme.layoutOffsetY() < 0.0f);
+    CHECK(children.computedStyle().opacity() > 0.0f);
+    f.frame(500ms + motion.medium);
+    CHECK(readme.layoutOffsetY() == 0.0f);
+    CHECK(children.computedStyle().opacity() == 1.0f);
+    CHECK(f.settled());
+
+    // Collapsed: they go at once, the rows below slide up
+    src.expanded(false);
+    f.frame(1000ms);
+    CHECK(Components::windowY(readme) == before);
+    CHECK(readme.layoutOffsetY() == Approx(static_cast<float>(after - before)));
+    f.frame(1000ms + motion.medium);
+    CHECK(readme.layoutOffsetY() == 0.0f);
+    f.frame(1000ms + motion.medium);
+    CHECK(f.settled());
+
+    // Expanded again: its children appear in place again
+    src.expanded(true);
+    f.frame(2000ms);
+    CHECK(main.layoutOffsetY() == 0.0f);
+    CHECK(readme.layoutOffsetY() < 0.0f);
+}
+
+TEST_CASE("Toasts slide into the place of one that leaves, which fades where it is", "[animation][layout-transition][toast]") {
+    Components f{};
+    Toast &first  = f.window->toast({.title = "First", .timeout = 0s});
+    Toast &second = f.window->toast({.title = "Second", .timeout = 0s});
+    Toast &third  = f.window->toast({.title = "Third", .timeout = 0s});
+    f.frame(0ms);
+    f.frame(500ms);
+    REQUIRE(f.settled());
+    const int firstY  = Components::windowY(first);
+    const int secondY = Components::windowY(second);
+
+    // From the middle: it fades where it is, out of the flow, and the one above slides down into its place
+    second.dismiss();
+    CHECK(hasClass(second, "in-place"));
+    f.frame(500ms);
+    CHECK(Components::windowY(second) == secondY);
+    CHECK(Components::windowY(first) == secondY);
+    CHECK(first.layoutOffsetY() == Approx(static_cast<float>(firstY - secondY)));
+    CHECK(third.layoutOffsetY() == 0.0f);
+    f.frame(500ms + motion.medium / 2);
+    CHECK(second.computedStyle().translateY().resolve(100) == 0.0f);
+    CHECK(second.computedStyle().opacity() < 1.0f);
+    CHECK(first.layoutOffsetY() < 0.0f);
+    f.frame(500ms + motion.medium);
+    f.frame(500ms + motion.medium);
+    CHECK(f.window->toasts().children().size() == 2);
+    CHECK(first.layoutOffsetY() == 0.0f);
+    CHECK(f.settled());
+
+    // The bottom one slides back under the edge, and the one above follows it down
+    const int thirdY = Components::windowY(third);
+    third.dismiss();
+    CHECK_FALSE(hasClass(third, "in-place"));
+    f.frame(1000ms);
+    CHECK(Components::windowY(first) == thirdY);
+    CHECK(first.layoutOffsetY() < 0.0f);
+    f.frame(1000ms + motion.medium / 2);
+    CHECK(third.computedStyle().translateY().value > 0.0f);
+
+    // A new one pushes the others up: they slide
+    f.frame(2000ms);
+    f.frame(2000ms);
+    REQUIRE(f.window->toasts().children().size() == 1);
+    const int lastY = Components::windowY(first);
+    f.window->toast({.title = "Fourth", .timeout = 0s});
+    f.frame(2000ms);
+    CHECK(Components::windowY(first) < lastY);
+    CHECK(first.layoutOffsetY() == Approx(static_cast<float>(lastY - Components::windowY(first))));
+    f.frame(3000ms);
+    CHECK(f.settled());
+}
+
+// endregion

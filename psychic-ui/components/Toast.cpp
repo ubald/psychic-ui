@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Toast.hpp"
 
 namespace psychic_ui {
@@ -94,6 +95,20 @@ namespace psychic_ui {
             return;
         }
         const auto keepAlive = shared_from_this();
+        // One with another under it fades where it is, rather than sliding down over it
+        const auto &siblings = stack->children();
+        const auto self      = std::find_if(siblings.begin(), siblings.end(), [this](const auto &c) { return c.get() == this; });
+        if (std::any_of(self, siblings.end(), [this](const auto &c) { return c.get() != this && !c->exiting(); })) {
+            addClassName("in-place");
+        }
+        // Out of the stack's flow, where it is (the stack keeps its bottom edge in the corner): the others slide into
+        // its place as it leaves
+        if (layoutReady) {
+            position(Position::Absolute)
+                .left(x())
+                .width(getWidth())
+                .bottom(stack->getHeight() - (y() + getHeight()));
+        }
         // It leaves the stack once its exit transitions are over (at once with reduced motion)
         exit("exiting", [this]() {
             if (Div *from = parent()) {
