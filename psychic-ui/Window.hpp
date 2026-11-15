@@ -113,6 +113,50 @@ namespace psychic_ui {
          */
         static constexpr int maxStylePasses = 4;
 
+        // region Animation
+
+        /**
+         * Advance what moves with time: tweens (`Animated`, `Div::animate`) and style transitions. `drawAll` calls it
+         * every frame with the system window's `gestureTime()`, after `updateGestures` and `updatePopups` and before
+         * the styles and the layout; tests call it with their own times. A tween started after it, until the frame
+         * ends, starts at its time (`animationClock`); one started between frames starts with the next one.
+         */
+        void updateAnimations(std::chrono::nanoseconds now);
+
+        /**
+         * The time of the frame being made: what `updateAnimations` was last given, until `drawAll` ends. nullopt
+         * between frames.
+         */
+        std::optional<std::chrono::nanoseconds> animationClock() const;
+
+        /**
+         * Tick an animation in `updateAnimations` until it ends; held weakly, so it ends with its owner too
+         */
+        void startAnimation(const std::shared_ptr<Animation> &animation);
+
+        /**
+         * Whether something moves: a tween, a style transition, kinetic scrolling
+         */
+        bool animating() const;
+
+        /**
+         * Whether motion is reduced: every duration is 0, values jump to their end (style transitions, `Animated`,
+         * `Div::animate`). Kinetic scrolling, which follows the finger, stays. Off by default: SDL doesn't say what
+         * the system prefers.
+         */
+        bool reducedMotion() const { return _reducedMotion; }
+
+        /**
+         * Reduce motion or not; reducing it ends what moves now
+         */
+        template<class Self>
+        Self &reducedMotion(this Self &self, detail::BoolArg reduced) {
+            static_cast<Window &>(self).updateReducedMotion(reduced.value);
+            return self;
+        }
+
+        // endregion
+
         // region Popups
 
         /**
@@ -537,6 +581,7 @@ namespace psychic_ui {
 
     protected:
 
+        void updateReducedMotion(bool reduced);
         void updateTheme(const Theme &theme);
         void applyTheme(const Theme &theme);
         void updateSkinSet(std::unique_ptr<SkinSet> skinSet);
@@ -577,6 +622,15 @@ namespace psychic_ui {
 
         void showTooltip(Div &target);
         void hideTooltip(bool warm);
+
+        // endregion
+
+        // region Animation and frames
+
+        std::vector<std::weak_ptr<Animation>> _scheduledAnimations{};
+        std::chrono::nanoseconds              _animationTime{};
+        bool                                  _animationClockFresh{false}; // From updateAnimations to the end of drawAll
+        bool                                  _reducedMotion{false};
 
         // endregion
 

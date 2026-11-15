@@ -42,11 +42,18 @@ namespace psychic_ui {
 
         // region Properties
 
-        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout) \
+        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) \
             const Type &name() const { return _values.name; } \
             Style &name(Argument value) { return assign(Property::name, _values.name, detail::toValue(value)); }
         PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
         #undef PSYCHIC_UI_X
+
+        /**
+         * Add to the transition: these properties blend to their new values with this timing (see `Transition`).
+         * In a rule, the transition only applies when that rule's transition wins the cascade.
+         */
+        Style &transition(Property property, const Timing &timing);
+        Style &transition(std::initializer_list<Property> properties, const Timing &timing);
 
         // endregion
 

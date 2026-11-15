@@ -401,8 +401,10 @@ namespace psychic_ui {
             return;
         }
 
-        updateGestures(_systemWindow->gestureTime());
-        updatePopups(_systemWindow->gestureTime());
+        const std::chrono::nanoseconds now = _systemWindow->gestureTime();
+        updateGestures(now);
+        updatePopups(now);
+        updateAnimations(now);
 
         updateStylesAndLayout();
 
@@ -429,6 +431,7 @@ namespace psychic_ui {
         render(_sk_canvas);
         _sk_canvas->restore();
         _sk_context->flushAndSubmit();
+        _animationClockFresh = false; // Tweens started from now on start with the next frame
 
         // Performance
         ++frames;
@@ -440,6 +443,73 @@ namespace psychic_ui {
             lastReport = std::chrono::high_resolution_clock::now();
             fps        = frames / (delta / 1000.0f);
             frames     = 0;
+        }
+    }
+
+    // endregion
+
+    // region Animation
+
+    void Window::updateAnimations(const std::chrono::nanoseconds now) {
+        _animationTime       = now;
+        _animationClockFresh = true;
+
+        // A callback may start animations: they land in the emptied list, and keep going after these
+        std::vector<std::weak_ptr<Animation>> scheduled = std::move(_scheduledAnimations);
+        _scheduledAnimations.clear();
+        std::vector<std::weak_ptr<Animation>> kept{};
+        for (const auto &weak: scheduled) {
+            const auto animation = weak.lock();
+            if (!animation || animation->_scheduledIn != this) {
+                continue; // Its owner let it go, or it moved to another window
+            }
+            if (animation->advance(now)) {
+                kept.push_back(weak);
+            } else {
+                animation->_scheduledIn = nullptr;
+            }
+        }
+        kept.insert(kept.end(), _scheduledAnimations.begin(), _scheduledAnimations.end());
+        _scheduledAnimations = std::move(kept);
+    }
+
+    std::optional<std::chrono::nanoseconds> Window::animationClock() const {
+        return _animationClockFresh ? std::optional{_animationTime} : std::nullopt;
+    }
+
+    void Window::startAnimation(const std::shared_ptr<Animation> &animation) {
+        if (animation && animation->_scheduledIn != this) {
+            animation->_scheduledIn = this;
+            _scheduledAnimations.push_back(animation);
+        }
+    }
+
+    bool Window::animating() const {
+        if (_flinging) {
+            return true;
+        }
+        return std::any_of(
+            _scheduledAnimations.begin(), _scheduledAnimations.end(),
+            [this](const auto &weak) {
+                const auto animation = weak.lock();
+                return animation && animation->_scheduledIn == this;
+            }
+        );
+    }
+
+    void Window::updateReducedMotion(const bool reduced) {
+        _reducedMotion = reduced;
+        if (!reduced) {
+            return;
+        }
+        // What moves gets there now
+        std::vector<std::weak_ptr<Animation>> scheduled = std::move(_scheduledAnimations);
+        _scheduledAnimations.clear();
+        for (const auto &weak: scheduled) {
+            if (const auto animation = weak.lock(); animation && animation->_scheduledIn == this) {
+                animation->_scheduledIn = nullptr;
+                animation->finish();
+            }
         }
     }
 

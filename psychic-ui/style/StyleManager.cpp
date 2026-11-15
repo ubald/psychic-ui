@@ -39,7 +39,7 @@ namespace psychic_ui {
         _rulesByTag.clear();
         _otherRules.clear();
         _universal = nullptr;
-        _valid     = false;
+        invalidate();
     }
 
     void StyleManager::loadStyleSheet(const std::type_index type, const std::function<std::unique_ptr<StyleSheet>()> &make) {
@@ -51,7 +51,7 @@ namespace psychic_ui {
                             ? it->second.get()
                             : _styleSheets.emplace_back(type, make()).second.get();
         sheet->load(this);
-        _valid = false;
+        invalidate();
     }
 
     StyleManager &StyleManager::theme(const Theme &theme) {
@@ -108,7 +108,7 @@ namespace psychic_ui {
         for (const auto &[type, sheet]: _styleSheets) {
             sheet->load(this);
         }
-        _valid = false;
+        invalidate();
     }
 
     sk_sp<SkFontMgr> StyleManager::fontManager() {
@@ -127,7 +127,7 @@ namespace psychic_ui {
         }
         _fonts.insert({name, fontManager()->makeFromFile(path.c_str())});
         _fontCollection = nullptr;
-        _valid          = false;
+        invalidate();
         return *this;
     }
 
@@ -170,7 +170,7 @@ namespace psychic_ui {
             }
             auto declaration = std::make_unique<StyleDeclaration>(
                 selectorString, std::move(selector),
-                [](void *manager) { static_cast<StyleManager *>(manager)->_valid = false; }, this
+                [](void *manager) { static_cast<StyleManager *>(manager)->invalidate(); }, this
             );
             it = _declarations.emplace(selectorString, std::move(declaration)).first;
         }
@@ -197,7 +197,7 @@ namespace psychic_ui {
                     _otherRules.push_back(index);
                 }
             }
-            _valid = false;
+            invalidate();
         }
         return declaration->style();
     }

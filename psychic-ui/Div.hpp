@@ -16,6 +16,7 @@
 #include "psychic-ui/style/StyleManager.hpp"
 #include "psychic-ui/signals/Signal.hpp"
 #include "psychic-ui/signals/Observer.hpp"
+#include "psychic-ui/animation/Animation.hpp"
 
 // Yoga stays out of the public headers: its node is only named here
 struct YGNode;
@@ -23,6 +24,10 @@ struct YGNode;
 namespace psychic_ui {
 
     class Window;
+
+    namespace detail {
+        class StyleTransitions;
+    }
 
     class Panel;
 
@@ -227,7 +232,7 @@ namespace psychic_ui {
         //     add<Button>("Toggle").enabled(false).toggle(true).padding(24).direction(Direction::Row);
         //
         // Read values back from computedStyle(), as of the last style pass.
-        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout) \
+        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) \
             template<class Self> \
             Self &name(this Self &self, Argument value) { \
                 static_cast<Div &>(self)._inlineStyle.name(value); \
@@ -235,6 +240,23 @@ namespace psychic_ui {
             }
         PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
         #undef PSYCHIC_UI_X
+
+        /**
+         * Add to the inline transition: these properties blend to their new values with this timing (see `Transition`)
+         *
+         *     div.transition(Property::backgroundColor, Timing{100ms});
+         */
+        template<class Self>
+        Self &transition(this Self &self, Property property, const Timing &timing) {
+            static_cast<Div &>(self)._inlineStyle.transition(property, timing);
+            return self;
+        }
+
+        template<class Self>
+        Self &transition(this Self &self, std::initializer_list<Property> properties, const Timing &timing) {
+            static_cast<Div &>(self)._inlineStyle.transition(properties, timing);
+            return self;
+        }
 
         /**
          * Lay the children out in a row, shortcut for `direction(Direction::Row)`
@@ -273,9 +295,36 @@ namespace psychic_ui {
 
         /**
          * The computed style: what the stylesheets, the parent and the inline and default styles give this div,
-         * as of the last style pass
+         * as of the last style pass, with its running transitions' values: what it paints with and pushes to Yoga.
+         * While a property transitions it holds the blend, updated every frame (and `styleUpdated` runs again);
+         * `targetStyle()` has where it goes.
          */
         const Style &computedStyle() const;
+
+        /**
+         * The computed style with every running transition at its end: what `computedStyle()` will be once they are
+         * done. A copy.
+         */
+        Style targetStyle() const;
+
+        /**
+         * Whether a property of the computed style is blending to a new value
+         */
+        bool transitioning() const;
+        bool transitioning(Property property) const;
+
+        // endregion
+
+        // region Animation
+
+        /**
+         * Move a number from `from` to `to` with a timing, calling `update` with each value (in
+         * `Window::updateAnimations`, once per frame, the last time with `to`). Fire and forget: it ends with this
+         * div, or when it gets there. At once when the div isn't in a window or the window reduces motion.
+         *
+         *     div.animate(0.0f, 1.0f, Timing{150ms, Ease::Out}, [this](float t) { _reveal = t; });
+         */
+        void animate(float from, float to, const Timing &timing, std::function<void(float)> update);
 
         // endregion
 
@@ -828,6 +877,49 @@ namespace psychic_ui {
          * A descendant has a dirty style, so the style pass has to go through this node
          */
         bool _descendantStyleDirty{false};
+
+        /**
+         * The window, and the style manager's rules generation, the style was last computed in: transitions only
+         * start from a style computed in the same window with the same rules, so neither a div's first style in a
+         * window nor a theme switch transitions
+         */
+        Window      *_styledIn{nullptr};
+        std::size_t _styledGeneration{0};
+
+        /**
+         * The running style transitions, which the window ticks (made with the first one)
+         */
+        std::shared_ptr<detail::StyleTransitions> _transitions{};
+
+        /**
+         * `animate`'s, until they end
+         */
+        std::vector<std::shared_ptr<Animation>> _animations{};
+
+        /**
+         * Start, retarget or drop transitions for a new computed style, and put their current values in it
+         */
+        void updateTransitions(Style &computed);
+
+        /**
+         * Put the transitions' values at `now` in the computed style
+         * @return Whether one still runs
+         */
+        bool advanceTransitions(std::chrono::nanoseconds now);
+        void finishTransitions();
+
+        /**
+         * Drop the transitions, leaving the computed style where they were (removed from the window)
+         */
+        void cancelTransitions();
+
+        /**
+         * The transitions changed these computed values: push them to Yoga, run `styleUpdated`, restyle the children
+         * that inherit them
+         */
+        void transitionsChanged(const PropertyMask &changed);
+
+        friend class detail::StyleTransitions;
 
 
         /**

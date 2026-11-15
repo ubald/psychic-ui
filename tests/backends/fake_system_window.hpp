@@ -10,13 +10,15 @@ namespace psychic_ui_tests {
     using namespace psychic_ui;
 
     /**
-     * A window that counts what reaches it
+     * A window that counts what reaches it. Motion is reduced: values are at their end after a style pass, without
+     * advancing time (tests of motion turn it back on).
      */
     struct TestWindow : Window {
         std::vector<std::string> dropped{};
 
         TestWindow() : Window("Test") {
             skinSet<DefaultSkins>();
+            reducedMotion(true);
         }
 
         bool dropEvent(const std::vector<std::string> &filenames) override {

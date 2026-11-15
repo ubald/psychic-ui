@@ -10,6 +10,7 @@
 #include "Div.hpp"
 #include "Window.hpp"
 #include "components/Menu.hpp"
+#include "animation/StyleTransitions.hpp"
 
 
 namespace psychic_ui {
@@ -54,6 +55,9 @@ namespace psychic_ui {
     }
 
     Div::~Div() {
+        if (_transitions) {
+            _transitions->owner = nullptr; // The window may still hold it for a moment
+        }
         YGNodeFree(_yogaNode);
     }
 
@@ -140,6 +144,9 @@ namespace psychic_ui {
     }
 
     void Div::removedFromRenderRecursive() {
+        // Transitions belong to the window: whatever the div's next window, its first style there doesn't blend
+        cancelTransitions();
+        _styledIn = nullptr;
         removedFromRender();
         for (auto &child: _children) {
             child->removedFromRenderRecursive();
@@ -457,6 +464,10 @@ namespace psychic_ui {
     void Div::updateStyle() {
         if (auto sm = styleManager()) {
             Style computed = sm->computeStyle(this);
+            // The transitions' current values replace what they blend to
+            updateTransitions(computed);
+            _styledIn         = window();
+            _styledGeneration = sm->rulesGeneration();
             // Only what changed reaches Yoga, everything the first time
             PropertyMask changed = _layoutInitialized ? _computedStyle.diff(computed) : PropertyMask{}.set();
             _computedStyle     = computed;
@@ -810,8 +821,9 @@ namespace psychic_ui {
         if (has(P::boxSizing)) { YGNodeStyleSetBoxSizing(n, toYoga(s.boxSizing())); }
 
         if (has(P::flex)) { setFloat(n, s, P::flex, s.flex(), YGNodeStyleSetFlex); }
-        if (has(P::grow)) { setFloat(n, s, P::grow, s.grow(), YGNodeStyleSetFlexGrow); }
-        if (has(P::shrink)) { setFloat(n, s, P::shrink, s.shrink(), YGNodeStyleSetFlexShrink); }
+        // Never negative, which a spring overshooting 0 would make them
+        if (has(P::grow)) { setFloat(n, s, P::grow, std::max(0.0f, s.grow()), YGNodeStyleSetFlexGrow); }
+        if (has(P::shrink)) { setFloat(n, s, P::shrink, std::max(0.0f, s.shrink()), YGNodeStyleSetFlexShrink); }
         if (has(P::basis)) { setLength(n, s, P::basis, s.basis(), YGNodeStyleSetFlexBasis, YGNodeStyleSetFlexBasisPercent, YGNodeStyleSetFlexBasisAuto); }
         if (has(P::aspectRatio)) { setFloat(n, s, P::aspectRatio, s.aspectRatio(), YGNodeStyleSetAspectRatio); }
 

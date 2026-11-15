@@ -96,6 +96,13 @@ namespace psychic_ui {
         std::size_t skinsGeneration() const { return _skinsGeneration; }
 
         /**
+         * Bumped every time every style is to be computed again: a rule set or changed, a stylesheet or a font loaded,
+         * the rules loaded again (a theme, a density or a skin set). Styles computed in such a pass change at once,
+         * without transitions: those follow a div's own state (classes, pseudo-classes, its inline style).
+         */
+        std::size_t rulesGeneration() const { return _rulesGeneration; }
+
+        /**
          * The theme stylesheets read (`manager->theme().palette.accent`), Pivotal Dark until another is set
          */
         const Theme &theme() const { return _theme; }
@@ -130,7 +137,10 @@ namespace psychic_ui {
         /**
          * Recompute every div's style on the next style pass, without touching the rules
          */
-        void invalidate() { _valid = false; }
+        void invalidate() {
+            _valid = false;
+            ++_rulesGeneration;
+        }
 
         /**
          * The platform's font manager (Fontconfig on Linux, CoreText on macOS), shared by every
@@ -209,6 +219,7 @@ namespace psychic_ui {
         std::vector<std::unique_ptr<SkinSet>>                              _skinSets{};
         SkinRegistry                                                       _skins{};
         std::size_t                                                        _skinsGeneration{0};
+        std::size_t                                                        _rulesGeneration{0};
         bool                                                               _valid{false};
         Theme                                                              _theme{themes::pivotalDark};
         Density                                                            _density{Density::Pointer};

@@ -105,7 +105,8 @@ if (PSYCHIC_UI_BUILD_TESTS)
         text/text_layout_tests.cpp
         text/font_tests.cpp
         signals/signal_tests.cpp
-        signals/lifetime_tests.cpp)
+        signals/lifetime_tests.cpp
+        animation/animation_tests.cpp)
 
     if (PSYCHIC_UI_BUILD_SDL3)
         target_sources(psychic-ui-tests PRIVATE
