@@ -149,9 +149,11 @@ namespace psychic_ui {
         /**
          * Hand a task to the UI thread, from any thread: it runs at the start of the next frame (`runPosted`, first in
          * `drawAll`), after the tasks posted before it, and asks for that frame (`requestFrame`). The UI stays
-         * single-threaded: another thread changes the window and its divs only through a task. A hidden window runs
-         * its tasks once it draws again. Tasks still queued when the window is destroyed are destroyed without running;
-         * the caller must stop posting before that.
+         * single-threaded: another thread changes the window and its divs only through a task. A hidden window
+         * (`windowVisible()` false) runs its tasks once it draws again, so stop or coalesce posts to one. A task must
+         * not capture a `shared_ptr` to the window (the queue would keep it alive: a cycle); capture a `weak_ptr`, or a
+         * raw pointer whose lifetime the caller guarantees. Tasks still queued when the window is destroyed are
+         * destroyed without running; the caller must stop posting before that.
          */
         void post(std::function<void()> task);
 

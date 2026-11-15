@@ -603,6 +603,10 @@ namespace psychic_ui {
     }
 
     void Window::runPosted() {
+        // Nothing posted: no lock for most frames
+        if (!_hasPosted) {
+            return;
+        }
         std::vector<std::function<void()>> batch{};
         {
             std::lock_guard lock(_postedMutex);
