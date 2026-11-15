@@ -346,11 +346,6 @@ public:
                .iconSize(theme.metrics.iconMd + 3)
                .borderRadius(m.radius.control);
 
-        // The current tool in the accent, whatever the set (Float's rule does the same for every tool bar)
-        manager->style("CanvasPage ToolBar Button:active DefaultButtonSkin.quiet")
-               .color(p.onAccent)
-               .backgroundColor(p.accent);
-
         // The stage: a lighting plot in the middle of the canvas
         manager->style("CanvasPage .stage")
                .position(Position::Relative)

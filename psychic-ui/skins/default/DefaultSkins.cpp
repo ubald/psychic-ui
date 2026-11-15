@@ -840,6 +840,11 @@ namespace psychic_ui {
             .height(s.controlSm)
             .paddingHorizontal(m.space(2));
 
+        // The current tool (a toggled button), like the primary action, in the accent
+        rule("ToolBar Button:active DefaultButtonSkin.quiet")
+            .color(p.onAccent)
+            .backgroundColor(p.accent);
+
         // endregion
 
         // region Tabs

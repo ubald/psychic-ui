@@ -116,11 +116,6 @@ namespace psychic_ui {
             .borderRadius(r.small)
             .fontFamily(theme.type.medium.name);
 
-        // The current tool, like the primary action, in the accent
-        rule("ToolBar Button:active DefaultButtonSkin.quiet")
-            .color(p.onAccent)
-            .backgroundColor(p.accent);
-
         // endregion
 
         // region Lists

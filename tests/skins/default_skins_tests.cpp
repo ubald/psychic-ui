@@ -6,6 +6,7 @@
 #include <psychic-ui/components/Menu.hpp>
 #include <psychic-ui/components/Range.hpp>
 #include <psychic-ui/components/TextInput.hpp>
+#include <psychic-ui/components/ToolBar.hpp>
 #include <psychic-ui/components/WindowControls.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include "../backends/fake_system_window.hpp"
@@ -347,4 +348,22 @@ TEST_CASE("Default skins: a menu's labels line up when some rows have an icon", 
     CHECK(plain[0] == plain[1]);
     CHECK(plain[0] == f.theme.metrics.space(2));
     CHECK(mixed[0] == plain[0] + f.theme.metrics.iconMd + f.theme.metrics.space(2));
+}
+
+TEST_CASE("Default skins: a tool bar's current tool is in the accent", "[skins][default][toolbar]") {
+    Fixture f;
+    auto &bar     = f.window->appContainer().add<ToolBar>();
+    auto &current = bar.add<Button>().icon("plus").toggle(true).autoToggle(false).selected(true);
+    auto &other   = bar.add<Button>().icon("search").toggle(true).autoToggle(false);
+    auto &action  = bar.add<Button>("Run");
+    f.layout();
+    CHECK(current.skin()->computedStyle().backgroundColor() == f.theme.palette.accent);
+    CHECK(current.skin()->computedStyle().color() == f.theme.palette.onAccent);
+    CHECK(other.skin()->computedStyle().backgroundColor().alpha() == 0); // Quiet at rest
+    CHECK(action.skin()->computedStyle().backgroundColor().alpha() == 0);
+
+    // Outside a tool bar, a toggled quiet button is only raised
+    auto &quiet = f.window->appContainer().add<Button>().icon("plus").skin("quiet").toggle(true).selected(true);
+    f.layout();
+    CHECK(quiet.skin()->computedStyle().backgroundColor() == f.theme.palette.raised);
 }
