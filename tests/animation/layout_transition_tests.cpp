@@ -372,14 +372,17 @@ TEST_CASE("A sorted grid's rows slide to their new places, keeping the selection
     CHECK(grid.selectedRow() == &b);
     CHECK(b.hasFocus());
 
-    f.frame(500ms + motion.medium / 2);
+    // At the slow step, since they travel across the grid: still going when a list's rows would be there
+    f.frame(500ms + motion.slow / 2);
     CHECK(std::abs(a.layoutOffsetY()) > 0.0f);
     CHECK(std::abs(a.layoutOffsetY()) < static_cast<float>(aY - cY));
     f.frame(500ms + motion.medium);
+    CHECK(a.layoutSliding());
+    f.frame(500ms + motion.slow);
     CHECK(a.layoutOffsetY() == 0.0f);
     CHECK(c.layoutOffsetY() == 0.0f);
     // Their opaque background blends back to nothing over the page, which looks the same
-    f.frame(500ms + motion.medium + motion.fast);
+    f.frame(500ms + motion.slow + motion.fast);
     CHECK(f.settled());
 }
 

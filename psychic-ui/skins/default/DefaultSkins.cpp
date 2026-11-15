@@ -885,11 +885,12 @@ namespace psychic_ui {
 
         // What a new layout moves slides from where it was painted (FLIP, a paint offset): the toasts as one comes or
         // goes, rows when a list or a grid is sorted, the tree's rows below a node that expands or collapses, as its
-        // children fade in (they go at once), the sidebar's sections and items
+        // children fade in (they go at once), the sidebar's sections and items. A grid's rows travel furthest, across
+        // the whole grid as it is sorted: at the slow step
         const Timing slide = mo.arrive();
         rule("ToastStack").layoutTransition(slide);
         rule("List").layoutTransition(slide);
-        rule("DataGrid .body").layoutTransition(slide);
+        rule("DataGrid .body").layoutTransition(Timing{mo.slow, mo.out});
         rule("Tree").layoutTransition(slide);
         rule("Tree .children").layoutTransition(slide).opacity(0).transition(P::opacity, slide);
         rule("Tree .children.open").opacity(1);
