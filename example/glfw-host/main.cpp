@@ -3,6 +3,7 @@
  * and hands the window to a `GLFWSystemWindow`, the way it would hand it to Dear ImGui's GLFW backend.
  */
 
+#include <chrono>
 #include <iostream>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -80,10 +81,19 @@ int main() {
         // Nothing but Psychic UI draws in this window
         adapter.setSharesContext(false);
 
+        // Draw, then wait for input unless the window has more to show (an animation, a timer); input wakes the
+        // wait, and so does a frame asked for (the adapter posts an empty event)
         while (!glfwWindowShouldClose(glfwWindow)) {
-            glfwPollEvents();
             adapter.render();
             glfwSwapBuffers(glfwWindow);
+            const auto wait = ui->untilNextFrame(adapter.gestureTime());
+            if (!wait) {
+                glfwWaitEvents();
+            } else if (*wait > std::chrono::nanoseconds::zero()) {
+                glfwWaitEventsTimeout(std::chrono::duration<double>(*wait).count());
+            } else {
+                glfwPollEvents();
+            }
         }
     } // The adapter goes before the window
 

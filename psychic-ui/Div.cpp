@@ -1716,6 +1716,9 @@ namespace psychic_ui {
         if (scrollX != _scrollX || scrollY != _scrollY) {
             _scrollX = scrollX;
             _scrollY = scrollY;
+            if (Window *w = window()) {
+                w->requestFrame(); // Only painting changes: no style or layout tells the window
+            }
             scrolled.emit(_scrollX, _scrollY);
         }
     }

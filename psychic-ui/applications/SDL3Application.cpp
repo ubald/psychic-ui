@@ -1,4 +1,7 @@
 #include <algorithm>
+#include <chrono>
+#include <climits>
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 #include "SDL3Application.hpp"
@@ -124,43 +127,90 @@ namespace psychic_ui {
     }
 
     bool SDL3Application::renderAll() {
-        bool any = false;
+        bool                           visible = false;
+        const std::chrono::nanoseconds now{SDL_GetTicksNS()};
         for (auto &owned : _windows) {
-            if (owned->systemWindow->render()) {
-                SDL_GL_SwapWindow(owned->sdlWindow);
-                any = true;
+            const auto &window = owned->systemWindow->window();
+            if (!window->windowVisible()) {
+                continue;
+            }
+            visible = true;
+            // After input, or when the window has something new (a style, a layout, an animation, a timer)
+            const auto wait = window->untilNextFrame(now);
+            if (owned->dirty || (wait && *wait <= std::chrono::nanoseconds::zero())) {
+                owned->dirty = false;
+                if (owned->systemWindow->render()) {
+                    SDL_GL_SwapWindow(owned->sdlWindow);
+                }
             }
         }
-        return any;
+        return visible;
+    }
+
+    std::optional<std::chrono::nanoseconds> SDL3Application::untilNextFrame() const {
+        const std::chrono::nanoseconds          now{SDL_GetTicksNS()};
+        std::optional<std::chrono::nanoseconds> soonest{};
+        for (const auto &owned : _windows) {
+            const auto &window = owned->systemWindow->window();
+            if (!window->windowVisible()) {
+                continue;
+            }
+            if (owned->dirty) {
+                return std::chrono::nanoseconds::zero();
+            }
+            const auto wait = window->untilNextFrame(now);
+            if (wait && (!soonest || *wait < *soonest)) {
+                soonest = wait;
+            }
+        }
+        return soonest;
+    }
+
+    void SDL3Application::dispatch(const SDL_Event &event) {
+        if (event.type == SDL_EVENT_QUIT) {
+            // Closing the last window or an interrupt: the windows that agree close, which ends the loop
+            for (auto &owned : _windows) {
+                if (owned->systemWindow->window()->windowShouldClose()) {
+                    owned->systemWindow->window()->close();
+                }
+            }
+            return;
+        }
+        if (event.type == SDL_EVENT_SYSTEM_THEME_CHANGED) {
+            // The system went light or dark: every window follows
+            for (auto &owned: _windows) {
+                owned->systemWindow->handleEvent(event);
+                owned->dirty = true;
+            }
+            return;
+        }
+        if (event.type == SDL3SystemWindow::wakeEventType()) {
+            return; // A window asked for a frame: it says so when asked (untilNextFrame)
+        }
+        if (auto owned = find(SDL_GetWindowFromEvent(&event))) {
+            owned->systemWindow->handleEvent(event);
+            owned->dirty = true; // Input may change anything: draw after it
+        }
     }
 
     void SDL3Application::run() {
-        while (true) {
+        while (renderAll()) {
             SDL_Event event;
-            while (SDL_PollEvent(&event)) {
-                if (event.type == SDL_EVENT_QUIT) {
-                    // Closing the last window or an interrupt: the windows that agree close, which ends the loop
-                    for (auto &owned : _windows) {
-                        if (owned->systemWindow->window()->windowShouldClose()) {
-                            owned->systemWindow->window()->close();
-                        }
-                    }
-                    continue;
+            // Nothing to draw: sleep until an event comes, or the soonest timer (a tooltip's delay, a toast's timeout)
+            const auto wait = untilNextFrame();
+            if (!wait) {
+                if (SDL_WaitEvent(&event)) {
+                    dispatch(event);
                 }
-                if (event.type == SDL_EVENT_SYSTEM_THEME_CHANGED) {
-                    // The system went light or dark: every window follows
-                    for (auto &owned: _windows) {
-                        owned->systemWindow->handleEvent(event);
-                    }
-                    continue;
-                }
-                if (auto owned = find(SDL_GetWindowFromEvent(&event))) {
-                    owned->systemWindow->handleEvent(event);
+            } else if (*wait > std::chrono::nanoseconds::zero()) {
+                // Rounded up: waking before the timer would only wait again
+                const auto ms = std::chrono::ceil<std::chrono::milliseconds>(*wait).count();
+                if (SDL_WaitEventTimeout(&event, static_cast<Sint32>(std::min<long long>(ms, INT32_MAX)))) {
+                    dispatch(event);
                 }
             }
-
-            if (!renderAll()) {
-                break;
+            while (SDL_PollEvent(&event)) {
+                dispatch(event);
             }
         }
     }

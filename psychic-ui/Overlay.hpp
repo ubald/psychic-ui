@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <optional>
 #include <cstdint>
 #include <memory>
 #include <type_traits>
@@ -292,6 +293,11 @@ namespace psychic_ui {
          * Advance what goes on with time (a toast's timer), every frame from `Window::updatePopups`
          */
         virtual void update(std::chrono::nanoseconds /*now*/) {}
+
+        /**
+         * When `update` has something to do next (a toast's timeout), on the same clock; nullopt when nothing waits
+         */
+        virtual std::optional<std::chrono::nanoseconds> nextUpdate() const { return std::nullopt; }
     };
 
     /**
@@ -388,6 +394,11 @@ namespace psychic_ui {
         Popup *popupAt(int x, int y) const;
 
         void update(std::chrono::nanoseconds now);
+
+        /**
+         * The soonest of the popups' `nextUpdate`
+         */
+        std::optional<std::chrono::nanoseconds> nextUpdate() const;
 
         MouseEventStatus handleMouseMove(const MouseEvent &event, bool handled) override;
         MouseEventStatus handleMouseButtonChange(const MouseEvent &event) override;

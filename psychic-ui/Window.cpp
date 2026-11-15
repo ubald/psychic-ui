@@ -71,6 +71,7 @@ namespace psychic_ui {
         if (_systemWindow) {
             handleColorSchemeChange(_systemWindow->colorScheme());
         }
+        requestFrame();
 
         // Performance
         lastReport = std::chrono::high_resolution_clock::now();
@@ -251,6 +252,7 @@ namespace psychic_ui {
             if (_systemWindow) {
                 _systemWindow->setVisible(_windowVisible);
             }
+            requestFrame();
         }
     }
 
@@ -361,6 +363,9 @@ namespace psychic_ui {
     // region Draw
 
     void Window::updateStylesAndLayout() {
+        // This frame draws what was asked for
+        _frameRequested = false;
+
         // Styles first, since they are the layout's input
         if (!_styleManager->valid()) {
             updateStyleRecursive();
@@ -443,6 +448,66 @@ namespace psychic_ui {
             lastReport = std::chrono::high_resolution_clock::now();
             fps        = frames / (delta / 1000.0f);
             frames     = 0;
+        }
+    }
+
+    // endregion
+
+    // region Frames
+
+    bool Window::needsFrame() const {
+        return _frameRequested
+               || animating()
+               || !_styleManager->valid()
+               || styleDirty()
+               || YGNodeIsDirty(_yogaNode)
+               || windowWidth() != _width
+               || windowHeight() != _height;
+    }
+
+    std::optional<std::chrono::nanoseconds> Window::nextFrameTime() const {
+        std::optional<std::chrono::nanoseconds> next{};
+        const auto soonest = [&next](const std::chrono::nanoseconds time) {
+            if (!next || time < *next) {
+                next = time;
+            }
+        };
+        constexpr std::chrono::nanoseconds now{0}; // Whatever the time: the next frame
+
+        // A finger held still becomes a long press
+        if (_touchPhase == TouchPhase::Pending) {
+            soonest(_touchStart + longPressDelay);
+        }
+
+        // A tooltip waiting for its delay (counted from the next frame), or the warm time running out
+        const auto target = _tooltipTarget.lock();
+        if (target && !_tooltip && !_tooltipSuppressed) {
+            soonest(_tooltipWarm || !_tooltipSince ? now : *_tooltipSince + tooltipDelay);
+        } else if (!target && _tooltipWarm) {
+            soonest(_warmSince ? *_warmSince + tooltipWarmTime : now);
+        }
+
+        // The toasts' timers
+        if (const auto popups = _overlay->nextUpdate()) {
+            soonest(*popups);
+        }
+        return next;
+    }
+
+    std::optional<std::chrono::nanoseconds> Window::untilNextFrame(const std::chrono::nanoseconds now) const {
+        if (needsFrame()) {
+            return std::chrono::nanoseconds::zero();
+        }
+        const auto next = nextFrameTime();
+        if (!next) {
+            return std::nullopt;
+        }
+        return std::max(*next - now, std::chrono::nanoseconds::zero());
+    }
+
+    void Window::requestFrame() {
+        if (!_frameRequested.exchange(true) && _systemWindow) {
+            _systemWindow->wake();
         }
     }
 
@@ -1476,6 +1541,7 @@ namespace psychic_ui {
 
         // The next frame gets a new surface, at the new framebuffer size
         _surfaceStale = true;
+        requestFrame();
     }
 
     void Window::windowActivated() {

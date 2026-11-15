@@ -345,6 +345,17 @@ namespace psychic_ui {
         }
     }
 
+    std::optional<std::chrono::nanoseconds> Overlay::nextUpdate() const {
+        std::optional<std::chrono::nanoseconds> next{};
+        for (const auto &child: _children) {
+            const auto popup = static_cast<const Popup *>(child.get())->nextUpdate();
+            if (popup && (!next || *popup < *next)) {
+                next = popup;
+            }
+        }
+        return next;
+    }
+
     // region Mouse
 
     namespace {

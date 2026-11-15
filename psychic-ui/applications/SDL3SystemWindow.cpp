@@ -228,6 +228,18 @@ namespace psychic_ui {
         return std::chrono::nanoseconds{SDL_GetTicksNS()};
     }
 
+    Uint32 SDL3SystemWindow::wakeEventType() {
+        static const Uint32 type = SDL_RegisterEvents(1);
+        return type;
+    }
+
+    void SDL3SystemWindow::wake() {
+        SDL_Event event{};
+        event.type             = wakeEventType();
+        event.user.windowID    = SDL_GetWindowID(_sdlWindow);
+        SDL_PushEvent(&event);
+    }
+
     // endregion
 
     // region Events

@@ -5,6 +5,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/animation/Animation.hpp>
+#include <psychic-ui/components/Toast.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include "../backends/fake_system_window.hpp"
 
@@ -285,6 +286,7 @@ TEST_CASE("A paint-only property transitions without touching the layout", "[ani
     CHECK(scene.box->targetStyle().backgroundColor() == rgb(0xFF0000));
     CHECK(scene.box->isValid()); // Yoga never saw it
     CHECK(scene.window->animating());
+    CHECK(scene.window->needsFrame());
 
     scene.frame(1050ms);
     CHECK(argbOf(*scene.box) == 0xFF800000u);
@@ -294,6 +296,7 @@ TEST_CASE("A paint-only property transitions without touching the layout", "[ani
     CHECK(argbOf(*scene.box) == 0xFFFF0000u);
     CHECK_FALSE(scene.box->transitioning());
     CHECK_FALSE(scene.window->animating());
+    CHECK_FALSE(scene.window->needsFrame());
 }
 
 TEST_CASE("A layout property transitions through Yoga, and retargets mid-way", "[animation][transition][layout]") {
@@ -432,3 +435,40 @@ TEST_CASE("Transitions declared inline, a few timings", "[animation][transition]
 
 // endregion
 
+// region Frames
+
+TEST_CASE("The window says when it needs a frame, and how long it may sleep", "[animation][frames]") {
+    auto window = std::make_shared<psychic_ui_tests::TestWindow>();
+    psychic_ui_tests::FakeSystemWindow system{window};
+    system.layout();
+    CHECK_FALSE(window->needsFrame());
+    CHECK(window->untilNextFrame(0ms) == std::nullopt);
+
+    // Asked for
+    window->requestFrame();
+    CHECK(window->needsFrame());
+    CHECK(window->untilNextFrame(0ms) == 0ns);
+    system.layout();
+    CHECK_FALSE(window->needsFrame());
+
+    // A style change
+    window->appContainer().add<Div>();
+    CHECK(window->needsFrame());
+    system.layout();
+    CHECK_FALSE(window->needsFrame());
+
+    // A toast: its timer, from the frame that shows it
+    window->toast({.title = "Saved", .timeout = 5s});
+    system.layout();
+    window->updatePopups(10s);
+    system.layout();
+    CHECK_FALSE(window->needsFrame());
+    CHECK(window->nextFrameTime() == 15s);
+    CHECK(window->untilNextFrame(12s) == 3s);
+    window->updatePopups(15s);
+    CHECK(window->toasts().toasts().empty());
+    system.layout();
+    CHECK(window->untilNextFrame(15s) == std::nullopt);
+}
+
+// endregion

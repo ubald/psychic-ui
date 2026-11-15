@@ -294,6 +294,10 @@ namespace psychic_ui {
         return glfwGetPlatform() != GLFW_PLATFORM_WAYLAND;
     }
 
+    void GLFWSystemWindow::wake() {
+        glfwPostEmptyEvent();
+    }
+
     void GLFWSystemWindow::startDrag() {
         if (!supportsDrag()) {
             if (!_warnedAboutDrag) {

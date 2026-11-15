@@ -111,6 +111,16 @@ namespace psychic_ui {
         }
     }
 
+    std::optional<std::chrono::nanoseconds> Toast::deadline() const {
+        if (_options.timeout <= std::chrono::nanoseconds::zero()) {
+            return std::nullopt;
+        }
+        if (!_last) {
+            return std::chrono::nanoseconds::zero(); // Its timer starts with the next update
+        }
+        return *_last + (_options.timeout - _elapsed);
+    }
+
     // endregion
 
     // region Stack
@@ -141,14 +151,32 @@ namespace psychic_ui {
     }
 
     void ToastStack::update(const std::chrono::nanoseconds now) {
-        // The mouse over the stack holds every toast (to read it, or reach its actions)
-        const bool paused = mouseOver();
+        // The mouse over the stack holds every toast (to read it, or reach its actions): the time since the last
+        // update doesn't count when it is over now, or was then (frames stop while nothing changes, and the mouse
+        // leaving brings the next one)
+        const bool paused = mouseOver() || _paused;
+        _paused = mouseOver();
         auto       children = _children; // A toast that times out leaves
         for (auto &child: children) {
             if (child->parent() == this) {
                 static_cast<Toast *>(child.get())->advance(now, paused);
             }
         }
+    }
+
+    std::optional<std::chrono::nanoseconds> ToastStack::nextUpdate() const {
+        if (mouseOver()) {
+            return std::nullopt; // Held: the mouse leaving brings the next frame
+        }
+        std::optional<std::chrono::nanoseconds> next{};
+        for (const auto &child: _children) {
+            const auto deadline = static_cast<const Toast *>(child.get())->deadline();
+            if (deadline && (!next || *deadline < *next)) {
+                next = deadline;
+            }
+        }
+        // Paused at the last update: the next one doesn't count, it only notes the time
+        return next && _paused ? std::optional{std::chrono::nanoseconds::zero()} : next;
     }
 
     // endregion

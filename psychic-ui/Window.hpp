@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <string>
 #include <chrono>
 #include <memory>
@@ -112,6 +113,37 @@ namespace psychic_ui {
          * How many style passes a frame may run when `styleUpdated` callbacks keep invalidating styles
          */
         static constexpr int maxStylePasses = 4;
+
+        // region Frames
+
+        /**
+         * Whether the window has something new to draw: a frame was asked for (`requestFrame`, the first one, a
+         * resize), styles or the layout are dirty, or something moves (`animating`). With `nextFrameTime`, what a
+         * runner needs to sleep while nothing changes; input events are the runner's own business (it draws after
+         * them).
+         */
+        bool needsFrame() const;
+
+        /**
+         * When the window has something to do next without input, on the system window's `gestureTime()` clock: a
+         * tooltip's delay, a toast's timeout, a long press. nullopt when nothing waits.
+         */
+        std::optional<std::chrono::nanoseconds> nextFrameTime() const;
+
+        /**
+         * How long a runner may wait for input before drawing again, at `now` (`gestureTime()`): zero when the window
+         * needs a frame, nullopt when nothing but input can change it
+         */
+        std::optional<std::chrono::nanoseconds> untilNextFrame(std::chrono::nanoseconds now) const;
+
+        /**
+         * Ask for a frame, for a change the window can't see: something a `draw` reads changing without input, a style
+         * or layout change. Wakes the system window's loop (`SystemWindow::wake`) the first time after a frame. The one
+         * call that may come from another thread.
+         */
+        void requestFrame();
+
+        // endregion
 
         // region Animation
 
@@ -631,6 +663,7 @@ namespace psychic_ui {
         std::chrono::nanoseconds              _animationTime{};
         bool                                  _animationClockFresh{false}; // From updateAnimations to the end of drawAll
         bool                                  _reducedMotion{false};
+        std::atomic<bool>                     _frameRequested{true}; // Until the first frame
 
         // endregion
 

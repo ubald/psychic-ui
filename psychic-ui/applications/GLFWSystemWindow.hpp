@@ -60,6 +60,12 @@ namespace psychic_ui {
         void startDrag() override;
         void stopDrag() override;
         bool supportsDrag() const override;
+
+        /**
+         * `glfwPostEmptyEvent`, which ends a host's `glfwWaitEvents`: a host that waits draws when
+         * `Window::untilNextFrame` says so
+         */
+        void wake() override;
         void setSize(int width, int height) override;
         void setPosition(int x, int y) override;
 

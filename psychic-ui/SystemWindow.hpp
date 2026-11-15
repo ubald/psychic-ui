@@ -84,6 +84,12 @@ namespace psychic_ui {
         virtual std::chrono::nanoseconds gestureTime() const;
 
         /**
+         * Wake the loop that waits for this window's events, so that it draws (`Window::requestFrame`). May be called
+         * from another thread. Nothing by default: a loop that doesn't wait needs nothing.
+         */
+        virtual void wake() {}
+
+        /**
          * Whether the system is in light or dark mode, `Unknown` when it doesn't say (this default). An adapter
          * that knows calls `Window::handleColorSchemeChange` when it changes.
          */

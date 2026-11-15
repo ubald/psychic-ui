@@ -1,6 +1,8 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
+#include <optional>
 #include <vector>
 #include "SDL3SystemWindow.hpp"
 
@@ -31,7 +33,9 @@ namespace psychic_ui {
         void close(const std::shared_ptr<Window> &window);
 
         /**
-         * Polls events and draws every window, until none is visible or SDL asks to quit
+         * Handles events and draws the windows, until none is visible or SDL asks to quit. A window is drawn after an
+         * event for it, and while it needs frames (`Window::untilNextFrame`: a style or layout change, an animation, a
+         * requested frame, a timer); when none does, the loop sleeps in SDL until an event or the soonest timer.
          */
         void run();
 
@@ -43,6 +47,7 @@ namespace psychic_ui {
             SDL_Window                        *sdlWindow{nullptr};
             SDL_GLContext                     glContext{nullptr};
             std::unique_ptr<SDL3SystemWindow> systemWindow{};
+            bool                              dirty{true}; // An event came for it (or it just opened): draw it
 
             ~OwnedWindow();
         };
@@ -50,7 +55,22 @@ namespace psychic_ui {
         std::vector<std::unique_ptr<OwnedWindow>> _windows{};
 
         OwnedWindow *find(SDL_Window *sdlWindow);
-        bool         renderAll();
+
+        /**
+         * Hands an event to its window, which will be drawn
+         */
+        void dispatch(const SDL_Event &event);
+
+        /**
+         * Draws the visible windows that need it
+         * @return Whether a window is visible
+         */
+        bool renderAll();
+
+        /**
+         * How long the loop may sleep: zero when a window needs a frame, nullopt until an event
+         */
+        std::optional<std::chrono::nanoseconds> untilNextFrame() const;
 
         /**
          * Keeps drawing while the platform blocks the loop in a live resize (Windows, macOS)

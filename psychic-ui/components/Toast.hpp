@@ -87,6 +87,11 @@ namespace psychic_ui {
          * Advance its timer to `now`; paused, the time passes without counting
          */
         void advance(std::chrono::nanoseconds now, bool paused);
+
+        /**
+         * When its timeout runs out, if it isn't paused
+         */
+        std::optional<std::chrono::nanoseconds> deadline() const;
     };
 
     /**
@@ -106,7 +111,11 @@ namespace psychic_ui {
 
         std::vector<Toast *> toasts() const;
 
+        std::optional<std::chrono::nanoseconds> nextUpdate() const override;
+
     protected:
+        bool _paused{false}; // The mouse was over the stack at the last update
+
         void update(std::chrono::nanoseconds now) override;
     };
 }

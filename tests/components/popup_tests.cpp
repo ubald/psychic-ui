@@ -1082,10 +1082,16 @@ TEST_CASE("Toasts time out, held while the mouse is over them", "[popup][toast]"
     f.hover(toast);
     f.window->updatePopups(20s);
     CHECK(toast.elapsed() == 2s);
+    // Frames stop while nothing changes: the mouse leaving brings the next one, and the time until it didn't count
+    f.window->updatePopups(40s);
+    CHECK(toast.elapsed() == 2s);
     f.moveTo(10, 300);
-    f.window->updatePopups(22s);
+    f.window->updatePopups(40s);
+    CHECK(toast.elapsed() == 2s);
+    f.window->updatePopups(42s);
+    CHECK(toast.elapsed() == 4s);
     CHECK(stack.toasts().size() == 1);
-    f.window->updatePopups(23s);
+    f.window->updatePopups(43s);
     CHECK(stack.toasts().empty());
 }
 

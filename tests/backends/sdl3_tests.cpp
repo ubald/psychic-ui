@@ -717,3 +717,28 @@ TEST_CASE("SDL3: mouse events say what made them, with SDL's click count and the
     tip.ptouch.down = false;
     sdl.adapter->handleEvent(tip);
 }
+
+TEST_CASE("SDL3: a frame asked for wakes a loop waiting for events, once until the next frame", "[backend][sdl3][frames]") {
+    SDL3Fixture sdl;
+    sdl.layout();
+    SDL_FlushEvents(SDL_EVENT_FIRST, SDL_EVENT_LAST);
+    CHECK_FALSE(sdl.window->needsFrame());
+
+    sdl.window->requestFrame();
+    sdl.window->requestFrame(); // Already asked: no second event
+    SDL_Event event{};
+    REQUIRE(SDL_WaitEventTimeout(&event, 100));
+    CHECK(event.type == SDL3SystemWindow::wakeEventType());
+    sdl.adapter->handleEvent(event); // Nothing for the adapter to do
+    CHECK_FALSE(SDL_PollEvent(&event));
+    CHECK(sdl.window->needsFrame());
+    CHECK(sdl.window->untilNextFrame(sdl.adapter->gestureTime()) == std::chrono::nanoseconds::zero());
+
+    // The frame draws it; the next request wakes again
+    sdl.layout();
+    CHECK_FALSE(sdl.window->needsFrame());
+    CHECK(sdl.window->untilNextFrame(sdl.adapter->gestureTime()) == std::nullopt);
+    sdl.window->requestFrame();
+    CHECK(SDL_PollEvent(&event));
+    CHECK(event.type == SDL3SystemWindow::wakeEventType());
+}

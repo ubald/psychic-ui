@@ -26,6 +26,9 @@ namespace psychic_ui {
      *         SDL_GL_SwapWindow(sdlWindow);
      *     }
      *
+     * A host that waits for events while nothing changes asks the window when to draw again
+     * (`Window::untilNextFrame`), as `SDL3Application::run` does.
+     *
      * For custom title bars (`Window::addDragArea`) and the resize borders of an undecorated window,
      * also call `adapter.installHitTest()`, which replaces the window's SDL hit test.
      *
@@ -74,6 +77,17 @@ namespace psychic_ui {
          * SDL's clock, which times its events
          */
         std::chrono::nanoseconds gestureTime() const override;
+
+        /**
+         * Pushes an event of `wakeEventType()`, which ends an `SDL_WaitEvent`: a host that waits for events
+         * draws when it gets one (the adapter ignores it)
+         */
+        void wake() override;
+
+        /**
+         * The event type `wake` pushes, registered with SDL on first use
+         */
+        static Uint32 wakeEventType();
 
         /**
          * SDL_GetSystemTheme. `handleEvent` passes SDL_EVENT_SYSTEM_THEME_CHANGED on to the window, whatever
