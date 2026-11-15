@@ -1320,8 +1320,11 @@ namespace psychic_ui {
     bool Window::handleKeyPress(Key key, Mod mod) {
         hideTooltip(false);
         _tooltipSuppressed = true;
-        // Escape closes the topmost popup, before anyone else sees it
-        if (key == Key::ESCAPE && _overlay->dismissTop()) {
+        // Escape closes the topmost popup before anyone else sees it, unless the focus is in a field that has a use
+        // for it (a search field with text, a number being typed), as browsers do
+        if (key == Key::ESCAPE
+            && std::none_of(_focusPath.begin(), _focusPath.end(), [](const Div *div) { return div->takesEscape(); })
+            && _overlay->dismissTop()) {
             return true;
         }
         // Tab moves the focus, before anyone else sees it

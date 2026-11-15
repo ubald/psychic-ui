@@ -129,6 +129,11 @@ namespace psychic_ui {
         Signal<double> changed{};
         PSYCHIC_UI_EVENT(onChange, changed)
 
+        /**
+         * While what is typed isn't the value shown: Escape reverts it before closing a popup
+         */
+        bool takesEscape() const override;
+
     protected:
         double                     _value{0};
         double                     _min{-1e9};

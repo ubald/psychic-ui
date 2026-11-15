@@ -861,6 +861,36 @@ TEST_CASE("In a dialog, Tab hands the focus to the text fields' text and stays i
     CHECK(f.window->focusedDiv() == &f.first);
 }
 
+TEST_CASE("In a dialog, Escape goes to a field that has a use for it before closing", "[popup][dialog][inputs]") {
+    Popups f{};
+    auto &dialog  = f.window->overlay().open<Dialog>("Find");
+    auto &search  = dialog.body().add<SearchField>();
+    auto &stepper = dialog.body().add<NumberStepper>(4);
+    dialog.action("Cancel");
+    f.layout();
+    REQUIRE(f.window->focusedDiv() == search.focusDelegate());
+
+    // With text, Escape clears the search field; empty, it closes the dialog
+    search.text("cue");
+    f.key(Key::ESCAPE);
+    CHECK(search.text().empty());
+    CHECK(f.popupCount() == 1);
+
+    // A number being typed reverts; as typed, Escape closes
+    f.key(Key::TAB);
+    REQUIRE(f.window->focusedDiv() == stepper.focusDelegate());
+    CHECK_FALSE(stepper.takesEscape());
+    f.window->handleType(icu::UnicodeString("2"));
+    f.layout();
+    CHECK(stepper.takesEscape());
+    f.key(Key::ESCAPE);
+    CHECK(f.popupCount() == 1);
+    CHECK(stepper.value() == 4);
+    CHECK_FALSE(stepper.takesEscape());
+    f.key(Key::ESCAPE);
+    CHECK(f.popupCount() == 0);
+}
+
 TEST_CASE("A select in a dialog closes first, and gives the focus back to itself", "[popup][dialog][select][focus]") {
     Popups f{};
     auto &dialog = f.window->overlay().open<Dialog>("Curve");

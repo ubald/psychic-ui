@@ -319,6 +319,13 @@ namespace psychic_ui {
         virtual Div *focusDelegate() { return nullptr; }
 
         /**
+         * Whether it has a use for Escape now, while it is on the focus path: then Escape goes to the keys' path
+         * instead of closing the topmost popup first (a search field with text clears it, a number stepper being
+         * edited reverts). None by default.
+         */
+        virtual bool takesEscape() const { return false; }
+
+        /**
          * Used by the window, which manages the focus path
          */
         void setFocused(bool focused);

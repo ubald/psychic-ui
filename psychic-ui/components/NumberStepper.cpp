@@ -208,4 +208,7 @@ namespace psychic_ui {
         refresh();
     }
 
+    bool NumberStepper::takesEscape() const {
+        return _enabled && _input->text() != valueString();
+    }
 }

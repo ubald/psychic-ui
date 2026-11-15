@@ -67,4 +67,7 @@ namespace psychic_ui {
         changed.emit(text);
     }
 
+    bool SearchField::takesEscape() const {
+        return _enabled && !_input->text().empty();
+    }
 }

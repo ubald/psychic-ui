@@ -73,6 +73,11 @@ namespace psychic_ui {
         Signal<std::string> submitted{};
         PSYCHIC_UI_EVENT(onSubmit, submitted)
 
+        /**
+         * While it has text: Escape clears it before closing a popup
+         */
+        bool takesEscape() const override;
+
     protected:
         std::shared_ptr<TextInput> _input{nullptr};
         std::shared_ptr<Div>       _clear{nullptr};
