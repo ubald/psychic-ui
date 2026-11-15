@@ -396,6 +396,12 @@ namespace psychic_ui {
         Div *focusedDiv() const { return _focusPath.empty() ? nullptr : _focusPath.back(); }
 
         /**
+         * The divs under `div` (it included) that Tab stops at, in document order: focusEnabled, enabled, visible
+         * and displayed, their ancestors up to `div` too
+         */
+        static void focusables(Div *div, std::vector<Div *> &list);
+
+        /**
          * Focus a div (and the path to it). `visible` is whether the focus should show (`:focus-visible`):
          * true when it moved with the keyboard, false for a press.
          */

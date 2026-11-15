@@ -17,7 +17,9 @@ namespace psychic_ui {
      * close button (`.header`: `.icon`, `.title`, `.close`), a body (`.body`: the description, `.description`, then
      * what is added to `body()`), and a footer of actions (`.footer`, after a hairline; not displayed without one).
      * The panel (`.panel`) is its surface: a press on the backdrop closes it (`dismissible(false)` keeps it), and so
-     * does Escape. Tab stays inside it; when it closes the focus goes back to what had it.
+     * does Escape. Once laid out it focuses its first field (a focusable div of the body that isn't a button), else
+     * its first button (body, then footer), else keeps the focus on its panel; `initialFocus(div)` picks another.
+     * Tab stays inside it; when it closes the focus goes back to what had it.
      *
      *     auto &dialog = window.overlay().open<Dialog>("Rename cue").description("…");
      *     dialog.body().add<TextInput>();
@@ -71,6 +73,21 @@ namespace psychic_ui {
             return self.dismissOnOutsidePress(dismissible.value);
         }
 
+        /**
+         * The div it focuses once it is laid out, instead of its first field or button
+         */
+        template<class Self>
+        Self &initialFocus(this Self &self, Div &div) {
+            static_cast<Dialog &>(self)._initialFocus = div.weak_from_this();
+            return self;
+        }
+
+        /**
+         * What it focuses once laid out: `initialFocus`'s div, else its first field, else its first button, else
+         * nullptr (the panel keeps the focus)
+         */
+        Div *initialFocus() const;
+
         Div &panel() const { return *_panel; }
         Div &body() const { return *_body; }
         Div &footer() const { return *_footer; }
@@ -93,8 +110,12 @@ namespace psychic_ui {
         Text   *_description{nullptr};
         Div    *_footer{nullptr};
 
+        std::weak_ptr<Div> _initialFocus{};
+        bool               _openedVisible{false}; // The focus was visible when it opened (from the keyboard)
+
         void updateIcon(std::string_view icon);
         void updateDescription(const std::string &description);
         void opened() override;
+        void laidOut() override;
     };
 }

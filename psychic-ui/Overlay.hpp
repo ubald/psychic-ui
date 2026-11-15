@@ -273,6 +273,7 @@ namespace psychic_ui {
         Popup                           *_owner{nullptr};
         Div                             *_surface{nullptr}; // A descendant, or nullptr for itself
         std::weak_ptr<Div>              _focusBefore{};     // What had the focus when it opened
+        bool                            _laidOut{false};    // `laidOut` was called since it opened
 
         void updateAnchor(Div *anchor, int x, int y);
 
@@ -280,6 +281,12 @@ namespace psychic_ui {
          * Called by the overlay once it is in it, after the focus it had was noted: take the focus (`opened`)
          */
         virtual void opened() {}
+
+        /**
+         * Called once, after the first layout since it opened (`Overlay::place`), when what was added to it after
+         * `open` is styled and laid out: a dialog focuses its first field
+         */
+        virtual void laidOut() {}
 
         /**
          * Advance what goes on with time (a toast's timer), every frame from `Window::updatePopups`
@@ -345,7 +352,8 @@ namespace psychic_ui {
         }
 
         /**
-         * Place the anchored popups beside their anchors (closing those whose anchor left the window)
+         * Place the anchored popups beside their anchors (closing those whose anchor left the window), then call
+         * `laidOut` on those laid out for the first time
          * @return Whether one moved, so that the layout must run again
          */
         bool place();

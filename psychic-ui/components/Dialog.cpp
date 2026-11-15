@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <utility>
+#include <vector>
 #include "psychic-ui/Window.hpp"
 #include "Dialog.hpp"
 
@@ -93,9 +95,36 @@ namespace psychic_ui {
     }
 
     void Dialog::opened() {
-        // The panel holds the focus: nothing shows a ring until Tab reaches the first control
+        // The panel holds the focus until it is laid out with what was added to it: nothing shows a ring yet
         if (Window *w = window()) {
+            _openedVisible = w->focusVisible();
             w->requestFocus(_panel, false);
+        }
+    }
+
+    Div *Dialog::initialFocus() const {
+        if (auto div = _initialFocus.lock()) {
+            return div.get();
+        }
+        std::vector<Div *> body{};
+        Window::focusables(_body, body);
+        const auto isButton = [](const Div *div) { return dynamic_cast<const Button *>(div) != nullptr; };
+        if (const auto field = std::find_if_not(body.begin(), body.end(), isButton); field != body.end()) {
+            return *field;
+        }
+        Window::focusables(_footer, body);
+        const auto button = std::find_if(body.begin(), body.end(), isButton);
+        return button != body.end() ? *button : nullptr;
+    }
+
+    void Dialog::laidOut() {
+        Window *w = window();
+        if (!w || w->focusedDiv() != _panel) {
+            return; // The focus went elsewhere already
+        }
+        if (Div *div = initialFocus()) {
+            // A field shows it has the focus anyway; a button's ring shows when the dialog came from the keyboard
+            w->requestFocus(div, _openedVisible);
         }
     }
 }

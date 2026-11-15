@@ -136,6 +136,7 @@ namespace psychic_ui {
         Div    *focused = w ? w->focusedDiv() : nullptr;
         popup->_focusBefore = focused ? focused->weak_from_this() : std::weak_ptr<Div>{};
         add(popup);
+        popup->_laidOut = false;
         popup->opened();
         return *popup;
     }
@@ -252,6 +253,16 @@ namespace psychic_ui {
                 || popup->style().top() != Length{static_cast<float>(y)}) {
                 popup->left(static_cast<float>(x)).top(static_cast<float>(y));
                 moved = true;
+            }
+        }
+
+        // The popups laid out for the first time since they opened
+        children = _children;
+        for (auto &child: children) {
+            auto *popup = static_cast<Popup *>(child.get());
+            if (!popup->_laidOut && popup->_parent == this) {
+                popup->_laidOut = true;
+                popup->laidOut();
             }
         }
         return moved;

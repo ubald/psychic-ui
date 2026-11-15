@@ -13,8 +13,10 @@
 #include <psychic-ui/components/MenuBar.hpp>
 #include <psychic-ui/components/MenuButton.hpp>
 #include <psychic-ui/components/Select.hpp>
+#include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/components/Toast.hpp>
 #include <psychic-ui/components/Tooltip.hpp>
+#include <psychic-ui/themes/pivotal.hpp>
 #include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;
@@ -745,17 +747,17 @@ TEST_CASE("In a dialog, Tab hands the focus to the text fields' text and stays i
     auto &stepper = dialog.body().add<NumberStepper>(4);
     auto &cancel  = dialog.action("Cancel");
     f.layout();
+    CHECK(f.window->focusedDiv() == search.focusDelegate()); // Its first field
 
     std::vector<Div *> visited{};
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 4; ++i) {
         f.key(Key::TAB);
         visited.push_back(f.window->focusedDiv());
     }
-    // The close button, then the search field's text, the stepper's (both delegated), Cancel, the close button
-    CHECK(visited[1] == search.focusDelegate());
-    CHECK(visited[2] == stepper.focusDelegate());
-    CHECK(visited[3] == &cancel);
-    CHECK(visited[4] == visited[0]);
+    // The stepper's text (delegated), Cancel, the close button, the search field's text again
+    CHECK(visited[0] == stepper.focusDelegate());
+    CHECK(visited[1] == &cancel);
+    CHECK(visited[3] == search.focusDelegate());
 
     f.key(Key::ESCAPE);
     CHECK(f.popupCount() == 0);
@@ -818,19 +820,22 @@ TEST_CASE("A dialog traps the focus and gives it back", "[popup][dialog][focus]"
     dialog.description("Something");
     auto &cancel = dialog.action("Cancel");
     auto &ok     = dialog.action("Rename", [&]() { ++renamed; }, "primary");
+    CHECK(f.window->focusedDiv() == &dialog.panel()); // Until it is laid out
     f.layout();
     CHECK(dialog.modal());
-    CHECK(f.window->focusedDiv() == &dialog.panel());
+    CHECK(f.window->focusedDiv() == &cancel); // No field: the first button, ringed since Tab opened it
+    CHECK(f.window->focusVisible());
 
-    // Tab goes round the close button and the actions, never out
+    // Tab goes round the actions and the close button, never out
     std::vector<Div *> visited{};
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 3; ++i) {
         f.key(Key::TAB);
         visited.push_back(f.window->focusedDiv());
     }
-    CHECK(visited[1] == &cancel);
-    CHECK(visited[2] == &ok);
-    CHECK(visited[3] == visited[0]); // The close button again
+    CHECK(visited[0] == &ok);
+    CHECK(visited[2] == &cancel); // After the close button
+    f.key(Key::TAB, Mod{.shift = true});
+    CHECK(f.window->focusedDiv() == visited[1]); // The close button
     f.key(Key::TAB, Mod{.shift = true});
     CHECK(f.window->focusedDiv() == &ok);
 
@@ -838,6 +843,60 @@ TEST_CASE("A dialog traps the focus and gives it back", "[popup][dialog][focus]"
     CHECK(renamed == 1);
     CHECK(f.popupCount() == 0);
     CHECK(f.window->focusedDiv() == &f.first);
+}
+
+TEST_CASE("A dialog focuses its first field, else its first button, else its panel, or what it is told", "[popup][dialog][focus]") {
+    Popups f{};
+
+    SECTION("a field, after buttons in the body") {
+        auto &dialog = f.window->overlay().open<Dialog>("Rename");
+        auto &help   = dialog.body().add<Button>("Help");
+        auto &name   = dialog.body().add<TextInput>();
+        dialog.action("Cancel");
+        f.layout();
+        CHECK(dialog.initialFocus() == &name);
+        CHECK(f.window->focusedDiv() == name.focusDelegate());
+        CHECK_FALSE(help.hasFocus());
+        f.layout();
+        CHECK(name.computedStyle().borderColor() == themes::pivotalDark.palette.accent);
+    }
+
+    SECTION("a button in the body, before the footer's") {
+        auto &dialog = f.window->overlay().open<Dialog>("Pick");
+        auto &help   = dialog.body().add<Button>("Help");
+        dialog.action("Cancel");
+        f.layout();
+        CHECK(f.window->focusedDiv() == &help);
+        CHECK_FALSE(f.window->focusVisible()); // Not opened from the keyboard: no ring
+    }
+
+    SECTION("nothing but the close button: the panel keeps it") {
+        auto &dialog = f.window->overlay().open<Dialog>("Note").description("Read me");
+        f.layout();
+        CHECK(dialog.initialFocus() == nullptr);
+        CHECK(f.window->focusedDiv() == &dialog.panel());
+    }
+
+    SECTION("initialFocus picks another") {
+        auto &dialog = f.window->overlay().open<Dialog>("Delete");
+        dialog.body().add<TextInput>();
+        dialog.action("Cancel");
+        auto &remove = dialog.action("Delete", nullptr, "danger");
+        dialog.initialFocus(remove);
+        f.layout();
+        CHECK(f.window->focusedDiv() == &remove);
+    }
+
+    SECTION("only once: a focus moved after it stays") {
+        auto &dialog = f.window->overlay().open<Dialog>("Twice");
+        auto &name   = dialog.body().add<TextInput>();
+        auto &cancel = dialog.action("Cancel");
+        f.layout();
+        REQUIRE(name.hasFocus());
+        f.window->requestFocus(&cancel, true);
+        f.layout();
+        CHECK(cancel.hasFocus());
+    }
 }
 
 TEST_CASE("A dialog closes by Escape and the backdrop, unless it isn't dismissible", "[popup][dialog][dismiss]") {

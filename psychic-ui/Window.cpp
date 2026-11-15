@@ -1257,20 +1257,15 @@ namespace psychic_ui {
         }
     }
 
-    namespace {
-        /**
-         * The divs that take the focus, in document order
-         */
-        void focusables(Div *div, std::vector<Div *> &list) {
-            if (!div->enabled() || !div->visible() || div->computedStyle().display() == Display::None) {
-                return;
-            }
-            if (div->focusEnabled()) {
-                list.push_back(div);
-            }
-            for (auto &child: div->children()) {
-                focusables(child.get(), list);
-            }
+    void Window::focusables(Div *div, std::vector<Div *> &list) {
+        if (!div->enabled() || !div->visible() || div->computedStyle().display() == Display::None) {
+            return;
+        }
+        if (div->focusEnabled()) {
+            list.push_back(div);
+        }
+        for (auto &child: div->children()) {
+            focusables(child.get(), list);
         }
     }
 
