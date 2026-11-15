@@ -97,7 +97,7 @@ if (PSYCHIC_UI_SKIA_DIR)
 else ()
     set(SKIA_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/build)
 endif ()
-set(PSYCHIC_UI_SKIA_OUTPUT "${SKIA_OUTPUT}" CACHE INTERNAL "The directory Skia is built into and linked from")
+set(PSYCHIC_UI_SKIA_OUTPUT "${SKIA_OUTPUT}" CACHE INTERNAL "The directory Skia is linked from (built into it, unless PSYCHIC_UI_SKIA_DIR gives a read-only prebuilt one)")
 
 configure_file("skia_build.sh.in" "skia_build.sh" @ONLY)
 

@@ -100,7 +100,7 @@ window->skinSet<psychic_ui::DefaultSkins>();
 ## Sample App
 
 A sample app that is used for development and demonstration is available in the `example` directory.
-It can be built with the rest of the library with the CMake option `PSYCHIC_UI_BUILD_EXAMPLE` (`ON` by default).
+It can be built with the rest of the library with the CMake option `PSYCHIC_UI_BUILD_EXAMPLE` (`ON` by default when Psychic UI is the top-level project, `OFF` inside another one).
     
 ## Building
 
