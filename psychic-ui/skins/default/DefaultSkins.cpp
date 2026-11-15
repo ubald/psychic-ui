@@ -224,7 +224,10 @@ namespace psychic_ui {
             .iconSize(m.iconSm);
 
         rule("Button:hover").borderColor(p.lineStrong);
-        rule("Button:active").borderColor(p.textMuted); // Pressed, or selected (a toggle)
+        // Pressed, or selected (a toggle): held as a hover, filled with the strong hairline's color in its outline
+        rule("Button:active")
+            .borderColor(p.lineStrong)
+            .backgroundColor(p.lineStrong);
         rule("Button:disabled").opacity(0.45f);
         focusRing(rule("Button:focus-visible"), p, m);
 

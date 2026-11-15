@@ -210,6 +210,18 @@ TEST_CASE("Default skins: buttons are pills, their variants skins", "[skins][def
     CHECK(primary.skin()->computedStyle().color() == f.theme.palette.onAccent);
     CHECK(ghost.skin()->computedStyle().backgroundColor().alpha() == 0);
 
+    // Toggled (`:active`, as pressed): held as a hover, filled with the strong hairline's color in its outline
+    secondary.toggle(true).selected(true);
+    primary.toggle(true).selected(true);
+    f.layout();
+    CHECK(secondary.skin()->computedStyle().backgroundColor() == f.theme.palette.lineStrong);
+    CHECK(secondary.skin()->computedStyle().borderColor() == f.theme.palette.lineStrong);
+    CHECK(primary.skin()->computedStyle().backgroundColor() == f.theme.palette.accentHover); // Its variant's own
+    secondary.selected(false);
+    f.layout();
+    CHECK(secondary.skin()->computedStyle().backgroundColor() == f.theme.palette.raised);
+    CHECK(secondary.skin()->computedStyle().borderColor() == f.theme.palette.line);
+
     Div *icon = part(*withIcon.skin(), "icon");
     REQUIRE(icon);
     CHECK(icon->computedStyle().display() == Display::Flex);
