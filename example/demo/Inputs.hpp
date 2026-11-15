@@ -96,7 +96,7 @@ namespace psychic_ui {
         steppers.add<NumberStepper>(8).enabled(false);
 
         Label *swatchEvent = nullptr;
-        auto  &swatches    = group("Color swatches", "Pivotal's palette; the arrows move the selection once focused", swatchEvent);
+        auto  &swatches    = group("Color swatches", "Pivotal's palette; a click picks, the arrows move the focus and Space or Enter picks", swatchEvent);
         swatches.add<ColorSwatches>()
                 .value(rgb(0x5E6AD2))
                 .onChange([swatchEvent](Color color) {

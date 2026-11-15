@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cctype>
 #include <functional>
 #include <iomanip>
@@ -59,6 +60,17 @@ namespace psychic_ui {
          * Show or hide the frame rate counter
          */
         void showFps(bool show);
+
+        /**
+         * Press keys, for screenshots: names separated by commas (tab, shift+tab, up, down, left, right, home, end,
+         * space, enter, escape), a name followed by `*n` pressed n times; false for an unknown name
+         */
+        bool pressKeys(const std::string &keys);
+
+        /**
+         * Scroll the page's first scrolling div down by this many pixels, for screenshots
+         */
+        void scrollPage(int pixels);
 
         /**
          * Show the Popups page and open one of its popups (see `Popups::openPopup`); false for an unknown name
@@ -357,6 +369,54 @@ namespace psychic_ui {
         updateStylesAndLayout(); // The page's anchors are laid out first
         auto popups = std::dynamic_pointer_cast<Popups>(_panel);
         return popups && popups->openPopup(name);
+    }
+
+    bool DemoWindow::pressKeys(const std::string &keys) {
+        static const std::vector<std::pair<std::string, Key>> names{
+            {"tab", Key::TAB}, {"up", Key::UP}, {"down", Key::DOWN}, {"left", Key::LEFT}, {"right", Key::RIGHT},
+            {"home", Key::HOME}, {"end", Key::END}, {"space", Key::SPACE}, {"enter", Key::ENTER}, {"escape", Key::ESCAPE},
+        };
+        std::stringstream list(keys);
+        std::string       name;
+        while (std::getline(list, name, ',')) {
+            int count = 1;
+            if (const auto star = name.find('*'); star != std::string::npos) {
+                count = std::stoi(name.substr(star + 1));
+                name  = name.substr(0, star);
+            }
+            Mod mod{};
+            if (name.starts_with("shift+")) {
+                mod.shift = true;
+                name      = name.substr(6);
+            }
+            const auto found = std::find_if(names.begin(), names.end(), [&](const auto &n) { return n.first == name; });
+            if (found == names.end()) {
+                return false;
+            }
+            for (int i = 0; i < count; ++i) {
+                updateStylesAndLayout(); // What the key goes to is laid out (a dialog has its focus)
+                handleKeyPress(found->second, mod);
+            }
+        }
+        return true;
+    }
+
+    void DemoWindow::scrollPage(const int pixels) {
+        updateStylesAndLayout();
+        std::function<Div *(Div &)> scroller = [&](Div &div) -> Div * {
+            if (div.computedStyle().overflow() == Overflow::Scroll) {
+                return &div;
+            }
+            for (const auto &child: div.children()) {
+                if (Div *found = scroller(*child)) {
+                    return found;
+                }
+            }
+            return nullptr;
+        };
+        if (Div *found = _panel ? scroller(*_panel) : nullptr) {
+            found->scrollBy(0, -pixels);
+        }
     }
 
     void DemoWindow::showFps(const bool show) {

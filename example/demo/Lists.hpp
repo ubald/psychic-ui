@@ -184,7 +184,8 @@ namespace psychic_ui {
 
         auto &avatars = group(people2, "Avatars", "Initials, neutral as Pivotal's or tinted from the name; 16 to 32 px, with a status");
         auto &avatarRow = avatars.add<HBox>().addClassName("row");
-        const std::vector<std::string> names{"Ada Lovelace", "Grace Hopper", "Alan Turing", "Katherine Johnson", "Linus", "margaret@apollo.nasa"};
+        const std::vector<std::string> names{"Ada Lovelace", "Grace Hopper", "Alan Turing", "Katherine Johnson", "Linus", "margaret@apollo.nasa",
+                                             "Edsger Dijkstra", "Hedy Lamarr", "Tim Berners-Lee", "Donald Knuth"};
         avatarRow.add<Avatar>("Ada Lovelace").size(AvatarSize::XSmall);
         avatarRow.add<Avatar>("Ada Lovelace").size(AvatarSize::Small);
         avatarRow.add<Avatar>("Ada Lovelace");
