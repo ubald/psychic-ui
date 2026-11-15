@@ -129,6 +129,79 @@ public:
 
         // endregion
 
+        // region Motion
+
+        manager->style("Motion")
+               .gap(m.space(6));
+
+        manager->style("Motion .group")
+               .shrink(0)
+               .gap(m.space(1));
+
+        manager->style("Motion .row")
+               .wrap(Wrap::Wrap)
+               .alignItems(Align::Center)
+               .gap(m.space(4))
+               .marginTop(m.space(2));
+
+        manager->style("Motion .lane-row")
+               .alignItems(Align::Center)
+               .gap(m.space(3))
+               .marginTop(m.space(1.5f));
+
+        manager->style("Motion .lane-row .name")
+               .width(200)
+               .shrink(0);
+
+        // A track, its rail the track less the puck, the puck moving along the rail
+        manager->style("Motion .lane")
+               .width(320)
+               .height(24)
+               .padding(2)
+               .borderRadius(m.radius.button)
+               .backgroundColor(p.raised)
+               .color(p.accent);
+
+        manager->style("Motion .rail")
+               .grow(1)
+               .marginRight(20);
+
+        manager->style("Motion .puck")
+               .position(Position::Absolute)
+               .top(0)
+               .width(20)
+               .height(20)
+               .borderRadius(m.radius.button)
+               .backgroundColor(p.accent);
+
+        manager->style("Motion .curves")
+               .wrap(Wrap::Wrap)
+               .gap(m.space(4))
+               .marginTop(m.space(2));
+
+        manager->style("Motion .curve-cell")
+               .alignItems(Align::Center)
+               .gap(m.space(1));
+
+        manager->style("Motion .curve")
+               .width(96)
+               .height(96)
+               .borderRadius(m.radius.surface)
+               .backgroundColor(p.surface)
+               .borderColor(p.line)
+               .color(p.accent);
+
+        manager->style("Motion .tokens")
+               .marginTop(m.space(2));
+
+        manager->style("Motion .slider")
+               .width(200);
+
+        manager->style("Motion TextInput")
+               .width(200);
+
+        // endregion
+
         // region Divs and scrollers
 
         manager->style("Divs .demo-div")

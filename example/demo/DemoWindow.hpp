@@ -30,6 +30,7 @@
 #include "Lists.hpp"
 #include "Inputs.hpp"
 #include "Popups.hpp"
+#include "Motion.hpp"
 #include "../demo-stylesheet.hpp"
 
 namespace psychic_ui {
@@ -58,7 +59,8 @@ namespace psychic_ui {
         bool useTheme(const std::string &key);
 
         /**
-         * Show or hide the frame rate counter
+         * Show or hide the frame rate counter. While it shows, the window draws every frame (to count them); hidden,
+         * it only draws when something changes.
          */
         void showFps(bool show);
 
@@ -158,6 +160,7 @@ namespace psychic_ui {
             {"Divs", "layers", page([] { return std::make_shared<Divs>(); })},
             {"Scroller", "arrow-up-down", page([] { return std::make_shared<Scrollers>(); })},
             {"Canvas", "hash", page([] { return std::make_shared<CanvasPage>(); })},
+            {"Motion", "play", page([] { return std::make_shared<MotionPanel>(); })}, // In Layout, after Canvas
             {"Colors", "eyedropper", page([] { return std::make_shared<Colors>(); })},
             {"Icons", "star", page([] { return std::make_shared<IconsPanel>(); })},
             {"Inputs", "settings", page([] { return std::make_shared<Inputs>(); })}, // In Controls, after Text Input
@@ -170,7 +173,7 @@ namespace psychic_ui {
         auto &assets   = sidebar.section("Assets");
         assets.grow(1); // Pushes the last section to the bottom
         for (Page &p: _pages) {
-            SidebarSection &section = p.name == "Divs" || p.name == "Scroller" || p.name == "Canvas" || p.name == "Typography"
+            SidebarSection &section = p.name == "Divs" || p.name == "Scroller" || p.name == "Canvas" || p.name == "Motion" || p.name == "Typography"
                                       ? layout
                                       : p.name == "Colors" || p.name == "Icons" ? assets : controls;
             p.item = &section.item(p.name, p.icon);
@@ -428,9 +431,12 @@ namespace psychic_ui {
     }
 
     void DemoWindow::render(SkCanvas *canvas) {
-        std::stringstream stream;
-        stream << std::fixed << std::setprecision(3) << fps;
-        fpsLabel->text("FPS: " + stream.str());
+        if (fpsLabel->visible()) {
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(3) << fps;
+            fpsLabel->text("FPS: " + stream.str());
+            requestFrame(); // A frame rate needs frames: the counter keeps them coming
+        }
         Window::render(canvas);
     }
 }
