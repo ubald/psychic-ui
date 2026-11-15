@@ -46,7 +46,7 @@ namespace psychic_ui::themes {
         .frameInset   = 10, // The canvas between the panels
         .barToolbar   = 42,
         .barHeader    = 46,
-        .sidebarWidth = 200,
+        .sidebarWidth = 216, // The board's 200, with room for the window controls before the title
         .iconSm       = 13,
         .iconMd       = 15,
         .iconStroke   = 1.35f,
