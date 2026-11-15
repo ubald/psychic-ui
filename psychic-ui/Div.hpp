@@ -936,6 +936,7 @@ namespace psychic_ui {
          * The `shadow*` and `outline*` styles, around the border box: every div paints them, whatever its `draw`
          */
         void drawShadow(SkCanvas *canvas);
+        void drawDotGrid(SkCanvas *canvas);
         void drawOutline(SkCanvas *canvas);
 
         bool _drawBackground{false};

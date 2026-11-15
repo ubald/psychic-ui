@@ -1079,6 +1079,39 @@ namespace psychic_ui {
         canvas->restore();
     }
 
+    void Div::drawDotGrid(SkCanvas *canvas) {
+        const Style &style   = _computedStyle;
+        const float  spacing = style.dotGridSpacing();
+        const float  radius  = style.dotGridRadius();
+        if (style.dotGridColor().alpha() == 0 || spacing < 1.0f || radius <= 0.0f) {
+            return;
+        }
+        // Only the dots that can show: the box within the clip, on the grid anchored at the box's corner
+        SkRect visible = _rect;
+        if (!visible.intersect(canvas->getLocalClipBounds())) {
+            return;
+        }
+        const float half   = spacing / 2.0f;
+        const float firstX = _rect.left() + half + std::floor((visible.left() - _rect.left()) / spacing) * spacing;
+        const float firstY = _rect.top() + half + std::floor((visible.top() - _rect.top()) / spacing) * spacing;
+        std::vector<SkPoint> dots{};
+        for (float y = firstY; y < visible.bottom() + radius; y += spacing) {
+            for (float x = firstX; x < visible.right() + radius; x += spacing) {
+                dots.push_back({x, y});
+            }
+        }
+        // Round points are discs of the stroke's width, in one call
+        SkPaint paint;
+        paint.setAntiAlias(true);
+        paint.setColor(style.dotGridColor().argb());
+        paint.setStrokeCap(SkPaint::kRound_Cap);
+        paint.setStrokeWidth(radius * 2.0f);
+        canvas->save();
+        canvas->clipRRect(_roundRect, true);
+        canvas->drawPoints(SkCanvas::kPoints_PointMode, dots, paint);
+        canvas->restore();
+    }
+
     void Div::drawOutline(SkCanvas *canvas) {
         const Style &style = _computedStyle;
         const float width  = style.outlineWidth();
@@ -1172,6 +1205,9 @@ namespace psychic_ui {
             }
         }
         // endregion
+
+        drawDotGrid(canvas);
+
         // region Individual Borders
 
         // In the parent's coordinates, like _rect

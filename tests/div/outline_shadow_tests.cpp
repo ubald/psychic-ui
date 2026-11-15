@@ -192,3 +192,30 @@ TEST_CASE("borders on some sides only are drawn on the div's own edges", "[div][
     CHECK(white(scene.at(*scene.box, -50, 50)));         // Nor its left
     CHECK(white(scene.at(*scene.box, 50, 99)));
 }
+
+TEST_CASE("a dot grid paints dots over the background, clipped to the box", "[div][paint][dots]") {
+    Scene scene;
+    scene.box->backgroundColor(argb(0xFFFFFFFF))
+              .borderRadius(32)
+              .dotGridColor(argb(0xFF000000))
+              .dotGridSpacing(16)
+              .dotGridRadius(1.5f);
+    CHECK(paintProperties.test(index(Property::dotGridColor)));
+    CHECK_FALSE(inheritedProperties.test(index(Property::dotGridColor)));
+
+    SECTION("half a step in from the corner, then a step apart") {
+        scene.render();
+        CHECK(near(scene.at(*scene.box, 40, 40), 0, 0, 0));
+        CHECK(near(scene.at(*scene.box, 56, 40), 0, 0, 0));
+        CHECK(near(scene.at(*scene.box, 40, 88), 0, 0, 0));
+        CHECK(white(scene.at(*scene.box, 48, 48)));
+        CHECK(white(scene.at(*scene.box, 2, 2)));
+        CHECK(white(scene.at(*scene.box, 8, 8))); // The first dot, outside the rounded corner
+    }
+
+    SECTION("none while transparent") {
+        scene.box->dotGridColor(argb(0x00000000));
+        scene.render();
+        CHECK(white(scene.at(*scene.box, 40, 40)));
+    }
+}

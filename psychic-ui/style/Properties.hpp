@@ -71,6 +71,12 @@
     X(shadow2OffsetX,           float,         detail::FloatArg,   0.0f,                   false, false) \
     X(shadow2OffsetY,           float,         detail::FloatArg,   0.0f,                   false, false) \
     X(shadow2Spread,            float,         detail::FloatArg,   0.0f,                   false, false) \
+    /* A grid of dots over the background, under the children, like a design tool's canvas: dotGridSpacing apart */ \
+    /* (the first half a step in from the border box's top left corner), each a disc of dotGridRadius, clipped to */ \
+    /* the box; none while transparent */ \
+    X(dotGridColor,             Color,         Color,              argb(0x00000000),       false, false) \
+    X(dotGridSpacing,           float,         detail::FloatArg,   16.0f,                  false, false) \
+    X(dotGridRadius,            float,         detail::FloatArg,   1.0f,                   false, false) \
     /* Radii: the most specific one set wins (corner, then side, then all) */ \
     X(borderRadius,             float,         detail::FloatArg,   0.0f,                   false, false) \
     X(borderRadiusTop,          float,         detail::FloatArg,   0.0f,                   false, false) \
