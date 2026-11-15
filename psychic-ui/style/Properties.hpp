@@ -58,6 +58,18 @@
     /* Painting */ \
     X(antiAlias,               bool,          detail::BoolArg,    false,                  false, false, false) \
     X(opacity,                  float,         detail::FloatArg,   1.0f,                   false, false, true ) \
+    /* Paint transforms, of the div and its subtree as painted, after layout: never laid out nor hit tested (a press */ \
+    /* finds a div where its layout puts it). Moved by translateX/translateY (a percent is of its border box's width */ \
+    /* or height), scaled by scale times scaleX/scaleY about its transformOriginX/transformOriginY (from its border */ \
+    /* box's top left corner, a percent of its size: the center by default), like CSS's translate, scale and */ \
+    /* transform-origin. Popups enter and leave with them. */ \
+    X(translateX,               Length,        Length,             Length{},               false, false, true ) \
+    X(translateY,               Length,        Length,             Length{},               false, false, true ) \
+    X(scale,                    float,         detail::FloatArg,   1.0f,                   false, false, true ) \
+    X(scaleX,                   float,         detail::FloatArg,   1.0f,                   false, false, true ) \
+    X(scaleY,                   float,         detail::FloatArg,   1.0f,                   false, false, true ) \
+    X(transformOriginX,         Length,        Length,             Length::percent(50),    false, false, true ) \
+    X(transformOriginY,         Length,        Length,             Length::percent(50),    false, false, true ) \
     /* A line around the border box, outlineOffset away from it (inside if negative), over the div and its children; */ \
     /* none at width 0 */ \
     X(outlineColor,             Color,         Color,              argb(0xFF000000),       false, false, true ) \

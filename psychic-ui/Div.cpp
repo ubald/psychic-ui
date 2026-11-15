@@ -967,9 +967,30 @@ namespace psychic_ui {
         // Paint only: styles and layout were updated by the window before rendering
         // Skia rejects empty rects, but an empty div still renders (a data container builds its
         // children when it renders): outset, only what's off-screen is rejected, as with Skia m73.
-        const float opacity = _computedStyle.opacity();
+        const Style &computed = _computedStyle;
+        const float opacity = computed.opacity();
+        const float scaleX  = computed.scale() * computed.scaleX();
+        const float scaleY  = computed.scale() * computed.scaleY();
+        if (!layoutReady || !_visible || opacity <= 0.0f || scaleX == 0.0f || scaleY == 0.0f) {
+            return;
+        }
+
+        // The paint transform, around everything below (CSS's translate, then scale about the origin): painting only,
+        // the layout and hit testing don't see it
+        const float translateX = computed.translateX().resolve(_rect.width());
+        const float translateY = computed.translateY().resolve(_rect.height());
+        const bool  transformed = translateX != 0.0f || translateY != 0.0f || scaleX != 1.0f || scaleY != 1.0f;
+        SkAutoCanvasRestore transform(canvas, transformed);
+        if (transformed) {
+            const float originX = _rect.left() + computed.transformOriginX().resolve(_rect.width());
+            const float originY = _rect.top() + computed.transformOriginY().resolve(_rect.height());
+            canvas->translate(translateX + originX, translateY + originY);
+            canvas->scale(scaleX, scaleY);
+            canvas->translate(-originX, -originY);
+        }
+
         const float outset = 1.0f + _paintOutset;
-        if (!layoutReady || !_visible || opacity <= 0.0f || canvas->quickReject(_rect.makeOutset(outset, outset))) {
+        if (canvas->quickReject(_rect.makeOutset(outset, outset))) {
             return;
         }
 

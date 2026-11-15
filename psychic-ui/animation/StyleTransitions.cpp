@@ -170,7 +170,9 @@ namespace psychic_ui {
                 Channels      target{};
                 Length::Unit  unit{it->unit};
                 const Timing  *timing = transition.timing(property);
-                const bool    valid   = detail::propertyChannels(computed, property, target, unit) && unit == it->unit;
+                // Zero is zero in any unit: a percent translation going back to 0 px blends
+                const bool    valid   = detail::propertyChannels(computed, property, target, unit)
+                                        && (unit == it->unit || target[0] == 0.0f);
                 const bool    set     = computed.has(property);
                 if (!valid || !timing || timing->instant()) {
                     it = running.erase(it); // The new value, at once
@@ -203,8 +205,19 @@ namespace psychic_ui {
                 Length::Unit toUnit{};
                 if (!timing || timing->instant()
                     || !detail::propertyChannels(_computedStyle, property, from, fromUnit)
-                    || !detail::propertyChannels(computed, property, to, toUnit)
-                    || fromUnit != toUnit || from == to) {
+                    || !detail::propertyChannels(computed, property, to, toUnit)) {
+                    continue;
+                }
+                // Zero is zero in any unit (a length going from 50% to 0 px blends in percent); otherwise a change of
+                // unit snaps
+                if (fromUnit != toUnit) {
+                    if (to[0] == 0.0f) {
+                        toUnit = fromUnit;
+                    } else if (from[0] != 0.0f) {
+                        continue;
+                    }
+                }
+                if (from == to) {
                     continue;
                 }
                 if (!_transitions) {
