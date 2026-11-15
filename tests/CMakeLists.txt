@@ -108,7 +108,20 @@ if (PSYCHIC_UI_BUILD_TESTS)
         text/font_tests.cpp
         signals/signal_tests.cpp
         signals/lifetime_tests.cpp
-        animation/animation_tests.cpp)
+        animation/animation_tests.cpp
+        components/reentrancy_tests.cpp
+        # Known bugs ([!shouldfail]) and hidden use-after-free cases ([asan]) from docs/review-2026-11.md
+        keyboard/key_routing_tests.cpp
+        text/editing_tests.cpp
+        style/selector_tests.cpp
+        div/press_tests.cpp
+        div/scroll_tests.cpp
+        div/focus_tests.cpp
+        div/ownership_tests.cpp
+        components/modal_input_tests.cpp
+        components/rows_tests.cpp
+        components/number_stepper_tests.cpp
+        asan/use_after_free_tests.cpp)
 
     if (PSYCHIC_UI_BUILD_SDL3)
         target_sources(psychic-ui-tests PRIVATE
