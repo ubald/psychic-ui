@@ -79,6 +79,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         style/theme_tests.cpp
         skins/skin_set_tests.cpp
         skins/default_skins_tests.cpp
+        skins/float_skins_tests.cpp
         components/app_shell_tests.cpp
         components/list_tests.cpp
         components/input_tests.cpp
