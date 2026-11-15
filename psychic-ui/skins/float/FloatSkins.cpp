@@ -103,6 +103,11 @@ namespace psychic_ui {
             .borderRadius(999);
         rule("Switch .thumb").borderRadius(999);
 
+        // A white thumb on a white panel: a hairline ring under its drop shadow keeps it visible
+        rule("Range .thumb")
+            .shadow2Color(p.lineStrong)
+            .shadow2Spread(1);
+
         // Round avatars and color chips, whatever the radii
         rule("Avatar").borderRadius(999);
         rule("ColorSwatches .swatch").borderRadius(999);
