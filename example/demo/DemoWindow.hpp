@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cctype>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -15,10 +16,7 @@
 #include <psychic-ui/components/Spacer.hpp>
 #include <psychic-ui/components/ToolBar.hpp>
 #include <psychic-ui/skins/default/DefaultSkins.hpp>
-#include <psychic-ui/themes/one-dark.hpp>
-#include <psychic-ui/themes/one-light.hpp>
-#include <psychic-ui/themes/pivotal.hpp>
-#include <psychic-ui/themes/psychic.hpp>
+#include <psychic-ui/skins/float/FloatSkins.hpp>
 #include "Typography.hpp"
 #include "TextInputs.hpp"
 #include "Buttons.hpp"
@@ -47,10 +45,15 @@ namespace psychic_ui {
         bool showPage(const std::string &name);
 
         /**
-         * Use a theme by its name: "system" (follow the system), "pivotal-dark", "pivotal-light", "one-dark",
-         * "one-light" or "psychic"; false for another name
+         * Use a skin set by its key ("default", "float"; see `_skinSets`); false for another name
          */
-        bool useTheme(const std::string &name);
+        bool useSkinSet(const std::string &key);
+
+        /**
+         * Use a theme by its key, its name in kebab case ("pivotal-dark", "float-light"), or "system" (follow the
+         * system); the current set's themes first, then the other sets'. False for another name.
+         */
+        bool useTheme(const std::string &key);
 
         /**
          * Show or hide the frame rate counter
@@ -73,14 +76,26 @@ namespace psychic_ui {
             SidebarItem                          *item{nullptr};
         };
 
-        struct NamedTheme {
-            std::string  key;
-            std::string  label;
-            const Theme *theme; // nullptr: follow the system
+        struct NamedSkinSet {
+            std::string                               key;
+            std::function<std::unique_ptr<SkinSet>()> make;
         };
 
-        std::vector<Page>       _pages{};
-        std::vector<NamedTheme> _themes{};
+        template<class S>
+        static NamedSkinSet named(const std::string &key) {
+            return {key, [] { return std::make_unique<S>(); }};
+        }
+
+        // The skin sets the View menu and `--skin` offer: adding one is one line
+        const std::vector<NamedSkinSet> _skinSets{
+            named<DefaultSkins>("default"),
+            named<FloatSkins>("float"),
+        };
+
+        std::vector<Page>               _pages{};
+        std::shared_ptr<MenuRadioGroup> _skinSetChoice{};
+        std::shared_ptr<MenuRadioGroup> _themeChoice{};
+        std::shared_ptr<SubMenuItem>    _themeMenu{}; // View → Theme, remade for each skin set
         AppShell                *_shell{nullptr};
         PageHeader              *_header{nullptr};
         Div                     *_content{nullptr};
@@ -90,6 +105,9 @@ namespace psychic_ui {
 
         void show(const Page &page);
         void openThemeMenu();
+        void themesChanged();
+
+        static std::string keyOf(std::string_view name);
     };
 
     DemoWindow::DemoWindow() :
@@ -99,14 +117,14 @@ namespace psychic_ui {
         skinSet<DefaultSkins>();          // Its theme follows the system: Pivotal Light or Pivotal Dark
         loadStyleSheet<DemoStyleSheet>(); // Over the skin set's rules; both load again on a theme change
 
-        _themes = {
-            {"system", "System", nullptr},
-            {"pivotal-dark", "Pivotal Dark", &themes::pivotalDark},
-            {"pivotal-light", "Pivotal Light", &themes::pivotalLight},
-            {"one-dark", "One Dark", &themes::oneDark},
-            {"one-light", "One Light", &themes::oneLight},
-            {"psychic", "Psychic", &themes::psychic},
-        };
+        // View → Skin Set and View → Theme: radio groups, switching live (the menu stays open)
+        _skinSetChoice = std::make_shared<MenuRadioGroup>("default", [this](const std::string &key) { useSkinSet(key); });
+        _themeChoice   = std::make_shared<MenuRadioGroup>("system", [this](const std::string &key) { useTheme(key); });
+        MenuItems skinSetItems{};
+        for (const NamedSkinSet &set: _skinSets) {
+            skinSetItems.push_back(Menu::radio(_skinSetChoice, std::string{set.make()->name()}, set.key));
+        }
+        _themeMenu = Menu::item("Theme", MenuItems{}, "", "sun");
 
         _shell = &app->add<AppShell>();
         Sidebar &sidebar = _shell->sidebar()
@@ -147,8 +165,7 @@ namespace psychic_ui {
 
         auto &bottom = sidebar.section();
         _themeItem = &bottom.item("Theme", "sun");
-        _themeItem->count("System")
-                  .selectable(false); // Opens a menu
+        _themeItem->selectable(false); // Opens a menu
         _themeItem->onClick([this]() { openThemeMenu(); });
 
         sidebar.onChange(
@@ -194,16 +211,9 @@ namespace psychic_ui {
             ),
             Menu::item(
                 "View", {
-                    Menu::item(
-                        "Theme", {
-                            Menu::item("System", [this]() { useTheme("system"); }, "", "monitor"),
-                            Menu::item("Pivotal Dark", [this]() { useTheme("pivotal-dark"); }, "", "moon"),
-                            Menu::item("Pivotal Light", [this]() { useTheme("pivotal-light"); }, "", "sun"),
-                            Menu::item("One Dark", [this]() { useTheme("one-dark"); }),
-                            Menu::item("One Light", [this]() { useTheme("one-light"); }),
-                            Menu::item("Psychic", [this]() { useTheme("psychic"); })
-                        }, "", "eye"
-                    ),
+                    Menu::item("Skin Set", skinSetItems, "", "layers"),
+                    _themeMenu,
+                    Menu::separator(),
                     Menu::item(
                         "Panels", {
                             Menu::item("Show Inspector", []() {}, "", "sidebar"),
@@ -247,6 +257,7 @@ namespace psychic_ui {
                 .right(4)
                 .bottom(0);
 
+        themesChanged();
         showPage("Buttons");
     }
 
@@ -273,28 +284,72 @@ namespace psychic_ui {
         return false;
     }
 
-    bool DemoWindow::useTheme(const std::string &name) {
-        for (const NamedTheme &named: _themes) {
-            if (named.key == name || named.label == name) {
-                if (named.theme) {
-                    theme(*named.theme);
-                } else {
-                    followSystemTheme();
-                }
-                _themeItem->count(named.label);
+    std::string DemoWindow::keyOf(std::string_view name) {
+        std::string key{name};
+        for (char &c: key) {
+            c = c == ' ' ? '-' : static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        }
+        return key;
+    }
+
+    bool DemoWindow::useSkinSet(const std::string &key) {
+        for (const NamedSkinSet &set: _skinSets) {
+            if (set.key == key) {
+                skinSet(set.make()); // The library settles the theme (see Window::skinSet)
+                themesChanged();
                 return true;
             }
         }
         return false;
     }
 
-    void DemoWindow::openThemeMenu() {
-        std::vector<std::shared_ptr<MenuItem>> items{};
-        for (const NamedTheme &named: _themes) {
-            items.push_back(Menu::item(named.label, [this, key = named.key]() { useTheme(key); }));
+    bool DemoWindow::useTheme(const std::string &key) {
+        if (key == "system") {
+            followSystemTheme();
+            themesChanged();
+            return true;
         }
+        // The current set's themes, then the others' (any theme works with any set)
+        std::vector<const Theme *> candidates = styleManager()->skinSet()->themes();
+        for (const NamedSkinSet &set: _skinSets) {
+            for (const Theme *other: set.make()->themes()) {
+                candidates.push_back(other);
+            }
+        }
+        for (const Theme *candidate: candidates) {
+            if (keyOf(candidate->name) == key || candidate->name == key) {
+                theme(*candidate);
+                themesChanged();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void DemoWindow::themesChanged() {
+        // The current set's themes, after System
+        MenuItems items{Menu::radio(_themeChoice, "System", "system", "", "monitor"), Menu::separator()};
+        for (const Theme *own: styleManager()->skinSet()->themes()) {
+            items.push_back(
+                Menu::radio(_themeChoice, std::string{own->name}, keyOf(own->name), "",
+                            own->scheme == ColorScheme::Light ? "sun" : "moon")
+            );
+        }
+        _themeMenu->items = items;
+
+        // What is chosen now: switching skin sets may have changed the theme
+        for (const NamedSkinSet &set: _skinSets) {
+            if (set.make()->name() == styleManager()->skinSet()->name()) {
+                _skinSetChoice->value = set.key;
+            }
+        }
+        _themeChoice->value = followsSystemTheme() ? "system" : keyOf(theme().name);
+        _themeItem->count(followsSystemTheme() ? "System" : std::string{theme().name});
+    }
+
+    void DemoWindow::openThemeMenu() {
         // Beside the item, its bottom level with the item's
-        openMenu(items, *_themeItem, Side::Right, PopupAlign::End).sideOffset(8);
+        openMenu(_themeMenu->items, *_themeItem, Side::Right, PopupAlign::End).sideOffset(8);
     }
 
     bool DemoWindow::openPopup(const std::string &name) {
