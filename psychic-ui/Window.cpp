@@ -1181,10 +1181,12 @@ namespace psychic_ui {
 
         auto res = Div::handleMouseButtonChange(e);
 
+        // The context menu on the right button's press, as on macOS and Linux, or its release, as on Windows; a touch
+        // long press is a right press, held: on the press
+        const bool contextOnRelease = _contextMenuOnRelease && e.source != InputMode::Touch;
         if (e.down) {
             handleMousePress(e);
-            // On the press, as on macOS and Linux (Windows waits for the release); a touch long press is one
-            if (e.button == MouseButton::RIGHT) {
+            if (e.button == MouseButton::RIGHT && !contextOnRelease) {
                 handleContextMenuRequest(e);
             }
         } else {
@@ -1193,6 +1195,9 @@ namespace psychic_ui {
                 handleDoubleClick(e);
             }
             handleMouseRelease(e);
+            if (e.button == MouseButton::RIGHT && contextOnRelease) {
+                handleContextMenuRequest(e);
+            }
         }
 
         return res;

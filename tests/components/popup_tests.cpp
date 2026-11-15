@@ -552,6 +552,57 @@ TEST_CASE("A right press elsewhere while a context menu is open opens it there",
     CHECK(f.firstClicks == 0);
 }
 
+TEST_CASE("On the right button's press by default, on its release as on Windows", "[popup][menu][context]") {
+    ContextMenus f{};
+    #ifdef _WIN32
+    CHECK(f.window->contextMenuOnRelease());
+    #else
+    CHECK_FALSE(f.window->contextMenuOnRelease());
+    #endif
+    f.window->contextMenuOnRelease(true);
+    const auto [ax, ay] = Popups::origin(f.area);
+    int requests = 0;
+    int released = 0;
+    f.area.onMouseRelease([&]() { ++released; });
+    f.area.onContextMenuRequest([&]() {
+        ++requests;
+        if (requests == 1) {
+            CHECK(released == 1); // After the release's signals
+        }
+    });
+    f.press(ax + 250, ay + 150, MouseButton::RIGHT);
+    CHECK(f.menu() == nullptr);
+    f.release(ax + 260, ay + 160, MouseButton::RIGHT);
+    REQUIRE(f.menu() != nullptr);
+    CHECK(requests == 1);
+    const auto [mx, my] = Popups::origin(*f.menu());
+    CHECK(mx == ax + 260); // Where it was released
+    CHECK(my == ay + 160);
+
+    // Elsewhere: the press closes it, the release opens it again there
+    f.press(ax + 150, ay + 170, MouseButton::RIGHT);
+    CHECK(f.menu() == nullptr);
+    f.release(ax + 150, ay + 170, MouseButton::RIGHT);
+    REQUIRE(f.menu() != nullptr);
+    CHECK(requests == 2);
+    f.key(Key::ESCAPE);
+
+    // A touch long press still opens it while held, the keyboard on its key
+    f.window->handleTouchPress(static_cast<float>(ax + 250), static_cast<float>(ay + 150), 0ms);
+    f.window->updateGestures(Window::longPressDelay);
+    f.layout();
+    CHECK(f.menu() != nullptr);
+    f.window->handleTouchRelease(static_cast<float>(ax + 250), static_cast<float>(ay + 150), Window::longPressDelay + 100ms);
+    f.layout();
+    CHECK(f.menu() != nullptr);
+    CHECK(requests == 3);
+    f.key(Key::ESCAPE);
+    f.window->requestFocus(&f.area, true);
+    f.key(Key::MENU);
+    CHECK(f.menu() != nullptr);
+    CHECK(requests == 4);
+}
+
 TEST_CASE("An empty context menu removes it", "[popup][menu][context]") {
     ContextMenus f{};
     f.area.contextMenu({});

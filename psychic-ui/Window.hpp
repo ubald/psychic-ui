@@ -442,8 +442,9 @@ namespace psychic_ui {
         // The backends call these with the event in window coordinates. The window fills in `windowX` and
         // `windowY`, `buttons` (from the presses and releases it saw) and, on a press, `clickCount` when the
         // backend left it 0. A press goes through mouseButtonChanged, mousePressed, then contextMenuRequested for
-        // the right button; a release through mouseButtonChanged, clicked (left button), doubleClicked (from
-        // the second press in a row), then mouseReleased.
+        // the right button (unless `contextMenuOnRelease`); a release through mouseButtonChanged, clicked (left
+        // button), doubleClicked (from the second press in a row), mouseReleased, then contextMenuRequested for the
+        // right button with `contextMenuOnRelease`.
 
         /**
          * Also follows the div under the mouse with a `tooltip`, to show it after `tooltipDelay`
@@ -458,6 +459,19 @@ namespace psychic_ui {
          * landed on its edge, and so does its release while still within that slop
          */
         MouseEventStatus handleMouseButtonChange(const MouseEvent &event) override;
+
+        /**
+         * Whether the right button asks for a context menu on its release, as on Windows (the default there), rather
+         * than on its press, as on macOS and Linux (the default elsewhere). A touch long press always asks on the
+         * press (it is held), the keyboard when its key goes down.
+         */
+        bool contextMenuOnRelease() const { return _contextMenuOnRelease; }
+
+        template<class Self>
+        Self &contextMenuOnRelease(this Self &self, detail::BoolArg onRelease) {
+            static_cast<Window &>(self)._contextMenuOnRelease = onRelease.value;
+            return self;
+        }
 
         /**
          * The div a press here goes to through its `hitSlop`, and the point on it the press moves to; nullptr
@@ -533,6 +547,11 @@ namespace psychic_ui {
         bool                        _tooltipWarm{false};       // One just hid: the next one shows at once
         std::optional<std::chrono::nanoseconds> _warmSince{};
         bool                        _touchTooltip{false};      // Shown by a long press, until the finger lifts
+        #ifdef _WIN32
+        bool                        _contextMenuOnRelease{true};
+        #else
+        bool                        _contextMenuOnRelease{false};
+        #endif
         bool                        _pressSwallowed{false};    // A press closed a modal popup: its release goes nowhere
         MouseButton                 _swallowedButton{MouseButton::LEFT};
 
