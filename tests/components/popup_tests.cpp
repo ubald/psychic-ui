@@ -507,6 +507,49 @@ TEST_CASE("The deepest div with a context menu opens its own", "[popup][menu][co
     CHECK(f.menu()->rows()[0]->menuItem()->label == "Rename");
 }
 
+TEST_CASE("A right press elsewhere while a context menu is open opens it there", "[popup][menu][context]") {
+    ContextMenus f{};
+    f.inner.contextMenu({Menu::item("Rename", []() {})});
+    const auto [ax, ay] = Popups::origin(f.area);
+    f.press(ax + 250, ay + 150, MouseButton::RIGHT);
+    f.release(ax + 250, ay + 150, MouseButton::RIGHT);
+    REQUIRE(f.menu() != nullptr);
+
+    // Elsewhere in the same div: closed, and open again at the new point
+    f.press(ax + 150, ay + 170, MouseButton::RIGHT);
+    REQUIRE(f.menu() != nullptr);
+    CHECK(f.window->overlay().popups().size() == 1);
+    const auto [mx, my] = Popups::origin(*f.menu());
+    CHECK(mx == ax + 150);
+    CHECK(my == ay + 170);
+    f.release(ax + 150, ay + 170, MouseButton::RIGHT);
+    CHECK(f.menu() != nullptr); // Its release doesn't close it
+
+    // On another div with a menu of its own: that one opens
+    const auto [ix, iy] = Popups::center(f.inner);
+    f.press(ix, iy, MouseButton::RIGHT);
+    REQUIRE(f.menu() != nullptr);
+    REQUIRE(f.menu()->rows().size() == 1);
+    CHECK(f.menu()->rows()[0]->menuItem()->label == "Rename");
+    f.release(ix, iy, MouseButton::RIGHT);
+
+    // Where nothing has one: only closed, and the press reaches what is there
+    const auto [bx, by] = Popups::center(f.first);
+    int pressed = 0;
+    f.first.onMousePress([&]() { ++pressed; });
+    f.press(bx, by, MouseButton::RIGHT);
+    CHECK(f.menu() == nullptr);
+    CHECK(pressed == 1);
+    f.release(bx, by, MouseButton::RIGHT);
+
+    // A left press outside still only closes it
+    f.press(ax + 250, ay + 150, MouseButton::RIGHT);
+    REQUIRE(f.menu() != nullptr);
+    f.clickAt(bx, by);
+    CHECK(f.menu() == nullptr);
+    CHECK(f.firstClicks == 0);
+}
+
 TEST_CASE("An empty context menu removes it", "[popup][menu][context]") {
     ContextMenus f{};
     f.area.contextMenu({});

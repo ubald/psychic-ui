@@ -55,7 +55,9 @@ namespace psychic_ui {
      * - `modal(true)`: the content under it (and the popups under it) get no mouse input, except its pass-through
      *   divs (`passThrough(div)`, like a menu bar while one of its menus is open).
      * - Dismissed by a press outside its surface (`dismissOnOutsidePress`, the default) and by Escape
-     *   (`dismissOnEscape`, the default); a press that dismisses a modal popup goes no further.
+     *   (`dismissOnEscape`, the default); a press that dismisses a modal popup goes no further, except a right
+     *   press outside a popup that `passesContextPress` (a menu), which goes on, so that another context menu opens
+     *   there, as on macOS and Windows.
      * - `trapFocus(true)`: Tab stays among its divs. When it closes with the focus inside it, the focus goes back to
      *   what had it when it opened (`restoreFocus`, the default).
      * - A popup opened from another (`owner(popup)`, a submenu) closes with it.
@@ -163,6 +165,18 @@ namespace psychic_ui {
             return self;
         }
 
+        /**
+         * Whether a right press outside it that closes it goes on to what is under it (false), so that a context
+         * menu opens there: a menu's (true)
+         */
+        bool passesContextPress() const { return _passesContextPress; }
+
+        template<class Self>
+        Self &passesContextPress(this Self &self, detail::BoolArg passes) {
+            static_cast<Popup &>(self)._passesContextPress = passes.value;
+            return self;
+        }
+
         bool dismissOnEscape() const { return _dismissOnEscape; }
 
         template<class Self>
@@ -251,6 +265,7 @@ namespace psychic_ui {
         bool _modal{false};
         bool _dismissOnOutsidePress{true};
         bool _dismissOnEscape{true};
+        bool _passesContextPress{false};
         bool _trapFocus{false};
         bool _restoreFocus{true};
 
@@ -338,9 +353,10 @@ namespace psychic_ui {
         /**
          * A press at this point (window coordinates) is about to be dispatched: close the popups it is outside of
          * that a press outside dismisses, topmost first, until one it is inside of, or a modal one that stays
+         * @param contextPress A right press: closing a popup that `passesContextPress` doesn't stop it
          * @return Whether it closed a modal popup without landing in another popup: the press goes no further
          */
-        bool pressOutside(int x, int y);
+        bool pressOutside(int x, int y, bool contextPress = false);
 
         /**
          * Escape was pressed: close the topmost popup Escape dismisses

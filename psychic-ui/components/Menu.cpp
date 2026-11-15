@@ -12,6 +12,7 @@ namespace psychic_ui {
         tag("Menu");
         modal(true);
         trapFocus(true);
+        passesContextPress(true); // A right press elsewhere opens the context menu there
         _focusEnabled = true; // It takes the keys, its rows are highlighted
         _defaultStyle.direction(Direction::Column);
 

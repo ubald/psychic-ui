@@ -257,7 +257,7 @@ namespace psychic_ui {
         return moved;
     }
 
-    bool Overlay::pressOutside(const int x, const int y) {
+    bool Overlay::pressOutside(const int x, const int y, const bool contextPress) {
         bool closedModal = false;
         auto children    = _children;
         for (auto it = children.rbegin(); it != children.rend(); ++it) {
@@ -272,7 +272,7 @@ namespace psychic_ui {
                 return false;
             }
             if (popup->_dismissOnOutsidePress) {
-                closedModal = closedModal || popup->_modal;
+                closedModal = closedModal || (popup->_modal && !(contextPress && popup->_passesContextPress));
                 popup->close();
             } else if (popup->_modal) {
                 return false;

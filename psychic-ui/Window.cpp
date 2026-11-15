@@ -1125,7 +1125,7 @@ namespace psychic_ui {
         if (e.down) {
             hideTooltip(false);
             _tooltipSuppressed = true;
-            if (_overlay->pressOutside(static_cast<int>(e.x), static_cast<int>(e.y))) {
+            if (_overlay->pressOutside(static_cast<int>(e.x), static_cast<int>(e.y), e.button == MouseButton::RIGHT)) {
                 _pressSwallowed  = true;
                 _swallowedButton = e.button;
                 return Handled;
