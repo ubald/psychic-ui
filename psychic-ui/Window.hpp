@@ -187,6 +187,19 @@ namespace psychic_ui {
             return self;
         }
 
+        /**
+         * How fast animations play (1, the default): 0.1 plays them ten times slower, to look at them. The animation
+         * clock advances by the time between `updateAnimations` calls times this; the timers (tooltip delays, toast
+         * timeouts, a long press) and kinetic scrolling keep the real time.
+         */
+        float animationSpeed() const { return _animationSpeed; }
+
+        template<class Self>
+        Self &animationSpeed(this Self &self, detail::FloatArg speed) {
+            static_cast<Window &>(self)._animationSpeed = std::max(speed.value, 0.0f);
+            return self;
+        }
+
         // endregion
 
         // region Popups

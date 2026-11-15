@@ -300,6 +300,23 @@ TEST_CASE("A paint-only property transitions without touching the layout", "[ani
     CHECK_FALSE(scene.window->needsFrame());
 }
 
+TEST_CASE("The animation speed slows the animation clock down", "[animation][transition]") {
+    Scene scene;
+    scene.styles().style(".box").backgroundColor(rgb(0x000000)).width(100).height(100)
+         .transition(P::backgroundColor, Timing{100ms, Ease::Linear});
+    scene.styles().style(".box.on").backgroundColor(rgb(0xFF0000));
+    scene.frame(0ms);
+    scene.window->animationSpeed(0.5f);
+    scene.box->addClassName("on");
+    scene.frame(1000ms);
+    scene.frame(1100ms); // 50 ms of animation
+    CHECK(argbOf(*scene.box) == 0xFF800000u);
+    scene.window->animationSpeed(1.0f);
+    scene.frame(1150ms); // 50 more, at full speed
+    CHECK(argbOf(*scene.box) == 0xFFFF0000u);
+    CHECK_FALSE(scene.box->transitioning());
+}
+
 TEST_CASE("A layout property transitions through Yoga, and retargets mid-way", "[animation][transition][layout]") {
     Scene scene;
     scene.styles().style(".box").width(100).height(20).transition(P::width, Timing{100ms, Ease::Linear});

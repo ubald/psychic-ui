@@ -8,7 +8,7 @@ using namespace psychic_ui;
 
 /**
  * psychic-ui-demo [--skin <default|float>] [--theme <system|pivotal-dark|pivotal-light|one-dark|one-light|psychic|
- *                 float-light|float-dark>] [--page <name>] [--no-fps] [--reduced-motion]
+ *                 float-light|float-dark>] [--page <name>] [--no-fps] [--reduced-motion] [--slow-motion]
  *                 [--open <menu|submenu|context|select|dialog|confirm|toasts|tooltip|view>]
  *                 [--keys <key,key*n,...>] [--scroll <pixels>]
  *
@@ -45,6 +45,8 @@ int main(int argc, char **argv) {
                 window->showFps(false);
             } else if (arg == "--reduced-motion") {
                 window->reducedMotion(true);
+            } else if (arg == "--slow-motion") {
+                window->animationSpeed(0.1f); // Ten times slower, to look at animations
             } else {
                 std::cerr << "Unknown argument: " << arg << std::endl;
             }

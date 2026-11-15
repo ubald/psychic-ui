@@ -570,8 +570,14 @@ namespace psychic_ui {
 
     // region Animation
 
-    void Window::updateAnimations(const std::chrono::nanoseconds now) {
-        _animationTime       = now;
+    void Window::updateAnimations(std::chrono::nanoseconds now) {
+        // The animation clock: the real time, slowed down (or sped up) by `animationSpeed` since the last call
+        const auto elapsed = _animationRealTime ? now - *_animationRealTime : now;
+        _animationRealTime = now;
+        _animationTime += _animationSpeed == 1.0f
+                              ? elapsed
+                              : std::chrono::nanoseconds{static_cast<std::int64_t>(static_cast<double>(elapsed.count()) * _animationSpeed)};
+        now = _animationTime;
         _animationClockFresh = true;
 
         // A callback may start animations: they land in the emptied list, and keep going after these

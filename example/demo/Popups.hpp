@@ -11,6 +11,7 @@
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/Menu.hpp>
 #include <psychic-ui/components/Select.hpp>
+#include <psychic-ui/components/Switch.hpp>
 #include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/components/Toast.hpp>
 #include <psychic-ui/components/Tooltip.hpp>
@@ -155,6 +156,18 @@ namespace psychic_ui {
         toasts.add<Button>("Success").icon("circle-check").onClick([this]() { showToast(ToastVariant::Success); });
         toasts.add<Button>("Warning").icon("warning").onClick([this]() { showToast(ToastVariant::Warning); });
         toasts.add<Button>("Danger").icon("circle-alert").onClick([this]() { showToast(ToastVariant::Danger); });
+
+        // endregion
+
+        // region Motion
+
+        auto &motion = group("Motion", "Popups fade and scale from their anchor as they open and close, a little quicker out; tooltips drift toward theirs, toasts slide in from the edge");
+        // Ten times slower, to watch them (as with --slow-motion)
+        motion.add<Switch>("Slow motion").onChange([this](bool on) {
+            if (Window *w = window()) {
+                w->animationSpeed(on ? 0.1f : 1.0f);
+            }
+        });
 
         // endregion
 
