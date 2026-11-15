@@ -89,7 +89,13 @@ list(JOIN SKIA_LIBRARY_FLAGS ", " SKIA_LIBRARY_FLAGS)
 list(APPEND SKIA_ARGS_LIST "extra_cflags=[${SKIA_INCLUDE_FLAGS}]" "extra_ldflags=[${SKIA_LIBRARY_FLAGS}]")
 
 list(JOIN SKIA_ARGS_LIST " " SKIA_ARGS)
-set(SKIA_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/build)
+set(PSYCHIC_UI_SKIA_DIR "" CACHE PATH "Directory to build Skia into and link it from, to share one build between build directories (default: this build directory's extlib/skia/build)")
+if (PSYCHIC_UI_SKIA_DIR)
+    set(SKIA_OUTPUT ${PSYCHIC_UI_SKIA_DIR})
+else ()
+    set(SKIA_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/build)
+endif ()
+set(PSYCHIC_UI_SKIA_OUTPUT "${SKIA_OUTPUT}" CACHE INTERNAL "The directory Skia is built into and linked from")
 
 configure_file("skia_build.sh.in" "skia_build.sh" @ONLY)
 
