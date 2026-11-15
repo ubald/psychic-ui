@@ -44,7 +44,7 @@ namespace psychic_ui::themes {
             .overlayContact = {.color = argb(0x4D000000), .blur = 6, .offsetY = 2},
             .thumb          = {.color = argb(0x4D000000), .blur = 2, .offsetY = 1},
             .panel          = {.color = argb(0x73000000), .blur = 24, .offsetY = 8, .spread = -6},
-            .panelContact   = {.color = argb(0x24FFFFFF), .spread = 1}, // The strong hairline
+            .panelContact   = {.color = argb(0x33FFFFFF), .spread = 1}, // 20%, a step past the strong hairline
         },
         .type = ubuntuType,
     };
