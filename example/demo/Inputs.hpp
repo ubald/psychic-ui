@@ -51,7 +51,7 @@ namespace psychic_ui {
         searches.add<SearchField>("Moving head").placeholder("Find fixtures");
 
         Label *switchEvent = nullptr;
-        auto  &switches    = group("Switches", "A click, Space or Enter flips one; the thumb drags (it moves instantly, without animation)", switchEvent);
+        auto  &switches    = group("Switches", "A click, Space or Enter flips one, the thumb springs over; it also drags", switchEvent);
         for (const auto &[label, on, enabled]: std::vector<std::tuple<std::string, bool, bool>>{
                  {"Follow system", false, true},
                  {"Blackout on start", true, true},

@@ -117,6 +117,14 @@ namespace psychic_ui {
         const Metrics    &m     = theme.metrics;
         const Radii      &r     = m.radius;
         const Sizes      &s     = manager->sizes();
+        const Motion     &mo    = m.motion;
+
+        // Motion, Pivotal's: colors blend quickly on hover, press, focus and selection; the focus ring fades in (and
+        // goes at once: its width snaps to 0); a switch's thumb springs. What paints the colors transitions them: a
+        // component's skin (which inherits the component's colors), rows, parts with colors of their own.
+        using P = Property;
+        const Timing quick = mo.quick();
+        const auto   colors = {P::color, P::backgroundColor, P::borderColor, P::outlineColor};
 
         // Inter (Pivotal's) and Ubuntu are always there, so any style can name them; then the theme's own
         for (const Typography &type: {Typography{}, themes::ubuntuType, t}) {
@@ -140,7 +148,8 @@ namespace psychic_ui {
             .iconSize(m.iconMd)
             .iconStrokeWidth(m.iconStroke)
             .antiAlias(true)
-            .textAntiAlias(true);
+            .textAntiAlias(true)
+            .transition(P::outlineColor, quick); // Every focus ring fades in
 
         // Three levels of text, by descending importance (TextRole)
         rule(".text-primary").color(p.text);
@@ -159,6 +168,9 @@ namespace psychic_ui {
         for (const char *control: {"Button", "CheckBox", "Range", "ScrollBar", "TextInput", "TextArea", "MenuButton"}) {
             rule(control).hitSlop(s.hitSlop);
         }
+
+        // Skins paint their components: they blend the colors they inherit
+        rule("Skin").transition(colors, quick);
 
         // endregion
 
@@ -198,7 +210,8 @@ namespace psychic_ui {
             .height(11)
             .paddingHorizontal(0) // Over the button's
             .border(0)
-            .backgroundColor(p.lineStrong);
+            .backgroundColor(p.lineStrong)
+            .transition({P::backgroundColor, P::outlineColor}, quick); // Its skin paints the component's color
 
         rule("WindowControls:hover Button.close").backgroundColor(p.danger);
         rule("WindowControls:hover Button.minimize").backgroundColor(p.warning);
@@ -296,7 +309,8 @@ namespace psychic_ui {
             .borderColor(p.lineStrong)
             .backgroundColor(p.page)
             .color(p.onAccent) // The check mark
-            .iconStrokeWidth(1.8f);
+            .iconStrokeWidth(1.8f)
+            .transition(colors, quick);
 
         rule("CheckBox:hover .box").borderColor(p.textSecondary);
         rule("CheckBox.checked .box")
@@ -331,6 +345,12 @@ namespace psychic_ui {
         rule("Range .fill")
             .borderRadius(r.button)
             .backgroundColor(p.accent);
+
+        // A step by the keyboard glides; the thumb follows a drag (or a press) at once
+        rule("Range .fill").transition({P::width, P::height}, mo.arrive());
+        rule("Range .thumb-anchor").transition({P::left, P::bottom}, mo.arrive());
+        rule("Range:active .fill").transition(Transition{});
+        rule("Range:active .thumb-anchor").transition(Transition{});
 
         shadow(rule("Range .thumb"), theme.elevation.thumb)
             .width(14)
@@ -446,7 +466,8 @@ namespace psychic_ui {
             .border(m.border)
             .borderRadius(r.button)
             .borderColor(p.lineStrong)
-            .backgroundColor(p.switchOff);
+            .backgroundColor(p.switchOff)
+            .transition(colors, mo.moderate());
         rule("Switch.checked .track")
             .borderColor(p.accent)
             .backgroundColor(p.accent);
@@ -457,6 +478,10 @@ namespace psychic_ui {
             .height(12)
             .borderRadius(r.button)
             .backgroundColor(p.onAccent);
+
+        // The thumb springs to its side, keeping its speed when flipped again half-way; it follows a drag at once
+        rule("Switch .thumb-space").transition(P::grow, Timing{mo.spring});
+        rule("Switch.dragging .thumb-space").transition(Transition{});
 
         rule("Switch:disabled").opacity(0.45f);
 
@@ -480,7 +505,8 @@ namespace psychic_ui {
             .alignItems(Align::Center)
             .gap(m.space(1.5f))
             .paddingHorizontal(m.space(2))
-            .borderRadius(r.button - 1);
+            .borderRadius(r.button - 1)
+            .transition(colors, quick);
         rule("SegmentedControl.small .segment").paddingHorizontal(m.space(1.5f));
         rule("SegmentedControl .segment:hover").color(p.text);
         text(rule("SegmentedControl .segment.selected"), t.xs, t.medium, s)
@@ -560,7 +586,8 @@ namespace psychic_ui {
             .width(s.controlXs)
             .height(s.controlXs)
             .shrink(0)
-            .borderRadius(r.button);
+            .borderRadius(r.button)
+            .transition(P::outlineColor, quick);
         rule("ColorSwatches .swatch.selected")
             .outlineColor(p.accent)
             .outlineWidth(2)
@@ -583,7 +610,8 @@ namespace psychic_ui {
 
         rule("ScrollBar .thumb")
             .borderRadius(r.button)
-            .backgroundColor(p.scrollThumb);
+            .backgroundColor(p.scrollThumb)
+            .transition(P::backgroundColor, quick);
         rule("ScrollBar.vertical .thumb")
             .marginHorizontal(m.scrollThumbInset)
             .minHeight(s.controlSm);
@@ -625,7 +653,7 @@ namespace psychic_ui {
             .backgroundColor(transparent);
 
         rule("Menu MenuButton.submenu").skin("submenu");
-        rule("Menu MenuButton .icon").color(p.textMuted);
+        rule("Menu MenuButton .icon").color(p.textMuted).transition(P::color, quick);
         rule("Menu MenuButton .label").grow(1);
 
         text(rule("Menu MenuButton .shortcut"), t.xs, t.regular, s)
@@ -692,7 +720,8 @@ namespace psychic_ui {
             .borderColor(p.line)
             .backgroundColor(p.raised)
             .color(p.text)
-            .hitSlop(s.hitSlop);
+            .hitSlop(s.hitSlop)
+            .transition(colors, quick);
 
         rule("Select:hover").borderColor(p.lineStrong);
         rule("Select:focus-visible").borderColor(p.accent);
@@ -961,9 +990,10 @@ namespace psychic_ui {
             .height(s.rowSm)
             .paddingHorizontal(m.space(2))
             .borderRadius(r.row)
-            .color(p.textSecondary);
+            .color(p.textSecondary)
+            .transition(colors, quick);
 
-        rule("SidebarItem .icon").color(p.textMuted);
+        rule("SidebarItem .icon").color(p.textMuted).transition(P::color, quick);
         rule("SidebarItem .label").grow(1).shrink(1);
         text(rule("SidebarItem .count"), t.xs, t.regular, s).color(p.textMuted);
 
@@ -1003,7 +1033,8 @@ namespace psychic_ui {
                 .borderBottom(m.border)
                 .borderColor(p.line)
                 .borderLeftColor(transparent)
-                .color(p.text);
+                .color(p.text)
+                .transition({P::color, P::backgroundColor, P::borderLeftColor, P::outlineColor}, quick);
             rule((row + ":last-child").c_str()).borderBottom(0);
             rule((row + ":hover").c_str()).backgroundColor(p.raised);
             rule((row + ".selected").c_str())
@@ -1098,7 +1129,8 @@ namespace psychic_ui {
             .border(m.border)
             .borderRadius(r.row)
             .borderColor(transparent)
-            .color(p.textSecondary);
+            .color(p.textSecondary)
+            .transition(colors, quick);
 
         rule("TreeRow:hover")
             .color(p.text)
@@ -1213,7 +1245,8 @@ namespace psychic_ui {
             .borderRadius(r.button)
             .borderColor(p.line)
             .color(p.textSecondary)
-            .hitSlop(s.hitSlop);
+            .hitSlop(s.hitSlop)
+            .transition(colors, quick);
         rule("Chip.removable").paddingRight(m.space(1.5f));
         for (const char *state: {"Chip:hover", "Chip.selected"}) {
             rule(state)

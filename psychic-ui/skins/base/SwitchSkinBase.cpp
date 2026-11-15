@@ -11,9 +11,11 @@ namespace psychic_ui {
               .alignItems(Align::Center)
               .shrink(0);
 
-        // The free space around the thumb, shared by the position: no measuring, the layout places it
+        // The free space around the thumb, shared by the position: no measuring, the layout places it. Their
+        // `grow` is the position, so a transition on it (`Switch .thumb-space`) moves the thumb.
         _before = &_track->add<Div>();
-        _before->mouseEnabled(false).grow(0).basis(0);
+        _before->addClassName("thumb-space")
+               .mouseEnabled(false).grow(0).basis(0);
 
         _thumb = &_track->add<Div>();
         _thumb->addClassName("thumb")
@@ -21,7 +23,8 @@ namespace psychic_ui {
               .shrink(0);
 
         _after = &_track->add<Div>();
-        _after->mouseEnabled(false).grow(1).basis(0);
+        _after->addClassName("thumb-space")
+              .mouseEnabled(false).grow(1).basis(0);
 
         _label = &add<Label>();
         _label->addClassName("label")

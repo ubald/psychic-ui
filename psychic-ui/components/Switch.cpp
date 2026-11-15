@@ -112,7 +112,10 @@ namespace psychic_ui {
         if (!_dragging && std::abs(windowX - _pressX) < dragThreshold && std::abs(windowY - _pressY) < dragThreshold) {
             return;
         }
-        _dragging = true;
+        if (!_dragging) {
+            _dragging = true;
+            addClassName("dragging");
+        }
         // The thumb follows the mouse from where it was when pressed, whatever part of the switch was pressed
         int x = 0;
         int y = 0;
@@ -128,6 +131,7 @@ namespace psychic_ui {
         if (_dragging) {
             const bool checked = _dragPosition >= 0.5f;
             _dragging = false;
+            removeClassName("dragging");
             if (checked != _checked) {
                 updateChecked(checked);
             } else if (_skin) {
@@ -148,6 +152,7 @@ namespace psychic_ui {
         _onMouseMove.disconnect(); // Removed mid-drag: the mouse up won't reach us
         _pressed  = false;
         _dragging = false;
+        removeClassName("dragging");
     }
 
 }

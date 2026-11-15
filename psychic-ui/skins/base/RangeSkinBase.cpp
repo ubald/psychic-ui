@@ -14,7 +14,8 @@ namespace psychic_ui {
 
         // A point: the thumb, bigger, overflows it evenly on every side
         _thumbAnchor = &_track->add<Div>();
-        _thumbAnchor->mouseEnabled(false)
+        _thumbAnchor->addClassName("thumb-anchor")
+                    .mouseEnabled(false)
                     .position(Position::Absolute)
                     .width(0)
                     .height(0)

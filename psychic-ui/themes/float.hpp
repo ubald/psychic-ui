@@ -59,6 +59,13 @@ namespace psychic_ui::themes {
             .rowMd     = 34,
             .hitSlop   = 8, // A 28 px control reaches 44 px for a finger
         },
+        // Softer than Pivotal's: a little longer, the same curve, a spring that overshoots a touch
+        .motion = {
+            .fast   = std::chrono::milliseconds{120},
+            .medium = std::chrono::milliseconds{200},
+            .slow   = std::chrono::milliseconds{280},
+            .spring = {.stiffness = 380.0f, .damping = 28.0f},
+        },
     };
 
     /**

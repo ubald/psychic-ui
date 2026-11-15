@@ -35,7 +35,9 @@ namespace psychic_ui {
      * @class Switch
      *
      * An on/off toggle, its thumb sliding along a track: a click, Space or Enter flips it, and the thumb can be
-     * dragged, landing on the nearer side. It moves instantly: there is no animation mechanism yet.
+     * dragged, landing on the nearer side. The skin places the thumb by the `grow` of the `.thumb-space` on either
+     * side of it, so a style transition on that moves it (the default set's springs); the `dragging` class, while the
+     * thumb follows the mouse, lets a rule turn that off.
      * It has the `checked` class while it is on (`Switch.checked .track`).
      */
     class Switch : public Component<SwitchSkin> {

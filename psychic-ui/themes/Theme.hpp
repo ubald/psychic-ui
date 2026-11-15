@@ -1,6 +1,8 @@
 #pragma once
 
+#include <chrono>
 #include <string_view>
+#include "psychic-ui/animation/Timing.hpp"
 #include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
@@ -151,6 +153,26 @@ namespace psychic_ui {
         float small{6};    // Keyboard hints, small marks
     };
 
+    /**
+     * How things move, by role: Pivotal's durations (`--duration-fast`, `--duration-medium`) and curve
+     * (`--ease-out-quick`), "quick and barely noticeable, or it reads as sluggish", and a spring for what is thrown or
+     * dragged. A window that reduces motion makes them all instant.
+     */
+    struct Motion {
+        std::chrono::milliseconds fast{100};   // Hover, press and focus: colors, borders, the focus ring
+        std::chrono::milliseconds medium{150}; // A switch's track, a selection moving, a slider's thumb on a key
+        std::chrono::milliseconds slow{240};   // What enters and leaves (popups); not Pivotal's, which has two steps
+        Ease                      standard{Ease::Standard};    // CSS's default curve, Pivotal's color transitions'
+        Ease                      out{0.16f, 1.0f, 0.3f, 1.0f}; // Things arriving (--ease-out-quick)
+        Spring                    spring{500.0f, 40.0f};        // Things thrown or dragged: a switch's thumb, barely overshooting
+
+        constexpr Timing quick() const { return {fast, standard}; }
+
+        constexpr Timing moderate() const { return {medium, standard}; }
+
+        constexpr Timing arrive() const { return {medium, out}; }
+    };
+
     struct Metrics {
         Radii radius{};
         float border{1};
@@ -176,6 +198,7 @@ namespace psychic_ui {
         float iconStroke{1.3f};
         Sizes pointer{};
         Sizes touch{.hitSlop = 10}; // A 24 px control reaches 44 px for a finger, and looks the same
+        Motion motion{};
 
         constexpr float space(float steps) const { return steps * spaceUnit; }
 

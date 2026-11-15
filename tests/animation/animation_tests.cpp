@@ -5,6 +5,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/animation/Animation.hpp>
+#include <psychic-ui/components/Switch.hpp>
 #include <psychic-ui/components/Toast.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include "../backends/fake_system_window.hpp"
@@ -469,6 +470,42 @@ TEST_CASE("The window says when it needs a frame, and how long it may sleep", "[
     CHECK(window->toasts().toasts().empty());
     system.layout();
     CHECK(window->untilNextFrame(15s) == std::nullopt);
+}
+
+TEST_CASE("A switch's thumb springs to its side", "[animation][switch]") {
+    auto window = std::make_shared<psychic_ui_tests::TestWindow>();
+    window->reducedMotion(false);
+    psychic_ui_tests::FakeSystemWindow system{window};
+    auto &toggle = window->appContainer().add<Switch>("Wi-Fi");
+    system.layout();
+    const Div *thumb = nullptr;
+    std::function<void(const Div &)> find = [&](const Div &div) {
+        for (const auto &child: div.children()) {
+            if (child->classNames().contains("thumb")) {
+                thumb = child.get();
+            }
+            find(*child);
+        }
+    };
+    find(toggle);
+    REQUIRE(thumb != nullptr);
+    const int off = thumb->x();
+
+    window->updateAnimations(1000ms);
+    toggle.checked(true);
+    window->updateStylesAndLayout();
+    CHECK(thumb->x() == off);
+    window->updateAnimations(1040ms);
+    window->updateStylesAndLayout();
+    const int between = thumb->x();
+    CHECK(between > off);
+    for (auto t = 1056ms; t < 3s && window->animating(); t += 16ms) {
+        window->updateAnimations(t);
+        window->updateStylesAndLayout();
+    }
+    CHECK_FALSE(window->animating());
+    CHECK(thumb->x() > between);
+    CHECK_FALSE(window->needsFrame());
 }
 
 // endregion
