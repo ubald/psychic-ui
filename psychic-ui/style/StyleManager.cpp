@@ -70,6 +70,22 @@ namespace psychic_ui {
     }
 
     StyleManager &StyleManager::skinSet(std::unique_ptr<SkinSet> skinSet, const ColorScheme scheme) {
+        installSkinSet(std::move(skinSet));
+        if (!_skinSets.empty()) {
+            _theme = _skinSets.back()->theme(scheme);
+        }
+        reloadRules();
+        return *this;
+    }
+
+    StyleManager &StyleManager::skinSet(std::unique_ptr<SkinSet> skinSet, const Theme theme) {
+        installSkinSet(std::move(skinSet));
+        _theme = theme;
+        reloadRules();
+        return *this;
+    }
+
+    void StyleManager::installSkinSet(std::unique_ptr<SkinSet> skinSet) {
         // The chain, from the last fallback to the set itself: a set's skins and rules go over its fallback's
         _skinSets.clear();
         while (skinSet) {
@@ -82,11 +98,6 @@ namespace psychic_ui {
             set->registerSkins(_skins);
         }
         ++_skinsGeneration;
-        if (!_skinSets.empty()) {
-            _theme = _skinSets.back()->theme(scheme);
-        }
-        reloadRules();
-        return *this;
     }
 
     void StyleManager::reloadRules() {

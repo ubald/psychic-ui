@@ -72,6 +72,11 @@ namespace psychic_ui {
         StyleManager &skinSet(std::unique_ptr<SkinSet> skinSet, ColorScheme scheme = ColorScheme::Unknown);
 
         /**
+         * Use a skin set with that theme rather than its own
+         */
+        StyleManager &skinSet(std::unique_ptr<SkinSet> skinSet, Theme theme);
+
+        /**
          * The skin set in use, nullptr before one is set
          */
         const SkinSet *skinSet() const { return _skinSets.empty() ? nullptr : _skinSets.back().get(); }
@@ -223,6 +228,11 @@ namespace psychic_ui {
          * Clear the rules, then load the skin sets' rules and the stylesheets', in order
          */
         void reloadRules();
+
+        /**
+         * Replace the skin set chain and the skins, bumping the generation; the rules are reloaded by the caller
+         */
+        void installSkinSet(std::unique_ptr<SkinSet> skinSet);
 
         /**
          * Fill _matches with the rules matching a Div, in the order they apply

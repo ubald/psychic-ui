@@ -310,12 +310,20 @@ namespace psychic_ui {
         }
 
         /**
-         * Use a skin set for the style manager, with its default theme: every component hatches a new skin
+         * Use a skin set for the style manager: every component hatches a new skin. The theme: a theme picked with
+         * `theme(t)` stays if it is one of the set's (`SkinSet::themes()`); otherwise the window follows the system
+         * again, with the set's light or default theme (`SkinSet::theme(scheme)`).
          */
         template<class S, class Self>
         Self &skinSet(this Self &self) {
             static_assert(std::is_base_of_v<SkinSet, S>, "S must extend SkinSet");
             static_cast<Window &>(self).updateSkinSet(std::make_unique<S>());
+            return self;
+        }
+
+        template<class Self>
+        Self &skinSet(this Self &self, std::unique_ptr<SkinSet> skinSet) {
+            static_cast<Window &>(self).updateSkinSet(std::move(skinSet));
             return self;
         }
 

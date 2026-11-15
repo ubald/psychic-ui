@@ -113,3 +113,58 @@ TEST_CASE("switching to Float live re-hatches skins and keeps the components' st
     CHECK(list.selection() == &grace);
     CHECK(on.checked());
 }
+
+TEST_CASE("which theme a skin set switch picks", "[skins][theme]") {
+    Fixture f;
+
+    SECTION("following the system, the new set's theme for the scheme") {
+        f.window->skinSet<FloatSkins>();
+        CHECK(f.theme() == "Float Light"); // The system doesn't say: the set's default
+        f.window->handleColorSchemeChange(ColorScheme::Dark);
+        CHECK(f.theme() == "Float Dark");
+        f.window->skinSet<DefaultSkins>();
+        CHECK(f.theme() == "Pivotal Dark");
+        f.window->handleColorSchemeChange(ColorScheme::Light);
+        CHECK(f.theme() == "Pivotal Light");
+        f.window->skinSet<FloatSkins>();
+        CHECK(f.theme() == "Float Light");
+        CHECK(f.window->followsSystemTheme());
+    }
+
+    SECTION("a picked theme of another set goes back to following the system") {
+        f.window->theme(themes::oneLight);
+        REQUIRE_FALSE(f.window->followsSystemTheme());
+        f.window->handleColorSchemeChange(ColorScheme::Dark);
+        f.window->skinSet<FloatSkins>();
+        CHECK(f.theme() == "Float Dark");
+        CHECK(f.window->followsSystemTheme());
+    }
+
+    SECTION("a picked theme of the new set stays") {
+        f.window->theme(themes::floatDark); // Any theme works with any set
+        f.window->skinSet<FloatSkins>();
+        CHECK(f.theme() == "Float Dark");
+        CHECK_FALSE(f.window->followsSystemTheme());
+        f.window->handleColorSchemeChange(ColorScheme::Light); // Still picked: the system doesn't change it
+        CHECK(f.theme() == "Float Dark");
+
+        // Installing the same set again keeps it too
+        f.window->skinSet<FloatSkins>();
+        CHECK(f.theme() == "Float Dark");
+
+        // Not a default set's theme: back to the system's, light now
+        f.window->skinSet<DefaultSkins>();
+        CHECK(f.theme() == "Pivotal Light");
+        CHECK(f.window->followsSystemTheme());
+    }
+
+    SECTION("a pair to follow the system with stays only if both are the new set's") {
+        f.window->followSystemTheme(themes::oneLight, themes::oneDark); // Both the default set's
+        f.window->skinSet<DefaultSkins>();
+        CHECK(f.theme() == "One Dark");
+        f.window->skinSet<FloatSkins>();
+        CHECK(f.theme() == "Float Light");
+        f.window->handleColorSchemeChange(ColorScheme::Dark);
+        CHECK(f.theme() == "Float Dark");
+    }
+}
