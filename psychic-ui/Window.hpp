@@ -465,6 +465,19 @@ namespace psychic_ui {
          * than on its press, as on macOS and Linux (the default elsewhere). A touch long press always asks on the
          * press (it is held), the keyboard when its key goes down.
          */
+        /**
+         * Whether a left press with Control (and no other modifier) is a right press, for the whole press and its
+         * release (the right button, a context menu, no click), as Cocoa applications do on macOS (the default
+         * there; AppKit delivers it as a left press with Control, and SDL leaves it so by default). Not for touches.
+         */
+        bool ctrlClickIsRightClick() const { return _ctrlClickIsRightClick; }
+
+        template<class Self>
+        Self &ctrlClickIsRightClick(this Self &self, detail::BoolArg rightClick) {
+            static_cast<Window &>(self)._ctrlClickIsRightClick = rightClick.value;
+            return self;
+        }
+
         bool contextMenuOnRelease() const { return _contextMenuOnRelease; }
 
         template<class Self>
@@ -547,6 +560,12 @@ namespace psychic_ui {
         bool                        _tooltipWarm{false};       // One just hid: the next one shows at once
         std::optional<std::chrono::nanoseconds> _warmSince{};
         bool                        _touchTooltip{false};      // Shown by a long press, until the finger lifts
+        #ifdef __APPLE__
+        bool                        _ctrlClickIsRightClick{true};
+        #else
+        bool                        _ctrlClickIsRightClick{false};
+        #endif
+        bool                        _ctrlClickHeld{false}; // The left button is down as a right one
         #ifdef _WIN32
         bool                        _contextMenuOnRelease{true};
         #else

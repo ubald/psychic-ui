@@ -603,6 +603,52 @@ TEST_CASE("On the right button's press by default, on its release as on Windows"
     CHECK(requests == 4);
 }
 
+TEST_CASE("Control and the left button is the right one on macOS", "[popup][menu][context]") {
+    ContextMenus f{};
+    #ifdef __APPLE__
+    CHECK(f.window->ctrlClickIsRightClick());
+    #else
+    CHECK_FALSE(f.window->ctrlClickIsRightClick());
+    #endif
+    const auto [ax, ay] = Popups::origin(f.area);
+    const auto [bx, by] = Popups::center(f.first);
+    std::vector<MouseButton> buttons{};
+    f.first.onMouseButtonChange([&](const MouseEvent &e) { buttons.push_back(e.button); });
+    const auto ctrlClick = [&](int x, int y, Mod mod) {
+        f.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = true, .modifiers = mod});
+        f.layout();
+        // Control may go up first: the release is still the right button's
+        f.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = false});
+        f.layout();
+    };
+
+    // Off: a left click with Control
+    f.window->ctrlClickIsRightClick(false);
+    ctrlClick(bx, by, Mod{.ctrl = true});
+    CHECK(f.firstClicks == 1);
+    CHECK(buttons == std::vector{MouseButton::LEFT, MouseButton::LEFT});
+
+    // On: a right press and release, no click, the context menu
+    f.window->ctrlClickIsRightClick(true);
+    buttons.clear();
+    ctrlClick(bx, by, Mod{.ctrl = true});
+    CHECK(f.firstClicks == 1);
+    CHECK(buttons == std::vector{MouseButton::RIGHT, MouseButton::RIGHT});
+    ctrlClick(ax + 250, ay + 150, Mod{.ctrl = true});
+    REQUIRE(f.menu() != nullptr);
+    const auto [mx, my] = Popups::origin(*f.menu());
+    CHECK(mx == ax + 250);
+    CHECK(my == ay + 150);
+    f.key(Key::ESCAPE);
+
+    // With another modifier, it stays the left button
+    buttons.clear();
+    ctrlClick(bx, by, Mod{.shift = true, .ctrl = true});
+    CHECK(f.firstClicks == 2);
+    CHECK(buttons == std::vector{MouseButton::LEFT, MouseButton::LEFT});
+    CHECK(f.menu() == nullptr);
+}
+
 TEST_CASE("An empty context menu removes it", "[popup][menu][context]") {
     ContextMenus f{};
     f.area.contextMenu({});

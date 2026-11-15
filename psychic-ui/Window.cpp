@@ -1120,6 +1120,19 @@ namespace psychic_ui {
     MouseEventStatus Window::handleMouseButtonChange(const MouseEvent &event) {
         MouseEvent e = event;
 
+        // Control and the left button is the right one, from its press to its release (macOS)
+        if (e.button == MouseButton::LEFT) {
+            const Mod &mod = e.modifiers;
+            if (e.down && _ctrlClickIsRightClick && e.source != InputMode::Touch && mod.ctrl && !mod.shift && !mod.alt
+                && !mod.super) {
+                e.button       = MouseButton::RIGHT;
+                _ctrlClickHeld = true;
+            } else if (!e.down && _ctrlClickHeld) {
+                e.button       = MouseButton::RIGHT;
+                _ctrlClickHeld = false;
+            }
+        }
+
         // A press hides the tooltip (a touch long press shows it after this) and closes the popups it is outside of:
         // when that closed a modal one, the press (and its release) went to it
         if (e.down) {
