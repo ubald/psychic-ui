@@ -7,12 +7,15 @@
 using namespace psychic_ui;
 
 /**
- * psychic-ui-demo [--skin <default|float>] [--theme <system|pivotal-dark|pivotal-light|one-dark|one-light|psychic|
- *                 float-light|float-dark>] [--page <name>] [--no-fps] [--reduced-motion] [--slow-motion]
+ * psychic-ui-demo [--skin <default|desk|float>] [--theme <system|pivotal-dark|pivotal-light|one-dark|one-light|psychic|
+ *                 desk-dark|desk-light|float-light|float-dark>] [--density <pointer|touch>] [--page <name>] [--no-fps]
+ *                 [--reduced-motion] [--slow-motion]
  *                 [--open <menu|submenu|context|select|dialog|confirm|toasts|tooltip|view>]
  *                 [--keys <key,key*n,...>] [--scroll <pixels>]
  *
- * The skin set applies first, then the theme, the page, the popup, the scroll and the keys, whatever their order.
+ * The skin set applies first, then the density, the theme, the page, the popup, the scroll and the keys, whatever
+ * their order. `--density touch` keeps the window in touch mode, as if a finger were on the screen, whatever the mouse
+ * does (for captures of the touch sizes).
  */
 int main(int argc, char **argv) {
     try {
@@ -21,6 +24,7 @@ int main(int argc, char **argv) {
         app.open(window);
 
         std::string skin{};
+        std::string density{};
         std::string theme{};
         std::string page{};
         std::string open{};
@@ -31,6 +35,8 @@ int main(int argc, char **argv) {
             const bool        more = i + 1 < argc;
             if (arg == "--skin" && more) {
                 skin = argv[++i];
+            } else if (arg == "--density" && more) {
+                density = argv[++i];
             } else if (arg == "--theme" && more) {
                 theme = argv[++i];
             } else if (arg == "--page" && more) {
@@ -54,6 +60,11 @@ int main(int argc, char **argv) {
 
         if (!skin.empty() && !window->useSkinSet(skin)) {
             std::cerr << "Unknown skin set: " << skin << std::endl;
+        }
+        if (density == "touch" || density == "pointer") {
+            window->forceInputMode(density == "touch" ? InputMode::Touch : InputMode::Pointer);
+        } else if (!density.empty()) {
+            std::cerr << "Unknown density: " << density << std::endl;
         }
         if (!theme.empty() && !window->useTheme(theme)) {
             std::cerr << "Unknown theme: " << theme << std::endl;

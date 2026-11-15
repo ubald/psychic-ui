@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -17,6 +18,7 @@
 #include <psychic-ui/components/Spacer.hpp>
 #include <psychic-ui/components/ToolBar.hpp>
 #include <psychic-ui/skins/default/DefaultSkins.hpp>
+#include <psychic-ui/skins/desk/DeskSkins.hpp>
 #include <psychic-ui/skins/float/FloatSkins.hpp>
 #include "Typography.hpp"
 #include "TextInputs.hpp"
@@ -48,7 +50,7 @@ namespace psychic_ui {
         bool showPage(const std::string &name);
 
         /**
-         * Use a skin set by its key ("default", "float"; see `_skinSets`); false for another name
+         * Use a skin set by its key ("default", "desk", "float"; see `_skinSets`); false for another name
          */
         bool useSkinSet(const std::string &key);
 
@@ -57,6 +59,12 @@ namespace psychic_ui {
          * system); the current set's themes first, then the other sets'. False for another name.
          */
         bool useTheme(const std::string &key);
+
+        /**
+         * Keep the window in this input mode whatever the devices report, and so the style manager at its density
+         * (for captures of the touch sizes without a touch screen); nullopt follows the devices again
+         */
+        void forceInputMode(std::optional<InputMode> mode);
 
         /**
          * Show or hide the frame rate counter. While it shows, the window draws every frame (to count them); hidden,
@@ -82,6 +90,7 @@ namespace psychic_ui {
 
     protected:
         void render(SkCanvas *canvas) override;
+        void handleInputModeChange(InputMode mode) override;
 
     private:
         struct Page {
@@ -104,6 +113,7 @@ namespace psychic_ui {
         // The skin sets the View menu and `--skin` offer: adding one is one line
         const std::vector<NamedSkinSet> _skinSets{
             named<DefaultSkins>("default"),
+            named<DeskSkins>("desk"),
             named<FloatSkins>("float"),
         };
 
@@ -117,6 +127,7 @@ namespace psychic_ui {
         std::shared_ptr<Div>    _panel{};
         SidebarItem             *_themeItem{nullptr};
         Label                   *fpsLabel{nullptr};
+        std::optional<InputMode> _forcedInputMode{};
 
         void show(const Page &page);
         void openThemeMenu();
@@ -424,6 +435,17 @@ namespace psychic_ui {
         if (Div *found = _panel ? scroller(*_panel) : nullptr) {
             found->scrollBy(0, -pixels);
         }
+    }
+
+    void DemoWindow::forceInputMode(const std::optional<InputMode> mode) {
+        _forcedInputMode = mode;
+        if (mode) {
+            Window::handleInputModeChange(*mode);
+        }
+    }
+
+    void DemoWindow::handleInputModeChange(const InputMode mode) {
+        Window::handleInputModeChange(_forcedInputMode.value_or(mode));
     }
 
     void DemoWindow::showFps(const bool show) {
