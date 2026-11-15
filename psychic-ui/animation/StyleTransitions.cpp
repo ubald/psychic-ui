@@ -148,9 +148,9 @@ namespace psychic_ui {
     void Div::updateTransitions(Style &computed) {
         Window *window = this->window();
         const bool allowed = window && !window->reducedMotion() && _styledIn == window
-                             && _styledGeneration == styleManager()->rulesGeneration();
+                             && _styledGeneration == styleManager()->rulesGeneration() && !starting();
         if (!allowed) {
-            // Nothing blends: the first style in a window, new rules (a theme), reduced motion
+            // Nothing blends: the first style in a window, its starting style, new rules (a theme), reduced motion
             cancelTransitions();
             return;
         }
@@ -284,6 +284,93 @@ namespace psychic_ui {
             }
         }
     }
+
+    // region Entering and leaving
+
+    namespace {
+        std::string lowercase(std::string string) {
+            std::transform(string.begin(), string.end(), string.begin(), ::tolower);
+            return string;
+        }
+    }
+
+    bool Div::starting() const {
+        for (const Div *div = this; div; div = div->_parent) {
+            if (div->_startingApplied) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void Div::releaseStartingClass() {
+        if (_startingApplied) {
+            _startingApplied = false;
+            updateClassName(_startingClass, false);
+        }
+    }
+
+    void Div::exit(const std::string &className, std::function<void()> done) {
+        if (_exit) {
+            return;
+        }
+        Window *w = window();
+        if (!w || w->reducedMotion() || _styledIn != w || starting()) {
+            // Nothing to leave from: it was never painted, or nothing moves
+            if (done) {
+                done();
+            }
+            return;
+        }
+        _exit          = std::make_unique<Exit>(Exit{lowercase(className), std::move(done), _mouseEnabled, _mouseChildren});
+        _mouseEnabled  = false;
+        _mouseChildren = false;
+        updateClassName(className, true);
+        // Styled with it now, to know whether anything transitions (those started between frames start with the
+        // next one): when nothing does, it leaves at once
+        updateStyleRecursive();
+        if (!subtreeTransitioning()) {
+            finishExit();
+            return;
+        }
+        w->_exitingDivs.push_back(weak_from_this());
+    }
+
+    void Div::cancelExit() {
+        if (!_exit) {
+            return;
+        }
+        const auto exit = std::move(_exit);
+        _mouseEnabled  = exit->mouseEnabled;
+        _mouseChildren = exit->mouseChildren;
+        updateClassName(exit->className, false);
+    }
+
+    void Div::finishExit() {
+        if (!_exit) {
+            return;
+        }
+        const auto keepAlive = shared_from_this(); // `done` removes it
+        const auto exit      = std::move(_exit);
+        _mouseEnabled  = exit->mouseEnabled;
+        _mouseChildren = exit->mouseChildren;
+        // Without restyling: `done` takes it out of the window, and its next first style computes it anew
+        _classNames.erase(exit->className);
+        if (exit->done) {
+            exit->done();
+        }
+        if (window()) {
+            invalidateStyle(); // Still there after all
+        }
+    }
+
+    bool Div::subtreeTransitioning() const {
+        return transitioning() || std::any_of(_children.begin(), _children.end(), [](const auto &child) {
+            return child->subtreeTransitioning();
+        });
+    }
+
+    // endregion
 
     void Div::animate(const float from, const float to, const Timing &timing, std::function<void(float)> update) {
         std::erase_if(_animations, [](const auto &animation) {

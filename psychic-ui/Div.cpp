@@ -35,6 +35,12 @@ namespace psychic_ui {
             static YogaConfig yogaConfig;
             return yogaConfig.config;
         }
+
+        // Class names are matched in lower case
+        std::string lowercase(std::string string) {
+            std::transform(string.begin(), string.end(), string.begin(), ::tolower);
+            return string;
+        }
     }
 
     #ifdef DEBUG_LAYOUT
@@ -147,6 +153,17 @@ namespace psychic_ui {
         // Transitions belong to the window: whatever the div's next window, its first style there doesn't blend
         cancelTransitions();
         _styledIn = nullptr;
+        // So do its starting class (its next first style takes it again) and its exit (`done` won't run)
+        if (_startingApplied) {
+            _startingApplied = false;
+            _classNames.erase(lowercase(_startingClass));
+        }
+        if (_exit) {
+            const auto exit = std::move(_exit);
+            _mouseEnabled  = exit->mouseEnabled;
+            _mouseChildren = exit->mouseChildren;
+            _classNames.erase(exit->className);
+        }
         removedFromRender();
         for (auto &child: _children) {
             child->removedFromRenderRecursive();
@@ -463,6 +480,14 @@ namespace psychic_ui {
 
     void Div::updateStyle() {
         if (auto sm = styleManager()) {
+            // Its first style in a window: with its starting class, until the window lets it go
+            Window *w = window();
+            if (w && !_startingClass.empty() && !_startingApplied && _styledIn != w && !w->reducedMotion()) {
+                if (_classNames.insert(lowercase(_startingClass)).second) {
+                    _startingApplied = true;
+                    w->_startingDivs.push_back(weak_from_this());
+                }
+            }
             Style computed = sm->computeStyle(this);
             // The transitions' current values replace what they blend to
             updateTransitions(computed);

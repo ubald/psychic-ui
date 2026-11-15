@@ -661,9 +661,26 @@ namespace psychic_ui {
 
         std::vector<std::weak_ptr<Animation>> _scheduledAnimations{};
         std::chrono::nanoseconds              _animationTime{};
+        std::optional<std::chrono::nanoseconds> _animationRealTime{}; // What updateAnimations was last given
+        float                                 _animationSpeed{1.0f};
         bool                                  _animationClockFresh{false}; // From updateAnimations to the end of drawAll
         bool                                  _reducedMotion{false};
         std::atomic<bool>                     _frameRequested{true}; // Until the first frame
+        std::vector<std::weak_ptr<Div>>       _startingDivs{};       // With their starting class (`Div::startingClass`)
+        std::vector<std::weak_ptr<Div>>       _exitingDivs{};        // Leaving (`Div::exit`)
+
+        /**
+         * Let the divs with their starting class go (they restyle from it)
+         * @return Whether there was one
+         */
+        bool releaseStartingClasses();
+
+        /**
+         * Finish the exits that are over: styled since they started, nothing of them transitioning
+         */
+        void settleExits();
+
+        friend class Div;
 
         // endregion
 

@@ -375,29 +375,84 @@ namespace psychic_ui {
         // `styleUpdated` callbacks can invalidate styles, so run the pass again until nothing is dirty,
         // but a bounded number of times so that a callback that always invalidates can't hang the frame:
         // what is left waits for the next frame.
-        for (int pass = 0; pass < maxStylePasses && styleDirty(); ++pass) {
-            updateDirtyStyles();
-        }
+        const auto styles = [this]() {
+            for (int pass = 0; pass < maxStylePasses && styleDirty(); ++pass) {
+                updateDirtyStyles();
+            }
+        };
 
         // Then the layout, at the window's current size: the root has no width or height of its own,
         // it fills the size given here
-        const int width  = windowWidth();
-        const int height = windowHeight();
-        if (YGNodeIsDirty(_yogaNode) || width != _width || height != _height) {
-            #ifdef DEBUG_LAYOUT
-            if (debugLayout) {
-                std::cout << "Layout dirty!" << std::endl;
+        const int  width  = windowWidth();
+        const int  height = windowHeight();
+        const auto layout = [this, width, height](const bool force) {
+            if (force || YGNodeIsDirty(_yogaNode) || width != _width || height != _height) {
+                #ifdef DEBUG_LAYOUT
+                if (debugLayout) {
+                    std::cout << "Layout dirty!" << std::endl;
+                }
+                #endif
+                YGNodeCalculateLayout(_yogaNode, width, height, YGDirectionLTR);
+                layoutUpdated();
             }
-            #endif
-            YGNodeCalculateLayout(_yogaNode, width, height, YGDirectionLTR);
-            layoutUpdated();
+        };
+
+        styles();
+        layout(false);
+
+        // Popups go beside their anchors, which needs both laid out: then their new places (and sides) are styled
+        // and laid out (the popups are absolute, so the rest of the tree is cached)
+        const bool placed = _overlay->place();
+        styles();
+
+        // What has its starting class was styled and laid out with it, and placed: it lets it go, and transitions
+        // from it, before its first paint
+        if (releaseStartingClasses()) {
+            styles();
         }
 
-        // Popups go beside their anchors, which needs both laid out: then their new places are laid out
-        // (the popups are absolute, so the rest of the tree is cached)
-        if (_overlay->place()) {
-            YGNodeCalculateLayout(_yogaNode, width, height, YGDirectionLTR);
-            layoutUpdated();
+        // The exits whose transitions are over leave
+        settleExits();
+
+        layout(placed);
+    }
+
+    bool Window::releaseStartingClasses() {
+        if (_startingDivs.empty()) {
+            return false;
+        }
+        bool released = false;
+        auto starting = std::move(_startingDivs);
+        _startingDivs.clear();
+        for (const auto &weak: starting) {
+            if (auto div = weak.lock(); div && div->_startingApplied && div->window() == this) {
+                div->releaseStartingClass();
+                released = true;
+            }
+        }
+        return released;
+    }
+
+    void Window::settleExits() {
+        if (_exitingDivs.empty()) {
+            return;
+        }
+        std::vector<std::shared_ptr<Div>> finished{};
+        auto exiting = std::move(_exitingDivs);
+        _exitingDivs.clear();
+        for (const auto &weak: exiting) {
+            auto div = weak.lock();
+            if (!div || !div->_exit || div->window() != this) {
+                continue; // Gone, stayed (`cancelExit`), or left another way
+            }
+            if (div->styleDirty() || div->subtreeTransitioning()) {
+                _exitingDivs.push_back(weak); // Not styled with its exit yet, or still on its way
+            } else {
+                finished.push_back(std::move(div));
+            }
+        }
+        for (const auto &div: finished) {
+            div->finishExit();
         }
     }
 

@@ -326,6 +326,50 @@ namespace psychic_ui {
          */
         void animate(float from, float to, const Timing &timing, std::function<void(float)> update);
 
+        /**
+         * A class it has for its first style in a window only (its first style after it is added), lost before its
+         * first paint, so that its transitions start from what that class's rules give it, as CSS's
+         * `@starting-style`: a popup's `entering`. Its descendants' first styles see it too. Until the window lets it
+         * go (`Window::updateStylesAndLayout`, after the layout and the popups' placement) nothing of it or its
+         * descendants transitions: it was never painted. Nothing starts that way with reduced motion.
+         */
+        template<class Self>
+        Self &startingClass(this Self &self, detail::StringArg className) {
+            static_cast<Div &>(self)._startingClass = std::string{className.value};
+            return self;
+        }
+
+        const std::string &startingClass() const { return _startingClass; }
+
+        /**
+         * Whether it, or an ancestor, still has its starting class
+         */
+        bool starting() const;
+
+        /**
+         * Leave with transitions: give it `className`, whose rules say where its transitions go (a popup's
+         * `exiting`), take the mouse from it and its descendants, and call `done` (which removes it) once neither it
+         * nor a descendant transitions any more, after the style pass that follows (`Window::updateStylesAndLayout`).
+         * At once when it isn't in a window, was never painted (`starting()`) or the window reduces motion. A no-op
+         * while it exits. Leaving the window ends it without calling `done`.
+         */
+        void exit(const std::string &className, std::function<void()> done);
+
+        /**
+         * Whether it is leaving (`exit`)
+         */
+        bool exiting() const { return _exit != nullptr; }
+
+        /**
+         * Stay after all: lose the exit's class (its transitions head back) and give the mouse back; `done` won't run
+         */
+        void cancelExit();
+
+        /**
+         * Whether it or a descendant transitions
+         */
+        bool subtreeTransitioning() const;
+
         // endregion
 
         // region Visibility, Focus & State
@@ -895,6 +939,35 @@ namespace psychic_ui {
          * `animate`'s, until they end
          */
         std::vector<std::shared_ptr<Animation>> _animations{};
+
+        /**
+         * `startingClass`, and whether it has it now (from its first style in a window until the window lets it go)
+         */
+        std::string _startingClass{};
+        bool        _startingApplied{false};
+
+        /**
+         * A running `exit`: its class, what to call at the end, the mouse flags it took
+         */
+        struct Exit {
+            std::string           className;
+            std::function<void()> done;
+            bool                  mouseEnabled;
+            bool                  mouseChildren;
+        };
+        std::unique_ptr<Exit> _exit{};
+
+        /**
+         * Lose the starting class (the window lets it go): its next style transitions from it
+         */
+        void releaseStartingClass();
+
+        /**
+         * The exit is over (nothing of it transitions): undo it and call `done`
+         */
+        void finishExit();
+
+        friend class Window;
 
         /**
          * Start, retarget or drop transitions for a new computed style, and put their current values in it
