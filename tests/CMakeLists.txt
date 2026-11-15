@@ -1,4 +1,4 @@
-option(PSYCHIC_UI_BUILD_TESTS "Build Psychic UI tests?" ON)
+option(PSYCHIC_UI_BUILD_TESTS "Build Psychic UI tests?" ${PROJECT_IS_TOP_LEVEL})
 add_feature_info("psychic-ui-tests" PSYCHIC_UI_BUILD_TESTS "Psychic UI tests")
 
 if (PSYCHIC_UI_BUILD_TESTS)

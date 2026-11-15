@@ -22,7 +22,7 @@
       "displayName": "Debug with AddressSanitizer and UndefinedBehaviorSanitizer",
       "inherits": "debug",
       "cacheVariables": {
-        "BUILD_SHARED_LIBS": "OFF",
+        "PSYCHIC_UI_SHARED": "OFF",
         "PSYCHIC_UI_BUILD_EXAMPLE": "OFF",
         "PSYCHIC_UI_BUILD_PLAYGROUND": "OFF",
         "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-sanitize=vptr -fno-sanitize-recover=undefined -fno-omit-frame-pointer -include ${sourceDir}/tests/asan/skasan_shim.h",

@@ -1,4 +1,4 @@
-option(PSYCHIC_UI_BUILD_EXAMPLE "Build Psychic UI example application?" ON)
+option(PSYCHIC_UI_BUILD_EXAMPLE "Build Psychic UI example application?" ${PROJECT_IS_TOP_LEVEL})
 add_feature_info("example" PSYCHIC_UI_BUILD_EXAMPLE "Example Application")
 
 if (PSYCHIC_UI_BUILD_EXAMPLE)

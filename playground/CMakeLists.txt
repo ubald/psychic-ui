@@ -1,4 +1,4 @@
-option(PSYCHIC_UI_BUILD_PLAYGROUND "Build Psychic UI playground?" ON)
+option(PSYCHIC_UI_BUILD_PLAYGROUND "Build Psychic UI playground?" ${PROJECT_IS_TOP_LEVEL})
 add_feature_info("playground" PSYCHIC_UI_BUILD_PLAYGROUND "Playground Application")
 
 # The playground runs on SDL3

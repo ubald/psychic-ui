@@ -13,43 +13,6 @@ set(PSYCHIC_UI_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(PSYCHIC_UI_VERSION_STRING ${PSYCHIC_UI_VERSION_MAJOR}.${PSYCHIC_UI_VERSION_MINOR}.${PSYCHIC_UI_VERSION_PATCH})
 set(PSYCHIC_UI_API_VERSION ${PSYCHIC_UI_VERSION_MAJOR}.${PSYCHIC_UI_VERSION_MINOR})
 
-# Package (pkg-config) Information
-set(PACKAGE_NAME psychic-ui)
-set(PACKAGE_DESCRIPTION "Psychic UI C++/OpenGL UI Library")
-set(PACKAGE_URL "https://github.com/ubald/psychic-ui")
-set(PACKAGE_VERSION ${PSYCHIC_UI_VERSION_STRING})
-
-# CPack - General
-set(CPACK_PACKAGE_NAME ${PACKAGE_NAME})
-set(CPACK_PACKAGE_VENDOR "Ubald Design")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PACKAGE_DESCRIPTION}")
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-SET(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-set(CPACK_PACKAGE_VERSION_MAJOR "${PSYCHIC_UI_VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${PSYCHIC_UI_VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${PSYCHIC_UI_VERSION_PATCH}")
-set(CPACK_GENERATOR TGZ)
-set(CPACK_SOURCE_GENERATOR TGZ)
-set(CPACK_COMPONENTS_ALL applications libraries headers)
-
-# CPack - Applications
-set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "Psychic UI")
-set(CPACK_COMPONENT_APPLICATIONS_DESCRIPTION "C++/OpenGL UI Library")
-set(CPACK_COMPONENT_APPLICATIONS_DEPENDS libraries)
-
-# CPack - Libraries
-set(CPACK_COMPONENT_LIBRARIES_DISPLAY_NAME "Libraries")
-set(CPACK_COMPONENT_LIBRARIES_DESCRIPTION "Libraries used to build programs with Psychic UI")
-
-# CPack - Includes
-set(CPACK_COMPONENT_HEADERS_DISPLAY_NAME "C++ Headers")
-set(CPACK_COMPONENT_HEADERS_DESCRIPTION "C/C++ header used to build programs with Psychic UI")
-set(CPACK_COMPONENT_HEADERS_DEPENDS libraries)
-
-# CPack - Source
-set(CPACK_SOURCE_IGNORE_FILES "/.git/;/.idea/;/build/;/cmake-build-debug/;${CPACK_SOURCE_IGNORE_FILES}")
-
 #
 # BUILDING
 #
@@ -75,11 +38,10 @@ if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION
 endif ()
 
 include(ExternalProject)
-include(CPack)
 include(FeatureSummary)
 
-option(BUILD_SHARED_LIBS "Build Psychic UI as a shared library?" ON)
-add_feature_info("psychic-ui-shared" BUILD_SHARED_LIBS "Build shared library")
+option(PSYCHIC_UI_SHARED "Build Psychic UI as a shared library" ${PROJECT_IS_TOP_LEVEL})
+add_feature_info("psychic-ui-shared" PSYCHIC_UI_SHARED "Build shared library")
 
 # The static dependencies below end up inside the shared library
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -413,7 +375,13 @@ if (PSYCHIC_UI_BUILD_GLFW_ADAPTER)
         )
 endif ()
 
-add_library(psychic-ui ${SOURCE_FILES})
+if (PSYCHIC_UI_SHARED)
+    set(_psychic_ui_type SHARED)
+else ()
+    set(_psychic_ui_type STATIC)
+endif ()
+add_library(psychic-ui ${_psychic_ui_type} ${SOURCE_FILES})
+add_library(psychic-ui::psychic-ui ALIAS psychic-ui)
 
 target_compile_features(psychic-ui PUBLIC cxx_std_23)
 target_compile_options(psychic-ui PRIVATE -Wall -Wextra)
@@ -454,12 +422,12 @@ if (PSYCHIC_UI_USE_GLAD)
     target_include_directories(psychic-ui PRIVATE ${GLAD_INCLUDE_DIR})
     target_link_libraries(psychic-ui PRIVATE ${GLAD_LIBRARIES})
     target_compile_definitions(psychic-ui PRIVATE PSYCHIC_UI_WITH_GLAD)
-    if (BUILD_SHARED_LIBS)
+    if (PSYCHIC_UI_SHARED)
         target_compile_definitions(psychic-ui PRIVATE GLAD_GLAPI_EXPORT GLAD_GLAPI_EXPORT_BUILD)
     endif ()
 endif ()
 
-if (BUILD_SHARED_LIBS AND NOT CMAKE_BUILD_TYPE MATCHES "Deb")
+if (PSYCHIC_UI_SHARED AND NOT CMAKE_BUILD_TYPE MATCHES "Deb")
     if (APPLE)
         add_custom_command(TARGET psychic-ui POST_BUILD COMMAND strip -u -r "$<TARGET_FILE:psychic-ui>")
     elseif (UNIX)
@@ -471,7 +439,10 @@ endif ()
 file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # SUBDIRECTORIES
-enable_testing()
+option(PSYCHIC_UI_BUILD_TESTS "Build Psychic UI tests?" ${PROJECT_IS_TOP_LEVEL})
+if (PSYCHIC_UI_BUILD_TESTS)
+    enable_testing()
+endif ()
 add_subdirectory(tests)
 add_subdirectory(example)
 add_subdirectory(playground)
@@ -482,7 +453,8 @@ add_subdirectory(playground)
 
 # Documentation
 find_package(Doxygen)
-if (DOXYGEN_FOUND)
+if (DOXYGEN_FOUND AND PROJECT_IS_TOP_LEVEL)
+    set(PACKAGE_NAME psychic-ui) # Doxyfile.in
     set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
     set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
     configure_file(${doxyfile_in} ${doxyfile} @ONLY)
@@ -496,4 +468,6 @@ endif ()
 #
 
 # Report
-feature_summary(WHAT ALL)
+if (PROJECT_IS_TOP_LEVEL)
+    feature_summary(WHAT ALL)
+endif ()
