@@ -873,7 +873,7 @@ namespace psychic_ui {
 
         // A toast slides in from under the stack's edge, and back out fading; one pushed out by a new one (the
         // stack's `limit`) only fades, where it is
-        rule("Toast").transition(motion, Timing{mo.slow, mo.out});
+        rule("Toast").transition(motion, enter);
         rule("Toast.entering").opacity(0).translateY(150_pct);
         rule("Toast.exiting").opacity(0).translateY(150_pct).transition(motion, Timing{mo.medium, mo.out});
         rule("Toast.exiting.limited").translateY(0);

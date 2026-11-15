@@ -369,10 +369,10 @@ TEST_CASE("Toasts slide in from under the stack's edge and out fading; those lea
     f.frame(0ms);
     CHECK(toast.computedStyle().translateY().value == Approx(150.0f));
     CHECK(opacityOf(toast) == 0.0f);
-    f.frame(motion.slow / 2);
+    f.frame(motion.medium / 2);
     CHECK(toast.computedStyle().translateY().value < 150.0f);
     CHECK(toast.computedStyle().translateY().value > 0.0f);
-    f.frame(motion.slow);
+    f.frame(motion.medium);
     CHECK(toast.computedStyle().translateY().resolve(100) == 0.0f);
     CHECK(opacityOf(toast) == 1.0f);
 
@@ -392,10 +392,10 @@ TEST_CASE("Toasts slide in from under the stack's edge and out fading; those lea
     }
     CHECK(f.window->toasts().toasts().size() == ToastStack::limit);
     CHECK(f.window->toasts().children().size() == 4);
-    f.frame(motion.slow + motion.medium / 2);
+    f.frame(motion.medium + motion.medium / 2);
     CHECK(opacityOf(toast) < 1.0f);
     CHECK(toast.computedStyle().translateY().value > 0.0f);
-    f.frame(motion.slow + motion.medium);
+    f.frame(motion.medium + motion.medium);
     CHECK(f.window->toasts().children().size() == 3);
 
     // One more: the oldest only fades, where it is
