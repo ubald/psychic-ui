@@ -14,6 +14,7 @@ namespace psychic_ui {
         std::string_view name() const override;
         const Theme &defaultTheme() const override;
         const Theme &lightTheme() const override;
+        std::vector<const Theme *> themes() const override; // Pivotal's two, then One Dark, One Light, Psychic
         void registerSkins(SkinRegistry &skins) const override;
         void load(StyleManager *manager) override;
     };

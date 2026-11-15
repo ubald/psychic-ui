@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <memory>
@@ -8,6 +9,7 @@
 #include <type_traits>
 #include <typeindex>
 #include <unordered_map>
+#include <vector>
 #include "psychic-ui/style/StyleSheet.hpp"
 #include "psychic-ui/themes/Theme.hpp"
 
@@ -81,7 +83,7 @@ namespace psychic_ui {
         virtual std::string_view name() const = 0;
 
         /**
-         * The theme the set ships with, for a dark system or one that doesn't say
+         * The theme the set ships with, for a system that doesn't say whether it is light or dark
          */
         virtual const Theme &defaultTheme() const = 0;
 
@@ -91,10 +93,47 @@ namespace psychic_ui {
         virtual const Theme &lightTheme() const { return defaultTheme(); }
 
         /**
-         * The set's theme for a system color scheme: light for `Light`, the default otherwise (dark when unknown)
+         * The set's theme for a dark system: its default theme unless it has a dark one
+         */
+        virtual const Theme &darkTheme() const { return defaultTheme(); }
+
+        /**
+         * The set's theme for a system color scheme: light, dark, or the default when it is unknown
          */
         const Theme &theme(ColorScheme scheme) const {
-            return scheme == ColorScheme::Light ? lightTheme() : defaultTheme();
+            switch (scheme) {
+                case ColorScheme::Light:
+                    return lightTheme();
+                case ColorScheme::Dark:
+                    return darkTheme();
+                default:
+                    return defaultTheme();
+            }
+        }
+
+        /**
+         * The themes made for the set, as a picker lists them: its light, dark and default themes unless it says more
+         */
+        virtual std::vector<const Theme *> themes() const {
+            std::vector<const Theme *> own{};
+            for (const Theme *theme: {&lightTheme(), &darkTheme(), &defaultTheme()}) {
+                if (std::find(own.begin(), own.end(), theme) == own.end()) {
+                    own.push_back(theme);
+                }
+            }
+            return own;
+        }
+
+        /**
+         * Whether the theme is one of the set's (`themes()`), by name
+         */
+        bool hasTheme(const Theme &theme) const {
+            for (const Theme *own: themes()) {
+                if (own->name == theme.name) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         virtual void registerSkins(SkinRegistry &skins) const = 0;
