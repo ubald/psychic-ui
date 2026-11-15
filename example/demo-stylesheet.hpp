@@ -174,6 +174,10 @@ public:
                .borderRadius(m.radius.button)
                .backgroundColor(p.accent);
 
+        manager->style("Motion .shuffle")
+               .width(320)
+               .marginTop(m.space(2));
+
         manager->style("Motion .curves")
                .wrap(Wrap::Wrap)
                .gap(m.space(4))

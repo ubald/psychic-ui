@@ -2,7 +2,9 @@
 
 #include <chrono>
 #include <format>
+#include <algorithm>
 #include <functional>
+#include <random>
 #include <string>
 #include <vector>
 #include "include/core/SkCanvas.h"
@@ -15,6 +17,7 @@
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/CheckBox.hpp>
 #include <psychic-ui/components/Label.hpp>
+#include <psychic-ui/components/List.hpp>
 #include <psychic-ui/components/Range.hpp>
 #include <psychic-ui/components/SegmentedControl.hpp>
 #include <psychic-ui/components/Switch.hpp>
@@ -22,6 +25,25 @@
 
 namespace psychic_ui {
     using namespace std::chrono_literals;
+
+    /**
+     * A list whose rows can be shuffled, keeping the selection: they slide to their new places (the default set's
+     * `List` has a `layoutTransition`)
+     */
+    class ShuffleList : public List {
+    public:
+        void shuffle() {
+            std::vector<std::shared_ptr<Div>> rows{children().begin(), children().end()};
+            const auto before = rows;
+            while (rows.size() > 1 && rows == before) {
+                std::shuffle(rows.begin(), rows.end(), _random);
+            }
+            reorder(*this, rows);
+        }
+
+    private:
+        std::mt19937 _random{2026};
+    };
 
     /**
      * A lane whose puck is drawn by hand, from an `Animated<float>`: the tween primitive, for what isn't a style
@@ -188,6 +210,24 @@ namespace psychic_ui {
         drawn.add<Label>("Animated<float> · Bouncy").addClassName("name").role(TextRole::Secondary);
         _drawn = &drawn.add<DrawnLane>();
         _drawn->addClassName("lane");
+
+        // endregion
+
+        // region Layout transitions
+
+        auto &layout = group(
+            "Layout transitions",
+            "A container's layoutTransition slides its children from where they were painted to where a new layout puts "
+            "them: lists, trees, the sidebar and toasts at the arrive timing, a sorted grid at the slow step"
+        );
+        auto &shuffleBar = layout.add<HBox>().addClassName("row");
+        auto &list       = layout.add<ShuffleList>();
+        list.addClassName("sm").addClassName("shuffle");
+        for (const char *name: {"Wash 1", "Wash 2", "Spot left", "Spot right", "Strobe"}) {
+            list.row(name);
+        }
+        list.select(2);
+        shuffleBar.add<Button>("Shuffle").icon("arrow-up-down").onClick([&list] { list.shuffle(); });
 
         // endregion
 
