@@ -131,13 +131,25 @@ TEST_CASE("which theme a skin set switch picks", "[skins][theme]") {
         CHECK(f.window->followsSystemTheme());
     }
 
-    SECTION("a picked theme of another set goes back to following the system") {
+    SECTION("a picked theme of another set gives way to the new set's of the same scheme, still picked") {
         f.window->theme(themes::oneLight);
         REQUIRE_FALSE(f.window->followsSystemTheme());
-        f.window->handleColorSchemeChange(ColorScheme::Dark);
+        f.window->handleColorSchemeChange(ColorScheme::Dark); // Ignored: the theme is picked
         f.window->skinSet<FloatSkins>();
-        CHECK(f.theme() == "Float Dark");
-        CHECK(f.window->followsSystemTheme());
+        CHECK(f.theme() == "Float Light"); // One Light is light, whatever the system
+        CHECK_FALSE(f.window->followsSystemTheme());
+
+        f.window->theme(themes::floatDark);
+        f.window->skinSet<DefaultSkins>();
+        CHECK(f.theme() == "Pivotal Dark");
+        CHECK_FALSE(f.window->followsSystemTheme());
+
+        f.window->theme(themes::pivotalLight);
+        f.window->skinSet<FloatSkins>();
+        CHECK(f.theme() == "Float Light");
+        f.window->handleColorSchemeChange(ColorScheme::Light);
+        f.window->handleColorSchemeChange(ColorScheme::Dark);
+        CHECK(f.theme() == "Float Light"); // Still picked
     }
 
     SECTION("a picked theme of the new set stays") {
@@ -152,13 +164,14 @@ TEST_CASE("which theme a skin set switch picks", "[skins][theme]") {
         f.window->skinSet<FloatSkins>();
         CHECK(f.theme() == "Float Dark");
 
-        // Not a default set's theme: back to the system's, light now
+        // One Dark is the default set's: it stays across a switch back
+        f.window->theme(themes::oneDark);
         f.window->skinSet<DefaultSkins>();
-        CHECK(f.theme() == "Pivotal Light");
-        CHECK(f.window->followsSystemTheme());
+        CHECK(f.theme() == "One Dark");
+        CHECK_FALSE(f.window->followsSystemTheme());
     }
 
-    SECTION("a pair to follow the system with stays only if both are the new set's") {
+    SECTION("following the system with a pair: it stays only if both are the new set's, else the new set's own") {
         f.window->followSystemTheme(themes::oneLight, themes::oneDark); // Both the default set's
         f.window->skinSet<DefaultSkins>();
         CHECK(f.theme() == "One Dark");
@@ -166,5 +179,13 @@ TEST_CASE("which theme a skin set switch picks", "[skins][theme]") {
         CHECK(f.theme() == "Float Light");
         f.window->handleColorSchemeChange(ColorScheme::Dark);
         CHECK(f.theme() == "Float Dark");
+        CHECK(f.window->followsSystemTheme());
+
+        // A pair of the new set's stays
+        f.window->followSystemTheme(themes::floatLight, themes::floatDark);
+        f.window->skinSet<FloatSkins>();
+        CHECK(f.theme() == "Float Dark");
+        f.window->handleColorSchemeChange(ColorScheme::Light);
+        CHECK(f.theme() == "Float Light");
     }
 }

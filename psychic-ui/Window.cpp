@@ -604,16 +604,19 @@ namespace psychic_ui {
     }
 
     void Window::updateSkinSet(std::unique_ptr<SkinSet> skinSet) {
-        // Which theme a skin set switch picks: an explicit choice survives only within the set it belongs to.
-        // A theme picked with `theme(t)` stays if it is one of the new set's themes; a pair given to
-        // `followSystemTheme` stays if both are. Otherwise the window follows the system with the new set's own
-        // light or dark theme.
-        if (!_followSystemTheme && skinSet->hasTheme(styleManager()->theme())) {
-            styleManager()->skinSet(std::move(skinSet), styleManager()->theme());
+        // Which theme a skin set switch picks. A theme picked with `theme(t)` stays picked: itself if it is one of
+        // the new set's themes, else the new set's theme of the same scheme (its light theme for a light one, its
+        // dark theme for a dark one). A window following the system keeps following it: with the pair given to
+        // `followSystemTheme` if both are the new set's, else with the new set's own light and dark themes.
+        if (!_followSystemTheme) {
+            const Theme &picked = styleManager()->theme();
+            Theme        theme  = skinSet->hasTheme(picked)
+                                      ? picked
+                                      : skinSet->theme(picked.scheme == ColorScheme::Light ? ColorScheme::Light : ColorScheme::Dark);
+            styleManager()->skinSet(std::move(skinSet), std::move(theme));
             updateRuntimeStyles(); // Clearing the rules dropped the runtime ones too
             return;
         }
-        _followSystemTheme = true;
         if ((_lightTheme && !skinSet->hasTheme(*_lightTheme)) || (_darkTheme && !skinSet->hasTheme(*_darkTheme))) {
             _lightTheme = std::nullopt;
             _darkTheme  = std::nullopt;

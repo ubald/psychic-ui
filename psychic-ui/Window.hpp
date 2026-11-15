@@ -311,8 +311,9 @@ namespace psychic_ui {
 
         /**
          * Use a skin set for the style manager: every component hatches a new skin. The theme: a theme picked with
-         * `theme(t)` stays if it is one of the set's (`SkinSet::themes()`); otherwise the window follows the system
-         * again, with the set's light or default theme (`SkinSet::theme(scheme)`).
+         * `theme(t)` stays picked, itself if it is one of the set's (`SkinSet::themes()`), else the set's theme of
+         * the same scheme (its light or dark theme); a window following the system keeps following it, with the
+         * pair given to `followSystemTheme` if both are the set's, else the set's own (`SkinSet::theme(scheme)`).
          */
         template<class S, class Self>
         Self &skinSet(this Self &self) {
