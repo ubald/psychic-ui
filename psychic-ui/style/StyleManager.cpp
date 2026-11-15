@@ -125,10 +125,23 @@ namespace psychic_ui {
         if (_fonts.contains(name)) {
             return *this; // Stylesheets load their fonts again on every replay: once is enough
         }
-        _fonts.insert({name, fontManager()->makeFromFile(path.c_str())});
+        std::filesystem::path file{path};
+        if (file.is_relative()) {
+            file = _resourceRoot / file;
+        }
+        _fonts.insert({name, fontManager()->makeFromFile(file.string().c_str())});
         _fontCollection = nullptr;
         invalidate();
         return *this;
+    }
+
+    StyleManager &StyleManager::resourceRoot(std::filesystem::path root) {
+        _resourceRoot = std::move(root);
+        return *this;
+    }
+
+    const std::filesystem::path &StyleManager::resourceRoot() const {
+        return _resourceRoot;
     }
 
     sk_sp<SkTypeface> StyleManager::font(const std::string &name) const {

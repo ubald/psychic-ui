@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <functional>
 #include <unordered_map>
 #include <vector>
@@ -14,6 +15,7 @@
 #include "psychic-ui/skins/SkinSet.hpp"
 #include "psychic-ui/themes/Theme.hpp"
 #include "psychic-ui/themes/pivotal.hpp"
+#include "psychic-ui/utils/ExecutablePath.hpp"
 #include "Style.hpp"
 #include "StyleSelector.hpp"
 #include "StyleSheet.hpp"
@@ -149,9 +151,16 @@ namespace psychic_ui {
         static sk_sp<SkFontMgr> fontManager();
 
         /**
-         * Loads a font file under a name, which `fontFamily` styles use
+         * Loads a font file under a name, which `fontFamily` styles use. A relative path is resolved against
+         * `resourceRoot()`, an absolute one is used as it is
          */
         StyleManager &loadFont(const std::string &name, const std::string &path);
+        /**
+         * The directory relative resource paths (fonts) resolve against: the executable's directory by default,
+         * where `psychic_ui_copy_resources` copies `res/`. Set it before installing a skin set: a font is loaded once
+         */
+        StyleManager &resourceRoot(std::filesystem::path root);
+        const std::filesystem::path &resourceRoot() const;
         /**
          * The font loaded under that name, otherwise the system font of that family, otherwise
          * the system default
@@ -211,6 +220,7 @@ namespace psychic_ui {
          * Weight and index in _rules of the rules matching the Div being computed, kept to reuse its memory
          */
         std::vector<std::pair<int, std::size_t>>                           _matches{};
+        std::filesystem::path                                              _resourceRoot{executableDirectory()};
         std::unordered_map<std::string, sk_sp<SkTypeface>>                 _fonts{};
         sk_sp<skia::textlayout::FontCollection>                            _fontCollection{nullptr};
         /**

@@ -88,7 +88,7 @@ namespace psychic_ui {
      */
     struct Font {
         std::string_view name{};
-        std::string_view path{}; // Loaded by the skin set (StyleManager::loadFont)
+        std::string_view path{}; // Loaded by the skin set (StyleManager::loadFont), relative to its resource root
     };
 
     /**
@@ -104,9 +104,9 @@ namespace psychic_ui {
      * body text is `sm`, inputs and menu rows `base`, labels and metadata `xs`
      */
     struct Typography {
-        Font     regular{"Inter", "../res/fonts/Inter/Inter-Regular.ttf"};
-        Font     medium{"Inter Medium", "../res/fonts/Inter/Inter-Medium.ttf"};
-        Font     semiBold{"Inter SemiBold", "../res/fonts/Inter/Inter-SemiBold.ttf"}; // Brand and app titles only
+        Font     regular{"Inter", "res/fonts/Inter/Inter-Regular.ttf"};
+        Font     medium{"Inter Medium", "res/fonts/Inter/Inter-Medium.ttf"};
+        Font     semiBold{"Inter SemiBold", "res/fonts/Inter/Inter-SemiBold.ttf"}; // Brand and app titles only
         TextStep xxs{10, 14};
         TextStep xs{11, 16};
         TextStep sm{12, 18};

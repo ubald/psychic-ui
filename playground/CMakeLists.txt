@@ -5,4 +5,5 @@ add_feature_info("playground" PSYCHIC_UI_BUILD_PLAYGROUND "Playground Applicatio
 if (PSYCHIC_UI_BUILD_PLAYGROUND AND PSYCHIC_UI_BUILD_SDL3)
     add_executable(psychic-ui-playground playground.hpp playground.cpp)
     target_link_libraries(psychic-ui-playground PRIVATE psychic-ui)
+    psychic_ui_copy_resources(psychic-ui-playground)
 endif ()

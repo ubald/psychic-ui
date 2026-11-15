@@ -1,6 +1,7 @@
 #include <memory>
 #include <cmath>
 #include <string>
+#include <filesystem>
 #include <catch2/catch_test_macros.hpp>
 #include "include/core/SkCanvas.h"
 #include "include/core/SkFont.h"
@@ -8,14 +9,15 @@
 #include "include/core/SkTypeface.h"
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/themes/Theme.hpp>
+#include <psychic-ui/utils/ExecutablePath.hpp>
 #include <psychic-ui/utils/TextLayout.hpp>
 
 using namespace psychic_ui;
 
 namespace {
-    // The theme's font paths are relative to a binary in the build directory: load from the sources instead
+    // The theme's font paths are relative to the resource root (the executable's directory): load from the sources instead
     std::string resource(std::string_view themePath) {
-        constexpr std::string_view prefix = "../res/";
+        constexpr std::string_view prefix = "res/";
         REQUIRE(themePath.starts_with(prefix));
         return std::string{PSYCHIC_UI_TEST_RES} + std::string{themePath.substr(prefix.size())};
     }
@@ -86,4 +88,29 @@ TEST_CASE("text lays out in Inter at small sizes, slightly hinted", "[text][font
         }
         REQUIRE(ink);
     }
+}
+
+TEST_CASE("The executable directory holds the running executable", "[font][resources]") {
+    CHECK(std::filesystem::exists(executableDirectory() / "psychic-ui-tests"));
+}
+
+TEST_CASE("A relative font path resolves against the resource root", "[font][resources]") {
+    auto manager = std::make_shared<StyleManager>();
+    // The macro ends in res/: its parent's parent is the source directory
+    manager->resourceRoot(std::filesystem::path(PSYCHIC_UI_TEST_RES).parent_path().parent_path());
+    manager->loadFont("Inter", "res/fonts/Inter/Inter-Regular.ttf");
+
+    sk_sp<SkTypeface> typeface = manager->font("Inter");
+    REQUIRE(typeface);
+    SkString name;
+    typeface->getFamilyName(&name);
+    CHECK(std::string{name.c_str()} == "Inter");
+    CHECK(typeface->fontStyle().weight() == 400);
+    // From the file, not a system Inter: under a name no system font has, only the file gives Inter
+    manager->loadFont("Resource Root Inter", "res/fonts/Inter/Inter-Regular.ttf");
+    SkString aliased;
+    manager->font("Resource Root Inter")->getFamilyName(&aliased);
+    CHECK(std::string{aliased.c_str()} == "Inter");
+
+    CHECK(StyleManager{}.resourceRoot() == executableDirectory());
 }

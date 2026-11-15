@@ -351,6 +351,8 @@ set(SOURCE_FILES
     psychic-ui/components/TextInput.hpp
     psychic-ui/components/TextArea.cpp
     psychic-ui/components/TextArea.hpp
+    psychic-ui/utils/ExecutablePath.cpp
+    psychic-ui/utils/ExecutablePath.hpp
     psychic-ui/utils/TextLayout.cpp
     psychic-ui/utils/TextLayout.hpp
     psychic-ui/components/Text.cpp
@@ -436,7 +438,13 @@ if (PSYCHIC_UI_SHARED AND NOT CMAKE_BUILD_TYPE MATCHES "Deb")
 endif ()
 
 # RESOURCES
-file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+# Copies res/ (the bundled fonts) next to an executable after each build of it, where relative font paths resolve
+# (StyleManager::resourceRoot, the executable's directory by default)
+function(psychic_ui_copy_resources target)
+    add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/res" "$<TARGET_FILE_DIR:${target}>/res"
+        VERBATIM)
+endfunction()
 
 # SUBDIRECTORIES
 option(PSYCHIC_UI_BUILD_TESTS "Build Psychic UI tests?" ${PROJECT_IS_TOP_LEVEL})

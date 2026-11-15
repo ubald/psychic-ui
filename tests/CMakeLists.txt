@@ -141,6 +141,8 @@ if (PSYCHIC_UI_BUILD_TESTS)
     target_compile_definitions(psychic-ui-tests PRIVATE
         PSYCHIC_UI_TEST_FONTS="${PROJECT_SOURCE_DIR}/res/fonts/Ubuntu/"
         PSYCHIC_UI_TEST_RES="${PROJECT_SOURCE_DIR}/res/")
+    # The skin sets load the themes' fonts relative to the executable, as in any app
+    psychic_ui_copy_resources(psychic-ui-tests)
 
     add_test(NAME psychic-ui-tests COMMAND psychic-ui-tests)
 
