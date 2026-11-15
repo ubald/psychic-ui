@@ -60,3 +60,9 @@ zoom-out
 maximize-2
 minimize-2
 command
+
+# Canvas tools
+mouse-pointer-2
+hash
+lightbulb
+type

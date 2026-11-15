@@ -234,6 +234,25 @@ namespace psychic_ui::icons {
         constexpr IconElement icon_command[]{
             {S, "M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"},
         };
+        constexpr IconElement icon_mouse_pointer_2[]{
+            {S, "M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z"},
+        };
+        constexpr IconElement icon_hash[]{
+            {S, "M4 9L20 9"},
+            {S, "M4 15L20 15"},
+            {S, "M10 3L8 21"},
+            {S, "M16 3L14 21"},
+        };
+        constexpr IconElement icon_lightbulb[]{
+            {S, "M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"},
+            {S, "M9 18h6"},
+            {S, "M10 22h4"},
+        };
+        constexpr IconElement icon_type[]{
+            {S, "M12 4v16"},
+            {S, "M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"},
+            {S, "M9 20h6"},
+        };
 
         constexpr IconDefinition definitions[]{
             {"chevron-up", 24.0f, 2.0f, icon_chevron_up},
@@ -280,6 +299,10 @@ namespace psychic_ui::icons {
             {"maximize-2", 24.0f, 2.0f, icon_maximize_2},
             {"minimize-2", 24.0f, 2.0f, icon_minimize_2},
             {"command", 24.0f, 2.0f, icon_command},
+            {"mouse-pointer-2", 24.0f, 2.0f, icon_mouse_pointer_2},
+            {"hash", 24.0f, 2.0f, icon_hash},
+            {"lightbulb", 24.0f, 2.0f, icon_lightbulb},
+            {"type", 24.0f, 2.0f, icon_type},
         };
     }
 
