@@ -19,6 +19,19 @@ namespace psychic_ui {
         const int selected = _selected;
         _selected = -1;
         setSelected(selected);
+        const int focused = _focused;
+        _focused = -1;
+        setFocused(focused);
+    }
+
+    void ColorSwatchesSkinBase::setFocused(const int index) {
+        if (_focused >= 0 && _focused < static_cast<int>(_swatches.size())) {
+            _swatches[static_cast<std::size_t>(_focused)]->removeClassName("focused");
+        }
+        _focused = index;
+        if (_focused >= 0 && _focused < static_cast<int>(_swatches.size())) {
+            _swatches[static_cast<std::size_t>(_focused)]->addClassName("focused");
+        }
     }
 
     void ColorSwatchesSkinBase::setSelected(const int index) {

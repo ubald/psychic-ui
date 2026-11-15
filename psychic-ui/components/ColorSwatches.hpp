@@ -20,6 +20,11 @@ namespace psychic_ui {
         virtual void setSelected(int /*index*/) {};
 
         /**
+         * The chip the keyboard is on (-1 for none), ringed while the focus is visible
+         */
+        virtual void setFocused(int /*index*/) {};
+
+        /**
          * The swatch at this point, in the skin's coordinates, or the nearest one; -1 when there are none.
          * The swatches handle the mouse; the skin only knows where each one is.
          */
@@ -29,9 +34,11 @@ namespace psychic_ui {
     /**
      * @class ColorSwatches
      *
-     * A color picked from a palette of chips, wrapping into rows like a grid: the selected one is ringed. A click
-     * picks one; with the focus, the arrows move the selection to the previous or next chip (Left and Up, Right and
-     * Down, like a radio group), Home and End to the ends. Pivotal's palette by default.
+     * A color picked from a palette of chips, wrapping into rows like a grid: the selected one is ringed. A press
+     * picks one. It is one Tab stop, with a focus of its own among the chips, apart from the selection: it starts on
+     * the selected chip, else the first, each time the group takes the focus; the arrows move it to the previous or
+     * next chip (Left and Up, Right and Down), Home and End to the ends, without selecting; Space or Enter selects
+     * the chip it is on. Pivotal's palette by default.
      */
     class ColorSwatches : public Component<ColorSwatchesSkin> {
     public:
@@ -68,6 +75,11 @@ namespace psychic_ui {
         }
 
         /**
+         * The chip the keyboard is on, -1 for none (before the group first takes the focus)
+         */
+        int focusedSwatch() const { return _focused; }
+
+        /**
          * The selected color, transparent when none is
          */
         Color value() const;
@@ -91,8 +103,11 @@ namespace psychic_ui {
         std::vector<Color> _colors{};
         int                _selected{-1};
         int                _pressed{-1}; // The chip the left button went down on
+        int                _focused{-1}; // The chip the keyboard is on
+        bool               _hadFocus{false};
 
         void updateColors(std::vector<Color> colors);
+        void updateFocused(int index);
         void updateSelected(int index);
         void updateValue(Color color);
         void skinChanged() override;

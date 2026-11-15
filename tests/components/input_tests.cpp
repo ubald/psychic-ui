@@ -3,6 +3,7 @@
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <unicode/unistr.h>
+#include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/ColorSwatches.hpp>
 #include <psychic-ui/components/NumberStepper.hpp>
 #include <psychic-ui/components/SearchField.hpp>
@@ -468,7 +469,7 @@ TEST_CASE("NumberStepper: decimal steps don't drift", "[components][inputs][step
 
 // region Color swatches
 
-TEST_CASE("ColorSwatches: a chip picked by click or arrow, ringed", "[components][inputs][swatches]") {
+TEST_CASE("ColorSwatches: a chip picked by a press, or by the keyboard's own focus", "[components][inputs][swatches]") {
     Inputs f;
     auto &swatches = f.column.add<ColorSwatches>(std::vector{rgb(0xE5484D), rgb(0x4CB782), rgb(0x4B8BF5)});
     std::vector<Color> changes{};
@@ -485,11 +486,57 @@ TEST_CASE("ColorSwatches: a chip picked by click or arrow, ringed", "[components
     CHECK(chips[2]->computedStyle().backgroundColor() == rgb(0x4B8BF5));
     CHECK(chips[0]->computedStyle().outlineWidth() == 0.0f);
 
+    // Tab: the keyboard's focus on the first chip (none is selected), ringed in grey; nothing selected
+    f.tab();
+    REQUIRE(swatches.hasFocus());
+    CHECK(swatches.focusedSwatch() == 0);
+    CHECK(chips[0]->classNames().contains("focused"));
+    CHECK(chips[0]->computedStyle().outlineColor() == f.theme.palette.textMuted);
+    CHECK(chips[0]->computedStyle().outlineWidth() == f.theme.metrics.focusRing);
+    CHECK(swatches.selected() == -1);
+
+    // The arrows move the focus, not the selection; Space or Enter selects
+    f.key(Key::RIGHT);
+    CHECK(swatches.focusedSwatch() == 1);
+    CHECK(swatches.selected() == -1);
+    CHECK_FALSE(chips[0]->classNames().contains("focused"));
+    CHECK(chips[0]->computedStyle().outlineWidth() == 0.0f);
+    CHECK(chips[1]->computedStyle().outlineColor() == f.theme.palette.textMuted);
+    f.key(Key::SPACE);
+    CHECK(swatches.selected() == 1);
+    CHECK(chips[1]->computedStyle().outlineColor() == f.theme.palette.accent); // Focused and selected: the accent
+    f.key(Key::END);
+    CHECK(swatches.focusedSwatch() == 2);
+    CHECK(swatches.selected() == 1);
+    // The selected chip keeps its accent ring, the focused one its grey one
+    CHECK(chips[1]->computedStyle().outlineColor() == f.theme.palette.accent);
+    CHECK(chips[1]->computedStyle().outlineWidth() == 2.0f);
+    CHECK(chips[2]->computedStyle().outlineColor() == f.theme.palette.textMuted);
+    f.key(Key::ENTER);
+    CHECK(swatches.selected() == 2);
+    f.key(Key::HOME);
+    f.key(Key::UP);
+    CHECK(swatches.focusedSwatch() == 0);
+    CHECK(swatches.selected() == 2);
+
+    // Leaving and coming back: the focus starts on the selection again
+    f.column.add<Button>("After");
+    f.layout();
+    f.tab();
+    CHECK_FALSE(swatches.hasFocus());
+    CHECK(chips[0]->computedStyle().outlineWidth() == 0.0f); // No ring without the focus
+    CHECK(chips[2]->computedStyle().outlineColor() == f.theme.palette.accent);
+    f.key(Key::TAB, Mod{.shift = true});
+    REQUIRE(swatches.hasFocus());
+    CHECK(swatches.focusedSwatch() == 2);
+
+    // A press selects at once, and the keyboard goes on from there
     f.click(*chips[1]);
     CHECK(swatches.selected() == 1);
     CHECK(swatches.value() == rgb(0x4CB782));
     CHECK(chips[1]->classNames().contains("selected"));
-    CHECK(chips[1]->computedStyle().outlineColor() == f.theme.palette.text);
+    CHECK(swatches.focusedSwatch() == 1);
+    CHECK(chips[1]->computedStyle().outlineColor() == f.theme.palette.accent);
     CHECK(chips[1]->computedStyle().outlineWidth() == 2.0f);
 
     // Between two chips: the nearest
@@ -497,17 +544,7 @@ TEST_CASE("ColorSwatches: a chip picked by click or arrow, ringed", "[components
     f.press(x, y);
     f.release(x, y);
     CHECK(swatches.selected() == 2);
-
-    f.tab();
-    CHECK(chips[2]->computedStyle().outlineColor() == f.theme.palette.accent);
-    f.key(Key::LEFT);
-    CHECK(swatches.selected() == 1);
-    f.key(Key::HOME);
-    f.key(Key::UP);
-    CHECK(swatches.selected() == 0);
-    f.key(Key::END);
-    CHECK(swatches.selected() == 2);
-    CHECK(changes == std::vector{rgb(0x4CB782), rgb(0x4B8BF5), rgb(0x4CB782), rgb(0xE5484D), rgb(0x4B8BF5)});
+    CHECK(changes == std::vector{rgb(0x4CB782), rgb(0x4B8BF5), rgb(0x4CB782), rgb(0x4B8BF5)});
 
     swatches.value(rgb(0x123456));
     CHECK(swatches.selected() == -1);

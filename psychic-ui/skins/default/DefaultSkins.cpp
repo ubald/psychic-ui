@@ -546,7 +546,8 @@ namespace psychic_ui {
                 .backgroundColor(transparent);
         }
 
-        // Color swatches: 20 px chips 4 px apart, wrapping; the selected one ringed in the text color, 2 px out
+        // Color swatches: 20 px chips 4 px apart, wrapping; the selected one ringed in the accent, 2 px out; the one
+        // the keyboard is on ringed in a neutral grey while the focus is visible (the accent when it is the selected)
         rule("ColorSwatches")
             .direction(Direction::Row)
             .wrap(Wrap::Wrap)
@@ -558,12 +559,15 @@ namespace psychic_ui {
             .shrink(0)
             .borderRadius(r.button);
         rule("ColorSwatches .swatch.selected")
-            .outlineColor(p.text)
+            .outlineColor(p.accent)
             .outlineWidth(2)
             .outlineOffset(2);
-        rule("ColorSwatches:focus-visible .swatch.selected")
-            .outlineColor(p.accent)
-            .outlineWidth(m.focusRing);
+        rule("ColorSwatches:focus-visible .swatch.focused")
+            .outlineColor(p.textMuted)
+            .outlineWidth(m.focusRing)
+            .outlineOffset(2);
+        rule("ColorSwatches:focus-visible .swatch.focused.selected")
+            .outlineColor(p.accent);
         rule("ColorSwatches:disabled").opacity(0.45f);
 
         // endregion

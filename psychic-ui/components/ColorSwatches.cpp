@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "ColorSwatches.hpp"
+#include "psychic-ui/Window.hpp"
 #include "psychic-ui/themes/palette.hpp"
 
 namespace psychic_ui {
@@ -14,34 +15,58 @@ namespace psychic_ui {
         _colors(std::move(colors)) {
         tag("ColorSwatches");
 
-        _focusEnabled = true; // Tab reaches it; the arrows, Home and End move the selection
+        _focusEnabled = true; // Tab reaches it; the arrows, Home and End move its focus among the chips
 
         const auto key = [this](const Key key, const Mod /*modifiers*/) {
             if (!_enabled || _colors.empty()) {
                 return;
             }
             const int last = static_cast<int>(_colors.size()) - 1;
+            const int from = _focused >= 0 ? _focused : _selected;
+            int       to   = -2;
             switch (key) {
                 case Key::LEFT:
                 case Key::UP:
-                    updateSelected(_selected < 0 ? last : std::max(_selected - 1, 0));
+                    to = from < 0 ? last : std::max(from - 1, 0);
                     break;
                 case Key::RIGHT:
                 case Key::DOWN:
-                    updateSelected(_selected < 0 ? 0 : std::min(_selected + 1, last));
+                    to = from < 0 ? 0 : std::min(from + 1, last);
                     break;
                 case Key::HOME:
-                    updateSelected(0);
+                    to = 0;
                     break;
                 case Key::END:
-                    updateSelected(last);
+                    to = last;
                     break;
+                case Key::SPACE:
+                case Key::ENTER:
+                case Key::KP_ENTER:
+                    updateSelected(from < 0 ? 0 : from);
+                    updateFocused(from < 0 ? 0 : from);
+                    return;
                 default:
-                    break;
+                    return;
+            }
+            updateFocused(to);
+            // The keyboard is in use: the ring shows even after a click focused the group
+            if (window() && !window()->focusVisible()) {
+                window()->requestFocus(this, true);
             }
         };
         keyPressed.subscribe(key);
         keyRepeated.subscribe(key);
+
+        // Taking the focus, the keyboard starts on the selection, else the first chip
+        focused.subscribe(
+            [this]() {
+                if (!_hadFocus) {
+                    _hadFocus = true;
+                    updateFocused(_selected >= 0 ? _selected : 0);
+                }
+            }
+        );
+        blurred.subscribe([this]() { _hadFocus = false; });
 
         // The chip pressed is the one a click picks
         onMousePress(
@@ -60,6 +85,7 @@ namespace psychic_ui {
             [this]() {
                 if (_enabled && _pressed >= 0) {
                     updateSelected(_pressed);
+                    updateFocused(_pressed);
                 }
                 _pressed = -1;
             }
@@ -75,8 +101,10 @@ namespace psychic_ui {
         const bool  had      = _selected >= 0;
         _colors   = std::move(colors);
         _selected = -1;
+        _focused  = std::min(_focused, static_cast<int>(_colors.size()) - 1);
         if (_skin) {
             _skin->setColors(_colors);
+            _skin->setFocused(_focused);
         }
         if (had) {
             const auto found = std::find(_colors.cbegin(), _colors.cend(), previous);
@@ -106,6 +134,16 @@ namespace psychic_ui {
         }
     }
 
+    void ColorSwatches::updateFocused(const int index) {
+        const int focused = index >= 0 && index < static_cast<int>(_colors.size()) ? index : -1;
+        if (focused != _focused) {
+            _focused = focused;
+            if (_skin) {
+                _skin->setFocused(_focused);
+            }
+        }
+    }
+
     Color ColorSwatches::value() const {
         return _selected >= 0 ? _colors[static_cast<std::size_t>(_selected)] : Color{};
     }
@@ -119,6 +157,7 @@ namespace psychic_ui {
         if (_skin) {
             _skin->setColors(_colors);
             _skin->setSelected(_selected);
+            _skin->setFocused(_focused);
         }
     }
 
