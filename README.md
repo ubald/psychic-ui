@@ -51,6 +51,52 @@ window. The host passes events (SDL) or keeps its callbacks, which the adapter c
 `render()` each frame. Their headers in `psychic-ui/applications/` show how; `example/glfw-host` is a
 complete GLFW host.
 
+## Using Psychic UI in your project
+
+Psychic UI builds from source inside your CMake project (3.24 or newer, a C++23 compiler: GCC 14+, Clang 18+ or
+Apple Clang 16+). There it builds as a static library, without its tests, demo or playground, and leaves your
+`BUILD_SHARED_LIBS` alone. The checkout needs its submodules (Yoga, Skia, psychic-color):
+
+    git submodule update --init --recursive
+
+Add the checkout as a subdirectory:
+
+```cmake
+add_subdirectory(../psychic-ui psychic-ui)
+```
+
+or fetch it:
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(psychic_ui
+    GIT_REPOSITORY https://github.com/ubald/psychic-ui.git
+    GIT_TAG <commit>
+    GIT_SUBMODULES_RECURSE TRUE)
+FetchContent_MakeAvailable(psychic_ui)
+```
+
+and configure with `-DFETCHCONTENT_SOURCE_DIR_PSYCHIC_UI=<checkout>` to build a local checkout instead, for edits.
+Then link it and copy its resources (the bundled fonts, `res/`) next to your executable, where it loads them from:
+
+```cmake
+add_executable(my-app main.cpp)
+target_link_libraries(my-app PRIVATE psychic-ui::psychic-ui)
+psychic_ui_copy_resources(my-app)
+```
+
+Skia's first build is long. `-DPSYCHIC_UI_SKIA_DIR=<dir>` builds it into that directory and links it from there,
+so several build directories share one build; point it at an existing one (such as another build's
+`extlib/skia/build`) to skip the build.
+
+Relative font paths resolve against the style manager's `resourceRoot()`, the executable's directory by default.
+To keep the resources elsewhere, set it before installing a skin set, which loads the theme's fonts once:
+
+```cpp
+psychic_ui::StyleManager::getInstance()->resourceRoot("/usr/share/my-app");
+window->skinSet<psychic_ui::DefaultSkins>();
+```
+
 ## Sample App
 
 A sample app that is used for development and demonstration is available in the `example` directory.

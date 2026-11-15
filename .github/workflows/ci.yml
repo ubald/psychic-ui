@@ -51,7 +51,7 @@ jobs:
       # Psychic UI needs C++23 deducing this (GCC 14+); noble's default is GCC 13.
       # Skia's gn build gets the same compilers from CMake.
       - name: Configure
-        run: cmake --preset debug -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14
+        run: cmake --preset debug -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14 -DPSYCHIC_UI_TEST_CONSUMER=ON
 
       # On its own, so a Skia that built is cached even if the rest fails
       - name: Build Skia
