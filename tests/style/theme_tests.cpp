@@ -3,6 +3,7 @@
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/themes/desk.hpp>
 #include <psychic-ui/themes/float.hpp>
 #include <psychic-ui/themes/one-dark.hpp>
 #include <psychic-ui/themes/one-light.hpp>
@@ -130,7 +131,8 @@ TEST_CASE("the Pivotal themes are Pivotal's tokens", "[style][theme]") {
 
 TEST_CASE("every named theme has a panel elevation, lower than its overlays'", "[style][theme]") {
     for (const Theme *named: {&themes::pivotalDark, &themes::pivotalLight, &themes::oneDark, &themes::oneLight,
-                              &themes::psychic, &themes::floatLight, &themes::floatDark}) {
+                              &themes::psychic, &themes::floatLight, &themes::floatDark,
+                              &themes::deskDark, &themes::deskLight}) {
         INFO(named->name);
         const Elevation &e = named->elevation;
         CHECK(e.panel.color.alpha() > 0);

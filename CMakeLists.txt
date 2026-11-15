@@ -332,6 +332,8 @@ set(SOURCE_FILES
     psychic-ui/skins/default/TitleBarButtonSkin.hpp
     psychic-ui/skins/default/DefaultInputSkins.cpp
     psychic-ui/skins/default/DefaultInputSkins.hpp
+    psychic-ui/skins/desk/DeskSkins.cpp
+    psychic-ui/skins/desk/DeskSkins.hpp
     psychic-ui/skins/float/FloatSkins.cpp
     psychic-ui/skins/float/FloatSkins.hpp
     psychic-ui/skins/paint/Box.cpp
@@ -353,6 +355,7 @@ set(SOURCE_FILES
     psychic-ui/style/StyleSheet.hpp
     psychic-ui/style/Values.cpp
     psychic-ui/style/Values.hpp
+    psychic-ui/themes/desk.hpp
     psychic-ui/themes/float.hpp
     psychic-ui/themes/one-dark.hpp
     psychic-ui/themes/one-light.hpp

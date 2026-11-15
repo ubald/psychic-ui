@@ -7,6 +7,7 @@
 #include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/skins/default/DefaultButtonSkin.hpp>
 #include <psychic-ui/skins/float/FloatSkins.hpp>
+#include <psychic-ui/themes/desk.hpp>
 #include <psychic-ui/themes/float.hpp>
 #include <psychic-ui/themes/one-dark.hpp>
 #include <psychic-ui/themes/one-light.hpp>
@@ -50,7 +51,8 @@ TEST_CASE("Float's themes", "[skins][float]") {
 
     // Every named theme has its canvas's dots; Float's are its hairlines, strong in light
     for (const Theme *named: {&themes::pivotalDark, &themes::pivotalLight, &themes::oneDark, &themes::oneLight,
-                              &themes::psychic, &themes::floatLight, &themes::floatDark}) {
+                              &themes::psychic, &themes::floatLight, &themes::floatDark, &themes::deskDark,
+                              &themes::deskLight}) {
         INFO(named->name);
         CHECK(named->palette.canvasDot.alpha() > 0);
     }

@@ -5,7 +5,9 @@
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Inspector.hpp>
 #include <psychic-ui/components/ToolBar.hpp>
+#include <psychic-ui/skins/desk/DeskSkins.hpp>
 #include <psychic-ui/skins/float/FloatSkins.hpp>
+#include <psychic-ui/themes/desk.hpp>
 #include <psychic-ui/themes/float.hpp>
 #include <psychic-ui/themes/one-dark.hpp>
 #include <psychic-ui/themes/one-light.hpp>
@@ -108,7 +110,7 @@ namespace {
     }
 }
 
-TEST_CASE("the demo's Canvas page under both skin sets", "[demo][canvas]") {
+TEST_CASE("the demo's Canvas page under every skin set", "[demo][canvas]") {
     Fixture f;
 
     SECTION("the default set") {
@@ -127,6 +129,19 @@ TEST_CASE("the demo's Canvas page under both skin sets", "[demo][canvas]") {
         f.window->theme(themes::floatDark);
         f.layout();
         checkCanvas(f, themes::floatDark);
+    }
+
+    SECTION("Desk, at both densities") {
+        f.window->skinSet<DeskSkins>();
+        f.layout();
+        checkCanvas(f, themes::deskDark);
+        f.window->theme(themes::deskLight);
+        f.layout();
+        checkCanvas(f, themes::deskLight);
+        f.window->handleInputModeChange(InputMode::Touch);
+        f.layout();
+        checkCanvas(f, themes::deskLight);
+        f.window->handleInputModeChange(InputMode::Pointer);
     }
 
     SECTION("picking another tool") {
