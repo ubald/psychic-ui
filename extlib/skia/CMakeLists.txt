@@ -6,7 +6,6 @@ endif()
 
 # Skia's build runs Python 3 scripts (gn's exec_script calls) and ninja.
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
-find_program(SKIA_NINJA ninja REQUIRED)
 
 # SkShaper shapes with the system HarfBuzz. CMake has no Find module for it.
 find_path(HARFBUZZ_INCLUDE_DIR hb.h PATH_SUFFIXES harfbuzz REQUIRED)
@@ -128,8 +127,16 @@ set(PSYCHIC_UI_SKIA_OUTPUT "${SKIA_OUTPUT}" CACHE INTERNAL "The directory Skia i
 
 if (NOT PSYCHIC_UI_SKIA_DIR)
     # gn reads the args from the output directory's args.gn, one per line. A prebuilt Skia is never written to.
+    # Ninja runs the build, and on Windows gn only knows clang-cl's toolchain: with MSVC's cl it would build Skia with
+    # cl and fail deep in ninja
+    find_program(SKIA_NINJA ninja REQUIRED)
+    if (WIN32 AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(FATAL_ERROR "Skia is built with clang-cl on Windows, not ${CMAKE_CXX_COMPILER_ID}'s ${CMAKE_CXX_COMPILER}. "
+            "Configure with -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl, or use the windows preset.")
+    endif ()
+    # file(CONFIGURE) leaves the file alone when its content is the same, so its timestamp only moves with the args
     list(JOIN SKIA_ARGS_LIST "\n" SKIA_ARGS)
-    file(WRITE ${SKIA_OUTPUT}/args.gn "${SKIA_ARGS}\n")
+    file(CONFIGURE OUTPUT ${SKIA_OUTPUT}/args.gn CONTENT "${SKIA_ARGS}\n" @ONLY)
 
     # The gn Skia pins, downloaded here rather than by Skia's bin/fetch-gn, which writes into Skia's checkout. The
     # revision is bin/fetch-gn's (it extracts the same package): update both together when Skia moves.

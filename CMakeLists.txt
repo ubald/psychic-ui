@@ -37,7 +37,6 @@ if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION
         "(found ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}). Pass another one with -DCMAKE_CXX_COMPILER=...")
 endif ()
 
-include(ExternalProject)
 include(FeatureSummary)
 
 if (WIN32)
