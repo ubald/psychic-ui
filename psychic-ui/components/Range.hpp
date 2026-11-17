@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <numbers>
 #include <sstream>
 #include <iomanip>
 #include <functional>
@@ -282,10 +283,10 @@ namespace psychic_ui {
         float v;
         switch (_mode) {
             case RangeMode::Logarithmic:
-                v = std::log((percent * 9.0f) + 1.0f) * (float) M_LOG10E;
+                v = std::log((percent * 9.0f) + 1.0f) * std::numbers::log10e_v<float>;
                 break;
             case RangeMode::LogarithmicInverse:
-                v = 1.0f - std::log(((1.0f - percent) * 9.0f) + 1.0f) * (float) M_LOG10E;
+                v = 1.0f - std::log(((1.0f - percent) * 9.0f) + 1.0f) * std::numbers::log10e_v<float>;
                 break;
             default:
                 v = percent;

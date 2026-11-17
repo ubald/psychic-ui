@@ -1,11 +1,14 @@
 #include <algorithm>
 #include <stdexcept>
+#include <vector>
 #include "StyleManager.hpp"
 #include "../Div.hpp"
 #include "modules/skparagraph/include/TypefaceFontProvider.h"
 
 #if defined(__APPLE__)
 #include "include/ports/SkFontMgr_mac_ct.h"
+#elif defined(_WIN32)
+#include "include/ports/SkTypeface_win.h"
 #else
 #include "include/ports/SkFontMgr_fontconfig.h"
 #include "include/ports/SkFontScanner_FreeType.h"
@@ -115,6 +118,8 @@ namespace psychic_ui {
         static sk_sp<SkFontMgr> manager =
             #if defined(__APPLE__)
             SkFontMgr_New_CoreText(nullptr);
+            #elif defined(_WIN32)
+            SkFontMgr_New_DirectWrite();
             #else
             SkFontMgr_New_FontConfig(nullptr, SkFontScanner_Make_FreeType());
             #endif
@@ -167,7 +172,16 @@ namespace psychic_ui {
             }
             _fontCollection = sk_make_sp<skia::textlayout::FontCollection>();
             _fontCollection->setAssetFontManager(std::move(provider));
-            _fontCollection->setDefaultFontManager(fontManager());
+            // An unknown family falls back to the system's default font: "sans-serif" (SkParagraph's default family,
+            // which Fontconfig knows), then the font manager's own default family, since DirectWrite and CoreText have
+            // no generic names. Without it SkParagraph would take the first loaded font.
+            std::vector<SkString> defaultFamilies{SkString{"sans-serif"}};
+            if (auto typeface = fontManager()->legacyMakeTypeface(nullptr, SkFontStyle())) {
+                SkString family;
+                typeface->getFamilyName(&family);
+                defaultFamilies.push_back(family);
+            }
+            _fontCollection->setDefaultFontManager(fontManager(), defaultFamilies);
             _fontCollection->enableFontFallback();
         }
         return _fontCollection;

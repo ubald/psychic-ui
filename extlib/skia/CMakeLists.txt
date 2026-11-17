@@ -4,13 +4,8 @@ if (NOT EXISTS "${SKIA_SOURCE_DIR}/.git")
   message(FATAL_ERROR "Psychic UI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
 endif()
 
-# Skia's build runs Python 3 scripts (bin/fetch-gn, gn's exec_script calls) and ninja. An installed
-# ninja is used when there is one; otherwise the build script fetches the one Skia pins.
+# Skia's build runs Python 3 scripts (gn's exec_script calls) and ninja.
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
-find_program(SKIA_NINJA ninja)
-if (NOT SKIA_NINJA)
-    set(SKIA_NINJA "")
-endif ()
 
 # SkShaper shapes with the system HarfBuzz. CMake has no Find module for it.
 find_path(HARFBUZZ_INCLUDE_DIR hb.h PATH_SUFFIXES harfbuzz REQUIRED)
@@ -22,8 +17,6 @@ find_library(HARFBUZZ_LIBRARY harfbuzz REQUIRED)
 # and Skia's own GL loaders (Psychic UI assembles its GL interface from the window's procs).
 set(SKIA_ARGS_LIST
     is_official_build=true
-    "cc=\"${CMAKE_C_COMPILER}\""
-    "cxx=\"${CMAKE_CXX_COMPILER}\""
     skia_enable_ganesh=true
     skia_use_gl=true
     skia_enable_graphite=false
@@ -63,11 +56,35 @@ set(SKIA_ARGS_LIST
     paragraph_tests_enabled=false
     paragraph_bench_enabled=false
     )
+if (WIN32)
+    # gn's Windows toolchain runs clang-cl and lld-link from the LLVM root (<root>/bin/clang-cl.exe), and takes MSVC's
+    # and the SDK's headers and libraries from the Developer prompt's environment, so that Skia compiles against the
+    # same STL and SDK as CMake; without one it finds Visual Studio with vswhere and their highest versions
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+        cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH SKIA_CLANG_BIN)
+        cmake_path(GET SKIA_CLANG_BIN PARENT_PATH SKIA_CLANG_ROOT)
+        list(APPEND SKIA_ARGS_LIST "clang_win=\"${SKIA_CLANG_ROOT}\"")
+    endif ()
+    # A gn arg from an environment variable, when it is set, as a path without its trailing separator
+    function(skia_arg_from_env arg variable)
+        if (DEFINED ENV{${variable}})
+            file(TO_CMAKE_PATH "$ENV{${variable}}" value)
+            string(REGEX REPLACE "/+$" "" value "${value}")
+            set(SKIA_ARGS_LIST ${SKIA_ARGS_LIST} "${arg}=\"${value}\"" PARENT_SCOPE)
+        endif ()
+    endfunction()
+    skia_arg_from_env(win_vc VCINSTALLDIR)
+    skia_arg_from_env(win_toolchain_version VCToolsVersion)
+    skia_arg_from_env(win_sdk WindowsSdkDir)
+    skia_arg_from_env(win_sdk_version WindowsSDKVersion)
+else ()
+    list(APPEND SKIA_ARGS_LIST "cc=\"${CMAKE_C_COMPILER}\"" "cxx=\"${CMAKE_CXX_COMPILER}\"")
+endif ()
 
 # Header and library directories of the system libraries Skia compiles against, which aren't
 # necessarily on the compiler's default paths (Nix, Homebrew's keg-only ICU). Skia only builds
 # static libraries, so the -L flags are for anything gn would link, not for the .a files.
-set(SKIA_INCLUDE_FLAGS "-I${ICU_INCLUDE_DIR}" "-I${HARFBUZZ_INCLUDE_DIR}")
+set(SKIA_CFLAGS "-I${ICU_INCLUDE_DIR}" "-I${HARFBUZZ_INCLUDE_DIR}")
 get_filename_component(SKIA_ICU_LIB_DIR "${ICU_UC_LIBRARY}" DIRECTORY)
 get_filename_component(SKIA_HARFBUZZ_LIB_DIR "${HARFBUZZ_LIBRARY}" DIRECTORY)
 set(SKIA_LIBRARY_FLAGS "-L${SKIA_ICU_LIB_DIR}" "-L${SKIA_HARFBUZZ_LIB_DIR}")
@@ -79,16 +96,25 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Linux|BSD")
     list(APPEND SKIA_ARGS_LIST skia_use_freetype=true skia_use_fontconfig=true)
     # Skia's system FreeType config only knows /usr/include/freetype2
     list(APPEND SKIA_ARGS_LIST "skia_system_freetype2_include_path=\"${FREETYPE_INCLUDE_DIR_freetype2}\"")
-    list(APPEND SKIA_INCLUDE_FLAGS "-I${Fontconfig_INCLUDE_DIRS}")
+    list(APPEND SKIA_CFLAGS "-I${Fontconfig_INCLUDE_DIRS}")
 endif ()
 
-list(TRANSFORM SKIA_INCLUDE_FLAGS REPLACE "(.+)" "\"\\1\"")
-list(TRANSFORM SKIA_LIBRARY_FLAGS REPLACE "(.+)" "\"\\1\"")
-list(JOIN SKIA_INCLUDE_FLAGS ", " SKIA_INCLUDE_FLAGS)
-list(JOIN SKIA_LIBRARY_FLAGS ", " SKIA_LIBRARY_FLAGS)
-list(APPEND SKIA_ARGS_LIST "extra_cflags=[${SKIA_INCLUDE_FLAGS}]" "extra_ldflags=[${SKIA_LIBRARY_FLAGS}]")
+if (WIN32)
+    # The release dynamic runtime (/MD), as every target links (CMAKE_MSVC_RUNTIME_LIBRARY MultiThreadedDLL, vcpkg's
+    # libraries too): Skia's gn sets none, clang-cl's default is the static one (/MT), and objects built against
+    # different runtimes don't link together (LNK2038)
+    list(APPEND SKIA_CFLAGS "/MD")
+endif ()
 
-list(JOIN SKIA_ARGS_LIST " " SKIA_ARGS)
+list(TRANSFORM SKIA_CFLAGS REPLACE "(.+)" "\"\\1\"")
+list(TRANSFORM SKIA_LIBRARY_FLAGS REPLACE "(.+)" "\"\\1\"")
+list(JOIN SKIA_CFLAGS ", " SKIA_CFLAGS)
+list(JOIN SKIA_LIBRARY_FLAGS ", " SKIA_LIBRARY_FLAGS)
+list(APPEND SKIA_ARGS_LIST "extra_cflags=[${SKIA_CFLAGS}]")
+if (NOT WIN32)
+    list(APPEND SKIA_ARGS_LIST "extra_ldflags=[${SKIA_LIBRARY_FLAGS}]")
+endif ()
+
 set(PSYCHIC_UI_SKIA_DIR "" CACHE PATH "A prebuilt Skia to link from, read-only, to share one build between build directories (default: build it into this build directory's extlib/skia/build)")
 if (PSYCHIC_UI_SKIA_DIR)
     # A relative directory (set by a parent project or a preset) is the build directory's: CMake already made one given
@@ -99,7 +125,51 @@ else ()
 endif ()
 set(PSYCHIC_UI_SKIA_OUTPUT "${SKIA_OUTPUT}" CACHE INTERNAL "The directory Skia is linked from (built into it, unless PSYCHIC_UI_SKIA_DIR gives a read-only prebuilt one)")
 
-configure_file("skia_build.sh.in" "skia_build.sh" @ONLY)
+if (NOT PSYCHIC_UI_SKIA_DIR)
+    # gn reads the args from the output directory's args.gn, one per line. A prebuilt Skia is never written to.
+    # Ninja runs the build, and on Windows gn only knows clang-cl's toolchain: with MSVC's cl it would build Skia with
+    # cl and fail deep in ninja
+    find_program(SKIA_NINJA ninja REQUIRED)
+    if (WIN32 AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(FATAL_ERROR "Skia is built with clang-cl on Windows, not ${CMAKE_CXX_COMPILER_ID}'s ${CMAKE_CXX_COMPILER}. "
+            "Configure with -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl, or use the windows preset.")
+    endif ()
+    # file(CONFIGURE) leaves the file alone when its content is the same, so its timestamp only moves with the args
+    list(JOIN SKIA_ARGS_LIST "\n" SKIA_ARGS)
+    file(CONFIGURE OUTPUT ${SKIA_OUTPUT}/args.gn CONTENT "${SKIA_ARGS}\n" @ONLY)
+
+    # The gn Skia pins, downloaded here rather than by Skia's bin/fetch-gn, which writes into Skia's checkout. The
+    # revision is bin/fetch-gn's (it extracts the same package): update both together when Skia moves.
+    set(SKIA_GN_REVISION b2afae122eeb6ce09c52d63f67dc53fc517dbdc8)
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
+        set(SKIA_GN_PLATFORM linux-amd64)
+        set(SKIA_GN_SHA256 6a3bfc53d825bccac5e5b4b7bdcc10ce9396a04a689ac684ec3308ca5c7f3d9c)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
+        set(SKIA_GN_PLATFORM linux-arm64)
+        set(SKIA_GN_SHA256 376e1358ded109d955b8eb55ba2a7dec0e95ab1f8dfe0e18011e06eed78a011f)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
+        set(SKIA_GN_PLATFORM mac-amd64)
+        set(SKIA_GN_SHA256 4bea817159f060980f1ca1d0400ef6cd2e0ab0ade66bb34e91aab9c2cffc9d83)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
+        set(SKIA_GN_PLATFORM mac-arm64)
+        set(SKIA_GN_SHA256 cbb260f2cf999f7d74da96b3828a061299c6337354dd6db642e778828576025c)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows" AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
+        set(SKIA_GN_PLATFORM windows-amd64)
+        set(SKIA_GN_SHA256 7249f55d6f22b55affa68aaf19d2f597c39946299216e12d78eac6cc1469f8a1)
+    else ()
+        message(FATAL_ERROR "No gn is published for ${CMAKE_HOST_SYSTEM_NAME} ${CMAKE_HOST_SYSTEM_PROCESSOR}: Skia can't be built here. "
+            "Use -DPSYCHIC_UI_SKIA_DIR=<a prebuilt Skia>.")
+    endif ()
+    set(SKIA_GN ${CMAKE_CURRENT_BINARY_DIR}/gn/gn${CMAKE_EXECUTABLE_SUFFIX})
+    if (NOT EXISTS "${SKIA_GN}")
+        set(SKIA_GN_ZIP ${CMAKE_CURRENT_BINARY_DIR}/gn-${SKIA_GN_PLATFORM}.zip)
+        file(DOWNLOAD
+            "https://chrome-infra-packages.appspot.com/dl/gn/gn/${SKIA_GN_PLATFORM}/+/git_revision:${SKIA_GN_REVISION}"
+            ${SKIA_GN_ZIP} EXPECTED_HASH SHA256=${SKIA_GN_SHA256})
+        file(ARCHIVE_EXTRACT INPUT ${SKIA_GN_ZIP} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/gn)
+        file(REMOVE ${SKIA_GN_ZIP})
+    endif ()
+endif ()
 
 # The static libraries Psychic UI links, in link order (each before what it uses)
 set(SKIA_LIBRARY_NAMES skparagraph skshaper skunicode_icu skunicode_core skia skcms)
@@ -121,9 +191,11 @@ if (PSYCHIC_UI_SKIA_DIR)
     add_custom_target(skia-build)
 else ()
     add_custom_command(OUTPUT ${SKIA_STATIC_LIBS}
-        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_build.sh
+        COMMAND ${SKIA_GN} gen ${SKIA_OUTPUT} --script-executable=${Python3_EXECUTABLE}
+        COMMAND ${SKIA_NINJA} -C ${SKIA_OUTPUT} skia modules/skparagraph modules/skshaper modules/skunicode
         WORKING_DIRECTORY ${SKIA_SOURCE_DIR}
         USES_TERMINAL
+        VERBATIM
     )
     add_custom_target(skia-build DEPENDS ${SKIA_STATIC_LIBS})
 endif ()
@@ -153,6 +225,9 @@ target_compile_definitions(Skia::Skia INTERFACE
     $<$<PLATFORM_ID:Linux>:SK_R32_SHIFT=16>
     $<$<PLATFORM_ID:Darwin>:SK_ASSUME_GL=1>
     $<$<PLATFORM_ID:Darwin>:SK_ENABLE_API_AVAILABLE>
+    $<$<PLATFORM_ID:Windows>:SK_TYPEFACE_FACTORY_DIRECTWRITE>
+    $<$<PLATFORM_ID:Windows>:SK_FONTMGR_DIRECTWRITE_AVAILABLE>
+    $<$<PLATFORM_ID:Windows>:SK_FONTMGR_GDI_AVAILABLE>
     )
 target_link_libraries(Skia::Skia INTERFACE
     ${SKIA_STATIC_LIBS}
@@ -164,7 +239,10 @@ target_link_libraries(Skia::Skia INTERFACE
 if (APPLE)
     target_link_libraries(Skia::Skia INTERFACE
         "-framework CoreFoundation" "-framework CoreGraphics" "-framework CoreText" "-framework CoreServices" "-framework AppKit")
-else ()
+elseif (WIN32)
+    # gn desc <out> //:skia libs: DirectWrite and GDI fonts, Uniscribe, COM, OpenGL
+    target_link_libraries(Skia::Skia INTERFACE ole32 oleaut32 fontsub user32 usp10 gdi32 opengl32)
+elseif (CMAKE_SYSTEM_NAME MATCHES "Linux|BSD")
     target_link_libraries(Skia::Skia INTERFACE Freetype::Freetype $<$<TARGET_EXISTS:Fontconfig::Fontconfig>:Fontconfig::Fontconfig>)
 endif ()
 add_dependencies(Skia::Skia skia-build)

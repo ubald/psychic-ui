@@ -553,12 +553,12 @@ TEST_CASE("A right press elsewhere while a context menu is open opens it there",
 }
 
 TEST_CASE("On the right button's press by default, on its release as on Windows", "[popup][menu][context]") {
-    ContextMenus f{};
     #ifdef _WIN32
-    CHECK(f.window->contextMenuOnRelease());
+    CHECK(std::make_shared<Window>("default")->contextMenuOnRelease());
     #else
-    CHECK_FALSE(f.window->contextMenuOnRelease());
+    CHECK_FALSE(std::make_shared<Window>("default")->contextMenuOnRelease());
     #endif
+    ContextMenus f{};
     f.window->contextMenuOnRelease(true);
     const auto [ax, ay] = Popups::origin(f.area);
     int requests = 0;

@@ -91,7 +91,11 @@ TEST_CASE("text lays out in Inter at small sizes, slightly hinted", "[text][font
 }
 
 TEST_CASE("The executable directory holds the running executable", "[font][resources]") {
+    #ifdef _WIN32
+    CHECK(std::filesystem::exists(executableDirectory() / "psychic-ui-tests.exe"));
+    #else
     CHECK(std::filesystem::exists(executableDirectory() / "psychic-ui-tests"));
+    #endif
 }
 
 TEST_CASE("A relative font path resolves against the resource root", "[font][resources]") {
