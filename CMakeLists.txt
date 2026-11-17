@@ -40,7 +40,14 @@ endif ()
 include(ExternalProject)
 include(FeatureSummary)
 
-option(PSYCHIC_UI_SHARED "Build Psychic UI as a shared library" ${PROJECT_IS_TOP_LEVEL})
+if (WIN32)
+    option(PSYCHIC_UI_SHARED "Build Psychic UI as a shared library" OFF)
+    if (PSYCHIC_UI_SHARED)
+        message(FATAL_ERROR "Psychic UI can't be built as a shared library on Windows yet: it exports no symbols. Configure with -DPSYCHIC_UI_SHARED=OFF.")
+    endif ()
+else ()
+    option(PSYCHIC_UI_SHARED "Build Psychic UI as a shared library" ${PROJECT_IS_TOP_LEVEL})
+endif ()
 add_feature_info("psychic-ui-shared" PSYCHIC_UI_SHARED "Build shared library")
 
 # The static dependencies below end up inside the shared library
@@ -59,9 +66,6 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux|BSD")
     find_package(Freetype REQUIRED)
     find_package(Fontconfig REQUIRED)
 endif ()
-
-# GLAD
-add_subdirectory(extlib/glad)
 
 include(FetchContent)
 
@@ -386,7 +390,11 @@ add_library(psychic-ui ${_psychic_ui_type} ${SOURCE_FILES})
 add_library(psychic-ui::psychic-ui ALIAS psychic-ui)
 
 target_compile_features(psychic-ui PUBLIC cxx_std_23)
-target_compile_options(psychic-ui PRIVATE -Wall -Wextra)
+if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+    target_compile_options(psychic-ui PRIVATE /W4)
+else ()
+    target_compile_options(psychic-ui PRIVATE -Wall -Wextra)
+endif ()
 
 target_include_directories(psychic-ui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -417,16 +425,6 @@ endif ()
 
 if (PSYCHIC_UI_BUILD_GLFW_ADAPTER)
     target_link_libraries(psychic-ui PUBLIC glfw)
-endif ()
-
-if (PSYCHIC_UI_USE_GLAD)
-    add_dependencies(psychic-ui glad)
-    target_include_directories(psychic-ui PRIVATE ${GLAD_INCLUDE_DIR})
-    target_link_libraries(psychic-ui PRIVATE ${GLAD_LIBRARIES})
-    target_compile_definitions(psychic-ui PRIVATE PSYCHIC_UI_WITH_GLAD)
-    if (PSYCHIC_UI_SHARED)
-        target_compile_definitions(psychic-ui PRIVATE GLAD_GLAPI_EXPORT GLAD_GLAPI_EXPORT_BUILD)
-    endif ()
 endif ()
 
 if (PSYCHIC_UI_SHARED AND NOT CMAKE_BUILD_TYPE MATCHES "Deb")
