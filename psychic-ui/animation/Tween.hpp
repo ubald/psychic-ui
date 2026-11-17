@@ -113,11 +113,6 @@ namespace psychic_ui {
 
         const Timing &timing() const { return _timing; }
 
-        /**
-         * A spring that went on this long is stopped where it should be
-         */
-        static constexpr std::chrono::nanoseconds maxSpringTime = std::chrono::seconds(10);
-
     private:
         std::size_t _count{4};
         Channels    _from{};     // The value when it was retargeted
@@ -128,7 +123,6 @@ namespace psychic_ui {
         Timing      _timing{};
         float       _tolerance{0.0f}; // A spring settles within this of its target
         std::optional<std::chrono::nanoseconds> _start{};
-        std::optional<std::chrono::nanoseconds> _last{};
         bool        _running{false};
     };
 }

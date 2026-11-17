@@ -83,25 +83,26 @@ namespace psychic_ui {
         }
 
         void play() {
-            const auto duration = _timing.isSpring() ? 800ms : _timing.duration();
-            animate(0.0f, 1.0f, Timing{duration, Ease::Linear}, [this](float t) { _time = t; });
+            animate(0.0f, 1.0f, Timing{plotDuration(), Ease::Linear}, [this](float t) { _time = t; });
         }
 
     protected:
         Timing _timing;
-        float  _time{0.0f}; // Of the plot's width: the duration, or 800 ms for a spring
+        float  _time{0.0f}; // Of the plot's width
 
         /**
-         * Where the value is (0 start, 1 end) at a share of the plot's time
+         * The time the plot's width shows: the duration, or 800 ms for a spring
+         */
+        std::chrono::nanoseconds plotDuration() const {
+            return _timing.isSpring() ? std::chrono::nanoseconds{800ms} : _timing.duration();
+        }
+
+        /**
+         * Where the value is (0 start, 1 end) at a share of the plot's time: from an offset of -1 to its target, 1
          */
         float valueAt(float t) const {
-            if (!_timing.isSpring()) {
-                return _timing.ease().at(t);
-            }
-            Tween tween{{0.0f}, 1};
-            tween.retarget({1.0f}, _timing, std::chrono::nanoseconds::zero());
-            tween.advance(std::chrono::duration_cast<std::chrono::nanoseconds>(800ms * t));
-            return tween.value()[0];
+            const float seconds = t * std::chrono::duration<float>(plotDuration()).count();
+            return 1.0f + _timing.approach(-1.0f, 0.0f, seconds, 1e-3f).offset;
         }
 
         void draw(SkCanvas *canvas) override {

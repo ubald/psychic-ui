@@ -89,6 +89,38 @@ TEST_CASE("A timing is a duration with a curve, a spring, or instant", "[animati
     CHECK(Spring::Snappy.dampingRatio() < 1.0f);
 }
 
+TEST_CASE("A timing answers where a value is as an offset from its target", "[animation][timing]") {
+    // A curve: the offset left along the ease, its exact velocity, settled once the duration is over
+    const Timing linear{100ms, Ease::Linear};
+    const Approach half = linear.approach(1.0f, 0.0f, 0.05f, 1e-3f);
+    CHECK(half.offset == Approx(0.5f));
+    CHECK(half.velocity == Approx(-10.0f));
+    CHECK_FALSE(half.settled);
+    const Approach end = linear.approach(1.0f, 0.0f, 0.1f, 1e-3f);
+    CHECK(end.settled);
+    CHECK(end.offset == 0.0f);
+
+    // A curved ease's velocity is its Bézier's derivative: dy/dx by a finite difference of `at`
+    const Timing   out{200ms, Ease::Out};
+    const float    h    = 1e-3f;
+    const float    dydx = (Ease::Out.at(0.25f + h) - Ease::Out.at(0.25f - h)) / (2.0f * h);
+    const Approach at   = out.approach(2.0f, 0.0f, 0.05f, 1e-3f);
+    CHECK(at.offset == Approx(2.0f * (1.0f - Ease::Out.at(0.25f))));
+    CHECK(at.velocity == Approx(-2.0f * dydx / 0.2f).epsilon(1e-2));
+
+    // A spring settles within its tolerance, and keeps its velocity on a retarget where a curve starts from rest
+    const Timing snappy{Spring::Snappy};
+    CHECK_FALSE(snappy.approach(1.0f, 0.0f, 0.0f, 1e-3f).settled);
+    CHECK(snappy.approach(1.0f, 0.0f, 0.05f, 1e-3f).velocity < 0.0f);
+    CHECK(snappy.approach(1.0f, 0.0f, 2.0f, 1e-3f).settled);
+    CHECK(snappy.approach(1.0f, 0.0f, std::chrono::duration<float>(Spring::maxTime).count(), 0.0f).settled);
+    CHECK(snappy.keepsVelocity());
+    CHECK_FALSE(linear.keepsVelocity());
+    // A spring starting with a velocity away from its target moves away first; a curve ignores it
+    CHECK(snappy.approach(0.0f, 10.0f, 0.01f, 1e-3f).offset > 0.0f);
+    CHECK(linear.approach(0.0f, 10.0f, 0.01f, 1e-3f).offset == 0.0f);
+}
+
 // endregion
 
 // region Tween

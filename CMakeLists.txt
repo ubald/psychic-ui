@@ -158,6 +158,7 @@ set(SOURCE_FILES
     psychic-ui/animation/Animation.hpp
     psychic-ui/animation/StyleTransitions.cpp
     psychic-ui/animation/StyleTransitions.hpp
+    psychic-ui/animation/Timing.cpp
     psychic-ui/animation/Timing.hpp
     psychic-ui/animation/Tween.cpp
     psychic-ui/animation/Tween.hpp

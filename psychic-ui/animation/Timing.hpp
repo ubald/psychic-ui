@@ -9,6 +9,15 @@
 namespace psychic_ui {
 
     /**
+     * Where a moving value is, as its offset from its target (which goes to 0), at some time since it started
+     */
+    struct Approach {
+        float offset{0.0f};
+        float velocity{0.0f}; // Of the offset, per second
+        bool  settled{false}; // There: the value takes its target
+    };
+
+    /**
      * An easing curve: a cubic Bézier from (0, 0) to (1, 1) through two control points, like CSS's `cubic-bezier()`.
      * `at(x)` is how far along its way a value is (y) at a share of the duration (x, 0 to 1). y may leave 0-1 (an
      * overshoot); the control points' x may not.
@@ -26,6 +35,17 @@ namespace psychic_ui {
          * The eased progress at a share of the duration (clamped to 0-1)
          */
         float at(float progress) const;
+
+        /**
+         * How fast the eased progress changes at a share of the duration (dy/dx, clamped to 0-1)
+         */
+        float slope(float progress) const;
+
+        /**
+         * Along this curve for `duration` seconds from an offset of `offset0` at rest, where it is `seconds` later:
+         * `offset0 × (1 − at(seconds / duration))`, settled once the duration is over
+         */
+        Approach approach(float offset0, float seconds, float duration) const;
 
         constexpr bool operator==(const Ease &) const = default;
 
@@ -60,7 +80,19 @@ namespace psychic_ui {
          */
         float dampingRatio() const;
 
+        /**
+         * Where it is `seconds` after it had an offset of `offset0` and a velocity of `velocity0` (the closed form, so
+         * the frame rate doesn't change the motion): settled once the offset is within `tolerance` and the velocity
+         * within `tolerance` × max(ω, 1), or after `maxTime`
+         */
+        Approach approach(float offset0, float velocity0, float seconds, float tolerance) const;
+
         constexpr bool operator==(const Spring &) const = default;
+
+        /**
+         * A spring that went on this long is settled
+         */
+        static constexpr std::chrono::nanoseconds maxTime = std::chrono::seconds(10);
 
         static const Spring Gentle; // Settles in about half a second, without overshooting
         static const Spring Snappy; // Quick, with a slight overshoot
@@ -102,6 +134,18 @@ namespace psychic_ui {
         constexpr const Ease &ease() const { return _ease; }
 
         constexpr const Spring &spring() const { return _spring; }
+
+        /**
+         * Whether a retarget keeps the velocity: a spring does, a curve starts from rest
+         */
+        constexpr bool keepsVelocity() const { return _isSpring; }
+
+        /**
+         * Where a value moving with this timing is, `seconds` after it had an offset of `offset0` from its target and
+         * a velocity of `velocity0`: along the curve (from rest, whatever the velocity) or pulled by the spring.
+         * `tolerance` is how close a spring settles (a curve settles when its duration is over).
+         */
+        Approach approach(float offset0, float velocity0, float seconds, float tolerance) const;
 
         constexpr bool operator==(const Timing &) const = default;
 
