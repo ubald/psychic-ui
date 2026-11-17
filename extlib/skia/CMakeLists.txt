@@ -18,8 +18,6 @@ find_library(HARFBUZZ_LIBRARY harfbuzz REQUIRED)
 # and Skia's own GL loaders (Psychic UI assembles its GL interface from the window's procs).
 set(SKIA_ARGS_LIST
     is_official_build=true
-    "cc=\"${CMAKE_C_COMPILER}\""
-    "cxx=\"${CMAKE_CXX_COMPILER}\""
     skia_enable_ganesh=true
     skia_use_gl=true
     skia_enable_graphite=false
@@ -59,11 +57,27 @@ set(SKIA_ARGS_LIST
     paragraph_tests_enabled=false
     paragraph_bench_enabled=false
     )
+if (WIN32)
+    # gn's Windows toolchain runs clang-cl and lld-link from the LLVM root (<root>/bin/clang-cl.exe) and finds
+    # MSVC's headers and libraries from its root, the Developer Prompt's when there is one, else with vswhere
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+        cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH SKIA_CLANG_BIN)
+        cmake_path(GET SKIA_CLANG_BIN PARENT_PATH SKIA_CLANG_ROOT)
+        list(APPEND SKIA_ARGS_LIST "clang_win=\"${SKIA_CLANG_ROOT}\"")
+    endif ()
+    if (DEFINED ENV{VCINSTALLDIR})
+        file(TO_CMAKE_PATH "$ENV{VCINSTALLDIR}" SKIA_WIN_VC)
+        string(REGEX REPLACE "/+$" "" SKIA_WIN_VC "${SKIA_WIN_VC}")
+        list(APPEND SKIA_ARGS_LIST "win_vc=\"${SKIA_WIN_VC}\"")
+    endif ()
+else ()
+    list(APPEND SKIA_ARGS_LIST "cc=\"${CMAKE_C_COMPILER}\"" "cxx=\"${CMAKE_CXX_COMPILER}\"")
+endif ()
 
 # Header and library directories of the system libraries Skia compiles against, which aren't
 # necessarily on the compiler's default paths (Nix, Homebrew's keg-only ICU). Skia only builds
 # static libraries, so the -L flags are for anything gn would link, not for the .a files.
-set(SKIA_INCLUDE_FLAGS "-I${ICU_INCLUDE_DIR}" "-I${HARFBUZZ_INCLUDE_DIR}")
+set(SKIA_CFLAGS "-I${ICU_INCLUDE_DIR}" "-I${HARFBUZZ_INCLUDE_DIR}")
 get_filename_component(SKIA_ICU_LIB_DIR "${ICU_UC_LIBRARY}" DIRECTORY)
 get_filename_component(SKIA_HARFBUZZ_LIB_DIR "${HARFBUZZ_LIBRARY}" DIRECTORY)
 set(SKIA_LIBRARY_FLAGS "-L${SKIA_ICU_LIB_DIR}" "-L${SKIA_HARFBUZZ_LIB_DIR}")
@@ -75,14 +89,24 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Linux|BSD")
     list(APPEND SKIA_ARGS_LIST skia_use_freetype=true skia_use_fontconfig=true)
     # Skia's system FreeType config only knows /usr/include/freetype2
     list(APPEND SKIA_ARGS_LIST "skia_system_freetype2_include_path=\"${FREETYPE_INCLUDE_DIR_freetype2}\"")
-    list(APPEND SKIA_INCLUDE_FLAGS "-I${Fontconfig_INCLUDE_DIRS}")
+    list(APPEND SKIA_CFLAGS "-I${Fontconfig_INCLUDE_DIRS}")
 endif ()
 
-list(TRANSFORM SKIA_INCLUDE_FLAGS REPLACE "(.+)" "\"\\1\"")
+if (WIN32)
+    # The release dynamic runtime (/MD), as every target links (CMAKE_MSVC_RUNTIME_LIBRARY MultiThreadedDLL, vcpkg's
+    # libraries too): Skia's gn sets none, clang-cl's default is the static one (/MT), and objects built against
+    # different runtimes don't link together (LNK2038)
+    list(APPEND SKIA_CFLAGS "/MD")
+endif ()
+
+list(TRANSFORM SKIA_CFLAGS REPLACE "(.+)" "\"\\1\"")
 list(TRANSFORM SKIA_LIBRARY_FLAGS REPLACE "(.+)" "\"\\1\"")
-list(JOIN SKIA_INCLUDE_FLAGS ", " SKIA_INCLUDE_FLAGS)
+list(JOIN SKIA_CFLAGS ", " SKIA_CFLAGS)
 list(JOIN SKIA_LIBRARY_FLAGS ", " SKIA_LIBRARY_FLAGS)
-list(APPEND SKIA_ARGS_LIST "extra_cflags=[${SKIA_INCLUDE_FLAGS}]" "extra_ldflags=[${SKIA_LIBRARY_FLAGS}]")
+list(APPEND SKIA_ARGS_LIST "extra_cflags=[${SKIA_CFLAGS}]")
+if (NOT WIN32)
+    list(APPEND SKIA_ARGS_LIST "extra_ldflags=[${SKIA_LIBRARY_FLAGS}]")
+endif ()
 
 set(PSYCHIC_UI_SKIA_DIR "" CACHE PATH "A prebuilt Skia to link from, read-only, to share one build between build directories (default: build it into this build directory's extlib/skia/build)")
 if (PSYCHIC_UI_SKIA_DIR)
@@ -186,6 +210,9 @@ target_compile_definitions(Skia::Skia INTERFACE
     $<$<PLATFORM_ID:Linux>:SK_R32_SHIFT=16>
     $<$<PLATFORM_ID:Darwin>:SK_ASSUME_GL=1>
     $<$<PLATFORM_ID:Darwin>:SK_ENABLE_API_AVAILABLE>
+    $<$<PLATFORM_ID:Windows>:SK_TYPEFACE_FACTORY_DIRECTWRITE>
+    $<$<PLATFORM_ID:Windows>:SK_FONTMGR_DIRECTWRITE_AVAILABLE>
+    $<$<PLATFORM_ID:Windows>:SK_FONTMGR_GDI_AVAILABLE>
     )
 target_link_libraries(Skia::Skia INTERFACE
     ${SKIA_STATIC_LIBS}
@@ -197,7 +224,10 @@ target_link_libraries(Skia::Skia INTERFACE
 if (APPLE)
     target_link_libraries(Skia::Skia INTERFACE
         "-framework CoreFoundation" "-framework CoreGraphics" "-framework CoreText" "-framework CoreServices" "-framework AppKit")
-else ()
+elseif (WIN32)
+    # gn desc <out> //:skia libs: DirectWrite and GDI fonts, Uniscribe, COM, OpenGL
+    target_link_libraries(Skia::Skia INTERFACE ole32 oleaut32 fontsub user32 usp10 gdi32 opengl32)
+elseif (CMAKE_SYSTEM_NAME MATCHES "Linux|BSD")
     target_link_libraries(Skia::Skia INTERFACE Freetype::Freetype $<$<TARGET_EXISTS:Fontconfig::Fontconfig>:Fontconfig::Fontconfig>)
 endif ()
 add_dependencies(Skia::Skia skia-build)

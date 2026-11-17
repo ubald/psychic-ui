@@ -19,6 +19,9 @@ namespace psychic_ui_tests {
         TestWindow() : Window("Test") {
             skinSet<DefaultSkins>();
             reducedMotion(true);
+            // Context menus on the right button's press on every platform (Windows defaults to its release): tests of the
+            // release turn it back on
+            contextMenuOnRelease(false);
         }
 
         bool dropEvent(const std::vector<std::string> &filenames) override {
