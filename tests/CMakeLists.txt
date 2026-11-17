@@ -77,7 +77,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         style/style_manager_tests.cpp
         style/theme_tests.cpp
         skins/skin_set_tests.cpp
-        skins/default_skins_tests.cpp
+        skins/pivotal_skins_tests.cpp
         skins/desk_skins_tests.cpp
         skins/float_skins_tests.cpp
         demo/canvas_page_tests.cpp

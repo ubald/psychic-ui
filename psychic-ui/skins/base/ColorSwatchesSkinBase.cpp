@@ -3,7 +3,9 @@
 
 namespace psychic_ui {
     ColorSwatchesSkinBase::ColorSwatchesSkinBase() :
-        ColorSwatchesSkin() {}
+        ColorSwatchesSkin() {
+        tag("ColorSwatchesSkinBase");
+    }
 
     void ColorSwatchesSkinBase::setColors(const std::vector<Color> &colors) {
         for (Div *swatch: _swatches) {

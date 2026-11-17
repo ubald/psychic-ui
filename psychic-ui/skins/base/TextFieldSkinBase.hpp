@@ -39,6 +39,9 @@ namespace psychic_ui {
      * the component. A skin set's text area only paints its chrome, behind them.
      */
     class TextAreaSkinBase : public TextAreaSkin {
+    public:
+        TextAreaSkinBase();
+
     protected:
         void addedToComponent() override;
         void removedFromComponent() override;

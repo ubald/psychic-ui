@@ -4,12 +4,13 @@
 
 namespace psychic_ui {
     /**
-     * Psychic UI's own look, Pivotal's design system (P1 Faithful), with Pivotal Dark and Pivotal Light: a skin for
-     * every component and the rules laying them out. Other sets fall back on it.
+     * Psychic UI's own look, the default set ("Default"): Pivotal's design system (P1 Faithful), with Pivotal Dark
+     * and Pivotal Light. A skin for every component, the bases for most, Pivotal's own for tabs, window controls and
+     * avatars, and the rules laying them out. Other sets fall back on it.
      *
-     *     window.skinSet<DefaultSkins>();
+     *     window.skinSet<PivotalSkins>();
      */
-    class DefaultSkins : public SkinSet {
+    class PivotalSkins : public SkinSet {
     public:
         std::string_view name() const override;
         const Theme &defaultTheme() const override;

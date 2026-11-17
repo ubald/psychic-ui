@@ -3,6 +3,7 @@
 namespace psychic_ui {
     AvatarSkinBase::AvatarSkinBase() :
         AvatarSkin() {
+        tag("AvatarSkinBase");
         _initials = &add<Label>();
         _initials->addClassName("initials");
         _status = &add<StatusDot>();

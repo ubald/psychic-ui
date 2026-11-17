@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include "psychic-ui/themes/palette.hpp"
-#include "DefaultAvatarSkin.hpp"
+#include "PivotalAvatarSkin.hpp"
 
 namespace psychic_ui {
     namespace {
@@ -27,12 +27,12 @@ namespace psychic_ui {
         }
     }
 
-    DefaultAvatarSkin::DefaultAvatarSkin() :
+    PivotalAvatarSkin::PivotalAvatarSkin() :
         AvatarSkinBase() {
-        tag("DefaultAvatarSkin");
+        tag("PivotalAvatarSkin");
     }
 
-    Color DefaultAvatarSkin::tint(const std::string_view name) {
+    Color PivotalAvatarSkin::tint(const std::string_view name) {
         // FNV-1a: stable across runs and platforms, unlike std::hash
         std::uint32_t hash = 2166136261u;
         for (const char c: name) {
@@ -41,21 +41,21 @@ namespace psychic_ui {
         return palette::pivotalSwatches[hash % palette::pivotalHueCount];
     }
 
-    Color DefaultAvatarSkin::initialsOn(const Color fill) {
+    Color PivotalAvatarSkin::initialsOn(const Color fill) {
         return contrast(fill, white) >= contrast(fill, nearBlack) ? white : nearBlack;
     }
 
-    void DefaultAvatarSkin::setInitials(const std::string &initials) {
+    void PivotalAvatarSkin::setInitials(const std::string &initials) {
         AvatarSkinBase::setInitials(initials);
         updateTint();
     }
 
-    void DefaultAvatarSkin::styleUpdated() {
+    void PivotalAvatarSkin::styleUpdated() {
         AvatarSkinBase::styleUpdated();
         updateTint();
     }
 
-    void DefaultAvatarSkin::updateTint() {
+    void PivotalAvatarSkin::updateTint() {
         const Avatar *avatar = component();
         if (avatar && avatar->colorful()) {
             _tint = tint(avatar->name());
@@ -66,7 +66,7 @@ namespace psychic_ui {
         }
     }
 
-    void DefaultAvatarSkin::drawChrome(SkCanvas *canvas, const paint::Box &box, const SkinState state) {
+    void PivotalAvatarSkin::drawChrome(SkCanvas *canvas, const paint::Box &box, const SkinState state) {
         AvatarSkinBase::drawChrome(canvas, box, state);
         if (_tint.argb() != 0) {
             paint::fill(canvas, box.outer, _tint, computedStyle().antiAlias()); // Over the hairline too

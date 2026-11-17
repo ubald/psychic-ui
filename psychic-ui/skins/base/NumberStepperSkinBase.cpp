@@ -1,6 +1,11 @@
 #include "NumberStepperSkinBase.hpp"
 
 namespace psychic_ui {
+    NumberStepperSkinBase::NumberStepperSkinBase() :
+        NumberStepperSkin() {
+        tag("NumberStepperSkinBase");
+    }
+
     void NumberStepperSkinBase::addedToComponent() {
         add(component()->decrementButton());
         add(component()->input());

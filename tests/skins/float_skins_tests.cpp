@@ -5,7 +5,7 @@
 #include <psychic-ui/components/List.hpp>
 #include <psychic-ui/components/Switch.hpp>
 #include <psychic-ui/components/TextInput.hpp>
-#include <psychic-ui/skins/default/DefaultButtonSkin.hpp>
+#include <psychic-ui/skins/base/ButtonSkinBase.hpp>
 #include <psychic-ui/skins/float/FloatSkins.hpp>
 #include <psychic-ui/themes/desk.hpp>
 #include <psychic-ui/themes/float.hpp>
@@ -28,7 +28,7 @@ namespace {
         std::string_view theme() const { return window->theme().name; }
 
         ~Fixture() {
-            window->skinSet<DefaultSkins>(); // The style manager is shared with the other tests
+            window->skinSet<PivotalSkins>(); // The style manager is shared with the other tests
         }
     };
 }
@@ -60,7 +60,7 @@ TEST_CASE("Float's themes", "[skins][float]") {
     CHECK(themes::floatDark.palette.canvasDot == themes::floatDark.palette.line);
 
     // The default set keeps Pivotal Dark when the system doesn't say, and lists its other themes
-    DefaultSkins defaults;
+    PivotalSkins defaults;
     CHECK(&defaults.theme(ColorScheme::Unknown) == &themes::pivotalDark);
     CHECK(&defaults.theme(ColorScheme::Dark) == &themes::pivotalDark);
     CHECK(defaults.hasTheme(themes::oneLight));
@@ -77,7 +77,7 @@ TEST_CASE("Float installs over the default set", "[skins][float]") {
     CHECK(f.theme() == themes::floatLight.name);
 
     // The default set's skins, Float's rules over the default set's
-    CHECK(std::dynamic_pointer_cast<DefaultButtonSkin>(button.skin()) != nullptr);
+    CHECK(std::dynamic_pointer_cast<ButtonSkinBase>(button.skin()) != nullptr);
     CHECK(button.computedStyle().borderRadius() == 7);
     CHECK(button.computedStyle().height() == Length::px(30));
 
@@ -124,7 +124,7 @@ TEST_CASE("switching to Float live re-hatches skins and keeps the components' st
     CHECK(on.checked());
 
     // And back
-    f.window->skinSet<DefaultSkins>();
+    f.window->skinSet<PivotalSkins>();
     f.layout();
     CHECK(input.text() == "Typed before");
     CHECK(list.selection() == &grace);
@@ -139,7 +139,7 @@ TEST_CASE("which theme a skin set switch picks", "[skins][theme]") {
         CHECK(f.theme() == "Float Light"); // The system doesn't say: the set's default
         f.window->handleColorSchemeChange(ColorScheme::Dark);
         CHECK(f.theme() == "Float Dark");
-        f.window->skinSet<DefaultSkins>();
+        f.window->skinSet<PivotalSkins>();
         CHECK(f.theme() == "Pivotal Dark");
         f.window->handleColorSchemeChange(ColorScheme::Light);
         CHECK(f.theme() == "Pivotal Light");
@@ -157,7 +157,7 @@ TEST_CASE("which theme a skin set switch picks", "[skins][theme]") {
         CHECK_FALSE(f.window->followsSystemTheme());
 
         f.window->theme(themes::floatDark);
-        f.window->skinSet<DefaultSkins>();
+        f.window->skinSet<PivotalSkins>();
         CHECK(f.theme() == "Pivotal Dark");
         CHECK_FALSE(f.window->followsSystemTheme());
 
@@ -183,14 +183,14 @@ TEST_CASE("which theme a skin set switch picks", "[skins][theme]") {
 
         // One Dark is the default set's: it stays across a switch back
         f.window->theme(themes::oneDark);
-        f.window->skinSet<DefaultSkins>();
+        f.window->skinSet<PivotalSkins>();
         CHECK(f.theme() == "One Dark");
         CHECK_FALSE(f.window->followsSystemTheme());
     }
 
     SECTION("following the system with a pair: it stays only if both are the new set's, else the new set's own") {
         f.window->followSystemTheme(themes::oneLight, themes::oneDark); // Both the default set's
-        f.window->skinSet<DefaultSkins>();
+        f.window->skinSet<PivotalSkins>();
         CHECK(f.theme() == "One Dark");
         f.window->skinSet<FloatSkins>();
         CHECK(f.theme() == "Float Light");

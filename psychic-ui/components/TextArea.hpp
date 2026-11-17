@@ -14,6 +14,13 @@ namespace psychic_ui {
             tag("TextAreaSkin");
         }
 
+        /**
+         * Show the component's scroller (`TextArea::textScroller()`), which it owns, among the skin's children; take
+         * it out again when the skin is replaced
+         */
+        void addedToComponent() override = 0;
+        void removedFromComponent() override = 0;
+
         virtual void setText(const std::string &/*text*/) {};
     };
 

@@ -4,6 +4,7 @@ namespace psychic_ui {
 
     ScrollBarSkinBase::ScrollBarSkinBase() :
         ScrollBarSkin() {
+        tag("ScrollBarSkinBase");
         _track = &add<Div>();
         _track->addClassName("track")
               .position(Position::Absolute)

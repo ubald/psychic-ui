@@ -3,6 +3,7 @@
 namespace psychic_ui {
     SearchFieldSkinBase::SearchFieldSkinBase() :
         SearchFieldSkin() {
+        tag("SearchFieldSkinBase");
         _icon = &add<Icon>("search");
         _icon->addClassName("icon")
              .mouseEnabled(false);

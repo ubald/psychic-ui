@@ -6,7 +6,7 @@
 #include "include/core/SkString.h"
 #include "include/core/SkTypeface.h"
 #include <psychic-ui/Window.hpp>
-#include <psychic-ui/skins/default/DefaultSkins.hpp>
+#include <psychic-ui/skins/pivotal/PivotalSkins.hpp>
 #include <psychic-ui/style/StyleManager.hpp>
 
 using namespace psychic_ui;
@@ -22,7 +22,7 @@ namespace {
 int main() {
     // No system window: the window's styles and tasks work without one
     auto window = std::make_shared<Window>("Consumer");
-    window->skinSet<DefaultSkins>();
+    window->skinSet<PivotalSkins>();
 
     // The skin set loaded the theme's fonts from res/, which psychic_ui_copy_resources copied next to the executable.
     // A font that didn't load falls back to the system's, or its default font, so load the file again under a name no

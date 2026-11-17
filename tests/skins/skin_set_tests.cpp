@@ -1,5 +1,6 @@
 #include <memory>
 #include <string>
+#include <typeinfo>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Button.hpp>
@@ -10,15 +11,13 @@
 #include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/skins/base/ButtonSkinBase.hpp>
 #include <psychic-ui/skins/base/CheckBoxSkinBase.hpp>
-#include <psychic-ui/skins/default/DefaultButtonSkin.hpp>
-#include <psychic-ui/skins/default/DefaultBasicButtonSkin.hpp>
-#include <psychic-ui/skins/default/DefaultCheckBoxSkin.hpp>
-#include <psychic-ui/skins/default/DefaultMenuButtonSkin.hpp>
-#include <psychic-ui/skins/default/DefaultScrollBarSkin.hpp>
-#include <psychic-ui/skins/default/DefaultSliderSkin.hpp>
-#include <psychic-ui/skins/default/DefaultTextAreaSkin.hpp>
-#include <psychic-ui/skins/default/DefaultTextInputSkin.hpp>
-#include <psychic-ui/skins/default/TitleBarButtonSkin.hpp>
+#include <psychic-ui/skins/base/MenuButtonSkinBase.hpp>
+#include <psychic-ui/skins/base/RangeSkinBase.hpp>
+#include <psychic-ui/skins/base/ScrollBarSkinBase.hpp>
+#include <psychic-ui/skins/base/TextFieldSkinBase.hpp>
+#include <psychic-ui/skins/pivotal/PivotalSkins.hpp>
+#include <psychic-ui/skins/pivotal/TabButtonSkin.hpp>
+#include <psychic-ui/skins/pivotal/TitleBarButtonSkin.hpp>
 #include <psychic-ui/themes/one-light.hpp>
 #include "../backends/fake_system_window.hpp"
 
@@ -41,7 +40,7 @@ namespace {
 
         const Theme &defaultTheme() const override { return themes::oneLight; }
 
-        std::unique_ptr<SkinSet> fallback() const override { return std::make_unique<DefaultSkins>(); }
+        std::unique_ptr<SkinSet> fallback() const override { return std::make_unique<PivotalSkins>(); }
 
         void registerSkins(SkinRegistry &skins) const override {
             skins.add<ButtonSkin, GlowButtonSkin>()
@@ -54,9 +53,12 @@ namespace {
         }
     };
 
+    /**
+     * Whether the skin is a T, not a subclass of it
+     */
     template<class T>
     bool is(const std::shared_ptr<internal::SkinBase> &skin) {
-        return std::dynamic_pointer_cast<T>(skin) != nullptr;
+        return skin && typeid(*skin) == typeid(T);
     }
 
     /**
@@ -76,12 +78,17 @@ TEST_CASE("the registry finds a variant, else the interface's default", "[skins]
     SkinRegistry skins;
     REQUIRE(skins.make<ButtonSkin>() == nullptr);
 
-    skins.add<ButtonSkin, DefaultButtonSkin>()
-         .add<ButtonSkin, DefaultBasicButtonSkin>("basic");
+    skins.add<ButtonSkin, ButtonSkinBase>()
+         .add<ButtonSkin, ButtonSkinBase>("primary")
+         .add<ButtonSkin, TabButtonSkin>("tab");
 
-    CHECK(is<DefaultButtonSkin>(skins.make<ButtonSkin>()));
-    CHECK(is<DefaultBasicButtonSkin>(skins.make<ButtonSkin>("basic")));
-    CHECK(is<DefaultButtonSkin>(skins.make<ButtonSkin>("unknown")));
+    CHECK(is<ButtonSkinBase>(skins.make<ButtonSkin>()));
+    CHECK(is<TabButtonSkin>(skins.make<ButtonSkin>("tab")));
+    CHECK(is<ButtonSkinBase>(skins.make<ButtonSkin>("unknown")));
+    // A variant's skins have its name as a class, the default's and the fallbacks' none
+    CHECK(skins.make<ButtonSkin>("primary")->classNames().contains("primary"));
+    CHECK(skins.make<ButtonSkin>("tab")->classNames().contains("tab"));
+    CHECK_FALSE(skins.make<ButtonSkin>("unknown")->classNames().contains("unknown"));
     CHECK(skins.make<CheckBoxSkin>() == nullptr); // Another interface: nothing registered for it
     CHECK(skins.make<ButtonSkin>() != skins.make<ButtonSkin>()); // A new one each time
 
@@ -101,21 +108,21 @@ TEST_CASE("a skin set falls back on its fallback set, never on no skin", "[skins
 
     CHECK(is<GlowButtonSkin>(manager.skin<ButtonSkin>()));
     CHECK(is<DangerButtonSkin>(manager.skin<ButtonSkin>("danger")));
-    CHECK(is<DefaultBasicButtonSkin>(manager.skin<ButtonSkin>("basic")));    // The fallback's variant
+    CHECK(is<TabButtonSkin>(manager.skin<ButtonSkin>("tab")));               // The fallback's variant
     CHECK(is<TitleBarButtonSkin>(manager.skin<ButtonSkin>("title-bar")));
     CHECK(is<GlowButtonSkin>(manager.skin<ButtonSkin>("unknown")));          // The set's default
     CHECK(is<FlatCheckBoxSkin>(manager.skin<CheckBoxSkin>()));
-    CHECK(is<DefaultSliderSkin>(manager.skin<RangeSkin>()));                 // Only in the fallback
-    CHECK(is<DefaultScrollBarSkin>(manager.skin<ScrollBarSkin>("unknown")));
-    CHECK(is<DefaultTextInputSkin>(manager.skin<TextInputSkin>()));
-    CHECK(is<DefaultTextAreaSkin>(manager.skin<TextAreaSkin>()));
-    CHECK(is<DefaultSubMenuButtonSkin>(manager.skin<MenuButtonSkin>("submenu")));
+    CHECK(is<RangeSkinBase>(manager.skin<RangeSkin>()));                 // Only in the fallback
+    CHECK(is<ScrollBarSkinBase>(manager.skin<ScrollBarSkin>("unknown")));
+    CHECK(is<TextInputSkinBase>(manager.skin<TextInputSkin>()));
+    CHECK(is<TextAreaSkinBase>(manager.skin<TextAreaSkin>()));
+    CHECK(is<MenuButtonSkinBase>(manager.skin<MenuButtonSkin>()));
 }
 
 TEST_CASE("a skin set's rules load over its fallback's", "[skins][registry]") {
     auto button = std::make_shared<Button>("Button");
     StyleManager manager;
-    manager.skinSet<DefaultSkins>();
+    manager.skinSet<PivotalSkins>();
     const Length defaultPadding = manager.computeStyle(button.get()).padding();
     REQUIRE(defaultPadding != Length{themes::oneLight.metrics.gutterCard});
     manager.skinSet<PartialSkins>();
@@ -127,7 +134,7 @@ TEST_CASE("switching skin sets hatches every component again", "[skins][switch]"
     FakeSystemWindow systemWindow(window);
     auto &app      = window->appContainer();
     auto &button   = app.add<Button>("Button");
-    auto &basic    = app.add<Button>("Basic").skin("basic");
+    auto &tab      = app.add<Button>("Tab").skin("tab");
     auto &checkBox = app.add<CheckBox>("Check");
     auto &range    = app.add<Range<float>>();
     auto &input    = app.add<TextInput>("Some text");
@@ -138,10 +145,10 @@ TEST_CASE("switching skin sets hatches every component again", "[skins][switch]"
     scroller.size(100, 100);
     systemWindow.layout();
 
-    REQUIRE(is<DefaultButtonSkin>(button.skin()));
-    REQUIRE(is<DefaultBasicButtonSkin>(basic.skin()));
-    REQUIRE(is<DefaultCheckBoxSkin>(checkBox.skin()));
-    REQUIRE(is<DefaultSliderSkin>(range.skin()));
+    REQUIRE(is<ButtonSkinBase>(button.skin()));
+    REQUIRE(is<TabButtonSkin>(tab.skin()));
+    REQUIRE(is<CheckBoxSkinBase>(checkBox.skin()));
+    REQUIRE(is<RangeSkinBase>(range.skin()));
     REQUIRE(input.textDisplay()->parent() == input.skin().get());
     const auto rangeSkin  = range.skin();
     const auto inputSkin  = input.skin();
@@ -153,7 +160,7 @@ TEST_CASE("switching skin sets hatches every component again", "[skins][switch]"
         systemWindow.layout();
         CHECK(range.skin() == rangeSkin);
         CHECK(input.skin() == inputSkin);
-        CHECK(is<DefaultButtonSkin>(button.skin()));
+        CHECK(is<ButtonSkinBase>(button.skin()));
     }
 
     SECTION("a skin set switch replaces them all") {
@@ -161,9 +168,9 @@ TEST_CASE("switching skin sets hatches every component again", "[skins][switch]"
         systemWindow.layout();
 
         CHECK(is<GlowButtonSkin>(button.skin()));
-        CHECK(is<DefaultBasicButtonSkin>(basic.skin())); // The variant, from the fallback set
+        CHECK(is<TabButtonSkin>(tab.skin())); // The variant, from the fallback set
         CHECK(is<FlatCheckBoxSkin>(checkBox.skin()));
-        CHECK(is<DefaultSliderSkin>(range.skin()));
+        CHECK(is<RangeSkinBase>(range.skin()));
         CHECK(range.skin() != rangeSkin); // Same type, new skin
         CHECK(area.skin() != areaSkin);
         CHECK(window->theme().name == themes::oneLight.name);
@@ -180,7 +187,7 @@ TEST_CASE("switching skin sets hatches every component again", "[skins][switch]"
         // Every component in the scroller too (its scroll bars)
         for (const auto &child: scroller.children()) {
             if (auto scrollBar = std::dynamic_pointer_cast<ScrollBar>(child)) {
-                CHECK(is<DefaultScrollBarSkin>(scrollBar->skin()));
+                CHECK(is<ScrollBarSkinBase>(scrollBar->skin()));
             }
         }
 
@@ -190,7 +197,7 @@ TEST_CASE("switching skin sets hatches every component again", "[skins][switch]"
         CHECK(hasPart(*glow, "label"));
     }
 
-    window->skinSet<DefaultSkins>(); // The style manager is shared with the other tests
+    window->skinSet<PivotalSkins>(); // The style manager is shared with the other tests
 }
 
 TEST_CASE("a skin built by hand stays until the skin set changes", "[skins][switch]") {
@@ -206,18 +213,18 @@ TEST_CASE("a skin built by hand stays until the skin set changes", "[skins][swit
     systemWindow.layout();
     CHECK(button.skin() == mine);
 
-    window->skinSet<DefaultSkins>();
+    window->skinSet<PivotalSkins>();
     systemWindow.layout();
-    CHECK(is<DefaultButtonSkin>(button.skin()));
+    CHECK(is<ButtonSkinBase>(button.skin()));
 }
 
 TEST_CASE("base skins create the parts contract", "[skins][parts]") {
     StyleManager manager;
-    manager.skinSet<DefaultSkins>();
+    manager.skinSet<PivotalSkins>();
 
     // Button .label, in every variant built on the base
     CHECK(hasPart(*manager.skin<ButtonSkin>(), "label"));
-    CHECK(hasPart(*manager.skin<ButtonSkin>("basic"), "label"));
+    CHECK(hasPart(*manager.skin<ButtonSkin>("tab"), "label"));
     // CheckBox .box .label
     CHECK(hasPart(*manager.skin<CheckBoxSkin>(), "box"));
     CHECK(hasPart(*manager.skin<CheckBoxSkin>(), "label"));
@@ -226,11 +233,10 @@ TEST_CASE("base skins create the parts contract", "[skins][parts]") {
     CHECK(hasPart(*manager.skin<ScrollBarSkin>(), "thumb"));
     // Range .value
     CHECK(hasPart(*manager.skin<RangeSkin>(), "value"));
-    // MenuButton .label .shortcut, and .arrow for a submenu
+    // MenuButton .label .shortcut .arrow (displayed for a submenu)
     CHECK(hasPart(*manager.skin<MenuButtonSkin>(), "label"));
     CHECK(hasPart(*manager.skin<MenuButtonSkin>(), "shortcut"));
-    CHECK_FALSE(hasPart(*manager.skin<MenuButtonSkin>(), "arrow"));
-    CHECK(hasPart(*manager.skin<MenuButtonSkin>("submenu"), "arrow"));
+    CHECK(hasPart(*manager.skin<MenuButtonSkin>(), "arrow"));
 
     // A set's own skins built on the bases get them too
     CHECK(hasPart(*std::make_shared<GlowButtonSkin>(), "label"));

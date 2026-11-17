@@ -13,6 +13,13 @@ namespace psychic_ui {
             tag("TextInputSkin");
         }
 
+        /**
+         * Show the component's text display (`TextInput::textDisplay()`), which it owns, among the skin's children;
+         * take it out again when the skin is replaced
+         */
+        void addedToComponent() override = 0;
+        void removedFromComponent() override = 0;
+
         virtual void setText(const std::string &/*text*/) {};
 
         /**

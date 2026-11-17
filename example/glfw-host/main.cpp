@@ -12,7 +12,7 @@
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/TextInput.hpp>
-#include <psychic-ui/skins/default/DefaultSkins.hpp>
+#include <psychic-ui/skins/pivotal/PivotalSkins.hpp>
 
 using namespace psychic_ui;
 
@@ -23,7 +23,7 @@ namespace {
     class HostedWindow : public Window {
     public:
         HostedWindow() : Window("Psychic UI in a GLFW host") {
-            skinSet<DefaultSkins>();
+            skinSet<PivotalSkins>();
 
             app->direction(Direction::Column)
                .alignItems(Align::Start) // "flex-start" before, which the string parser ignored (stretch)

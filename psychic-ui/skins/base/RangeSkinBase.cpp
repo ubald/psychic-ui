@@ -3,6 +3,7 @@
 namespace psychic_ui {
     RangeSkinBase::RangeSkinBase() :
         RangeSkin() {
+        tag("RangeSkinBase");
         _track = &add<Div>();
         _track->addClassName("track")
               .mouseEnabled(false);

@@ -4,6 +4,7 @@ namespace psychic_ui {
 
     TextInputSkinBase::TextInputSkinBase() :
         TextInputSkin() {
+        tag("TextInputSkinBase");
         // Out of the layout: the skin's justify and alignment put it where the text starts
         _placeholder = &add<Label>();
         _placeholder->addClassName("placeholder")
@@ -35,6 +36,11 @@ namespace psychic_ui {
 
     void TextInputSkinBase::drawChrome(SkCanvas *canvas, const paint::Box &/*box*/, SkinState /*state*/) {
         Div::draw(canvas);
+    }
+
+    TextAreaSkinBase::TextAreaSkinBase() :
+        TextAreaSkin() {
+        tag("TextAreaSkinBase");
     }
 
     void TextAreaSkinBase::addedToComponent() {

@@ -10,8 +10,9 @@ namespace psychic_ui {
     /**
      * What every menu item skin shares: the `.check` part (a check mark, drawn when the item is checked, displayed when
      * its menu keeps a check column), the `.icon` part (displayed when the item has one or its menu keeps an icon
-     * column), the `.label` part, the `.shortcut` part (not displayed when empty), then the `.indicator` part (the
-     * check mark after the label instead, in a select's list), from the item. A submenu's skin adds an `.arrow` part.
+     * column), the `.label` part, the `.shortcut` part (not displayed when empty), the `.indicator` part (the
+     * check mark after the label instead, in a select's list), then the `.arrow` part (a chevron, displayed when the
+     * item opens a submenu), from the item.
      */
     class MenuButtonSkinBase : public MenuButtonSkin {
     public:
@@ -19,10 +20,11 @@ namespace psychic_ui {
 
     protected:
         Icon  *_check{nullptr};     // The `.check` part, a child, which we own
-        Icon  *_icon{nullptr};     // The `.icon` part, a child, which we own
-        Label *_label{nullptr};    // The `.label` part, a child, which we own
-        Label *_shortcut{nullptr}; // The `.shortcut` part, a child, which we own
+        Icon  *_icon{nullptr};      // The `.icon` part, a child, which we own
+        Label *_label{nullptr};     // The `.label` part, a child, which we own
+        Label *_shortcut{nullptr};  // The `.shortcut` part, a child, which we own
         Icon  *_indicator{nullptr}; // The `.indicator` part, a child, which we own
+        Icon  *_arrow{nullptr};     // The `.arrow` part, a child, which we own
 
         void added() override;
         void itemChanged() override;

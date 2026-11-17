@@ -24,12 +24,20 @@ namespace psychic_ui {
     class SkinRegistry {
     public:
         /**
-         * Register ImplT as the `variant` of SkinT, replacing what was registered there
+         * Register ImplT as the `variant` of SkinT, replacing what was registered there. The skins it makes have the
+         * variant's name as a class, so one skin serves several variants that rules tell apart
+         * (`Button ButtonSkinBase.primary`).
          */
         template<class SkinT, class ImplT>
         SkinRegistry &add(std::string_view variant = "") {
             static_assert(std::is_base_of_v<SkinT, ImplT>, "ImplT must implement SkinT");
-            _makers[Key{typeid(SkinT), std::string{variant}}] = [] { return std::make_shared<ImplT>(); };
+            _makers[Key{typeid(SkinT), std::string{variant}}] = [name = std::string{variant}] {
+                auto skin = std::make_shared<ImplT>();
+                if (!name.empty()) {
+                    skin->addClassName(name);
+                }
+                return skin;
+            };
             return *this;
         }
 

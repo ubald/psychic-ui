@@ -1,5 +1,6 @@
 #include <memory>
 #include <string>
+#include <typeinfo>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/AppShell.hpp>
 #include <psychic-ui/components/Button.hpp>
@@ -8,16 +9,17 @@
 #include <psychic-ui/components/Range.hpp>
 #include <psychic-ui/components/Switch.hpp>
 #include <psychic-ui/components/TextInput.hpp>
-#include <psychic-ui/skins/default/DefaultButtonSkin.hpp>
-#include <psychic-ui/skins/default/DefaultCheckBoxSkin.hpp>
-#include <psychic-ui/skins/default/DefaultInputSkins.hpp>
-#include <psychic-ui/skins/default/DefaultMenuButtonSkin.hpp>
-#include <psychic-ui/skins/default/DefaultScrollBarSkin.hpp>
-#include <psychic-ui/skins/default/DefaultSkins.hpp>
-#include <psychic-ui/skins/default/DefaultSliderSkin.hpp>
-#include <psychic-ui/skins/default/DefaultTextInputSkin.hpp>
+#include <psychic-ui/skins/base/ButtonSkinBase.hpp>
+#include <psychic-ui/skins/base/CheckBoxSkinBase.hpp>
+#include <psychic-ui/skins/base/ColorSwatchesSkinBase.hpp>
+#include <psychic-ui/skins/base/MenuButtonSkinBase.hpp>
+#include <psychic-ui/skins/base/RangeSkinBase.hpp>
+#include <psychic-ui/skins/base/ScrollBarSkinBase.hpp>
+#include <psychic-ui/skins/base/SwitchSkinBase.hpp>
+#include <psychic-ui/skins/base/TextFieldSkinBase.hpp>
 #include <psychic-ui/skins/desk/DeskSkins.hpp>
 #include <psychic-ui/skins/float/FloatSkins.hpp>
+#include <psychic-ui/skins/pivotal/PivotalSkins.hpp>
 #include <psychic-ui/themes/desk.hpp>
 #include <psychic-ui/themes/float.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
@@ -27,9 +29,12 @@ using namespace psychic_ui;
 using namespace psychic_ui_tests;
 
 namespace {
+    /**
+     * Whether the skin is a T, not a subclass of it
+     */
     template<class T>
     bool is(const std::shared_ptr<internal::SkinBase> &skin) {
-        return std::dynamic_pointer_cast<T>(skin) != nullptr;
+        return skin && typeid(*skin) == typeid(T);
     }
 
     /**
@@ -58,7 +63,7 @@ namespace {
         ~Fixture() {
             // The style manager is shared with the other tests
             window->handleInputModeChange(InputMode::Pointer);
-            window->skinSet<DefaultSkins>();
+            window->skinSet<PivotalSkins>();
         }
 
         void layout() { systemWindow.layout(); }
@@ -144,15 +149,16 @@ TEST_CASE("Desk skins: its themes are Pivotal's colors at desk sizes", "[skins][
 TEST_CASE("Desk skins: every skin is the default set's", "[skins][desk][registry]") {
     StyleManager manager;
     manager.skinSet<DeskSkins>();
-    CHECK(is<DefaultSliderSkin>(manager.skin<RangeSkin>()));
-    CHECK(is<DefaultButtonSkin>(manager.skin<ButtonSkin>()));
-    CHECK(is<DefaultPrimaryButtonSkin>(manager.skin<ButtonSkin>("primary")));
-    CHECK(is<DefaultCheckBoxSkin>(manager.skin<CheckBoxSkin>()));
-    CHECK(is<DefaultScrollBarSkin>(manager.skin<ScrollBarSkin>()));
-    CHECK(is<DefaultTextInputSkin>(manager.skin<TextInputSkin>()));
-    CHECK(is<DefaultSubMenuButtonSkin>(manager.skin<MenuButtonSkin>("submenu")));
-    CHECK(is<DefaultSwitchSkin>(manager.skin<SwitchSkin>()));
-    CHECK(is<DefaultColorSwatchesSkin>(manager.skin<ColorSwatchesSkin>()));
+    CHECK(is<RangeSkinBase>(manager.skin<RangeSkin>()));
+    CHECK(is<ButtonSkinBase>(manager.skin<ButtonSkin>()));
+    CHECK(is<ButtonSkinBase>(manager.skin<ButtonSkin>("primary")));
+    CHECK(manager.skin<ButtonSkin>("primary")->classNames().contains("primary"));
+    CHECK(is<CheckBoxSkinBase>(manager.skin<CheckBoxSkin>()));
+    CHECK(is<ScrollBarSkinBase>(manager.skin<ScrollBarSkin>()));
+    CHECK(is<TextInputSkinBase>(manager.skin<TextInputSkin>()));
+    CHECK(is<MenuButtonSkinBase>(manager.skin<MenuButtonSkin>()));
+    CHECK(is<SwitchSkinBase>(manager.skin<SwitchSkin>()));
+    CHECK(is<ColorSwatchesSkinBase>(manager.skin<ColorSwatchesSkin>()));
 }
 
 TEST_CASE("Desk skins: its rules go over the default set's", "[skins][desk]") {
@@ -177,7 +183,7 @@ TEST_CASE("Desk skins: its rules go over the default set's", "[skins][desk]") {
     CHECK(shell.sidebar().computedStyle().backgroundColor() == p.surface);
 
     // The default set, for comparison
-    f.window->skinSet<DefaultSkins>();
+    f.window->skinSet<PivotalSkins>();
     f.layout();
     CHECK(button.getHeight() == 28);
     CHECK(button.computedStyle().borderRadius() == 999);
@@ -187,7 +193,7 @@ TEST_CASE("Desk skins: the slider is a value field, the value inside it", "[skin
     Fixture f;
     auto &range = f.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.25f, nullptr).width(200);
     f.layout();
-    REQUIRE(is<DefaultSliderSkin>(range.skin()));
+    REQUIRE(is<RangeSkinBase>(range.skin()));
     Div *track = part(*range.skin(), "track");
     Div *fill  = part(*range.skin(), "fill");
     Div *thumb = part(*range.skin(), "thumb");

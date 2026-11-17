@@ -6,7 +6,9 @@
 
 namespace psychic_ui {
     SegmentedControlSkinBase::SegmentedControlSkinBase() :
-        SegmentedControlSkin() {}
+        SegmentedControlSkin() {
+        tag("SegmentedControlSkinBase");
+    }
 
     void SegmentedControlSkinBase::setSegments(const std::vector<Segment> &segments) {
         for (Div *segment: _segments) {

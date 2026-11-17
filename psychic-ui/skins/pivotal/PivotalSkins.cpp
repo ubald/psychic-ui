@@ -5,17 +5,19 @@
 #include "psychic-ui/themes/pivotal.hpp"
 #include "psychic-ui/themes/psychic.hpp"
 #include "psychic-ui/themes/ubuntu-type.hpp"
-#include "DefaultSkins.hpp"
-#include "DefaultBasicButtonSkin.hpp"
-#include "DefaultButtonSkin.hpp"
-#include "DefaultAvatarSkin.hpp"
-#include "DefaultCheckBoxSkin.hpp"
-#include "DefaultInputSkins.hpp"
-#include "DefaultMenuButtonSkin.hpp"
-#include "DefaultScrollBarSkin.hpp"
-#include "DefaultSliderSkin.hpp"
-#include "DefaultTextAreaSkin.hpp"
-#include "DefaultTextInputSkin.hpp"
+#include "psychic-ui/skins/base/ColorSwatchesSkinBase.hpp"
+#include "psychic-ui/skins/base/CheckBoxSkinBase.hpp"
+#include "psychic-ui/skins/base/MenuButtonSkinBase.hpp"
+#include "psychic-ui/skins/base/NumberStepperSkinBase.hpp"
+#include "psychic-ui/skins/base/RangeSkinBase.hpp"
+#include "psychic-ui/skins/base/ScrollBarSkinBase.hpp"
+#include "psychic-ui/skins/base/SearchFieldSkinBase.hpp"
+#include "psychic-ui/skins/base/SegmentedControlSkinBase.hpp"
+#include "psychic-ui/skins/base/SwitchSkinBase.hpp"
+#include "psychic-ui/skins/base/TextFieldSkinBase.hpp"
+#include "PivotalSkins.hpp"
+#include "PivotalAvatarSkin.hpp"
+#include "TabButtonSkin.hpp"
 #include "TitleBarButtonSkin.hpp"
 
 namespace psychic_ui {
@@ -65,52 +67,50 @@ namespace psychic_ui {
         }
     }
 
-    std::string_view DefaultSkins::name() const {
+    std::string_view PivotalSkins::name() const {
         return "Default";
     }
 
-    const Theme &DefaultSkins::defaultTheme() const {
+    const Theme &PivotalSkins::defaultTheme() const {
         return themes::pivotalDark;
     }
 
-    const Theme &DefaultSkins::lightTheme() const {
+    const Theme &PivotalSkins::lightTheme() const {
         return themes::pivotalLight;
     }
 
-    std::vector<const Theme *> DefaultSkins::themes() const {
+    std::vector<const Theme *> PivotalSkins::themes() const {
         return {&themes::pivotalDark, &themes::pivotalLight, &themes::oneDark, &themes::oneLight, &themes::psychic};
     }
 
-    void DefaultSkins::registerSkins(SkinRegistry &skins) const {
-        skins.add<ButtonSkin, DefaultButtonSkin>()
-             .add<ButtonSkin, DefaultButtonSkin>("secondary")
-             .add<ButtonSkin, DefaultPrimaryButtonSkin>("primary")
-             .add<ButtonSkin, DefaultGhostButtonSkin>("ghost")
-             .add<ButtonSkin, DefaultQuietButtonSkin>("quiet")
-             .add<ButtonSkin, DefaultDangerButtonSkin>("danger")
-             .add<ButtonSkin, DefaultTabButtonSkin>("tab")
-             .add<ButtonSkin, DefaultBasicButtonSkin>("basic")
+    void PivotalSkins::registerSkins(SkinRegistry &skins) const {
+        // The bases draw from the rules; the variants are classes on them (`Button ButtonSkinBase.primary`)
+        skins.add<ButtonSkin, ButtonSkinBase>()
+             .add<ButtonSkin, ButtonSkinBase>("primary")
+             .add<ButtonSkin, ButtonSkinBase>("ghost")
+             .add<ButtonSkin, ButtonSkinBase>("quiet")
+             .add<ButtonSkin, ButtonSkinBase>("danger")
+             .add<ButtonSkin, TabButtonSkin>("tab")
              .add<ButtonSkin, TitleBarButtonSkin>("title-bar")
-             .add<CheckBoxSkin, DefaultCheckBoxSkin>()
-             .add<RangeSkin, DefaultSliderSkin>()
-             .add<ScrollBarSkin, DefaultScrollBarSkin>()
-             .add<TextInputSkin, DefaultTextInputSkin>()
-             .add<TextAreaSkin, DefaultTextAreaSkin>()
-             .add<MenuButtonSkin, DefaultMenuButtonSkin>()
-             .add<MenuButtonSkin, DefaultSubMenuButtonSkin>("submenu");
+             .add<CheckBoxSkin, CheckBoxSkinBase>()
+             .add<RangeSkin, RangeSkinBase>()
+             .add<ScrollBarSkin, ScrollBarSkinBase>()
+             .add<TextInputSkin, TextInputSkinBase>()
+             .add<TextAreaSkin, TextAreaSkinBase>()
+             .add<MenuButtonSkin, MenuButtonSkinBase>();
 
         // Lists
-        skins.add<AvatarSkin, DefaultAvatarSkin>();
+        skins.add<AvatarSkin, PivotalAvatarSkin>();
 
         // Inputs
-        skins.add<SwitchSkin, DefaultSwitchSkin>()
-             .add<SegmentedControlSkin, DefaultSegmentedControlSkin>()
-             .add<ColorSwatchesSkin, DefaultColorSwatchesSkin>()
-             .add<NumberStepperSkin, DefaultNumberStepperSkin>()
-             .add<SearchFieldSkin, DefaultSearchFieldSkin>();
+        skins.add<SwitchSkin, SwitchSkinBase>()
+             .add<SegmentedControlSkin, SegmentedControlSkinBase>()
+             .add<ColorSwatchesSkin, ColorSwatchesSkinBase>()
+             .add<NumberStepperSkin, NumberStepperSkinBase>()
+             .add<SearchFieldSkin, SearchFieldSkinBase>();
     }
 
-    void DefaultSkins::load(StyleManager *manager) {
+    void PivotalSkins::load(StyleManager *manager) {
         const Theme      &theme = manager->theme();
         const Palette    &p     = theme.palette;
         const Typography &t     = theme.type;
@@ -266,33 +266,33 @@ namespace psychic_ui {
         rule("Button.icon-button:active").color(p.text).backgroundColor(p.raised);
 
         // The variants, on the skin (`button.skin("primary")`)
-        rule("Button DefaultButtonSkin.primary")
+        rule("Button ButtonSkinBase.primary")
             .color(p.onAccent)
             .backgroundColor(p.accent)
             .borderColor(transparent);
-        rule("Button:hover DefaultButtonSkin.primary").backgroundColor(p.accentHover);
-        rule("Button:active DefaultButtonSkin.primary").backgroundColor(p.accentHover);
+        rule("Button:hover ButtonSkinBase.primary").backgroundColor(p.accentHover);
+        rule("Button:active ButtonSkinBase.primary").backgroundColor(p.accentHover);
 
-        rule("Button DefaultButtonSkin.ghost")
+        rule("Button ButtonSkinBase.ghost")
             .color(p.textSecondary)
             .backgroundColor(transparent)
             .borderColor(transparent);
-        rule("Button:hover DefaultButtonSkin.ghost").backgroundColor(p.raised);
-        rule("Button:active DefaultButtonSkin.ghost").color(p.text).backgroundColor(p.raised);
+        rule("Button:hover ButtonSkinBase.ghost").backgroundColor(p.raised);
+        rule("Button:active ButtonSkinBase.ghost").color(p.text).backgroundColor(p.raised);
 
-        rule("Button DefaultButtonSkin.quiet")
+        rule("Button ButtonSkinBase.quiet")
             .color(p.textMuted)
             .backgroundColor(transparent)
             .borderColor(transparent);
-        rule("Button:hover DefaultButtonSkin.quiet").color(p.text).backgroundColor(p.raised);
-        rule("Button:active DefaultButtonSkin.quiet").color(p.text).backgroundColor(p.raised);
+        rule("Button:hover ButtonSkinBase.quiet").color(p.text).backgroundColor(p.raised);
+        rule("Button:active ButtonSkinBase.quiet").color(p.text).backgroundColor(p.raised);
 
-        rule("Button DefaultButtonSkin.danger")
+        rule("Button ButtonSkinBase.danger")
             .color(p.dangerText)
             .backgroundColor(transparent)
             .borderColor(p.danger.withAlpha(0x4D)); // 30%
-        rule("Button:hover DefaultButtonSkin.danger").backgroundColor(p.danger.withAlpha(0x14)); // 8%
-        rule("Button:active DefaultButtonSkin.danger").backgroundColor(p.danger.withAlpha(0x14));
+        rule("Button:hover ButtonSkinBase.danger").backgroundColor(p.danger.withAlpha(0x14)); // 8%
+        rule("Button:active ButtonSkinBase.danger").backgroundColor(p.danger.withAlpha(0x14));
 
         // endregion
 
@@ -328,13 +328,13 @@ namespace psychic_ui {
         // region Slider
 
         // A thin track filled with the accent, a white thumb, the value after it
-        rule("Range DefaultSliderSkin.horizontal")
+        rule("Range RangeSkinBase.horizontal")
             .direction(Direction::Row)
             .alignItems(Align::Center)
             .gap(m.space(2.5f))
             .height(s.controlSm);
 
-        rule("Range DefaultSliderSkin.vertical")
+        rule("Range RangeSkinBase.vertical")
             .direction(Direction::Column)
             .alignItems(Align::Center)
             .width(s.controlSm);
@@ -343,8 +343,8 @@ namespace psychic_ui {
             .grow(1)
             .borderRadius(r.button)
             .backgroundColor(p.lineStrong);
-        rule("Range DefaultSliderSkin.horizontal .track").height(4);
-        rule("Range DefaultSliderSkin.vertical .track").width(4);
+        rule("Range RangeSkinBase.horizontal .track").height(4);
+        rule("Range RangeSkinBase.vertical .track").width(4);
 
         rule("Range .fill")
             .borderRadius(r.button)
@@ -368,7 +368,7 @@ namespace psychic_ui {
             .shrink(0)
             .textAlign(TextAlign::End)
             .color(p.text);
-        rule("Range DefaultSliderSkin.vertical .value").display(Display::None); // No room
+        rule("Range RangeSkinBase.vertical .value").display(Display::None); // No room
 
         rule("Range:disabled").opacity(0.5f);
 
@@ -656,7 +656,6 @@ namespace psychic_ui {
             .color(p.textSecondary)
             .backgroundColor(transparent);
 
-        rule("Menu MenuButton.submenu").skin("submenu");
         rule("Menu MenuButton .icon").color(p.textMuted).transition(P::color, quick);
         rule("Menu MenuButton .label").grow(1);
 
@@ -937,7 +936,7 @@ namespace psychic_ui {
             .paddingHorizontal(m.space(2));
 
         // The current tool (a toggled button), like the primary action, in the accent
-        rule("ToolBar Button:active DefaultButtonSkin.quiet")
+        rule("ToolBar Button:active ButtonSkinBase.quiet")
             .color(p.onAccent)
             .backgroundColor(p.accent);
 

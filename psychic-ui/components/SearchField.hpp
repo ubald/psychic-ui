@@ -16,6 +16,13 @@ namespace psychic_ui {
         SearchFieldSkin() : Skin<SearchField>() {
             tag("SearchFieldSkin");
         }
+
+        /**
+         * Show the component's parts, which it owns (`input()`, `clearButton()`), among the skin's children; take
+         * them out again when the skin is replaced
+         */
+        void addedToComponent() override = 0;
+        void removedFromComponent() override = 0;
     };
 
     /**

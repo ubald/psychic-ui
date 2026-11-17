@@ -4,7 +4,7 @@
 #include "include/core/SkSurface.h"
 #include <psychic-ui/SystemWindow.hpp>
 #include <psychic-ui/Window.hpp>
-#include <psychic-ui/skins/default/DefaultSkins.hpp>
+#include <psychic-ui/skins/pivotal/PivotalSkins.hpp>
 
 namespace psychic_ui_tests {
     using namespace psychic_ui;
@@ -17,7 +17,7 @@ namespace psychic_ui_tests {
         std::vector<std::string> dropped{};
 
         TestWindow() : Window("Test") {
-            skinSet<DefaultSkins>();
+            skinSet<PivotalSkins>();
             reducedMotion(true);
             // Context menus on the right button's press on every platform (Windows defaults to its release): tests of the
             // release turn it back on

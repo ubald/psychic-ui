@@ -67,7 +67,7 @@ namespace {
     }
 }
 
-TEST_CASE("Default skins: the slider's track, fill and thumb follow the value", "[skins][default][range]") {
+TEST_CASE("Pivotal skins: the slider's track, fill and thumb follow the value", "[skins][pivotal][range]") {
     Fixture f;
     auto &range = f.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.25f, nullptr).width(300);
     f.layout();
@@ -107,7 +107,7 @@ TEST_CASE("Default skins: the slider's track, fill and thumb follow the value", 
     CHECK(range.value() == Catch::Approx(0.5f).margin(0.01f));
 }
 
-TEST_CASE("Default skins: a vertical slider fills from the bottom", "[skins][default][range]") {
+TEST_CASE("Pivotal skins: a vertical slider fills from the bottom", "[skins][pivotal][range]") {
     Fixture f;
     auto &range = f.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.25f, nullptr)
                    .orientation(Orientation::Vertical)
@@ -123,7 +123,7 @@ TEST_CASE("Default skins: a vertical slider fills from the bottom", "[skins][def
     CHECK(fill->y() + fill->getHeight() == Catch::Approx(track->getHeight()).margin(0.5f));
 }
 
-TEST_CASE("Default skins: the keyboard's focus shows the focus ring, a click's doesn't", "[skins][default][focus]") {
+TEST_CASE("Pivotal skins: the keyboard's focus shows the focus ring, a click's doesn't", "[skins][pivotal][focus]") {
     Fixture f;
     auto &first  = f.window->appContainer().add<Button>("First");
     auto &check  = f.window->appContainer().add<CheckBox>("Check");
@@ -183,7 +183,7 @@ TEST_CASE("Default skins: the keyboard's focus shows the focus ring, a click's d
     CHECK(first.computedStyle().outlineWidth() == 0.0f);
 }
 
-TEST_CASE("Default skins: a text field shows its focus with the accent's border", "[skins][default][focus]") {
+TEST_CASE("Pivotal skins: a text field shows its focus with the accent's border", "[skins][pivotal][focus]") {
     Fixture f;
     auto &input = f.window->appContainer().add<TextInput>("Text");
     f.layout();
@@ -194,7 +194,7 @@ TEST_CASE("Default skins: a text field shows its focus with the accent's border"
     CHECK(input.computedStyle().outlineWidth() == 0.0f);
 }
 
-TEST_CASE("Default skins: buttons are pills, their variants skins", "[skins][default][button]") {
+TEST_CASE("Pivotal skins: buttons are pills, their variants skins", "[skins][pivotal][button]") {
     Fixture f;
     auto &secondary = f.window->appContainer().add<Button>("Secondary");
     auto &primary   = f.window->appContainer().add<Button>("Primary").skin("primary");
@@ -241,7 +241,7 @@ TEST_CASE("Default skins: buttons are pills, their variants skins", "[skins][def
     CHECK(part(*iconButton.skin(), "label")->computedStyle().display() == Display::None);
 }
 
-TEST_CASE("Default skins: a checked check box fills its box with the accent", "[skins][default][checkbox]") {
+TEST_CASE("Pivotal skins: a checked check box fills its box with the accent", "[skins][pivotal][checkbox]") {
     Fixture f;
     auto &check = f.window->appContainer().add<CheckBox>("Check");
     f.layout();
@@ -255,7 +255,7 @@ TEST_CASE("Default skins: a checked check box fills its box with the accent", "[
     CHECK(box->computedStyle().backgroundColor() == f.theme.palette.accent);
 }
 
-TEST_CASE("Default skins: menus float on the theme's two-layer shadow", "[skins][default][menu]") {
+TEST_CASE("Pivotal skins: menus float on the theme's two-layer shadow", "[skins][pivotal][menu]") {
     Fixture f;
     f.window->openMenu({Menu::item("Copy", []() {}, "Ctrl+C", "copy")}, 10, 10);
     f.layout();
@@ -269,7 +269,7 @@ TEST_CASE("Default skins: menus float on the theme's two-layer shadow", "[skins]
     CHECK(menu.shadow2Blur() == f.theme.elevation.overlayContact.blur);
 }
 
-TEST_CASE("Default skins: the window controls are grey until the pointer is over them", "[skins][default][window-controls]") {
+TEST_CASE("Pivotal skins: the window controls are grey until the pointer is over them", "[skins][pivotal][window-controls]") {
     Fixture f;
     auto &controls = f.window->appContainer().add<WindowControls>();
     f.layout();
@@ -311,7 +311,7 @@ TEST_CASE("Default skins: the window controls are grey until the pointer is over
     CHECK(colors() == grey);
 }
 
-TEST_CASE("Default skins: a menu's labels line up when some rows have an icon", "[skins][default][menu]") {
+TEST_CASE("Pivotal skins: a menu's labels line up when some rows have an icon", "[skins][pivotal][menu]") {
     Fixture f;
 
     const auto labelsLeft = [&](const std::vector<std::shared_ptr<MenuItem>> &items) {
@@ -348,9 +348,18 @@ TEST_CASE("Default skins: a menu's labels line up when some rows have an icon", 
     CHECK(plain[0] == plain[1]);
     CHECK(plain[0] == f.theme.metrics.space(2));
     CHECK(mixed[0] == plain[0] + f.theme.metrics.iconMd + f.theme.metrics.space(2));
+
+    // Only a submenu's row shows its arrow
+    f.window->openMenu({Menu::item("Copy", []() {}), Menu::item("More", {Menu::item("Nothing", []() {})})}, 10, 10);
+    f.layout();
+    Div &menu = *f.window->overlay().children().front();
+    REQUIRE(menu.children().size() == 2);
+    CHECK(part(*menu.children()[0], "arrow")->computedStyle().display() == Display::None);
+    CHECK(part(*menu.children()[1], "arrow")->computedStyle().display() == Display::Flex);
+    f.window->closeMenu();
 }
 
-TEST_CASE("Default skins: a tool bar's current tool is in the accent", "[skins][default][toolbar]") {
+TEST_CASE("Pivotal skins: a tool bar's current tool is in the accent", "[skins][pivotal][toolbar]") {
     Fixture f;
     auto &bar     = f.window->appContainer().add<ToolBar>();
     auto &current = bar.add<Button>().icon("plus").toggle(true).autoToggle(false).selected(true);

@@ -3,6 +3,7 @@
 namespace psychic_ui {
     ButtonSkinBase::ButtonSkinBase() :
         ButtonSkin() {
+        tag("ButtonSkinBase");
         _icon = &add<Icon>();
         _icon->addClassName("icon")
              .display(Display::None);

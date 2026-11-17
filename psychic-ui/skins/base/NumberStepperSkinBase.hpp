@@ -12,6 +12,9 @@ namespace psychic_ui {
      * (`NumberStepper .value`) and the buttons' looks (`NumberStepper .decrement:hover`, `:disabled`).
      */
     class NumberStepperSkinBase : public NumberStepperSkin {
+    public:
+        NumberStepperSkinBase();
+
     protected:
         void addedToComponent() override;
         void removedFromComponent() override;

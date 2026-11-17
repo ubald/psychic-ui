@@ -33,7 +33,7 @@ namespace {
         static std::shared_ptr<TestWindow> make() {
             auto window = std::make_shared<TestWindow>();
             window->setStyleManager(std::make_shared<StyleManager>());
-            window->skinSet<DefaultSkins>();
+            window->skinSet<PivotalSkins>();
             window->loadStyleSheet<DemoStyleSheet>();
             return window;
         }

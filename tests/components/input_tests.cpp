@@ -1,5 +1,6 @@
 #include <memory>
 #include <string>
+#include <typeinfo>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <unicode/unistr.h>
@@ -10,7 +11,11 @@
 #include <psychic-ui/components/SegmentedControl.hpp>
 #include <psychic-ui/components/Switch.hpp>
 #include <psychic-ui/components/TextInput.hpp>
-#include <psychic-ui/skins/default/DefaultInputSkins.hpp>
+#include <psychic-ui/skins/base/ColorSwatchesSkinBase.hpp>
+#include <psychic-ui/skins/base/NumberStepperSkinBase.hpp>
+#include <psychic-ui/skins/base/SearchFieldSkinBase.hpp>
+#include <psychic-ui/skins/base/SegmentedControlSkinBase.hpp>
+#include <psychic-ui/skins/base/SwitchSkinBase.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include "../backends/fake_system_window.hpp"
 
@@ -18,9 +23,12 @@ using namespace psychic_ui;
 using namespace psychic_ui_tests;
 
 namespace {
+    /**
+     * Whether the skin is a T, not a subclass of it
+     */
     template<class T>
     bool is(const std::shared_ptr<internal::SkinBase> &skin) {
-        return std::dynamic_pointer_cast<T>(skin) != nullptr;
+        return skin && typeid(*skin) == typeid(T);
     }
 
     struct Inputs {
@@ -170,7 +178,7 @@ TEST_CASE("SearchField: icon, text, and a clear button while not empty", "[compo
     search.onSubmit([&](const std::string &text) { submits.push_back(text); });
     f.layout();
 
-    REQUIRE(is<DefaultSearchFieldSkin>(search.skin()));
+    REQUIRE(is<SearchFieldSkinBase>(search.skin()));
     Div *icon  = part<Icon>(search, "icon");
     Div *clear = search.clearButton().get();
     REQUIRE(icon);
@@ -234,7 +242,7 @@ TEST_CASE("Switch: a click, Space or Enter flips it", "[components][inputs][swit
     toggle.onChange([&](bool on) { changes.push_back(on); });
     f.layout();
 
-    REQUIRE(is<DefaultSwitchSkin>(toggle.skin()));
+    REQUIRE(is<SwitchSkinBase>(toggle.skin()));
     Div *track = part<Div>(toggle, "track");
     Div *thumb = part<Div>(toggle, "thumb");
     REQUIRE(track);
@@ -321,7 +329,7 @@ TEST_CASE("SegmentedControl: one segment selected, by click or arrow", "[compone
     control.onChange([&](int index) { changes.push_back(index); });
     f.layout();
 
-    REQUIRE(is<DefaultSegmentedControlSkin>(control.skin()));
+    REQUIRE(is<SegmentedControlSkinBase>(control.skin()));
     const auto segments = parts(control, "segment");
     REQUIRE(segments.size() == 3);
     CHECK(control.selected() == 0);
@@ -374,7 +382,7 @@ TEST_CASE("NumberStepper: the buttons step it within its range", "[components][i
     stepper.onChange([&](double value) { changes.push_back(value); });
     f.layout();
 
-    REQUIRE(is<DefaultNumberStepperSkin>(stepper.skin()));
+    REQUIRE(is<NumberStepperSkinBase>(stepper.skin()));
     Div &minus = *stepper.decrementButton();
     Div &plus  = *stepper.incrementButton();
     CHECK(stepper.getWidth() == f.theme.metrics.pointer.controlMd * 4);
@@ -476,7 +484,7 @@ TEST_CASE("ColorSwatches: a chip picked by a press, or by the keyboard's own foc
     swatches.onChange([&](Color color) { changes.push_back(color); });
     f.layout();
 
-    REQUIRE(is<DefaultColorSwatchesSkin>(swatches.skin()));
+    REQUIRE(is<ColorSwatchesSkinBase>(swatches.skin()));
     const auto chips = parts(swatches, "swatch");
     REQUIRE(chips.size() == 3);
     CHECK(swatches.selected() == -1);

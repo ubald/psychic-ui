@@ -16,7 +16,7 @@
 #include <psychic-ui/components/Kbd.hpp>
 #include <psychic-ui/components/List.hpp>
 #include <psychic-ui/components/Tree.hpp>
-#include <psychic-ui/skins/default/DefaultAvatarSkin.hpp>
+#include <psychic-ui/skins/pivotal/PivotalAvatarSkin.hpp>
 #include <psychic-ui/themes/palette.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include "../backends/fake_system_window.hpp"
@@ -581,24 +581,24 @@ TEST_CASE("Avatar: initials, sizes, a status and a tint", "[components][avatar]"
     CHECK(avatar.getWidth() == 32);
     CHECK(avatar.getHeight() == 32);
     REQUIRE(avatar.skin());
-    auto skin = std::dynamic_pointer_cast<DefaultAvatarSkin>(avatar.skin());
+    auto skin = std::dynamic_pointer_cast<PivotalAvatarSkin>(avatar.skin());
     REQUIRE(skin);
 
     // The tint: the same name gets the same, one of the swatches' hues; names spread over many of them
-    const Color tint = DefaultAvatarSkin::tint("Ada Lovelace");
-    CHECK(tint == DefaultAvatarSkin::tint("Ada Lovelace"));
+    const Color tint = PivotalAvatarSkin::tint("Ada Lovelace");
+    CHECK(tint == PivotalAvatarSkin::tint("Ada Lovelace"));
     const auto hues = std::span(palette::pivotalSwatches).first(palette::pivotalHueCount);
     CHECK(std::ranges::find(hues, tint) != hues.end());
     std::set<std::uint32_t> picked{};
     for (const char *name: {"Ada Lovelace", "Grace Hopper", "Alan Turing", "Edsger Dijkstra", "Barbara Liskov",
                             "Donald Knuth", "Margaret Hamilton", "Ken Thompson", "Radia Perlman", "John McCarthy"}) {
-        picked.insert(DefaultAvatarSkin::tint(name).argb());
+        picked.insert(PivotalAvatarSkin::tint(name).argb());
     }
     CHECK(picked.size() >= 6);
 
     // The initials contrast with every hue: at least 3:1 (WCAG's large text), white or near black
     for (const Color hue: hues) {
-        const Color text = DefaultAvatarSkin::initialsOn(hue);
+        const Color text = PivotalAvatarSkin::initialsOn(hue);
         const auto  lum  = [](const Color c) {
             const auto ch = [](std::uint32_t v) {
                 const double x = static_cast<double>(v & 0xFFu) / 255.0;
@@ -610,13 +610,13 @@ TEST_CASE("Avatar: initials, sizes, a status and a tint", "[components][avatar]"
         const double b = lum(text);
         CHECK((std::max(a, b) + 0.05) / (std::min(a, b) + 0.05) >= 3.0);
     }
-    CHECK(DefaultAvatarSkin::initialsOn(rgb(0xF2C94C)) != rgb(0xFFFFFF)); // Yellow: dark initials
-    CHECK(DefaultAvatarSkin::initialsOn(rgb(0x5E6AD2)) == rgb(0xFFFFFF)); // Indigo: white
+    CHECK(PivotalAvatarSkin::initialsOn(rgb(0xF2C94C)) != rgb(0xFFFFFF)); // Yellow: dark initials
+    CHECK(PivotalAvatarSkin::initialsOn(rgb(0x5E6AD2)) == rgb(0xFFFFFF)); // Indigo: white
 
     avatar.colorful(true);
     f.layout();
     Div *initials = skin->children()[0].get();
-    CHECK(initials->computedStyle().color() == DefaultAvatarSkin::initialsOn(tint));
+    CHECK(initials->computedStyle().color() == PivotalAvatarSkin::initialsOn(tint));
     avatar.colorful(false);
     f.layout();
     CHECK(initials->computedStyle().color() == f.theme.palette.textSecondary);

@@ -282,34 +282,18 @@ set(SOURCE_FILES
     psychic-ui/skins/base/SegmentedControlSkinBase.hpp
     psychic-ui/skins/base/SwitchSkinBase.cpp
     psychic-ui/skins/base/SwitchSkinBase.hpp
-    psychic-ui/skins/default/DefaultAvatarSkin.cpp
-    psychic-ui/skins/default/DefaultAvatarSkin.hpp
-    psychic-ui/skins/default/DefaultBasicButtonSkin.cpp
-    psychic-ui/skins/default/DefaultBasicButtonSkin.hpp
-    psychic-ui/skins/default/DefaultButtonSkin.cpp
-    psychic-ui/skins/default/DefaultButtonSkin.hpp
-    psychic-ui/skins/default/DefaultCheckBoxSkin.cpp
-    psychic-ui/skins/default/DefaultCheckBoxSkin.hpp
-    psychic-ui/skins/default/DefaultMenuButtonSkin.cpp
-    psychic-ui/skins/default/DefaultMenuButtonSkin.hpp
-    psychic-ui/skins/default/DefaultScrollBarSkin.cpp
-    psychic-ui/skins/default/DefaultScrollBarSkin.hpp
-    psychic-ui/skins/default/DefaultSkins.cpp
-    psychic-ui/skins/default/DefaultSkins.hpp
-    psychic-ui/skins/default/DefaultSliderSkin.cpp
-    psychic-ui/skins/default/DefaultSliderSkin.hpp
-    psychic-ui/skins/default/DefaultTextAreaSkin.cpp
-    psychic-ui/skins/default/DefaultTextAreaSkin.hpp
-    psychic-ui/skins/default/DefaultTextInputSkin.cpp
-    psychic-ui/skins/default/DefaultTextInputSkin.hpp
-    psychic-ui/skins/default/TitleBarButtonSkin.cpp
-    psychic-ui/skins/default/TitleBarButtonSkin.hpp
-    psychic-ui/skins/default/DefaultInputSkins.cpp
-    psychic-ui/skins/default/DefaultInputSkins.hpp
     psychic-ui/skins/desk/DeskSkins.cpp
     psychic-ui/skins/desk/DeskSkins.hpp
     psychic-ui/skins/float/FloatSkins.cpp
     psychic-ui/skins/float/FloatSkins.hpp
+    psychic-ui/skins/pivotal/PivotalAvatarSkin.cpp
+    psychic-ui/skins/pivotal/PivotalAvatarSkin.hpp
+    psychic-ui/skins/pivotal/PivotalSkins.cpp
+    psychic-ui/skins/pivotal/PivotalSkins.hpp
+    psychic-ui/skins/pivotal/TabButtonSkin.cpp
+    psychic-ui/skins/pivotal/TabButtonSkin.hpp
+    psychic-ui/skins/pivotal/TitleBarButtonSkin.cpp
+    psychic-ui/skins/pivotal/TitleBarButtonSkin.hpp
     psychic-ui/style/Properties.hpp
     psychic-ui/style/Style.cpp
     psychic-ui/style/Style.hpp

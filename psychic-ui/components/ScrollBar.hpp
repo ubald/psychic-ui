@@ -13,7 +13,7 @@ namespace psychic_ui {
             tag("ScrollBarSkin");
         }
 
-        virtual void updateScrollBar(bool enabled, float scrollPosition, float contentRatio) = 0;
+        virtual void updateScrollBar(bool /*enabled*/, float /*scrollPosition*/, float /*contentRatio*/) {};
 
         /**
          * Where the thumb moves, in the skin's coordinates

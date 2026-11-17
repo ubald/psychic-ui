@@ -9,8 +9,8 @@ namespace psychic_ui {
      * value-field sliders, square swatches. Its sizes follow the input mode (the style manager's density): the board's
      * desk sizes for a pointer, 40 px rows and controls by touch, and hit slop taking every target to 44 px.
      *
-     * Like Float, it falls back on `DefaultSkins` for every skin and rule, and only overrides the rules whose look
-     * differs (the slider's value field too: rules over `DefaultSliderSkin`'s parts).
+     * Like Float, it falls back on `PivotalSkins` for every skin and rule, and only overrides the rules whose look
+     * differs (the slider's value field too: rules over `RangeSkinBase`'s parts).
      *
      *     window.skinSet<DeskSkins>();
      */

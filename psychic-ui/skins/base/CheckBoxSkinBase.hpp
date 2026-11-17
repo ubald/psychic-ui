@@ -9,7 +9,7 @@
 namespace psychic_ui {
     /**
      * What every check box skin shares: the `.box` part, then the `.label` part.
-     * A skin set's check box only paints the box.
+     * A skin set's check box only paints the box, whose style gives its colors (`CheckBox.checked .box`).
      */
     class CheckBoxSkinBase : public CheckBoxSkin {
     public:
@@ -28,7 +28,8 @@ namespace psychic_ui {
 
         /**
          * Paint the `.box` part, in its coordinates (`box` is its border box; its colors are in
-         * `_box->computedStyle()`). The default fills it with its background color and strokes its border.
+         * `_box->computedStyle()`). The default fills it with its background color, strokes its border, and draws a
+         * check mark in its `color` when checked.
          */
         virtual void drawChrome(SkCanvas *canvas, const paint::Box &box, SkinState state);
     };

@@ -4,6 +4,7 @@
 namespace psychic_ui {
     SwitchSkinBase::SwitchSkinBase() :
         SwitchSkin() {
+        tag("SwitchSkinBase");
         _track = &add<Div>();
         _track->addClassName("track")
               .mouseEnabled(false)

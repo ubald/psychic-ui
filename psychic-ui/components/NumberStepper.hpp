@@ -17,6 +17,13 @@ namespace psychic_ui {
         NumberStepperSkin() : Skin<NumberStepper>() {
             tag("NumberStepperSkin");
         }
+
+        /**
+         * Show the component's parts, which it owns (`decrementButton()`, `input()`, `incrementButton()`), among the
+         * skin's children; take them out again when the skin is replaced
+         */
+        void addedToComponent() override = 0;
+        void removedFromComponent() override = 0;
     };
 
     /**

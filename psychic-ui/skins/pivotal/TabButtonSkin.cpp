@@ -1,22 +1,12 @@
-#include "DefaultButtonSkin.hpp"
+#include "TabButtonSkin.hpp"
 
 namespace psychic_ui {
-    DefaultButtonSkin::DefaultButtonSkin() :
+    TabButtonSkin::TabButtonSkin() :
         ButtonSkinBase() {
-        tag("DefaultButtonSkin");
+        tag("TabButtonSkin");
     }
 
-    DefaultButtonSkin::DefaultButtonSkin(const char *variant) :
-        DefaultButtonSkin() {
-        addClassName(variant);
-    }
-
-    DefaultTabButtonSkin::DefaultTabButtonSkin() :
-        ButtonSkinBase() {
-        tag("DefaultTabButtonSkin");
-    }
-
-    void DefaultTabButtonSkin::drawChrome(SkCanvas *canvas, const paint::Box &box, const SkinState state) {
+    void TabButtonSkin::drawChrome(SkCanvas *canvas, const paint::Box &box, const SkinState state) {
         ButtonSkinBase::drawChrome(canvas, box, state);
         // 2 px, 4 px in from the sides, rounded on top, on the tab's last pixels (over the strip's line)
         const Color color = _computedStyle.borderColor();

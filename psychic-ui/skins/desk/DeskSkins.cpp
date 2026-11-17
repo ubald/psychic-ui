@@ -1,6 +1,6 @@
 #include <algorithm>
 #include "psychic-ui/style/StyleManager.hpp"
-#include "psychic-ui/skins/default/DefaultSkins.hpp"
+#include "psychic-ui/skins/pivotal/PivotalSkins.hpp"
 #include "psychic-ui/themes/desk.hpp"
 #include "DeskSkins.hpp"
 
@@ -69,7 +69,7 @@ namespace psychic_ui {
 
     // Everything Desk doesn't override comes from the default set: its skins, and its rules, loaded first
     std::unique_ptr<SkinSet> DeskSkins::fallback() const {
-        return std::make_unique<DefaultSkins>();
+        return std::make_unique<PivotalSkins>();
     }
 
     // Desk draws nothing differently: the default skins paint it from these rules (its slider too: a value field is
@@ -142,43 +142,43 @@ namespace psychic_ui {
 
         // A value field: the default slider's parts laid out as a field, the accent at 38 % inside it up to the value,
         // the value written at its end; no thumb with a pointer, a grab tab on the value by touch
-        rule("Range DefaultSliderSkin.horizontal")
+        rule("Range RangeSkinBase.horizontal")
             .alignItems(Align::Stretch)
             .height(parts.field);
 
-        rule("Range DefaultSliderSkin.vertical")
+        rule("Range RangeSkinBase.vertical")
             .alignItems(Align::Stretch)
             .width(parts.field);
 
-        rule("Range DefaultSliderSkin .track")
+        rule("Range RangeSkinBase .track")
             .border(m.border)
             .borderRadius(r.control)
             .borderColor(p.line)
             .backgroundColor(p.raised)
             .overflow(Overflow::Hidden)
             .transition(Property::borderColor, m.motion.quick());
-        rule("Range DefaultSliderSkin.horizontal .track").height(Auto); // The field's height, over the default's 4 px
-        rule("Range DefaultSliderSkin.vertical .track").width(Auto);
-        rule("Range:hover DefaultSliderSkin .track").borderColor(p.lineStrong);
-        rule("Range:active DefaultSliderSkin .track").borderColor(p.lineStrong);
-        rule("Range:focus-visible DefaultSliderSkin .track").borderColor(p.accent); // As the fields: no ring
+        rule("Range RangeSkinBase.horizontal .track").height(Auto); // The field's height, over the default's 4 px
+        rule("Range RangeSkinBase.vertical .track").width(Auto);
+        rule("Range:hover RangeSkinBase .track").borderColor(p.lineStrong);
+        rule("Range:active RangeSkinBase .track").borderColor(p.lineStrong);
+        rule("Range:focus-visible RangeSkinBase .track").borderColor(p.accent); // As the fields: no ring
 
-        rule("Range DefaultSliderSkin .fill")
+        rule("Range RangeSkinBase .fill")
             .borderRadius(0)
             .backgroundColor(p.accent.withAlpha(0x61)); // 38%
 
         // By touch, a white tab across the field on the value, so the finger has something to hold
         const float tab = std::min(parts.grabTab, parts.field - 2 * m.border - 2);
-        rule("Range DefaultSliderSkin .thumb")
+        rule("Range RangeSkinBase .thumb")
             .display(touch ? Display::Flex : Display::None)
             .borderRadius(r.control)
             .border(m.border)
             .borderColor(p.lineStrong);
-        rule("Range DefaultSliderSkin.horizontal .thumb").width(12).height(tab);
-        rule("Range DefaultSliderSkin.vertical .thumb").width(tab).height(12);
+        rule("Range RangeSkinBase.horizontal .thumb").width(12).height(tab);
+        rule("Range RangeSkinBase.vertical .thumb").width(tab).height(12);
 
         // The value inside the field, at its end
-        text(rule("Range DefaultSliderSkin .value"), t.xs, t.regular, s)
+        text(rule("Range RangeSkinBase .value"), t.xs, t.regular, s)
             .position(Position::Absolute)
             .right(m.space(2))
             .top(0)

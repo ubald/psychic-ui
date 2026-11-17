@@ -30,7 +30,7 @@ namespace psychic_ui {
         /**
          * The value changed, as a linear percentage (0 to 1)
          */
-        virtual void setValue(float value) = 0;
+        virtual void setValue(float /*value*/) {};
 
         /**
          * The linear percentage (0 to 1, or beyond, which the range clamps) a press or drag at this point, in the

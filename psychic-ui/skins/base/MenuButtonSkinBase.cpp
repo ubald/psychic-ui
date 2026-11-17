@@ -4,6 +4,7 @@
 namespace psychic_ui {
     MenuButtonSkinBase::MenuButtonSkinBase() :
         MenuButtonSkin() {
+        tag("MenuButtonSkinBase");
         _check = &add<Icon>();
         _check->addClassName("check")
               .display(Display::None);
@@ -17,6 +18,9 @@ namespace psychic_ui {
         _indicator = &add<Icon>();
         _indicator->addClassName("indicator")
                   .display(Display::None);
+        _arrow = &add<Icon>("chevron-right");
+        _arrow->addClassName("arrow")
+              .display(Display::None);
     }
 
     void MenuButtonSkinBase::added() {
@@ -41,6 +45,7 @@ namespace psychic_ui {
                  .display(item->shortcut.empty() ? Display::None : Display::Flex);
         _indicator->name(trailing ? mark : "")
                   .display(trailing ? Display::Flex : Display::None);
+        _arrow->display(dynamic_cast<const SubMenuItem *>(item) ? Display::Flex : Display::None);
     }
 
     void MenuButtonSkinBase::draw(SkCanvas *canvas) {

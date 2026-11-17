@@ -17,7 +17,7 @@
 #include <psychic-ui/components/MenuBar.hpp>
 #include <psychic-ui/components/Spacer.hpp>
 #include <psychic-ui/components/ToolBar.hpp>
-#include <psychic-ui/skins/default/DefaultSkins.hpp>
+#include <psychic-ui/skins/pivotal/PivotalSkins.hpp>
 #include <psychic-ui/skins/desk/DeskSkins.hpp>
 #include <psychic-ui/skins/float/FloatSkins.hpp>
 #include "Typography.hpp"
@@ -112,7 +112,7 @@ namespace psychic_ui {
 
         // The skin sets the View menu and `--skin` offer: adding one is one line
         const std::vector<NamedSkinSet> _skinSets{
-            named<DefaultSkins>("default"),
+            named<PivotalSkins>("default"),
             named<DeskSkins>("desk"),
             named<FloatSkins>("float"),
         };
@@ -140,7 +140,7 @@ namespace psychic_ui {
         Window("Psychic UI") {
         _decorated = false;
 
-        skinSet<DefaultSkins>();          // Its theme follows the system: Pivotal Light or Pivotal Dark
+        skinSet<PivotalSkins>();          // Its theme follows the system: Pivotal Light or Pivotal Dark
         loadStyleSheet<DemoStyleSheet>(); // Over the skin set's rules; both load again on a theme change
 
         // View → Skin Set and View → Theme: radio groups, switching live (the menu stays open)

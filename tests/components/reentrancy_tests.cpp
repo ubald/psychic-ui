@@ -332,7 +332,7 @@ TEST_CASE("Reentrancy: change theme and skin set inside styleUpdated / mid event
     Window *w = f.window.get();
     int     n = 0;
     b.onClick([w, &n]() {
-        if (n++ % 2) w->skinSet<FloatSkins>(); else w->skinSet<DefaultSkins>();
+        if (n++ % 2) w->skinSet<FloatSkins>(); else w->skinSet<PivotalSkins>();
         w->theme(themes::pivotalLight);
     });
     f.click(b);
@@ -360,7 +360,7 @@ namespace {
         explicit SkinFlipper(Window *w) : w(w) {}
         void styleUpdated() override {
             Div::styleUpdated();
-            if (n++ < 3) { if (n % 2) w->skinSet<FloatSkins>(); else w->skinSet<DefaultSkins>(); }
+            if (n++ < 3) { if (n % 2) w->skinSet<FloatSkins>(); else w->skinSet<PivotalSkins>(); }
         }
     };
 }

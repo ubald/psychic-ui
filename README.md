@@ -94,7 +94,7 @@ To keep the resources elsewhere, set it before installing a skin set, which load
 
 ```cpp
 psychic_ui::StyleManager::getInstance()->resourceRoot("/usr/share/my-app");
-window->skinSet<psychic_ui::DefaultSkins>();
+window->skinSet<psychic_ui::PivotalSkins>();
 ```
 
 ## Sample App

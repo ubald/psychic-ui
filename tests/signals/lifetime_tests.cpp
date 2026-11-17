@@ -8,7 +8,7 @@
 #include <psychic-ui/components/Menu.hpp>
 #include <psychic-ui/components/MenuBar.hpp>
 #include <psychic-ui/components/MenuButton.hpp>
-#include <psychic-ui/skins/default/DefaultSkins.hpp>
+#include <psychic-ui/skins/pivotal/PivotalSkins.hpp>
 
 using namespace psychic_ui;
 
@@ -20,7 +20,7 @@ namespace {
         HeadlessWindow() : Window("Headless") {
             setWindowSize(1440, 900);
             reducedMotion(true); // Popups close at once: the tests are about lifetimes, not motion
-            skinSet<DefaultSkins>();
+            skinSet<PivotalSkins>();
         }
 
         void layout() {

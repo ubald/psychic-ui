@@ -1,7 +1,7 @@
 #include <string>
 #include "psychic-ui/style/StyleManager.hpp"
 #include "psychic-ui/themes/float.hpp"
-#include "psychic-ui/skins/default/DefaultSkins.hpp"
+#include "psychic-ui/skins/pivotal/PivotalSkins.hpp"
 #include "FloatSkins.hpp"
 
 namespace psychic_ui {
@@ -45,7 +45,7 @@ namespace psychic_ui {
 
     // Everything Float doesn't override comes from the default set: its skins, and its rules, loaded first
     std::unique_ptr<SkinSet> FloatSkins::fallback() const {
-        return std::make_unique<DefaultSkins>();
+        return std::make_unique<PivotalSkins>();
     }
 
     // Float draws nothing differently: every default skin paints from the computed style, so rules are enough.
