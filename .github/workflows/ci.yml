@@ -46,7 +46,7 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: build/debug/extlib/skia/build
-          key: skia-${{ runner.os }}-${{ runner.arch }}-${{ steps.skia.outputs.commit }}-${{ hashFiles('extlib/skia/CMakeLists.txt', 'extlib/skia/skia_build.sh.in') }}
+          key: skia-${{ runner.os }}-${{ runner.arch }}-${{ steps.skia.outputs.commit }}-${{ hashFiles('extlib/skia/CMakeLists.txt') }}
 
       # Psychic UI needs C++23 deducing this (GCC 14+); noble's default is GCC 13.
       # Skia's gn build gets the same compilers from CMake.
@@ -91,7 +91,7 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: build/debug/extlib/skia/build
-          key: skia-${{ runner.os }}-${{ runner.arch }}-${{ steps.skia.outputs.commit }}-${{ hashFiles('extlib/skia/CMakeLists.txt', 'extlib/skia/skia_build.sh.in') }}
+          key: skia-${{ runner.os }}-${{ runner.arch }}-${{ steps.skia.outputs.commit }}-${{ hashFiles('extlib/skia/CMakeLists.txt') }}
 
       - name: Configure
         run: cmake --preset debug
