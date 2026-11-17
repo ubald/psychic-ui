@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <type_traits>
+#include "Interpolation.hpp"
 #include "StyleTransitions.hpp"
 #include "psychic-ui/Div.hpp"
 #include "psychic-ui/Window.hpp"
@@ -63,64 +65,70 @@ namespace psychic_ui {
         }
 
         // endregion
+    }
 
-        // region Property channels
+    // region Property channels
 
-        namespace {
-            template<class T>
-            bool channelsOf(const Style &style, const Property property, const T &value, Channels &channels, Length::Unit &unit) {
-                if constexpr (std::is_same_v<T, Color>) {
-                    // Unset is transparent: a color that appears fades in, one that goes fades out
-                    channels = style.has(property) ? Interpolation<Color>::channels(value) : Channels{};
-                    return true;
-                } else if constexpr (std::is_same_v<T, Length>) {
-                    if (value.isAuto()) {
-                        return false;
-                    }
-                    channels = Interpolation<Length>::channels(value);
-                    unit     = value.unit;
-                    return true;
-                } else if constexpr (Interpolable<T>) {
-                    channels = Interpolation<T>::channels(value);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-
-            template<class T, class Set>
-            void assignChannels(const Channels &channels, const Length::Unit unit, Set set) {
-                if constexpr (std::is_same_v<T, Length>) {
-                    set(Length{channels[0], unit});
-                } else if constexpr (Interpolable<T>) {
-                    set(Interpolation<T>::value(channels, T{}));
-                }
-            }
-        }
-
-        bool propertyChannels(const Style &style, const Property property, Channels &channels, Length::Unit &unit) {
+    namespace {
+        // Calls `f(get, set)` with an animatable property's accessors (`get(style)`, `set(style, value)`); false for
+        // the others
+        template<class F>
+        bool withAccessors(const Property property, F &&f) {
             switch (property) {
                 #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) \
-                    case Property::name: return (animatable) && channelsOf<Type>(style, property, style.name(), channels, unit);
+                    case Property::name: \
+                        if constexpr (animatable) { \
+                            return f([](const Style &style) { return style.name(); }, \
+                                     [](Style &style, const Type &value) { style.name(value); }); \
+                        } \
+                        return false;
                 PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
                 #undef PSYCHIC_UI_X
             }
             return false;
         }
 
-        void setPropertyChannels(Style &style, const Property property, const Channels &channels, const Length::Unit unit) {
-            switch (property) {
-                #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) \
-                    case Property::name: \
-                        assignChannels<Type>(channels, unit, [&style](const Type &value) { style.name(value); }); \
-                        break;
-                PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
-                #undef PSYCHIC_UI_X
+        // Unset is transparent: a color that appears fades in, one that goes fades out
+        template<class T>
+        T blended(const Style &style, const Property property, const T &value) {
+            if constexpr (std::is_same_v<T, Color>) {
+                return style.has(property) ? value : Color{};
+            } else {
+                return value;
             }
         }
 
-        // endregion
+        /**
+         * Aim a property from its value in `from` to its value in `to`: where it ends goes in `targets`, the channels
+         * of both ends in `start` and `end`; false when it doesn't interpolate (an auto length, another unit)
+         */
+        bool aim(const Property property, const Style &from, const Style &to, Style &targets, Channels &start, Channels &end) {
+            return withAccessors(property, [&](auto get, auto set) {
+                using T = decltype(get(from));
+                const T                fromValue = blended(from, property, get(from));
+                const std::optional<T> target    = Interpolation<T>::target(fromValue, blended(to, property, get(to)));
+                if (!target) {
+                    return false;
+                }
+                set(targets, *target);
+                start = Interpolation<T>::channels(fromValue);
+                end   = Interpolation<T>::channels(*target);
+                return true;
+            });
+        }
+
+        /**
+         * Set a property from channels, on its way to its value in `targets`
+         */
+        void setChannels(Style &style, const Property property, const Channels &channels, const Style &targets) {
+            withAccessors(property, [&](auto get, auto set) {
+                set(style, Interpolation<decltype(get(targets))>::value(channels, get(targets)));
+                return true;
+            });
+        }
     }
+
+    // endregion
 
     // region Div
 
@@ -129,7 +137,7 @@ namespace psychic_ui {
         if (_transitions) {
             for (const auto &r: _transitions->running) {
                 if (r.targetSet) {
-                    detail::setPropertyChannels(target, r.property, r.tween.target(), r.unit);
+                    target.overlay(_transitions->targets, PropertyMask{}.set(index(r.property)));
                 } else {
                     target.unset(r.property);
                 }
@@ -168,24 +176,22 @@ namespace psychic_ui {
             for (auto it = running.begin(); it != running.end();) {
                 const Property property = it->property;
                 changed.reset(index(property));
-                Channels      target{};
-                Length::Unit  unit{it->unit};
-                const Timing  *timing = transition.timing(property);
-                // Zero is zero in any unit: a percent translation going back to 0 px blends
-                const bool    valid   = detail::propertyChannels(computed, property, target, unit)
-                                        && (unit == it->unit || target[0] == 0.0f);
-                const bool    set     = computed.has(property);
-                if (!valid || !timing || timing->instant()) {
+                const Timing *timing = transition.timing(property);
+                Channels     painted{};
+                Channels     target{};
+                if (!timing || timing->instant()
+                    || !aim(property, _computedStyle, computed, _transitions->targets, painted, target)) {
                     it = running.erase(it); // The new value, at once
                     continue;
                 }
+                const bool set = computed.has(property);
                 if (set == it->targetSet && target == it->tween.target()) {
                     // The same end: it goes on
                 } else {
                     it->tween.retarget(target, *timing, start);
                     it->targetSet = set;
                 }
-                detail::setPropertyChannels(computed, property, it->tween.value(), it->unit);
+                setChannels(computed, property, it->tween.value(), _transitions->targets);
                 ++it;
             }
         }
@@ -193,6 +199,9 @@ namespace psychic_ui {
         // The new ones
         if (!transition.empty()) {
             changed &= transition.properties();
+            if (changed.any() && !_transitions) {
+                _transitions = std::make_shared<detail::StyleTransitions>(this);
+            }
             for (std::size_t i = 0; changed.any() && i < propertyCount; ++i) {
                 if (!changed.test(i)) {
                     continue;
@@ -202,33 +211,15 @@ namespace psychic_ui {
                 const Timing *timing  = transition.timing(property);
                 Channels     from{};
                 Channels     to{};
-                Length::Unit fromUnit{};
-                Length::Unit toUnit{};
                 if (!timing || timing->instant()
-                    || !detail::propertyChannels(_computedStyle, property, from, fromUnit)
-                    || !detail::propertyChannels(computed, property, to, toUnit)) {
+                    || !aim(property, _computedStyle, computed, _transitions->targets, from, to) || from == to) {
                     continue;
-                }
-                // Zero is zero in any unit (a length going from 50% to 0 px blends in percent); otherwise a change of
-                // unit snaps
-                if (fromUnit != toUnit) {
-                    if (to[0] == 0.0f) {
-                        toUnit = fromUnit;
-                    } else if (from[0] != 0.0f) {
-                        continue;
-                    }
-                }
-                if (from == to) {
-                    continue;
-                }
-                if (!_transitions) {
-                    _transitions = std::make_shared<detail::StyleTransitions>(this);
                 }
                 detail::RunningTransition &r = _transitions->running.emplace_back(
-                    detail::RunningTransition{property, Tween{from}, toUnit, computed.has(property)}
+                    detail::RunningTransition{property, Tween{from}, computed.has(property)}
                 );
                 r.tween.retarget(to, *timing, start);
-                detail::setPropertyChannels(computed, property, from, toUnit);
+                setChannels(computed, property, from, _transitions->targets);
             }
         }
 
@@ -246,7 +237,7 @@ namespace psychic_ui {
         for (auto it = running.begin(); it != running.end();) {
             const bool moving = it->tween.advance(now);
             if (moving || it->targetSet) {
-                detail::setPropertyChannels(_computedStyle, it->property, it->tween.value(), it->unit);
+                setChannels(_computedStyle, it->property, it->tween.value(), _transitions->targets);
             } else {
                 _computedStyle.unset(it->property);
             }

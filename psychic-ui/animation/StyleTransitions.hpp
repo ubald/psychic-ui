@@ -9,13 +9,12 @@ namespace psychic_ui {
 
     namespace detail {
         /**
-         * A style property on its way to a new value
+         * A style property on its way to its value in `StyleTransitions::targets`
          */
         struct RunningTransition {
-            Property     property;
-            Tween        tween;
-            Length::Unit unit{Length::Unit::Px}; // A length's, kept from start to end
-            bool         targetSet{true};        // Unset at the end: a color fading out to nothing
+            Property property;
+            Tween    tween;
+            bool     targetSet{true}; // Unset at the end: a color fading out to nothing
         };
 
         /**
@@ -27,22 +26,12 @@ namespace psychic_ui {
 
             Div                            *owner; // Cleared when the div goes
             std::vector<RunningTransition> running{};
+            Style                          targets{}; // Where the running ones go (a length in the unit it moves in)
 
             const RunningTransition *find(Property property) const;
 
             bool advance(std::chrono::nanoseconds now) override;
             void finish() override;
         };
-
-        /**
-         * A property's value in a style as channels, an unset color as transparent; false when it doesn't
-         * interpolate (not animatable, an auto length)
-         */
-        bool propertyChannels(const Style &style, Property property, Channels &channels, Length::Unit &unit);
-
-        /**
-         * Set a property from channels (a length in `unit`)
-         */
-        void setPropertyChannels(Style &style, Property property, const Channels &channels, Length::Unit unit);
     }
 }

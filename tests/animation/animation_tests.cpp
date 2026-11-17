@@ -5,6 +5,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/animation/Animation.hpp>
+#include <psychic-ui/animation/Interpolation.hpp>
 #include <psychic-ui/components/Switch.hpp>
 #include <psychic-ui/components/Toast.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
@@ -229,10 +230,12 @@ TEST_CASE("Colors interpolate premultiplied", "[animation][color]") {
     }
     CHECK(Interpolation<Color>::value(half, {}).argb() == 0x80FF0000u);
     CHECK(Interpolation<Color>::value(Interpolation<Color>::channels(argb(0x40123456)), {}).argb() == 0x40123456u);
-    // A length changes unit at once
-    CHECK(Interpolation<Length>::compatible(Length{10}, Length{20}));
-    CHECK_FALSE(Interpolation<Length>::compatible(Length{10}, 50_pct));
-    CHECK_FALSE(Interpolation<Length>::compatible(Length{10}, Auto));
+    // A length changes unit at once, but zero is zero in any unit
+    CHECK(Interpolation<Length>::target(Length{10}, Length{20}) == Length{20});
+    CHECK_FALSE(Interpolation<Length>::target(Length{10}, 50_pct));
+    CHECK_FALSE(Interpolation<Length>::target(Length{10}, Auto));
+    CHECK(Interpolation<Length>::target(50_pct, Length{0}) == 0_pct);
+    CHECK(Interpolation<Length>::target(Length{0}, 50_pct) == 50_pct);
 }
 
 // endregion

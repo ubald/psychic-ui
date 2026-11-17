@@ -2,72 +2,16 @@
 
 #include <array>
 #include <chrono>
-#include <concepts>
 #include <cstddef>
 #include <optional>
 #include "Timing.hpp"
-#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
 
     /**
-     * A value as up to four numbers that interpolate linearly: a float is one, a color four (premultiplied)
+     * A value as up to four numbers that move together (`Interpolation<T>` turns values into channels and back)
      */
     using Channels = std::array<float, 4>;
-
-    /**
-     * How a type becomes channels and back. A type with a specialization can be tweened (`Animated<T>`) and, as a
-     * style property, transition.
-     */
-    template<class T>
-    struct Interpolation;
-
-    template<class T>
-    concept Interpolable = requires(const T &value, const Channels &channels) {
-        { Interpolation<T>::count } -> std::convertible_to<std::size_t>;
-        { Interpolation<T>::channels(value) } -> std::same_as<Channels>;
-        { Interpolation<T>::value(channels, value) } -> std::same_as<T>;
-        { Interpolation<T>::compatible(value, value) } -> std::same_as<bool>;
-    };
-
-    template<>
-    struct Interpolation<float> {
-        static constexpr std::size_t count = 1;
-
-        static Channels channels(float value) { return {value, 0.0f, 0.0f, 0.0f}; }
-
-        static float value(const Channels &channels, float /*target*/) { return channels[0]; }
-
-        static bool compatible(float /*from*/, float /*to*/) { return true; }
-    };
-
-    /**
-     * Premultiplied, as CSS interpolates colors: a fade from transparent shows no other color on the way
-     */
-    template<>
-    struct Interpolation<Color> {
-        static constexpr std::size_t count = 4;
-
-        static Channels channels(Color color);
-
-        static Color value(const Channels &channels, Color target);
-
-        static bool compatible(Color /*from*/, Color /*to*/) { return true; }
-    };
-
-    /**
-     * Lengths of the same unit; `Auto`, or a change of unit, doesn't interpolate
-     */
-    template<>
-    struct Interpolation<Length> {
-        static constexpr std::size_t count = 1;
-
-        static Channels channels(Length length) { return {length.value, 0.0f, 0.0f, 0.0f}; }
-
-        static Length value(const Channels &channels, Length target) { return Length{channels[0], target.unit}; }
-
-        static bool compatible(Length from, Length to) { return from.unit == to.unit && !to.isAuto(); }
-    };
 
     /**
      * The motion of up to four channels toward a target, with a timing: along an easing curve for its duration, or

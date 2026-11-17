@@ -3,8 +3,9 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <optional>
 #include "Timing.hpp"
-#include "Tween.hpp"
+#include "Interpolation.hpp"
 
 namespace psychic_ui {
     class Div;
@@ -84,11 +85,12 @@ namespace psychic_ui {
          * Move to `target` from the current value (a spring keeps its velocity)
          */
         Animated &to(T target) {
-            if (!Interpolation<T>::compatible(value(), target)) {
+            const std::optional<T> end = Interpolation<T>::target(value(), target);
+            if (!end) {
                 return jump(target);
             }
-            _target = target;
-            detail::startTween(_owner, _animation, Interpolation<T>::channels(target), _timing);
+            _target = *end;
+            detail::startTween(_owner, _animation, Interpolation<T>::channels(*end), _timing);
             return *this;
         }
 

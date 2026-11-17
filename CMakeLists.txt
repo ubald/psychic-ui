@@ -156,6 +156,8 @@ unset(BUILD_SHARED_LIBS)
 set(SOURCE_FILES
     ${LIBPSYCHIC_UI_EXTRA_SOURCE}
     psychic-ui/animation/Animation.hpp
+    psychic-ui/animation/Interpolation.cpp
+    psychic-ui/animation/Interpolation.hpp
     psychic-ui/animation/StyleTransitions.cpp
     psychic-ui/animation/StyleTransitions.hpp
     psychic-ui/animation/Timing.cpp
