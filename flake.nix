@@ -18,7 +18,7 @@
 
         packages = with pkgs; [
           cmake
-          # Skia's build: gn's scripts and bin/fetch-gn are Python 3, and gn writes ninja files
+          # Skia's build: gn's scripts are Python 3, and gn writes ninja files
           ninja
           python3
           pkg-config

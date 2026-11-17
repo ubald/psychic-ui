@@ -10,8 +10,8 @@ on:
 # and IBus development packages are theirs.
 #
 # Skia takes ICU, HarfBuzz, FreeType and Fontconfig from the system and
-# downloads its pinned gn (and ninja, when none is installed). Its build is
-# long, so its output directory is cached per Skia commit and build script.
+# gets its pinned gn from CMake at configure time. Its build is long, so its
+# output directory is cached per Skia commit and CMake's Skia file.
 
 jobs:
   linux:

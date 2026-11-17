@@ -105,6 +105,9 @@ if (NOT PSYCHIC_UI_SKIA_DIR)
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
         set(SKIA_GN_PLATFORM linux-amd64)
         set(SKIA_GN_SHA256 6a3bfc53d825bccac5e5b4b7bdcc10ce9396a04a689ac684ec3308ca5c7f3d9c)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
+        set(SKIA_GN_PLATFORM linux-arm64)
+        set(SKIA_GN_SHA256 376e1358ded109d955b8eb55ba2a7dec0e95ab1f8dfe0e18011e06eed78a011f)
     elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
         set(SKIA_GN_PLATFORM mac-amd64)
         set(SKIA_GN_SHA256 4bea817159f060980f1ca1d0400ef6cd2e0ab0ade66bb34e91aab9c2cffc9d83)
@@ -149,7 +152,7 @@ if (PSYCHIC_UI_SKIA_DIR)
     add_custom_target(skia-build)
 else ()
     add_custom_command(OUTPUT ${SKIA_STATIC_LIBS}
-        COMMAND ${SKIA_GN} gen ${SKIA_OUTPUT}
+        COMMAND ${SKIA_GN} gen ${SKIA_OUTPUT} --script-executable=${Python3_EXECUTABLE}
         COMMAND ${SKIA_NINJA} -C ${SKIA_OUTPUT} skia modules/skparagraph modules/skshaper modules/skunicode
         WORKING_DIRECTORY ${SKIA_SOURCE_DIR}
         USES_TERMINAL
