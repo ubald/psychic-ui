@@ -247,6 +247,12 @@ set(SOURCE_FILES
     psychic-ui/icons/IconSet.hpp
     psychic-ui/icons/LucideIcons.cpp
     psychic-ui/icons/PivotalIcons.cpp
+    psychic-ui/paint/Box.cpp
+    psychic-ui/paint/Box.hpp
+    psychic-ui/paint/Icon.cpp
+    psychic-ui/paint/Icon.hpp
+    psychic-ui/paint/Marks.cpp
+    psychic-ui/paint/Marks.hpp
     psychic-ui/signals/Observer.hpp
     psychic-ui/signals/Signal.hpp
     psychic-ui/signals/Slot.hpp
@@ -304,12 +310,6 @@ set(SOURCE_FILES
     psychic-ui/skins/desk/DeskSkins.hpp
     psychic-ui/skins/float/FloatSkins.cpp
     psychic-ui/skins/float/FloatSkins.hpp
-    psychic-ui/skins/paint/Box.cpp
-    psychic-ui/skins/paint/Box.hpp
-    psychic-ui/skins/paint/Icon.cpp
-    psychic-ui/skins/paint/Icon.hpp
-    psychic-ui/skins/paint/Marks.cpp
-    psychic-ui/skins/paint/Marks.hpp
     psychic-ui/style/Properties.hpp
     psychic-ui/style/Style.cpp
     psychic-ui/style/Style.hpp

@@ -1,4 +1,4 @@
-#include "psychic-ui/skins/paint/Icon.hpp"
+#include "psychic-ui/paint/Icon.hpp"
 #include "DefaultCheckBoxSkin.hpp"
 
 namespace psychic_ui {

@@ -2,7 +2,7 @@
 
 #include <vector>
 #include "psychic-ui/components/ColorSwatches.hpp"
-#include "psychic-ui/skins/paint/Box.hpp"
+#include "psychic-ui/paint/Box.hpp"
 #include "SkinState.hpp"
 
 namespace psychic_ui {

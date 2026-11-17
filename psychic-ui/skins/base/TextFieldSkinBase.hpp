@@ -3,7 +3,7 @@
 #include "psychic-ui/components/TextInput.hpp"
 #include "psychic-ui/components/TextArea.hpp"
 #include "psychic-ui/components/Label.hpp"
-#include "psychic-ui/skins/paint/Box.hpp"
+#include "psychic-ui/paint/Box.hpp"
 #include "SkinState.hpp"
 
 namespace psychic_ui {

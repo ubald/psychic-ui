@@ -1,5 +1,5 @@
 #include <algorithm>
-#include "psychic-ui/skins/paint/Icon.hpp"
+#include "psychic-ui/paint/Icon.hpp"
 #include "Icon.hpp"
 
 namespace psychic_ui {

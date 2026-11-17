@@ -1,7 +1,7 @@
 #pragma once
 
 #include "psychic-ui/components/NumberStepper.hpp"
-#include "psychic-ui/skins/paint/Box.hpp"
+#include "psychic-ui/paint/Box.hpp"
 #include "SkinState.hpp"
 
 namespace psychic_ui {

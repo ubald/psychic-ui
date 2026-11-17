@@ -3,7 +3,7 @@
 #include "psychic-ui/components/MenuButton.hpp"
 #include "psychic-ui/components/Icon.hpp"
 #include "psychic-ui/components/Label.hpp"
-#include "psychic-ui/skins/paint/Box.hpp"
+#include "psychic-ui/paint/Box.hpp"
 #include "SkinState.hpp"
 
 namespace psychic_ui {

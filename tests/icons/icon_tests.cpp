@@ -8,7 +8,7 @@
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Icon.hpp>
 #include <psychic-ui/icons/IconRegistry.hpp>
-#include <psychic-ui/skins/paint/Icon.hpp>
+#include <psychic-ui/paint/Icon.hpp>
 
 using namespace psychic_ui;
 

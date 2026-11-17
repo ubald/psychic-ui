@@ -2,7 +2,7 @@
 
 #include "psychic-ui/components/SearchField.hpp"
 #include "psychic-ui/components/Icon.hpp"
-#include "psychic-ui/skins/paint/Box.hpp"
+#include "psychic-ui/paint/Box.hpp"
 #include "SkinState.hpp"
 
 namespace psychic_ui {

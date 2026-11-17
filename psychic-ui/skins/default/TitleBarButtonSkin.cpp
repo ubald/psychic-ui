@@ -1,4 +1,4 @@
-#include "psychic-ui/skins/paint/Marks.hpp"
+#include "psychic-ui/paint/Marks.hpp"
 #include "TitleBarButtonSkin.hpp"
 
 namespace psychic_ui {

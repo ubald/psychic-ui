@@ -3,7 +3,7 @@
 #include "psychic-ui/Shape.hpp"
 #include "psychic-ui/components/CheckBox.hpp"
 #include "psychic-ui/components/Label.hpp"
-#include "psychic-ui/skins/paint/Box.hpp"
+#include "psychic-ui/paint/Box.hpp"
 #include "SkinState.hpp"
 
 namespace psychic_ui {
