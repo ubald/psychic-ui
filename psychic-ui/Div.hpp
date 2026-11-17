@@ -682,8 +682,6 @@ namespace psychic_ui {
         bool getMouseDown() const;
         void setMouseDown(bool down); // Mostly for testing
 
-        using MouseSlot = std::shared_ptr<Slot<MouseEvent>>;
-
         // Every mouse signal passes a MouseEvent, in this div's content coordinates (see MouseEvent)
         Signal<MouseEvent> mouseButtonChanged{}; // Press or release, `down` tells which
         Signal<MouseEvent> mousePressed{};
@@ -731,10 +729,6 @@ namespace psychic_ui {
          * The event moved from the parent's content coordinates into this div's
          */
         MouseEvent localMouseEvent(const MouseEvent &event) const;
-
-        using KeySlot = std::shared_ptr<Slot<Key, Mod>>;
-        using CharSlot = std::shared_ptr<Slot<icu::UnicodeString>>;
-        using FocusSlot = std::shared_ptr<Slot<>>;
 
         Signal<Key, Mod>           keyPressed{};
         Signal<Key, Mod>           keyRepeated{};
@@ -791,7 +785,7 @@ namespace psychic_ui {
     protected:
         std::string _tooltip{};
         std::vector<std::shared_ptr<MenuItem>> _contextMenu{};
-        MouseSlot _contextMenuSlot{}; // Our subscription to contextMenuRequested while there is a context menu
+        ScopedSlot _contextMenuSlot{}; // Our subscription to contextMenuRequested while there is a context menu
         void updateContextMenu(std::vector<std::shared_ptr<MenuItem>> items);
         bool _enabled{true};
         bool _visible{true};

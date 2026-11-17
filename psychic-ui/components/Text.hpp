@@ -134,15 +134,8 @@ namespace psychic_ui {
         bool _pendingCaretSignal{false};
 
         ScopedSlot                _onMouseMove{}; // On the window, only while selecting
-        Div::MouseSlot            _onMousePress{nullptr};
-        Div::MouseSlot            _onMouseRelease{nullptr};
-        Div::MouseSlot            _onDoubleClick{nullptr};
-        Div::KeySlot              _onKeyPress{nullptr};
-        Div::KeySlot              _onKeyRepeat{nullptr};
-        Div::CharSlot             _onType{nullptr};
-        Div::FocusSlot            _onFocus{nullptr};
-        Div::FocusSlot            _onBlur{nullptr};
-        ScopedSlot                _onCaretMove{};
+        std::vector<ScopedSlot>   _selectionSlots{}; // Ours while selectable
+        std::vector<ScopedSlot>   _editionSlots{}; // Ours while editable
 
         /**
          * In touch mode, tell the window where the caret's line is, for the on-screen keyboard
@@ -167,9 +160,7 @@ namespace psychic_ui {
         void moveCaret(unsigned int caret, bool saveX = true);
 
         void subscribeToSelection();
-        void unsubscribeFromSelection();
         void subscribeToEdition();
-        void unsubscribeFromEdition();
 
         void removedFromRender() override;
         void styleUpdated() override;

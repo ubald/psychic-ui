@@ -301,9 +301,6 @@ namespace psychic_ui {
 
         // region Signals
 
-        using MenuOpenedSlot = std::shared_ptr<Slot<>>;
-        using MenuClosedSlot = std::shared_ptr<Slot<>>;
-
         Signal<> menuOpened{};
         Signal<> menuClosed{};
 

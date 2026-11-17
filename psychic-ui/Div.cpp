@@ -1414,10 +1414,7 @@ namespace psychic_ui {
     void Div::updateContextMenu(std::vector<std::shared_ptr<MenuItem>> items) {
         _contextMenu = std::move(items);
         if (_contextMenu.empty()) {
-            if (_contextMenuSlot) {
-                _contextMenuSlot->disconnect();
-                _contextMenuSlot = nullptr;
-            }
+            _contextMenuSlot.disconnect();
             return;
         }
         if (!_contextMenuSlot) {

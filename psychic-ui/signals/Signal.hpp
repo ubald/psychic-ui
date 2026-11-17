@@ -20,7 +20,7 @@ namespace psychic_ui {
      * Handlers may connect, disconnect (themselves or others) and destroy the signal while it is emitting:
      * - a slot connected during an emission is first called by the next emission;
      * - a slot disconnected during an emission is not called anymore, even by the running one;
-     * - when a handler destroys the signal, the emission stops after that handler.
+     * - when a handler destroys the signal, the emission stops after that handler (destroying it disconnects them all).
      *
      * Signals can't be copied or moved: their slots and the handlers' captures refer to them.
      */
@@ -34,8 +34,13 @@ namespace psychic_ui {
         Signal &operator=(const Signal &) = delete;
 
         ~Signal() {
+            // Disconnect every slot: a running emission skips them, and releases them once it ends
             if (_core) {
-                _core->alive = false;
+                for (auto &slot: _core->slots) {
+                    slot->_connected = false;
+                }
+                _core->dirty = true;
+                _core->compact();
             }
         }
 
@@ -43,7 +48,7 @@ namespace psychic_ui {
          * Check if the signal has any subscriptions
          */
         bool hasSubscriptions() const {
-            return _core && std::any_of(_core->slots.cbegin(), _core->slots.cend(), [](const SlotPtr &slot) { return slot->_connected; });
+            return subscriptionCount() > 0;
         }
 
         /**
@@ -55,9 +60,8 @@ namespace psychic_ui {
 
         /**
          * Subscribe to this signal
-         * The signal keeps the slot: keep the returned pointer only to disconnect later. When the callback refers to
-         * something that can die before the signal, extend from Observer and use `subscribeTo`, or keep the slot in a
-         * ScopedSlot.
+         * The signal keeps the slot: keep the returned pointer in a ScopedSlot to disconnect later. When the callback
+         * refers to something that can die before the signal, do that, or extend from Observer and use `subscribeTo`.
          */
         template<class F>
         requires std::invocable<F &, const T &...> || std::invocable<F &>
@@ -76,24 +80,6 @@ namespace psychic_ui {
             }
             _core->slots.push_back(slot);
             return slot;
-        }
-
-        /**
-         * Subscription () operator, same as `subscribe`
-         */
-        template<class F>
-        requires std::invocable<F &, const T &...> || std::invocable<F &>
-        SlotPtr operator()(F &&callback) {
-            return subscribe(std::forward<F>(callback));
-        }
-
-        /**
-         * Unsubscribe a slot from this signal, same as `slot->disconnect()`
-         */
-        void unsubscribe(const SlotPtr &slot) {
-            if (slot && _core && slot->_core.lock() == _core) {
-                slot->disconnect();
-            }
         }
 
         /**
@@ -116,17 +102,7 @@ namespace psychic_ui {
                     continue;
                 }
                 slot._callback(args...);
-                if (!core->alive) {
-                    return;
-                }
             }
-        }
-
-        /**
-         * Emit a signal () operator, same as `emit`
-         */
-        void operator()(const T &... args) {
-            emit(args...);
         }
 
     private:

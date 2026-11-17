@@ -42,9 +42,7 @@ namespace psychic_ui {
 
     void Text::updateSelectable(const bool selectable) {
         if (_selectable != selectable) {
-            if (_selectable) {
-                unsubscribeFromSelection();
-            }
+            _selectionSlots.clear();
             _selectable = selectable;
             if (_selectable) {
                 subscribeToSelection();
@@ -58,9 +56,7 @@ namespace psychic_ui {
 
     void Text::updateEditable(const bool editable) {
         if (_editable != editable) {
-            if (_editable) {
-                unsubscribeFromEdition();
-            }
+            _editionSlots.clear();
             _editable = editable;
             if (_editable) {
                 subscribeToEdition();
@@ -125,7 +121,7 @@ namespace psychic_ui {
     }
 
     void Text::subscribeToSelection() {
-        _onMousePress = mousePressed.subscribe(
+        _selectionSlots.emplace_back(mousePressed.subscribe(
             [this](const MouseEvent &event) {
                 unsigned int initialBegin = indexAt(static_cast<int>(event.x), static_cast<int>(event.y));
                 moveCaret(initialBegin);
@@ -147,15 +143,15 @@ namespace psychic_ui {
                     }
                 );
             }
-        );
+        ));
 
-        _onMouseRelease = mouseReleased.subscribe(
+        _selectionSlots.emplace_back(mouseReleased.subscribe(
             [this] {
                 _onMouseMove.disconnect();
             }
-        );
+        ));
 
-        _onDoubleClick = doubleClicked.subscribe(
+        _selectionSlots.emplace_back(doubleClicked.subscribe(
             [this](const MouseEvent &event) {
                 const unsigned clickCount = event.clickCount;
                 if (clickCount == 2) {
@@ -172,34 +168,19 @@ namespace psychic_ui {
                 }
                 selectionChanged.emit(_selectBegin, _selectEnd);
             }
-        );
-    }
-
-    void Text::unsubscribeFromSelection() {
-        if (_onMousePress) {
-            _onMousePress->disconnect();
-            _onMousePress = nullptr;
-        }
-        if (_onMouseRelease) {
-            _onMouseRelease->disconnect();
-            _onMouseRelease = nullptr;
-        }
-        if (_onDoubleClick) {
-            _onDoubleClick->disconnect();
-            _onDoubleClick = nullptr;
-        }
+        ));
     }
 
     void Text::subscribeToEdition() {
-        _onFocus     = focused.subscribe([this]() {
+        _editionSlots.emplace_back(focused.subscribe([this]() {
             window()->startTextInput();
             updateTextInputArea();
-        });
-        _onCaretMove = caretMoved.subscribe([this](unsigned int /*caret*/) { updateTextInputArea(); });
-        _onBlur      = blurred.subscribe([this]() { window()->stopTextInput(); });
-        _onKeyPress  = keyPressed.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); });
-        _onKeyRepeat = keyRepeated.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); });
-        _onType = typed.subscribe(
+        }));
+        _editionSlots.emplace_back(caretMoved.subscribe([this](unsigned int /*caret*/) { updateTextInputArea(); }));
+        _editionSlots.emplace_back(blurred.subscribe([this]() { window()->stopTextInput(); }));
+        _editionSlots.emplace_back(keyPressed.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); }));
+        _editionSlots.emplace_back(keyRepeated.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); }));
+        _editionSlots.emplace_back(typed.subscribe(
             [this](icu::UnicodeString character) {
                 if (_selectBegin != _selectEnd) {
                     _text.replace(_selectBegin, _selectEnd - _selectBegin, character);
@@ -209,31 +190,7 @@ namespace psychic_ui {
                     textEdited(++_caret);
                 }
             }
-        );
-    }
-
-    void Text::unsubscribeFromEdition() {
-        if (_onFocus) {
-            _onFocus->disconnect();
-            _onFocus = nullptr;
-        }
-        if (_onBlur) {
-            _onBlur->disconnect();
-            _onBlur = nullptr;
-        }
-        _onCaretMove.disconnect();
-        if (_onKeyPress) {
-            _onKeyPress->disconnect();
-            _onKeyPress = nullptr;
-        }
-        if (_onKeyRepeat) {
-            _onKeyRepeat->disconnect();
-            _onKeyRepeat = nullptr;
-        }
-        if (_onType) {
-            _onType->disconnect();
-            _onType = nullptr;
-        }
+        ));
     }
 
     void Text::removedFromRender() {

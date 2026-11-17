@@ -20,37 +20,25 @@ namespace psychic_ui {
         Observer &operator=(const Observer &) = delete;
 
         ~Observer() {
-            // Disconnecting can release callbacks, whose captures could call back into us: work on a local list
+            // Disconnecting can release callbacks, whose captures could call back into us: the slots move to a local
+            // list first, which disconnects them as it dies
             auto toDisconnect = std::move(slots);
-            for (auto &slot: toDisconnect) {
-                slot->disconnect();
-            }
         }
 
     protected:
-        std::vector<std::shared_ptr<SlotBase>> slots{};
+        std::vector<ScopedSlot> slots{};
 
         /**
          * Subscribe this observer to a signal, disconnected when the observer is destroyed
+         * The returned slot can disconnect it earlier.
          */
         template<class... T, class F>
         std::shared_ptr<Slot<T...>> subscribeTo(Signal<T...> &signal, F &&callback) {
             // Forget the slots that ended on their own (signal destroyed, or disconnected directly)
-            std::erase_if(slots, [](const std::shared_ptr<SlotBase> &slot) { return !slot->connected(); });
+            std::erase_if(slots, [](const ScopedSlot &slot) { return !slot.connected(); });
             auto slot = signal.subscribe(std::forward<F>(callback));
-            slots.push_back(slot);
+            slots.emplace_back(slot);
             return slot;
-        }
-
-        /**
-         * Disconnect a slot obtained from `subscribeTo`, ignores null
-         */
-        void unsubscribeFrom(const std::shared_ptr<SlotBase> &slot) {
-            if (!slot) {
-                return;
-            }
-            slot->disconnect();
-            std::erase(slots, slot);
         }
     };
 

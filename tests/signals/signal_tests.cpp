@@ -26,10 +26,6 @@ namespace {
             return subscribeTo(signal, std::forward<F>(callback));
         }
 
-        void stop(const std::shared_ptr<SlotBase> &slot) {
-            unsubscribeFrom(slot);
-        }
-
         std::size_t slotCount() const {
             return slots.size();
         }
@@ -55,55 +51,47 @@ TEST_CASE("Signal basics", "[signals]") {
     REQUIRE_FALSE(signal.hasSubscriptions());
     REQUIRE(signal.subscriptionCount() == 0);
 
-    auto slot = signal([&](int a, int b) { sum += a + b; });
+    auto slot = signal.subscribe([&](int a, int b) { sum += a + b; });
     REQUIRE(signal.hasSubscriptions());
     REQUIRE(signal.subscriptionCount() == 1);
     REQUIRE(slot->connected());
 
     SECTION("emits rvalues and lvalues") {
-        signal(1, 2);
+        signal.emit(1, 2);
         int x = 10;
         signal.emit(x, x);
         REQUIRE(sum == 23);
     }
 
-    SECTION("subscribe and the call operator are the same") {
+    SECTION("callbacks may take the arguments by const reference") {
         signal.subscribe([&](const int &a, const int &) { sum += a * 100; });
-        signal(1, 0);
+        signal.emit(1, 0);
         REQUIRE(sum == 101);
     }
 
-    SECTION("unsubscribe") {
-        signal.unsubscribe(slot);
+    SECTION("disconnect") {
+        slot->disconnect();
         REQUIRE_FALSE(slot->connected());
         REQUIRE_FALSE(signal.hasSubscriptions());
-        signal(1, 2);
+        signal.emit(1, 2);
         REQUIRE(sum == 0);
     }
 
     SECTION("double disconnect is a no-op") {
         slot->disconnect();
         slot->disconnect();
-        signal.unsubscribe(slot);
-        signal(1, 2);
+        signal.emit(1, 2);
         REQUIRE(sum == 0);
         REQUIRE(signal.subscriptionCount() == 0);
-    }
-
-    SECTION("unsubscribe ignores another signal's slot") {
-        Signal<int, int> other;
-        signal.unsubscribe(other([](int, int) {}));
-        signal(1, 2);
-        REQUIRE(sum == 3);
     }
 }
 
 TEST_CASE("Signal arguments are converted once and passed by reference", "[signals]") {
     Signal<std::string> signal;
     std::vector<const std::string *> seen{};
-    signal([&](const std::string &s) { seen.push_back(&s); });
-    signal([&](const std::string &s) { seen.push_back(&s); });
-    signal("converted from const char *");
+    signal.subscribe([&](const std::string &s) { seen.push_back(&s); });
+    signal.subscribe([&](const std::string &s) { seen.push_back(&s); });
+    signal.emit("converted from const char *");
     REQUIRE(seen.size() == 2);
     REQUIRE(seen[0] == seen[1]);
 }
@@ -114,55 +102,55 @@ TEST_CASE("Disconnecting during emission", "[signals]") {
     std::shared_ptr<Slot<int>>     first, second, third;
 
     SECTION("a slot disconnecting itself doesn't skip the next one") {
-        first  = signal([&](int) { calls.emplace_back("first"); first->disconnect(); });
-        second = signal([&](int) { calls.emplace_back("second"); });
-        signal(0);
-        signal(0);
+        first  = signal.subscribe([&](int) { calls.emplace_back("first"); first->disconnect(); });
+        second = signal.subscribe([&](int) { calls.emplace_back("second"); });
+        signal.emit(0);
+        signal.emit(0);
         REQUIRE(calls == std::vector<std::string>{"first", "second", "second"});
         REQUIRE(signal.subscriptionCount() == 1);
     }
 
     SECTION("a slot disconnecting the next one stops it from running") {
-        first  = signal([&](int) { calls.emplace_back("first"); second->disconnect(); });
-        second = signal([&](int) { calls.emplace_back("second"); });
-        third  = signal([&](int) { calls.emplace_back("third"); });
-        signal(0);
+        first  = signal.subscribe([&](int) { calls.emplace_back("first"); second->disconnect(); });
+        second = signal.subscribe([&](int) { calls.emplace_back("second"); });
+        third  = signal.subscribe([&](int) { calls.emplace_back("third"); });
+        signal.emit(0);
         REQUIRE(calls == std::vector<std::string>{"first", "third"});
     }
 
     SECTION("a slot disconnecting the previous one") {
-        first  = signal([&](int) { calls.emplace_back("first"); });
-        second = signal([&](int) { calls.emplace_back("second"); first->disconnect(); });
-        third  = signal([&](int) { calls.emplace_back("third"); });
-        signal(0);
-        signal(0);
+        first  = signal.subscribe([&](int) { calls.emplace_back("first"); });
+        second = signal.subscribe([&](int) { calls.emplace_back("second"); first->disconnect(); });
+        third  = signal.subscribe([&](int) { calls.emplace_back("third"); });
+        signal.emit(0);
+        signal.emit(0);
         REQUIRE(calls == std::vector<std::string>{"first", "second", "third", "second", "third"});
     }
 
     SECTION("a self-disconnecting slot whose handle is dropped keeps its callback alive while it runs") {
         auto marker = std::make_shared<int>(42);
-        first = signal([&, marker](int) {
+        first = signal.subscribe([&, marker](int) {
             first->disconnect();
             first = nullptr; // Drops the last outside reference
             calls.emplace_back(std::to_string(*marker));
         });
         marker = nullptr;
-        signal(0);
+        signal.emit(0);
         REQUIRE(calls == std::vector<std::string>{"42"});
         REQUIRE_FALSE(signal.hasSubscriptions());
     }
 
     SECTION("nested emissions") {
-        first = signal([&](int depth) {
+        first = signal.subscribe([&](int depth) {
             calls.push_back("first" + std::to_string(depth));
             if (depth == 0) {
                 second->disconnect();
-                signal(1);
+                signal.emit(1);
             }
         });
-        second = signal([&](int depth) { calls.push_back("second" + std::to_string(depth)); });
-        third  = signal([&](int depth) { calls.push_back("third" + std::to_string(depth)); });
-        signal(0);
+        second = signal.subscribe([&](int depth) { calls.push_back("second" + std::to_string(depth)); });
+        third  = signal.subscribe([&](int depth) { calls.push_back("third" + std::to_string(depth)); });
+        signal.emit(0);
         REQUIRE(calls == std::vector<std::string>{"first0", "first1", "third1", "third0"});
         REQUIRE(signal.subscriptionCount() == 2);
     }
@@ -172,17 +160,17 @@ TEST_CASE("Connecting during emission fires from the next emission", "[signals]"
     Signal<> signal;
     int      added = 0;
     int      ran   = 0;
-    signal([&]() {
+    signal.subscribe([&]() {
         // Enough to reallocate the slot list under the running emission
         for (int i = 0; i < 64; ++i) {
-            signal([&]() { ++added; });
+            signal.subscribe([&]() { ++added; });
         }
         ++ran;
     });
-    signal();
+    signal.emit();
     REQUIRE(ran == 1);
     REQUIRE(added == 0);
-    signal();
+    signal.emit();
     REQUIRE(ran == 2);
     REQUIRE(added == 64);
 }
@@ -191,17 +179,18 @@ TEST_CASE("Signal destroyed by its own handler", "[signals]") {
     auto signal = std::make_unique<Signal<int>>();
     int  ran    = 0;
     auto marker = std::make_shared<int>(7);
-    (*signal)([&, marker](int value) {
+    signal->subscribe([&, marker](int value) {
         ++ran;
         signal.reset();
         REQUIRE(*marker == 7); // The running callback survives
         REQUIRE(value == 1);
     });
-    (*signal)([&](int) { ++ran; }); // Not called: its signal is gone
+    auto next = signal->subscribe([&](int) { ++ran; }); // Not called: its signal is gone
     Signal<int> *raw = signal.get();
     raw->emit(1);
     REQUIRE(ran == 1);
     REQUIRE(signal == nullptr);
+    REQUIRE_FALSE(next->connected());
 }
 
 TEST_CASE("Slots outliving their signal", "[signals]") {
@@ -210,8 +199,8 @@ TEST_CASE("Slots outliving their signal", "[signals]") {
     Listener                listener;
     {
         Signal<> signal;
-        slot   = signal([]() {});
-        scoped = signal([]() {});
+        slot   = signal.subscribe([]() {});
+        scoped = signal.subscribe([]() {});
         listener.listen(signal, []() {});
         REQUIRE(slot->connected());
         REQUIRE(scoped.connected());
@@ -231,30 +220,30 @@ TEST_CASE("Observer", "[signals]") {
         {
             Listener listener;
             listener.listen(signal, [&](int v) { sum += v; });
-            signal(1);
+            signal.emit(1);
         }
-        signal(1);
+        signal.emit(1);
         REQUIRE(sum == 1);
         REQUIRE_FALSE(signal.hasSubscriptions());
     }
 
-    SECTION("unsubscribeFrom") {
+    SECTION("a slot disconnected directly") {
         Listener listener;
         auto     slot = listener.listen(signal, [&](int v) { sum += v; });
-        listener.stop(slot);
-        listener.stop(slot);
-        listener.stop(nullptr);
-        signal(1);
+        slot->disconnect();
+        slot->disconnect();
+        signal.emit(1);
         REQUIRE(sum == 0);
-        REQUIRE(listener.slotCount() == 0);
+        listener.listen(signal, [](int) {}); // Forgets the disconnected one
+        REQUIRE(listener.slotCount() == 1);
     }
 
     SECTION("observer destroyed by the handler it's running") {
         auto listener = std::make_unique<Listener>();
         listener->listen(signal, [&](int v) { sum += v; listener.reset(); });
-        signal([&](int v) { sum += 10 * v; });
-        signal(1);
-        signal(1);
+        signal.subscribe([&](int v) { sum += 10 * v; });
+        signal.emit(1);
+        signal.emit(1);
         REQUIRE(sum == 21);
     }
 
@@ -275,38 +264,38 @@ TEST_CASE("ScopedSlot", "[signals]") {
 
     SECTION("disconnects the previous slot when reassigned") {
         ScopedSlot scoped;
-        scoped = signal([&](int v) { sum += v; });
-        scoped = signal([&](int v) { sum += 10 * v; });
-        signal(1);
+        scoped = signal.subscribe([&](int v) { sum += v; });
+        scoped = signal.subscribe([&](int v) { sum += 10 * v; });
+        signal.emit(1);
         REQUIRE(sum == 10);
         REQUIRE(signal.subscriptionCount() == 1);
     }
 
     SECTION("disconnects when destroyed") {
         {
-            ScopedSlot scoped = signal([&](int v) { sum += v; });
+            ScopedSlot scoped = signal.subscribe([&](int v) { sum += v; });
         }
-        signal(1);
+        signal.emit(1);
         REQUIRE(sum == 0);
     }
 
     SECTION("a handler replacing its own scoped slot") {
         ScopedSlot scoped;
-        scoped = signal([&](int v) {
+        scoped = signal.subscribe([&](int v) {
             sum += v;
-            scoped = signal([&](int w) { sum += 100 * w; });
+            scoped = signal.subscribe([&](int w) { sum += 100 * w; });
         });
-        signal(1);
-        signal(1);
+        signal.emit(1);
+        signal.emit(1);
         REQUIRE(sum == 101);
     }
 
     SECTION("move keeps a single owner") {
-        ScopedSlot a = signal([&](int v) { sum += v; });
+        ScopedSlot a = signal.subscribe([&](int v) { sum += v; });
         ScopedSlot b = std::move(a);
         REQUIRE_FALSE(a.connected());
         a.disconnect();
-        signal(1);
+        signal.emit(1);
         REQUIRE(sum == 1);
     }
 }
@@ -316,7 +305,7 @@ TEST_CASE("Disconnected and orphaned slots release their callbacks", "[signals]"
 
     SECTION("on disconnect, even while the handle is kept") {
         Signal<> signal;
-        auto     slot = signal([marker]() {});
+        auto     slot = signal.subscribe([marker]() {});
         REQUIRE(marker.use_count() == 2);
         slot->disconnect();
         REQUIRE(marker.use_count() == 1);
@@ -326,7 +315,7 @@ TEST_CASE("Disconnected and orphaned slots release their callbacks", "[signals]"
         std::shared_ptr<Slot<>> slot;
         {
             Signal<> signal;
-            slot = signal([marker]() {});
+            slot = signal.subscribe([marker]() {});
         }
         REQUIRE(marker.use_count() == 1);
     }
@@ -335,7 +324,7 @@ TEST_CASE("Disconnected and orphaned slots release their callbacks", "[signals]"
         int destroyed = 0;
         {
             auto owner = std::make_shared<Owner>(&destroyed);
-            owner->onClick([raw = owner.get()]() { (void) raw; });
+            owner->onClick.subscribe([raw = owner.get()]() { (void) raw; });
         }
         REQUIRE(destroyed == 1);
     }

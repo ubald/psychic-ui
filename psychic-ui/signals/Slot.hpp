@@ -24,7 +24,6 @@ namespace psychic_ui {
         struct SignalCore {
             std::vector<std::shared_ptr<Slot<T...>>> slots{};
             unsigned int                             emitting{0}; // Nested emissions in progress
-            bool                                     alive{true}; // False once the Signal is destroyed
             bool                                     dirty{false}; // Some slots were disconnected
 
             /**
@@ -50,20 +49,11 @@ namespace psychic_ui {
                     }
                 }
             }
-
-            ~SignalCore() {
-                // No emission is running (it would hold us), so no callback is running either
-                auto removed = std::move(slots);
-                for (auto &slot: removed) {
-                    slot->_connected = false;
-                    slot->_callback  = nullptr;
-                }
-            }
         };
     }
 
     /**
-     * Type-erased slot, so that an Observer can store slots of any signal.
+     * Type-erased slot, so that a ScopedSlot can hold a slot of any signal.
      */
     class SlotBase {
     public:
@@ -87,10 +77,8 @@ namespace psychic_ui {
     /**
      * Subscription to a signal, returned by `Signal::subscribe`.
      *
-     * The signal keeps its slots alive, so dropping the returned pointer does not disconnect: keep it to disconnect
-     * manually, or extend from Observer and use `subscribeTo` to disconnect automatically when the observer dies.
-     * When keeping a slot, type it with the same type parameters as the Signal: a `Signal<float, int>` returns a
-     * `std::shared_ptr<Slot<float, int>>`.
+     * The signal keeps its slots alive, so dropping the returned pointer does not disconnect: keep it in a ScopedSlot
+     * to disconnect later, or extend from Observer and use `subscribeTo` to disconnect when the observer dies.
      */
     template<class... T>
     class Slot final : public SlotBase {

@@ -90,8 +90,8 @@ namespace psychic_ui {
 
     void MenuBar::addedToRender() {
         DataContainer<std::shared_ptr<MenuItem>>::addedToRender();
-        _menuClosedSlot = subscribeTo(
-            window()->menuClosed, [this]() {
+        _menuClosedSlot = window()->menuClosed.subscribe(
+            [this]() {
                 if (!_menuOpen) {
                     return;
                 }
@@ -110,8 +110,7 @@ namespace psychic_ui {
 
     void MenuBar::removedFromRender() {
         DataContainer<std::shared_ptr<MenuItem>>::removedFromRender();
-        unsubscribeFrom(_menuClosedSlot);
-        _menuClosedSlot = nullptr;
+        _menuClosedSlot.disconnect();
     }
 
 }
