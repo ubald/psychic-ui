@@ -18,7 +18,6 @@
 
         packages = with pkgs; [
           cmake
-          # Skia's build: gn's scripts and bin/fetch-gn are Python 3, and gn writes ninja files
           ninja
           python3
           pkg-config
@@ -33,7 +32,6 @@
           sdl3
           glfw
 
-          # Found by the tests' FetchContent instead of downloading it
           catch2_3
 
           # X11 development files, for SDL3 or GLFW when they're fetched
