@@ -4,13 +4,9 @@ if (NOT EXISTS "${SKIA_SOURCE_DIR}/.git")
   message(FATAL_ERROR "Psychic UI dependency missing! Use \"git submodule update --init --recursive\" to download dependencies.")
 endif()
 
-# Skia's build runs Python 3 scripts (bin/fetch-gn, gn's exec_script calls) and ninja. An installed
-# ninja is used when there is one; otherwise the build script fetches the one Skia pins.
+# Skia's build runs Python 3 scripts (gn's exec_script calls) and ninja.
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
-find_program(SKIA_NINJA ninja)
-if (NOT SKIA_NINJA)
-    set(SKIA_NINJA "")
-endif ()
+find_program(SKIA_NINJA ninja REQUIRED)
 
 # SkShaper shapes with the system HarfBuzz. CMake has no Find module for it.
 find_path(HARFBUZZ_INCLUDE_DIR hb.h PATH_SUFFIXES harfbuzz REQUIRED)
@@ -88,7 +84,6 @@ list(JOIN SKIA_INCLUDE_FLAGS ", " SKIA_INCLUDE_FLAGS)
 list(JOIN SKIA_LIBRARY_FLAGS ", " SKIA_LIBRARY_FLAGS)
 list(APPEND SKIA_ARGS_LIST "extra_cflags=[${SKIA_INCLUDE_FLAGS}]" "extra_ldflags=[${SKIA_LIBRARY_FLAGS}]")
 
-list(JOIN SKIA_ARGS_LIST " " SKIA_ARGS)
 set(PSYCHIC_UI_SKIA_DIR "" CACHE PATH "A prebuilt Skia to link from, read-only, to share one build between build directories (default: build it into this build directory's extlib/skia/build)")
 if (PSYCHIC_UI_SKIA_DIR)
     # A relative directory (set by a parent project or a preset) is the build directory's: CMake already made one given
@@ -99,7 +94,43 @@ else ()
 endif ()
 set(PSYCHIC_UI_SKIA_OUTPUT "${SKIA_OUTPUT}" CACHE INTERNAL "The directory Skia is linked from (built into it, unless PSYCHIC_UI_SKIA_DIR gives a read-only prebuilt one)")
 
-configure_file("skia_build.sh.in" "skia_build.sh" @ONLY)
+if (NOT PSYCHIC_UI_SKIA_DIR)
+    # gn reads the args from the output directory's args.gn, one per line. A prebuilt Skia is never written to.
+    list(JOIN SKIA_ARGS_LIST "\n" SKIA_ARGS)
+    file(WRITE ${SKIA_OUTPUT}/args.gn "${SKIA_ARGS}\n")
+
+    # The gn Skia pins, downloaded here rather than by Skia's bin/fetch-gn, which writes into Skia's checkout. The
+    # revision is bin/fetch-gn's (it extracts the same package): update both together when Skia moves.
+    set(SKIA_GN_REVISION b2afae122eeb6ce09c52d63f67dc53fc517dbdc8)
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
+        set(SKIA_GN_PLATFORM linux-amd64)
+        set(SKIA_GN_SHA256 6a3bfc53d825bccac5e5b4b7bdcc10ce9396a04a689ac684ec3308ca5c7f3d9c)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
+        set(SKIA_GN_PLATFORM linux-arm64)
+        set(SKIA_GN_SHA256 376e1358ded109d955b8eb55ba2a7dec0e95ab1f8dfe0e18011e06eed78a011f)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
+        set(SKIA_GN_PLATFORM mac-amd64)
+        set(SKIA_GN_SHA256 4bea817159f060980f1ca1d0400ef6cd2e0ab0ade66bb34e91aab9c2cffc9d83)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
+        set(SKIA_GN_PLATFORM mac-arm64)
+        set(SKIA_GN_SHA256 cbb260f2cf999f7d74da96b3828a061299c6337354dd6db642e778828576025c)
+    elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows" AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
+        set(SKIA_GN_PLATFORM windows-amd64)
+        set(SKIA_GN_SHA256 7249f55d6f22b55affa68aaf19d2f597c39946299216e12d78eac6cc1469f8a1)
+    else ()
+        message(FATAL_ERROR "No gn is published for ${CMAKE_HOST_SYSTEM_NAME} ${CMAKE_HOST_SYSTEM_PROCESSOR}: Skia can't be built here. "
+            "Use -DPSYCHIC_UI_SKIA_DIR=<a prebuilt Skia>.")
+    endif ()
+    set(SKIA_GN ${CMAKE_CURRENT_BINARY_DIR}/gn/gn${CMAKE_EXECUTABLE_SUFFIX})
+    if (NOT EXISTS "${SKIA_GN}")
+        set(SKIA_GN_ZIP ${CMAKE_CURRENT_BINARY_DIR}/gn-${SKIA_GN_PLATFORM}.zip)
+        file(DOWNLOAD
+            "https://chrome-infra-packages.appspot.com/dl/gn/gn/${SKIA_GN_PLATFORM}/+/git_revision:${SKIA_GN_REVISION}"
+            ${SKIA_GN_ZIP} EXPECTED_HASH SHA256=${SKIA_GN_SHA256})
+        file(ARCHIVE_EXTRACT INPUT ${SKIA_GN_ZIP} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/gn)
+        file(REMOVE ${SKIA_GN_ZIP})
+    endif ()
+endif ()
 
 # The static libraries Psychic UI links, in link order (each before what it uses)
 set(SKIA_LIBRARY_NAMES skparagraph skshaper skunicode_icu skunicode_core skia skcms)
@@ -121,9 +152,11 @@ if (PSYCHIC_UI_SKIA_DIR)
     add_custom_target(skia-build)
 else ()
     add_custom_command(OUTPUT ${SKIA_STATIC_LIBS}
-        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/skia_build.sh
+        COMMAND ${SKIA_GN} gen ${SKIA_OUTPUT} --script-executable=${Python3_EXECUTABLE}
+        COMMAND ${SKIA_NINJA} -C ${SKIA_OUTPUT} skia modules/skparagraph modules/skshaper modules/skunicode
         WORKING_DIRECTORY ${SKIA_SOURCE_DIR}
         USES_TERMINAL
+        VERBATIM
     )
     add_custom_target(skia-build DEPENDS ${SKIA_STATIC_LIBS})
 endif ()
