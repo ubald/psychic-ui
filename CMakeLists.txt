@@ -442,16 +442,6 @@ function(psychic_ui_copy_resources target)
     add_custom_command(TARGET ${target} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/res" "$<TARGET_FILE_DIR:${target}>/res"
         VERBATIM)
-    # vcpkg's ICU and HarfBuzz are DLLs. vcpkg copies them next to an executable from debug/bin in a Debug build, which
-    # a release-only triplet (the windows preset's) doesn't have, so copy the release ones
-    if (WIN32 AND VCPKG_INSTALLED_DIR AND VCPKG_TARGET_TRIPLET)
-        file(GLOB _psychic_ui_dlls "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/*.dll")
-        if (_psychic_ui_dlls)
-            add_custom_command(TARGET ${target} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_psychic_ui_dlls} "$<TARGET_FILE_DIR:${target}>"
-                VERBATIM)
-        endif ()
-    endif ()
 endfunction()
 
 # SUBDIRECTORIES

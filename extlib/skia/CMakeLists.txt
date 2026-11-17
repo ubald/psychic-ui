@@ -58,18 +58,26 @@ set(SKIA_ARGS_LIST
     paragraph_bench_enabled=false
     )
 if (WIN32)
-    # gn's Windows toolchain runs clang-cl and lld-link from the LLVM root (<root>/bin/clang-cl.exe) and finds
-    # MSVC's headers and libraries from its root, the Developer Prompt's when there is one, else with vswhere
+    # gn's Windows toolchain runs clang-cl and lld-link from the LLVM root (<root>/bin/clang-cl.exe), and takes MSVC's
+    # and the SDK's headers and libraries from the Developer prompt's environment, so that Skia compiles against the
+    # same STL and SDK as CMake; without one it finds Visual Studio with vswhere and their highest versions
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
         cmake_path(GET CMAKE_CXX_COMPILER PARENT_PATH SKIA_CLANG_BIN)
         cmake_path(GET SKIA_CLANG_BIN PARENT_PATH SKIA_CLANG_ROOT)
         list(APPEND SKIA_ARGS_LIST "clang_win=\"${SKIA_CLANG_ROOT}\"")
     endif ()
-    if (DEFINED ENV{VCINSTALLDIR})
-        file(TO_CMAKE_PATH "$ENV{VCINSTALLDIR}" SKIA_WIN_VC)
-        string(REGEX REPLACE "/+$" "" SKIA_WIN_VC "${SKIA_WIN_VC}")
-        list(APPEND SKIA_ARGS_LIST "win_vc=\"${SKIA_WIN_VC}\"")
-    endif ()
+    # A gn arg from an environment variable, when it is set, as a path without its trailing separator
+    function(skia_arg_from_env arg variable)
+        if (DEFINED ENV{${variable}})
+            file(TO_CMAKE_PATH "$ENV{${variable}}" value)
+            string(REGEX REPLACE "/+$" "" value "${value}")
+            set(SKIA_ARGS_LIST ${SKIA_ARGS_LIST} "${arg}=\"${value}\"" PARENT_SCOPE)
+        endif ()
+    endfunction()
+    skia_arg_from_env(win_vc VCINSTALLDIR)
+    skia_arg_from_env(win_toolchain_version VCToolsVersion)
+    skia_arg_from_env(win_sdk WindowsSdkDir)
+    skia_arg_from_env(win_sdk_version WindowsSDKVersion)
 else ()
     list(APPEND SKIA_ARGS_LIST "cc=\"${CMAKE_C_COMPILER}\"" "cxx=\"${CMAKE_CXX_COMPILER}\"")
 endif ()

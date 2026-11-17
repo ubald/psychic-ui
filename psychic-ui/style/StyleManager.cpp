@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <stdexcept>
+#include <vector>
 #include "StyleManager.hpp"
 #include "../Div.hpp"
 #include "modules/skparagraph/include/TypefaceFontProvider.h"
@@ -171,7 +172,16 @@ namespace psychic_ui {
             }
             _fontCollection = sk_make_sp<skia::textlayout::FontCollection>();
             _fontCollection->setAssetFontManager(std::move(provider));
-            _fontCollection->setDefaultFontManager(fontManager());
+            // An unknown family falls back to the system's default font: "sans-serif" (SkParagraph's default family,
+            // which Fontconfig knows), then the font manager's own default family, since DirectWrite and CoreText have
+            // no generic names. Without it SkParagraph would take the first loaded font.
+            std::vector<SkString> defaultFamilies{SkString{"sans-serif"}};
+            if (auto typeface = fontManager()->legacyMakeTypeface(nullptr, SkFontStyle())) {
+                SkString family;
+                typeface->getFamilyName(&family);
+                defaultFamilies.push_back(family);
+            }
+            _fontCollection->setDefaultFontManager(fontManager(), defaultFamilies);
             _fontCollection->enableFontFallback();
         }
         return _fontCollection;
