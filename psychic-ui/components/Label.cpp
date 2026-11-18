@@ -47,7 +47,7 @@ namespace psychic_ui {
             // Only horizontally: glyphs can reach above and below the line
             canvas->clipRect(SkRect::MakeLTRB(_paddedRect.fLeft, _paddedRect.fTop - _lineHeight, _paddedRect.fLeft + _visibleWidth, _paddedRect.fBottom + _lineHeight));
         }
-        _textLayout.paint(canvas, _paddedRect.fLeft, _paddedRect.fTop);
+        _textLayout.paint(canvas, _paddedRect.fLeft, _paddedRect.fTop, _computedStyle.color().argb());
         if (cut) {
             canvas->restore();
         }

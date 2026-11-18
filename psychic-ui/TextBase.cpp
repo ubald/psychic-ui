@@ -33,8 +33,6 @@ namespace psychic_ui {
         // Auto is 1.5 times the font size, a percent is of the font size
         _lineHeight = _computedStyle.lineHeight().resolve(_fontSize, _fontSize * 1.5f);
 
-        _textPaint.setAntiAlias(true);
-        _textPaint.setColor(_computedStyle.color().argb());
         _font.setTypeface(styleManager()->font(_computedStyle.fontFamily().str()));
         _font.setSize(_fontSize);
 
@@ -47,10 +45,11 @@ namespace psychic_ui {
             _computedStyle.fontSmoothing(),
             _computedStyle.textAlign()
         };
-        // Yoga caches measures: re-measure when anything changing the text metrics changes
+        // Yoga caches measures: re-measure when anything changing the text metrics changes. Colors aren't part of
+        // the layout: they are given when painting, so a color transition lays nothing out again
         bool remeasure = !(layoutStyle == _layoutStyle);
         _layoutStyle = layoutStyle;
-        _textLayout.setStyle(layoutStyle, _computedStyle.color().argb(), _computedStyle.selectionColor().argb());
+        _textLayout.setStyle(layoutStyle);
         if (remeasure) {
             invalidate();
         }

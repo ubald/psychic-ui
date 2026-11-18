@@ -36,8 +36,7 @@ namespace {
         TextLayout text{};
         text.setText(icu::UnicodeString::fromUTF8("The quick brown fox jumps over the lazy dog"));
         text.setStyle(
-            TextLayoutStyle{manager->fontCollection(), family, size, size * 1.5f, 0.0f, FontSmoothing::Grayscale, TextAlign::Start},
-            SK_ColorBLACK, SK_ColorBLACK
+            TextLayoutStyle{manager->fontCollection(), family, size, size * 1.5f, 0.0f, FontSmoothing::Grayscale, TextAlign::Start}
         );
         return text;
     }
@@ -76,7 +75,7 @@ TEST_CASE("text lays out in Inter at small sizes, slightly hinted", "[text][font
         auto surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(400, 40));
         surface->getCanvas()->clear(SK_ColorWHITE);
         regular.layout(400.0f);
-        regular.paint(surface->getCanvas(), 0.0f, 0.0f);
+        regular.paint(surface->getCanvas(), 0.0f, 0.0f, SK_ColorBLACK);
         SkPixmap pixmap;
         REQUIRE(surface->peekPixels(&pixmap));
         bool ink = false;

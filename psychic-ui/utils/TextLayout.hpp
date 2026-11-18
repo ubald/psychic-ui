@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
@@ -38,6 +39,9 @@ namespace psychic_ui {
      * Every line is `lineHeight` tall, its glyphs centred in it (CSS's half-leading). One-line
      * layouts never wrap: their text overflows the width instead, and line returns lay out as
      * spaces.
+     *
+     * Colors are given when painting, so a color change (a transition) never builds or lays out the
+     * paragraph again.
      */
     class TextLayout {
     public:
@@ -49,9 +53,9 @@ namespace psychic_ui {
         void setText(const icu::UnicodeString &text);
 
         /**
-         * Set the style; the colors are for painting and selected text
+         * Set what the text is laid out with
          */
-        void setStyle(const TextLayoutStyle &style, SkColor color, SkColor selectionColor);
+        void setStyle(const TextLayoutStyle &style);
 
         /**
          * Whether the text wraps at the width (or stays on one line, past it)
@@ -75,14 +79,26 @@ namespace psychic_ui {
         void layout(float width);
 
         /**
-         * Paint the text with its top left at (x, y)
+         * Paint the text in a color with its top left at (x, y)
          */
-        void paint(SkCanvas *canvas, float x, float y);
+        void paint(SkCanvas *canvas, float x, float y, SkColor color);
 
         /**
-         * Paint the text in the selection color, for drawing under a selection's clip
+         * Paint the selection from `begin` to `end` over the text painted at (x, y): its rectangles
+         * (a line's height each, in visual order, so bidirectional text gets several) in `background`,
+         * and the text inside them again in `foreground`
          */
-        void paintSelected(SkCanvas *canvas, float x, float y);
+        void paintSelection(SkCanvas *canvas, float x, float y, unsigned int begin, unsigned int end, SkColor background, SkColor foreground);
+
+        /**
+         * The caret before the character at the index: a zero-width rectangle across its line
+         */
+        SkRect caretRect(unsigned int index);
+
+        /**
+         * The caret index closest to a point
+         */
+        unsigned int indexAt(float x, float y);
 
         /**
          * The x where the visible text ends when it's cut at the width: the end of the last
@@ -105,34 +121,29 @@ namespace psychic_ui {
          */
         std::pair<unsigned int, float> posFromIndex(unsigned int index);
 
-        /**
-         * The caret index closest to a point
-         */
-        unsigned int indexFromPos(float x, float y);
-
         std::pair<unsigned int, unsigned int> wordAtIndex(unsigned int index) const;
         std::pair<unsigned int, unsigned int> sentenceAtIndex(unsigned int index) const;
         unsigned int previousWordBoundary(unsigned int index) const;
         unsigned int nextWordBoundary(unsigned int index) const;
 
+        /**
+         * How many paragraphs every TextLayout has built so far, for tests of what rebuilds them
+         */
+        static std::size_t paragraphsBuilt();
+
     private:
-        icu::UnicodeString                         _text{};
-        std::u16string                             _utf16{};
+        std::u16string                             _text{}; // The only copy, which the iterators read too
         TextLayoutStyle                            _style{};
-        SkColor                                    _color{SK_ColorBLACK};
-        SkColor                                    _selectionColor{SK_ColorBLACK};
         bool                                       _multiline{false};
         float                                      _width{0.0f};
         float                                      _paragraphWidth{-1.0f}; // What _paragraph is laid out at
-        float                                      _selectedWidth{-1.0f};
         bool                                       _linesValid{false};
         std::unique_ptr<skia::textlayout::Paragraph> _paragraph{nullptr};
-        std::unique_ptr<skia::textlayout::Paragraph> _selectedParagraph{nullptr};
         std::vector<skia::textlayout::LineMetrics>  _lines{};
         std::unique_ptr<icu::BreakIterator>        _wordIterator{nullptr};
         std::unique_ptr<icu::BreakIterator>        _sentenceIterator{nullptr};
 
-        std::unique_ptr<skia::textlayout::Paragraph> build(SkColor color) const;
+        std::unique_ptr<skia::textlayout::Paragraph> build() const;
 
         /**
          * The paragraph, built if needed and laid out at `width` (another width than the

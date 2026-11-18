@@ -126,8 +126,6 @@ namespace psychic_ui {
         unsigned int       _caret{0};
         float              _targetXPos{0.0f};
         icu::UnicodeString _text{};
-        SkPaint            _selectionBackgroundPaint{};
-        SkPaint            _caretPaint{};
 
         /**
          * Whether we're waiting on layout validation to sent the caret signal
@@ -164,7 +162,6 @@ namespace psychic_ui {
         void subscribeToEdition();
 
         void removedFromRender() override;
-        void styleUpdated() override;
         Size measure(Constraint width, Constraint height) override;
         void layoutUpdated() override;
         void draw(SkCanvas *canvas) override;

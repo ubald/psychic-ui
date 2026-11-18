@@ -5,6 +5,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 #include "include/core/SkFont.h"
+#include "include/core/SkSurface.h"
 #include <psychic-ui/utils/TextLayout.hpp>
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/style/Style.hpp>
@@ -67,7 +68,7 @@ namespace {
     float textWidth(const std::shared_ptr<StyleManager> &styleManager, const std::string &text, float size = 14.0f, const std::string &font = FONT) {
         TextLayout layout{};
         layout.setText(icu::UnicodeString::fromUTF8(text));
-        layout.setStyle(layoutStyle(styleManager, size, font), SK_ColorBLACK, SK_ColorBLACK);
+        layout.setStyle(layoutStyle(styleManager, size, font));
         layout.setMultiline(true);
         return std::ceil(layout.maxContentWidth());
     }
@@ -220,7 +221,7 @@ TEST_CASE("Text and Label are re-measured when their font changes through style"
 TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
     auto       styleManager = makeStyleManager();
     TextLayout layout{};
-    layout.setStyle(layoutStyle(styleManager), SK_ColorBLACK, SK_ColorBLACK);
+    layout.setStyle(layoutStyle(styleManager));
     layout.setMultiline(true);
 
     SECTION("hard line breaks") {
@@ -247,11 +248,11 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
             REQUIRE(line == 0);
             REQUIRE(x > previous);
             previous = x;
-            REQUIRE(layout.indexFromPos(x + 0.5f, LINE_HEIGHT / 2) == i);
+            REQUIRE(layout.indexAt(x + 0.5f, LINE_HEIGHT / 2) == i);
         }
         REQUIRE(previous == Approx(layout.maxContentWidth()).margin(0.5));
         // Past the end, below the last line
-        REQUIRE(layout.indexFromPos(1000.0f, 1000.0f) == 11);
+        REQUIRE(layout.indexAt(1000.0f, 1000.0f) == 11);
     }
 
     SECTION("wrapping keeps whole words and lines a line height apart") {
@@ -266,7 +267,7 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
             REQUIRE(start > 0);
             REQUIRE(layout.previousWordBoundary(start + 1) == start);
             REQUIRE(layout.lineFromIndex(start) == line);
-            REQUIRE(layout.indexFromPos(0.0f, (line + 0.5f) * LINE_HEIGHT) == start);
+            REQUIRE(layout.indexAt(0.0f, (line + 0.5f) * LINE_HEIGHT) == start);
         }
     }
 
@@ -295,7 +296,7 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
         layout.layout(400.0f);
         REQUIRE(layout.lineCount() == 1);
         REQUIRE(layout.posFromIndex(0) == std::make_pair(0u, 0.0f));
-        REQUIRE(layout.indexFromPos(10.0f, 10.0f) == 0);
+        REQUIRE(layout.indexAt(10.0f, 10.0f) == 0);
     }
 
     SECTION("words and sentences") {
@@ -304,4 +305,85 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
         REQUIRE(layout.nextWordBoundary(6) == 11);
         REQUIRE(layout.sentenceAtIndex(3) == std::make_pair(0u, 19u));
     }
+}
+
+TEST_CASE("Text layout caret rectangles, hit testing and selections", "[text]") {
+    auto       styleManager = makeStyleManager();
+    TextLayout layout{};
+    layout.setStyle(layoutStyle(styleManager));
+    layout.setMultiline(true);
+    layout.setText(icu::UnicodeString::fromUTF8("ab\ncdef\ngh"));
+    layout.layout(400.0f);
+
+    SECTION("a caret is a line high, at the x of its index") {
+        const SkRect first = layout.caretRect(0);
+        CHECK(first.fLeft == 0.0f);
+        CHECK(first.width() == 0.0f);
+        CHECK(first.fTop == 0.0f);
+        CHECK(first.height() == LINE_HEIGHT);
+
+        const SkRect middle = layout.caretRect(5); // After "cd"
+        CHECK(middle.fTop == LINE_HEIGHT);
+        CHECK(middle.fLeft == layout.posFromIndex(5).second);
+        CHECK(layout.indexAt(middle.fLeft, middle.centerY()) == 5);
+        CHECK(layout.caretRect(10).fTop == 2 * LINE_HEIGHT);
+    }
+
+    SECTION("a selection is painted over its text only, ending where its line's text ends") {
+        auto  surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(400, 100));
+        auto *canvas  = surface->getCanvas();
+        canvas->clear(SK_ColorWHITE);
+        // From "b" to "g": all of the middle line
+        layout.paintSelection(canvas, 10.0f, 10.0f, 1, 9, SK_ColorRED, SK_ColorBLACK);
+        SkPixmap pixmap;
+        REQUIRE(surface->peekPixels(&pixmap));
+        const int   middleY = static_cast<int>(10.0f + LINE_HEIGHT) + 1; // Its top row, in the half-leading over the glyphs
+        const float lineEnd = 10.0f + layout.caretRect(7).fLeft;
+        CHECK(pixmap.getColor(11, middleY) == SK_ColorRED);
+        CHECK(pixmap.getColor(static_cast<int>(lineEnd) - 1, middleY) == SK_ColorRED);
+        // Not past the line's text (B7: middle lines went to the box's width plus its left inset)
+        CHECK(pixmap.getColor(static_cast<int>(lineEnd) + 4, middleY) == SK_ColorWHITE);
+        // Before "b" on the first line, nothing
+        CHECK(pixmap.getColor(11, 11) == SK_ColorWHITE);
+        // An empty selection paints nothing
+        canvas->clear(SK_ColorWHITE);
+        layout.paintSelection(canvas, 10.0f, 10.0f, 4, 4, SK_ColorRED, SK_ColorBLACK);
+        CHECK(pixmap.getColor(11, middleY) == SK_ColorWHITE);
+    }
+}
+
+TEST_CASE("Text is painted in the color given then, without building its paragraph again", "[text]") {
+    auto       styleManager = makeStyleManager();
+    TextLayout layout{};
+    layout.setStyle(layoutStyle(styleManager));
+    layout.setText(icu::UnicodeString::fromUTF8("Hello"));
+    layout.layout(200.0f);
+
+    auto surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(200, 40));
+    // The darkest pixel painted over white: a glyph's core, in the text's color
+    auto inkOf = [&](SkColor color) {
+        surface->getCanvas()->clear(SK_ColorWHITE);
+        layout.paint(surface->getCanvas(), 0.0f, 0.0f, color);
+        SkPixmap pixmap;
+        REQUIRE(surface->peekPixels(&pixmap));
+        SkColor darkest = SK_ColorWHITE;
+        int     least   = 3 * 255;
+        for (int y = 0; y < pixmap.height(); ++y) {
+            for (int x = 0; x < pixmap.width(); ++x) {
+                const SkColor c   = pixmap.getColor(x, y);
+                const int     sum = static_cast<int>(SkColorGetR(c) + SkColorGetG(c) + SkColorGetB(c));
+                if (sum < least) {
+                    least   = sum;
+                    darkest = c;
+                }
+            }
+        }
+        return darkest;
+    };
+
+    CHECK(inkOf(SK_ColorBLUE) == SK_ColorBLUE);
+    const auto built = TextLayout::paragraphsBuilt();
+    CHECK(inkOf(SK_ColorRED) == SK_ColorRED);
+    CHECK(inkOf(SK_ColorBLUE) == SK_ColorBLUE);
+    CHECK(TextLayout::paragraphsBuilt() == built);
 }

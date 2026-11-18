@@ -1,5 +1,4 @@
 #include <cmath>
-#include "include/core/SkPathBuilder.h"
 #include "psychic-ui/Window.hpp"
 #include "Text.hpp"
 
@@ -207,7 +206,7 @@ namespace psychic_ui {
 
     unsigned int Text::indexAt(int x, int y) const {
         // The text starts inside the padding and border
-        return _textLayout.indexFromPos(
+        return _textLayout.indexAt(
             static_cast<float>(x) - (_paddedRect.fLeft - _rect.fLeft),
             static_cast<float>(y) - (_paddedRect.fTop - _rect.fTop)
         );
@@ -278,7 +277,7 @@ namespace psychic_ui {
                     moveCaret(0);
                 } else {
                     // Otherwise go one line up
-                    auto index = _textLayout.indexFromPos(_targetXPos, (static_cast<float>(pos.first) - 0.5f) * _lineHeight);
+                    auto index = _textLayout.indexAt(_targetXPos, (static_cast<float>(pos.first) - 0.5f) * _lineHeight);
                     moveCaret(index, false);
                 }
                 break;
@@ -291,7 +290,7 @@ namespace psychic_ui {
                     moveCaret(static_cast<unsigned int>(_text.length()));
                 } else {
                     // Otherwise go one line down
-                    auto index = _textLayout.indexFromPos(_targetXPos, (static_cast<float>(pos.first) + 1.5f) * _lineHeight);
+                    auto index = _textLayout.indexAt(_targetXPos, (static_cast<float>(pos.first) + 1.5f) * _lineHeight);
                     moveCaret(index, false);
                 }
                 break;
@@ -372,17 +371,6 @@ namespace psychic_ui {
         }
     }
 
-    void Text::styleUpdated() {
-        TextBase::styleUpdated();
-
-        _selectionBackgroundPaint = _textPaint;
-        _selectionBackgroundPaint.setColor(_computedStyle.selectionBackgroundColor().argb());
-        _caretPaint = _textPaint;
-        if (_computedStyle.has(Property::caretColor)) {
-            _caretPaint.setColor(_computedStyle.caretColor().argb());
-        }
-    }
-
     Size Text::measure(Constraint width, Constraint height) {
         // Pure: the layout caches measures and calls this with various constraints,
         // so the layout used for painting (at the box's width) is left as it is.
@@ -403,42 +391,22 @@ namespace psychic_ui {
     void Text::draw(SkCanvas *canvas) {
         Div::draw(canvas);
         if (!_text.isEmpty()) {
-            _textLayout.paint(canvas, _paddedRect.fLeft, _paddedRect.fTop);
-
-            if (_selectable && _focused && _selectBegin != _selectEnd) {
-                auto begin = _textLayout.posFromIndex(_selectBegin);
-                auto end   = _textLayout.posFromIndex(_selectEnd);
-
-                SkPathBuilder builder{};
-                for (unsigned int i = begin.first; i <= end.first; ++i) {
-                    builder.addRect(
-                        SkRect{
-                            _paddedRect.fLeft + (i == begin.first ? begin.second : 0.0f),
-                            _paddedRect.fTop + (i * _lineHeight),
-                            _paddedRect.fLeft + (i == end.first ? end.second : _width),
-                            _paddedRect.fTop + ((i + 1.0f) * _lineHeight),
-                        }
-                    );
-                }
-                SkPath path = builder.detach();
-
-                canvas->drawPath(path, _selectionBackgroundPaint);
-                canvas->save();
-                canvas->clipPath(path);
-                _textLayout.paintSelected(canvas, _paddedRect.fLeft, _paddedRect.fTop);
-                canvas->restore();
+            _textLayout.paint(canvas, _paddedRect.fLeft, _paddedRect.fTop, _computedStyle.color().argb());
+            if (_selectable && _focused) {
+                _textLayout.paintSelection(
+                    canvas, _paddedRect.fLeft, _paddedRect.fTop, _selectBegin, _selectEnd,
+                    _computedStyle.selectionBackgroundColor().argb(), _computedStyle.selectionColor().argb()
+                );
             }
         }
 
         if (_editable && _focused) {
-            auto   caret = _textLayout.posFromIndex(_caret);
-            SkRect caretRect{
-                _paddedRect.fLeft + caret.second - 1.0f,
-                _paddedRect.fTop + (caret.first * _lineHeight),
-                _paddedRect.fLeft + caret.second + 1.0f,
-                _paddedRect.fTop + ((caret.first + 1.0f) * _lineHeight),
-            };
-            canvas->drawRect(caretRect, _caretPaint);
+            // A 2 px bar, in the text's color unless caretColor says otherwise
+            const SkRect caret = _textLayout.caretRect(_caret).makeOffset(_paddedRect.fLeft, _paddedRect.fTop);
+            SkPaint      paint{};
+            paint.setAntiAlias(true);
+            paint.setColor((_computedStyle.has(Property::caretColor) ? _computedStyle.caretColor() : _computedStyle.color()).argb());
+            canvas->drawRect(caret.makeOutset(1.0f, 0.0f), paint);
         }
     }
 
@@ -448,19 +416,19 @@ namespace psychic_ui {
             return;
         }
         // The caret's line, across the text, in window coordinates
-        const auto caret = _textLayout.posFromIndex(_caret);
-        int        x     = 0;
-        int        y     = 0;
+        const SkRect caret = _textLayout.caretRect(_caret);
+        int          x     = 0;
+        int          y     = 0;
         localToGlobal(
             x, y,
             static_cast<int>(_paddedRect.fLeft) - _x,
-            static_cast<int>(_paddedRect.fTop + static_cast<float>(caret.first) * _lineHeight) - _y
+            static_cast<int>(_paddedRect.fTop + caret.fTop) - _y
         );
         window->setTextInputArea(
             x, y,
             static_cast<int>(std::ceil(_paddedRect.width())),
-            static_cast<int>(std::ceil(_lineHeight)),
-            static_cast<int>(caret.second)
+            static_cast<int>(std::ceil(caret.height())),
+            static_cast<int>(caret.fLeft)
         );
     }
 }

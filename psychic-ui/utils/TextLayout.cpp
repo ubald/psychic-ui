@@ -1,9 +1,12 @@
 #include <algorithm>
 #include <cmath>
 #include "TextLayout.hpp"
+#include <unicode/utext.h>
 #include "modules/skparagraph/include/ParagraphBuilder.h"
+#include "modules/skparagraph/include/ParagraphPainter.h"
 #include "modules/skparagraph/include/ParagraphStyle.h"
 #include "modules/skparagraph/include/TextStyle.h"
+#include "include/core/SkPathBuilder.h"
 #include "modules/skunicode/include/SkUnicode_icu.h"
 
 namespace psychic_ui {
@@ -22,6 +25,57 @@ namespace psychic_ui {
                     return SkFont::Edging::kAntiAlias;
             }
         }
+
+        std::size_t built = 0; // Paragraphs built, by every TextLayout
+
+        /**
+         * Paints a paragraph in one color, whatever the color it was built with: SkParagraph keeps the
+         * paint of each run in its lines' text blobs once painted, so the color given at paint time
+         * replaces it here rather than in the paragraph (`updateForegroundPaint` would need the
+         * paragraph laid out again to reach those blobs)
+         */
+        class ColorPainter final : public tl::ParagraphPainter {
+        public:
+            ColorPainter(SkCanvas *canvas, SkColor color) : _canvas(canvas), _color(color) {}
+
+            void drawTextBlob(const sk_sp<SkTextBlob> &blob, SkScalar x, SkScalar y, const SkPaintOrID &paint) override {
+                SkPaint p = std::get<SkPaint>(paint);
+                p.setColor(_color);
+                _canvas->drawTextBlob(blob, x, y, p);
+            }
+
+            // What follows only paints what this layout never builds (shadows, backgrounds, decorations)
+            void drawTextShadow(const sk_sp<SkTextBlob> &blob, SkScalar x, SkScalar y, SkColor color, SkScalar /*blurSigma*/) override {
+                SkPaint p;
+                p.setColor(color);
+                _canvas->drawTextBlob(blob, x, y, p);
+            }
+
+            void drawRect(const SkRect &rect, const SkPaintOrID &paint) override {
+                _canvas->drawRect(rect, std::get<SkPaint>(paint));
+            }
+
+            void drawFilledRect(const SkRect &rect, const DecorationStyle &style) override {
+                _canvas->drawRect(rect, style.skPaint());
+            }
+
+            void drawPath(const SkPath &path, const DecorationStyle &style) override {
+                _canvas->drawPath(path, style.skPaint());
+            }
+
+            void drawLine(SkScalar x0, SkScalar y0, SkScalar x1, SkScalar y1, const DecorationStyle &style) override {
+                _canvas->drawLine(x0, y0, x1, y1, style.skPaint());
+            }
+
+            void clipRect(const SkRect &rect) override { _canvas->clipRect(rect); }
+            void translate(SkScalar dx, SkScalar dy) override { _canvas->translate(dx, dy); }
+            void save() override { _canvas->save(); }
+            void restore() override { _canvas->restore(); }
+
+        private:
+            SkCanvas *_canvas;
+            SkColor   _color;
+        };
 
         sk_sp<SkUnicode> unicode() {
             static sk_sp<SkUnicode> unicode = SkUnicodes::ICU::Make();
@@ -51,27 +105,29 @@ namespace psychic_ui {
         UErrorCode status = U_ZERO_ERROR;
         _wordIterator     = std::unique_ptr<icu::BreakIterator>(icu::BreakIterator::createWordInstance(icu::Locale::getDefault(), status));
         _sentenceIterator = std::unique_ptr<icu::BreakIterator>(icu::BreakIterator::createSentenceInstance(icu::Locale::getDefault(), status));
-        setText(_text);
+        setText(icu::UnicodeString{});
+    }
+
+    std::size_t TextLayout::paragraphsBuilt() {
+        return built;
     }
 
     void TextLayout::setText(const icu::UnicodeString &text) {
-        if (&text != &_text) {
-            _text = text;
-        }
-        _utf16.assign(reinterpret_cast<const char16_t *>(_text.getBuffer()), static_cast<size_t>(_text.length()));
-        // The iterators keep a reference to the text: reset them on every change
-        _wordIterator->setText(_text);
-        _sentenceIterator->setText(_text);
+        _text.assign(reinterpret_cast<const char16_t *>(text.getBuffer()), static_cast<size_t>(text.length()));
+        // The iterators read the string itself, not a copy: point them at it again on every change
+        UErrorCode status = U_ZERO_ERROR;
+        UText     *utext  = utext_openUChars(nullptr, reinterpret_cast<const UChar *>(_text.data()), static_cast<int64_t>(_text.size()), &status);
+        _wordIterator->setText(utext, status);
+        _sentenceIterator->setText(utext, status);
+        utext_close(utext); // The iterators keep shallow clones
         changed();
     }
 
-    void TextLayout::setStyle(const TextLayoutStyle &style, SkColor color, SkColor selectionColor) {
-        if (style == _style && color == _color && selectionColor == _selectionColor) {
+    void TextLayout::setStyle(const TextLayoutStyle &style) {
+        if (style == _style) {
             return;
         }
-        _style          = style;
-        _color          = color;
-        _selectionColor = selectionColor;
+        _style = style;
         changed();
     }
 
@@ -83,19 +139,19 @@ namespace psychic_ui {
     }
 
     void TextLayout::changed() {
-        _paragraph         = nullptr;
-        _selectedParagraph = nullptr;
-        _paragraphWidth    = -1.0f;
-        _linesValid        = false;
+        _paragraph      = nullptr;
+        _paragraphWidth = -1.0f;
+        _linesValid     = false;
     }
 
-    std::unique_ptr<tl::Paragraph> TextLayout::build(SkColor color) const {
+    std::unique_ptr<tl::Paragraph> TextLayout::build() const {
+        ++built;
         // Line heights are multiples of the font size; every line gets exactly the line height
         float height = _style.fontSize > 0.0f ? _style.lineHeight / _style.fontSize : 1.0f;
         std::vector<SkString> families{SkString(_style.fontFamily.c_str())};
 
         tl::TextStyle textStyle{};
-        textStyle.setColor(color);
+        textStyle.setColor(SK_ColorBLACK); // Painted in the color given to `paint`
         textStyle.setFontFamilies(families);
         textStyle.setFontSize(_style.fontSize);
         textStyle.setLetterSpacing(_style.letterSpacing);
@@ -127,10 +183,10 @@ namespace psychic_ui {
         auto fonts   = _style.fonts ? _style.fonts : sk_make_sp<tl::FontCollection>();
         auto builder = tl::ParagraphBuilder::make(paragraphStyle, fonts, unicode());
         if (_multiline) {
-            builder->addText(_utf16);
+            builder->addText(_text);
         } else {
             // One line: line returns lay out as spaces (like Label), one for one so indices hold
-            std::u16string oneLine = _utf16;
+            std::u16string oneLine = _text;
             for (auto &c: oneLine) {
                 if (c == u'\n' || c == u'\r' || c == u'\u2028' || c == u'\u2029' || c == u'\v' || c == u'\f' || c == u'\u0085') {
                     c = u' ';
@@ -143,7 +199,7 @@ namespace psychic_ui {
 
     tl::Paragraph *TextLayout::paragraphAt(float width) {
         if (!_paragraph) {
-            _paragraph      = build(_color);
+            _paragraph      = build();
             _paragraphWidth = -1.0f;
         }
         float w = std::isnan(width) ? 0.0f : std::max(0.0f, width);
@@ -187,7 +243,7 @@ namespace psychic_ui {
     }
 
     size_t TextLayout::lineCountAt(float width) {
-        if (_utf16.empty() || !(width > 0.0f)) {
+        if (_text.empty() || !(width > 0.0f)) {
             return 0;
         }
         if (!_multiline) {
@@ -203,27 +259,48 @@ namespace psychic_ui {
         }
     }
 
-    void TextLayout::paint(SkCanvas *canvas, float x, float y) {
-        if (_utf16.empty() || !(_width > 0.0f)) {
+    void TextLayout::paint(SkCanvas *canvas, float x, float y, SkColor color) {
+        if (_text.empty() || !(_width > 0.0f)) {
             return;
         }
-        laidOut()->paint(canvas, x, y);
+        ColorPainter painter{canvas, color};
+        laidOut()->paint(&painter, x, y);
     }
 
-    void TextLayout::paintSelected(SkCanvas *canvas, float x, float y) {
-        if (_utf16.empty() || !(_width > 0.0f)) {
+    void TextLayout::paintSelection(SkCanvas *canvas, float x, float y, unsigned int begin, unsigned int end, SkColor background, SkColor foreground) {
+        if (begin > end) {
+            std::swap(begin, end);
+        }
+        if (begin == end || _text.empty() || !(_width > 0.0f)) {
             return;
         }
-        laidOut();
-        if (!_selectedParagraph) {
-            _selectedParagraph = build(_selectionColor);
-            _selectedWidth     = -1.0f;
+        auto *paragraph = laidOut();
+        // Every line is the strut's height, so its rectangles are too; a line's line return selects nothing
+        auto boxes = paragraph->getRectsForRange(begin, end, tl::RectHeightStyle::kStrut, tl::RectWidthStyle::kTight);
+        if (boxes.empty()) {
+            return;
         }
-        if (_selectedWidth != _paragraphWidth) {
-            _selectedParagraph->layout(_paragraphWidth);
-            _selectedWidth = _paragraphWidth;
+        SkPathBuilder builder{};
+        for (const auto &box: boxes) {
+            builder.addRect(box.rect.makeOffset(x, y));
         }
-        _selectedParagraph->paint(canvas, x, y);
+        const SkPath path = builder.detach();
+
+        SkPaint paint{};
+        paint.setAntiAlias(true);
+        paint.setColor(background);
+        canvas->drawPath(path, paint);
+        canvas->save();
+        canvas->clipPath(path, true);
+        ColorPainter painter{canvas, foreground};
+        paragraph->paint(&painter, x, y);
+        canvas->restore();
+    }
+
+    SkRect TextLayout::caretRect(unsigned int index) {
+        const auto [line, x] = posFromIndex(index);
+        const float top      = static_cast<float>(line) * _style.lineHeight;
+        return SkRect::MakeLTRB(x, top, x, top + _style.lineHeight);
     }
 
     float TextLayout::fittingWidth(float width) {
@@ -251,7 +328,7 @@ namespace psychic_ui {
     unsigned int TextLayout::lineEnd(unsigned int line) {
         laidOut();
         if (line + 1 >= _lines.size()) {
-            return static_cast<unsigned int>(_utf16.size());
+            return static_cast<unsigned int>(_text.size());
         }
         return static_cast<unsigned int>(_lines[line + 1].fStartIndex) - 1;
     }
@@ -282,12 +359,12 @@ namespace psychic_ui {
         return std::make_pair(line, x);
     }
 
-    unsigned int TextLayout::indexFromPos(float x, float y) {
-        if (_utf16.empty()) {
+    unsigned int TextLayout::indexAt(float x, float y) {
+        if (_text.empty()) {
             return 0;
         }
         auto position = laidOut()->getGlyphPositionAtCoordinate(x, y).position;
-        return static_cast<unsigned int>(std::clamp<int32_t>(position, 0, static_cast<int32_t>(_utf16.size())));
+        return static_cast<unsigned int>(std::clamp<int32_t>(position, 0, static_cast<int32_t>(_text.size())));
     }
 
     std::pair<unsigned int, unsigned int> TextLayout::wordAtIndex(unsigned int index) const {
@@ -295,7 +372,7 @@ namespace psychic_ui {
         auto end   = _wordIterator->following(static_cast<int32_t>(index));
         return std::make_pair(
             begin != icu::BreakIterator::DONE ? static_cast<unsigned int>(begin) : 0,
-            end != icu::BreakIterator::DONE ? static_cast<unsigned int>(end) : static_cast<unsigned int>(_text.length())
+            end != icu::BreakIterator::DONE ? static_cast<unsigned int>(end) : static_cast<unsigned int>(_text.size())
         );
     }
 
@@ -304,7 +381,7 @@ namespace psychic_ui {
         auto end   = _sentenceIterator->following(static_cast<int32_t>(index));
         return std::make_pair(
             begin != icu::BreakIterator::DONE ? static_cast<unsigned int>(begin) : 0,
-            end != icu::BreakIterator::DONE ? static_cast<unsigned int>(end) : static_cast<unsigned int>(_text.length())
+            end != icu::BreakIterator::DONE ? static_cast<unsigned int>(end) : static_cast<unsigned int>(_text.size())
         );
     }
 
@@ -315,6 +392,6 @@ namespace psychic_ui {
 
     unsigned int TextLayout::nextWordBoundary(unsigned int index) const {
         auto boundary = _wordIterator->following(static_cast<int32_t>(index));
-        return boundary != icu::BreakIterator::DONE ? static_cast<unsigned int>(boundary) : static_cast<unsigned int>(_text.length());
+        return boundary != icu::BreakIterator::DONE ? static_cast<unsigned int>(boundary) : static_cast<unsigned int>(_text.size());
     }
 }

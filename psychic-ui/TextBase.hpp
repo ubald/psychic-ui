@@ -2,7 +2,6 @@
 
 #include "include/core/SkFont.h"
 #include "include/core/SkFontMetrics.h"
-#include "include/core/SkPaint.h"
 #include "Div.hpp"
 #include "psychic-ui/utils/TextLayout.hpp"
 
@@ -32,7 +31,6 @@ namespace psychic_ui {
         float   _fontSize{0.0f};
         float   _lineHeight{0.0f};
         SkFont  _font{};      // The font family's primary font, for its metrics
-        SkPaint _textPaint{};
         /**
          * The text's layout (SkParagraph). Mutable: its queries lay the text out on demand.
          */

@@ -1,13 +1,19 @@
+#include <chrono>
 #include <cstdlib>
+#include <functional>
 #include <memory>
+#include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include "include/core/SkCanvas.h"
 #include "include/core/SkSurface.h"
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/Text.hpp>
+#include <psychic-ui/components/Button.hpp>
+#include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;
+using namespace std::chrono_literals;
 
 namespace {
     struct RenderWindow : Window {
@@ -94,4 +100,44 @@ TEST_CASE("The caret is painted in caretColor, else in the text's color", "[text
     text.caretColor(rgb(0xFF0000));
     s.render();
     CHECK(s.at(text, 0, middle) == SkColorSetRGB(0xFF, 0x00, 0x00));
+}
+
+TEST_CASE("A hovered button's label blends its color without building a paragraph", "[text][style][animation]") {
+    auto window = std::make_shared<psychic_ui_tests::TestWindow>();
+    window->reducedMotion(false);
+    psychic_ui_tests::FakeSystemWindow system{window};
+    auto &button = window->appContainer().add<Button>("Quiet").skin("quiet");
+    system.layout();
+    const Label *label = nullptr;
+    std::function<void(const Div &)> find = [&](const Div &div) {
+        for (const auto &child: div.children()) {
+            if (auto *l = dynamic_cast<const Label *>(child.get()); l && l->classNames().contains("label")) {
+                label = l;
+            }
+            find(*child);
+        }
+    };
+    find(button);
+    REQUIRE(label != nullptr);
+    const Color rest = label->computedStyle().color();
+
+    const auto built = TextLayout::paragraphsBuilt();
+    window->updateAnimations(1000ms);
+    int x = 0, y = 0;
+    button.localToGlobal(x, y, static_cast<int>(button.getWidth() / 2.0f), static_cast<int>(button.getHeight() / 2.0f));
+    window->handleMouseMove({.x = static_cast<float>(x), .y = static_cast<float>(y)}, false);
+    system.layout();
+    std::vector<Color> colors{};
+    for (auto t = 1016ms; t < 2s && window->animating(); t += 16ms) {
+        window->updateAnimations(t);
+        system.layout();
+        colors.push_back(label->computedStyle().color());
+    }
+    REQUIRE(colors.size() > 2);
+    const Color hovered = colors.back();
+    CHECK(hovered != rest);
+    // Colors between the two, a frame each
+    CHECK(colors.front() != rest);
+    CHECK(colors.front() != hovered);
+    CHECK(TextLayout::paragraphsBuilt() == built);
 }
