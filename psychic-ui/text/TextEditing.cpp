@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <stdexcept>
+#include <string_view>
 #include <tuple>
 #include <unicode/uchar.h>
 #include "TextEditing.hpp"
@@ -10,50 +11,35 @@ namespace psychic_ui {
         // Past any line's edge, for the line edge moves
         constexpr float far = 1.0e9f;
 
-        std::unique_ptr<icu::BreakIterator> made(icu::BreakIterator *iterator, UErrorCode status) {
-            if (U_FAILURE(status) || !iterator) {
-                delete iterator;
-                throw std::runtime_error("TextEditing: ICU break iterator unavailable");
+        using Create = icu::BreakIterator *(*)(const icu::Locale &, UErrorCode &);
+
+        /**
+         * The iterator, made on first use, pointed at the text: it reads the string itself, which may have changed
+         * or moved since
+         */
+        icu::BreakIterator &pointed(std::unique_ptr<icu::BreakIterator> &iterator, const Create create, const icu::UnicodeString &text) {
+            if (!iterator) {
+                UErrorCode status = U_ZERO_ERROR;
+                iterator.reset(create(icu::Locale::getDefault(), status));
+                if (U_FAILURE(status) || !iterator) {
+                    throw std::runtime_error("TextEditing: ICU break iterator unavailable");
+                }
             }
-            return std::unique_ptr<icu::BreakIterator>(iterator);
+            iterator->setText(text);
+            return *iterator;
         }
     }
 
-    TextEditing::TextEditing()                                   = default;
-    TextEditing::~TextEditing()                                  = default;
-    TextEditing::TextEditing(TextEditing &&) noexcept            = default;
-    TextEditing &TextEditing::operator=(TextEditing &&) noexcept = default;
-
     icu::BreakIterator &TextEditing::graphemes() const {
-        if (!_graphemes) {
-            UErrorCode status = U_ZERO_ERROR;
-            _graphemes = made(icu::BreakIterator::createCharacterInstance(icu::Locale::getDefault(), status), status);
-        }
-        // The iterator reads the string itself: point it at it again, as it may have changed or moved
-        _graphemes->setText(_text);
-        return *_graphemes;
+        return pointed(_graphemes, &icu::BreakIterator::createCharacterInstance, _text);
     }
 
     icu::BreakIterator &TextEditing::words() const {
-        if (!_words) {
-            UErrorCode status = U_ZERO_ERROR;
-            _words = made(icu::BreakIterator::createWordInstance(icu::Locale::getDefault(), status), status);
-        }
-        _words->setText(_text);
-        return *_words;
+        return pointed(_words, &icu::BreakIterator::createWordInstance, _text);
     }
 
     icu::BreakIterator &TextEditing::sentences() const {
-        if (!_sentences) {
-            UErrorCode status = U_ZERO_ERROR;
-            _sentences = made(icu::BreakIterator::createSentenceInstance(icu::Locale::getDefault(), status), status);
-        }
-        _sentences->setText(_text);
-        return *_sentences;
-    }
-
-    const icu::UnicodeString &TextEditing::text() const {
-        return _text;
+        return pointed(_sentences, &icu::BreakIterator::createSentenceInstance, _text);
     }
 
     std::string TextEditing::utf8() const {
@@ -70,50 +56,9 @@ namespace psychic_ui {
         return edit | place(0, 0);
     }
 
-    unsigned int TextEditing::length() const {
-        return static_cast<unsigned int>(_text.length());
-    }
-
-    unsigned int TextEditing::anchor() const {
-        return _anchor;
-    }
-
-    unsigned int TextEditing::caret() const {
-        return _caret;
-    }
-
-    std::pair<unsigned int, unsigned int> TextEditing::selection() const {
-        return std::minmax(_anchor, _caret);
-    }
-
-    bool TextEditing::hasSelection() const {
-        return _anchor != _caret;
-    }
-
-    std::u16string TextEditing::selectedText() const {
-        auto [begin, end] = selection();
-        return {reinterpret_cast<const char16_t *>(_text.getBuffer()) + begin, end - begin};
-    }
-
     TextEditing::Edit TextEditing::select(unsigned int anchor, unsigned int caret) {
         _goalX.reset();
         return place(std::min(anchor, length()), std::min(caret, length()));
-    }
-
-    bool TextEditing::multiline() const {
-        return _multiline;
-    }
-
-    void TextEditing::setMultiline(bool multiline) {
-        _multiline = multiline;
-    }
-
-    bool TextEditing::readOnly() const {
-        return _readOnly;
-    }
-
-    void TextEditing::setReadOnly(bool readOnly) {
-        _readOnly = readOnly;
     }
 
     TextEditing::Edit TextEditing::place(unsigned int anchor, unsigned int caret) {
@@ -146,8 +91,7 @@ namespace psychic_ui {
             // One line: line returns become spaces
             inserted.findAndReplace(u"\r\n", u" ");
             for (int32_t i = 0; i < inserted.length(); ++i) {
-                const char16_t c = inserted.charAt(i);
-                if (c == u'\n' || c == u'\r' || c == u' ' || c == u' ' || c == u'\v' || c == u'\f' || c == u'\u0085') {
+                if (std::u16string_view{u"\n\r\u2028\u2029\v\f\u0085"}.contains(inserted.charAt(i))) {
                     inserted.setCharAt(i, u' ');
                 }
             }
@@ -156,7 +100,7 @@ namespace psychic_ui {
         return replace(begin, end, inserted);
     }
 
-    TextEditing::Edit TextEditing::erase(Direction direction, Unit unit, const TextGeometry *geometry) {
+    TextEditing::Edit TextEditing::erase(Direction direction, Unit unit, const TextGeometry &geometry) {
         if (_readOnly) {
             return Edit::None;
         }
@@ -168,22 +112,21 @@ namespace psychic_ui {
         return replace(begin, end, icu::UnicodeString{});
     }
 
-    TextEditing::Edit TextEditing::move(Direction direction, Unit unit, bool extend, const TextGeometry *geometry) {
+    TextEditing::Edit TextEditing::move(Direction direction, Unit unit, bool extend, const TextGeometry &geometry) {
+        if (unit != Unit::Line) {
+            _goalX.reset(); // Line moves keep it, and set it on the first
+        }
         if (!extend && hasSelection() && unit == Unit::Grapheme) {
             // An arrow collapses the selection to its side
             auto [begin, end] = selection();
-            _goalX.reset();
             const unsigned int side = direction == Direction::Backward ? begin : end;
             return place(side, side);
-        }
-        if (unit != Unit::Line) {
-            _goalX.reset(); // Line moves keep it, and set it on the first
         }
         const unsigned int to = target(direction, unit, geometry);
         return place(extend ? _anchor : to, to);
     }
 
-    unsigned int TextEditing::target(Direction direction, Unit unit, const TextGeometry *geometry) {
+    unsigned int TextEditing::target(Direction direction, Unit unit, const TextGeometry &geometry) {
         const bool forward = direction == Direction::Forward;
         switch (unit) {
             case Unit::Grapheme:
@@ -196,12 +139,9 @@ namespace psychic_ui {
                 return forward ? length() : 0;
 
             case Unit::LineEdge: {
-                if (!geometry) {
-                    return forward ? length() : 0;
-                }
-                const SkRect       caret = geometry->caretRect(_caret);
-                const unsigned int edge  = geometry->indexAt(forward ? far : -far, caret.centerY());
-                if (forward && edge > _caret && geometry->caretRect(edge).fTop != caret.fTop) {
+                const SkRect       caret = geometry.caretRect(_caret);
+                const unsigned int edge  = geometry.indexAt(forward ? far : -far, caret.centerY());
+                if (forward && edge > _caret && geometry.caretRect(edge).fTop != caret.fTop) {
                     // A wrapped line's end is the next line's start: stop before the space it wrapped at
                     return previousGrapheme(edge);
                 }
@@ -209,16 +149,13 @@ namespace psychic_ui {
             }
 
             case Unit::Line: {
-                if (!geometry) {
-                    return forward ? length() : 0;
-                }
-                const SkRect caret = geometry->caretRect(_caret);
+                const SkRect caret = geometry.caretRect(_caret);
                 if (!_goalX) {
                     _goalX = caret.fLeft;
                 }
                 const float        y     = forward ? caret.fBottom + caret.height() / 2.0f : caret.fTop - caret.height() / 2.0f;
-                const unsigned int index = geometry->indexAt(*_goalX, y);
-                if (geometry->caretRect(index).fTop == caret.fTop) {
+                const unsigned int index = geometry.indexAt(*_goalX, y);
+                if (geometry.caretRect(index).fTop == caret.fTop) {
                     // No line there: the first line goes to the start, the last to the end
                     return forward ? length() : 0;
                 }
@@ -229,17 +166,11 @@ namespace psychic_ui {
     }
 
     unsigned int TextEditing::previousGrapheme(unsigned int index) const {
-        if (index == 0) {
-            return 0;
-        }
-        const int32_t boundary = graphemes().preceding(static_cast<int32_t>(std::min(index, length())));
+        const int32_t boundary = graphemes().preceding(static_cast<int32_t>(index));
         return boundary == icu::BreakIterator::DONE ? 0 : static_cast<unsigned int>(boundary);
     }
 
     unsigned int TextEditing::nextGrapheme(unsigned int index) const {
-        if (index >= length()) {
-            return length();
-        }
         const int32_t boundary = graphemes().following(static_cast<int32_t>(index));
         return boundary == icu::BreakIterator::DONE ? length() : static_cast<unsigned int>(boundary);
     }
@@ -257,7 +188,7 @@ namespace psychic_ui {
 
     unsigned int TextEditing::previousWordStart(unsigned int index) const {
         icu::BreakIterator &iterator = words();
-        unsigned int        end      = std::min(index, length());
+        unsigned int        end      = index;
         while (end > 0) {
             const int32_t begin = iterator.preceding(static_cast<int32_t>(end));
             if (begin == icu::BreakIterator::DONE) {
@@ -308,10 +239,6 @@ namespace psychic_ui {
         return segmentAt(words(), index);
     }
 
-    std::pair<unsigned int, unsigned int> TextEditing::sentenceAt(unsigned int index) const {
-        return segmentAt(sentences(), index);
-    }
-
     TextEditing::Edit TextEditing::selectAt(unsigned int index, unsigned int clickCount, bool extend) {
         index = std::min(index, length());
         _goalX.reset();
@@ -324,7 +251,7 @@ namespace psychic_ui {
         } else if (clickCount == 2) {
             _pressed = wordAt(index);
         } else if (clickCount == 3) {
-            _pressed = sentenceAt(index);
+            _pressed = segmentAt(sentences(), index);
         } else {
             _pressed = {0, length()};
         }
@@ -342,7 +269,11 @@ namespace psychic_ui {
     }
 
     TextEditing::Edit TextEditing::handleKey(Key key, Mod mod, const TextGeometry &geometry, Clipboard &clipboard) {
-        const bool command = mod.ctrl || mod.super;
+        const bool      command   = mod.ctrl || mod.super;
+        const Unit      character = mod.ctrl ? Unit::Word : Unit::Grapheme;
+        const Direction direction = key == Key::HOME || key == Key::UP || key == Key::LEFT || key == Key::BACKSPACE
+                                    ? Direction::Backward
+                                    : Direction::Forward;
         switch (key) {
             case Key::A:
                 return command ? select(0, length()) : Edit::None;
@@ -363,28 +294,20 @@ namespace psychic_ui {
                 return command ? insert(icu::UnicodeString::fromUTF8(clipboard.clipboardText())) : Edit::None;
 
             case Key::HOME:
-                return move(Direction::Backward, mod.ctrl ? Unit::All : Unit::LineEdge, mod.shift, &geometry);
-
             case Key::END:
-                return move(Direction::Forward, mod.ctrl ? Unit::All : Unit::LineEdge, mod.shift, &geometry);
+                return move(direction, mod.ctrl ? Unit::All : Unit::LineEdge, mod.shift, geometry);
 
             case Key::UP:
-                return move(Direction::Backward, Unit::Line, mod.shift, &geometry);
-
             case Key::DOWN:
-                return move(Direction::Forward, Unit::Line, mod.shift, &geometry);
+                return move(direction, Unit::Line, mod.shift, geometry);
 
             case Key::LEFT:
-                return move(Direction::Backward, mod.ctrl ? Unit::Word : Unit::Grapheme, mod.shift, &geometry);
-
             case Key::RIGHT:
-                return move(Direction::Forward, mod.ctrl ? Unit::Word : Unit::Grapheme, mod.shift, &geometry);
+                return move(direction, character, mod.shift, geometry);
 
             case Key::BACKSPACE:
-                return erase(Direction::Backward, mod.ctrl ? Unit::Word : Unit::Grapheme, &geometry);
-
             case Key::DELETE:
-                return erase(Direction::Forward, mod.ctrl ? Unit::Word : Unit::Grapheme, &geometry);
+                return erase(direction, character, geometry);
 
             case Key::ENTER:
                 return _multiline ? insert(icu::UnicodeString(u'\n')) : Edit::None;
