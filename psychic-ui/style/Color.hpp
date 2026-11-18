@@ -22,9 +22,9 @@ namespace psychic_ui {
             _argb(0xFF000000u | (color.getColor() & 0x00FFFFFFu)) {}
 
         static constexpr Color fromARGB(std::uint32_t argb) {
-            Color c;
-            c._argb = argb;
-            return c;
+            Color color;
+            color._argb = argb;
+            return color;
         }
 
         [[nodiscard]] constexpr std::uint32_t argb() const { return _argb; }
@@ -42,18 +42,18 @@ namespace psychic_ui {
          * This color painted over another (source over): what shows where a translucent fill lies on `below`
          */
         [[nodiscard]] constexpr Color over(const Color &below) const {
-            const std::uint32_t a  = alpha();
-            const std::uint32_t ba = below.alpha() * (255u - a) / 255u; // What of the color below shows through
-            const std::uint32_t oa = a + ba;
-            if (oa == 0) {
+            const std::uint32_t a          = alpha();
+            const std::uint32_t belowShown = below.alpha() * (255u - a) / 255u; // What of the color below shows through
+            const std::uint32_t outAlpha   = a + belowShown;
+            if (outAlpha == 0) {
                 return Color{};
             }
             const auto channel = [&](const int shift) {
-                const std::uint32_t c = (_argb >> shift) & 0xFFu;
-                const std::uint32_t b = (below._argb >> shift) & 0xFFu;
-                return ((c * a + b * ba + oa / 2) / oa) << shift;
+                const std::uint32_t own = (_argb >> shift) & 0xFFu;
+                const std::uint32_t b   = (below._argb >> shift) & 0xFFu;
+                return ((own * a + b * belowShown + outAlpha / 2) / outAlpha) << shift;
             };
-            return fromARGB((oa << 24) | channel(16) | channel(8) | channel(0));
+            return fromARGB((outAlpha << 24) | channel(16) | channel(8) | channel(0));
         }
 
         constexpr bool operator==(const Color &) const = default;

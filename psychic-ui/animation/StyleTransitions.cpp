@@ -83,15 +83,15 @@ namespace psychic_ui {
     // region Property channels
 
     namespace {
-        // Calls `f(get, set)` with an animatable property's accessors (`get(style)`, `set(style, value)`); false for
+        // Calls `visit(get, set)` with an animatable property's accessors (`get(style)`, `set(style, value)`); false for
         // the others
         template<class F>
-        bool withAccessors(const Property property, F &&f) {
+        bool withAccessors(const Property property, F &&visit) {
             switch (property) {
                 #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) \
                     case Property::name: \
                         if constexpr (animatable) { \
-                            return std::forward<F>(f)([](const Style &style) { return style.name(); }, \
+                            return std::forward<F>(visit)([](const Style &style) { return style.name(); }, \
                                      [](Style &style, const Type &value) { style.name(value); }); \
                         } \
                         return false;
@@ -112,14 +112,14 @@ namespace psychic_ui {
         }
 
         /**
-         * Aim a property from its value in `from` to its value in `to`: where it ends goes in `targets`, the channels
+         * Aim a property from its value in `from` to its value in `toward`: where it ends goes in `targets`, the channels
          * of both ends in `start` and `end`; false when it doesn't interpolate (an auto length, another unit)
          */
-        bool aim(const Property property, const Style &from, const Style &to, Style &targets, Channels &start, Channels &end) {
+        bool aim(const Property property, const Style &from, const Style &toward, Style &targets, Channels &start, Channels &end) {
             return withAccessors(property, [&](auto get, auto set) {
                 using T = decltype(get(from));
                 const T                fromValue = blended(from, property, get(from));
-                const std::optional<T> target    = Interpolation<T>::target(fromValue, blended(to, property, get(to)));
+                const std::optional<T> target    = Interpolation<T>::target(fromValue, blended(toward, property, get(toward)));
                 if (!target) {
                     return false;
                 }
@@ -223,15 +223,15 @@ namespace psychic_ui {
                 const auto   property = static_cast<Property>(i);
                 const Timing *timing  = transition.timing(property);
                 Channels     from{};
-                Channels     to{};
+                Channels     toward{};
                 if (!timing || timing->instant()
-                    || !aim(property, _computedStyle, computed, _transitions->targets, from, to) || from == to) {
+                    || !aim(property, _computedStyle, computed, _transitions->targets, from, toward) || from == toward) {
                     continue;
                 }
                 detail::RunningTransition &r = _transitions->running.emplace_back(
                     detail::RunningTransition{.property = property, .tween = Tween{from}, .targetSet = computed.has(property)}
                 );
-                r.tween.retarget(to, *timing, start);
+                r.tween.retarget(toward, *timing, start);
                 setChannels(computed, property, from, _transitions->targets);
             }
         }
@@ -470,7 +470,7 @@ namespace psychic_ui {
 
     // endregion
 
-    void Div::animate(const float from, const float to, const Timing &timing, std::function<void(float)> update) {
+    void Div::animate(const float from, const float target, const Timing &timing, std::function<void(float)> update) {
         std::erase_if(_animations, [](const auto &animation) {
             return !static_cast<const detail::TweenAnimation &>(*animation).tween.running();
         });
@@ -478,7 +478,7 @@ namespace psychic_ui {
         animation->tween  = Tween{Interpolation<float>::channels(from), 1};
         animation->update = [update = std::move(update)](const Channels &channels) { update(channels[0]); };
         animation->update(animation->tween.value());
-        detail::startTween(this, animation, Interpolation<float>::channels(to), timing);
+        detail::startTween(this, animation, Interpolation<float>::channels(target), timing);
         if (animation->tween.running()) {
             _animations.push_back(std::move(animation));
         }

@@ -13,8 +13,9 @@ namespace psychic_ui {
      * How a type becomes channels and back. A type with a specialization can be tweened (`Animated<T>`) and, as a
      * style property, transition.
      *
-     * `target(from, to)` is where a move from `from` toward `to` ends, as `value(channels, target)` rebuilds it from
-     * channels (a length's unit comes from the target): `to`, or nothing when they don't interpolate (the move jumps).
+     * `target(from, toward)` is where a move from `from` toward `toward` ends, as `value(channels, target)` rebuilds it
+     * from channels (a length's unit comes from the target): `toward`, or nothing when they don't interpolate (the move
+     * jumps).
      */
     template<class T>
     struct Interpolation;
@@ -35,7 +36,7 @@ namespace psychic_ui {
 
         static float value(const Channels &channels, float /*target*/) { return channels[0]; }
 
-        static std::optional<float> target(float /*from*/, float to) { return to; }
+        static std::optional<float> target(float /*from*/, float toward) { return toward; }
     };
 
     /**
@@ -49,7 +50,7 @@ namespace psychic_ui {
 
         static Color value(const Channels &channels, Color target);
 
-        static std::optional<Color> target(Color /*from*/, Color to) { return to; }
+        static std::optional<Color> target(Color /*from*/, Color toward) { return toward; }
     };
 
     /**
@@ -64,14 +65,14 @@ namespace psychic_ui {
 
         static Length value(const Channels &channels, Length target) { return Length{channels[0], target.unit}; }
 
-        static std::optional<Length> target(Length from, Length to) {
-            if (from.isAuto() || to.isAuto()) {
+        static std::optional<Length> target(Length from, Length toward) {
+            if (from.isAuto() || toward.isAuto()) {
                 return std::nullopt;
             }
-            if (from.unit == to.unit || from.value == 0.0f) {
-                return to;
+            if (from.unit == toward.unit || from.value == 0.0f) {
+                return toward;
             }
-            if (to.value == 0.0f) {
+            if (toward.value == 0.0f) {
                 return Length{0.0f, from.unit};
             }
             return std::nullopt;

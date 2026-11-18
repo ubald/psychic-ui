@@ -114,44 +114,44 @@ namespace psychic_ui {
         return damping / (2.0f * std::sqrt(stiffness * massOf(*this)));
     }
 
-    Approach Spring::approach(const float x0, const float v0, const float t, const float tolerance) const {
+    Approach Spring::approach(const float offset0, const float velocity0, const float t, const float tolerance) const {
         const float omega = std::sqrt(std::max(stiffness, 0.0f) / massOf(*this));
         if (omega <= 0.0f) {
             return {.offset = 0.0f, .velocity = 0.0f, .settled = true}; // No stiffness: nothing pulls, so it's there
         }
-        const float zeta = dampingRatio();
-        float       x    = 0.0f;
-        float       v    = 0.0f;
+        const float zeta     = dampingRatio();
+        float       x        = 0.0f;
+        float       velocity = 0.0f;
         if (std::abs(zeta - 1.0f) < 1e-4f) {
             // Critically damped
-            const float b = v0 + (omega * x0);
-            const float e = std::exp(-omega * t);
-            x = e * (x0 + b * t);
-            v = e * (b - omega * (x0 + b * t));
+            const float b     = velocity0 + (omega * offset0);
+            const float decay = std::exp(-omega * t);
+            x        = decay * (offset0 + b * t);
+            velocity = decay * (b - omega * (offset0 + b * t));
         } else if (zeta < 1.0f) {
             // Underdamped: it oscillates as it decays
-            const float a  = zeta * omega;
-            const float wd = omega * std::sqrt(1.0f - (zeta * zeta));
-            const float b  = (v0 + a * x0) / wd;
-            const float e  = std::exp(-a * t);
-            const float c  = std::cos(wd * t);
-            const float s  = std::sin(wd * t);
-            x = e * (x0 * c + b * s);
-            v = e * ((-a * x0 + b * wd) * c + (-a * b - x0 * wd) * s);
+            const float a           = zeta * omega;
+            const float dampedOmega = omega * std::sqrt(1.0f - (zeta * zeta));
+            const float b           = (velocity0 + a * offset0) / dampedOmega;
+            const float decay       = std::exp(-a * t);
+            const float cosine      = std::cos(dampedOmega * t);
+            const float sine        = std::sin(dampedOmega * t);
+            x        = decay * (offset0 * cosine + b * sine);
+            velocity = decay * ((-a * offset0 + b * dampedOmega) * cosine + (-a * b - offset0 * dampedOmega) * sine);
         } else {
             // Overdamped: two decaying exponentials
-            const float root = omega * std::sqrt((zeta * zeta) - 1.0f);
-            const float r1   = (-zeta * omega) + root;
-            const float r2   = (-zeta * omega) - root;
-            const float c2   = (v0 - r1 * x0) / (r2 - r1);
-            const float c1   = x0 - c2;
-            const float e1   = std::exp(r1 * t);
-            const float e2   = std::exp(r2 * t);
-            x = (c1 * e1) + (c2 * e2);
-            v = (c1 * r1 * e1) + (c2 * r2 * e2);
+            const float root    = omega * std::sqrt((zeta * zeta) - 1.0f);
+            const float rate1   = (-zeta * omega) + root;
+            const float rate2   = (-zeta * omega) - root;
+            const float weight2 = (velocity0 - rate1 * offset0) / (rate2 - rate1);
+            const float weight1 = offset0 - weight2;
+            const float decay1  = std::exp(rate1 * t);
+            const float decay2  = std::exp(rate2 * t);
+            x        = (weight1 * decay1) + (weight2 * decay2);
+            velocity = (weight1 * rate1 * decay1) + (weight2 * rate2 * decay2);
         }
-        const bool within = std::abs(x) <= tolerance && std::abs(v) <= tolerance * std::max(omega, 1.0f);
-        return {.offset = x, .velocity = v, .settled = within || t >= std::chrono::duration<float>(maxTime).count()};
+        const bool within = std::abs(x) <= tolerance && std::abs(velocity) <= tolerance * std::max(omega, 1.0f);
+        return {.offset = x, .velocity = velocity, .settled = within || t >= std::chrono::duration<float>(maxTime).count()};
     }
 
     // endregion
@@ -170,9 +170,9 @@ namespace psychic_ui {
             const Spring &s = timing.spring();
             return os << "spring(" << s.stiffness << ", " << s.damping << ", " << s.mass << ")";
         }
-        const Ease &e = timing.ease();
+        const Ease &curve = timing.ease();
         return os << std::chrono::duration<double, std::milli>(timing.duration()).count() << "ms cubic-bezier("
-                  << e.x1 << ", " << e.y1 << ", " << e.x2 << ", " << e.y2 << ")";
+                  << curve.x1 << ", " << curve.y1 << ", " << curve.x2 << ", " << curve.y2 << ")";
     }
 
     // endregion

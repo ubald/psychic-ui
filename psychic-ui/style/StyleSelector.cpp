@@ -35,17 +35,17 @@ namespace psychic_ui {
             std::size_t lastTokenPos = 0;
 
             for (auto it = selectorItem.cbegin(); it < selectorItem.cend(); ++it) {
-                const char   c        = (*it);
-                unsigned int offset   = 0;
-                bool         newToken = false;
+                const char   character = (*it);
+                unsigned int offset    = 0;
+                bool         newToken  = false;
 
-                if (c == '#') {
+                if (character == '#') {
                     nextToken = Token::Id;
                     newToken  = true;
-                } else if (c == '.') {
+                } else if (character == '.') {
                     nextToken = Token::Class;
                     newToken  = true;
-                } else if (c == ':') {
+                } else if (character == ':') {
                     nextToken = Token::Pseudo;
                     newToken  = true;
                 } else if (it == selectorItem.cend() - 1) {
