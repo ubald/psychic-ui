@@ -65,7 +65,8 @@ namespace psychic_ui {
             right.add<Label>("Ellipsis")
                  .addClassName("h1");
 
-            right.add<Label>(lorem);
+            right.add<Label>(lorem)
+                 .textOverflow(TextOverflow::Ellipsis);
 
             right.add<Label>("International")
                  .addClassName("h1");
