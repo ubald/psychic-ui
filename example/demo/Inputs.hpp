@@ -52,14 +52,14 @@ namespace psychic_ui {
 
         Label *switchEvent = nullptr;
         auto  &switches    = group("Switches", "A click, Space or Enter flips one, the thumb springs over; it also drags", switchEvent);
-        for (const auto &[label, on, enabled]: std::vector<std::tuple<std::string, bool, bool>>{
+        for (const auto &[label, checked, enabled]: std::vector<std::tuple<std::string, bool, bool>>{
                  {"Follow system", false, true},
                  {"Blackout on start", true, true},
                  {"Disabled", false, false},
                  {"On, disabled", true, false},
              }) {
             switches.add<Switch>(label)
-                    .checked(on)
+                    .checked(checked)
                     .enabled(enabled)
                     .onChange([switchEvent, label](bool checked) {
                         switchEvent->text(std::format("{}: {}", label, checked ? "on" : "off"));

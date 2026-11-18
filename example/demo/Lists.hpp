@@ -131,10 +131,10 @@ namespace psychic_ui {
             {"Follow spot", "Profile", Tone::Neutral, "Parked", "8", "4"},
             {"Blinder", "Blinder", Tone::Accent, "Armed", "4", "10"},
         };
-        for (const Fixture &f: fixtures) {
-            auto &row = grid.row({f.name, f.kind, f.status, f.channels, f.universe});
+        for (const Fixture &fixture: fixtures) {
+            auto &row = grid.row({fixture.name, fixture.kind, fixture.status, fixture.channels, fixture.universe});
             // The status as a dot before its text
-            row.cell(2).add(0, std::make_shared<StatusDot>(f.tone));
+            row.cell(2).add(0, std::make_shared<StatusDot>(fixture.tone));
         }
 
         _inspector = &card.add<Inspector>().width(300);

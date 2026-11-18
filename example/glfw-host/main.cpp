@@ -79,8 +79,8 @@ int main() {
     glfwSetKeyCallback(glfwWindow, hostKeyCallback);
 
     {
-        auto ui = std::make_shared<HostedWindow>();
-        GLFWSystemWindow adapter(ui, glfwWindow);
+        auto window = std::make_shared<HostedWindow>();
+        GLFWSystemWindow adapter(window, glfwWindow);
         // Nothing but Psychic UI draws in this window
         adapter.setSharesContext(false);
 
@@ -89,7 +89,7 @@ int main() {
         while (!glfwWindowShouldClose(glfwWindow)) {
             adapter.render();
             glfwSwapBuffers(glfwWindow);
-            const auto wait = ui->untilNextFrame(adapter.gestureTime());
+            const auto wait = window->untilNextFrame(adapter.gestureTime());
             if (!wait) {
                 glfwWaitEvents();
             } else if (*wait > std::chrono::nanoseconds::zero()) {

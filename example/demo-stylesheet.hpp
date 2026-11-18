@@ -11,14 +11,14 @@ using namespace psychic_ui;
 class DemoStyleSheet : public StyleSheet {
 public:
     void load(StyleManager *manager) override {
-        const Theme   &theme = manager->theme();
-        const Palette &p     = theme.palette;
-        const Metrics &m     = theme.metrics;
+        const Theme   &theme   = manager->theme();
+        const Palette &palette = theme.palette;
+        const Metrics &metrics = theme.metrics;
 
         manager->loadFont("stan0755", "fonts/stan0755.ttf");
 
         manager->style(".demo-panel")
-               .padding(m.space(6));
+               .padding(metrics.space(6));
 
         // The menus after the page's title, at the same place on every page
         manager->style("PageHeader .title")
@@ -27,95 +27,95 @@ public:
         // region Buttons
 
         manager->style("Buttons")
-               .gap(m.space(8));
+               .gap(metrics.space(8));
 
         manager->style("Buttons .group")
                .shrink(0)
-               .gap(m.space(1));
+               .gap(metrics.space(1));
 
         manager->style("Buttons .group .row")
                .wrap(Wrap::Wrap)
                .alignItems(Align::Center)
-               .gap(m.space(2))
-               .marginTop(m.space(2));
+               .gap(metrics.space(2))
+               .marginTop(metrics.space(2));
 
         manager->style("Buttons .group .row CheckBox")
-               .marginRight(m.space(4));
+               .marginRight(metrics.space(4));
 
         // endregion
 
         // region Popups
 
         manager->style("Popups")
-               .gap(m.space(8));
+               .gap(metrics.space(8));
 
         manager->style("Popups .group")
                .shrink(0)
-               .gap(m.space(1));
+               .gap(metrics.space(1));
 
         manager->style("Popups .group .row")
                .wrap(Wrap::Wrap)
                .alignItems(Align::Center)
-               .gap(m.space(2))
-               .marginTop(m.space(2));
+               .gap(metrics.space(2))
+               .marginTop(metrics.space(2));
 
         // Where a context menu opens
         manager->style("Popups .context-area")
                .width(280)
                .height(64)
-               .marginLeft(m.space(4))
-               .border(m.border)
-               .borderRadius(m.radius.surface)
-               .borderColor(p.lineStrong);
+               .marginLeft(metrics.space(4))
+               .border(metrics.border)
+               .borderRadius(metrics.radius.surface)
+               .borderColor(palette.lineStrong);
 
         manager->style("Popups .context-area:focus-visible")
-               .outlineColor(p.accent)
-               .outlineWidth(m.focusRing)
-               .outlineOffset(m.focusRingOffset);
+               .outlineColor(palette.accent)
+               .outlineWidth(metrics.focusRing)
+               .outlineOffset(metrics.focusRingOffset);
 
         manager->style("Popups .status")
-               .marginTop(-m.space(4));
+               .marginTop(-metrics.space(4));
 
         // endregion
 
         // region Ranges
 
         manager->style("Ranges .columns")
-               .gap(m.space(12));
+               .gap(metrics.space(12));
 
         manager->style("Ranges .column")
                .width(360)
-               .gap(m.space(1));
+               .gap(metrics.space(1));
 
         manager->style("Ranges .field")
                .alignItems(Align::Center)
-               .gap(m.space(3))
-               .marginTop(m.space(2));
+               .gap(metrics.space(3))
+               .marginTop(metrics.space(2));
 
         manager->style("Ranges .field .name")
                .width(72);
 
         manager->style("Ranges .verticals")
                .height(160)
-               .gap(m.space(6))
-               .marginTop(m.space(3));
+               .gap(metrics.space(6))
+               .marginTop(metrics.space(3));
 
         // endregion
 
         // region Inputs
 
         manager->style("Inputs")
-               .gap(m.space(8));
+               .gap(metrics.space(8));
 
         manager->style("Inputs .group")
                .shrink(0)
-               .gap(m.space(1));
+               .gap(metrics.space(1));
 
         manager->style("Inputs .group .row")
                .wrap(Wrap::Wrap)
                .alignItems(Align::Center)
-               .gap(m.space(4))
-               .marginTop(m.space(2));
+               .gap(metrics.space(4))
+               .marginTop(metrics.space(2));
 
         manager->style("Inputs SearchField")
                .width(240);
@@ -125,29 +125,29 @@ public:
                .maxWidth((10 * 20) + (9 * 4));
 
         manager->style("Inputs .event")
-               .marginTop(m.space(1));
+               .marginTop(metrics.space(1));
 
         // endregion
 
         // region Motion
 
         manager->style("Motion")
-               .gap(m.space(6));
+               .gap(metrics.space(6));
 
         manager->style("Motion .group")
                .shrink(0)
-               .gap(m.space(1));
+               .gap(metrics.space(1));
 
         manager->style("Motion .row")
                .wrap(Wrap::Wrap)
                .alignItems(Align::Center)
-               .gap(m.space(4))
-               .marginTop(m.space(2));
+               .gap(metrics.space(4))
+               .marginTop(metrics.space(2));
 
         manager->style("Motion .lane-row")
                .alignItems(Align::Center)
-               .gap(m.space(3))
-               .marginTop(m.space(1.5f));
+               .gap(metrics.space(3))
+               .marginTop(metrics.space(1.5f));
 
         manager->style("Motion .lane-row .name")
                .width(200)
@@ -158,9 +158,9 @@ public:
                .width(320)
                .height(24)
                .padding(2)
-               .borderRadius(m.radius.button)
-               .backgroundColor(p.raised)
-               .color(p.accent);
+               .borderRadius(metrics.radius.button)
+               .backgroundColor(palette.raised)
+               .color(palette.accent);
 
         manager->style("Motion .rail")
                .grow(1)
@@ -171,32 +171,32 @@ public:
                .top(0)
                .width(20)
                .height(20)
-               .borderRadius(m.radius.button)
-               .backgroundColor(p.accent);
+               .borderRadius(metrics.radius.button)
+               .backgroundColor(palette.accent);
 
         manager->style("Motion .shuffle")
                .width(320)
-               .marginTop(m.space(2));
+               .marginTop(metrics.space(2));
 
         manager->style("Motion .curves")
                .wrap(Wrap::Wrap)
-               .gap(m.space(4))
-               .marginTop(m.space(2));
+               .gap(metrics.space(4))
+               .marginTop(metrics.space(2));
 
         manager->style("Motion .curve-cell")
                .alignItems(Align::Center)
-               .gap(m.space(1));
+               .gap(metrics.space(1));
 
         manager->style("Motion .curve")
                .width(96)
                .height(96)
-               .borderRadius(m.radius.surface)
-               .backgroundColor(p.surface)
-               .borderColor(p.line)
-               .color(p.accent);
+               .borderRadius(metrics.radius.surface)
+               .backgroundColor(palette.surface)
+               .borderColor(palette.line)
+               .color(palette.accent);
 
         manager->style("Motion .tokens")
-               .marginTop(m.space(2));
+               .marginTop(metrics.space(2));
 
         manager->style("Motion .slider")
                .width(200);
@@ -212,22 +212,22 @@ public:
                .margin(12)
                .width(128.0f)
                .height(64.0f)
-               .backgroundColor(p.raised)
-               .borderColor(p.lineStrong);
+               .backgroundColor(palette.raised)
+               .borderColor(palette.lineStrong);
 
         manager->style("Scrollers .box")
                .shrink(0)
                .margin(12)
                .width(128.0f)
                .height(64.0f)
-               .borderRadius(m.radius.control)
-               .backgroundColor(p.raised);
+               .borderRadius(metrics.radius.control)
+               .backgroundColor(palette.raised);
 
         manager->style("Scrollers Scroller")
                .margin(12)
-               .border(m.border)
-               .borderRadius(m.radius.surface)
-               .borderColor(p.line);
+               .border(metrics.border)
+               .borderRadius(metrics.radius.surface)
+               .borderColor(palette.line);
 
         // endregion
 
@@ -238,7 +238,7 @@ public:
 
         manager->style("Colors .swatch")
                .height(32.0f)
-               .borderRadius(m.radius.small);
+               .borderRadius(metrics.radius.small);
 
         manager->style("Colors .swatches")
                .direction(Direction::Row)
@@ -258,39 +258,39 @@ public:
         // region Lists
 
         manager->style("Lists .scroller")
-               .padding(m.space(6))
-               .gap(m.space(8));
+               .padding(metrics.space(6))
+               .gap(metrics.space(8));
 
         manager->style("Lists .columns")
                .shrink(0)
                .alignItems(Align::Start)
-               .gap(m.space(8));
+               .gap(metrics.space(8));
 
         manager->style("Lists .group")
                .shrink(0)
-               .gap(m.space(1));
+               .gap(metrics.space(1));
 
         manager->style("Lists .group .row")
                .wrap(Wrap::Wrap)
                .alignItems(Align::Center)
-               .gap(m.space(2))
-               .marginTop(m.space(2));
+               .gap(metrics.space(2))
+               .marginTop(metrics.space(2));
 
         // Lists and grids sit edge to edge in a card, as on a page
         manager->style("Lists .card")
                .shrink(0)
-               .marginTop(m.space(3))
-               .border(m.border)
-               .borderColor(p.line)
-               .borderRadius(m.radius.surface)
-               .backgroundColor(p.page)
+               .marginTop(metrics.space(3))
+               .border(metrics.border)
+               .borderColor(palette.line)
+               .borderRadius(metrics.radius.surface)
+               .backgroundColor(palette.page)
                .overflow(Overflow::Hidden);
 
         manager->style("Lists .card List")
                .borderTop(0);
 
         manager->style("Lists .tree-card")
-               .padding(m.space(2));
+               .padding(metrics.space(2));
 
         manager->style("Lists .grid-card")
                .height(360)
@@ -298,8 +298,8 @@ public:
 
         manager->style("Lists .dot-item")
                .alignItems(Align::Center)
-               .gap(m.space(1.5f))
-               .marginRight(m.space(2));
+               .gap(metrics.space(1.5f))
+               .marginRight(metrics.space(2));
 
         // endregion
 
@@ -309,8 +309,8 @@ public:
         manager->style("CanvasPage")
                .position(Position::Relative)
                .overflow(Overflow::Hidden)
-               .backgroundColor(p.frame)
-               .dotGridColor(p.canvasDot)
+               .backgroundColor(palette.frame)
+               .dotGridColor(palette.canvasDot)
                .dotGridSpacing(16)
                .dotGridRadius(1);
 
@@ -318,8 +318,8 @@ public:
         const Shadow &soft    = theme.elevation.panel;
         const Shadow &contact = theme.elevation.panelContact;
         manager->style("CanvasPage .floating")
-               .backgroundColor(p.surface)
-               .borderRadius(m.radius.surface)
+               .backgroundColor(palette.surface)
+               .borderRadius(metrics.radius.surface)
                .shadowColor(soft.color)
                .shadowBlur(soft.blur)
                .shadowOffsetY(soft.offsetY)
@@ -338,66 +338,66 @@ public:
 
         manager->style("CanvasPage .left")
                .position(Position::Absolute)
-               .left(m.space(4))
-               .top(m.space(4))
+               .left(metrics.space(4))
+               .top(metrics.space(4))
                .width(232)
-               .gap(m.space(2));
+               .gap(metrics.space(2));
 
         manager->style("CanvasPage .document")
                .alignSelf(Align::Start)
                .alignItems(Align::Center)
-               .gap(m.space(2))
+               .gap(metrics.space(2))
                .height(44)
-               .paddingLeft(m.space(2.5f))
-               .paddingRight(m.space(3))
-               .iconSize(m.iconSm)
-               .color(p.textMuted);
+               .paddingLeft(metrics.space(2.5f))
+               .paddingRight(metrics.space(3))
+               .iconSize(metrics.iconSm)
+               .color(palette.textMuted);
 
         manager->style("CanvasPage .document .mark")
                .width(24)
                .height(24)
                .textAlign(TextAlign::Center)
                .lineHeight(24)
-               .borderRadius(m.radius.small)
+               .borderRadius(metrics.radius.small)
                .fontFamily(theme.type.semiBold.name)
                .fontSize(theme.type.xs.size)
-               .backgroundColor(p.accent)
-               .color(p.onAccent);
+               .backgroundColor(palette.accent)
+               .color(palette.onAccent);
 
         manager->style("CanvasPage .document .name")
                .fontFamily(theme.type.semiBold.name)
                .fontSize(theme.type.md.size)
                .lineHeight(theme.type.md.leading)
-               .color(p.text);
+               .color(palette.text);
 
         manager->style("CanvasPage .layers")
-               .padding(m.space(2))
-               .paddingTop(m.space(1));
+               .padding(metrics.space(2))
+               .paddingTop(metrics.space(1));
 
         // The layers' tree sits on the panel, not on a page: its sliding nodes hide what they pass over in its color
         manager->style("CanvasPage .layers TreeNode.sliding")
-               .backgroundColor(p.surface);
+               .backgroundColor(palette.surface);
 
         manager->style("CanvasPage .layers .heading")
                .fontSize(theme.type.xs.size)
                .lineHeight(theme.type.xs.leading)
-               .paddingHorizontal(m.space(2))
-               .paddingTop(m.space(2))
-               .paddingBottom(m.space(1))
-               .color(p.textMuted);
+               .paddingHorizontal(metrics.space(2))
+               .paddingTop(metrics.space(2))
+               .paddingBottom(metrics.space(1))
+               .color(palette.textMuted);
 
         manager->style("CanvasPage .inspector")
                .position(Position::Absolute)
-               .right(m.space(4))
-               .top(m.space(4))
+               .right(metrics.space(4))
+               .top(metrics.space(4))
                .width(300)
                .overflow(Overflow::Hidden); // Its sections' hairlines end at its corners
 
         manager->style("CanvasPage .inspector .actions")
-               .gap(m.space(2))
-               .padding(m.gutter)
-               .borderTop(m.border)
-               .borderColor(p.line);
+               .gap(metrics.space(2))
+               .padding(metrics.gutter)
+               .borderTop(metrics.border)
+               .borderColor(palette.line);
 
         manager->style("CanvasPage .inspector InspectorField")
                .alignItems(Align::Center);
@@ -410,14 +410,14 @@ public:
 
         manager->style("CanvasPage .dock")
                .position(Position::Absolute)
-               .left(0).right(0).bottom(m.space(5))
+               .left(0).right(0).bottom(metrics.space(5))
                .justify(Justify::Center);
 
         // The tool bar: a floating strip of square quiet tools, not a band under a header
         manager->style("CanvasPage ToolBar")
                .height(Auto)
-               .padding(m.space(1.5f))
-               .gap(m.space(1))
+               .padding(metrics.space(1.5f))
+               .gap(metrics.space(1))
                .borderBottom(0);
 
         manager->style("CanvasPage ToolBar Button")
@@ -425,23 +425,23 @@ public:
                .height(36)
                .paddingHorizontal(0)
                .iconSize(theme.metrics.iconMd + 3)
-               .borderRadius(m.radius.control);
+               .borderRadius(metrics.radius.control);
 
         // The stage: a lighting plot in the middle of the canvas
         manager->style("CanvasPage .stage")
                .position(Position::Relative)
                .width(468)
                .height(300)
-               .border(m.border)
-               .borderColor(p.lineStrong)
-               .borderRadius(m.radius.control)
-               .backgroundColor(p.page.withAlpha(0x99)); // The canvas shows through, a little
+               .border(metrics.border)
+               .borderColor(palette.lineStrong)
+               .borderRadius(metrics.radius.control)
+               .backgroundColor(palette.page.withAlpha(0x99)); // The canvas shows through, a little
 
         manager->style("CanvasPage .truss")
                .position(Position::Absolute)
                .left(40).right(40).top(67)
                .height(2)
-               .backgroundColor(p.lineStrong);
+               .backgroundColor(palette.lineStrong);
 
         manager->style("CanvasPage .fixture")
                .position(Position::Absolute)
@@ -449,35 +449,35 @@ public:
                .height(28)
                .borderRadius(999)
                .border(2)
-               .borderColor(p.lineStrong);
+               .borderColor(palette.lineStrong);
 
         manager->style("CanvasPage .selection")
                .position(Position::Absolute)
                .left(284).top(46)
                .width(124).height(44)
                .border(1.5f)
-               .borderColor(p.accent)
+               .borderColor(palette.accent)
                .borderRadius(2)
                .alignItems(Align::Center);
 
         manager->style("CanvasPage .selection-label")
                .position(Position::Absolute)
                .top(-30)
-               .paddingHorizontal(m.space(2))
+               .paddingHorizontal(metrics.space(2))
                .height(24)
-               .borderRadius(m.radius.small)
+               .borderRadius(metrics.radius.small)
                .fontFamily(theme.type.medium.name)
                .fontSize(theme.type.sm.size)
                .lineHeight(24)
-               .backgroundColor(p.accent)
-               .color(p.onAccent);
+               .backgroundColor(palette.accent)
+               .color(palette.onAccent);
 
         manager->style("CanvasPage .caption")
                .position(Position::Absolute)
-               .left(m.space(3))
-               .bottom(m.space(2))
+               .left(metrics.space(3))
+               .bottom(metrics.space(2))
                .fontSize(theme.type.sm.size)
-               .color(p.textMuted);
+               .color(palette.textMuted);
 
         // endregion
 
@@ -513,11 +513,11 @@ public:
                .gap(12);
 
         manager->style("Icons .icon-cell Icon")
-               .color(p.text);
+               .color(palette.text);
 
         manager->style("Icons .icon-cell Label")
                .fontSize(10)
-               .color(p.textMuted);
+               .color(palette.textMuted);
 
         // endregion
     }

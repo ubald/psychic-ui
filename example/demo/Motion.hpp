@@ -54,8 +54,8 @@ namespace psychic_ui {
             tag("DrawnLane");
         }
 
-        void toggle(bool on) {
-            _position.to(on ? 1.0f : 0.0f);
+        void toggle(bool forward) {
+            _position.to(forward ? 1.0f : 0.0f);
         }
 
     protected:
@@ -108,9 +108,9 @@ namespace psychic_ui {
         void draw(SkCanvas *canvas) override {
             Div::draw(canvas);
             // Room for an overshoot above and an undershoot below
-            const SkRect plot = _rect.makeInset(10.0f, _rect.height() * 0.2f);
-            const auto   at   = [&plot](float t, float v) {
-                return SkPoint::Make(plot.left() + (t * plot.width()), plot.bottom() - (v * plot.height()));
+            const SkRect plot    = _rect.makeInset(10.0f, _rect.height() * 0.2f);
+            const auto   pointAt = [&plot](float t, float value) {
+                return SkPoint::Make(plot.left() + (t * plot.width()), plot.bottom() - (value * plot.height()));
             };
 
             SkPaint line;
@@ -118,14 +118,14 @@ namespace psychic_ui {
             line.setStyle(SkPaint::kStroke_Style);
             line.setStrokeWidth(1.0f);
             line.setColor(_computedStyle.borderColor().argb());
-            canvas->drawLine(at(0, 0), at(1, 0), line);
-            canvas->drawLine(at(0, 1), at(1, 1), line);
+            canvas->drawLine(pointAt(0, 0), pointAt(1, 0), line);
+            canvas->drawLine(pointAt(0, 1), pointAt(1, 1), line);
 
             SkPathBuilder path;
-            path.moveTo(at(0, valueAt(0)));
+            path.moveTo(pointAt(0, valueAt(0)));
             for (int i = 1; i <= 64; ++i) {
                 const float t = static_cast<float>(i) / 64.0f;
-                path.lineTo(at(t, valueAt(t)));
+                path.lineTo(pointAt(t, valueAt(t)));
             }
             line.setStrokeWidth(1.5f);
             line.setColor(_computedStyle.color().argb());
@@ -134,7 +134,7 @@ namespace psychic_ui {
             SkPaint dot;
             dot.setAntiAlias(true);
             dot.setColor(_computedStyle.color().argb());
-            canvas->drawCircle(at(_time, valueAt(_time)), 4.0f, dot);
+            canvas->drawCircle(pointAt(_time, valueAt(_time)), 4.0f, dot);
         }
     };
 
@@ -186,9 +186,9 @@ namespace psychic_ui {
         bar.add<Button>("Play").icon("play").skin("primary").onClick([this] { play(); });
         // Every duration becomes 0, values jump to their end (as with --reduced-motion)
         _reduced = &bar.add<Switch>("Reduce motion");
-        _reduced->onChange([this](bool on) {
+        _reduced->onChange([this](bool reduced) {
             if (Window *w = window()) {
-                w->reducedMotion(on);
+                w->reducedMotion(reduced);
             }
         });
 
@@ -297,7 +297,7 @@ namespace psychic_ui {
 
     inline void MotionPanel::showTokens() {
         const auto &motion = styleManager()->theme().metrics.motion;
-        const auto    ease   = [](const Ease &e) { return std::format("cubic-bezier({}, {}, {}, {})", e.x1, e.y1, e.x2, e.y2); };
+        const auto    ease   = [](const Ease &curve) { return std::format("cubic-bezier({}, {}, {}, {})", curve.x1, curve.y1, curve.x2, curve.y2); };
         _tokens->text(std::format(
             "{}: fast {} ms, medium {} ms, slow {} ms · standard {} · out {} · spring stiffness {}, damping {}",
             _theme, motion.fast.count(), motion.medium.count(), motion.slow.count(), ease(motion.standard),

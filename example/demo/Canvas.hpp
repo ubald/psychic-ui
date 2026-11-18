@@ -50,15 +50,15 @@ namespace psychic_ui {
         const Color amber = rgb(0xFFC98A);
         const Color pink  = rgb(0xF56E9B);
         const Color blue  = rgb(0x8DB2FF);
-        for (const Fixture &f: std::vector<Fixture>{
+        for (const Fixture &fixture: std::vector<Fixture>{
                  {84, 68, amber}, {159, 68, amber}, {308, 68, amber}, {383, 68, amber},
                  {233, 179, pink}, {122, 245, blue}, {346, 245, blue},
              }) {
             stage.add<Div>()
                  .addClassName("fixture")
-                 .left(f.x - 14)
-                 .top(f.y - 14)
-                 .backgroundColor(f.color);
+                 .left(fixture.x - 14)
+                 .top(fixture.y - 14)
+                 .backgroundColor(fixture.color);
         }
         auto &selection = stage.add<Div>().addClassName("selection");
         selection.add<Label>("2 fixtures").addClassName("selection-label");

@@ -182,8 +182,8 @@ int main(int argc, char **argv) {
             } else {
                 failed = true;
             }
-            const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
-            std::cout << scene.name << ".png  " << ms.count() << " ms" << '\n';
+            const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+            std::cout << scene.name << ".png  " << elapsed.count() << " ms" << '\n';
         }
         const auto total = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - begin);
         std::cout << written << " scenes in " << total.count() << " ms" << '\n';

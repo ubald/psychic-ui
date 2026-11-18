@@ -73,7 +73,7 @@ namespace psychic_ui::showcase {
                 const char *channels;
                 const char *universe;
             };
-            for (const Fixture &f: std::vector<Fixture>{
+            for (const Fixture &fixture: std::vector<Fixture>{
                      {"Wash 1", "Moving head", Tone::Success, "Online", "16", "1"},
                      {"Spot left", "Profile", Tone::Warning, "Hot", "24", "2"},
                      {"Strobe", "Strobe", Tone::Danger, "Offline", "4", "3"},
@@ -83,8 +83,8 @@ namespace psychic_ui::showcase {
                      {"Blinder", "Blinder", Tone::Accent, "Armed", "4", "10"},
                      {"Wash 2", "Moving head", Tone::Success, "Online", "16", "1"},
                  }) {
-                auto &row = grid.row({f.name, f.kind, f.status, f.channels, f.universe});
-                row.cell(2).add(0, std::make_shared<StatusDot>(f.tone));
+                auto &row = grid.row({fixture.name, fixture.kind, fixture.status, fixture.channels, fixture.universe});
+                row.cell(2).add(0, std::make_shared<StatusDot>(fixture.tone));
             }
             grid.sort(3, SortOrder::Descending);
             grid.select(0); // Spot left, first once sorted

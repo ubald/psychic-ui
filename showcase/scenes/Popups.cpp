@@ -117,7 +117,7 @@ namespace psychic_ui::showcase {
             .build = [](Window &window) { cueList(window); },
             .pose = [](Stage &stage) {
                 Div &list = find(stage.window(), "list");
-                const MouseEvent at = list.mouseEventAtCenter();
+                const MouseEvent center = list.mouseEventAtCenter();
                 Menu &menu = stage.window().openContextMenu(
                     {
                         Menu::item("Cut", [] {}, "Ctrl+X"),
@@ -127,7 +127,7 @@ namespace psychic_ui::showcase {
                         Menu::item("Duplicate", [] {}, "Ctrl+D"),
                         Menu::item("Select all", [] {}, "Ctrl+A"),
                     },
-                    at.windowX - 120, at.windowY - 20
+                    center.windowX - 120, center.windowY - 20
                 );
                 stage.frame();
                 menu.highlight(1);
