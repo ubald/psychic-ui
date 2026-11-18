@@ -794,7 +794,7 @@ namespace psychic_ui {
 
         floating(rule("Dialog .panel"), theme.elevation)
             .width(metrics.dialogSm)
-            .maxWidth(100_pct)
+            .maxWidth(Full)
             .maxHeight(80_pct)
             .border(metrics.border)
             .borderColor(palette.lineStrong)

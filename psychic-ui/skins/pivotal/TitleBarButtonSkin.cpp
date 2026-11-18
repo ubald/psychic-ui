@@ -11,8 +11,8 @@ namespace psychic_ui {
     TitleBarButtonSkin::TitleBarButtonSkin() :
         ButtonSkin() {
         tag("TitleBarButtonSkin");
-        _inlineStyle.width(100_pct)
-            .height(100_pct);
+        _inlineStyle.width(Full)
+            .height(Full);
     }
 
     void TitleBarButtonSkin::draw(SkCanvas *canvas) {

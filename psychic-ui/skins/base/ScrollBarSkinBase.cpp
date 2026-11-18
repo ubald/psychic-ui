@@ -13,8 +13,8 @@ namespace psychic_ui {
         _track = &add<Div>();
         _track->addClassName("track")
               .position(Position::Absolute)
-              .width(100_pct)
-              .height(100_pct);
+              .width(Full)
+              .height(Full);
 
         _thumb = &add<Div>();
         _thumb->addClassName("thumb")

@@ -112,8 +112,8 @@ namespace psychic_ui {
         _body = &viewport.add<Div>();
         _body->addClassName("body")
              .direction(Direction::Column)
-             .width(100_pct)
-             .height(100_pct)
+             .width(Full)
+             .height(Full)
              .overflow(Overflow::Scroll);
         viewport.add<ScrollBar>(*_body)
                 .position(Position::Absolute)
