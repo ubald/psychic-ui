@@ -20,7 +20,7 @@ namespace psychic_ui::paint {
             return shape != nullptr;
         }
 
-        SkPoint origin = SkPoint::Make(rect.centerX() - (size / 2.0f), rect.centerY() - (size / 2.0f));
+        SkPoint origin = SkPoint::Make(rect.centerX() - (size / 2), rect.centerY() - (size / 2));
         // On the pixel grid, so the same icon looks the same wherever it is
         const SkMatrix matrix = canvas->getTotalMatrix();
         SkMatrix       inverse;

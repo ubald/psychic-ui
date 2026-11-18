@@ -10,6 +10,11 @@ namespace psychic_ui {
     // region Ease
 
     namespace {
+        constexpr int   newtonSteps    = 8;     // Newton's method converges in a few steps, or not at all
+        constexpr int   bisectionSteps = 32;    // Halvings of [0, 1]: past a float's precision
+        constexpr float solveEpsilon   = 1e-6f; // Close enough to the progress, or too flat a slope for Newton
+        constexpr float besideStep     = 1e-3f; // How far beside a vertical tangent the slope is taken
+
         /**
          * An easing curve's B(t) = 3(1-t)²t·p1 + 3(1-t)t²·p2 + t³ as polynomials in t, with the t whose x is a progress
          */
@@ -18,29 +23,29 @@ namespace psychic_ui {
             float cy, by, ay;
 
             explicit Bezier(const Ease &ease) :
-                cx(3.0f * ease.x1), bx((3.0f * (ease.x2 - ease.x1)) - cx), ax(1.0f - cx - bx),
-                cy(3.0f * ease.y1), by((3.0f * (ease.y2 - ease.y1)) - cy), ay(1.0f - cy - by) {}
+                cx(3 * ease.x1), bx((3 * (ease.x2 - ease.x1)) - cx), ax(1.0f - cx - bx),
+                cy(3 * ease.y1), by((3 * (ease.y2 - ease.y1)) - cy), ay(1.0f - cy - by) {}
 
             [[nodiscard]] float x(float t) const { return ((ax * t + bx) * t + cx) * t; }
 
             [[nodiscard]] float y(float t) const { return ((ay * t + by) * t + cy) * t; }
 
-            [[nodiscard]] float dx(float t) const { return ((3.0f * ax * t + 2.0f * bx) * t) + cx; }
+            [[nodiscard]] float dx(float t) const { return ((3 * ax * t + 2 * bx) * t) + cx; }
 
-            [[nodiscard]] float dy(float t) const { return ((3.0f * ay * t + 2.0f * by) * t) + cy; }
+            [[nodiscard]] float dy(float t) const { return ((3 * ay * t + 2 * by) * t) + cy; }
 
             /**
              * The t whose x is the progress: Newton's method, then bisection where the slope is too flat for it
              */
             [[nodiscard]] float solve(float progress) const {
                 float t = progress;
-                for (int i = 0; i < 8; ++i) {
+                for (int i = 0; i < newtonSteps; ++i) {
                     const float error = x(t) - progress;
-                    if (std::abs(error) < 1e-6f) {
+                    if (std::abs(error) < solveEpsilon) {
                         return t;
                     }
                     const float slope = dx(t);
-                    if (std::abs(slope) < 1e-6f) {
+                    if (std::abs(slope) < solveEpsilon) {
                         break;
                     }
                     t -= error / slope;
@@ -48,13 +53,13 @@ namespace psychic_ui {
                 float low  = 0.0f;
                 float high = 1.0f;
                 t = progress;
-                for (int i = 0; i < 32; ++i) {
+                for (int i = 0; i < bisectionSteps; ++i) {
                     const float value = x(t);
-                    if (std::abs(value - progress) < 1e-6f) {
+                    if (std::abs(value - progress) < solveEpsilon) {
                         break;
                     }
                     (value < progress ? low : high) = t;
-                    t = (low + high) / 2.0f;
+                    t = (low + high) / 2;
                 }
                 return t;
             }
@@ -79,9 +84,9 @@ namespace psychic_ui {
         const Bezier curve{*this};
         float        t  = curve.solve(std::clamp(progress, 0.0f, 1.0f));
         float        dx = curve.dx(t);
-        if (std::abs(dx) < 1e-6f) {
+        if (std::abs(dx) < solveEpsilon) {
             // A vertical tangent, or both derivatives 0 at an end (Ease::Out at 0): the slope just beside it
-            t  = t < 0.5f ? t + 1e-3f : t - 1e-3f;
+            t  = t < 0.5f ? t + besideStep : t - besideStep;
             dx = curve.dx(t);
         }
         return curve.dy(t) / dx;
@@ -104,14 +109,16 @@ namespace psychic_ui {
     // region Spring
 
     namespace {
+        constexpr float springEpsilon = 1e-4f; // The least mass, and how near critical damping counts as critical
+
         /**
          * Its mass, kept above 0 so that the motion stays finite
          */
-        float massOf(const Spring &spring) { return std::max(spring.mass, 1e-4f); }
+        float massOf(const Spring &spring) { return std::max(spring.mass, springEpsilon); }
     }
 
     float Spring::dampingRatio() const {
-        return damping / (2.0f * std::sqrt(stiffness * massOf(*this)));
+        return damping / (2 * std::sqrt(stiffness * massOf(*this)));
     }
 
     Approach Spring::approach(const float offset0, const float velocity0, const float t, const float tolerance) const {
@@ -122,7 +129,7 @@ namespace psychic_ui {
         const float zeta     = dampingRatio();
         float       x        = 0.0f;
         float       velocity = 0.0f;
-        if (std::abs(zeta - 1.0f) < 1e-4f) {
+        if (std::abs(zeta - 1.0f) < springEpsilon) {
             // Critically damped
             const float b     = velocity0 + (omega * offset0);
             const float decay = std::exp(-omega * t);

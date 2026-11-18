@@ -1091,41 +1091,51 @@ namespace psychic_ui {
             }
             paint.setStrokeWidth(SkIntToScalar(1));
 
-            paint.setColor(0x7FFF0000);
-            const SkRect mRect = _marginRect.makeInset(0.5f, 0.5f);
+            // Each box in its color, on the pixels' centers
+            constexpr float   halfPixel      = 0.5f;
+            constexpr SkColor marginColor    = 0x7FFF0000;
+            constexpr SkColor borderBoxColor = 0x7F00FF00;
+            constexpr SkColor paddingColor   = 0x7F0000FF;
+            constexpr SkColor boundsColor    = 0x30FFFF00;
+            constexpr SkColor borderColor    = 0x7F00FFFF;
+            constexpr SkColor pressedColor   = 0x30FFFFFF;
+            constexpr SkColor hoveredColor   = 0x10FFFFFF;
+
+            paint.setColor(marginColor);
+            const SkRect mRect = _marginRect.makeInset(halfPixel, halfPixel);
             canvas->drawRect(mRect, paint);
 
-            paint.setColor(0x7F00FF00);
-            const SkRect dRect = _rect.makeInset(0.5f, 0.5f);
+            paint.setColor(borderBoxColor);
+            const SkRect dRect = _rect.makeInset(halfPixel, halfPixel);
             canvas->drawRect(dRect, paint);
 
-            paint.setColor(0x7F0000FF);
-            const SkRect pRect = _paddedRect.makeInset(0.5f, 0.5f);
+            paint.setColor(paddingColor);
+            const SkRect pRect = _paddedRect.makeInset(halfPixel, halfPixel);
             canvas->drawRect(pRect, paint);
 
-            paint.setColor(0x30FFFF00);
+            paint.setColor(boundsColor);
             SkRect bRect = SkRect::MakeLTRB((float) _boundsLeft, (float) _boundsTop, (float) _boundsRight, (float) _boundsBottom);
-            bRect.inset(0.5f, 0.5f);
+            bRect.inset(halfPixel, halfPixel);
             canvas->drawRect(bRect, paint);
 
             if (_borderLeft > 0 || _borderTop > 0 || _borderRight > 0 || _borderBottom > 0) {
-                paint.setColor(0x7F00FFFF);
+                paint.setColor(borderColor);
                 canvas->drawRect(
                     SkRect::MakeLTRB(
-                        _rect.left() + _borderLeft + 0.5f,
-                        _rect.top() + _borderTop + 0.5f,
-                        _rect.right() - _borderRight - 0.5f,
-                        _rect.bottom() - _borderBottom - 0.5f
+                        _rect.left() + _borderLeft + halfPixel,
+                        _rect.top() + _borderTop + halfPixel,
+                        _rect.right() - _borderRight - halfPixel,
+                        _rect.bottom() - _borderBottom - halfPixel
                     ), paint
                 );
             }
 
             if (_mouseDown) {
-                paint.setColor(0x30FFFFFF);
+                paint.setColor(pressedColor);
                 paint.setStrokeWidth(2);
                 canvas->drawRect(_rect.makeInset(1.0f, 1.0f), paint);
             } else if (_mouseOver) {
-                paint.setColor(0x10FFFFFF);
+                paint.setColor(hoveredColor);
                 paint.setStrokeWidth(2);
                 canvas->drawRect(_rect.makeInset(1.0f, 1.0f), paint);
             }
@@ -1173,7 +1183,7 @@ namespace psychic_ui {
             paint.setAntiAlias(true);
             paint.setColor(color.argb());
             if (blur > 0.0f) {
-                paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, blur / 2.0f));
+                paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, blur / 2));
             }
             SkRRect shape = _roundRect.makeOffset(x, y);
             if (spread != 0.0f) {
@@ -1219,7 +1229,7 @@ namespace psychic_ui {
         paint.setAntiAlias(true);
         paint.setColor(style.dotGridColor().argb());
         paint.setStrokeCap(SkPaint::kRound_Cap);
-        paint.setStrokeWidth(radius * 2.0f);
+        paint.setStrokeWidth(radius * 2);
         canvas->save();
         canvas->clipRRect(_roundRect, true);
         canvas->drawPoints(SkCanvas::kPoints_PointMode, dots, paint);
@@ -1477,8 +1487,8 @@ namespace psychic_ui {
         localToGlobal(windowX, windowY);
         MouseEvent event{};
         // The center of the border box, in content coordinates
-        event.x       = (static_cast<float>(_width) / 2.0f) - static_cast<float>(_scrollX);
-        event.y       = (static_cast<float>(_height) / 2.0f) - static_cast<float>(_scrollY);
+        event.x       = (static_cast<float>(_width) / 2) - static_cast<float>(_scrollX);
+        event.y       = (static_cast<float>(_height) / 2) - static_cast<float>(_scrollY);
         event.windowX = static_cast<float>(windowX) + event.x;
         event.windowY = static_cast<float>(windowY) + event.y;
         event.fromKeyboard = true;

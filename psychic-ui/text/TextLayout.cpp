@@ -354,7 +354,7 @@ namespace psychic_ui {
             return width;
         }
         tl::Paragraph::GlyphClusterInfo cluster{};
-        if (!paragraph->getClosestGlyphClusterAt(width, _style.lineHeight / 2.0f, &cluster)) {
+        if (!paragraph->getClosestGlyphClusterAt(width, _style.lineHeight / 2, &cluster)) {
             return width;
         }
         return cluster.fBounds.fRight <= width ? cluster.fBounds.fRight : cluster.fBounds.fLeft;

@@ -13,13 +13,21 @@ namespace psychic_ui {
      */
     class Color {
     public:
+        // Where the channels sit in the 32 bits (blue in the lowest byte), and the masks that take them
+        static constexpr int           alphaShift = 24;
+        static constexpr int           redShift   = 16;
+        static constexpr int           greenShift = 8;
+        static constexpr std::uint32_t opaque     = 0xFF000000u; // The alpha byte, full
+        static constexpr std::uint32_t rgbMask    = 0x00FFFFFFu; // The color without its alpha
+        static constexpr std::uint32_t channelMax = 0xFFu;       // One channel, full: a byte
+
         constexpr Color() = default;
 
         /**
          * From a psychic-color color, opaque
          */
         Color(const psychic_color::Color &color) : // NOLINT(google-explicit-constructor): theme colors are psychic-color's
-            _argb(0xFF000000u | (color.getColor() & 0x00FFFFFFu)) {}
+            _argb(opaque | (color.getColor() & rgbMask)) {}
 
         static constexpr Color fromARGB(std::uint32_t argb) {
             Color color;
@@ -29,13 +37,13 @@ namespace psychic_ui {
 
         [[nodiscard]] constexpr std::uint32_t argb() const { return _argb; }
 
-        [[nodiscard]] constexpr std::uint8_t alpha() const { return static_cast<std::uint8_t>(_argb >> 24); }
+        [[nodiscard]] constexpr std::uint8_t alpha() const { return static_cast<std::uint8_t>(_argb >> alphaShift); }
 
         /**
          * The same color with another alpha, 0 (transparent) to 255 (opaque)
          */
         [[nodiscard]] constexpr Color withAlpha(std::uint8_t alpha) const {
-            return fromARGB((static_cast<std::uint32_t>(alpha) << 24) | (_argb & 0x00FFFFFFu));
+            return fromARGB((static_cast<std::uint32_t>(alpha) << alphaShift) | (_argb & rgbMask));
         }
 
         /**
@@ -53,7 +61,7 @@ namespace psychic_ui {
                 const std::uint32_t b   = (below._argb >> shift) & 0xFFu;
                 return ((own * a + b * belowShown + outAlpha / 2) / outAlpha) << shift;
             };
-            return fromARGB((outAlpha << 24) | channel(16) | channel(8) | channel(0));
+            return fromARGB((outAlpha << alphaShift) | channel(redShift) | channel(greenShift) | channel(0));
         }
 
         constexpr bool operator==(const Color &) const = default;
@@ -65,13 +73,15 @@ namespace psychic_ui {
     /**
      * An opaque color from 0xRRGGBB
      */
-    constexpr Color rgb(std::uint32_t rgb) { return Color::fromARGB(0xFF000000u | (rgb & 0x00FFFFFFu)); }
+    constexpr Color rgb(std::uint32_t rgb) { return Color::fromARGB(Color::opaque | (rgb & Color::rgbMask)); }
 
     /**
      * An opaque color from its components
      */
     constexpr Color rgb(std::uint8_t r, std::uint8_t g, std::uint8_t b) {
-        return Color::fromARGB(0xFF000000u | (std::uint32_t{r} << 16) | (std::uint32_t{g} << 8) | std::uint32_t{b});
+        return Color::fromARGB(
+            Color::opaque | (std::uint32_t{r} << Color::redShift) | (std::uint32_t{g} << Color::greenShift) | std::uint32_t{b}
+        );
     }
 
     /**

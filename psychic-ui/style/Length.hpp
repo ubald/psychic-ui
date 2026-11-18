@@ -60,6 +60,11 @@ namespace psychic_ui {
      */
     inline constexpr Length Auto{0.0f, Length::Unit::Auto};
 
+    /**
+     * All of the parent, `100_pct`: `width(Full)`, `height(Full)`
+     */
+    inline constexpr Length Full{100.0f, Length::Unit::Percent};
+
     inline namespace literals {
         /**
          * Percent of the parent, 0-100 like CSS: `width(50_pct)`

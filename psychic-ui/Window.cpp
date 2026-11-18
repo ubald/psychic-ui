@@ -67,7 +67,9 @@ namespace psychic_ui {
         // its input mode last.
         styleManager()->density(Density::Pointer);
         tag("Window");
-        setWindowSize(1440, 900);
+        constexpr int initialWidth  = 1440;
+        constexpr int initialHeight = 900;
+        setWindowSize(initialWidth, initialHeight);
 
         _inlineStyle.position(Position::Absolute)
             .overflow(Overflow::Hidden);
@@ -75,8 +77,8 @@ namespace psychic_ui {
         app = &add<Div>()
             .id("app")
             .position(Position::Absolute)
-            .width(100_pct)
-            .height(100_pct)
+            .width(Full)
+            .height(Full)
             .overflow(Overflow::Hidden);
 
         _overlay = &add<Overlay>();
@@ -558,11 +560,13 @@ namespace psychic_ui {
         _animationClockFresh = false; // Tweens started from now on start with the next frame
 
         // Performance
+        constexpr double reportEvery = 500;     // Milliseconds between two counts
+        constexpr float  perSecond   = 1000.0f; // Milliseconds in a second
         ++frames;
         const double delta = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - lastReport).count();
-        if (delta >= 500) {
+        if (delta >= reportEvery) {
             lastReport = std::chrono::high_resolution_clock::now();
-            fps        = frames / (delta / 1000.0f);
+            fps        = frames / (delta / perSecond);
             frames     = 0;
         }
     }
@@ -1176,8 +1180,10 @@ namespace psychic_ui {
                 panBy(dx, dy);
                 if (elapsed > 0) {
                     // Mostly the latest movement's speed, smoothed a little
-                    _panVelocityX = (0.6f * dx / elapsed) + (0.4f * _panVelocityX);
-                    _panVelocityY = (0.6f * dy / elapsed) + (0.4f * _panVelocityY);
+                    constexpr float latest   = 0.6f;
+                    constexpr float smoothed = 0.4f;
+                    _panVelocityX = (latest * dx / elapsed) + (smoothed * _panVelocityX);
+                    _panVelocityY = (latest * dy / elapsed) + (smoothed * _panVelocityY);
                 }
                 break;
 

@@ -35,7 +35,7 @@ namespace psychic_ui::paint {
         /**
          * Where a stroke of the border's width goes to fill the border: its center line
          */
-        [[nodiscard]] SkRRect strokeLine() const { return inset(border / 2.0f); }
+        [[nodiscard]] SkRRect strokeLine() const { return inset(border / 2); }
     };
 
     void fill(SkCanvas *canvas, const SkRRect &shape, Color color, bool antiAlias = true);
