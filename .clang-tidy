@@ -40,6 +40,10 @@ HeaderFilterRegex: '.*'
 # Only the project's own headers: not the submodules, the downloaded Catch2 or the Nix store.
 ExcludeHeaderFilterRegex: '.*/(extlib|lib/psychic-color|_deps)/.*|^/nix/store/.*'
 CheckOptions:
+  # The only macros: the style property table (PSYCHIC_UI_STYLE_PROPERTIES), the PSYCHIC_UI_X each use of it defines
+  # and undefines, and PSYCHIC_UI_EVENT, which declares an event's connector; C++ has no other way to generate them.
+  # Matched against macro names, by name: any other macro is still reported (this replaces the default, ^DEBUG_*).
+  cppcoreguidelines-macro-usage.AllowedRegexp: '^PSYCHIC_UI_(STYLE_PROPERTIES|X|EVENT)$'
   readability-identifier-length.IgnoredVariableNames: '^(x|y|z|w|h|i|j|k|n|r|g|b|a|t|s|dx|dy|it|id|ok|os)$'
   readability-identifier-length.IgnoredParameterNames: '^(x|y|z|w|h|i|j|k|n|r|g|b|a|t|s|dx|dy|it|id|os)$'
   readability-identifier-length.IgnoredLoopCounterNames: '^[ijk_]$'
