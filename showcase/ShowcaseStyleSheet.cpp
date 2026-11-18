@@ -142,8 +142,8 @@ namespace psychic_ui::showcase {
         // A data grid beside its inspector
         manager->style(".grid-card")
                .direction(Direction::Row)
-               .width(100_pct)
-               .height(100_pct);
+               .width(Full)
+               .height(Full);
 
         manager->style(".grid-inspector")
                .width(280)

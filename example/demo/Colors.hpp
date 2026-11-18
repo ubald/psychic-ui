@@ -140,13 +140,13 @@ namespace psychic_ui {
             .padding(0); // We're using a scroller so no padding
 
         auto &scroller = add<Div>()
-            .width(100_pct)
-            .height(100_pct)
+            .width(Full)
+            .height(Full)
             .padding(24)
             .overflow(Overflow::Scroll);
 
         auto &scrollbar = add<ScrollBar>(scroller)
-            .height(100_pct);
+            .height(Full);
 
         {
             auto &container = scroller.add<HBox>()

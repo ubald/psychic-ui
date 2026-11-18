@@ -60,7 +60,7 @@ namespace psychic_ui::showcase {
                     return window;
                 },
                 .build = [](Window &window) {
-                    window.appContainer().add<CanvasPage>().width(100_pct).height(100_pct);
+                    window.appContainer().add<CanvasPage>().width(Full).height(Full);
                 },
                 .pose = [](Stage &stage) {
                     // The mouse resting on a tool, its tooltip shown

@@ -18,14 +18,14 @@ namespace psychic_ui {
 
         auto &scroller = add<Div>()
             .shrink(1)
-            .height(100_pct)
+            .height(Full)
             .padding(24)
             .overflow(Overflow::Scroll)
             .wrap(Wrap::Wrap)
             .direction(Direction::Row);
 
         auto &scrollbar = add<ScrollBar>(scroller)
-            .height(100_pct);
+            .height(Full);
 
         // region No Borders
 

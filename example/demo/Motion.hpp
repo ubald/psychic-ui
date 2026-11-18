@@ -308,7 +308,7 @@ namespace psychic_ui {
     inline void MotionPanel::play() {
         _on = !_on;
         for (Div *puck: _pucks) {
-            puck->left(_on ? 100_pct : 0_pct);
+            puck->left(_on ? Full : 0_pct);
         }
         _drawn->toggle(_on);
         for (CurveView *curve: _curves) {

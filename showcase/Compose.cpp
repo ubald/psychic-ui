@@ -13,8 +13,8 @@ namespace psychic_ui::showcase::compose {
         return window.appContainer()
                      .add<Div>()
                      .addClassName("backdrop")
-                     .width(100_pct)
-                     .height(100_pct);
+                     .width(Full)
+                     .height(Full);
     }
 
     Div &panel(Div &parent, const std::string &title, const std::string &caption) {

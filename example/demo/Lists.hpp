@@ -63,9 +63,9 @@ namespace psychic_ui {
             .addClassName("scroller")
             .grow(1)
             .shrink(1)
-            .height(100_pct)
+            .height(Full)
             .overflow(Overflow::Scroll);
-        add<ScrollBar>(scroller).height(100_pct);
+        add<ScrollBar>(scroller).height(Full);
 
         // region List and tree
 
