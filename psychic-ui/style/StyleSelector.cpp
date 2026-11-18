@@ -231,6 +231,10 @@ namespace psychic_ui {
         for (const auto &pseudo: _pseudo) {
             switch (pseudo) {
                 case Pseudo::Hover:
+                case Pseudo::Empty:
+                case Pseudo::FirstChild:
+                case Pseudo::LastChild:
+                case Pseudo::Touch:
                     w += 1;
                     break;
                 case Pseudo::Active:
@@ -242,18 +246,6 @@ namespace psychic_ui {
                     break;
                 case Pseudo::Disabled:
                     w += 4;
-                    break;
-                case Pseudo::Empty:
-                    w += 1;
-                    break;
-                case Pseudo::FirstChild:
-                    w += 1;
-                    break;
-                case Pseudo::LastChild:
-                    w += 1;
-                    break;
-                case Pseudo::Touch:
-                    w += 1;
                     break;
             }
         }
