@@ -2,17 +2,22 @@
 
 #include <string>
 #include <unicode/unistr.h>
-#include "psychic-ui/TextBase.hpp"
 #include "psychic-ui/Div.hpp"
+#include "psychic-ui/text/TextEditing.hpp"
+#include "psychic-ui/text/TextLayout.hpp"
 
 namespace psychic_ui {
 
     /**
      * @class Text
      *
-     * Displays single or multiline text that is optionally selectable and/or editable.
+     * Displays single or multiline text that is optionally selectable and/or editable, through a TextEditing.
+     * It answers the editing model's geometry questions in its own coordinates (inside its padding and border).
+     *
+     * Measured to its text: the widest line within the width it's given, and as many lines as that takes, each
+     * the computed line height (glyphs may overflow a line height smaller than the font's, as in CSS).
      */
-    class Text : public TextBase {
+    class Text : public Div, public TextEditing::Geometry {
     public:
         /**
          * Construct a Text component, optionally initializing it with text
@@ -21,13 +26,18 @@ namespace psychic_ui {
         explicit Text(const std::string &text = "");
 
         /**
-         * Get the component's text
-         * @return
+         * The text, in UTF-8, as it was set or edited
          */
         std::string text() const;
 
-        // The setter, which the getter above would hide
-        using TextBase::text;
+        /**
+         * Set the text, the caret at its start
+         */
+        template<class Self>
+        Self &text(this Self &self, const std::string &text) {
+            static_cast<Text &>(self).updateText(text);
+            return self;
+        }
 
         bool selectable() const;
 
@@ -71,11 +81,11 @@ namespace psychic_ui {
         std::pair<unsigned int, unsigned int> selection() const;
 
         /**
-         * Set the selection. If both values are equal, then nothing is selected.
+         * Select from the anchor to the caret, which ends there. If both values are equal, then nothing is selected.
          */
         template<class Self>
-        Self &selection(this Self &self, unsigned int selectionBegin, unsigned int selectionEnd) {
-            static_cast<Text &>(self).updateSelection(selectionBegin, selectionEnd);
+        Self &selection(this Self &self, unsigned int anchor, unsigned int caret) {
+            static_cast<Text &>(self).updateSelection(anchor, caret);
             return self;
         }
 
@@ -94,19 +104,8 @@ namespace psychic_ui {
             return self;
         }
 
-        /**
-         * Get the line the caret is on
-         * @return
-         */
-        unsigned int getCaretLine() const;
-
-        /**
-         * Get the Y coordinate of the line.
-         * @param line Line number
-         * @return Y coordinate, line * line height
-         */
-        unsigned int getLineY(unsigned int line) const;
-
+        SkRect caretRect(unsigned int index) const override;
+        unsigned int indexAt(float x, float y) const override;
 
         Signal<unsigned int, unsigned int> selectionChanged{};
         Signal<unsigned int>               caretMoved{};
@@ -118,15 +117,15 @@ namespace psychic_ui {
 
     protected:
 
-        bool               _selectable{true};
-        bool               _editable{false};
-        bool               _multiline{false};
-        unsigned int       _selectBegin{0};
-        unsigned int       _selectEnd{0};
-        unsigned int       _caret{0};
-        float              _targetXPos{0.0f};
-        icu::UnicodeString _text{};
-        SkPaint            _selectionBackgroundPaint{};
+        float       _visibleWidth{0.0f}; // Where one line of static text is cut when it doesn't fit
+        bool        _selectable{true};
+        bool        _editable{false};
+        TextEditing _editing{};
+
+        /**
+         * The text's layout (SkParagraph). Mutable: its queries lay the text out on demand.
+         */
+        mutable TextLayout _textLayout{};
 
         /**
          * Whether we're waiting on layout validation to sent the caret signal
@@ -138,26 +137,16 @@ namespace psychic_ui {
         std::vector<ScopedSlot>   _editionSlots{}; // Ours while editable
 
         /**
-         * In touch mode, tell the window where the caret's line is, for the on-screen keyboard
+         * Tell the window where the caret's line is, for the on-screen keyboard and the input method's candidates
          */
         void updateTextInputArea();
 
-        void updateText(const std::string &text) override;
+        void updateText(const std::string &text);
         void updateSelectable(bool selectable);
         void updateEditable(bool editable);
         void updateMultiline(bool multiline);
-        void updateSelection(unsigned int selectionBegin, unsigned int selectionEnd);
-
-        /**
-         * Set the caret position in the text
-         * @param caret Position of the caret
-         * @param saveX Used internally, saves where the caret is horizontally
-         *              in order to restore it horizontally in case navigating
-         *              in the text with the keyboard makes us pass by a line
-         *              that is shorter, we still want to navigate up or down
-         *              in the same column.
-         */
-        void moveCaret(unsigned int caret, bool saveX = true);
+        void updateSelection(unsigned int anchor, unsigned int caret);
+        void moveCaret(unsigned int caret);
 
         void subscribeToSelection();
         void subscribeToEdition();
@@ -169,26 +158,11 @@ namespace psychic_ui {
         void draw(SkCanvas *canvas) override;
 
         /**
-         * Call when text has changed in another manner than using `setText`.
-         * Since we're referencing the string we habe to call this method whenever
-         * the text inside string changes.
+         * Show and tell what an edit changed: the text laid out again and `changed`, then the caret (`caretMoved`,
+         * once laid out, so that its position is right) and `selectionChanged`
          */
-        void textChanged();
-
-        /**
-         * Called when text was edited, as a shortcut to both
-         * `textChanged` and `setCaret` since they have to be called
-         * in a particular order and we don't want to repeat both calls.
-         *
-         * @param caret Position the caret should be at after the text was edited
-         */
-        void textEdited(unsigned int caret);
+        void apply(TextEditing::Edit edit);
 
         void handleKey(Key key, Mod mod);
-
-        /**
-         * The caret index at a point in the Div's own coordinates
-         */
-        unsigned int indexAt(int x, int y) const;
     };
 }

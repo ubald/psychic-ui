@@ -167,7 +167,7 @@ namespace psychic_ui {
     Div &MotionPanel::group(const std::string &title, const std::string &caption) {
         auto &group = add<VBox>().addClassName("group");
         group.add<Label>(title).addClassName("h4");
-        group.add<Label>(caption).role(TextRole::Tertiary);
+        group.add<Label>(caption).addClassName("text-tertiary");
         return group;
     }
 
@@ -194,7 +194,7 @@ namespace psychic_ui {
 
         const auto lane = [&](const std::string &name, const Timing &timing) {
             auto &row = lanes.add<HBox>().addClassName("lane-row");
-            row.add<Label>(name).addClassName("name").role(TextRole::Secondary);
+            row.add<Label>(name).addClassName("name").addClassName("text-secondary");
             // The rail is the track less the puck's width: the puck goes from 0 to 100% of it
             auto &rail = row.add<Div>().addClassName("lane").add<Div>().addClassName("rail");
             // A style transition on `left`, inline: a layout property, laid out every frame while it moves
@@ -208,7 +208,7 @@ namespace psychic_ui {
         lane("Instant", Timing{});
 
         auto &drawn = lanes.add<HBox>().addClassName("lane-row");
-        drawn.add<Label>("Animated<float> · Bouncy").addClassName("name").role(TextRole::Secondary);
+        drawn.add<Label>("Animated<float> · Bouncy").addClassName("name").addClassName("text-secondary");
         _drawn = &drawn.add<DrawnLane>();
         _drawn->addClassName("lane");
 
@@ -249,7 +249,7 @@ namespace psychic_ui {
             auto &cell = plots.add<VBox>().addClassName("curve-cell");
             _curves.push_back(&cell.add<CurveView>(timing));
             _curves.back()->addClassName("curve");
-            cell.add<Label>(name).role(TextRole::Tertiary);
+            cell.add<Label>(name).addClassName("text-tertiary");
         }
 
         // endregion

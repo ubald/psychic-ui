@@ -22,7 +22,7 @@ namespace psychic_ui {
     Div &Buttons::group(const std::string &title, const std::string &caption) {
         auto &group = add<VBox>().addClassName("group");
         group.add<Label>(title).addClassName("h4");
-        group.add<Label>(caption).role(TextRole::Tertiary);
+        group.add<Label>(caption).addClassName("text-tertiary");
         return group.add<HBox>().addClassName("row");
     }
 

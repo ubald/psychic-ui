@@ -47,7 +47,7 @@ namespace psychic_ui {
     Div &Lists::group(Div &parent, const std::string &title, const std::string &caption) {
         auto &group = parent.add<VBox>().addClassName("group");
         group.add<Label>(title).addClassName("h4");
-        group.add<Label>(caption).role(TextRole::Tertiary);
+        group.add<Label>(caption).addClassName("text-tertiary");
         return group;
     }
 
@@ -168,7 +168,7 @@ namespace psychic_ui {
         for (std::size_t i = 0; i < std::size(allTones); ++i) {
             auto &item = dotRow.add<HBox>().addClassName("dot-item");
             item.add<StatusDot>(allTones[i]);
-            item.add<Label>(toneNames[i]).role(TextRole::Secondary);
+            item.add<Label>(toneNames[i]).addClassName("text-secondary");
         }
 
         auto &chips = group(marks, "Chips", "Filters and values: Backspace dismisses the focused one");
@@ -205,7 +205,7 @@ namespace psychic_ui {
         keyRow.add<Kbd>("⌥ ⇧ ↵");
         keyRow.add<Kbd>("Esc");
         auto &hint = keys.add<HBox>().addClassName("row");
-        hint.add<Label>("Jump to anything").role(TextRole::Secondary);
+        hint.add<Label>("Jump to anything").addClassName("text-secondary");
         hint.add<Kbd>("⌘ J");
 
         // endregion

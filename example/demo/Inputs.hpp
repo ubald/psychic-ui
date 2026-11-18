@@ -33,9 +33,9 @@ namespace psychic_ui {
     Div &Inputs::group(const std::string &title, const std::string &caption, Label *&event) {
         auto &group = add<VBox>().addClassName("group");
         group.add<Label>(title).addClassName("h4");
-        group.add<Label>(caption).role(TextRole::Tertiary);
+        group.add<Label>(caption).addClassName("text-tertiary");
         auto &row = group.add<HBox>().addClassName("row");
-        event = &group.add<Label>("—").addClassName("event").role(TextRole::Tertiary);
+        event = &group.add<Label>("—").addClassName("event").addClassName("text-tertiary");
         return row;
     }
 

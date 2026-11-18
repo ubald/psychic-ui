@@ -25,7 +25,7 @@ namespace psychic_ui {
     public:
         explicit SidebarItem(const std::string &label = "", const std::string &icon = "");
 
-        const std::string &label() const { return _label->text(); }
+        std::string label() const { return _label->text(); }
 
         template<class Self>
         Self &label(this Self &self, const std::string &label) {
@@ -44,7 +44,7 @@ namespace psychic_ui {
             return self;
         }
 
-        const std::string &count() const { return _count->text(); }
+        std::string count() const { return _count->text(); }
 
         /**
          * What is after the label, in small muted figures (a count, a shortcut); "" for nothing
@@ -132,7 +132,7 @@ namespace psychic_ui {
 
         WindowControls &controls() const { return *_controls; }
 
-        const std::string &title() const { return _title->text(); }
+        std::string title() const { return _title->text(); }
 
         void setTitle(const std::string &title);
         void setMark(const std::string &mark);

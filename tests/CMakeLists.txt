@@ -107,6 +107,8 @@ if (PSYCHIC_UI_BUILD_TESTS)
         backends/touch_tests.cpp
         text/text_layout_tests.cpp
         text/font_tests.cpp
+        text/text_style_tests.cpp
+        text/text_editing_tests.cpp
         signals/signal_tests.cpp
         signals/lifetime_tests.cpp
         animation/animation_tests.cpp

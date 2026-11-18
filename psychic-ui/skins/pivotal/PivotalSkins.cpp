@@ -153,10 +153,10 @@ namespace psychic_ui {
             .iconSize(iconMd)
             .iconStrokeWidth(m.iconStroke)
             .antiAlias(true)
-            .textAntiAlias(true)
             .transition(P::outlineColor, quick); // Every focus ring fades in
 
-        // Three levels of text, by descending importance (TextRole)
+        // Three levels of text, by descending importance: titles, values and what was chosen; body text, labels and
+        // controls at rest; metadata and placeholders. Classes, as the headings are
         rule(".text-primary").color(p.text);
         rule(".text-secondary").color(p.textSecondary);
         rule(".text-tertiary").color(p.textMuted);

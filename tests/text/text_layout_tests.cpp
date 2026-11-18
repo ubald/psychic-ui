@@ -5,7 +5,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 #include "include/core/SkFont.h"
-#include <psychic-ui/utils/TextLayout.hpp>
+#include "include/core/SkSurface.h"
+#include <psychic-ui/text/TextLayout.hpp>
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/style/Style.hpp>
 #include <psychic-ui/Div.hpp>
@@ -51,24 +52,23 @@ namespace {
         auto &node = root.add<T>(text);
         node.fontFamily(FONT)
             .fontSize(size)
-            .lineHeight(LINE_HEIGHT)
-            .textAntiAlias(true);
+            .lineHeight(LINE_HEIGHT);
         return node;
     }
 
     TextLayoutStyle layoutStyle(const std::shared_ptr<StyleManager> &styleManager, float size = 14.0f, const std::string &font = FONT) {
         return TextLayoutStyle{
-            styleManager->fontCollection(), font, size, LINE_HEIGHT, 0.0f, SkFont::Edging::kSubpixelAntiAlias, true, TextAlign::Start
+            styleManager->fontCollection(), font, size, LINE_HEIGHT, 0.0f, FontSmoothing::Grayscale, TextAlign::Start
         };
     }
 
     /**
-     * Width of the widest line, laid out with the same settings as TextBase
+     * Width of the widest line, laid out with the same settings as Text
      */
     float textWidth(const std::shared_ptr<StyleManager> &styleManager, const std::string &text, float size = 14.0f, const std::string &font = FONT) {
         TextLayout layout{};
         layout.setText(icu::UnicodeString::fromUTF8(text));
-        layout.setStyle(layoutStyle(styleManager, size, font), SK_ColorBLACK, SK_ColorBLACK);
+        layout.setStyle(layoutStyle(styleManager, size, font));
         layout.setMultiline(true);
         return std::ceil(layout.maxContentWidth());
     }
@@ -221,53 +221,61 @@ TEST_CASE("Text and Label are re-measured when their font changes through style"
 TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
     auto       styleManager = makeStyleManager();
     TextLayout layout{};
-    layout.setStyle(layoutStyle(styleManager), SK_ColorBLACK, SK_ColorBLACK);
+    layout.setStyle(layoutStyle(styleManager));
     layout.setMultiline(true);
+
+    // The line a caret is on, from its rectangle
+    auto lineOf = [&](unsigned int index) {
+        return static_cast<unsigned int>(layout.caretRect(index).fTop / LINE_HEIGHT);
+    };
 
     SECTION("hard line breaks") {
         layout.setText(icu::UnicodeString::fromUTF8("ab\ncd\n"));
         layout.layout(400.0f);
-        REQUIRE(layout.lineCount() == 3);
-        REQUIRE(layout.lineStart(1) == 3);
-        REQUIRE(layout.lineEnd(0) == 2);
-        REQUIRE(layout.lineEnd(1) == 5);
-        REQUIRE(layout.lineFromIndex(2) == 0);
-        REQUIRE(layout.lineFromIndex(3) == 1);
-        REQUIRE(layout.lineFromIndex(6) == 2);
-        REQUIRE(layout.posFromIndex(0).second == 0.0f);
-        REQUIRE(layout.posFromIndex(6) == std::make_pair(2u, 0.0f));
+        REQUIRE(layout.lineCountAt(400.0f) == 3);
+        REQUIRE(lineOf(2) == 0);
+        REQUIRE(lineOf(3) == 1);
+        REQUIRE(lineOf(5) == 1);
+        REQUIRE(lineOf(6) == 2);
+        REQUIRE(layout.caretRect(0).fLeft == 0.0f);
+        REQUIRE(layout.caretRect(3).fLeft == 0.0f);
+        REQUIRE(layout.caretRect(6).fLeft == 0.0f);
+        // Past a line's end, before its line return
+        REQUIRE(layout.indexAt(1000.0f, LINE_HEIGHT / 2) == 2);
+        REQUIRE(layout.indexAt(-1000.0f, LINE_HEIGHT * 1.5f) == 3);
     }
 
     SECTION("carets advance along a line and hit testing finds them back") {
         layout.setText(icu::UnicodeString::fromUTF8("Hello world"));
         layout.layout(400.0f);
-        REQUIRE(layout.lineCount() == 1);
         float previous = -1.0f;
         for (unsigned int i = 0; i <= 11; ++i) {
-            auto [line, x] = layout.posFromIndex(i);
-            REQUIRE(line == 0);
-            REQUIRE(x > previous);
-            previous = x;
-            REQUIRE(layout.indexFromPos(x + 0.5f, LINE_HEIGHT / 2) == i);
+            const SkRect caret = layout.caretRect(i);
+            REQUIRE(caret.fTop == 0.0f);
+            REQUIRE(caret.fLeft > previous);
+            previous = caret.fLeft;
+            REQUIRE(layout.indexAt(caret.fLeft + 0.5f, LINE_HEIGHT / 2) == i);
         }
         REQUIRE(previous == Approx(layout.maxContentWidth()).margin(0.5));
         // Past the end, below the last line
-        REQUIRE(layout.indexFromPos(1000.0f, 1000.0f) == 11);
+        REQUIRE(layout.indexAt(1000.0f, 1000.0f) == 11);
     }
 
     SECTION("wrapping keeps whole words and lines a line height apart") {
-        layout.setText(icu::UnicodeString::fromUTF8("one two three four five six"));
+        const std::string str = "one two three four five six";
+        layout.setText(icu::UnicodeString::fromUTF8(str));
         float width = layout.maxContentWidth();
         REQUIRE(layout.lineCountAt(width + 1.0f) == 1);
         layout.layout(width / 2.0f);
-        REQUIRE(layout.lineCount() >= 2);
+        const auto lines = layout.lineCountAt(width / 2.0f);
+        REQUIRE(lines >= 2);
         // Lines start on words
-        for (unsigned int line = 1; line < layout.lineCount(); ++line) {
-            auto start = layout.lineStart(line);
+        for (unsigned int line = 1; line < lines; ++line) {
+            const unsigned int start = layout.indexAt(0.0f, (line + 0.5f) * LINE_HEIGHT);
             REQUIRE(start > 0);
-            REQUIRE(layout.previousWordBoundary(start + 1) == start);
-            REQUIRE(layout.lineFromIndex(start) == line);
-            REQUIRE(layout.indexFromPos(0.0f, (line + 0.5f) * LINE_HEIGHT) == start);
+            REQUIRE(str[start - 1] == ' ');
+            REQUIRE(lineOf(start) == line);
+            REQUIRE(layout.caretRect(start).fLeft == 0.0f);
         }
     }
 
@@ -275,8 +283,8 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
         layout.setMultiline(false);
         layout.setText(icu::UnicodeString::fromUTF8("one two three four five six"));
         layout.layout(20.0f);
-        REQUIRE(layout.lineCount() == 1);
         REQUIRE(layout.lineCountAt(20.0f) == 1);
+        REQUIRE(lineOf(27) == 0);
         float fits = layout.fittingWidth(20.0f);
         REQUIRE(fits <= 20.0f);
         REQUIRE(fits > 0.0f);
@@ -286,23 +294,162 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
         layout.setMultiline(false);
         layout.setText(icu::UnicodeString::fromUTF8("ab\ncd"));
         layout.layout(400.0f);
-        REQUIRE(layout.lineCount() == 1);
-        REQUIRE(layout.lineFromIndex(4) == 0);
-        REQUIRE(layout.posFromIndex(3).second > layout.posFromIndex(2).second);
+        REQUIRE(lineOf(4) == 0);
+        REQUIRE(layout.caretRect(3).fLeft > layout.caretRect(2).fLeft);
     }
 
     SECTION("empty text has one line for the caret") {
         layout.setText(icu::UnicodeString{});
         layout.layout(400.0f);
-        REQUIRE(layout.lineCount() == 1);
-        REQUIRE(layout.posFromIndex(0) == std::make_pair(0u, 0.0f));
-        REQUIRE(layout.indexFromPos(10.0f, 10.0f) == 0);
+        REQUIRE(layout.caretRect(0) == SkRect::MakeLTRB(0.0f, 0.0f, 0.0f, LINE_HEIGHT));
+        REQUIRE(layout.indexAt(10.0f, 10.0f) == 0);
+    }
+}
+
+TEST_CASE("Text layout caret rectangles, hit testing and selections", "[text]") {
+    auto       styleManager = makeStyleManager();
+    TextLayout layout{};
+    layout.setStyle(layoutStyle(styleManager));
+    layout.setMultiline(true);
+    layout.setText(icu::UnicodeString::fromUTF8("ab\ncdef\ngh"));
+    layout.layout(400.0f);
+
+    SECTION("a caret is a line high, at the x of its index") {
+        const SkRect first = layout.caretRect(0);
+        CHECK(first.fLeft == 0.0f);
+        CHECK(first.width() == 0.0f);
+        CHECK(first.fTop == 0.0f);
+        CHECK(first.height() == LINE_HEIGHT);
+
+        const SkRect middle = layout.caretRect(5); // After "cd"
+        CHECK(middle.fTop == LINE_HEIGHT);
+        CHECK(middle.fLeft > layout.caretRect(3).fLeft);
+        CHECK(layout.indexAt(middle.fLeft, middle.centerY()) == 5);
+        CHECK(layout.caretRect(10).fTop == 2 * LINE_HEIGHT);
     }
 
-    SECTION("words and sentences") {
-        layout.setText(icu::UnicodeString::fromUTF8("Hello brave world. Second one."));
-        REQUIRE(layout.wordAtIndex(8) == std::make_pair(6u, 11u));
-        REQUIRE(layout.nextWordBoundary(6) == 11);
-        REQUIRE(layout.sentenceAtIndex(3) == std::make_pair(0u, 19u));
+    SECTION("a selection is painted over its text only, ending where its line's text ends") {
+        auto  surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(400, 100));
+        auto *canvas  = surface->getCanvas();
+        canvas->clear(SK_ColorWHITE);
+        // From "b" to "g": all of the middle line
+        layout.paintSelection(canvas, 10.0f, 10.0f, 1, 9, SK_ColorRED, SK_ColorBLACK);
+        SkPixmap pixmap;
+        REQUIRE(surface->peekPixels(&pixmap));
+        const int   middleY = static_cast<int>(10.0f + LINE_HEIGHT) + 1; // Its top row, in the half-leading over the glyphs
+        const float lineEnd = 10.0f + layout.caretRect(7).fLeft;
+        CHECK(pixmap.getColor(11, middleY) == SK_ColorRED);
+        CHECK(pixmap.getColor(static_cast<int>(lineEnd) - 1, middleY) == SK_ColorRED);
+        // Not past the line's text (B7: middle lines went to the box's width plus its left inset)
+        CHECK(pixmap.getColor(static_cast<int>(lineEnd) + 4, middleY) == SK_ColorWHITE);
+        // Before "b" on the first line, nothing
+        CHECK(pixmap.getColor(11, 11) == SK_ColorWHITE);
+        // An empty selection paints nothing
+        canvas->clear(SK_ColorWHITE);
+        layout.paintSelection(canvas, 10.0f, 10.0f, 4, 4, SK_ColorRED, SK_ColorBLACK);
+        CHECK(pixmap.getColor(11, middleY) == SK_ColorWHITE);
     }
+}
+
+TEST_CASE("Text is painted in the color given then, without building its paragraph again", "[text]") {
+    auto       styleManager = makeStyleManager();
+    TextLayout layout{};
+    layout.setStyle(layoutStyle(styleManager));
+    layout.setText(icu::UnicodeString::fromUTF8("Hello"));
+    layout.layout(200.0f);
+
+    auto surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(200, 40));
+    // The darkest pixel painted over white: a glyph's core, in the text's color
+    auto inkOf = [&](SkColor color) {
+        surface->getCanvas()->clear(SK_ColorWHITE);
+        layout.paint(surface->getCanvas(), 0.0f, 0.0f, color);
+        SkPixmap pixmap;
+        REQUIRE(surface->peekPixels(&pixmap));
+        SkColor darkest = SK_ColorWHITE;
+        int     least   = 3 * 255;
+        for (int y = 0; y < pixmap.height(); ++y) {
+            for (int x = 0; x < pixmap.width(); ++x) {
+                const SkColor c   = pixmap.getColor(x, y);
+                const int     sum = static_cast<int>(SkColorGetR(c) + SkColorGetG(c) + SkColorGetB(c));
+                if (sum < least) {
+                    least   = sum;
+                    darkest = c;
+                }
+            }
+        }
+        return darkest;
+    };
+
+    CHECK(inkOf(SK_ColorBLUE) == SK_ColorBLUE);
+    const auto built = TextLayout::paragraphsBuilt();
+    CHECK(inkOf(SK_ColorRED) == SK_ColorRED);
+    CHECK(inkOf(SK_ColorBLUE) == SK_ColorBLUE);
+    CHECK(TextLayout::paragraphsBuilt() == built);
+}
+
+TEST_CASE("One line too long ends in an ellipsis that fits, or overflows", "[text]") {
+    auto       styleManager = makeStyleManager();
+    TextLayout layout{};
+    auto       style = layoutStyle(styleManager);
+    layout.setText(icu::UnicodeString::fromUTF8("one two three four five six"));
+    layout.setStyle(style);
+    const float whole = layout.maxContentWidth();
+    layout.layout(60.0f);
+
+    auto surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(400, 40));
+    // The rightmost column with ink
+    auto inkEnd = [&] {
+        surface->getCanvas()->clear(SK_ColorWHITE);
+        layout.paint(surface->getCanvas(), 0.0f, 0.0f, SK_ColorBLACK);
+        SkPixmap pixmap;
+        REQUIRE(surface->peekPixels(&pixmap));
+        int end = -1;
+        for (int y = 0; y < pixmap.height(); ++y) {
+            for (int x = 0; x < pixmap.width(); ++x) {
+                if (pixmap.getColor(x, y) != SK_ColorWHITE) {
+                    end = std::max(end, x);
+                }
+            }
+        }
+        return end;
+    };
+
+    SECTION("clipped, it runs past the width") {
+        CHECK(inkEnd() > 60);
+    }
+
+    SECTION("with an ellipsis, it stops within the width and still measures as a whole") {
+        style.overflow = TextOverflow::Ellipsis;
+        CHECK(layout.setStyle(style));
+        const int end = inkEnd();
+        CHECK(end > 30);
+        CHECK(end < 60);
+        CHECK(layout.lineCountAt(60.0f) == 1);
+        CHECK(layout.maxContentWidth() == Approx(whole));
+    }
+
+    SECTION("several lines wrap instead") {
+        style.overflow = TextOverflow::Ellipsis;
+        layout.setStyle(style);
+        layout.setMultiline(true);
+        CHECK(layout.lineCountAt(60.0f) > 1);
+    }
+}
+
+TEST_CASE("A Label keeps its text as set and is as tall as its line height", "[text]") {
+    auto styleManager = makeStyleManager();
+    Root root{styleManager};
+    root.alignItems(Align::Start);
+
+    auto &label = root.add<Label>("two\nlines");
+    label.fontFamily(FONT)
+        .fontSize(14.0f)
+        .lineHeight(8.0f); // Less than the font's spacing: the glyphs overflow it, as in CSS
+    root.layout(400, 300);
+
+    CHECK(label.text() == "two\nlines");
+    CHECK(label.getHeight() == 8.0f);
+    CHECK_FALSE(label.selectable());
+    CHECK_FALSE(label.multiline());
+    CHECK(label.tags().back() == "label");
 }

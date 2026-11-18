@@ -49,7 +49,8 @@ namespace psychic_ui {
         _input->addClassName("value")
               .focusEnabled(false); // Tab stops once, on the stepper
 
-        // The keys reach the text display first; it ignores these on one line
+        // The text display moves its caret on Up and Down too (to the start or the end of its line); `refresh()`
+        // sets the text again, which puts the caret back
         const auto key = [this](const Key key, const Mod modifiers) {
             if (!_enabled) {
                 return;

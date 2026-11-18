@@ -34,40 +34,26 @@ namespace psychic_ui {
                 .shrink(0)
                 .gap(12);
 
-            // Anti Aliasing
+            // Font smoothing
 
             auto &left = container.add<VBox>()
                 .grow(1)
                 .basis(0) // Both columns needs to be considered the same size
                 .gap(6);
 
-            left.add<Label>("Anti Aliasing")
+            left.add<Label>("Font Smoothing")
                 .addClassName("h1");
 
             left.add<Label>("Default Label");
 
-            left.add<Label>("Simple Label (No AA)")
-                .textAntiAlias(false);
+            left.add<Label>("Aliased (FontSmoothing::None)")
+                .fontSmoothing(FontSmoothing::None);
 
-            left.add<Label>("Simple Label (AA)")
-                .lcdRender(false)
-                .subPixelText(false)
-                .textAntiAlias(true);
+            left.add<Label>("Grayscale (FontSmoothing::Grayscale)")
+                .fontSmoothing(FontSmoothing::Grayscale);
 
-            left.add<Label>("Simple Label (AA+LCD)")
-                .lcdRender(true)
-                .subPixelText(false)
-                .textAntiAlias(true);
-
-            left.add<Label>("Simple Label (AA+SUB)")
-                .lcdRender(false)
-                .subPixelText(true)
-                .textAntiAlias(true);
-
-            left.add<Label>("Simple Label (AA+LCD+SUB)")
-                .lcdRender(true)
-                .subPixelText(true)
-                .textAntiAlias(true);
+            left.add<Label>("LCD subpixels (FontSmoothing::Subpixel)")
+                .fontSmoothing(FontSmoothing::Subpixel);
 
             // Ellipsis
 
@@ -79,7 +65,8 @@ namespace psychic_ui {
             right.add<Label>("Ellipsis")
                  .addClassName("h1");
 
-            right.add<Label>(lorem);
+            right.add<Label>(lorem)
+                 .textOverflow(TextOverflow::Ellipsis);
 
             right.add<Label>("International")
                  .addClassName("h1");

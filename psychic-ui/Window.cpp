@@ -1645,7 +1645,7 @@ namespace psychic_ui {
     bool Window::handleType(const icu::UnicodeString &character) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
-            // Only the focusEnabled divs get the character events
+            // The deepest div on the focus path with a subscriber gets the characters
             Div *div = (*focused);
             if (div->typed.hasSubscriptions()) {
                 div->typed.emit(character);

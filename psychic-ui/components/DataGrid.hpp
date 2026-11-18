@@ -52,7 +52,7 @@ namespace psychic_ui {
         /**
          * A cell's text, which sorting compares ("" out of range)
          */
-        const std::string &value(std::size_t column) const;
+        std::string value(std::size_t column) const;
 
         /**
          * Set a cell's text, adding cells up to its column

@@ -18,7 +18,7 @@ namespace psychic_ui {
     public:
         explicit InspectorField(const std::string &label = "", const std::string &text = "");
 
-        const std::string &label() const;
+        std::string label() const;
 
         template<class Self>
         Self &label(this Self &self, const std::string &label) {
@@ -26,7 +26,7 @@ namespace psychic_ui {
             return self;
         }
 
-        const std::string &text() const;
+        std::string text() const;
 
         /**
          * The value as text; "" to show only what is added to `value()`
@@ -62,7 +62,7 @@ namespace psychic_ui {
     public:
         explicit InspectorSection(const std::string &title = "");
 
-        const std::string &title() const;
+        std::string title() const;
 
         /**
          * Add a field: `body().add<InspectorField>(label, text)`

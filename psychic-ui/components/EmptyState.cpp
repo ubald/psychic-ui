@@ -31,7 +31,7 @@ namespace psychic_ui {
         updateDescription(description);
     }
 
-    const std::string &EmptyState::title() const {
+    std::string EmptyState::title() const {
         return _title->text();
     }
 

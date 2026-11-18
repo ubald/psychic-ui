@@ -50,7 +50,7 @@ namespace psychic_ui {
     Div &Popups::group(const std::string &title, const std::string &caption) {
         auto &group = add<VBox>().addClassName("group");
         group.add<Label>(title).addClassName("h4");
-        group.add<Label>(caption).role(TextRole::Tertiary);
+        group.add<Label>(caption).addClassName("text-tertiary");
         return group.add<HBox>().addClassName("row");
     }
 
@@ -99,7 +99,7 @@ namespace psychic_ui {
         _contextArea->addClassName("context-area")
                      .alignItems(Align::Center)
                      .justify(Justify::Center);
-        _contextArea->add<Label>("Right-click or long-press here").role(TextRole::Tertiary);
+        _contextArea->add<Label>("Right-click or long-press here").addClassName("text-tertiary");
         // Opens where it is asked for: a right press, a touch long press, or the Menu key (Shift+F10) once focused,
         // at the area's center and at its first item
         _contextArea->focusEnabled(true)
@@ -172,7 +172,7 @@ namespace psychic_ui {
         // endregion
 
         _status = &add<Label>("Nothing chosen yet");
-        _status->addClassName("status").role(TextRole::Secondary);
+        _status->addClassName("status").addClassName("text-secondary");
     }
 
     void Popups::say(const std::string &text) {

@@ -10,7 +10,7 @@
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/themes/Theme.hpp>
 #include <psychic-ui/utils/ExecutablePath.hpp>
-#include <psychic-ui/utils/TextLayout.hpp>
+#include <psychic-ui/text/TextLayout.hpp>
 
 using namespace psychic_ui;
 
@@ -31,13 +31,12 @@ namespace {
         return manager;
     }
 
-    // Laid out as TextBase does with antialiased text: subpixel positioning, so slight hinting
+    // Laid out as Text does: subpixel positioning, so slight hinting
     TextLayout layout(const std::shared_ptr<StyleManager> &manager, const std::string &family, float size) {
         TextLayout text{};
         text.setText(icu::UnicodeString::fromUTF8("The quick brown fox jumps over the lazy dog"));
         text.setStyle(
-            TextLayoutStyle{manager->fontCollection(), family, size, size * 1.5f, 0.0f, SkFont::Edging::kSubpixelAntiAlias, true, TextAlign::Start},
-            SK_ColorBLACK, SK_ColorBLACK
+            TextLayoutStyle{manager->fontCollection(), family, size, size * 1.5f, 0.0f, FontSmoothing::Grayscale, TextAlign::Start}
         );
         return text;
     }
@@ -59,7 +58,6 @@ TEST_CASE("Inter is bundled and loads by family name", "[text][fonts]") {
 
 TEST_CASE("text lays out in Inter at small sizes, slightly hinted", "[text][fonts]") {
     auto manager = withInter();
-    REQUIRE(fontHinting(true) == SkFontHinting::kSlight);
 
     for (float size: {11.0f, 12.0f, 13.0f, 14.0f}) {
         INFO(size << " px");
@@ -77,7 +75,7 @@ TEST_CASE("text lays out in Inter at small sizes, slightly hinted", "[text][font
         auto surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(400, 40));
         surface->getCanvas()->clear(SK_ColorWHITE);
         regular.layout(400.0f);
-        regular.paint(surface->getCanvas(), 0.0f, 0.0f);
+        regular.paint(surface->getCanvas(), 0.0f, 0.0f, SK_ColorBLACK);
         SkPixmap pixmap;
         REQUIRE(surface->peekPixels(&pixmap));
         bool ink = false;

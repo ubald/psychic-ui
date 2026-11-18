@@ -28,11 +28,11 @@ namespace psychic_ui {
         updateText(text);
     }
 
-    const std::string &InspectorField::label() const {
+    std::string InspectorField::label() const {
         return _label->text();
     }
 
-    const std::string &InspectorField::text() const {
+    std::string InspectorField::text() const {
         return _text->text();
     }
 
@@ -67,7 +67,7 @@ namespace psychic_ui {
              .direction(Direction::Column);
     }
 
-    const std::string &InspectorSection::title() const {
+    std::string InspectorSection::title() const {
         return _title->text();
     }
 

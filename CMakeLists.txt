@@ -359,12 +359,12 @@ set(SOURCE_FILES
     psychic-ui/components/TextArea.hpp
     psychic-ui/utils/ExecutablePath.cpp
     psychic-ui/utils/ExecutablePath.hpp
-    psychic-ui/utils/TextLayout.cpp
-    psychic-ui/utils/TextLayout.hpp
+    psychic-ui/text/TextEditing.cpp
+    psychic-ui/text/TextEditing.hpp
+    psychic-ui/text/TextLayout.cpp
+    psychic-ui/text/TextLayout.hpp
     psychic-ui/components/Text.cpp
     psychic-ui/components/Text.hpp
-    psychic-ui/TextBase.cpp
-    psychic-ui/TextBase.hpp
     )
 
 if (PSYCHIC_UI_BUILD_SDL3)

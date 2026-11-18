@@ -9,8 +9,6 @@
 
 namespace psychic_ui {
     namespace {
-        const std::string empty{};
-
         /**
          * The number a text starts with, if it does
          */
@@ -58,8 +56,8 @@ namespace psychic_ui {
         return *_cells[column];
     }
 
-    const std::string &DataGridRow::value(const std::size_t column) const {
-        return column < _values.size() ? _values[column]->text() : empty;
+    std::string DataGridRow::value(const std::size_t column) const {
+        return column < _values.size() ? _values[column]->text() : std::string{};
     }
 
     void DataGridRow::addCell() {
