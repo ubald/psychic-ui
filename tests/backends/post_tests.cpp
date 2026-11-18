@@ -54,6 +54,7 @@ TEST_CASE("Tasks posted from other threads all run, waking the system window onc
 
     int                      count = 0; // Tasks run on this thread
     std::vector<std::thread> threads{};
+    threads.reserve(4);
     for (int t = 0; t < 4; ++t) {
         threads.emplace_back([&window, &count] {
             for (int i = 0; i < 1000; ++i) {

@@ -159,6 +159,6 @@ namespace psychic_ui {
          * pass-through divs and no further
          */
         template<class F>
-        MouseEventStatus dispatch(const MouseEvent &event, F &&handler);
+        MouseEventStatus dispatch(const MouseEvent &event, const F &handler);
     };
 }

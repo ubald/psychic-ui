@@ -2,6 +2,8 @@
 #include <charconv>
 #include <cmath>
 #include <format>
+#include <memory>
+#include <string_view>
 #include "NumberStepper.hpp"
 #include "Icon.hpp"
 
@@ -179,13 +181,14 @@ namespace psychic_ui {
             refresh();
             return;
         }
-        double      value = 0;
-        const char *begin = text.data() + first;
-        const char *end   = text.data() + last + 1;
-        if (*begin == '+') {
-            ++begin;
+        double           value = 0;
+        std::string_view number{text};
+        number = number.substr(first, last + 1 - first);
+        if (number.starts_with('+')) {
+            number.remove_prefix(1);
         }
-        const auto [ptr, error] = std::from_chars(begin, end, value);
+        const char *end = std::to_address(number.end());
+        const auto [ptr, error] = std::from_chars(std::to_address(number.begin()), end, value);
         if (error != std::errc{} || ptr != end || !std::isfinite(value)) {
             refresh();
             return;

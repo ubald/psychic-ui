@@ -147,6 +147,7 @@ TEST_CASE("gap is Yoga's gap", "[style][computed][layout]") {
     const Tree t;
     auto &row = t.div->add<HBox>(10);
     std::vector<Div *> children;
+    children.reserve(3);
     for (int i = 0; i < 3; ++i) {
         children.push_back(&row.add<Div>().width(20).height(20).marginRight(Length{i}));
     }

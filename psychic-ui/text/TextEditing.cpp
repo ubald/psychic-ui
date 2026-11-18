@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <unicode/uchar.h>
@@ -94,7 +96,8 @@ namespace psychic_ui {
 
     std::u16string TextEditing::selectedText() const {
         auto [begin, end] = selection();
-        return {_text.getBuffer() + begin, end - begin};
+        const std::u16string_view text{_text.getBuffer(), static_cast<std::size_t>(_text.length())};
+        return std::u16string{text.substr(begin, end - begin)};
     }
 
     TextEditing::Edit TextEditing::select(unsigned int anchor, unsigned int caret) {

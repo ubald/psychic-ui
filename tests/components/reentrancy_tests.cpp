@@ -135,7 +135,7 @@ TEST_CASE("Reentrancy: remove focused div on blur", "[reentrancy]") {
 }
 
 TEST_CASE("Reentrancy: close a popup from its closed handler", "[reentrancy]") {
-    F f;
+    const F f;
     auto &b = f.window->appContainer().add<Button>("a");
     f.layout();
     Menu &m = f.window->openMenu({Menu::item("One", []() {})}, b);
@@ -384,7 +384,7 @@ namespace {
 }
 
 TEST_CASE("Reentrancy: theme switched inside styleUpdated", "[reentrancy]") {
-    F f;
+    const F f;
     f.window->appContainer().add<Button>("a");
     f.window->appContainer().add<ThemeFlipper>(f.window.get());
     f.window->appContainer().add<TextInput>("t");
@@ -393,7 +393,7 @@ TEST_CASE("Reentrancy: theme switched inside styleUpdated", "[reentrancy]") {
 }
 
 TEST_CASE("Reentrancy: skin set switched inside styleUpdated", "[reentrancy]") {
-    F f;
+    const F f;
     f.window->appContainer().add<Button>("a");
     f.window->appContainer().add<SkinFlipper>(f.window.get());
     f.window->appContainer().add<TextInput>("t");
@@ -440,7 +440,7 @@ TEST_CASE("Reentrancy: toast action removes all toasts and opens a dialog", "[re
 }
 
 TEST_CASE("Reentrancy: toasts time out while one is being clicked away; more than the limit", "[reentrancy]") {
-    F f;
+    const F f;
     Window *w = f.window.get();
     for (int i = 0; i < 8; ++i) {
         w->toast({.title = "t" + std::to_string(i), .timeout = 1ms});
@@ -520,7 +520,7 @@ TEST_CASE("Reentrancy: context menu whose item removes the div with the context 
 }
 
 TEST_CASE("Reentrancy: touch long press then remove target before release", "[reentrancy]") {
-    F f;
+    const F f;
     auto &parent = f.window->appContainer().add<Div>();
     auto &b      = parent.add<Button>("x").tooltip("tip");
     f.layout();
@@ -537,7 +537,7 @@ TEST_CASE("Reentrancy: touch long press then remove target before release", "[re
 }
 
 TEST_CASE("Reentrancy: touch pan a scroller and remove it mid-fling", "[reentrancy]") {
-    F f;
+    const F f;
     auto &parent = f.window->appContainer().add<Div>();
     auto &sc     = parent.add<Div>().size(200, 200).overflow(Overflow::Scroll);
     for (int i = 0; i < 30; ++i) {

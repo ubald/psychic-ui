@@ -433,7 +433,7 @@ namespace psychic_ui {
     }
 
     template<class F>
-    MouseEventStatus Overlay::dispatch(const MouseEvent &event, F &&handler) {
+    MouseEventStatus Overlay::dispatch(const MouseEvent &event, const F &handler) {
         const auto keepAlive = weak_from_this().lock(); // A handler may close popups
         if (!_visible) {
             return MouseEventStatus::Out;

@@ -1,3 +1,4 @@
+#include <array>
 #include <catch2/catch_test_macros.hpp>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -12,8 +13,8 @@ namespace {
     int hostKeys    = 0;
     int hostButtons = 0;
 
-    void hostKeyCallback(GLFWwindow *, int, int, int, int) { ++hostKeys; }
-    void hostButtonCallback(GLFWwindow *, int, int, int) { ++hostButtons; }
+    void hostKeyCallback(GLFWwindow * /*window*/, int /*key*/, int /*scancode*/, int /*action*/, int /*mods*/) { ++hostKeys; }
+    void hostButtonCallback(GLFWwindow * /*window*/, int /*button*/, int /*action*/, int /*mods*/) { ++hostButtons; }
 
     /**
      * A host on GLFW's null platform: real GLFW windows, no display, no GL context.
@@ -125,8 +126,8 @@ TEST_CASE("GLFW: drops, clipboard and window dragging", "[backend][glfw]") {
 
     auto drop = glfwSetDropCallback(host.glfwWindow, nullptr);
     glfwSetDropCallback(host.glfwWindow, drop);
-    const char *paths[] = {"/tmp/a.txt", "/tmp/b.png"};
-    drop(host.glfwWindow, 2, paths);
+    std::array<const char *, 2> paths{"/tmp/a.txt", "/tmp/b.png"};
+    drop(host.glfwWindow, 2, paths.data());
     CHECK(host.window->dropped == std::vector<std::string>{"/tmp/a.txt", "/tmp/b.png"});
 
     host.window->setClipboardText("from Psychic UI ✓");

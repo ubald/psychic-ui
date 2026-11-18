@@ -50,7 +50,7 @@ namespace {
     template<typename T>
     T &addText(Root &root, const std::string &text, float size = 14.0f, const std::string &font = FONT) {
         auto &node = root.add<T>(text);
-        node.fontFamily(FONT)
+        node.fontFamily(font)
             .fontSize(size)
             .lineHeight(LINE_HEIGHT);
         return node;

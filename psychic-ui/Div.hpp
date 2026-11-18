@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <concepts>
 #include <cstdint>
 #include <utility>
@@ -1178,12 +1179,7 @@ namespace psychic_ui {
         float    _radiusTopRight{0.0f};
         float    _radiusBottomLeft{0.0f};
         float    _radiusBottomRight{0.0f};
-        SkVector _radii[4]{
-            {0.0f, 0.0f},
-            {0.0f, 0.0f},
-            {0.0f, 0.0f},
-            {0.0f, 0.0f}
-        };
+        std::array<SkVector, 4> _radii{}; // Top left, top right, bottom right, bottom left, as Skia wants them
 
         float _borderLeft{0.0f};
         float _borderRight{0.0f};

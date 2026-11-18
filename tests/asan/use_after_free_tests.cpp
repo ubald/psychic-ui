@@ -134,7 +134,7 @@ TEST_CASE("M6: a child outlives its parent", "[.][asan]") {
 
 // M6: a part handed out as a shared_ptr outlives its component, whose `this` its slots capture
 TEST_CASE("M6: a SearchField's input outlives the field", "[.][asan]") {
-    F                          f;
+    const F                    f;
     std::shared_ptr<TextInput> input;
     std::weak_ptr<SearchField> gone;
     {
@@ -156,7 +156,7 @@ TEST_CASE("M6: a SearchField's input outlives the field", "[.][asan]") {
 // M8: removed() fires only on the moved TreeNode, so the first tree keeps the row as its selection, and reaches it
 // after it is freed
 TEST_CASE("M8: a selected row moved to another tree, then freed", "[.][asan]") {
-    F     f;
+    const F f;
     auto &tree1 = f.window->appContainer().add<Tree>();
     auto &tree2 = f.window->appContainer().add<Tree>();
     auto  keep  = std::shared_ptr<TreeNode>(std::make_unique<TreeNode>("a")); // Apart, as above
@@ -174,7 +174,7 @@ TEST_CASE("M8: a selected row moved to another tree, then freed", "[.][asan]") {
 
 // M9: Tabs::_selected is null until something is selected, and the first render dereferences it
 TEST_CASE("M9: a TabContainer renders before anything is selected", "[.][asan]") {
-    F f;
+    const F f;
     f.window->appContainer().add<TabContainer<std::string>>(
         std::vector<std::string>{"a", "b"},
         [](const std::string &s) { return s; },

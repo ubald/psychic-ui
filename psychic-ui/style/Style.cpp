@@ -170,7 +170,7 @@ namespace psychic_ui {
     void Style::trace(std::ostream &os) const {
         os << "{\n";
         #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) \
-            if (has(Property::name)) { os << "    " #name ": "; printValue(os, _values.name); os << std::endl; }
+            if (has(Property::name)) { os << "    " #name ": "; printValue(os, _values.name); os << "\n"; }
         PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
         #undef PSYCHIC_UI_X
         os << "}\n";

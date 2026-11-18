@@ -599,7 +599,7 @@ namespace psychic_ui {
                                 || _radiusBottomLeft != _radiusBottomRight;
 
         // The layout may not change, but the rounded rect must follow the radii
-        _roundRect.setRectRadii(_rect, _radii);
+        _roundRect.setRectRadii(_rect, _radii.data());
         // endregion
 
         // region Background
@@ -919,7 +919,7 @@ namespace psychic_ui {
         _height = (int) std::ceil(YGNodeLayoutGetHeight(_yogaNode));
 
         _rect.setLTRB(_x, _y, _x + _width, _y + _height);
-        _roundRect.setRectRadii(_rect, _radii);
+        _roundRect.setRectRadii(_rect, _radii.data());
 
         _marginLeft   = YGNodeLayoutGetMargin(_yogaNode, YGEdgeLeft);
         _marginTop    = YGNodeLayoutGetMargin(_yogaNode, YGEdgeTop);
