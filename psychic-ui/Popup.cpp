@@ -1,5 +1,8 @@
+#include <memory>
 #include "Popup.hpp"
 #include "Overlay.hpp"
+#include "Div.hpp"
+#include "style/Values.hpp"
 
 namespace psychic_ui {
 

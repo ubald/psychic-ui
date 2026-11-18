@@ -1,8 +1,14 @@
 #include <algorithm>
 #include <cmath>
+#include <string_view>
+#include "include/core/SkCanvas.h"
+#include "include/core/SkMatrix.h"
 #include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
 #include "psychic-ui/icons/IconRegistry.hpp"
 #include "Icon.hpp"
+#include "psychic-ui/icons/IconSet.hpp"
+#include "psychic-ui/style/Color.hpp"
 
 namespace psychic_ui::paint {
 

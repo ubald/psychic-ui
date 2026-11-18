@@ -1,16 +1,42 @@
 #include <algorithm>
+#include <cctype>
 #include <cmath>
+#include <cstddef>
 #include <iostream>
+#include <iterator>
+#include <memory>
 #include <stdexcept>
+#include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 #include "include/core/SkBlurTypes.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkClipOp.h"
 #include "include/core/SkMaskFilter.h"
 #include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
 #include "include/effects/SkDashPathEffect.h"
-#include "yoga/Yoga.h"
+#include "yoga/YGConfig.h"
+#include "yoga/YGEnums.h"
+#include "yoga/YGNode.h"
+#include "yoga/YGNodeLayout.h"
+#include "yoga/YGNodeStyle.h"
+#include "yoga/YGValue.h"
 #include "Div.hpp"
 #include "Window.hpp"
 #include "components/Menu.hpp"
 #include "animation/StyleTransitions.hpp"
+#include "Measure.hpp"
+#include "psychic-ui.hpp"
+#include "signals/Observer.hpp"
+#include "style/Color.hpp"
+#include "style/Length.hpp"
+#include "style/Properties.hpp"
+#include "style/StyleManager.hpp"
+#include "style/Values.hpp"
 
 
 namespace psychic_ui {
@@ -1036,7 +1062,7 @@ namespace psychic_ui {
             // CSS opacity: the div and its children are drawn into a layer, which is then blended as one group, so
             // overlapping parts don't show through each other and nested opacities multiply
             const SkRect layer = _boundsRect.makeOutset(_paintOutset, _paintOutset);
-            canvas->saveLayerAlpha(&layer, static_cast<U8CPU>(std::lround(opacity * 255.0f)));
+            canvas->saveLayerAlpha(&layer, static_cast<unsigned>(std::lround(opacity * 255.0f)));
         } else {
             canvas->save();
         }

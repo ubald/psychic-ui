@@ -1,5 +1,7 @@
 
+#include "Div.hpp"
 #include "Skin.hpp"
+#include "style/Properties.hpp"
 
 namespace psychic_ui::internal {
 

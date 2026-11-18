@@ -4,6 +4,7 @@
 // Names are Pivotal's component names in kebab case, without "Icon" (ChevronDownIcon is "chevron-down");
 // StarIcon's filled form is "star-filled".
 
+#include <span>
 #include "psychic-ui/icons/IconSet.hpp"
 
 namespace psychic_ui::icons {

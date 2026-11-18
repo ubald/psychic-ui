@@ -1,6 +1,10 @@
+#include "include/core/SkCanvas.h"
 #include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
 #include "include/core/SkPathBuilder.h"
+#include "include/core/SkPoint.h"
 #include "Marks.hpp"
+#include "psychic-ui/style/Color.hpp"
 
 namespace psychic_ui::paint {
 

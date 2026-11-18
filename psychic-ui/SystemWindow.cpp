@@ -1,4 +1,7 @@
+#include <chrono>
 #include <memory>
+#include <string>
+#include <utility>
 #include "SystemWindow.hpp"
 #include "Window.hpp"
 
