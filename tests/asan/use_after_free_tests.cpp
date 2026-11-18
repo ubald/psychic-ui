@@ -194,7 +194,9 @@ TEST_CASE("M4: delete rows during selectionChanged", "[.][asan]") {
     (void) c;
     f.layout();
     list.onSelectionChange([&list](ListRow *row) {
-        if (row) list.remove(*row);
+        if (row) {
+            list.remove(*row);
+        }
     });
     f.click(a);
     f.layout();
@@ -209,7 +211,9 @@ TEST_CASE("M4: delete rows during selectionChanged", "[.][asan]") {
 TEST_CASE("M4: clear all rows during selectionChanged, then keys", "[.][asan]") {
     F f;
     auto &list = f.window->appContainer().add<List>();
-    for (int i = 0; i < 5; ++i) list.row("r" + std::to_string(i));
+    for (int i = 0; i < 5; ++i) {
+        list.row("r" + std::to_string(i));
+    }
     f.layout();
     list.onSelectionChange([&list](ListRow *) { list.removeAll(); });
     f.key(Key::TAB);
@@ -225,7 +229,11 @@ TEST_CASE("M3: text input removes itself on change while typing", "[.][asan]") {
     auto &t      = parent.add<TextInput>("");
     f.layout();
     f.click(t);
-    t.onChange([&parent, &t]() { if (t.parent()) parent.remove(t); });
+    t.onChange([&parent, &t]() {
+        if (t.parent()) {
+            parent.remove(t);
+        }
+    });
     f.window->handleType("a");
     f.window->handleType("b");
     f.key(Key::BACKSPACE);
@@ -240,7 +248,11 @@ TEST_CASE("M4: sidebar removes the item on change (keys)", "[.][asan]") {
     sec.item("b");
     sec.item("c");
     f.layout();
-    sb.onChange([](SidebarItem *item) { if (item && item->parent()) item->parent()->remove(*item); });
+    sb.onChange([](SidebarItem *item) {
+        if (item && item->parent()) {
+            item->parent()->remove(*item);
+        }
+    });
     f.key(Key::TAB);
     f.key(Key::DOWN);
     f.key(Key::ENTER);
@@ -259,7 +271,11 @@ TEST_CASE("M4: tree removes the selected node on selection change (keys)", "[.][
     tree.node("b");
     a.expanded(true);
     f.layout();
-    tree.onSelectionChange([](TreeNode *n) { if (n && n->parent()) n->parent()->remove(*n); });
+    tree.onSelectionChange([](TreeNode *n) {
+        if (n && n->parent()) {
+            n->parent()->remove(*n);
+        }
+    });
     f.key(Key::TAB);
     f.key(Key::DOWN);
     f.key(Key::DOWN);
@@ -275,7 +291,11 @@ TEST_CASE("M3: list removes itself on selection change (keys)", "[.][asan]") {
     list.row("a");
     list.row("b");
     f.layout();
-    list.onSelectionChange([&parent, &list](ListRow *) { if (list.parent()) parent.remove(list); });
+    list.onSelectionChange([&parent, &list](ListRow *) {
+        if (list.parent()) {
+            parent.remove(list);
+        }
+    });
     f.key(Key::TAB);
     f.key(Key::DOWN);
     f.layout();

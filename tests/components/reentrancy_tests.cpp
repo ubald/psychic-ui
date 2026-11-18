@@ -299,7 +299,9 @@ TEST_CASE("Reentrancy: remove a tree node holding the selection / collapse durin
     kid.expanded(true);
     f.layout();
     tree.onExpansionChange([&kid](TreeNode *node, bool) {
-        if (node == &kid && kid.parent()) kid.parent()->remove(kid);
+        if (node == &kid && kid.parent()) {
+            kid.parent()->remove(kid);
+        }
     });
     tree.onSelectionChange([](TreeNode *) {});
     f.key(Key::TAB);
@@ -315,7 +317,9 @@ TEST_CASE("Reentrancy: sort a data grid from its selection change and remove row
     F f;
     auto &grid = f.window->appContainer().add<DataGrid>();
     grid.columns({{"Name"}, {.title = "Size", .width = 80}});
-    for (int i = 0; i < 6; ++i) grid.row({"n" + std::to_string(i), std::to_string(10 - i)});
+    for (int i = 0; i < 6; ++i) {
+        grid.row({"n" + std::to_string(i), std::to_string(10 - i)});
+    }
     f.layout();
     grid.onSelectionChange([&grid](DataGridRow *) { grid.sort(1, SortOrder::Ascending); });
     f.key(Key::TAB);
@@ -334,7 +338,11 @@ TEST_CASE("Reentrancy: change theme and skin set inside styleUpdated / mid event
     Window *w = f.window.get();
     int     n = 0;
     b.onClick([w, &n]() {
-        if (n++ % 2) w->skinSet<FloatSkins>(); else w->skinSet<PivotalSkins>();
+        if (n++ % 2) {
+            w->skinSet<FloatSkins>();
+        } else {
+            w->skinSet<PivotalSkins>();
+        }
         w->theme(themes::pivotalLight);
     });
     f.click(b);
@@ -353,7 +361,9 @@ namespace {
         explicit ThemeFlipper(Window *w) : w(w) {}
         void styleUpdated() override {
             Div::styleUpdated();
-            if (n++ < 3) w->theme(n % 2 ? themes::pivotalLight : themes::pivotalDark);
+            if (n++ < 3) {
+                w->theme(n % 2 ? themes::pivotalLight : themes::pivotalDark);
+            }
         }
     };
     struct SkinFlipper : Div {
@@ -362,7 +372,13 @@ namespace {
         explicit SkinFlipper(Window *w) : w(w) {}
         void styleUpdated() override {
             Div::styleUpdated();
-            if (n++ < 3) { if (n % 2) w->skinSet<FloatSkins>(); else w->skinSet<PivotalSkins>(); }
+            if (n++ < 3) {
+                if (n % 2) {
+                    w->skinSet<FloatSkins>();
+                } else {
+                    w->skinSet<PivotalSkins>();
+                }
+            }
         }
     };
 }
@@ -410,7 +426,9 @@ TEST_CASE("Reentrancy: toast action removes all toasts and opens a dialog", "[re
     Div *btn = nullptr;
     std::function<void(Div &)> find = [&](Div &d) {
         for (const auto &c: d.children()) {
-            if (auto *bb = dynamic_cast<Button *>(c.get()); bb && !btn) btn = bb;
+            if (auto *bb = dynamic_cast<Button *>(c.get()); bb && !btn) {
+                btn = bb;
+            }
             find(*c);
         }
     };
@@ -522,7 +540,9 @@ TEST_CASE("Reentrancy: touch pan a scroller and remove it mid-fling", "[reentran
     F f;
     auto &parent = f.window->appContainer().add<Div>();
     auto &sc     = parent.add<Div>().size(200, 200).overflow(Overflow::Scroll);
-    for (int i = 0; i < 30; ++i) sc.add<Div>().height(40);
+    for (int i = 0; i < 30; ++i) {
+        sc.add<Div>().height(40);
+    }
     f.layout();
     auto [x, y] = F::center(sc);
     auto t0     = std::chrono::steady_clock::now().time_since_epoch();
@@ -609,9 +629,15 @@ TEST_CASE("Reentrancy: data grid removes the selected row on selection change (k
     F f;
     auto &grid = f.window->appContainer().add<DataGrid>();
     grid.columns({{"Name"}});
-    for (int i = 0; i < 5; ++i) grid.row({"n" + std::to_string(i)});
+    for (int i = 0; i < 5; ++i) {
+        grid.row({"n" + std::to_string(i)});
+    }
     f.layout();
-    grid.onSelectionChange([](DataGridRow *r) { if (r && r->parent()) r->parent()->remove(*r); });
+    grid.onSelectionChange([](DataGridRow *r) {
+        if (r && r->parent()) {
+            r->parent()->remove(*r);
+        }
+    });
     f.key(Key::TAB);
     f.key(Key::DOWN);
     f.key(Key::DOWN);
@@ -625,7 +651,11 @@ TEST_CASE("Reentrancy: list removes itself on selection change (click)", "[reent
     auto &a      = list.row("a");
     list.row("b");
     f.layout();
-    list.onSelectionChange([&parent, &list](ListRow *) { if (list.parent()) parent.remove(list); });
+    list.onSelectionChange([&parent, &list](ListRow *) {
+        if (list.parent()) {
+            parent.remove(list);
+        }
+    });
     f.click(a);
     f.layout();
 }
