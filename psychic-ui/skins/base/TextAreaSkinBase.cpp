@@ -1,4 +1,13 @@
+#include <memory>
+#include "include/core/SkCanvas.h"
+#include "SkinState.hpp"
 #include "TextAreaSkinBase.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/components/Scroller.hpp"
+#include "psychic-ui/components/Text.hpp"
+#include "psychic-ui/components/TextArea.hpp"
+#include "psychic-ui/paint/Box.hpp"
+#include "psychic-ui/style/Length.hpp"
 
 namespace psychic_ui {
 

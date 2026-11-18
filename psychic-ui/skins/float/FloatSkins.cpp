@@ -1,8 +1,14 @@
+#include <memory>
 #include <string>
+#include <string_view>
 #include "psychic-ui/style/StyleManager.hpp"
 #include "psychic-ui/themes/float.hpp"
 #include "psychic-ui/skins/pivotal/PivotalSkins.hpp"
 #include "FloatSkins.hpp"
+#include "psychic-ui/skins/SkinSet.hpp"
+#include "psychic-ui/style/Color.hpp"
+#include "psychic-ui/style/Style.hpp"
+#include "psychic-ui/themes/Theme.hpp"
 
 namespace psychic_ui {
     namespace {

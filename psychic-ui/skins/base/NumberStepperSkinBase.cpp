@@ -1,5 +1,11 @@
+#include "include/core/SkCanvas.h"
 #include "psychic-ui/components/Icon.hpp"
 #include "NumberStepperSkinBase.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/components/NumberStepper.hpp"
+#include "psychic-ui/components/Text.hpp"
+#include "psychic-ui/paint/Box.hpp"
+#include "SkinState.hpp"
 
 namespace psychic_ui {
     NumberStepperSkinBase::NumberStepperSkinBase() :

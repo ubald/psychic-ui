@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 #include "psychic-ui/style/StyleManager.hpp"
 #include "psychic-ui/themes/one-dark.hpp"
 #include "psychic-ui/themes/one-light.hpp"
@@ -20,6 +21,28 @@
 #include "PivotalAvatarSkin.hpp"
 #include "TabButtonSkin.hpp"
 #include "TitleBarButtonSkin.hpp"
+#include "psychic-ui/animation/Timing.hpp"
+#include "psychic-ui/components/Avatar.hpp"
+#include "psychic-ui/components/Button.hpp"
+#include "psychic-ui/components/CheckBox.hpp"
+#include "psychic-ui/components/ColorSwatches.hpp"
+#include "psychic-ui/components/MenuButton.hpp"
+#include "psychic-ui/components/NumberStepper.hpp"
+#include "psychic-ui/components/Range.hpp"
+#include "psychic-ui/components/ScrollBar.hpp"
+#include "psychic-ui/components/SearchField.hpp"
+#include "psychic-ui/components/SegmentedControl.hpp"
+#include "psychic-ui/components/Switch.hpp"
+#include "psychic-ui/components/TextArea.hpp"
+#include "psychic-ui/components/TextInput.hpp"
+#include "psychic-ui/skins/SkinSet.hpp"
+#include "psychic-ui/skins/base/ButtonSkinBase.hpp"
+#include "psychic-ui/style/Color.hpp"
+#include "psychic-ui/style/Length.hpp"
+#include "psychic-ui/style/Properties.hpp"
+#include "psychic-ui/style/Style.hpp"
+#include "psychic-ui/style/Values.hpp"
+#include "psychic-ui/themes/Theme.hpp"
 
 namespace psychic_ui {
     namespace {

@@ -1,4 +1,14 @@
+#include <optional>
+#include "include/core/SkCanvas.h"
 #include "AvatarSkinBase.hpp"
+#include "SkinState.hpp"
+#include "psychic-ui/components/Avatar.hpp"
+#include "psychic-ui/components/Label.hpp"
+#include "psychic-ui/components/StatusDot.hpp"
+#include "psychic-ui/components/Tone.hpp"
+#include "psychic-ui/paint/Box.hpp"
+#include "psychic-ui/style/Style.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
     AvatarSkinBase::AvatarSkinBase() :

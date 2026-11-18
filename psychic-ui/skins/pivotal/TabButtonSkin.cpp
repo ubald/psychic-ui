@@ -1,5 +1,13 @@
 #include <array>
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkRect.h"
 #include "TabButtonSkin.hpp"
+#include "psychic-ui/paint/Box.hpp"
+#include "psychic-ui/skins/base/ButtonSkinBase.hpp"
+#include "psychic-ui/skins/base/SkinState.hpp"
+#include "psychic-ui/style/Color.hpp"
 
 namespace psychic_ui {
     TabButtonSkin::TabButtonSkin() :

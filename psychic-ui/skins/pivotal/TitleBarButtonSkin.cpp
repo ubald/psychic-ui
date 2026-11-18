@@ -1,5 +1,11 @@
+#include <algorithm>
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
 #include "psychic-ui/paint/Marks.hpp"
 #include "TitleBarButtonSkin.hpp"
+#include "psychic-ui/components/Button.hpp"
+#include "psychic-ui/style/Length.hpp"
 
 namespace psychic_ui {
     TitleBarButtonSkin::TitleBarButtonSkin() :
