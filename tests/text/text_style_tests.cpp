@@ -93,7 +93,7 @@ TEST_CASE("The caret is painted in caretColor, else in the text's color", "[text
         .top(20)
         .width(100);
     s.render();
-    const int middle = static_cast<int>(text.getHeight() / 2.0f);
+    const int middle = text.getHeight() / 2;
     CHECK(s.at(text, 0, middle) == SkColorSetRGB(0x00, 0x00, 0xFF));
 
     text.caretColor(rgb(0xFF0000));

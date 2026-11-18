@@ -185,10 +185,10 @@ TEST_CASE("SearchField: icon, text, and a clear button while not empty", "[compo
     f.layout();
 
     REQUIRE(is<SearchFieldSkinBase>(search.skin()));
-    Div   *icon        = part<Icon>(search, "icon");
-    Text  *text        = part<Text>(search, "text");
-    Div   *clear       = part<Div>(search, "clear");
-    Label *placeholder = part<Label>(search, "placeholder");
+    const Div  *icon        = part<Icon>(search, "icon");
+    Text       *text        = part<Text>(search, "text");
+    const Div  *clear       = part<Div>(search, "clear");
+    const auto *placeholder = part<Label>(search, "placeholder");
     REQUIRE(icon);
     REQUIRE(text);
     REQUIRE(clear);
@@ -228,7 +228,7 @@ TEST_CASE("SearchField: Escape clears it, once, then leaves the key alone", "[co
     std::vector<std::string> changes{};
     search.onChange([&](const std::string &text) { changes.push_back(text); });
     f.layout();
-    Div *clear = part<Div>(search, "clear");
+    const Div *clear = part<Div>(search, "clear");
     CHECK(clear->visible());
 
     f.tab();
@@ -253,7 +253,7 @@ TEST_CASE("SearchField: a press on the clear button clears it, and the field kee
     f.type("fixtures");
     changes.clear();
 
-    Div *clear = part<Div>(search, "clear");
+    const Div *clear = part<Div>(search, "clear");
     REQUIRE(clear->visible());
     const auto [cx, cy] = Inputs::center(*clear);
     int x = 0;
@@ -467,8 +467,8 @@ TEST_CASE("NumberStepper: the buttons step it within its range", "[components][i
     f.layout();
 
     REQUIRE(is<NumberStepperSkinBase>(stepper.skin()));
-    Div  &minus = *part<Div>(stepper, "decrement");
-    Div  &plus  = *part<Div>(stepper, "increment");
+    const Div &minus = *part<Div>(stepper, "decrement");
+    const Div &plus  = *part<Div>(stepper, "increment");
     Text &value = *part<Text>(stepper, "value");
     CHECK(&value == stepper.skin()->textView());
     CHECK(stepper.getWidth() == f.theme.metrics.pointer.controlMd * 4);
@@ -731,9 +731,9 @@ TEST_CASE("ColorSwatches: a chip picked by a press, or by the keyboard's own foc
 
 TEST_CASE("Inputs: by touch, they look the same and take presses from around them", "[components][inputs][touch]") {
     Inputs f;
-    auto              &search = f.column.add<SearchField>();
-    auto              &toggle = f.column.add<Switch>("On");
-    std::vector<Div *> controls{
+    auto                    &search = f.column.add<SearchField>();
+    auto                    &toggle = f.column.add<Switch>("On");
+    const std::vector<Div *> controls{
         &search,
         &toggle,
         &f.column.add<SegmentedControl>(std::vector<Segment>{{"A"}, {"B"}}),
