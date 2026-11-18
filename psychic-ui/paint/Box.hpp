@@ -2,7 +2,7 @@
 
 #include "include/core/SkCanvas.h"
 #include "include/core/SkRRect.h"
-#include "psychic-ui/style/Values.hpp"
+#include "psychic-ui/style/Color.hpp"
 
 namespace psychic_ui {
     class Div;

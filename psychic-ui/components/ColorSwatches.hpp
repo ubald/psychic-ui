@@ -5,7 +5,7 @@
 #include "psychic-ui/Component.hpp"
 #include "psychic-ui/Skin.hpp"
 #include "psychic-ui/signals/Signal.hpp"
-#include "psychic-ui/style/Values.hpp"
+#include "psychic-ui/style/Color.hpp"
 
 namespace psychic_ui {
     class ColorSwatches;

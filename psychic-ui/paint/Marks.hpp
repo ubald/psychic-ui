@@ -1,7 +1,7 @@
 #pragma once
 
 #include "include/core/SkCanvas.h"
-#include "psychic-ui/style/Values.hpp"
+#include "psychic-ui/style/Color.hpp"
 
 /**
  * Small shapes skins draw: arrows, circles

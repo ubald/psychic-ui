@@ -3,7 +3,7 @@
 #include <chrono>
 #include <string_view>
 #include "psychic-ui/animation/Timing.hpp"
-#include "psychic-ui/style/Values.hpp"
+#include "psychic-ui/style/Color.hpp"
 
 namespace psychic_ui {
 

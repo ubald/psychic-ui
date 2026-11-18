@@ -1,6 +1,8 @@
-#include <iomanip>
+#include <cstddef>
+#include <functional>
+#include <string>
 #include <unordered_set>
-#include "Values.hpp"
+#include "Atom.hpp"
 
 namespace psychic_ui {
 
@@ -40,23 +42,5 @@ namespace psychic_ui {
 
     std::ostream &operator<<(std::ostream &os, const Atom &atom) {
         return os << '"' << atom.str() << '"';
-    }
-
-    std::ostream &operator<<(std::ostream &os, const Length &length) {
-        switch (length.unit) {
-            case Length::Unit::Px:
-                return os << length.value << "px";
-            case Length::Unit::Percent:
-                return os << length.value << "%";
-            default:
-                return os << "auto";
-        }
-    }
-
-    std::ostream &operator<<(std::ostream &os, const Color &color) {
-        auto flags = os.flags();
-        os << "argb(0x" << std::hex << std::uppercase << std::setw(8) << std::setfill('0') << color.argb() << ")";
-        os.flags(flags);
-        return os;
     }
 }

@@ -4,7 +4,8 @@
 #include <cstddef>
 #include <optional>
 #include "Tween.hpp"
-#include "psychic-ui/style/Values.hpp"
+#include "psychic-ui/style/Color.hpp"
+#include "psychic-ui/style/Length.hpp"
 
 namespace psychic_ui {
 

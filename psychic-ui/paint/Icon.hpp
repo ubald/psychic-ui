@@ -3,7 +3,7 @@
 #include <string_view>
 #include "include/core/SkCanvas.h"
 #include "include/core/SkRect.h"
-#include "psychic-ui/style/Values.hpp"
+#include "psychic-ui/style/Color.hpp"
 
 namespace psychic_ui {
     class IconRegistry;

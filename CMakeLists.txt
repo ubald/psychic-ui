@@ -303,6 +303,12 @@ set(SOURCE_FILES
     psychic-ui/skins/pivotal/TabButtonSkin.hpp
     psychic-ui/skins/pivotal/TitleBarButtonSkin.cpp
     psychic-ui/skins/pivotal/TitleBarButtonSkin.hpp
+    psychic-ui/style/Atom.cpp
+    psychic-ui/style/Atom.hpp
+    psychic-ui/style/Color.cpp
+    psychic-ui/style/Color.hpp
+    psychic-ui/style/Length.cpp
+    psychic-ui/style/Length.hpp
     psychic-ui/style/Properties.hpp
     psychic-ui/style/Style.cpp
     psychic-ui/style/Style.hpp
@@ -314,7 +320,6 @@ set(SOURCE_FILES
     psychic-ui/style/StyleSelector.hpp
     psychic-ui/style/StyleSheet.cpp
     psychic-ui/style/StyleSheet.hpp
-    psychic-ui/style/Values.cpp
     psychic-ui/style/Values.hpp
     psychic-ui/themes/desk.hpp
     psychic-ui/themes/float.hpp
