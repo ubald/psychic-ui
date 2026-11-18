@@ -48,3 +48,6 @@ CheckOptions:
   readability-identifier-length.IgnoredParameterNames: '^(x|y|z|w|h|i|j|k|n|r|g|b|a|t|s|dx|dy|it|id|os)$'
   readability-identifier-length.IgnoredLoopCounterNames: '^[ijk_]$'
   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic: true
+  # clang-tidy 21 doesn't know <chrono> is the public header for the chrono literal operators (100ms, 1s) and only
+  # offers libstdc++'s <bits/chrono.h>, which must never be included; remove this once clang-tidy maps them.
+  misc-include-cleaner.IgnoreHeaders: 'bits/chrono\.h'

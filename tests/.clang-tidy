@@ -1,3 +1,5 @@
 # Tests keep their literal values: an expected 24 reads better than a named constant.
 InheritParentConfig: true
-Checks: '-readability-magic-numbers'
+# Catch2's CHECK, REQUIRE and SECTION macros inflate the cognitive complexity score with branches that aren't the
+# test's own, so it stays on for the library, the demo, the playground and the showcase only.
+Checks: '-readability-magic-numbers,-readability-function-cognitive-complexity'

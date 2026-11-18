@@ -1,4 +1,4 @@
-#include <chrono>
+#include <chrono> // IWYU pragma: keep: the chrono literals (500ms), which clang-tidy maps to <bits/chrono.h> only
 #include <memory>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
