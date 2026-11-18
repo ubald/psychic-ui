@@ -34,11 +34,11 @@ if (PSYCHIC_UI_BUILD_SHOWCASE)
     add_custom_command(TARGET psychic-ui-showcase POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${PSYCHIC_UI_DIR}/example/fonts $<TARGET_FILE_DIR:psychic-ui-showcase>/fonts)
 
-    # Captures every scene into the website (docs/showcase/)
+    # Captures every scene into <build dir>/showcase/captures (tools/showcase/publish.sh publishes them)
     add_custom_target(showcase-capture
-        COMMAND psychic-ui-showcase --out ${PSYCHIC_UI_DIR}/docs/showcase
+        COMMAND psychic-ui-showcase --out ${CMAKE_CURRENT_BINARY_DIR}/captures
         DEPENDS psychic-ui-showcase
-        COMMENT "Capturing the showcase into docs/showcase"
+        COMMENT "Capturing the showcase into ${CMAKE_CURRENT_BINARY_DIR}/captures"
         USES_TERMINAL
         VERBATIM)
 endif ()
