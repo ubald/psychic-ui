@@ -50,9 +50,9 @@ namespace psychic_ui {
     }
 
     void NumberStepper::updateValue(const double value) {
-        const double v = std::clamp(value, _min, _max);
-        if (v != _value) {
-            _value = v;
+        const double clamped = std::clamp(value, _min, _max);
+        if (clamped != _value) {
+            _value = clamped;
             refresh();
             const auto keepAlive = weak_from_this().lock(); // A handler may remove this stepper from its parent
             changed.emit(_value);
