@@ -1,0 +1,8 @@
+var searchData=
+[
+  ['gesturetime_0',['gestureTime',['../classpsychic__ui_1_1_s_d_l3_system_window.html#a2661f2946008c194ecd8cc95f2a99e8e',1,'psychic_ui::SDL3SystemWindow::gestureTime()'],['../classpsychic__ui_1_1_system_window.html#af29c5641932204dfb77a92bae36dc98f',1,'psychic_ui::SystemWindow::gestureTime()']]],
+  ['getclipboardtext_1',['getClipboardText',['../classpsychic__ui_1_1_g_l_f_w_system_window.html#a11bea03ecaabcbfdcea0aba02ca59133',1,'psychic_ui::GLFWSystemWindow::getClipboardText()'],['../classpsychic__ui_1_1_s_d_l3_system_window.html#a91da7baaa23e9406b64eb9bccc3cea8d',1,'psychic_ui::SDL3SystemWindow::getClipboardText()'],['../classpsychic__ui_1_1_system_window.html#a35855965ecbf7df590946828e2bf32bc',1,'psychic_ui::SystemWindow::getClipboardText()']]],
+  ['getinstance_2',['getInstance',['../classpsychic__ui_1_1_style_manager.html#a185600e158b9923cccb683edea009f64',1,'psychic_ui::StyleManager']]],
+  ['glprocaddress_3',['glProcAddress',['../classpsychic__ui_1_1_g_l_f_w_system_window.html#ac581ab944ea02c4f0608d06400ba50ec',1,'psychic_ui::GLFWSystemWindow::glProcAddress()'],['../classpsychic__ui_1_1_s_d_l3_system_window.html#a29d9dfd5c85196ea32580f10b17f5a53',1,'psychic_ui::SDL3SystemWindow::glProcAddress()'],['../classpsychic__ui_1_1_system_window.html#aa70e6ac2e8a08d4b10dfb400e7465879',1,'psychic_ui::SystemWindow::glProcAddress()']]],
+  ['group_4',['group',['../classpsychic__ui_1_1_menu.html#ab43fa04358fd58cec5609aeab029b2b3',1,'psychic_ui::Menu::group()'],['../classpsychic__ui_1_1_selectable_row.html#a19cd9e35b49ad8b05813137371c879b4',1,'psychic_ui::SelectableRow::group()']]]
+];

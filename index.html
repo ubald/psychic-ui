@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Psychic UI</title>
+    <meta name="description" content="Psychic UI is a retained-mode C++23 UI library: Skia draws, Yoga lays out, and a CSS-like style system with skin sets and themes drives both.">
+    <meta name="color-scheme" content="light dark">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="assets/site.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235e6ad2'/%3E%3Ctext x='16' y='22' font-family='Inter,sans-serif' font-size='17' font-weight='600' fill='white' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+<header class="nav">
+    <div class="wrap">
+        <a class="brand" href="#top"><span class="mark">P</span>Psychic UI</a>
+        <nav class="nav-links" aria-label="Sections">
+            <a class="optional" href="#ideas">Ideas</a>
+            <a class="optional" href="#skin-sets">Skin sets</a>
+            <a class="optional" href="#gallery">Gallery</a>
+            <a href="html/">API</a>
+            <a href="https://github.com/ubald/psychic-ui">GitHub</a>
+        </nav>
+    </div>
+</header>
+
+<main id="top">
+
+    <section class="hero">
+        <div class="wrap">
+            <div class="hero-copy">
+                <p class="status"><span class="dot"></span>Being revived in 2026, on C++23</p>
+                <h1>Native UI in C++, styled like the web.</h1>
+                <p class="lead">Psychic UI is a retained-mode UI library. Skia draws, Yoga lays out with flexbox, and a
+                    CSS-like style system with skin sets and themes drives both.</p>
+                <div class="actions">
+                    <a class="button primary" href="https://github.com/ubald/psychic-ui">
+                        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                        View the source
+                    </a>
+                    <a class="button" href="html/">Read the API reference</a>
+                </div>
+            </div>
+
+            <div class="switcher" role="group" aria-label="Look of the screenshots">
+                <div class="group">
+                    <span id="set-label">Skin set</span>
+                    <div class="segmented" role="group" aria-labelledby="set-label">
+                        <button type="button" data-pick-set="default" aria-pressed="true">Default</button>
+                        <button type="button" data-pick-set="desk" aria-pressed="false">Desk</button>
+                        <button type="button" data-pick-set="float" aria-pressed="false">Float</button>
+                    </div>
+                </div>
+                <div class="group">
+                    <span id="theme-label">Theme</span>
+                    <div class="segmented" role="group" aria-labelledby="theme-label">
+                        <button type="button" data-pick-theme="auto" aria-pressed="true">System</button>
+                        <button type="button" data-pick-theme="light" aria-pressed="false">Light</button>
+                        <button type="button" data-pick-theme="dark" aria-pressed="false">Dark</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stage">
+                <figure class="shot">
+                    <img data-scene="canvas" src="showcase/canvas-default-dark.png" width="1280" height="800" fetchpriority="high"
+                         alt="A lighting design tool made of Psychic UI components: floating panels over a dotted canvas, a layer tree, an inspector with steppers, a slider, swatches and a switch, and a tool bar with a tooltip">
+                </figure>
+            </div>
+            <p class="caption">Library components only, rendered by the library offscreen: <span data-look>Default skin set, Pivotal Dark theme</span>.</p>
+        </div>
+    </section>
+
+    <section id="ideas">
+        <div class="wrap">
+            <h2>How it works</h2>
+            <p class="intro">A tree of divs, each styled by rules and laid out by flexbox, painted by Skia. Nothing redraws
+                until something changes.</p>
+
+            <div class="ideas">
+                <article class="idea">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="18" height="7" rx="1.5"/></svg>
+                    <h3>Skia draws, Yoga lays out</h3>
+                    <p>Every element is a <code>Div</code> with a Yoga node. Styles and layout update only where they
+                        changed, and the loop sleeps until input, a timer or an animation needs a frame.</p>
+                </article>
+                <article class="idea">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4c-2 0-3 1-3 3v2c0 1.5-1 3-2 3 1 0 2 1.5 2 3v2c0 2 1 3 3 3"/><path d="M16 4c2 0 3 1 3 3v2c0 1.5 1 3 2 3-1 0-2 1.5-2 3v2c0 2-1 3-3 3"/></svg>
+                    <h3>Styles that cascade</h3>
+                    <p>Rules on tags and classes apply by specificity, then by order, as in CSS. <code>:hover</code>,
+                        <code>:focus-visible</code> and <code>:touch</code> match; properties inherit; transitions are
+                        declared per property.</p>
+                </article>
+                <article class="idea">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+                    <h3>Skin sets and themes</h3>
+                    <p>Components own their behaviour; skins only draw. A skin set supplies the skins and rules, a
+                        theme supplies the values: palette, elevation, type, metrics and motion. Light and dark follow
+                        the system.</p>
+                </article>
+                <article class="idea">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5"/><path d="M16 7l5 5-5 5"/><path d="M14 4l-4 16"/></svg>
+                    <h3>A chainable C++23 API</h3>
+                    <p>Every style property has a setter on <code>Div</code>, and every setter returns the most derived
+                        type through explicit object parameters, so calls chain in any order.</p>
+                </article>
+                <article class="idea">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17c4 0 5-10 9-10s5 10 9 10"/></svg>
+                    <h3>Motion</h3>
+                    <p>Bézier curves and springs solved in closed form, style transitions, entering and leaving
+                        classes like CSS's <code>@starting-style</code>, and layout transitions that slide rows to their
+                        new places. Reduced motion makes it all instant.</p>
+                </article>
+                <article class="idea">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5a2 2 0 014 0v5"/><path d="M13 10V9a2 2 0 014 0v2"/><path d="M17 11a2 2 0 014 0v3a7 7 0 01-7 7h-1a7 7 0 01-6-3.5L4 13a2 2 0 013.4-2L9 13"/></svg>
+                    <h3>Touch, pen and keyboard</h3>
+                    <p>Taps, pans with fling and long presses for context menus; hit slop around small controls; Tab
+                        through focusable controls with a focus ring for the keyboard only.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section id="code">
+        <div class="wrap split">
+            <div class="prose">
+                <h2>Build a window in a few lines</h2>
+                <p><code>add&lt;T&gt;()</code> creates a child and returns it, so a tree reads top to bottom. Base and
+                    component setters chain in any order, and misuse, like a string where a number belongs, doesn't
+                    compile.</p>
+                <p><code>SDL3Application</code> runs windows on their own. An application that already has a window
+                    and a loop embeds Psychic UI through an SDL3 or GLFW adapter instead: the adapter translates the window's
+                    events and chains to the host's callbacks, and the host keeps the window and the loop.</p>
+                <p>Looks belong in stylesheets, written from the theme, so they follow it when it changes.</p>
+            </div>
+            <div>
+<pre><code><span class="k">class</span> <span class="f">CueWindow</span> : <span class="k">public</span> Window {
+<span class="k">public</span>:
+    <span class="f">CueWindow</span>() : Window(<span class="s">"Cues"</span>) {
+        skinSet&lt;PivotalSkins&gt;(); <span class="c">// Light or dark with the system</span>
+
+        <span class="k">auto</span> &amp;panel = appContainer().add&lt;Div&gt;().padding(<span class="s">24</span>).gap(<span class="s">12</span>);
+        panel.add&lt;Label&gt;(<span class="s">"Opening night"</span>).addClassName(<span class="s">"h2"</span>);
+        panel.add&lt;Switch&gt;(<span class="s">"Blackout"</span>).checked(<span class="k">true</span>);
+        panel.add&lt;Button&gt;(<span class="s">"Go"</span>)
+             .icon(<span class="s">"play"</span>)
+             .skin(<span class="s">"primary"</span>)
+             .onClick([] { <span class="c">/* run the cue */</span> });
+    }
+};
+
+<span class="k">int</span> <span class="f">main</span>() {
+    SDL3Application app;
+    app.open(std::make_shared&lt;CueWindow&gt;());
+    app.run();
+}</code></pre>
+<pre><code><span class="k">void</span> CueStyles::<span class="f">load</span>(StyleManager *manager) {
+    <span class="k">const</span> Theme &amp;theme = manager-&gt;theme();
+    manager-&gt;style(<span class="s">"Button ButtonSkinBase.primary"</span>)
+           .borderRadius(theme.metrics.radius.control)
+           .transition(Property::backgroundColor, theme.metrics.motion.quick());
+}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <section id="skin-sets">
+        <div class="wrap">
+            <h2>One app, three skin sets</h2>
+            <p class="intro">The same demo app, its components untouched. Pick a set to restyle every screenshot on this
+                page.</p>
+
+            <div class="sets">
+                <button type="button" class="set" data-pick-set="default" aria-pressed="true">
+                    <h3>Default</h3>
+                    <p>Pivotal's design system: pill buttons, hairlines, quick and quiet motion, Inter.</p>
+                </button>
+                <button type="button" class="set" data-pick-set="desk" aria-pressed="false">
+                    <h3>Desk</h3>
+                    <p>A dense desktop tool that grows its controls when a finger touches the screen.</p>
+                </button>
+                <button type="button" class="set" data-pick-set="float" aria-pressed="false">
+                    <h3>Float</h3>
+                    <p>Rounded panels floating over a dotted canvas, light first. It registers no skins of its own.</p>
+                </button>
+            </div>
+
+            <div class="stage">
+                <button type="button" class="shot zoomable" data-zoom>
+                    <img data-scene="app" src="showcase/app-default-dark.png" width="1280" height="800" loading="lazy"
+                         alt="The demo app: a sidebar of pages, a page title bar with menus, a tool bar, a list of people, a file tree and a data grid with an inspector">
+                </button>
+            </div>
+            <p class="caption">The demo app from the repository: <span data-look>Default skin set, Pivotal Dark theme</span>.</p>
+        </div>
+    </section>
+
+    <section id="gallery">
+        <div class="wrap">
+            <h2>Components</h2>
+            <p class="intro">Each screenshot is a scene in the showcase program, rendered offscreen at twice the pixel
+                density. Select one to see it full size.</p>
+
+            <h3 class="group-title">Controls</h3>
+            <div class="gallery">
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="buttons" src="showcase/buttons-default-dark.png" width="680" height="460" loading="lazy" alt="Buttons in their variants, sizes and states, and check boxes"></button>
+                    <figcaption><h3>Buttons</h3><p>Primary, secondary, ghost, quiet and danger are skins of one component.</p></figcaption>
+                </figure>
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="inputs" src="showcase/inputs-default-dark.png" width="680" height="460" loading="lazy" alt="Two forms: text and search fields, a segmented control, a select and a stepper; sliders, color swatches, switches and a check box"></button>
+                    <figcaption><h3>Inputs</h3><p>Fields, search, segmented controls, selects, steppers, sliders, swatches, switches.</p></figcaption>
+                </figure>
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="chrome" src="showcase/chrome-default-dark.png" width="680" height="460" loading="lazy" alt="A page header with a menu bar, tabs, a tool bar and an empty state"></button>
+                    <figcaption><h3>App chrome</h3><p>Page headers, menu bars, tabs, tool bars and empty states.</p></figcaption>
+                </figure>
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="focus" src="showcase/focus-default-dark.png" width="680" height="460" loading="lazy" alt="A settings panel with a focus ring around the selected segment of a segmented control"></button>
+                    <figcaption><h3>Keyboard focus</h3><p>Captured after Tab, Tab and Right: the ring shows for the keyboard, never for a click.</p></figcaption>
+                </figure>
+            </div>
+
+            <h3 class="group-title">Popups</h3>
+            <div class="gallery">
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="menu" src="showcase/menu-default-dark.png" width="680" height="460" loading="lazy" alt="A menu with groups, icons, shortcuts, check marks, a radio group, a danger item and an open submenu"></button>
+                    <figcaption><h3>Menus</h3><p>Groups, icons, shortcuts, checks, radios and submenus, all from data.</p></figcaption>
+                </figure>
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="context-menu" src="showcase/context-menu-default-dark.png" width="680" height="460" loading="lazy" alt="A context menu opened over a cue list"></button>
+                    <figcaption><h3>Context menus</h3><p>From a right press, a long press, or the Menu key.</p></figcaption>
+                </figure>
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="select" src="showcase/select-default-dark.png" width="680" height="460" loading="lazy" alt="A select with its list of options open below it"></button>
+                    <figcaption><h3>Selects</h3><p>The options open under the field, the chosen one checked.</p></figcaption>
+                </figure>
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="tooltip" src="showcase/tooltip-default-dark.png" width="680" height="460" loading="lazy" alt="A tooltip above a tool in a tool bar over a stage plot"></button>
+                    <figcaption><h3>Tooltips</h3><p>Shown after the mouse rests on a tool, placed above it with an arrow.</p></figcaption>
+                </figure>
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="dialog" src="showcase/dialog-default-dark.png" width="680" height="460" loading="lazy" alt="A rename dialog over a scrim, its text field focused"></button>
+                    <figcaption><h3>Dialogs</h3><p>Modal over a scrim, the first field focused, Tab kept inside.</p></figcaption>
+                </figure>
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="toasts" src="showcase/toasts-default-dark.png" width="680" height="460" loading="lazy" alt="Three toasts stacked in the corner: information, a warning with actions, and a success"></button>
+                    <figcaption><h3>Toasts</h3><p>Stacked in the corner, with variants and actions.</p></figcaption>
+                </figure>
+            </div>
+
+            <h3 class="group-title">Collections</h3>
+            <div class="gallery">
+                <figure class="tile wide">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="data-grid" src="showcase/data-grid-default-dark.png" width="1040" height="440" loading="lazy" alt="A data grid of lighting fixtures sorted by channels, with the selected fixture in an inspector"></button>
+                    <figcaption><h3>Data grid and inspector</h3><p>Sortable columns, a sticky header, a selection the keyboard moves.</p></figcaption>
+                </figure>
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="lists" src="showcase/lists-default-dark.png" width="680" height="460" loading="lazy" alt="A list of people with avatars, a badge and key caps, beside a file tree"></button>
+                    <figcaption><h3>Lists and trees</h3><p>Rows with leading and trailing parts, and a tree that expands with the arrows.</p></figcaption>
+                </figure>
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="marks" src="showcase/marks-default-dark.png" width="680" height="460" loading="lazy" alt="Badges and status dots in five tones, chips, colorful avatars and key caps"></button>
+                    <figcaption><h3>Badges, chips and avatars</h3><p>Five tones, removable chips, initials tinted from the name.</p></figcaption>
+                </figure>
+            </div>
+
+            <h3 class="group-title">Type and icons</h3>
+            <div class="gallery">
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="typography" src="showcase/typography-default-dark.png" width="680" height="460" loading="lazy" alt="Six heading levels, three levels of text, a wrapped paragraph, an ellipsis and several scripts"></button>
+                    <figcaption><h3>Typography</h3><p>The theme's scale, wrapping and ellipsis through SkParagraph.</p></figcaption>
+                </figure>
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="icons" src="showcase/icons-default-dark.png" width="680" height="460" loading="lazy" alt="A grid of 84 bundled icons"></button>
+                    <figcaption><h3>Icons</h3><p>Pivotal's icons and the Lucide icons they lack, as vector data drawn at one stroke weight.</p></figcaption>
+                </figure>
+            </div>
+        </div>
+    </section>
+
+    <section id="touch">
+        <div class="wrap">
+            <h2>Pointer and touch</h2>
+            <p class="intro">Desk switches density with the input. The same panel, with a mouse and then by touch, where
+                controls grow and each one's touch target reaches 44 px.</p>
+            <div class="pair">
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="density-pointer" data-set="desk" src="showcase/density-pointer-desk-dark.png" width="520" height="520" loading="lazy" alt="A fixture panel at Desk's pointer density"></button>
+                    <figcaption><p>Pointer</p></figcaption>
+                </figure>
+                <figure class="tile">
+                    <button type="button" class="shot zoomable" data-zoom><img data-scene="density-touch" data-set="desk" src="showcase/density-touch-desk-dark.png" width="520" height="520" loading="lazy" alt="The same fixture panel at Desk's touch density, with larger controls"></button>
+                    <figcaption><p>Touch</p></figcaption>
+                </figure>
+            </div>
+        </div>
+    </section>
+
+    <section id="motion">
+        <div class="wrap">
+            <h2>Motion</h2>
+            <p class="intro">Popups scale and fade from their anchor, and rows slide to their new places when a grid
+                sorts. Captured frame by frame on the library's own clock; the Default set.</p>
+            <div class="pair">
+                <figure class="tile">
+                    <div class="shot"><img data-scene="motion-menu" data-set="default" data-still src="showcase/motion-menu-default-dark.png" width="560" height="420" loading="lazy" alt="A menu opening from its button, its submenu following, then closing"></div>
+                    <figcaption><p>A menu enters, opens its submenu, and leaves.</p></figcaption>
+                </figure>
+                <figure class="tile">
+                    <div class="shot"><img data-scene="motion-sort" data-set="default" data-still src="showcase/motion-sort-default-dark.png" width="560" height="420" loading="lazy" alt="Data grid rows sliding to new places as the grid sorts"></div>
+                    <figcaption><p>Layout transitions as the grid sorts by one column, then another.</p></figcaption>
+                </figure>
+            </div>
+        </div>
+    </section>
+
+    <section id="start">
+        <div class="wrap split">
+            <div class="prose">
+                <h2>Build it</h2>
+                <p>CMake 3.24 or newer and a C++23 compiler: GCC 14+, Clang 18+, Apple Clang 16+, or clang-cl on
+                    Windows. Skia, Yoga and psychic-color are submodules; Skia is built by CMake on the first build,
+                    which takes a while.</p>
+                <p>Inside your own CMake project, <code>add_subdirectory</code> the checkout and link
+                    <code>psychic-ui::psychic-ui</code>.</p>
+            </div>
+<pre><code>git submodule update --init --recursive
+cmake --preset debug
+cmake --build --preset debug -j"$(nproc)"
+
+<span class="c"># The demo, the tests, and these screenshots</span>
+./build/debug/example/psychic-ui-demo
+ctest --preset debug
+tools/showcase/capture.sh</code></pre>
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <div class="wrap">
+        <span>Psychic UI is MIT licensed, by François Ubald Brien.</span>
+        <nav aria-label="Links">
+            <a href="https://github.com/ubald/psychic-ui">Repository</a>
+            <a href="html/">API reference</a>
+            <a href="https://github.com/ubald/psychic-ui/blob/master/README.md">README</a>
+        </nav>
+    </div>
+</footer>
+
+<dialog class="zoom" aria-label="Screenshot at full size"><img alt=""></dialog>
+
+<script src="assets/site.js"></script>
+</body>
+</html>
