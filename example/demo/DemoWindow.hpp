@@ -184,16 +184,16 @@ namespace psychic_ui {
         auto &layout   = sidebar.section("Layout");
         auto &assets   = sidebar.section("Assets");
         assets.grow(1); // Pushes the last section to the bottom
-        for (Page &page: _pages) {
+        for (Page &entry: _pages) {
             SidebarSection *section = &controls;
-            if (page.name == "Divs" || page.name == "Scroller" || page.name == "Canvas" || page.name == "Motion" || page.name == "Typography") {
+            if (entry.name == "Divs" || entry.name == "Scroller" || entry.name == "Canvas" || entry.name == "Motion" || entry.name == "Typography") {
                 section = &layout;
-            } else if (page.name == "Colors" || page.name == "Icons") {
+            } else if (entry.name == "Colors" || entry.name == "Icons") {
                 section = &assets;
             }
-            page.item = &section->item(page.name, page.icon);
-            if (page.name == "Icons") {
-                page.item->count(std::to_string(IconRegistry::shared().names().size()));
+            entry.item = &section->item(entry.name, entry.icon);
+            if (entry.name == "Icons") {
+                entry.item->count(std::to_string(IconRegistry::shared().names().size()));
             }
         }
 
@@ -204,9 +204,9 @@ namespace psychic_ui {
 
         sidebar.onChange(
             [this](SidebarItem *item) {
-                for (const Page &page: _pages) {
-                    if (page.item == item) {
-                        show(page);
+                for (const Page &entry: _pages) {
+                    if (entry.item == item) {
+                        show(entry);
                         return;
                     }
                 }

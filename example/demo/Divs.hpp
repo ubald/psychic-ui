@@ -31,91 +31,91 @@ namespace psychic_ui {
 
         {
             // Rectangle
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rectangle");
-            c.add<Div>()
+            sample.add<Label>("Rectangle");
+            sample.add<Div>()
              .addClassName("demo-div")
              .borderRadius(0);
         }
         {
             // Rounded
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded 12px");
-            c.add<Div>()
+            sample.add<Label>("Rounded 12px");
+            sample.add<Div>()
              .addClassName("demo-div")
              .borderRadius(12);
         }
         {
             // Rounded Left
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Left");
-            c.add<Div>()
+            sample.add<Label>("Rounded Left");
+            sample.add<Div>()
              .addClassName("demo-div")
              .borderRadiusLeft(12);
         }
         {
             // Rounded Right
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Right");
-            c.add<Div>()
+            sample.add<Label>("Rounded Right");
+            sample.add<Div>()
              .addClassName("demo-div")
              .borderRadiusRight(12);
         }
         {
             // Rounded Top
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Top");
-            c.add<Div>()
+            sample.add<Label>("Rounded Top");
+            sample.add<Div>()
              .addClassName("demo-div")
              .borderRadiusTop(12);
         }
         {
             // Rounded Bottom
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Bottom");
-            c.add<Div>()
+            sample.add<Label>("Rounded Bottom");
+            sample.add<Div>()
              .addClassName("demo-div")
              .borderRadiusBottom(12);
         }
         {
             // Rounded Top Left
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Top Left");
-            c.add<Div>()
+            sample.add<Label>("Rounded Top Left");
+            sample.add<Div>()
              .addClassName("demo-div")
              .borderRadiusTopLeft(12);
         }
         {
             // Rounded Top Right
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Top Right");
-            c.add<Div>()
+            sample.add<Label>("Rounded Top Right");
+            sample.add<Div>()
              .addClassName("demo-div")
              .borderRadiusTopRight(12);
         }
         {
             // Rounded Bottom Left
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Bottom Left");
-            c.add<Div>()
+            sample.add<Label>("Rounded Bottom Left");
+            sample.add<Div>()
              .addClassName("demo-div")
              .borderRadiusBottomLeft(12);
         }
         {
             // Rounded Bottom Right
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Bottom Right");
-            c.add<Div>()
+            sample.add<Label>("Rounded Bottom Right");
+            sample.add<Div>()
              .addClassName("demo-div")
              .borderRadiusBottomRight(12);
         }
@@ -123,100 +123,100 @@ namespace psychic_ui {
         // region Full Borders
         {
             // Rectangle
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rectangle Border");
-            c.add<Div>()
+            sample.add<Label>("Rectangle Border");
+            sample.add<Div>()
              .addClassName("demo-div")
              .border(3)
              .borderRadius(0);
         }
         {
             // Rounded
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded 12px Border");
-            c.add<Div>()
+            sample.add<Label>("Rounded 12px Border");
+            sample.add<Div>()
              .addClassName("demo-div")
              .border(3)
              .borderRadius(12);
         }
         {
             // Rounded Left
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Left Border");
-            c.add<Div>()
+            sample.add<Label>("Rounded Left Border");
+            sample.add<Div>()
              .addClassName("demo-div")
              .border(3)
              .borderRadiusLeft(12);
         }
         {
             // Rounded Right
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Right Border");
-            c.add<Div>()
+            sample.add<Label>("Rounded Right Border");
+            sample.add<Div>()
              .addClassName("demo-div")
              .border(3)
              .borderRadiusRight(12);
         }
         {
             // Rounded Top
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Top Border");
-            c.add<Div>()
+            sample.add<Label>("Rounded Top Border");
+            sample.add<Div>()
              .addClassName("demo-div")
              .border(3)
              .borderRadiusTop(12);
         }
         {
             // Rounded Bottom
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Bottom Border");
-            c.add<Div>()
+            sample.add<Label>("Rounded Bottom Border");
+            sample.add<Div>()
              .addClassName("demo-div")
              .border(3)
              .borderRadiusBottom(12);
         }
         {
             // Rounded Top Left
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Top Left Border");
-            c.add<Div>()
+            sample.add<Label>("Rounded Top Left Border");
+            sample.add<Div>()
              .addClassName("demo-div")
              .border(3)
              .borderRadiusTopLeft(12);
         }
         {
             // Rounded Top Right
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Top Right Border");
-            c.add<Div>()
+            sample.add<Label>("Rounded Top Right Border");
+            sample.add<Div>()
              .addClassName("demo-div")
              .border(3)
              .borderRadiusTopRight(12);
         }
         {
             // Rounded Bottom Left
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Bottom Left Border");
-            c.add<Div>()
+            sample.add<Label>("Rounded Bottom Left Border");
+            sample.add<Div>()
              .addClassName("demo-div")
              .border(3)
              .borderRadiusBottomLeft(12);
         }
         {
             // Rounded Bottom Right
-            auto &c = scroller.add<Div>()
+            auto &sample = scroller.add<Div>()
                 .direction(Direction::Column);
-            c.add<Label>("Rounded Bottom Right Border");
-            c.add<Div>()
+            sample.add<Label>("Rounded Bottom Right Border");
+            sample.add<Div>()
              .addClassName("demo-div")
              .border(3)
              .borderRadiusBottomRight(12);

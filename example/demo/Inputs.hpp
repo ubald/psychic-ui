@@ -61,8 +61,8 @@ namespace psychic_ui {
             switches.add<Switch>(label)
                     .checked(checked)
                     .enabled(enabled)
-                    .onChange([switchEvent, label](bool checked) {
-                        switchEvent->text(std::format("{}: {}", label, checked ? "on" : "off"));
+                    .onChange([switchEvent, label](bool isOn) {
+                        switchEvent->text(std::format("{}: {}", label, isOn ? "on" : "off"));
                     });
         }
 
