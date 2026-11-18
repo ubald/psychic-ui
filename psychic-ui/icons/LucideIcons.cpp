@@ -9,300 +9,309 @@
 // Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is
 // hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
 
+#include <array>
 #include <span>
+#include <string_view>
 #include "psychic-ui/icons/IconSet.hpp"
 
 namespace psychic_ui::icons {
 
     namespace {
-        constexpr auto S = IconPaint::Stroke;
+        constexpr IconElement stroke(std::string_view path) { return {.paint = IconPaint::Stroke, .d = path}; }
 
-        constexpr IconElement icon_chevron_up[]{
-            {S, "m18 15-6-6-6 6"},
+        constexpr float grid        = 24.0f;
+        constexpr float strokeWidth = 2.0f;
+
+        constexpr IconDefinition icon(std::string_view name, std::span<const IconElement> elements) {
+            return {.name = name, .grid = grid, .stroke = strokeWidth, .elements = elements};
+        }
+
+        constexpr std::array icon_chevron_up{
+            stroke("m18 15-6-6-6 6"),
         };
-        constexpr IconElement icon_chevrons_up_down[]{
-            {S, "m7 15 5 5 5-5"},
-            {S, "m7 9 5-5 5 5"},
+        constexpr std::array icon_chevrons_up_down{
+            stroke("m7 15 5 5 5-5"),
+            stroke("m7 9 5-5 5 5"),
         };
-        constexpr IconElement icon_chevrons_left[]{
-            {S, "m11 17-5-5 5-5"},
-            {S, "m18 17-5-5 5-5"},
+        constexpr std::array icon_chevrons_left{
+            stroke("m11 17-5-5 5-5"),
+            stroke("m18 17-5-5 5-5"),
         };
-        constexpr IconElement icon_chevrons_right[]{
-            {S, "m6 17 5-5-5-5"},
-            {S, "m13 17 5-5-5-5"},
+        constexpr std::array icon_chevrons_right{
+            stroke("m6 17 5-5-5-5"),
+            stroke("m13 17 5-5-5-5"),
         };
-        constexpr IconElement icon_arrow_left[]{
-            {S, "m12 19-7-7 7-7"},
-            {S, "M19 12H5"},
+        constexpr std::array icon_arrow_left{
+            stroke("m12 19-7-7 7-7"),
+            stroke("M19 12H5"),
         };
-        constexpr IconElement icon_arrow_right[]{
-            {S, "M5 12h14"},
-            {S, "m12 5 7 7-7 7"},
+        constexpr std::array icon_arrow_right{
+            stroke("M5 12h14"),
+            stroke("m12 5 7 7-7 7"),
         };
-        constexpr IconElement icon_corner_down_left[]{
-            {S, "M20 4v7a4 4 0 0 1-4 4H4"},
-            {S, "m9 10-5 5 5 5"},
+        constexpr std::array icon_corner_down_left{
+            stroke("M20 4v7a4 4 0 0 1-4 4H4"),
+            stroke("m9 10-5 5 5 5"),
         };
-        constexpr IconElement icon_arrow_up_down[]{
-            {S, "m21 16-4 4-4-4"},
-            {S, "M17 20V4"},
-            {S, "m3 8 4-4 4 4"},
-            {S, "M7 4v16"},
+        constexpr std::array icon_arrow_up_down{
+            stroke("m21 16-4 4-4-4"),
+            stroke("M17 20V4"),
+            stroke("m3 8 4-4 4 4"),
+            stroke("M7 4v16"),
         };
-        constexpr IconElement icon_arrow_up_narrow_wide[]{
-            {S, "m3 8 4-4 4 4"},
-            {S, "M7 4v16"},
-            {S, "M11 12h4"},
-            {S, "M11 16h7"},
-            {S, "M11 20h10"},
+        constexpr std::array icon_arrow_up_narrow_wide{
+            stroke("m3 8 4-4 4 4"),
+            stroke("M7 4v16"),
+            stroke("M11 12h4"),
+            stroke("M11 16h7"),
+            stroke("M11 20h10"),
         };
-        constexpr IconElement icon_arrow_down_wide_narrow[]{
-            {S, "m3 16 4 4 4-4"},
-            {S, "M7 20V4"},
-            {S, "M11 4h10"},
-            {S, "M11 8h7"},
-            {S, "M11 12h4"},
+        constexpr std::array icon_arrow_down_wide_narrow{
+            stroke("m3 16 4 4 4-4"),
+            stroke("M7 20V4"),
+            stroke("M11 4h10"),
+            stroke("M11 8h7"),
+            stroke("M11 12h4"),
         };
-        constexpr IconElement icon_circle_check[]{
-            {S, "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z"},
-            {S, "m16 9-5.5 5.5L8 12"},
+        constexpr std::array icon_circle_check{
+            stroke("M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z"),
+            stroke("m16 9-5.5 5.5L8 12"),
         };
-        constexpr IconElement icon_circle_x[]{
-            {S, "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z"},
-            {S, "m15 9-6 6"},
-            {S, "m9 9 6 6"},
+        constexpr std::array icon_circle_x{
+            stroke("M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z"),
+            stroke("m15 9-6 6"),
+            stroke("m9 9 6 6"),
         };
-        constexpr IconElement icon_circle_alert[]{
-            {S, "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z"},
-            {S, "M12 8L12 12"},
-            {S, "M12 16L12.01 16"},
+        constexpr std::array icon_circle_alert{
+            stroke("M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z"),
+            stroke("M12 8L12 12"),
+            stroke("M12 16L12.01 16"),
         };
-        constexpr IconElement icon_circle_plus[]{
-            {S, "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z"},
-            {S, "M8 12h8"},
-            {S, "M12 8v8"},
+        constexpr std::array icon_circle_plus{
+            stroke("M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z"),
+            stroke("M8 12h8"),
+            stroke("M12 8v8"),
         };
-        constexpr IconElement icon_circle_minus[]{
-            {S, "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z"},
-            {S, "M8 12h8"},
+        constexpr std::array icon_circle_minus{
+            stroke("M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z"),
+            stroke("M8 12h8"),
         };
-        constexpr IconElement icon_loader_circle[]{
-            {S, "M21 12a9 9 0 1 1-6.219-8.56"},
+        constexpr std::array icon_loader_circle{
+            stroke("M21 12a9 9 0 1 1-6.219-8.56"),
         };
-        constexpr IconElement icon_eye_off[]{
-            {S, "M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"},
-            {S, "M14.084 14.158a3 3 0 0 1-4.242-4.242"},
-            {S, "M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"},
-            {S, "m2 2 20 20"},
+        constexpr std::array icon_eye_off{
+            stroke("M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"),
+            stroke("M14.084 14.158a3 3 0 0 1-4.242-4.242"),
+            stroke("M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"),
+            stroke("m2 2 20 20"),
         };
-        constexpr IconElement icon_lock_open[]{
-            {S, "M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-7a2 2 0 0 1 2 -2Z"},
-            {S, "M7 11V7a5 5 0 0 1 9.9-1"},
+        constexpr std::array icon_lock_open{
+            stroke("M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-7a2 2 0 0 1 2 -2Z"),
+            stroke("M7 11V7a5 5 0 0 1 9.9-1"),
         };
-        constexpr IconElement icon_square[]{
-            {S, "M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2Z"},
+        constexpr std::array icon_square{
+            stroke("M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2Z"),
         };
-        constexpr IconElement icon_square_check[]{
-            {S, "M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2Z"},
-            {S, "m16 9-5.5 5.5L8 12"},
+        constexpr std::array icon_square_check{
+            stroke("M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2Z"),
+            stroke("m16 9-5.5 5.5L8 12"),
         };
-        constexpr IconElement icon_circle[]{
-            {S, "M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z"},
+        constexpr std::array icon_circle{
+            stroke("M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0Z"),
         };
-        constexpr IconElement icon_folder_open[]{
-            {S, "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"},
+        constexpr std::array icon_folder_open{
+            stroke("m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"),
         };
-        constexpr IconElement icon_file_text[]{
-            {S, "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"},
-            {S, "M14 2v5a1 1 0 0 0 1 1h5"},
-            {S, "M10 9H8"},
-            {S, "M16 13H8"},
-            {S, "M16 17H8"},
+        constexpr std::array icon_file_text{
+            stroke("M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"),
+            stroke("M14 2v5a1 1 0 0 0 1 1h5"),
+            stroke("M10 9H8"),
+            stroke("M16 13H8"),
+            stroke("M16 17H8"),
         };
-        constexpr IconElement icon_save[]{
-            {S, "M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"},
-            {S, "M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"},
-            {S, "M7 3v4a1 1 0 0 0 1 1h7"},
+        constexpr std::array icon_save{
+            stroke("M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"),
+            stroke("M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"),
+            stroke("M7 3v4a1 1 0 0 0 1 1h7"),
         };
-        constexpr IconElement icon_copy[]{
-            {S, "M10 8h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2Z"},
-            {S, "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"},
+        constexpr std::array icon_copy{
+            stroke("M10 8h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2Z"),
+            stroke("M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"),
         };
-        constexpr IconElement icon_clipboard[]{
-            {S, "M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-6a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1Z"},
-            {S, "M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"},
+        constexpr std::array icon_clipboard{
+            stroke("M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-6a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1Z"),
+            stroke("M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"),
         };
-        constexpr IconElement icon_external_link[]{
-            {S, "M15 3h6v6"},
-            {S, "M10 14 21 3"},
-            {S, "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"},
+        constexpr std::array icon_external_link{
+            stroke("M15 3h6v6"),
+            stroke("M10 14 21 3"),
+            stroke("M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"),
         };
-        constexpr IconElement icon_log_in[]{
-            {S, "m10 17 5-5-5-5"},
-            {S, "M15 12H3"},
-            {S, "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"},
+        constexpr std::array icon_log_in{
+            stroke("m10 17 5-5-5-5"),
+            stroke("M15 12H3"),
+            stroke("M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"),
         };
-        constexpr IconElement icon_sun[]{
-            {S, "M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z"},
-            {S, "M12 2v2"},
-            {S, "M12 20v2"},
-            {S, "m4.93 4.93 1.41 1.41"},
-            {S, "m17.66 17.66 1.41 1.41"},
-            {S, "M2 12h2"},
-            {S, "M20 12h2"},
-            {S, "m6.34 17.66-1.41 1.41"},
-            {S, "m19.07 4.93-1.41 1.41"},
+        constexpr std::array icon_sun{
+            stroke("M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0Z"),
+            stroke("M12 2v2"),
+            stroke("M12 20v2"),
+            stroke("m4.93 4.93 1.41 1.41"),
+            stroke("m17.66 17.66 1.41 1.41"),
+            stroke("M2 12h2"),
+            stroke("M20 12h2"),
+            stroke("m6.34 17.66-1.41 1.41"),
+            stroke("m19.07 4.93-1.41 1.41"),
         };
-        constexpr IconElement icon_moon[]{
-            {S, "M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"},
+        constexpr std::array icon_moon{
+            stroke("M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"),
         };
-        constexpr IconElement icon_monitor[]{
-            {S, "M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-16a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2Z"},
-            {S, "M8 21L16 21"},
-            {S, "M12 17L12 21"},
+        constexpr std::array icon_monitor{
+            stroke("M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-16a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2Z"),
+            stroke("M8 21L16 21"),
+            stroke("M12 17L12 21"),
         };
-        constexpr IconElement icon_grip_vertical[]{
-            {S, "M8 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
-            {S, "M8 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
-            {S, "M8 19a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
-            {S, "M14 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
-            {S, "M14 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
-            {S, "M14 19a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
+        constexpr std::array icon_grip_vertical{
+            stroke("M8 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
+            stroke("M8 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
+            stroke("M8 19a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
+            stroke("M14 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
+            stroke("M14 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
+            stroke("M14 19a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
         };
-        constexpr IconElement icon_grip_horizontal[]{
-            {S, "M11 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
-            {S, "M18 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
-            {S, "M4 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
-            {S, "M11 15a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
-            {S, "M18 15a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
-            {S, "M4 15a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
+        constexpr std::array icon_grip_horizontal{
+            stroke("M11 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
+            stroke("M18 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
+            stroke("M4 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
+            stroke("M11 15a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
+            stroke("M18 15a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
+            stroke("M4 15a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
         };
-        constexpr IconElement icon_ellipsis_vertical[]{
-            {S, "M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
-            {S, "M11 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
-            {S, "M11 19a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"},
+        constexpr std::array icon_ellipsis_vertical{
+            stroke("M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
+            stroke("M11 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
+            stroke("M11 19a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z"),
         };
-        constexpr IconElement icon_list[]{
-            {S, "M3 5h.01"},
-            {S, "M3 12h.01"},
-            {S, "M3 19h.01"},
-            {S, "M8 5h13"},
-            {S, "M8 12h13"},
-            {S, "M8 19h13"},
+        constexpr std::array icon_list{
+            stroke("M3 5h.01"),
+            stroke("M3 12h.01"),
+            stroke("M3 19h.01"),
+            stroke("M8 5h13"),
+            stroke("M8 12h13"),
+            stroke("M8 19h13"),
         };
-        constexpr IconElement icon_funnel[]{
-            {S, "M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"},
+        constexpr std::array icon_funnel{
+            stroke("M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"),
         };
-        constexpr IconElement icon_refresh_cw[]{
-            {S, "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"},
-            {S, "M21 3v5h-5"},
-            {S, "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"},
-            {S, "M8 16H3v5"},
+        constexpr std::array icon_refresh_cw{
+            stroke("M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"),
+            stroke("M21 3v5h-5"),
+            stroke("M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"),
+            stroke("M8 16H3v5"),
         };
-        constexpr IconElement icon_undo_2[]{
-            {S, "M9 14 4 9l5-5"},
-            {S, "M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"},
+        constexpr std::array icon_undo_2{
+            stroke("M9 14 4 9l5-5"),
+            stroke("M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"),
         };
-        constexpr IconElement icon_redo_2[]{
-            {S, "m15 14 5-5-5-5"},
-            {S, "M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13"},
+        constexpr std::array icon_redo_2{
+            stroke("m15 14 5-5-5-5"),
+            stroke("M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13"),
         };
-        constexpr IconElement icon_zoom_in[]{
-            {S, "M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z"},
-            {S, "M21 21L16.65 16.65"},
-            {S, "M11 8L11 14"},
-            {S, "M8 11L14 11"},
+        constexpr std::array icon_zoom_in{
+            stroke("M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z"),
+            stroke("M21 21L16.65 16.65"),
+            stroke("M11 8L11 14"),
+            stroke("M8 11L14 11"),
         };
-        constexpr IconElement icon_zoom_out[]{
-            {S, "M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z"},
-            {S, "M21 21L16.65 16.65"},
-            {S, "M8 11L14 11"},
+        constexpr std::array icon_zoom_out{
+            stroke("M3 11a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z"),
+            stroke("M21 21L16.65 16.65"),
+            stroke("M8 11L14 11"),
         };
-        constexpr IconElement icon_maximize_2[]{
-            {S, "M15 3h6v6"},
-            {S, "m21 3-7 7"},
-            {S, "m3 21 7-7"},
-            {S, "M9 21H3v-6"},
+        constexpr std::array icon_maximize_2{
+            stroke("M15 3h6v6"),
+            stroke("m21 3-7 7"),
+            stroke("m3 21 7-7"),
+            stroke("M9 21H3v-6"),
         };
-        constexpr IconElement icon_minimize_2[]{
-            {S, "m14 10 7-7"},
-            {S, "M20 10h-6V4"},
-            {S, "m3 21 7-7"},
-            {S, "M4 14h6v6"},
+        constexpr std::array icon_minimize_2{
+            stroke("m14 10 7-7"),
+            stroke("M20 10h-6V4"),
+            stroke("m3 21 7-7"),
+            stroke("M4 14h6v6"),
         };
-        constexpr IconElement icon_command[]{
-            {S, "M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"},
+        constexpr std::array icon_command{
+            stroke("M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"),
         };
-        constexpr IconElement icon_mouse_pointer_2[]{
-            {S, "M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z"},
+        constexpr std::array icon_mouse_pointer_2{
+            stroke("M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z"),
         };
-        constexpr IconElement icon_hash[]{
-            {S, "M4 9L20 9"},
-            {S, "M4 15L20 15"},
-            {S, "M10 3L8 21"},
-            {S, "M16 3L14 21"},
+        constexpr std::array icon_hash{
+            stroke("M4 9L20 9"),
+            stroke("M4 15L20 15"),
+            stroke("M10 3L8 21"),
+            stroke("M16 3L14 21"),
         };
-        constexpr IconElement icon_lightbulb[]{
-            {S, "M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"},
-            {S, "M9 18h6"},
-            {S, "M10 22h4"},
+        constexpr std::array icon_lightbulb{
+            stroke("M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"),
+            stroke("M9 18h6"),
+            stroke("M10 22h4"),
         };
-        constexpr IconElement icon_type[]{
-            {S, "M12 4v16"},
-            {S, "M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"},
-            {S, "M9 20h6"},
+        constexpr std::array icon_type{
+            stroke("M12 4v16"),
+            stroke("M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"),
+            stroke("M9 20h6"),
         };
 
-        constexpr IconDefinition definitions[]{
-            {"chevron-up", 24.0f, 2.0f, icon_chevron_up},
-            {"chevrons-up-down", 24.0f, 2.0f, icon_chevrons_up_down},
-            {"chevrons-left", 24.0f, 2.0f, icon_chevrons_left},
-            {"chevrons-right", 24.0f, 2.0f, icon_chevrons_right},
-            {"arrow-left", 24.0f, 2.0f, icon_arrow_left},
-            {"arrow-right", 24.0f, 2.0f, icon_arrow_right},
-            {"corner-down-left", 24.0f, 2.0f, icon_corner_down_left},
-            {"arrow-up-down", 24.0f, 2.0f, icon_arrow_up_down},
-            {"arrow-up-narrow-wide", 24.0f, 2.0f, icon_arrow_up_narrow_wide},
-            {"arrow-down-wide-narrow", 24.0f, 2.0f, icon_arrow_down_wide_narrow},
-            {"circle-check", 24.0f, 2.0f, icon_circle_check},
-            {"circle-x", 24.0f, 2.0f, icon_circle_x},
-            {"circle-alert", 24.0f, 2.0f, icon_circle_alert},
-            {"circle-plus", 24.0f, 2.0f, icon_circle_plus},
-            {"circle-minus", 24.0f, 2.0f, icon_circle_minus},
-            {"loader-circle", 24.0f, 2.0f, icon_loader_circle},
-            {"eye-off", 24.0f, 2.0f, icon_eye_off},
-            {"lock-open", 24.0f, 2.0f, icon_lock_open},
-            {"square", 24.0f, 2.0f, icon_square},
-            {"square-check", 24.0f, 2.0f, icon_square_check},
-            {"circle", 24.0f, 2.0f, icon_circle},
-            {"folder-open", 24.0f, 2.0f, icon_folder_open},
-            {"file-text", 24.0f, 2.0f, icon_file_text},
-            {"save", 24.0f, 2.0f, icon_save},
-            {"copy", 24.0f, 2.0f, icon_copy},
-            {"clipboard", 24.0f, 2.0f, icon_clipboard},
-            {"external-link", 24.0f, 2.0f, icon_external_link},
-            {"log-in", 24.0f, 2.0f, icon_log_in},
-            {"sun", 24.0f, 2.0f, icon_sun},
-            {"moon", 24.0f, 2.0f, icon_moon},
-            {"monitor", 24.0f, 2.0f, icon_monitor},
-            {"grip-vertical", 24.0f, 2.0f, icon_grip_vertical},
-            {"grip-horizontal", 24.0f, 2.0f, icon_grip_horizontal},
-            {"ellipsis-vertical", 24.0f, 2.0f, icon_ellipsis_vertical},
-            {"list", 24.0f, 2.0f, icon_list},
-            {"funnel", 24.0f, 2.0f, icon_funnel},
-            {"refresh-cw", 24.0f, 2.0f, icon_refresh_cw},
-            {"undo-2", 24.0f, 2.0f, icon_undo_2},
-            {"redo-2", 24.0f, 2.0f, icon_redo_2},
-            {"zoom-in", 24.0f, 2.0f, icon_zoom_in},
-            {"zoom-out", 24.0f, 2.0f, icon_zoom_out},
-            {"maximize-2", 24.0f, 2.0f, icon_maximize_2},
-            {"minimize-2", 24.0f, 2.0f, icon_minimize_2},
-            {"command", 24.0f, 2.0f, icon_command},
-            {"mouse-pointer-2", 24.0f, 2.0f, icon_mouse_pointer_2},
-            {"hash", 24.0f, 2.0f, icon_hash},
-            {"lightbulb", 24.0f, 2.0f, icon_lightbulb},
-            {"type", 24.0f, 2.0f, icon_type},
+        constexpr std::array definitions{
+            icon("chevron-up", icon_chevron_up),
+            icon("chevrons-up-down", icon_chevrons_up_down),
+            icon("chevrons-left", icon_chevrons_left),
+            icon("chevrons-right", icon_chevrons_right),
+            icon("arrow-left", icon_arrow_left),
+            icon("arrow-right", icon_arrow_right),
+            icon("corner-down-left", icon_corner_down_left),
+            icon("arrow-up-down", icon_arrow_up_down),
+            icon("arrow-up-narrow-wide", icon_arrow_up_narrow_wide),
+            icon("arrow-down-wide-narrow", icon_arrow_down_wide_narrow),
+            icon("circle-check", icon_circle_check),
+            icon("circle-x", icon_circle_x),
+            icon("circle-alert", icon_circle_alert),
+            icon("circle-plus", icon_circle_plus),
+            icon("circle-minus", icon_circle_minus),
+            icon("loader-circle", icon_loader_circle),
+            icon("eye-off", icon_eye_off),
+            icon("lock-open", icon_lock_open),
+            icon("square", icon_square),
+            icon("square-check", icon_square_check),
+            icon("circle", icon_circle),
+            icon("folder-open", icon_folder_open),
+            icon("file-text", icon_file_text),
+            icon("save", icon_save),
+            icon("copy", icon_copy),
+            icon("clipboard", icon_clipboard),
+            icon("external-link", icon_external_link),
+            icon("log-in", icon_log_in),
+            icon("sun", icon_sun),
+            icon("moon", icon_moon),
+            icon("monitor", icon_monitor),
+            icon("grip-vertical", icon_grip_vertical),
+            icon("grip-horizontal", icon_grip_horizontal),
+            icon("ellipsis-vertical", icon_ellipsis_vertical),
+            icon("list", icon_list),
+            icon("funnel", icon_funnel),
+            icon("refresh-cw", icon_refresh_cw),
+            icon("undo-2", icon_undo_2),
+            icon("redo-2", icon_redo_2),
+            icon("zoom-in", icon_zoom_in),
+            icon("zoom-out", icon_zoom_out),
+            icon("maximize-2", icon_maximize_2),
+            icon("minimize-2", icon_minimize_2),
+            icon("command", icon_command),
+            icon("mouse-pointer-2", icon_mouse_pointer_2),
+            icon("hash", icon_hash),
+            icon("lightbulb", icon_lightbulb),
+            icon("type", icon_type),
         };
     }
 

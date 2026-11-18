@@ -44,7 +44,15 @@ namespace {
         TextLayout text{};
         text.setText(icu::UnicodeString::fromUTF8("The quick brown fox jumps over the lazy dog"));
         text.setStyle(
-            TextLayoutStyle{manager->fontCollection(), family, size, size * 1.5f, 0.0f, FontSmoothing::Grayscale, TextAlign::Start}
+            TextLayoutStyle{
+                .fonts         = manager->fontCollection(),
+                .fontFamily    = family,
+                .fontSize      = size,
+                .lineHeight    = size * 1.5f,
+                .letterSpacing = 0.0f,
+                .smoothing     = FontSmoothing::Grayscale,
+                .align         = TextAlign::Start
+            }
         );
         return text;
     }

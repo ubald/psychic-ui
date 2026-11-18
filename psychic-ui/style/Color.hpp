@@ -27,21 +27,21 @@ namespace psychic_ui {
             return c;
         }
 
-        constexpr std::uint32_t argb() const { return _argb; }
+        [[nodiscard]] constexpr std::uint32_t argb() const { return _argb; }
 
-        constexpr std::uint8_t alpha() const { return static_cast<std::uint8_t>(_argb >> 24); }
+        [[nodiscard]] constexpr std::uint8_t alpha() const { return static_cast<std::uint8_t>(_argb >> 24); }
 
         /**
          * The same color with another alpha, 0 (transparent) to 255 (opaque)
          */
-        constexpr Color withAlpha(std::uint8_t alpha) const {
+        [[nodiscard]] constexpr Color withAlpha(std::uint8_t alpha) const {
             return fromARGB((static_cast<std::uint32_t>(alpha) << 24) | (_argb & 0x00FFFFFFu));
         }
 
         /**
          * This color painted over another (source over): what shows where a translucent fill lies on `below`
          */
-        constexpr Color over(const Color &below) const {
+        [[nodiscard]] constexpr Color over(const Color &below) const {
             const std::uint32_t a  = alpha();
             const std::uint32_t ba = below.alpha() * (255u - a) / 255u; // What of the color below shows through
             const std::uint32_t oa = a + ba;

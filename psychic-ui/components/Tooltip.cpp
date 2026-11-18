@@ -43,24 +43,24 @@ namespace psychic_ui {
         SkPoint base2{};
         switch (_placedSide) {
             case Side::Top: // Above the anchor: the arrow under the box
-                base1 = {anchorX - half, height - border};
-                tip   = {anchorX, height + arrowSize};
-                base2 = {anchorX + half, height - border};
+                base1 = SkPoint::Make(anchorX - half, height - border);
+                tip   = SkPoint::Make(anchorX, height + arrowSize);
+                base2 = SkPoint::Make(anchorX + half, height - border);
                 break;
             case Side::Bottom:
-                base1 = {anchorX - half, border};
-                tip   = {anchorX, -arrowSize};
-                base2 = {anchorX + half, border};
+                base1 = SkPoint::Make(anchorX - half, border);
+                tip   = SkPoint::Make(anchorX, -arrowSize);
+                base2 = SkPoint::Make(anchorX + half, border);
                 break;
             case Side::Left: // Left of the anchor: the arrow right of the box
-                base1 = {width - border, anchorY - half};
-                tip   = {width + arrowSize, anchorY};
-                base2 = {width - border, anchorY + half};
+                base1 = SkPoint::Make(width - border, anchorY - half);
+                tip   = SkPoint::Make(width + arrowSize, anchorY);
+                base2 = SkPoint::Make(width - border, anchorY + half);
                 break;
             case Side::Right:
-                base1 = {border, anchorY - half};
-                tip   = {-arrowSize, anchorY};
-                base2 = {border, anchorY + half};
+                base1 = SkPoint::Make(border, anchorY - half);
+                tip   = SkPoint::Make(-arrowSize, anchorY);
+                base2 = SkPoint::Make(border, anchorY + half);
                 break;
         }
 

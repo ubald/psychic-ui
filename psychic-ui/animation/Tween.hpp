@@ -47,15 +47,15 @@ namespace psychic_ui {
          */
         void finish();
 
-        const Channels &value() const { return _value; }
+        [[nodiscard]] const Channels &value() const { return _value; }
 
-        const Channels &target() const { return _target; }
+        [[nodiscard]] const Channels &target() const { return _target; }
 
-        const Channels &velocity() const { return _velocity; }
+        [[nodiscard]] const Channels &velocity() const { return _velocity; }
 
-        bool running() const { return _running; }
+        [[nodiscard]] bool running() const { return _running; }
 
-        const Timing &timing() const { return _timing; }
+        [[nodiscard]] const Timing &timing() const { return _timing; }
 
     private:
         std::size_t _count{4};

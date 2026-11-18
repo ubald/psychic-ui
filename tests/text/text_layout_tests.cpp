@@ -64,7 +64,13 @@ namespace {
 
     TextLayoutStyle layoutStyle(const std::shared_ptr<StyleManager> &styleManager, float size = 14.0f, const std::string &font = FONT) {
         return TextLayoutStyle{
-            styleManager->fontCollection(), font, size, LINE_HEIGHT, 0.0f, FontSmoothing::Grayscale, TextAlign::Start
+            .fonts         = styleManager->fontCollection(),
+            .fontFamily    = font,
+            .fontSize      = size,
+            .lineHeight    = LINE_HEIGHT,
+            .letterSpacing = 0.0f,
+            .smoothing     = FontSmoothing::Grayscale,
+            .align         = TextAlign::Start
         };
     }
 

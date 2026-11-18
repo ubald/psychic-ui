@@ -29,7 +29,7 @@ namespace {
     public:
         explicit FakeGeometry(const TextEditing &editing) : _editing(&editing) {}
 
-        SkRect caretRect(unsigned int index) const override {
+        [[nodiscard]] SkRect caretRect(unsigned int index) const override {
             const auto &text   = _editing->text();
             int         line   = 0;
             int         column = 0;
@@ -44,7 +44,7 @@ namespace {
             return SkRect::MakeXYWH(static_cast<float>(column) * 10.0f, static_cast<float>(line) * 20.0f, 0.0f, 20.0f);
         }
 
-        unsigned int indexAt(float x, float y) const override {
+        [[nodiscard]] unsigned int indexAt(float x, float y) const override {
             const auto &text   = _editing->text();
             const int   target = std::max(0, static_cast<int>(y / 20.0f));
             int         line   = 0;
@@ -70,7 +70,7 @@ namespace {
     public:
         std::string text{};
 
-        std::string clipboardText() const override { return text; }
+        [[nodiscard]] std::string clipboardText() const override { return text; }
         void setClipboardText(const std::string &t) override { text = t; }
     };
 

@@ -33,7 +33,7 @@ namespace {
             return subscribeTo(signal, std::forward<F>(callback));
         }
 
-        std::size_t slotCount() const {
+        [[nodiscard]] std::size_t slotCount() const {
             return slots.size();
         }
     };

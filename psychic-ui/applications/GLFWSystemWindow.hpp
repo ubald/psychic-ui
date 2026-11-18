@@ -45,7 +45,7 @@ namespace psychic_ui {
         GLFWSystemWindow(GLFWSystemWindow &&) = delete;
         GLFWSystemWindow &operator=(GLFWSystemWindow &&) = delete;
 
-        GLFWwindow *glfwWindow() const;
+        [[nodiscard]] GLFWwindow *glfwWindow() const;
 
         /**
          * Draws the window. When the window was closed from inside (a title bar's close button), marks the
@@ -56,15 +56,15 @@ namespace psychic_ui {
 
         void setTitle(const std::string &title) override;
         void setFullscreen(bool fullscreen) override;
-        bool getMinimized() const override;
+        [[nodiscard]] bool getMinimized() const override;
         void setMinimized(bool minimized) override;
-        bool getMaximized() const override;
+        [[nodiscard]] bool getMaximized() const override;
         void setMaximized(bool maximized) override;
         void setVisible(bool visible) override;
         void setCursor(Cursor cursor) override;
         void startDrag() override;
         void stopDrag() override;
-        bool supportsDrag() const override;
+        [[nodiscard]] bool supportsDrag() const override;
 
         /**
          * `glfwPostEmptyEvent`, which ends a host's `glfwWaitEvents`: a host that waits draws when
@@ -74,7 +74,7 @@ namespace psychic_ui {
         void setSize(int width, int height) override;
         void setPosition(int x, int y) override;
 
-        std::string getClipboardText() const override;
+        [[nodiscard]] std::string getClipboardText() const override;
         void setClipboardText(const std::string &text) override;
 
         static Mod mapMods(int mods);

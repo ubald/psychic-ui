@@ -21,18 +21,18 @@ namespace psychic_ui {
                 cx(3.0f * ease.x1), bx((3.0f * (ease.x2 - ease.x1)) - cx), ax(1.0f - cx - bx),
                 cy(3.0f * ease.y1), by((3.0f * (ease.y2 - ease.y1)) - cy), ay(1.0f - cy - by) {}
 
-            float x(float t) const { return ((ax * t + bx) * t + cx) * t; }
+            [[nodiscard]] float x(float t) const { return ((ax * t + bx) * t + cx) * t; }
 
-            float y(float t) const { return ((ay * t + by) * t + cy) * t; }
+            [[nodiscard]] float y(float t) const { return ((ay * t + by) * t + cy) * t; }
 
-            float dx(float t) const { return ((3.0f * ax * t + 2.0f * bx) * t) + cx; }
+            [[nodiscard]] float dx(float t) const { return ((3.0f * ax * t + 2.0f * bx) * t) + cx; }
 
-            float dy(float t) const { return ((3.0f * ay * t + 2.0f * by) * t) + cy; }
+            [[nodiscard]] float dy(float t) const { return ((3.0f * ay * t + 2.0f * by) * t) + cy; }
 
             /**
              * The t whose x is the progress: Newton's method, then bisection where the slope is too flat for it
              */
-            float solve(float progress) const {
+            [[nodiscard]] float solve(float progress) const {
                 float t = progress;
                 for (int i = 0; i < 8; ++i) {
                     const float error = x(t) - progress;

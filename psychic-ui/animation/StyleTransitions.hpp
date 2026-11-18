@@ -28,7 +28,7 @@ namespace psychic_ui {
             std::vector<RunningTransition> running{};
             Style                          targets{}; // Where the running ones go (a length in the unit it moves in)
 
-            const RunningTransition *find(Property property) const;
+            [[nodiscard]] const RunningTransition *find(Property property) const;
 
             bool advance(std::chrono::nanoseconds now) override;
             void finish() override;

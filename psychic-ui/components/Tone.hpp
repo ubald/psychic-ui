@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string_view>
 
@@ -32,7 +33,7 @@ namespace psychic_ui {
         return "neutral";
     }
 
-    inline constexpr Tone allTones[]{Tone::Neutral, Tone::Accent, Tone::Success, Tone::Warning, Tone::Danger};
+    inline constexpr std::array allTones{Tone::Neutral, Tone::Accent, Tone::Success, Tone::Warning, Tone::Danger};
 
     class Div;
 

@@ -77,7 +77,7 @@ namespace psychic_ui {
         /**
          * How long the loop may sleep: zero when a window needs a frame, nullopt until an event
          */
-        std::optional<std::chrono::nanoseconds> untilNextFrame() const;
+        [[nodiscard]] std::optional<std::chrono::nanoseconds> untilNextFrame() const;
 
         /**
          * Keeps drawing while the platform blocks the loop in a live resize (Windows, macOS)

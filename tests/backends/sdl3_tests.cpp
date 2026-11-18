@@ -56,11 +56,11 @@ namespace {
          */
         std::optional<ColorScheme> scheme{};
 
-        ColorScheme colorScheme() const override {
+        [[nodiscard]] ColorScheme colorScheme() const override {
             return scheme ? *scheme : SDL3SystemWindow::colorScheme();
         }
 
-        SDL_TouchDeviceType touchDeviceType(SDL_TouchID touchID) const override {
+        [[nodiscard]] SDL_TouchDeviceType touchDeviceType(SDL_TouchID touchID) const override {
             if (touchID == touchScreen) {
                 return SDL_TOUCH_DEVICE_DIRECT;
             }
@@ -105,7 +105,7 @@ namespace {
             window->layout(surface->getCanvas());
         }
 
-        SDL_Event event(SDL_EventType type) const {
+        [[nodiscard]] SDL_Event event(SDL_EventType type) const {
             SDL_Event e{};
             e.type = type;
             // windowID is at the same place in every event that has one
@@ -116,7 +116,7 @@ namespace {
         /**
          * A finger event, at window coordinates, timed in milliseconds
          */
-        bool finger(SDL_EventType type, float x, float y, Uint64 milliseconds, SDL_TouchID device = touchScreen, SDL_FingerID id = 1) const {
+        [[nodiscard]] bool finger(SDL_EventType type, float x, float y, Uint64 milliseconds, SDL_TouchID device = touchScreen, SDL_FingerID id = 1) const {
             SDL_Event e{};
             e.type              = type;
             e.tfinger.timestamp = milliseconds * 1'000'000;
@@ -147,7 +147,7 @@ namespace {
             adapter->handleEvent(e);
         }
 
-        bool button(SDL_EventType type, float x, float y) const {
+        [[nodiscard]] bool button(SDL_EventType type, float x, float y) const {
             auto e = event(type);
             e.button.button = SDL_BUTTON_LEFT;
             e.button.down   = type == SDL_EVENT_MOUSE_BUTTON_DOWN;
@@ -223,7 +223,7 @@ TEST_CASE("SDL3: a window opening on a light system starts light", "[backend][sd
 
     struct LightAdapter : SDL3SystemWindow {
         using SDL3SystemWindow::SDL3SystemWindow;
-        ColorScheme colorScheme() const override { return ColorScheme::Light; }
+        [[nodiscard]] ColorScheme colorScheme() const override { return ColorScheme::Light; }
     };
     {
         LightAdapter adapter(window, sdlWindow, nullptr);
@@ -487,9 +487,9 @@ TEST_CASE("SDL3: dragging a range follows the mouse, through its skin's geometry
     range.enabled(false);
     sdl.layout();
     const SkPoint low = inWindow(*range.skin(), 10.0f, 90.0f);
-    sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, low.x(), low.y());
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, low.x(), low.y()));
     CHECK(range.value() == Catch::Approx(0.5f).margin(0.01f));
-    sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, low.x(), low.y());
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, low.x(), low.y()));
 }
 
 TEST_CASE("SDL3: dragging a scroll bar's thumb scrolls its viewport", "[backend][sdl3][drag]") {
@@ -520,9 +520,9 @@ TEST_CASE("SDL3: dragging a scroll bar's thumb scrolls its viewport", "[backend]
 
     // A press on the track, below the thumb, doesn't drag
     const SkPoint below = inWindow(*skin, thumb.centerX(), thumb.bottom() + 20.0f);
-    sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, below.x(), below.y());
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, below.x(), below.y()));
     moveTo(sdl, below.x(), below.y() + 50.0f);
-    sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, below.x(), below.y() + 50.0f);
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, below.x(), below.y() + 50.0f));
     CHECK(scroller.viewport()->scrollY() == 0);
 
     // Pressed in its middle, the thumb follows the mouse: halfway down its free length is halfway down the content
@@ -580,8 +580,8 @@ TEST_CASE("SDL3: a trackpad's fingers don't switch to touch", "[backend][sdl3][t
     int presses = 0;
     div.onMousePress([&]() { ++presses; });
 
-    sdl.finger(SDL_EVENT_FINGER_DOWN, 40.0f, 40.0f, 1000, trackpad);
-    sdl.finger(SDL_EVENT_FINGER_UP, 40.0f, 40.0f, 1080, trackpad);
+    CHECK(sdl.finger(SDL_EVENT_FINGER_DOWN, 40.0f, 40.0f, 1000, trackpad));
+    CHECK(sdl.finger(SDL_EVENT_FINGER_UP, 40.0f, 40.0f, 1080, trackpad));
     CHECK(sdl.window->inputMode() == InputMode::Pointer);
     CHECK(presses == 0); // The mouse it moves does the clicking
 }
@@ -597,26 +597,26 @@ TEST_CASE("SDL3: touch drags, long presses and a second finger", "[backend][sdl3
     sdl.window->onMouseMove([&]() { ++moves; });
 
     // Past the slop, a drag
-    sdl.finger(SDL_EVENT_FINGER_DOWN, 20.0f, 20.0f, 1000);
-    sdl.finger(SDL_EVENT_FINGER_MOTION, 24.0f, 20.0f, 1010);
+    CHECK(sdl.finger(SDL_EVENT_FINGER_DOWN, 20.0f, 20.0f, 1000));
+    CHECK(sdl.finger(SDL_EVENT_FINGER_MOTION, 24.0f, 20.0f, 1010));
     CHECK(presses.empty());
-    sdl.finger(SDL_EVENT_FINGER_MOTION, 60.0f, 20.0f, 1020);
+    CHECK(sdl.finger(SDL_EVENT_FINGER_MOTION, 60.0f, 20.0f, 1020));
     CHECK(presses == std::vector{MouseButton::LEFT});
     const int movesBefore = moves;
     // A second finger is ignored
-    sdl.finger(SDL_EVENT_FINGER_DOWN, 80.0f, 80.0f, 1025, touchScreen, 2);
-    sdl.finger(SDL_EVENT_FINGER_MOTION, 90.0f, 90.0f, 1030, touchScreen, 2);
+    CHECK(sdl.finger(SDL_EVENT_FINGER_DOWN, 80.0f, 80.0f, 1025, touchScreen, 2));
+    CHECK(sdl.finger(SDL_EVENT_FINGER_MOTION, 90.0f, 90.0f, 1030, touchScreen, 2));
     CHECK(moves == movesBefore);
-    sdl.finger(SDL_EVENT_FINGER_UP, 60.0f, 20.0f, 1040);
-    sdl.finger(SDL_EVENT_FINGER_UP, 90.0f, 90.0f, 1045, touchScreen, 2);
+    CHECK(sdl.finger(SDL_EVENT_FINGER_UP, 60.0f, 20.0f, 1040));
+    CHECK(sdl.finger(SDL_EVENT_FINGER_UP, 90.0f, 90.0f, 1045, touchScreen, 2));
 
     // Held, a right button press, timed by SDL's timestamps
-    sdl.finger(SDL_EVENT_FINGER_DOWN, 20.0f, 20.0f, 2000);
+    CHECK(sdl.finger(SDL_EVENT_FINGER_DOWN, 20.0f, 20.0f, 2000));
     sdl.window->updateGestures(std::chrono::milliseconds(2400));
     CHECK(presses.size() == 1);
     sdl.window->updateGestures(std::chrono::milliseconds(2500));
     CHECK(presses == std::vector{MouseButton::LEFT, MouseButton::RIGHT});
-    sdl.finger(SDL_EVENT_FINGER_CANCELED, 20.0f, 20.0f, 2600);
+    CHECK(sdl.finger(SDL_EVENT_FINGER_CANCELED, 20.0f, 20.0f, 2600));
     CHECK(presses.size() == 2);
 }
 
@@ -693,8 +693,8 @@ TEST_CASE("SDL3: a focused text field tells SDL where its caret is, by mouse or 
     sdl.mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, 700.0f, 500.0f, 1);
     sdl.mouse(SDL_EVENT_MOUSE_BUTTON_UP, 700.0f, 500.0f, 1);
     SDL_SetTextInputArea(sdl.sdlWindow, nullptr, 0);
-    sdl.finger(SDL_EVENT_FINGER_DOWN, x, y, 1000);
-    sdl.finger(SDL_EVENT_FINGER_UP, x, y, 1050);
+    CHECK(sdl.finger(SDL_EVENT_FINGER_DOWN, x, y, 1000));
+    CHECK(sdl.finger(SDL_EVENT_FINGER_UP, x, y, 1050));
     REQUIRE(SDL_GetTextInputArea(sdl.sdlWindow, &area, &cursor));
     CHECK(area.w > 0);
     CHECK(area.h > 0);
@@ -726,7 +726,7 @@ TEST_CASE("SDL3: mouse events say what made them, with SDL's click count and the
     CHECK(presses[0].clickCount == 2);
     CHECK(presses[0].source == InputMode::Pointer);
     CHECK(presses[0].windowX == 40.5f); // Not rounded
-    sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, 40.5f, 20.0f);
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, 40.5f, 20.0f));
 
     // The wheel, with the keyboard's modifiers
     SDL_SetModState(SDL_KMOD_LSHIFT);

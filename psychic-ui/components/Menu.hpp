@@ -105,7 +105,7 @@ namespace psychic_ui {
             group(std::move(itemGroup)),
             value(std::move(itemValue)) {}
 
-        bool checked() const { return group && group->value == value; }
+        [[nodiscard]] bool checked() const { return group && group->value == value; }
     };
 
     /**

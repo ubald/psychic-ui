@@ -31,7 +31,7 @@ namespace psychic_ui {
         template<class SkinT, class ImplT>
         SkinRegistry &add(std::string_view variant = "") {
             static_assert(std::is_base_of_v<SkinT, ImplT>, "ImplT must implement SkinT");
-            _makers[Key{typeid(SkinT), std::string{variant}}] = [name = std::string{variant}] {
+            _makers[Key{.type = typeid(SkinT), .variant = std::string{variant}}] = [name = std::string{variant}] {
                 auto skin = std::make_shared<ImplT>();
                 if (!name.empty()) {
                     skin->addClassName(name);
@@ -46,7 +46,7 @@ namespace psychic_ui {
          */
         template<class SkinT>
         bool has(std::string_view variant = "") const {
-            return _makers.contains(Key{typeid(SkinT), std::string{variant}});
+            return _makers.contains(Key{.type = typeid(SkinT), .variant = std::string{variant}});
         }
 
         /**
@@ -54,9 +54,9 @@ namespace psychic_ui {
          */
         template<class SkinT>
         std::shared_ptr<SkinT> make(std::string_view variant = "") const {
-            auto it = _makers.find(Key{typeid(SkinT), std::string{variant}});
+            auto it = _makers.find(Key{.type = typeid(SkinT), .variant = std::string{variant}});
             if (it == _makers.cend() && !variant.empty()) {
-                it = _makers.find(Key{typeid(SkinT), std::string{}});
+                it = _makers.find(Key{.type = typeid(SkinT), .variant = std::string{}});
             }
             // The maker made an ImplT, which implements SkinT
             return it != _makers.cend() ? std::static_pointer_cast<SkinT>(it->second()) : nullptr;
@@ -88,27 +88,27 @@ namespace psychic_ui {
      */
     class SkinSet : public StyleSheet {
     public:
-        virtual std::string_view name() const = 0;
+        [[nodiscard]] virtual std::string_view name() const = 0;
 
         /**
          * The theme the set ships with, for a system that doesn't say whether it is light or dark
          */
-        virtual const Theme &defaultTheme() const = 0;
+        [[nodiscard]] virtual const Theme &defaultTheme() const = 0;
 
         /**
          * The set's theme for a light system: its default theme unless it has a light one
          */
-        virtual const Theme &lightTheme() const { return defaultTheme(); }
+        [[nodiscard]] virtual const Theme &lightTheme() const { return defaultTheme(); }
 
         /**
          * The set's theme for a dark system: its default theme unless it has a dark one
          */
-        virtual const Theme &darkTheme() const { return defaultTheme(); }
+        [[nodiscard]] virtual const Theme &darkTheme() const { return defaultTheme(); }
 
         /**
          * The set's theme for a system color scheme: light, dark, or the default when it is unknown
          */
-        const Theme &theme(ColorScheme scheme) const {
+        [[nodiscard]] const Theme &theme(ColorScheme scheme) const {
             switch (scheme) {
                 case ColorScheme::Light:
                     return lightTheme();
@@ -122,7 +122,7 @@ namespace psychic_ui {
         /**
          * The themes made for the set, as a picker lists them: its light, dark and default themes unless it says more
          */
-        virtual std::vector<const Theme *> themes() const {
+        [[nodiscard]] virtual std::vector<const Theme *> themes() const {
             std::vector<const Theme *> own{};
             for (const Theme *theme: {&lightTheme(), &darkTheme(), &defaultTheme()}) {
                 if (std::ranges::find(own, theme) == own.end()) {
@@ -135,7 +135,7 @@ namespace psychic_ui {
         /**
          * Whether the theme is one of the set's (`themes()`), by name
          */
-        bool hasTheme(const Theme &theme) const {
+        [[nodiscard]] bool hasTheme(const Theme &theme) const {
             return std::ranges::any_of(themes(), [&theme](const Theme *own) { return own->name == theme.name; });
         }
 
@@ -144,6 +144,6 @@ namespace psychic_ui {
         /**
          * Where the skins this set lacks come from; the default set has none
          */
-        virtual std::unique_ptr<SkinSet> fallback() const { return nullptr; }
+        [[nodiscard]] virtual std::unique_ptr<SkinSet> fallback() const { return nullptr; }
     };
 }

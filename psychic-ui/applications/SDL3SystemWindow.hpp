@@ -49,7 +49,7 @@ namespace psychic_ui {
         SDL3SystemWindow(SDL3SystemWindow &&) = delete;
         SDL3SystemWindow &operator=(SDL3SystemWindow &&) = delete;
 
-        SDL_Window *sdlWindow() const;
+        [[nodiscard]] SDL_Window *sdlWindow() const;
 
         /**
          * Translates an SDL event into the window's events
@@ -62,15 +62,15 @@ namespace psychic_ui {
 
         void setTitle(const std::string &title) override;
         void setFullscreen(bool fullscreen) override;
-        bool getMinimized() const override;
+        [[nodiscard]] bool getMinimized() const override;
         void setMinimized(bool minimized) override;
-        bool getMaximized() const override;
+        [[nodiscard]] bool getMaximized() const override;
         void setMaximized(bool maximized) override;
         void setVisible(bool visible) override;
         void setCursor(Cursor cursor) override;
         void startDrag() override;
         void stopDrag() override;
-        bool supportsDrag() const override;
+        [[nodiscard]] bool supportsDrag() const override;
         void setSize(int width, int height) override;
         void setPosition(int x, int y) override;
 
@@ -81,7 +81,7 @@ namespace psychic_ui {
         /**
          * SDL's clock, which times its events
          */
-        std::chrono::nanoseconds gestureTime() const override;
+        [[nodiscard]] std::chrono::nanoseconds gestureTime() const override;
 
         /**
          * Pushes an event of `wakeEventType()`, which ends an `SDL_WaitEvent`: a host that waits for events
@@ -98,9 +98,9 @@ namespace psychic_ui {
          * SDL_GetSystemTheme. `handleEvent` passes SDL_EVENT_SYSTEM_THEME_CHANGED on to the window, whatever
          * window the event names (it names none). Virtual so that tests can make up a system.
          */
-        ColorScheme colorScheme() const override;
+        [[nodiscard]] ColorScheme colorScheme() const override;
 
-        std::string getClipboardText() const override;
+        [[nodiscard]] std::string getClipboardText() const override;
         void setClipboardText(const std::string &text) override;
 
         /**
@@ -153,7 +153,7 @@ namespace psychic_ui {
          * What kind of touch device sent finger events: only touch screens (direct) are followed,
          * trackpads also move the mouse. Virtual so that tests can make up touch screens.
          */
-        virtual SDL_TouchDeviceType touchDeviceType(SDL_TouchID touchID) const;
+        [[nodiscard]] virtual SDL_TouchDeviceType touchDeviceType(SDL_TouchID touchID) const;
 
         void handleFingerEvent(const SDL_TouchFingerEvent &finger);
         void handlePenButton(MouseButton button, bool down, float x, float y);

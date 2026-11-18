@@ -13,24 +13,24 @@ namespace psychic_ui {
     public:
         StyleDeclaration(std::string selectorString, std::unique_ptr<StyleSelector> selector, Style::ChangedCallback onChanged = nullptr, void *owner = nullptr);
 
-        const std::string &selectorString() const { return _selectorString; }
+        [[nodiscard]] const std::string &selectorString() const { return _selectorString; }
 
-        const StyleSelector *selector() const { return _selector.get(); }
+        [[nodiscard]] const StyleSelector *selector() const { return _selector.get(); }
 
         Style &style() { return _style; }
 
-        const Style &style() const { return _style; }
+        [[nodiscard]] const Style &style() const { return _style; }
 
         /**
          * Returns the cached weight computed from the selector chain
          * @return int
          */
-        int weight() const { return _weight; }
+        [[nodiscard]] int weight() const { return _weight; }
 
         /**
          * Whether the rule is in effect: false once its style manager was reset, until it is declared again
          */
-        bool active() const { return _active; }
+        [[nodiscard]] bool active() const { return _active; }
 
         void setActive(bool active) { _active = active; }
 

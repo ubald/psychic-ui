@@ -346,16 +346,16 @@ namespace psychic_ui::showcase {
                 }
             }
             if (right < 0) {
-                return {0, 0, 1, 1};
+                return {.x = 0, .y = 0, .width = 1, .height = 1};
             }
-            return {left, top, right - left + 1, bottom - top + 1};
+            return {.x = left, .y = top, .width = right - left + 1, .height = bottom - top + 1};
         }
 
         PngFrame crop(const PngFrame &frame, const Region &region) {
             if (region.x == 0 && region.y == 0 && region.width == frame.width && region.height == frame.height) {
                 return frame;
             }
-            PngFrame part{region.width, region.height, {}};
+            PngFrame part{.width = region.width, .height = region.height, .rgba = {}};
             part.rgba.reserve(static_cast<std::size_t>(region.width) * region.height * 4);
             for (int y = region.y; y < region.y + region.height; ++y) {
                 const auto begin = frame.rgba.begin() + (static_cast<std::ptrdiff_t>(y) * frame.width + region.x) * 4;
@@ -401,7 +401,7 @@ namespace psychic_ui::showcase {
         std::uint32_t sequence = 0;
         for (std::size_t f = 0; f < frames.size(); ++f) {
             // After the first, a frame only holds what changed since the one before, which stays under it
-            const Region   region = f == 0 ? Region{0, 0, width, height} : changed(frames[f - 1], frames[f]);
+            const Region   region = f == 0 ? Region{.x = 0, .y = 0, .width = width, .height = height} : changed(frames[f - 1], frames[f]);
             const PngFrame part   = crop(frames[f], region);
             if (animated) {
                 std::vector<std::uint8_t> control{};

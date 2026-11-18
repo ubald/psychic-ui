@@ -31,7 +31,7 @@ namespace psychic_ui {
 
     Size Icon::measure(Constraint width, Constraint height) {
         const float size = _computedStyle.iconSize();
-        return Size{width.apply(size), height.apply(size)};
+        return Size{.width = width.apply(size), .height = height.apply(size)};
     }
 
     void Icon::draw(SkCanvas *canvas) {

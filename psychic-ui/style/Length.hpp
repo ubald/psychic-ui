@@ -32,16 +32,16 @@ namespace psychic_ui {
 
         static constexpr Length percent(float value) { return Length{value, Unit::Percent}; }
 
-        constexpr bool isPx() const { return unit == Unit::Px; }
+        [[nodiscard]] constexpr bool isPx() const { return unit == Unit::Px; }
 
-        constexpr bool isPercent() const { return unit == Unit::Percent; }
+        [[nodiscard]] constexpr bool isPercent() const { return unit == Unit::Percent; }
 
-        constexpr bool isAuto() const { return unit == Unit::Auto; }
+        [[nodiscard]] constexpr bool isAuto() const { return unit == Unit::Auto; }
 
         /**
          * The length in pixels, given what a percent is relative to; `fallback` when auto
          */
-        constexpr float resolve(float relativeTo, float fallback = 0.0f) const {
+        [[nodiscard]] constexpr float resolve(float relativeTo, float fallback = 0.0f) const {
             switch (unit) {
                 case Unit::Px:
                     return value;

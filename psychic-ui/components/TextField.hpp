@@ -152,7 +152,7 @@ namespace psychic_ui {
             this->_editing.setText(icu::UnicodeString::fromUTF8(text));
         }
 
-        Text *view() const override { // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
+        [[nodiscard]] Text *view() const override { // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
             return this->_skin ? this->_skin->textView() : nullptr;
         }
 

@@ -62,19 +62,19 @@ namespace {
         }
 
         // The callback installed right now
-        GLFWkeyfun keyCallback() const {
+        [[nodiscard]] GLFWkeyfun keyCallback() const {
             auto current = glfwSetKeyCallback(glfwWindow, nullptr);
             glfwSetKeyCallback(glfwWindow, current);
             return current;
         }
 
-        GLFWmousebuttonfun buttonCallback() const {
+        [[nodiscard]] GLFWmousebuttonfun buttonCallback() const {
             auto current = glfwSetMouseButtonCallback(glfwWindow, nullptr);
             glfwSetMouseButtonCallback(glfwWindow, current);
             return current;
         }
 
-        GLFWcursorposfun cursorCallback() const {
+        [[nodiscard]] GLFWcursorposfun cursorCallback() const {
             auto current = glfwSetCursorPosCallback(glfwWindow, nullptr);
             glfwSetCursorPosCallback(glfwWindow, current);
             return current;

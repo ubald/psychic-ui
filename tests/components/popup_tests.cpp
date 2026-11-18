@@ -169,10 +169,10 @@ namespace {
             return {x + (div.getWidth() / 2), y + (div.getHeight() / 2)};
         }
 
-        std::size_t popupCount() const { return window->overlay().children().size(); }
+        [[nodiscard]] std::size_t popupCount() const { return window->overlay().children().size(); }
 
         template<class T>
-        T *top() const { return window->overlay().top<T>(); }
+        [[nodiscard]] T *top() const { return window->overlay().top<T>(); }
     };
 
     bool hasClass(const Div &div, const std::string &name) {
@@ -482,7 +482,7 @@ namespace {
             layout();
         }
 
-        Menu *menu() const { return top<Menu>(); }
+        [[nodiscard]] Menu *menu() const { return top<Menu>(); }
     };
 }
 

@@ -130,7 +130,7 @@ namespace psychic_ui {
         // interface, which only knows GLX on Linux and fails in an EGL context (Wayland)
         auto interface = GrGLMakeAssembledInterface(
             _systemWindow,
-            [](void *ctx, const char name[]) -> GrGLFuncPtr {
+            [](void *ctx, const char *name) -> GrGLFuncPtr {
                 // Skia also asks for eglQueryString, only to list EGL extensions it can do without. A GLX
                 // loader returns a stub for any name, which crashes when called, so it gets none.
                 if (std::strncmp(name, "egl", 3) == 0) {
@@ -1393,7 +1393,7 @@ namespace psychic_ui {
             return nullptr;
         }
 
-        SlopSearch search{x, y};
+        SlopSearch search{.x = x, .y = y};
         constexpr int unbounded = std::numeric_limits<int>::max() / 2;
         findSlopTarget(this, 0, 0, -unbounded, -unbounded, unbounded, unbounded, search);
         if (!search.target) {

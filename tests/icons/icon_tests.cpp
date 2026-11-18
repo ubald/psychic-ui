@@ -1,3 +1,4 @@
+#include <array>
 #include <cstddef>
 #include <iostream>
 #include <memory>
@@ -69,8 +70,8 @@ namespace {
         return surface;
     }
 
-    constexpr IconElement squareElements[]{{IconPaint::Fill, "M2 2h6v6H2z"}};
-    constexpr IconDefinition square{"test-square", 10.0f, 1.0f, squareElements};
+    constexpr std::array squareElements{IconElement{.paint = IconPaint::Fill, .d = "M2 2h6v6H2z"}};
+    constexpr IconDefinition square{.name = "test-square", .grid = 10.0f, .stroke = 1.0f, .elements = squareElements};
 }
 
 TEST_CASE("the shared registry has the bundled icons", "[icons]") {
@@ -125,8 +126,8 @@ TEST_CASE("an application adds its own icons, or replaces one", "[icons]") {
     REQUIRE(registry.has("test-square"));
     REQUIRE(registry.shape("test-square")->grid == 10.0f);
 
-    constexpr IconElement bigger[]{{IconPaint::Stroke, "M1 1h8v8H1z"}};
-    registry.add(IconDefinition{"test-square", 12.0f, 1.0f, bigger});
+    constexpr std::array bigger{IconElement{.paint = IconPaint::Stroke, .d = "M1 1h8v8H1z"}};
+    registry.add(IconDefinition{.name = "test-square", .grid = 12.0f, .stroke = 1.0f, .elements = bigger});
     REQUIRE(registry.size() == 1);
     const IconShape *shape = registry.shape("test-square");
     REQUIRE(shape->grid == 12.0f);
@@ -147,9 +148,9 @@ TEST_CASE("an unknown icon draws nothing and is reported once", "[icons]") {
 }
 
 TEST_CASE("path data that doesn't parse draws nothing and is reported once", "[icons]") {
-    constexpr IconElement broken[]{{IconPaint::Stroke, "M1 1 Q"}};
+    constexpr std::array broken{IconElement{.paint = IconPaint::Stroke, .d = "M1 1 Q"}};
     IconRegistry registry{};
-    registry.add(IconDefinition{"broken", 16.0f, 1.3f, broken});
+    registry.add(IconDefinition{.name = "broken", .grid = 16.0f, .stroke = 1.3f, .elements = broken});
     const CaptureErrors errors;
 
     REQUIRE(registry.shape("broken") == nullptr);

@@ -20,7 +20,7 @@ namespace psychic_ui {
         public:
             explicit WindowClipboard(Window *window) : _window(window) {}
 
-            std::string clipboardText() const override {
+            [[nodiscard]] std::string clipboardText() const override {
                 return _window ? _window->clipboardText() : std::string{};
             }
 

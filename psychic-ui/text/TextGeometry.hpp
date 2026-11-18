@@ -22,11 +22,11 @@ namespace psychic_ui {
         /**
          * The caret before the character at the index: a zero-width rectangle across its line
          */
-        virtual SkRect caretRect(unsigned int index) const = 0;
+        [[nodiscard]] virtual SkRect caretRect(unsigned int index) const = 0;
 
         /**
          * The caret index closest to a point
          */
-        virtual unsigned int indexAt(float x, float y) const = 0;
+        [[nodiscard]] virtual unsigned int indexAt(float x, float y) const = 0;
     };
 }

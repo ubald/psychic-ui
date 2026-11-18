@@ -42,9 +42,9 @@ namespace psychic_ui::showcase {
         Stage &operator=(Stage &&) = delete;
         ~Stage();
 
-        Window &window() const { return *_window; }
-        bool live() const { return !_systemWindow; }
-        std::chrono::nanoseconds now() const { return _now; }
+        [[nodiscard]] Window &window() const { return *_window; }
+        [[nodiscard]] bool live() const { return !_systemWindow; }
+        [[nodiscard]] std::chrono::nanoseconds now() const { return _now; }
 
         /**
          * One frame: time advances, then the window updates and paints
@@ -74,8 +74,8 @@ namespace psychic_ui::showcase {
         /**
          * What the last frame painted
          */
-        PngFrame snapshot() const;
-        sk_sp<SkImage> image() const;
+        [[nodiscard]] PngFrame snapshot() const;
+        [[nodiscard]] sk_sp<SkImage> image() const;
 
     private:
         std::shared_ptr<Window>               _window;

@@ -20,13 +20,13 @@ namespace psychic_ui::paint {
             return shape != nullptr;
         }
 
-        SkPoint origin{rect.centerX() - (size / 2.0f), rect.centerY() - (size / 2.0f)};
+        SkPoint origin = SkPoint::Make(rect.centerX() - (size / 2.0f), rect.centerY() - (size / 2.0f));
         // On the pixel grid, so the same icon looks the same wherever it is
         const SkMatrix matrix = canvas->getTotalMatrix();
         SkMatrix       inverse;
         if (matrix.isScaleTranslate() && matrix.invert(&inverse)) {
             const SkPoint device = matrix.mapPoint(origin);
-            origin = inverse.mapPoint({std::round(device.x()), std::round(device.y())});
+            origin = inverse.mapPoint(SkPoint::Make(std::round(device.x()), std::round(device.y())));
         }
 
         const float scale = size / shape->grid;

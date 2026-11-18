@@ -15,11 +15,11 @@ namespace psychic_ui {
      */
     class FloatSkins : public SkinSet {
     public:
-        std::string_view name() const override;
-        const Theme &defaultTheme() const override; // Float Light: light first, when the system doesn't say
-        const Theme &lightTheme() const override;
-        const Theme &darkTheme() const override;
-        std::unique_ptr<SkinSet> fallback() const override;
+        [[nodiscard]] std::string_view name() const override;
+        [[nodiscard]] const Theme &defaultTheme() const override; // Float Light: light first, when the system doesn't say
+        [[nodiscard]] const Theme &lightTheme() const override;
+        [[nodiscard]] const Theme &darkTheme() const override;
+        [[nodiscard]] std::unique_ptr<SkinSet> fallback() const override;
         void registerSkins(SkinRegistry &skins) const override;
         void load(StyleManager *manager) override;
     };

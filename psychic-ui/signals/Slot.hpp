@@ -73,7 +73,7 @@ namespace psychic_ui {
         /**
          * Whether the callback will still be called when the signal is emitted
          */
-        virtual bool connected() const = 0;
+        [[nodiscard]] virtual bool connected() const = 0;
     };
 
     /**
@@ -105,7 +105,7 @@ namespace psychic_ui {
         }
 
         // NOLINTNEXTLINE(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
-        bool connected() const override {
+        [[nodiscard]] bool connected() const override {
             return _connected;
         }
 
@@ -158,7 +158,7 @@ namespace psychic_ui {
             }
         }
 
-        bool connected() const {
+        [[nodiscard]] bool connected() const {
             return _slot && _slot->connected();
         }
 

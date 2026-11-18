@@ -70,11 +70,11 @@ namespace {
         }
 
         template<class T>
-        T *find() const {
+        [[nodiscard]] T *find() const {
             return dynamic_cast<T *>(find([](Div *div) { return dynamic_cast<T *>(div) != nullptr; }));
         }
 
-        Button *currentTool() const {
+        [[nodiscard]] Button *currentTool() const {
             return dynamic_cast<Button *>(find([](Div *div) {
                 auto *button = dynamic_cast<Button *>(div);
                 return button && button->parent() && dynamic_cast<ToolBar *>(button->parent()) && button->selected();

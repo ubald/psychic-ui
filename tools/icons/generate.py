@@ -197,7 +197,7 @@ def lucide_names():
 def lucide(directory):
     """[(name, [(paint, d)])] of the listed icons, and the package's license"""
     nodes, license = lucide_package(directory)
-    pivotal_names = set(re.findall(r'^\s*\{"([^"]+)", ', (OUT_DIR / "PivotalIcons.cpp").read_text(), re.M))
+    pivotal_names = set(re.findall(r'^\s*icon\("([^"]+)", ', (OUT_DIR / "PivotalIcons.cpp").read_text(), re.M))
     icons = []
     for name in lucide_names():
         if name not in nodes:
@@ -228,30 +228,41 @@ def write(path, symbol, header, icons, grid, stroke):
     lines += ["// " + h if h else "//" for h in header]
     lines += [
         "",
+        "#include <array>",
         "#include <span>",
+        "#include <string_view>",
         '#include "psychic-ui/icons/IconSet.hpp"',
         "",
         "namespace psychic_ui::icons {",
         "",
         "    namespace {",
     ]
-    # Only the paints the icons use, so the table compiles without an unused constant
+    # Only the paints the icons use, so the table compiles without an unused function
     used = {paint for _, elements in icons for paint, _ in elements}
-    lines += [f"        constexpr auto {paint[0]} = IconPaint::{paint};" for paint in ("Stroke", "Fill") if paint in used]
+    for paint in ("Stroke", "Fill"):
+        if paint in used:
+            lines.append(f"        constexpr IconElement {paint.lower()}(std::string_view path) {{ return {{.paint = IconPaint::{paint}, .d = path}}; }}")
     lines += [
+        "",
+        f"        constexpr float grid        = {float(grid)!r}f;",
+        f"        constexpr float strokeWidth = {float(stroke)!r}f;",
+        "",
+        "        constexpr IconDefinition icon(std::string_view name, std::span<const IconElement> elements) {",
+        "            return {.name = name, .grid = grid, .stroke = strokeWidth, .elements = elements};",
+        "        }",
         "",
     ]
     for name, elements in icons:
-        lines.append(f"        constexpr IconElement {identifier(name)}[]{{")
+        lines.append(f"        constexpr std::array {identifier(name)}{{")
         for paint, d in elements:
-            lines.append(f"            {{{paint[0]}, {cpp_string(d)}}},")
+            lines.append(f"            {paint.lower()}({cpp_string(d)}),")
         lines.append("        };")
     lines += [
         "",
-        f"        constexpr IconDefinition definitions[]{{",
+        "        constexpr std::array definitions{",
     ]
     for name, _ in icons:
-        lines.append(f"            {{{cpp_string(name)}, {float(grid)!r}f, {float(stroke)!r}f, {identifier(name)}}},")
+        lines.append(f"            icon({cpp_string(name)}, {identifier(name)}),")
     lines += [
         "        };",
         "    }",

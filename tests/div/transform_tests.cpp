@@ -45,7 +45,7 @@ namespace {
             window->render(surface->getCanvas());
         }
 
-        bool red(int x, int y) const {
+        [[nodiscard]] bool red(int x, int y) const {
             SkPixmap pixmap;
             REQUIRE(surface->peekPixels(&pixmap));
             return pixmap.getColor(x, y) == SK_ColorRED;

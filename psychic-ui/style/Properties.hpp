@@ -251,14 +251,14 @@ namespace psychic_ui {
         /**
          * The timing of a property, nullptr when it doesn't transition
          */
-        const Timing *timing(Property property) const;
+        [[nodiscard]] const Timing *timing(Property property) const;
 
         /**
          * The properties with a timing
          */
-        PropertyMask properties() const;
+        [[nodiscard]] PropertyMask properties() const;
 
-        bool empty() const { return _count == 0; }
+        [[nodiscard]] bool empty() const { return _count == 0; }
 
         bool operator==(const Transition &) const = default;
 

@@ -22,16 +22,16 @@ namespace psychic_ui::showcase {
          * The time `gestureTime()` reports: the frames' time, which the capture advances
          */
         void time(std::chrono::nanoseconds now) { _now = now; }
-        std::chrono::nanoseconds gestureTime() const override { return _now; }
+        [[nodiscard]] std::chrono::nanoseconds gestureTime() const override { return _now; }
 
         bool render() override { return false; } // Captures draw the window themselves, into their own canvas
         GLProc glProcAddress(const char * /*name*/) const override { return nullptr; }
 
         void setTitle(const std::string & /*title*/) override {}
         void setFullscreen(bool /*fullscreen*/) override {}
-        bool getMinimized() const override { return false; }
+        [[nodiscard]] bool getMinimized() const override { return false; }
         void setMinimized(bool /*minimized*/) override {}
-        bool getMaximized() const override { return false; }
+        [[nodiscard]] bool getMaximized() const override { return false; }
         void setMaximized(bool /*maximized*/) override {}
         void setVisible(bool /*visible*/) override {}
         void setCursor(Cursor /*cursor*/) override {}
