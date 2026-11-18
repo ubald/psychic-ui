@@ -197,7 +197,7 @@ namespace psychic_ui {
         /**
          * The current item, or nullptr
          */
-        SidebarItem *current() const { return static_cast<SidebarItem *>(_selection); }
+        SidebarItem *current() const { return dynamic_cast<SidebarItem *>(_selection); }
 
         // Make an item current (nullptr for none) with `select(item)`, emitting `changed` when it changes
 

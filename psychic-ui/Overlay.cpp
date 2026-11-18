@@ -143,7 +143,7 @@ namespace psychic_ui {
         std::vector<Popup *> list{};
         list.reserve(_children.size());
         for (const auto &child: _children) {
-            if (auto *popup = static_cast<Popup *>(child.get()); !popup->exiting()) {
+            if (auto *popup = dynamic_cast<Popup *>(child.get()); !popup->exiting()) {
                 list.push_back(popup);
             }
         }
@@ -156,7 +156,7 @@ namespace psychic_ui {
         // What it opened first, topmost first
         auto children = _children;
         for (const auto &child: std::views::reverse(children)) {
-            auto *other = static_cast<Popup *>(child.get());
+            auto *other = dynamic_cast<Popup *>(child.get());
             if (other->_owner == &popup && other->isOpen()) {
                 other->close();
             }
@@ -188,7 +188,7 @@ namespace psychic_ui {
         // It leaves once its transitions are over (at once with reduced motion)
         popup.exit("exiting", [this, &popup]() {
             for (const auto &child: _children) {
-                if (auto *other = static_cast<Popup *>(child.get()); other->_owner == &popup) {
+                if (auto *other = dynamic_cast<Popup *>(child.get()); other->_owner == &popup) {
                     other->_owner = nullptr; // Its owner goes
                 }
             }
@@ -237,7 +237,7 @@ namespace psychic_ui {
 
         auto children = _children; // Closing one changes them
         for (auto &child: children) {
-            auto *popup = static_cast<Popup *>(child.get());
+            auto *popup = dynamic_cast<Popup *>(child.get());
             if (!popup->_anchored || popup->_parent != this || popup->exiting()) {
                 continue; // Leaving: it stays where it was
             }
@@ -304,7 +304,7 @@ namespace psychic_ui {
         // The popups laid out for the first time since they opened
         children = _children;
         for (auto &child: children) {
-            auto *popup = static_cast<Popup *>(child.get());
+            auto *popup = dynamic_cast<Popup *>(child.get());
             if (!popup->_laidOut && popup->_parent == this && !popup->exiting()) {
                 popup->_laidOut = true;
                 popup->laidOut();
@@ -317,7 +317,7 @@ namespace psychic_ui {
         bool closedModal = false;
         auto children    = _children;
         for (const auto &child: std::views::reverse(children)) {
-            auto *popup = static_cast<Popup *>(child.get());
+            auto *popup = dynamic_cast<Popup *>(child.get());
             if (popup->_parent != this || popup->exiting()) {
                 continue; // Closed with its owner, or leaving
             }
@@ -340,7 +340,7 @@ namespace psychic_ui {
     bool Overlay::dismissTop() {
         auto children = _children;
         for (const auto &child: std::views::reverse(children)) {
-            auto *popup = static_cast<Popup *>(child.get());
+            auto *popup = dynamic_cast<Popup *>(child.get());
             if (popup->_parent != this || popup->exiting()) {
                 continue;
             }
@@ -357,13 +357,13 @@ namespace psychic_ui {
 
     bool Overlay::modal() const {
         return std::ranges::any_of(_children, [](const auto &child) {
-            return static_cast<const Popup *>(child.get())->modal();
+            return dynamic_cast<const Popup *>(child.get())->modal();
         });
     }
 
     Popup *Overlay::focusScope() const {
         for (const auto &child: std::views::reverse(_children)) {
-            auto *popup = static_cast<Popup *>(child.get());
+            auto *popup = dynamic_cast<Popup *>(child.get());
             if (popup->_trapFocus && !popup->exiting()) {
                 return popup;
             }
@@ -373,7 +373,7 @@ namespace psychic_ui {
 
     Popup *Overlay::popupAt(const int x, const int y) const {
         for (const auto &child: std::views::reverse(_children)) {
-            auto *popup = static_cast<Popup *>(child.get());
+            auto *popup = dynamic_cast<Popup *>(child.get());
             if (popup->visible() && popup->mouseEnabled() && !popup->exiting() && surfaceContains(*popup, x, y)) {
                 return popup;
             }
@@ -384,7 +384,7 @@ namespace psychic_ui {
     void Overlay::update(const std::chrono::nanoseconds now) {
         auto children = _children; // A toast's timer closes it
         for (auto &child: children) {
-            if (auto *popup = static_cast<Popup *>(child.get()); popup->parent() == this && !popup->exiting()) {
+            if (auto *popup = dynamic_cast<Popup *>(child.get()); popup->parent() == this && !popup->exiting()) {
                 popup->update(now);
             }
         }
@@ -393,10 +393,10 @@ namespace psychic_ui {
     std::optional<std::chrono::nanoseconds> Overlay::nextUpdate() const {
         std::optional<std::chrono::nanoseconds> next{};
         for (const auto &child: _children) {
-            if (static_cast<const Popup *>(child.get())->exiting()) {
+            if (dynamic_cast<const Popup *>(child.get())->exiting()) {
                 continue;
             }
-            const auto popup = static_cast<const Popup *>(child.get())->nextUpdate();
+            const auto popup = dynamic_cast<const Popup *>(child.get())->nextUpdate();
             if (popup && (!next || *popup < *next)) {
                 next = popup;
             }
@@ -447,7 +447,7 @@ namespace psychic_ui {
             if (child->parent() != this) {
                 continue; // Closed by an earlier handler
             }
-            auto *popup = static_cast<Popup *>(child.get());
+            auto *popup = dynamic_cast<Popup *>(child.get());
             if (popup->mouseEnabled() || popup->mouseChildren()) {
                 auto res = handler(*popup, local);
                 if (res != MouseEventStatus::Out) {
@@ -496,7 +496,7 @@ namespace psychic_ui {
             if (child->parent() != this) {
                 continue;
             }
-            auto *popup = static_cast<Popup *>(child.get());
+            auto *popup = dynamic_cast<Popup *>(child.get());
             if (!popup->mouseEnabled() && !popup->mouseChildren()) {
                 continue;
             }

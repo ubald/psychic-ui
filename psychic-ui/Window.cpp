@@ -982,7 +982,7 @@ namespace psychic_ui {
                 path.push_back(div);
                 const auto &children = overlay->children();
                 for (const auto &child: std::views::reverse(children)) {
-                    auto *popup = static_cast<Popup *>(child.get());
+                    auto *popup = dynamic_cast<Popup *>(child.get());
                     if ((popup->mouseEnabled() || popup->mouseChildren()) && hitPath(popup, localX, localY, path)) {
                         return true;
                     }
@@ -1051,7 +1051,7 @@ namespace psychic_ui {
         _touchPhase  = TouchPhase::Pressing;
         _touchButton = button;
         const std::size_t popups = _overlay->children().size();
-        const Popup *top = popups ? static_cast<Popup *>(_overlay->children().back().get()) : nullptr;
+        const Popup *top = popups ? dynamic_cast<Popup *>(_overlay->children().back().get()) : nullptr;
 
         // Taps in a row count on the touch clock, with a finger's precision
         MouseEvent press = touchEvent(_touchStartX, _touchStartY, button, true);

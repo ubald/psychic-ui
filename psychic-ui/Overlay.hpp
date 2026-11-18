@@ -81,7 +81,7 @@ namespace psychic_ui {
         void closeAll() {
             auto children = _children; // Closing one closes those it owns, and frees them
             for (auto &child: children) {
-                auto *popup = static_cast<Popup *>(child.get());
+                auto *popup = dynamic_cast<Popup *>(child.get());
                 if (dynamic_cast<T *>(popup) && popup->isOpen()) {
                     popup->close();
                 }

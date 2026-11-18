@@ -142,7 +142,7 @@ TEST_CASE("SDL3: the adapter reads the SDL window", "[backend][sdl3]") {
 
 TEST_CASE("SDL3: the theme follows the system's light and dark mode", "[backend][sdl3][theme]") {
     SDL3Fixture sdl;
-    auto &adapter = static_cast<TouchAdapter &>(*sdl.adapter);
+    auto &adapter = dynamic_cast<TouchAdapter &>(*sdl.adapter);
     auto &div     = sdl.window->appContainer().add<Div>().addClassName("probe");
     std::vector<ColorScheme> changes{};
     sdl.window->onColorSchemeChange([&](ColorScheme scheme) { changes.push_back(scheme); });

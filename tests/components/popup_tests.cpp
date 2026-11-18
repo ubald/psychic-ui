@@ -426,7 +426,7 @@ TEST_CASE("Menu bars switch menus with Left and Right", "[popup][menu][keyboard]
         }
     );
     f.layout();
-    auto *file = static_cast<Button *>(bar.children()[0].get());
+    auto *file = dynamic_cast<Button *>(bar.children()[0].get());
     f.click(*file);
     REQUIRE(f.top<Menu>() != nullptr);
     CHECK(f.top<Menu>()->rows()[0]->menuItem()->label == "New");

@@ -602,7 +602,7 @@ TEST_CASE("Inputs: by touch, they look the same and take presses from around the
     CHECK(touchSizes == sizes);
 
     // A press just outside the switch reaches it
-    auto *toggle = static_cast<Switch *>(controls[1]);
+    auto *toggle = dynamic_cast<Switch *>(controls[1]);
     const auto [x, y] = Inputs::at(*toggle, toggle->getWidth() / 2, toggle->getHeight() + 4);
     f.press(x, y);
     f.release(x, y);

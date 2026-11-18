@@ -171,7 +171,7 @@ namespace psychic_ui {
         std::vector<Toast *> list{};
         for (const auto &child: _children) {
             if (!child->exiting()) {
-                list.push_back(static_cast<Toast *>(child.get()));
+                list.push_back(dynamic_cast<Toast *>(child.get()));
             }
         }
         return list;
@@ -186,7 +186,7 @@ namespace psychic_ui {
         auto       children = _children; // A toast that times out leaves
         for (auto &child: children) {
             if (child->parent() == this && !child->exiting()) {
-                static_cast<Toast *>(child.get())->advance(now, paused);
+                dynamic_cast<Toast *>(child.get())->advance(now, paused);
             }
         }
     }
@@ -200,7 +200,7 @@ namespace psychic_ui {
             if (child->exiting()) {
                 continue;
             }
-            const auto deadline = static_cast<const Toast *>(child.get())->deadline();
+            const auto deadline = dynamic_cast<const Toast *>(child.get())->deadline();
             if (deadline && (!next || *deadline < *next)) {
                 next = deadline;
             }
