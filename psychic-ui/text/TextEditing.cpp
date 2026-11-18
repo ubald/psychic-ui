@@ -93,7 +93,7 @@ namespace psychic_ui {
 
     std::u16string TextEditing::selectedText() const {
         auto [begin, end] = selection();
-        return {reinterpret_cast<const char16_t *>(_text.getBuffer()) + begin, end - begin};
+        return {_text.getBuffer() + begin, end - begin};
     }
 
     TextEditing::Edit TextEditing::select(unsigned int anchor, unsigned int caret) {

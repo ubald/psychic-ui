@@ -5,9 +5,9 @@
 #include "../Div.hpp"
 #include "modules/skparagraph/include/TypefaceFontProvider.h"
 
-#if defined(__APPLE__)
+#ifdef __APPLE__
 #include "include/ports/SkFontMgr_mac_ct.h"
-#elif defined(_WIN32)
+#elifdef _WIN32
 #include "include/ports/SkTypeface_win.h"
 #else
 #include "include/ports/SkFontMgr_fontconfig.h"
@@ -116,9 +116,9 @@ namespace psychic_ui {
 
     sk_sp<SkFontMgr> StyleManager::fontManager() {
         static const sk_sp<SkFontMgr> manager =
-            #if defined(__APPLE__)
+            #ifdef __APPLE__
             SkFontMgr_New_CoreText(nullptr);
-            #elif defined(_WIN32)
+            #elifdef _WIN32
             SkFontMgr_New_DirectWrite();
             #else
             SkFontMgr_New_FontConfig(nullptr, SkFontScanner_Make_FreeType());

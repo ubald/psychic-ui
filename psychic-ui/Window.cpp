@@ -158,7 +158,7 @@ namespace psychic_ui {
             &props
         );
         if (!_sk_surface) {
-            std::cerr << "Psychic UI: Skia could not wrap the window's framebuffer" << std::endl;
+            std::cerr << "Psychic UI: Skia could not wrap the window's framebuffer\n";
             return;
         }
         _sk_canvas = _sk_surface->getCanvas();
@@ -393,7 +393,7 @@ namespace psychic_ui {
                 laidOut = true;
                 #ifdef DEBUG_LAYOUT
                 if (debugLayout) {
-                    std::cout << "Layout dirty!" << std::endl;
+                    std::cout << "Layout dirty!\n";
                 }
                 #endif
                 YGNodeCalculateLayout(_yogaNode, width, height, YGDirectionLTR);

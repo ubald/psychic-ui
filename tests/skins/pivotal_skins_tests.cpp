@@ -101,7 +101,7 @@ TEST_CASE("Pivotal skins: the slider's track, fill and thumb follow the value", 
     // A press picks the value under it along the track
     int x = 0;
     int y = 0;
-    track->localToGlobal(x, y, static_cast<int>(track->getWidth() / 2), 2);
+    track->localToGlobal(x, y, track->getWidth() / 2, 2);
     f.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = true});
     f.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = false});
     CHECK(range.value() == Catch::Approx(0.5f).margin(0.01f));

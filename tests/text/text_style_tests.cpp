@@ -37,7 +37,7 @@ namespace {
             window->render(surface->getCanvas());
         }
 
-        SkColor at(const Div &div, int x, int y) {
+        SkColor at(const Div &div, int x, int y) const {
             int gx = 0;
             int gy = 0;
             div.localToGlobal(gx, gy, x, y);

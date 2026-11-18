@@ -329,10 +329,9 @@ namespace psychic_ui {
     bool Div::boundsContains(const float x, const float y) const {
         if (_computedStyle.overflow() == Overflow::Visible) {
             return x >= _boundsLeft && x < _boundsRight && y >= _boundsTop && y < _boundsBottom;
-        } else {
-            // TODO: Keep right and bottom cached
-            return x >= _x && x < _x + _width && y >= _y && y < _y + _height;
         }
+        // TODO: Keep right and bottom cached
+        return x >= _x && x < _x + _width && y >= _y && y < _y + _height;
     }
 
     // endregion
@@ -382,11 +381,11 @@ namespace psychic_ui {
     StyleManager *Div::styleManager() const {
         if (_styleManager) {
             return _styleManager.get();
-        } else if (_parent) {
-            return _parent->styleManager();
-        } else {
-            return nullptr;
         }
+        if (_parent) {
+            return _parent->styleManager();
+        }
+        return nullptr;
     }
 
     void Div::setStyleManager(std::shared_ptr<StyleManager> styleManager) {
@@ -592,11 +591,9 @@ namespace psychic_ui {
                          || _radiusBottomLeft != 0
                          || _radiusBottomRight != 0;
 
-        _drawComplexRoundRect = !(
-            _radiusTopLeft == _radiusTopRight
-            && _radiusTopRight == _radiusBottomLeft
-            && _radiusBottomLeft == _radiusBottomRight
-        );
+        _drawComplexRoundRect = _radiusTopLeft != _radiusTopRight
+                                || _radiusTopRight != _radiusBottomLeft
+                                || _radiusBottomLeft != _radiusBottomRight;
 
         // The layout may not change, but the rounded rect must follow the radii
         _roundRect.setRectRadii(_rect, _radii);
@@ -641,7 +638,7 @@ namespace psychic_ui {
             [](YGNodeConstRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
                 auto *div = static_cast<Div *>(YGNodeGetContext(node));
                 if (!div) {
-                    std::cerr << "Could not find div to measure" << std::endl;
+                    std::cerr << "Could not find div to measure\n";
                     return YGSize{};
                 }
                 const Size size = div->measure(toConstraint(width, widthMode), toConstraint(height, heightMode));
@@ -950,11 +947,9 @@ namespace psychic_ui {
                       || _borderTop != 0
                       || _borderBottom != 0;
 
-        _drawComplexBorders = !(
-            _borderLeft == _borderRight
-            && _borderRight == _borderTop
-            && _borderTop == _borderBottom
-        );
+        _drawComplexBorders = _borderLeft != _borderRight
+                              || _borderRight != _borderTop
+                              || _borderTop != _borderBottom;
 
 
         // Children should also update

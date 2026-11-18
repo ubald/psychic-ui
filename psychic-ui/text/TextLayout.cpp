@@ -107,7 +107,7 @@ namespace psychic_ui {
     }
 
     void TextLayout::setText(const icu::UnicodeString &text) {
-        _text.assign(reinterpret_cast<const char16_t *>(text.getBuffer()), static_cast<size_t>(text.length()));
+        _text.assign(text.getBuffer(), static_cast<size_t>(text.length()));
         changed();
     }
 

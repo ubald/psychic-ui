@@ -86,7 +86,7 @@ namespace {
         /**
          * A finger event, at window coordinates, timed in milliseconds
          */
-        bool finger(SDL_EventType type, float x, float y, Uint64 milliseconds, SDL_TouchID device = touchScreen, SDL_FingerID id = 1) {
+        bool finger(SDL_EventType type, float x, float y, Uint64 milliseconds, SDL_TouchID device = touchScreen, SDL_FingerID id = 1) const {
             SDL_Event e{};
             e.type              = type;
             e.tfinger.timestamp = milliseconds * 1'000'000;
@@ -101,7 +101,7 @@ namespace {
         /**
          * The mouse events SDL makes of a touch (or of a pen, or a real mouse's, by `which`)
          */
-        void mouse(SDL_EventType type, float x, float y, SDL_MouseID which) {
+        void mouse(SDL_EventType type, float x, float y, SDL_MouseID which) const {
             auto e = event(type);
             if (type == SDL_EVENT_MOUSE_MOTION) {
                 e.motion.which = which;
@@ -117,7 +117,7 @@ namespace {
             adapter->handleEvent(e);
         }
 
-        bool button(SDL_EventType type, float x, float y) {
+        bool button(SDL_EventType type, float x, float y) const {
             auto e = event(type);
             e.button.button = SDL_BUTTON_LEFT;
             e.button.down   = type == SDL_EVENT_MOUSE_BUTTON_DOWN;

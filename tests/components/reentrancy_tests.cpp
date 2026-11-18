@@ -42,7 +42,7 @@ namespace {
         std::shared_ptr<TestWindow>       window{std::make_shared<TestWindow>()};
         std::unique_ptr<FakeSystemWindow> sys{std::make_unique<FakeSystemWindow>(window, 800, 600)};
 
-        void layout() { sys->layout(); }
+        void layout() const { sys->layout(); }
         static std::pair<float, float> center(const Div &div) {
             int x = 0;
             int y = 0;

@@ -23,12 +23,12 @@ namespace {
         }
 
         void press(float x, float y, MouseButton button = MouseButton::LEFT) const {
-            window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = button, .down = true});
+            window->handleMouseButtonChange({.x = x, .y = y, .button = button, .down = true});
             window->updateStylesAndLayout();
         }
 
         void release(float x, float y, MouseButton button = MouseButton::LEFT) const {
-            window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = button, .down = false});
+            window->handleMouseButtonChange({.x = x, .y = y, .button = button, .down = false});
             window->updateStylesAndLayout();
         }
     };

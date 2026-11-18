@@ -89,7 +89,7 @@ namespace {
         /**
          * Move a child to another place in the container (a sort)
          */
-        void move(Div &child, std::size_t index) {
+        void move(Div &child, std::size_t index) const {
             auto keep = child.shared_from_this();
             list->remove(child);
             list->add(index, keep);

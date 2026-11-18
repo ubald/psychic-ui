@@ -102,7 +102,7 @@ namespace psychic_ui {
             return self;
         }
 
-        const T min() const;
+        T min() const;
 
         template<class Self>
         Self &min(this Self &self, T min) {
@@ -110,7 +110,7 @@ namespace psychic_ui {
             return self;
         }
 
-        const T max() const;
+        T max() const;
 
         template<class Self>
         Self &max(this Self &self, T max) {
@@ -118,7 +118,7 @@ namespace psychic_ui {
             return self;
         }
 
-        const T step() const;
+        T step() const;
 
         template<class Self>
         Self &step(this Self &self, T step) {
@@ -126,7 +126,7 @@ namespace psychic_ui {
             return self;
         }
 
-        const T value() const;
+        T value() const;
 
         /**
          * Set the value, clamped to the range
@@ -230,7 +230,7 @@ namespace psychic_ui {
     }
 
     template<class T>
-    const T Range<T>::min() const {
+    T Range<T>::min() const {
         return _min;
     }
 
@@ -241,7 +241,7 @@ namespace psychic_ui {
     }
 
     template<class T>
-    const T Range<T>::max() const {
+    T Range<T>::max() const {
         return _max;
     }
 
@@ -252,12 +252,12 @@ namespace psychic_ui {
     }
 
     template<class T>
-    const T Range<T>::step() const {
+    T Range<T>::step() const {
         return _step;
     }
 
     template<class T>
-    const T Range<T>::value() const {
+    T Range<T>::value() const {
         return _value;
     }
 
