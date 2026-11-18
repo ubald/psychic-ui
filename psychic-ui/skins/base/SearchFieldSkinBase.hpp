@@ -17,7 +17,7 @@ namespace psychic_ui {
         SearchFieldSkinBase();
 
     protected:
-        Icon *_icon{nullptr}; // The `.icon` part, a child, which we own
+        Icon *_icon{nullptr}; // The `.icon` part, a child: our child list owns it
 
         void addedToComponent() override;
         void removedFromComponent() override;

@@ -24,7 +24,7 @@ namespace psychic_ui {
         int segmentAt(int x, int y) const override;
 
     protected:
-        std::vector<Div *> _segments{}; // The `.segment` parts, children, which we own
+        std::vector<Div *> _segments{}; // The `.segment` parts, children: our child list owns them
         int                _selected{-1};
 
         void draw(SkCanvas *canvas) final;

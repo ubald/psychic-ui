@@ -21,7 +21,7 @@ namespace psychic_ui {
         void setPlaceholder(const std::string &placeholder) override;
 
     protected:
-        Label *_placeholder{nullptr}; // The `.placeholder` part, a child, which we own
+        Label *_placeholder{nullptr}; // The `.placeholder` part, a child: our child list owns it
 
 
         void addedToComponent() override;

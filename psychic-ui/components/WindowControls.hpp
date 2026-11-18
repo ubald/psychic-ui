@@ -20,7 +20,7 @@ namespace psychic_ui {
         Button &maximizeButton() const { return *_maximize; }
 
     protected:
-        // Children, which we own
+        // Children: our child list owns them
         Button *_close{nullptr};
         Button *_minimize{nullptr};
         Button *_maximize{nullptr};

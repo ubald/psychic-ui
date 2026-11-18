@@ -25,11 +25,11 @@ namespace psychic_ui {
         float positionAt(int x, int y) const override;
 
     protected:
-        Div   *_track{nullptr};  // The `.track` part, a child, which we own
+        Div   *_track{nullptr};  // The `.track` part, a child: our child list owns it
         Div   *_before{nullptr}; // Grows by the position, before the thumb
         Div   *_thumb{nullptr};  // The `.thumb` part, in the track
         Div   *_after{nullptr};  // Grows by what's left, after the thumb
-        Label *_label{nullptr};  // The `.label` part, a child, which we own
+        Label *_label{nullptr};  // The `.label` part, a child: our child list owns it
 
         void draw(SkCanvas *canvas) final;
 

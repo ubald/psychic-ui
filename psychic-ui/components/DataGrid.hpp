@@ -66,7 +66,7 @@ namespace psychic_ui {
     protected:
         friend class DataGrid;
 
-        std::vector<Div *>   _cells{};  // Children, which we own
+        std::vector<Div *>   _cells{};  // Children: our child list owns them
         std::vector<Label *> _values{}; // The cells' labels
         std::size_t          _order{0}; // Where it was added among the grid's rows, for `SortOrder::None`
 
@@ -170,7 +170,7 @@ namespace psychic_ui {
 
     protected:
         std::vector<DataGridColumn> _columns{};
-        Div                         *_header{nullptr}; // Children, which we own
+        Div                         *_header{nullptr}; // Children: our child list owns them
         Div                         *_body{nullptr};
         std::vector<Div *>          _sortButtons{}; // In the header's cells, nullptr for a column that doesn't sort
         int                         _sortColumn{-1};

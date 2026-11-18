@@ -18,8 +18,8 @@ namespace psychic_ui {
 
     protected:
         ScrollDirection _direction{ScrollDirection::Vertical};
-        Div             *_track{nullptr}; // The `.track` part, a child, which we own
-        Div             *_thumb{nullptr}; // The `.thumb` part, a child, which we own
+        Div             *_track{nullptr}; // The `.track` part, a child: our child list owns it
+        Div             *_thumb{nullptr}; // The `.thumb` part, a child: our child list owns it
 
         void added() override;
         void styleUpdated() override;

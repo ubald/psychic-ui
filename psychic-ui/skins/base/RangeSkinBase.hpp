@@ -27,11 +27,11 @@ namespace psychic_ui {
 
     protected:
         float  _value{0.0f};
-        Div   *_track{nullptr};      // The `.track` part, a child, which we own
+        Div   *_track{nullptr};      // The `.track` part, a child: our child list owns it
         Div   *_fill{nullptr};       // The `.fill` part, in the track
         Div   *_thumbAnchor{nullptr}; // A point on the track at the value, centering the thumb on it
         Div   *_thumb{nullptr};      // The `.thumb` part
-        Label *_valueLabel{nullptr}; // The `.value` part, a child, which we own
+        Label *_valueLabel{nullptr}; // The `.value` part, a child: our child list owns it
 
         void added() override;
         void styleUpdated() override;

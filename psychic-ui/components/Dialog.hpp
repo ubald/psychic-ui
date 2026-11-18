@@ -100,7 +100,7 @@ namespace psychic_ui {
                        bool closes = true);
 
     protected:
-        // Children, which we own
+        // Children: our child list owns them
         Div    *_panel{nullptr};
         Div    *_header{nullptr};
         Icon   *_icon{nullptr};

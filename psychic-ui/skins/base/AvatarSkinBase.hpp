@@ -19,8 +19,8 @@ namespace psychic_ui {
         void setStatus(std::optional<Tone> status) override;
 
     protected:
-        Label     *_initials{nullptr}; // The `.initials` part, a child, which we own
-        StatusDot *_status{nullptr};   // The `.status` part, a child, which we own
+        Label     *_initials{nullptr}; // The `.initials` part, a child: our child list owns it
+        StatusDot *_status{nullptr};   // The `.status` part, a child: our child list owns it
 
         void draw(SkCanvas *canvas) final;
 

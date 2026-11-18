@@ -20,8 +20,8 @@ namespace psychic_ui {
         void setIcon(const std::string &icon) override;
 
     protected:
-        Icon  *_icon{nullptr};  // The `.icon` part, a child, which we own
-        Label *_label{nullptr}; // The `.label` part, a child, which we own
+        Icon  *_icon{nullptr};  // The `.icon` part, a child: our child list owns it
+        Label *_label{nullptr}; // The `.label` part, a child: our child list owns it
 
         void draw(SkCanvas *canvas) final;
 

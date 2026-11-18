@@ -26,7 +26,7 @@ namespace psychic_ui {
         int swatchAt(int x, int y) const override;
 
     protected:
-        std::vector<Div *> _swatches{}; // The `.swatch` parts, children, which we own
+        std::vector<Div *> _swatches{}; // The `.swatch` parts, children: our child list owns them
         int                _selected{-1};
         int                _focused{-1};
 

@@ -58,7 +58,7 @@ namespace psychic_ui {
         Button *actionButton() const { return _action; }
 
     protected:
-        // Children, which we own
+        // Children: our child list owns them
         Div    *_tile{nullptr};
         Icon   *_icon{nullptr};
         Label  *_title{nullptr};

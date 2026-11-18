@@ -31,7 +31,7 @@ namespace psychic_ui {
         Div &page() const { return *_page; }
 
     protected:
-        // Children, which we own
+        // Children: our child list owns them
         Sidebar *_sidebar{nullptr};
         Div     *_main{nullptr};
         Div     *_page{nullptr};
@@ -63,7 +63,7 @@ namespace psychic_ui {
         }
 
     protected:
-        // Children, which we own
+        // Children: our child list owns them
         Icon  *_icon{nullptr};
         Label *_title{nullptr};
 

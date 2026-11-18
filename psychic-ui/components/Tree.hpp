@@ -26,7 +26,7 @@ namespace psychic_ui {
     protected:
         friend class TreeNode;
 
-        // Children, which we own
+        // Children: our child list owns them
         Div   *_indent{nullptr};
         Icon  *_disclosure{nullptr};
         Icon  *_icon{nullptr};
@@ -118,7 +118,7 @@ namespace psychic_ui {
     protected:
         friend class Tree;
 
-        TreeRow *_row{nullptr};      // Children, which we own
+        TreeRow *_row{nullptr};      // Children: our child list owns them
         Div     *_children{nullptr};
         int     _level{0};
         bool    _expanded{false};

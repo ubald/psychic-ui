@@ -32,7 +32,7 @@ namespace psychic_ui {
         static constexpr float arrowSize = 5.0f;
 
     protected:
-        Label *_label{nullptr}; // The `.text` part, a child, which we own
+        Label *_label{nullptr}; // The `.text` part, a child: our child list owns it
 
         void draw(SkCanvas *canvas) override;
     };

@@ -18,8 +18,8 @@ namespace psychic_ui {
         void setLabel(const std::string &label) override;
 
     protected:
-        Shape *_box{nullptr};   // The `.box` part, a child, which we own
-        Label *_label{nullptr}; // The `.label` part, a child, which we own
+        Shape *_box{nullptr};   // The `.box` part, a child: our child list owns it
+        Label *_label{nullptr}; // The `.label` part, a child: our child list owns it
 
         /**
          * Nothing: the box, sized by its own style, carries the chrome

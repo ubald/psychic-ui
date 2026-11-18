@@ -19,12 +19,12 @@ namespace psychic_ui {
         MenuButtonSkinBase();
 
     protected:
-        Icon  *_check{nullptr};     // The `.check` part, a child, which we own
-        Icon  *_icon{nullptr};      // The `.icon` part, a child, which we own
-        Label *_label{nullptr};     // The `.label` part, a child, which we own
-        Label *_shortcut{nullptr};  // The `.shortcut` part, a child, which we own
-        Icon  *_indicator{nullptr}; // The `.indicator` part, a child, which we own
-        Icon  *_arrow{nullptr};     // The `.arrow` part, a child, which we own
+        Icon  *_check{nullptr};     // The `.check` part, a child: our child list owns it
+        Icon  *_icon{nullptr};      // The `.icon` part, a child: our child list owns it
+        Label *_label{nullptr};     // The `.label` part, a child: our child list owns it
+        Label *_shortcut{nullptr};  // The `.shortcut` part, a child: our child list owns it
+        Icon  *_indicator{nullptr}; // The `.indicator` part, a child: our child list owns it
+        Icon  *_arrow{nullptr};     // The `.arrow` part, a child: our child list owns it
 
         void added() override;
         void itemChanged() override;

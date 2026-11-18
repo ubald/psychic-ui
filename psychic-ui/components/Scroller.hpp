@@ -12,7 +12,7 @@ namespace psychic_ui {
     protected:
         std::shared_ptr<Div>       _content{nullptr};
         std::shared_ptr<Div>       _viewport{nullptr};
-        ScrollBar            *_horizontalScrollBar{nullptr}; // Children, which we own
+        ScrollBar            *_horizontalScrollBar{nullptr}; // Children: our child list owns them
         ScrollBar            *_verticalScrollBar{nullptr};
     };
 }

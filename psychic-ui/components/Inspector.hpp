@@ -43,7 +43,7 @@ namespace psychic_ui {
         Div &value() const { return *_value; }
 
     protected:
-        // Children, which we own
+        // Children: our child list owns them
         Label *_label{nullptr};
         Div   *_value{nullptr};
         Label *_text{nullptr};
@@ -73,7 +73,7 @@ namespace psychic_ui {
         Div &body() const { return *_body; }
 
     protected:
-        // Children, which we own
+        // Children: our child list owns them
         Div   *_header{nullptr};
         Label *_title{nullptr};
         Div   *_body{nullptr};
@@ -118,7 +118,7 @@ namespace psychic_ui {
         InspectorSection &section(const std::string &title = "");
 
     protected:
-        // Children, which we own
+        // Children: our child list owns them
         Div   *_heading{nullptr};
         Div   *_media{nullptr};
         Icon  *_icon{nullptr};

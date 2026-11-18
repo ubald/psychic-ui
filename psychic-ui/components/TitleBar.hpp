@@ -18,8 +18,8 @@ namespace psychic_ui {
         WindowControls &controls() const { return *_controls; }
 
     protected:
-        WindowControls *_controls{nullptr}; // A child, which we own
-        Label          *_label{nullptr};    // A child, which we own
+        WindowControls *_controls{nullptr}; // A child: our child list owns it
+        Label          *_label{nullptr};    // A child: our child list owns it
         void addedToRender() override;
     };
 }

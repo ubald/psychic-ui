@@ -87,7 +87,7 @@ namespace psychic_ui {
         Sidebar *sidebar() const;
 
     protected:
-        // Children, which we own
+        // Children: our child list owns them
         Icon  *_icon{nullptr};
         Label *_label{nullptr};
         Label *_count{nullptr};
@@ -117,7 +117,7 @@ namespace psychic_ui {
         }
 
     protected:
-        Label *_heading{nullptr}; // A child, which we own
+        Label *_heading{nullptr}; // A child: our child list owns it
     };
 
     /**
@@ -138,7 +138,7 @@ namespace psychic_ui {
         void setMark(const std::string &mark);
 
     protected:
-        // Children, which we own
+        // Children: our child list owns them
         WindowControls *_controls{nullptr};
         Div            *_brand{nullptr};
         Label          *_mark{nullptr};
@@ -208,8 +208,8 @@ namespace psychic_ui {
         PSYCHIC_UI_EVENT(onChange, changed)
 
     protected:
-        SidebarHeader *_header{nullptr};   // A child, which we own
-        Div           *_sections{nullptr}; // A child, which we own
+        SidebarHeader *_header{nullptr};   // A child: our child list owns it
+        Div           *_sections{nullptr}; // A child: our child list owns it
 
         bool selectionFollowsFocus() const override { return false; }
         void selectionUpdated() override;

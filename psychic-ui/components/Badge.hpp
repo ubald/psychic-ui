@@ -38,7 +38,7 @@ namespace psychic_ui {
         }
 
     protected:
-        Label *_label{nullptr}; // A child, which we own
+        Label *_label{nullptr}; // A child: our child list owns it
         Tone  _tone{Tone::Neutral};
 
         void updateTone(Tone tone);
@@ -143,7 +143,7 @@ namespace psychic_ui {
         PSYCHIC_UI_EVENT(onDismiss, dismissed)
 
     protected:
-        // Children, which we own
+        // Children: our child list owns them
         Icon  *_icon{nullptr};
         Label *_label{nullptr};
         Icon  *_remove{nullptr};

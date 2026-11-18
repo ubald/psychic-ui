@@ -91,7 +91,7 @@ namespace psychic_ui {
         std::string              _placeholder{};
         std::weak_ptr<Menu>      _menu{};
 
-        // Children, which we own
+        // Children: our child list owns them
         Label *_value{nullptr};
         Icon  *_chevron{nullptr};
 

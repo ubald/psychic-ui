@@ -81,7 +81,7 @@ namespace psychic_ui {
         Div &trailing();
 
     protected:
-        // Children, which we own; the leading and trailing parts are made when first needed
+        // Children: our child list owns them; the leading and trailing parts are made when first needed
         Div   *_leading{nullptr};
         Label *_title{nullptr};
         Label *_secondary{nullptr};

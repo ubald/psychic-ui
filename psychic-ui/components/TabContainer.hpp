@@ -26,7 +26,7 @@ namespace psychic_ui {
         void updateSelected(const T &item);
         void onTabChanged(const T &item);
         ComponentCallback _getTabComponentCallback{nullptr};
-        Tabs<T>              *_tabs{nullptr}; // A child, which we own
+        Tabs<T>              *_tabs{nullptr}; // A child: our child list owns it
         std::shared_ptr<Div> _panel;
     };
 
