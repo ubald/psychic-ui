@@ -411,7 +411,7 @@ namespace psychic_ui {
                     std::cout << "Layout dirty!\n";
                 }
                 #endif
-                YGNodeCalculateLayout(_yogaNode, width, height, YGDirectionLTR);
+                YGNodeCalculateLayout(_yogaNode, static_cast<float>(width), static_cast<float>(height), YGDirectionLTR);
                 layoutUpdated();
             }
         };
@@ -534,10 +534,7 @@ namespace psychic_ui {
 
         // Performance
         ++frames;
-        const double delta = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::high_resolution_clock::now()
-            - lastReport
-        ).count();
+        const double delta = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - lastReport).count();
         if (delta >= 500) {
             lastReport = std::chrono::high_resolution_clock::now();
             fps        = frames / (delta / 1000.0f);

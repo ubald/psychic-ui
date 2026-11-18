@@ -36,7 +36,7 @@ namespace {
                     ++column;
                 }
             }
-            return SkRect::MakeXYWH(column * 10.0f, line * 20.0f, 0.0f, 20.0f);
+            return SkRect::MakeXYWH(static_cast<float>(column) * 10.0f, static_cast<float>(line) * 20.0f, 0.0f, 20.0f);
         }
 
         unsigned int indexAt(float x, float y) const override {

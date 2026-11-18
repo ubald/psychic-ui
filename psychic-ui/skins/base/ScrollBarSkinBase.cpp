@@ -17,11 +17,11 @@ namespace psychic_ui {
     }
 
     SkRect ScrollBarSkinBase::trackRect() const {
-        return SkRect::MakeXYWH(_track->x(), _track->y(), _track->getWidth(), _track->getHeight());
+        return SkRect::Make(SkIRect::MakeXYWH(_track->x(), _track->y(), _track->getWidth(), _track->getHeight()));
     }
 
     SkRect ScrollBarSkinBase::thumbRect() const {
-        return SkRect::MakeXYWH(_thumb->x(), _thumb->y(), _thumb->getWidth(), _thumb->getHeight());
+        return SkRect::Make(SkIRect::MakeXYWH(_thumb->x(), _thumb->y(), _thumb->getWidth(), _thumb->getHeight()));
     }
 
     void ScrollBarSkinBase::added() {

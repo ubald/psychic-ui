@@ -271,7 +271,7 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
         REQUIRE(lines >= 2);
         // Lines start on words
         for (unsigned int line = 1; line < lines; ++line) {
-            const unsigned int start = layout.indexAt(0.0f, (line + 0.5f) * LINE_HEIGHT);
+            const unsigned int start = layout.indexAt(0.0f, (static_cast<float>(line) + 0.5f) * LINE_HEIGHT);
             REQUIRE(start > 0);
             REQUIRE(str[start - 1] == ' ');
             REQUIRE(lineOf(start) == line);

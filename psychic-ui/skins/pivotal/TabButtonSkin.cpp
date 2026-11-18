@@ -14,7 +14,8 @@ namespace psychic_ui {
         if (color.alpha() == 0) {
             return;
         }
-        const SkRect  line = SkRect::MakeLTRB(4.0f, _height - 2.0f, _width - 4.0f, _height);
+        const SkRect  bounds = SkRect::Make(SkIRect::MakeWH(_width, _height));
+        const SkRect  line   = SkRect::MakeLTRB(bounds.left() + 4.0f, bounds.bottom() - 2.0f, bounds.right() - 4.0f, bounds.bottom());
         const SkVector top{1.0f, 1.0f};
         const SkVector bottom{0.0f, 0.0f};
         const std::array<SkVector, 4> radii{top, top, bottom, bottom};

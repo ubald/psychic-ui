@@ -95,7 +95,7 @@ TEST_CASE("The caret is painted in caretColor, else in the text's color", "[text
     s.render();
     s.window->requestFocus(&text);
     s.render();
-    const int middle = static_cast<int>(text.getHeight() / 2.0f);
+    const int middle = text.getHeight() / 2;
     CHECK(s.at(text, 0, middle) == SkColorSetRGB(0x00, 0x00, 0xFF));
 
     text.caretColor(rgb(0xFF0000));
@@ -126,7 +126,7 @@ TEST_CASE("A hovered button's label blends its color without building a paragrap
     window->updateAnimations(1000ms);
     int x = 0;
     int y = 0;
-    button.localToGlobal(x, y, static_cast<int>(button.getWidth() / 2.0f), static_cast<int>(button.getHeight() / 2.0f));
+    button.localToGlobal(x, y, button.getWidth() / 2, button.getHeight() / 2);
     window->handleMouseMove({.x = static_cast<float>(x), .y = static_cast<float>(y)}, false);
     system.layout();
     std::vector<Color> colors{};

@@ -56,7 +56,7 @@ namespace {
         int x = 0;
         int y = 0;
         div.localToGlobal(x, y);
-        return static_cast<float>(x) + (div.getWidth() / 2.0f);
+        return static_cast<float>(x) + (static_cast<float>(div.getWidth()) / 2.0f);
     }
 
     float left(const Div &div) {

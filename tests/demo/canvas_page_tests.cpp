@@ -87,7 +87,7 @@ namespace {
         auto *tools     = f.find<ToolBar>();
         REQUIRE(inspector != nullptr);
         REQUIRE(tools != nullptr);
-        const float width = f.page->getWidth();
+        const auto width = static_cast<float>(f.page->getWidth());
         CHECK(inspector->x() + inspector->getWidth() == width - theme.metrics.space(4));
         CHECK(std::abs(tools->x() + (tools->getWidth() / 2.0f) - (width / 2.0f)) < 1);
         CHECK(tools->parent()->y() + tools->parent()->getHeight() == f.page->getHeight() - theme.metrics.space(5));

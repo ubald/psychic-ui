@@ -326,15 +326,14 @@ namespace psychic_ui {
     // region Hit Tests
 
     bool Div::contains(const float x, const float y) const {
-        return x >= _x && x < _x + _width && y >= _y && y < _y + _height;
+        return SkRect::Make(SkIRect::MakeXYWH(_x, _y, _width, _height)).contains(x, y);
     }
 
     bool Div::boundsContains(const float x, const float y) const {
         if (_computedStyle.overflow() == Overflow::Visible) {
-            return x >= _boundsLeft && x < _boundsRight && y >= _boundsTop && y < _boundsBottom;
+            return SkRect::Make(SkIRect::MakeLTRB(_boundsLeft, _boundsTop, _boundsRight, _boundsBottom)).contains(x, y);
         }
-        // TODO: Keep right and bottom cached
-        return x >= _x && x < _x + _width && y >= _y && y < _y + _height;
+        return contains(x, y);
     }
 
     // endregion
@@ -918,7 +917,7 @@ namespace psychic_ui {
         _width  = (int) std::ceil(YGNodeLayoutGetWidth(_yogaNode));
         _height = (int) std::ceil(YGNodeLayoutGetHeight(_yogaNode));
 
-        _rect.setLTRB(_x, _y, _x + _width, _y + _height);
+        _rect = SkRect::Make(SkIRect::MakeXYWH(_x, _y, _width, _height));
         _roundRect.setRectRadii(_rect, _radii.data());
 
         _marginLeft   = YGNodeLayoutGetMargin(_yogaNode, YGEdgeLeft);
@@ -927,10 +926,10 @@ namespace psychic_ui {
         _marginBottom = YGNodeLayoutGetMargin(_yogaNode, YGEdgeBottom);
 
         _marginRect.setLTRB(
-            _x - _marginLeft,
-            _y - _marginTop,
-            _x + _width + _marginRight,
-            _y + _height + _marginBottom
+            _rect.left() - _marginLeft,
+            _rect.top() - _marginTop,
+            _rect.right() + _marginRight,
+            _rect.bottom() + _marginBottom
         );
 
         _borderLeft   = YGNodeLayoutGetBorder(_yogaNode, YGEdgeLeft);
@@ -939,10 +938,10 @@ namespace psychic_ui {
         _borderBottom = YGNodeLayoutGetBorder(_yogaNode, YGEdgeBottom);
 
         _paddedRect.setLTRB(
-            _x + YGNodeLayoutGetPadding(_yogaNode, YGEdgeLeft) + _borderLeft,
-            _y + YGNodeLayoutGetPadding(_yogaNode, YGEdgeTop) + _borderTop,
-            _x + _width - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeRight) + _borderRight),
-            _y + _height - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeBottom) + _borderBottom)
+            _rect.left() + YGNodeLayoutGetPadding(_yogaNode, YGEdgeLeft) + _borderLeft,
+            _rect.top() + YGNodeLayoutGetPadding(_yogaNode, YGEdgeTop) + _borderTop,
+            _rect.right() - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeRight) + _borderRight),
+            _rect.bottom() - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeBottom) + _borderBottom)
         );
 
         _drawBorder = _borderLeft != 0
@@ -974,7 +973,7 @@ namespace psychic_ui {
             _boundsBottom = std::max(_boundsBottom, _y + child->boundsBottom() + endPaddingY);
         }
         const SkRect previousBoundsRect = _boundsRect;
-        _boundsRect.setLTRB(_boundsLeft, _boundsTop, _boundsRight, _boundsBottom);
+        _boundsRect = SkRect::Make(SkIRect::MakeLTRB(_boundsLeft, _boundsTop, _boundsRight, _boundsBottom));
 
         layoutReady = true;
 
@@ -1041,7 +1040,7 @@ namespace psychic_ui {
 
         clip(canvas);
 
-        canvas->translate(_scrollX, _scrollY);
+        canvas->translate(static_cast<float>(_scrollX), static_cast<float>(_scrollY));
 
         // region Debug
         #ifdef DEBUG_LAYOUT
@@ -1076,10 +1075,10 @@ namespace psychic_ui {
                 paint.setColor(0x7F00FFFF);
                 canvas->drawRect(
                     SkRect{
-                        _x + _borderLeft + 0.5f,
-                        _y + _borderTop + 0.5f,
-                        _x + _rect.width() - _borderRight - 0.5f,
-                        _y + _rect.height() - _borderBottom - 0.5f
+                        _rect.left() + _borderLeft + 0.5f,
+                        _rect.top() + _borderTop + 0.5f,
+                        _rect.right() - _borderRight - 0.5f,
+                        _rect.bottom() - _borderBottom - 0.5f
                     }, paint
                 );
             }
@@ -1087,17 +1086,17 @@ namespace psychic_ui {
             if (_mouseDown) {
                 paint.setColor(0x30FFFFFF);
                 paint.setStrokeWidth(2);
-                canvas->drawRect({_x + 1.f, _y + 1.f, _x + _width - 1.f, _y + _height - 1.f}, paint);
+                canvas->drawRect(_rect.makeInset(1.0f, 1.0f), paint);
             } else if (_mouseOver) {
                 paint.setColor(0x10FFFFFF);
                 paint.setStrokeWidth(2);
-                canvas->drawRect({_x + 1.f, _y + 1.f, _x + _width - 1.f, _y + _height - 1.f}, paint);
+                canvas->drawRect(_rect.makeInset(1.0f, 1.0f), paint);
             }
         }
         #endif
         // endregion
 
-        canvas->translate(_x, _y);
+        canvas->translate(static_cast<float>(_x), static_cast<float>(_y));
 
         // Back-to-front: children are in document order, the last one is on top, except that those sliding to their
         // layout places go over those that don't (rows crossing as they are sorted, or passing over children fading in)
@@ -1175,7 +1174,7 @@ namespace psychic_ui {
         dots.reserve(static_cast<size_t>(columns) * rows);
         for (int row = 0; row < rows; ++row) {
             for (int column = 0; column < columns; ++column) {
-                dots.push_back({firstX + (column * spacing), firstY + (row * spacing)});
+                dots.push_back({firstX + (static_cast<float>(column) * spacing), firstY + (static_cast<float>(row) * spacing)});
             }
         }
         // Round points are discs of the stroke's width, in one call

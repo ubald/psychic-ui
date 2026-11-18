@@ -284,7 +284,7 @@ TEST_CASE("Desk skins: the sidebar widens by touch", "[skins][desk][touch]") {
     Fixture f;
     auto &shell = f.window->appContainer().add<AppShell>();
     f.layout();
-    const float pointer = shell.sidebar().getWidth();
+    const auto pointer = static_cast<float>(shell.sidebar().getWidth());
     f.touch(true);
     CHECK(shell.sidebar().getWidth() > pointer);
     f.touch(false);

@@ -192,15 +192,17 @@ TEST_CASE("a button looks pressed and clicks for the left button only", "[div][e
     int x = 0;
     int y = 0;
     button.localToGlobal(x, y);
+    const auto inX = static_cast<float>(x + 10);
+    const auto inY = static_cast<float>(y + 10);
 
-    t.press(x + 10, y + 10, MouseButton::RIGHT);
+    t.press(inX, inY, MouseButton::RIGHT);
     CHECK_FALSE(button.selected());
-    t.release(x + 10, y + 10, MouseButton::RIGHT);
+    t.release(inX, inY, MouseButton::RIGHT);
     CHECK(clicks == 0);
 
-    t.press(x + 10, y + 10);
+    t.press(inX, inY);
     CHECK(button.selected());
-    t.release(x + 10, y + 10);
+    t.release(inX, inY);
     CHECK_FALSE(button.selected());
     CHECK(clicks == 1);
 }
