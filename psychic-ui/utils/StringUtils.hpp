@@ -15,8 +15,8 @@ namespace psychic_ui::string_utils {
     static inline void ltrim(std::string &s) {
         s.erase(
             s.begin(), std::ranges::find_if(
-                s, [](int ch) {
-                    return !std::isspace(ch);
+                s, [](int character) {
+                    return !std::isspace(character);
                 }
             ));
     }
@@ -25,8 +25,8 @@ namespace psychic_ui::string_utils {
     static inline void rtrim(std::string &s) {
         s.erase(
             std::ranges::find_if(
-                std::views::reverse(s), [](int ch) {
-                    return !std::isspace(ch);
+                std::views::reverse(s), [](int character) {
+                    return !std::isspace(character);
                 }
             ).base(), s.end());
     }
@@ -57,10 +57,10 @@ namespace psychic_ui::string_utils {
 
     static inline std::vector<std::string> split(const std::string &text, char delimiter, bool removeEmpties = true) {
         std::vector<std::string> result;
-        std::stringstream        ss;
-        ss.str(text);
+        std::stringstream        stream;
+        stream.str(text);
         std::string token;
-        while (std::getline(ss, token, delimiter)) {
+        while (std::getline(stream, token, delimiter)) {
             if (!removeEmpties || !token.empty()) {
                 result.push_back(token);
             }

@@ -96,7 +96,7 @@ namespace psychic_ui {
             const std::shared_ptr<detail::SignalCore<T...>> core = _core;
             const Emitting emitting{*core};
             // By index over a snapshot of the size: slots connected by a handler wait for the next emission
-            for (std::size_t i = 0, n = core->slots.size(); i < n; ++i) {
+            for (std::size_t i = 0, count = core->slots.size(); i < count; ++i) {
                 // The core keeps the slot, and only compacts once no emission runs, so the callback stays valid even
                 // if the slot disconnects itself
                 const Slot<T...> &slot = *core->slots[i];

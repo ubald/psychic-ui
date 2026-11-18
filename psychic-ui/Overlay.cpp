@@ -542,27 +542,27 @@ namespace psychic_ui {
     }
 
     MouseEventStatus Overlay::handleMouseButtonChange(const MouseEvent &event) {
-        return dispatch(event, [](Div &div, const MouseEvent &e) { return div.handleMouseButtonChange(e); });
+        return dispatch(event, [](Div &div, const MouseEvent &popupEvent) { return div.handleMouseButtonChange(popupEvent); });
     }
 
     MouseEventStatus Overlay::handleMousePress(const MouseEvent &event) {
-        return dispatch(event, [](Div &div, const MouseEvent &e) { return div.handleMousePress(e); });
+        return dispatch(event, [](Div &div, const MouseEvent &popupEvent) { return div.handleMousePress(popupEvent); });
     }
 
     MouseEventStatus Overlay::handleClick(const MouseEvent &event) {
-        return dispatch(event, [](Div &div, const MouseEvent &e) { return div.handleClick(e); });
+        return dispatch(event, [](Div &div, const MouseEvent &popupEvent) { return div.handleClick(popupEvent); });
     }
 
     MouseEventStatus Overlay::handleDoubleClick(const MouseEvent &event) {
-        return dispatch(event, [](Div &div, const MouseEvent &e) { return div.handleDoubleClick(e); });
+        return dispatch(event, [](Div &div, const MouseEvent &popupEvent) { return div.handleDoubleClick(popupEvent); });
     }
 
     MouseEventStatus Overlay::handleMouseScroll(const MouseEvent &event) {
-        return dispatch(event, [](Div &div, const MouseEvent &e) { return div.handleMouseScroll(e); });
+        return dispatch(event, [](Div &div, const MouseEvent &popupEvent) { return div.handleMouseScroll(popupEvent); });
     }
 
     MouseEventStatus Overlay::handleContextMenuRequest(const MouseEvent &event) {
-        return dispatch(event, [](Div &div, const MouseEvent &e) { return div.handleContextMenuRequest(e); });
+        return dispatch(event, [](Div &div, const MouseEvent &popupEvent) { return div.handleContextMenuRequest(popupEvent); });
     }
 
     // endregion
