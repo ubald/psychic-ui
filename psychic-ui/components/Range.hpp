@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstdint>
 #include <numbers>
 #include <sstream>
 #include <iomanip>
@@ -68,7 +69,7 @@ namespace psychic_ui {
         };
     }
 
-    enum class RangeMode {
+    enum class RangeMode : std::uint8_t {
         Linear,
         Logarithmic,
         LogarithmicInverse

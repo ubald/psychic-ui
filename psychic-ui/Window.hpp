@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstdint>
 #include <string>
 #include <chrono>
 #include <functional>
@@ -798,7 +799,7 @@ namespace psychic_ui {
 
         // region Touch
 
-        enum class TouchPhase {
+        enum class TouchPhase : std::uint8_t {
             None,     // No finger down
             Pending,  // Down, within the slop: a tap, a long press, a drag or a pan
             Pressing, // Pressing a mouse button (_touchButton): a drag or a long press

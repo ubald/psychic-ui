@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -30,19 +31,19 @@ namespace psychic_ui {
          * What an operation changed, as a bitmask (`Edit::Caret | Edit::Text`).
          * Every combination is an enumerator, so that `|` never makes a value the type doesn't name.
          */
-        enum class Edit : unsigned {
+        enum class Edit : std::uint8_t {
             None         = 0,
             Caret        = 1u << 0, // The anchor or the caret
             Text         = 1u << 1,
             TextAndCaret = Caret | Text
         };
 
-        enum class Direction { Backward, Forward };
+        enum class Direction : std::uint8_t { Backward, Forward };
 
         /**
          * How far a move or an erase goes
          */
-        enum class Unit {
+        enum class Unit : std::uint8_t {
             Grapheme, // A user-perceived character
             Word,     // The previous word's start, or the next word's end, past whitespace
             Line,     // The line above or below, in the column kept (needs the geometry)

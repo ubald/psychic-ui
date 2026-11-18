@@ -27,7 +27,7 @@ namespace psychic_ui {
      * What the user is pointing with, as the window last saw it (`Window::inputMode()`): a mouse or trackpad,
      * a finger on a touch screen, or a pen. Touch makes the style manager switch to touch density.
      */
-    enum class InputMode {
+    enum class InputMode : std::uint8_t {
         Pointer,
         Touch,
         Pen
@@ -99,7 +99,7 @@ namespace psychic_ui {
      *
      * Here we're using the set of keys from GLFW since it names less keys than SDL
      */
-    enum class Key {
+    enum class Key : std::uint8_t {
         UNKNOWN,
         SPACE,
         APOSTROPHE,
