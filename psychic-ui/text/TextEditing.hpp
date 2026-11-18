@@ -27,12 +27,14 @@ namespace psychic_ui {
     class TextEditing {
     public:
         /**
-         * What an operation changed, as a bitmask (`Edit::Caret | Edit::Text`)
+         * What an operation changed, as a bitmask (`Edit::Caret | Edit::Text`).
+         * Every combination is an enumerator, so that `|` never makes a value the type doesn't name.
          */
         enum class Edit : unsigned {
-            None  = 0,
-            Caret = 1u << 0, // The anchor or the caret
-            Text  = 1u << 1
+            None         = 0,
+            Caret        = 1u << 0, // The anchor or the caret
+            Text         = 1u << 1,
+            TextAndCaret = Caret | Text
         };
 
         enum class Direction { Backward, Forward };
