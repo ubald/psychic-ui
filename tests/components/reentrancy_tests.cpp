@@ -4,6 +4,7 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Button.hpp>
@@ -656,20 +657,42 @@ TEST_CASE("Reentrancy: window destroyed with focus and hover inside", "[reentran
     f.reset();
 }
 
-#define SELF_REMOVE_ON_CHANGE(NAME, TYPE, CTOR, KEYS)                                               \
-TEST_CASE("Reentrancy: " NAME, "[reentrancy]") {                                                    \
-    F f;                                                                                            \
-    auto &parent = f.window->appContainer().add<Div>();                                             \
-    auto &w      = parent.add<TYPE> CTOR;                                                           \
-    f.layout();                                                                                     \
-    w.onChange([&parent, &w]() { if (w.parent()) parent.remove(w); });                              \
-    f.key(Key::TAB);                                                                                \
-    for (Key k: KEYS) f.key(k);                                                                     \
-    f.layout();                                                                                     \
-    f.key(Key::TAB);                                                                                \
+namespace {
+    /**
+     * A component that removes itself from its parent when it changes, then the keys that change it
+     */
+    template<class T, class... Args>
+    void removeItselfOnChange(const std::vector<Key> &keys, Args &&...args) {
+        F f;
+        auto &parent = f.window->appContainer().add<Div>();
+        auto &w      = parent.add<T>(std::forward<Args>(args)...);
+        f.layout();
+        w.onChange([&parent, &w]() {
+            if (w.parent()) {
+                parent.remove(w);
+            }
+        });
+        f.key(Key::TAB);
+        for (const Key k: keys) {
+            f.key(k);
+        }
+        f.layout();
+        f.key(Key::TAB);
+    }
 }
-#define K(...) std::vector<Key>{__VA_ARGS__}
-SELF_REMOVE_ON_CHANGE("switch removes itself on change", Switch, ("s"), K(Key::SPACE, Key::ENTER))
-SELF_REMOVE_ON_CHANGE("checkbox removes itself on change", CheckBox, ("c"), K(Key::SPACE, Key::SPACE))
-SELF_REMOVE_ON_CHANGE("segmented control removes itself on change", SegmentedControl, (std::vector<Segment>{{"A"}, {"B"}, {"C"}}), K(Key::RIGHT, Key::RIGHT, Key::END))
-SELF_REMOVE_ON_CHANGE("number stepper removes itself on change", NumberStepper, (1.0), K(Key::UP, Key::UP, Key::DOWN))
+
+TEST_CASE("Reentrancy: switch removes itself on change", "[reentrancy]") {
+    removeItselfOnChange<Switch>({Key::SPACE, Key::ENTER}, std::string{"s"});
+}
+
+TEST_CASE("Reentrancy: checkbox removes itself on change", "[reentrancy]") {
+    removeItselfOnChange<CheckBox>({Key::SPACE, Key::SPACE}, std::string{"c"});
+}
+
+TEST_CASE("Reentrancy: segmented control removes itself on change", "[reentrancy]") {
+    removeItselfOnChange<SegmentedControl>({Key::RIGHT, Key::RIGHT, Key::END}, std::vector<Segment>{{"A"}, {"B"}, {"C"}});
+}
+
+TEST_CASE("Reentrancy: number stepper removes itself on change", "[reentrancy]") {
+    removeItselfOnChange<NumberStepper>({Key::UP, Key::UP, Key::DOWN}, 1.0);
+}
