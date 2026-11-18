@@ -14,7 +14,7 @@ namespace psychic_ui {
          */
         bool leadingNumber(const std::string &text, double &number) {
             const char *start = text.c_str();
-            char       *end   = nullptr;
+            char       *end   = nullptr; // NOLINT(misc-const-correctness): std::strtod's end is a char **
             number = std::strtod(start, &end);
             return end != start;
         }

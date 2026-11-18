@@ -41,6 +41,7 @@ namespace psychic_ui::showcase::compose {
             return &root;
         }
         for (const auto &child: root.children()) {
+            // NOLINTNEXTLINE(misc-const-correctness): returned as a mutable pointer, which the check misses
             if (Div *found = findIf(*child, accept)) {
                 return found;
             }

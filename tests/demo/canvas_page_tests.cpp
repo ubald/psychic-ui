@@ -54,6 +54,7 @@ namespace {
                     if (accept(child.get())) {
                         return child.get();
                     }
+                    // NOLINTNEXTLINE(misc-const-correctness): returned as a mutable pointer, which the check misses
                     if (Div *found = search(child.get())) {
                         return found;
                     }

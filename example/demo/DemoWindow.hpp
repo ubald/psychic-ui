@@ -427,6 +427,7 @@ namespace psychic_ui {
                 return &div;
             }
             for (const auto &child: div.children()) {
+                // NOLINTNEXTLINE(misc-const-correctness): returned as a mutable pointer, which the check misses
                 if (Div *found = scroller(*child)) {
                     return found;
                 }

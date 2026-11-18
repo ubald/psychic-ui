@@ -45,6 +45,7 @@ namespace {
             return &root;
         }
         for (const auto &child: root.children()) {
+            // NOLINTNEXTLINE(misc-const-correctness): returned as a mutable pointer, which the check misses
             if (Div *found = part(*child, className)) {
                 return found;
             }

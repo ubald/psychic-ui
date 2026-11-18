@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <memory>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
@@ -166,12 +167,7 @@ TEST_CASE("AppShell: the sidebar is one Tab stop, the current item else the firs
     s.layout();
     const auto items = s.shell.sidebar().items();
     const auto inSidebar = [&]() {
-        for (SidebarItem *item: items) {
-            if (item->hasFocus()) {
-                return item;
-            }
-        }
-        return static_cast<SidebarItem *>(nullptr);
+        return std::ranges::any_of(items, [](const SidebarItem *item) { return item->hasFocus(); });
     };
     // Tab until the focus is on an item or the button after the sidebar (the window controls come first)
     const auto tabToStop = [&](const Mod mod = Mod{}) {

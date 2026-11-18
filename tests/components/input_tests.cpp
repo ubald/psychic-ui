@@ -102,6 +102,7 @@ namespace {
                     return found;
                 }
             }
+            // NOLINTNEXTLINE(misc-const-correctness): returned as a mutable pointer, which the check misses
             if (T *found = part<T>(*child, className)) {
                 return found;
             }
