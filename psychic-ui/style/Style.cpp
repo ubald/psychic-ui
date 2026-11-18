@@ -52,11 +52,11 @@ namespace psychic_ui {
     }
 
     PropertyMask Transition::properties() const {
-        PropertyMask m;
+        PropertyMask result;
         for (const Entry &entry: std::span{_entries}.first(_count)) {
-            m |= entry.properties;
+            result |= entry.properties;
         }
-        return m;
+        return result;
     }
 
     std::ostream &operator<<(std::ostream &os, const Transition &transition) {

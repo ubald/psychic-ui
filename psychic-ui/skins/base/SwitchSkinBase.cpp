@@ -45,9 +45,9 @@ namespace psychic_ui {
     }
 
     void SwitchSkinBase::setThumbPosition(const float position) {
-        const float p = std::clamp(position, 0.0f, 1.0f);
-        _before->grow(p);
-        _after->grow(1.0f - p);
+        const float clamped = std::clamp(position, 0.0f, 1.0f);
+        _before->grow(clamped);
+        _after->grow(1.0f - clamped);
     }
 
     float SwitchSkinBase::positionAt(const int x, const int /*y*/) const {

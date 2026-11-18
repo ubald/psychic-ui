@@ -258,8 +258,8 @@ namespace psychic_ui {
     void Tree::collapsed(TreeNode &node) {
         // Whether a row is hidden in the node: one of its descendants
         const auto inside = [&node](const Div *div) {
-            for (const Div *d = div ? div->parent() : nullptr; d; d = d->parent()) {
-                if (d == node._children) {
+            for (const Div *ancestor = div ? div->parent() : nullptr; ancestor; ancestor = ancestor->parent()) {
+                if (ancestor == node._children) {
                     return true;
                 }
             }
@@ -297,8 +297,8 @@ namespace psychic_ui {
                 case Key::LEFT:
                     if (node->hasChildren() && node->expanded()) {
                         node->expanded(false);
-                    } else if (const TreeNode *up = node->parentNode()) {
-                        moveTo(&up->row());
+                    } else if (const TreeNode *parent = node->parentNode()) {
+                        moveTo(&parent->row());
                     }
                     return true;
                 case Key::ENTER:

@@ -89,8 +89,8 @@ namespace {
 
         void layout() { systemWindow.layout(); }
 
-        void touch(const bool on) {
-            window->handleInputModeChange(on ? InputMode::Touch : InputMode::Pointer);
+        void touch(const bool enabled) {
+            window->handleInputModeChange(enabled ? InputMode::Touch : InputMode::Pointer);
             layout();
         }
     };
@@ -112,24 +112,24 @@ TEST_CASE("Desk skins: the set installs with its dark theme, its light one for a
     CHECK(manager.theme().name == themes::deskDark.name);
 
     // A window follows the system with the set's pair
-    const Fixture f;
-    CHECK(f.window->theme().name == themes::deskDark.name);
-    f.window->handleColorSchemeChange(ColorScheme::Light);
-    CHECK(f.window->theme().name == themes::deskLight.name);
-    f.window->handleColorSchemeChange(ColorScheme::Dark);
-    CHECK(f.window->theme().name == themes::deskDark.name);
-    f.window->handleColorSchemeChange(ColorScheme::Unknown);
+    const Fixture fixture;
+    CHECK(fixture.window->theme().name == themes::deskDark.name);
+    fixture.window->handleColorSchemeChange(ColorScheme::Light);
+    CHECK(fixture.window->theme().name == themes::deskLight.name);
+    fixture.window->handleColorSchemeChange(ColorScheme::Dark);
+    CHECK(fixture.window->theme().name == themes::deskDark.name);
+    fixture.window->handleColorSchemeChange(ColorScheme::Unknown);
 }
 
 TEST_CASE("Desk skins: a picked theme follows the scheme across sets", "[skins][desk][theme]") {
-    const Fixture f;
-    f.window->theme(themes::deskLight);
-    f.window->skinSet<FloatSkins>();
-    CHECK(f.window->theme().name == themes::floatLight.name);
-    f.window->theme(themes::pivotalDark);
-    f.window->skinSet<DeskSkins>();
-    CHECK(f.window->theme().name == themes::deskDark.name);
-    CHECK_FALSE(f.window->followsSystemTheme());
+    const Fixture fixture;
+    fixture.window->theme(themes::deskLight);
+    fixture.window->skinSet<FloatSkins>();
+    CHECK(fixture.window->theme().name == themes::floatLight.name);
+    fixture.window->theme(themes::pivotalDark);
+    fixture.window->skinSet<DeskSkins>();
+    CHECK(fixture.window->theme().name == themes::deskDark.name);
+    CHECK_FALSE(fixture.window->followsSystemTheme());
 }
 
 TEST_CASE("Desk skins: its themes are Pivotal's colors at desk sizes", "[skins][desk][theme]") {
@@ -150,19 +150,19 @@ TEST_CASE("Desk skins: its themes are Pivotal's colors at desk sizes", "[skins][
         CHECK(theme->metrics.motion.fast == themes::pivotalDark.metrics.motion.fast);
         CHECK(theme->metrics.motion.medium == themes::pivotalDark.metrics.motion.medium);
 
-        const Metrics &m = theme->metrics;
-        CHECK(m.radius.button == 4); // Not pills
-        CHECK(m.radius.page == 0);   // Flush panes
-        CHECK(m.frameInset == 0);
-        CHECK(m.pointer.controlMd == 24);
-        CHECK(m.pointer.rowSm == 26);
-        CHECK(m.pointer.hitSlop == 0);
-        CHECK(m.pointer.iconStep == 0);
-        CHECK(m.touch.controlMd == 40);
-        CHECK(m.touch.rowSm == 40);
-        CHECK(m.touch.textStep == 1);
-        CHECK(m.touch.iconStep == 2);
-        CHECK(m.touch.rowSm + (2 * m.touch.hitSlop) >= 44);
+        const Metrics &metrics = theme->metrics;
+        CHECK(metrics.radius.button == 4); // Not pills
+        CHECK(metrics.radius.page == 0);   // Flush panes
+        CHECK(metrics.frameInset == 0);
+        CHECK(metrics.pointer.controlMd == 24);
+        CHECK(metrics.pointer.rowSm == 26);
+        CHECK(metrics.pointer.hitSlop == 0);
+        CHECK(metrics.pointer.iconStep == 0);
+        CHECK(metrics.touch.controlMd == 40);
+        CHECK(metrics.touch.rowSm == 40);
+        CHECK(metrics.touch.textStep == 1);
+        CHECK(metrics.touch.iconStep == 2);
+        CHECK(metrics.touch.rowSm + (2 * metrics.touch.hitSlop) >= 44);
         CHECK(theme->type.sm.size == 11.5f);
     }
 }
@@ -183,37 +183,37 @@ TEST_CASE("Desk skins: every skin is the default set's", "[skins][desk][registry
 }
 
 TEST_CASE("Desk skins: its rules go over the default set's", "[skins][desk]") {
-    Fixture f;
-    auto &shell  = f.window->appContainer().add<AppShell>();
+    Fixture fixture;
+    auto &shell  = fixture.window->appContainer().add<AppShell>();
     auto &button = shell.page().add<Button>("Button");
     auto &input  = shell.page().add<TextInput>("Text");
-    f.layout();
+    fixture.layout();
     CHECK(button.getHeight() == 24);
     CHECK(button.computedStyle().borderRadius() == 4); // Not a pill
     CHECK(input.getHeight() == 24);
     CHECK(input.computedStyle().fontSize() == 12);
 
     // Flush panes: no inset, no corners, the sidebar on the surface behind a hairline
-    const Palette &p = themes::deskDark.palette;
+    const Palette &palette = themes::deskDark.palette;
     CHECK(shell.page().computedStyle().borderRadius() == 0);
     CHECK(shell.page().x() == 0);
     CHECK(shell.page().y() == 0);
     CHECK(shell.page().parent()->x() == shell.sidebar().getWidth());
     CHECK(shell.sidebar().getWidth() == themes::deskDark.metrics.sidebarWidth);
     CHECK(shell.sidebar().computedStyle().borderRight() == 1);
-    CHECK(shell.sidebar().computedStyle().backgroundColor() == p.surface);
+    CHECK(shell.sidebar().computedStyle().backgroundColor() == palette.surface);
 
     // The default set, for comparison
-    f.window->skinSet<PivotalSkins>();
-    f.layout();
+    fixture.window->skinSet<PivotalSkins>();
+    fixture.layout();
     CHECK(button.getHeight() == 28);
     CHECK(button.computedStyle().borderRadius() == 999);
 }
 
 TEST_CASE("Desk skins: the slider is a value field, the value inside it", "[skins][desk][range]") {
-    Fixture f;
-    auto &range = f.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.25f, nullptr).width(200);
-    f.layout();
+    Fixture fixture;
+    auto &range = fixture.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.25f, nullptr).width(200);
+    fixture.layout();
     REQUIRE(is<RangeSkinBase>(range.skin()));
     const Div *track = part(*range.skin(), "track");
     const Div *fill  = part(*range.skin(), "fill");
@@ -238,13 +238,13 @@ TEST_CASE("Desk skins: the slider is a value field, the value inside it", "[skin
 }
 
 TEST_CASE("Desk skins: touch switches to touch sizes, and back", "[skins][desk][touch]") {
-    Fixture f;
-    auto &button   = f.window->appContainer().add<Button>("Button");
-    auto &checkBox = f.window->appContainer().add<CheckBox>("Check");
-    auto &range    = f.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.5f, nullptr).width(200);
-    auto &toggle   = f.window->appContainer().add<Switch>("Switch");
-    auto &swatches = f.window->appContainer().add<ColorSwatches>(std::vector<Color>{rgb(0xFF0000), rgb(0x00FF00)});
-    f.layout();
+    Fixture fixture;
+    auto &button   = fixture.window->appContainer().add<Button>("Button");
+    auto &checkBox = fixture.window->appContainer().add<CheckBox>("Check");
+    auto &range    = fixture.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.5f, nullptr).width(200);
+    auto &toggle   = fixture.window->appContainer().add<Switch>("Switch");
+    auto &swatches = fixture.window->appContainer().add<ColorSwatches>(std::vector<Color>{rgb(0xFF0000), rgb(0x00FF00)});
+    fixture.layout();
     const Div *box    = part(*checkBox.skin(), "box");
     const Div *thumb  = part(*range.skin(), "thumb");
     const Div *track  = part(*toggle.skin(), "track");
@@ -264,8 +264,8 @@ TEST_CASE("Desk skins: touch switches to touch sizes, and back", "[skins][desk][
     CHECK(button.computedStyle().hitSlop() == 0);
     CHECK(checkBox.computedStyle().hitSlop() == 0);
 
-    f.touch(true);
-    CHECK(f.window->styleManager()->density() == Density::Touch);
+    fixture.touch(true);
+    CHECK(fixture.window->styleManager()->density() == Density::Touch);
     CHECK(button.getHeight() == 40);
     CHECK(box->getHeight() == 20);
     CHECK(range.getHeight() == 32);
@@ -283,7 +283,7 @@ TEST_CASE("Desk skins: touch switches to touch sizes, and back", "[skins][desk][
     CHECK(swatch->getHeight() + (2 * swatches.computedStyle().hitSlop()) >= 44);
 
     // Back with the next mouse motion
-    f.touch(false);
+    fixture.touch(false);
     CHECK(button.getHeight() == 24);
     CHECK(box->getHeight() == 14);
     CHECK(range.getHeight() == 18);
@@ -292,13 +292,13 @@ TEST_CASE("Desk skins: touch switches to touch sizes, and back", "[skins][desk][
 }
 
 TEST_CASE("Desk skins: the sidebar widens by touch", "[skins][desk][touch]") {
-    Fixture f;
-    auto &shell = f.window->appContainer().add<AppShell>();
-    f.layout();
+    Fixture fixture;
+    auto &shell = fixture.window->appContainer().add<AppShell>();
+    fixture.layout();
     const auto pointer = static_cast<float>(shell.sidebar().getWidth());
-    f.touch(true);
+    fixture.touch(true);
     CHECK(shell.sidebar().getWidth() > pointer);
-    f.touch(false);
+    fixture.touch(false);
     CHECK(shell.sidebar().getWidth() == pointer);
 }
 

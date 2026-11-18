@@ -67,7 +67,9 @@ namespace psychic_ui {
         // its input mode last.
         styleManager()->density(Density::Pointer);
         tag("Window");
-        setWindowSize(1440, 900);
+        constexpr int initialWidth  = 1440;
+        constexpr int initialHeight = 900;
+        setWindowSize(initialWidth, initialHeight);
 
         _inlineStyle.position(Position::Absolute)
             .overflow(Overflow::Hidden);
@@ -75,8 +77,8 @@ namespace psychic_ui {
         app = &add<Div>()
             .id("app")
             .position(Position::Absolute)
-            .width(100_pct)
-            .height(100_pct)
+            .width(Full)
+            .height(Full)
             .overflow(Overflow::Hidden);
 
         _overlay = &add<Overlay>();
@@ -558,11 +560,13 @@ namespace psychic_ui {
         _animationClockFresh = false; // Tweens started from now on start with the next frame
 
         // Performance
+        constexpr double reportEvery = 500;     // Milliseconds between two counts
+        constexpr float  perSecond   = 1000.0f; // Milliseconds in a second
         ++frames;
         const double delta = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - lastReport).count();
-        if (delta >= 500) {
+        if (delta >= reportEvery) {
             lastReport = std::chrono::high_resolution_clock::now();
-            fps        = frames / (delta / 1000.0f);
+            fps        = frames / (delta / perSecond);
             frames     = 0;
         }
     }
@@ -1138,9 +1142,9 @@ namespace psychic_ui {
         }
         updateGestures(time); // A long press may be due first
 
-        const float dx = x - _touchX;
-        const float dy = y - _touchY;
-        const float dt = seconds(time - _touchTime);
+        const float dx      = x - _touchX;
+        const float dy      = y - _touchY;
+        const float elapsed = seconds(time - _touchTime);
         _touchX    = x;
         _touchY    = y;
         _touchTime = time;
@@ -1174,10 +1178,12 @@ namespace psychic_ui {
 
             case TouchPhase::Panning:
                 panBy(dx, dy);
-                if (dt > 0) {
+                if (elapsed > 0) {
                     // Mostly the latest movement's speed, smoothed a little
-                    _panVelocityX = (0.6f * dx / dt) + (0.4f * _panVelocityX);
-                    _panVelocityY = (0.6f * dy / dt) + (0.4f * _panVelocityY);
+                    constexpr float latest   = 0.6f;
+                    constexpr float smoothed = 0.4f;
+                    _panVelocityX = (latest * dx / elapsed) + (smoothed * _panVelocityX);
+                    _panVelocityY = (latest * dy / elapsed) + (smoothed * _panVelocityY);
                 }
                 break;
 
@@ -1240,14 +1246,14 @@ namespace psychic_ui {
         if (!_flinging) {
             return;
         }
-        const float dt = seconds(now - _flingTime);
-        if (dt <= 0) {
+        const float elapsed = seconds(now - _flingTime);
+        if (elapsed <= 0) {
             return;
         }
         _flingTime = now;
         // The velocity decays exponentially, v(t) = v0 * flingDecay^(t in ms), so the distance is its integral
         const float rate     = -std::log(flingDecay) * 1000.0f; // Per second
-        const float kept     = std::exp(-rate * dt);
+        const float kept     = std::exp(-rate * elapsed);
         const float distance = (1.0f - kept) / rate;
         const bool  blocked  = panBy(_panVelocityX * distance, _panVelocityY * distance);
         _panVelocityX *= kept;
@@ -1272,8 +1278,8 @@ namespace psychic_ui {
 
         // Build the path
         std::vector<Div *> path{};
-        for (Div *c = component; c != nullptr; c = c->parent()) {
-            path.insert(path.begin(), c);
+        for (Div *ancestor = component; ancestor != nullptr; ancestor = ancestor->parent()) {
+            path.insert(path.begin(), ancestor);
         }
 
         // A disabled or hidden div doesn't take the focus (a press on a disabled field, a popup giving it back to a
@@ -1413,98 +1419,98 @@ namespace psychic_ui {
     }
 
     MouseEventStatus Window::handleMouseButtonChange(const MouseEvent &event) {
-        MouseEvent e = event;
+        MouseEvent changed = event;
 
         // Control and the left button is the right one, from its press to its release (macOS)
-        if (e.button == MouseButton::LEFT) {
-            const Mod &mod = e.modifiers;
-            if (e.down && _ctrlClickIsRightClick && e.source != InputMode::Touch && mod.ctrl && !mod.shift && !mod.alt
+        if (changed.button == MouseButton::LEFT) {
+            const Mod &mod = changed.modifiers;
+            if (changed.down && _ctrlClickIsRightClick && changed.source != InputMode::Touch && mod.ctrl && !mod.shift && !mod.alt
                 && !mod.super) {
-                e.button       = MouseButton::RIGHT;
+                changed.button = MouseButton::RIGHT;
                 _ctrlClickHeld = true;
-            } else if (!e.down && _ctrlClickHeld) {
-                e.button       = MouseButton::RIGHT;
+            } else if (!changed.down && _ctrlClickHeld) {
+                changed.button = MouseButton::RIGHT;
                 _ctrlClickHeld = false;
             }
         }
 
         // A press hides the tooltip (a touch long press shows it after this) and closes the popups it is outside of:
         // when that closed a modal one, the press (and its release) went to it
-        if (e.down) {
+        if (changed.down) {
             hideTooltip(false);
             _tooltipSuppressed = true;
-            if (_overlay->pressOutside(static_cast<int>(e.x), static_cast<int>(e.y), e.button == MouseButton::RIGHT)) {
+            if (_overlay->pressOutside(static_cast<int>(changed.x), static_cast<int>(changed.y), changed.button == MouseButton::RIGHT)) {
                 _pressSwallowed  = true;
-                _swallowedButton = e.button;
+                _swallowedButton = changed.button;
                 return MouseEventStatus::Handled;
             }
-        } else if (_pressSwallowed && e.button == _swallowedButton) {
+        } else if (_pressSwallowed && changed.button == _swallowedButton) {
             _pressSwallowed = false;
             return MouseEventStatus::Handled;
         }
 
         // Through hit slop, the press and its release land on the target's edge
-        if (e.down) {
-            float targetX = e.x;
-            float targetY = e.y;
-            Div  *target  = hitSlopTarget(e.x, e.y, targetX, targetY);
+        if (changed.down) {
+            float targetX = changed.x;
+            float targetY = changed.y;
+            Div  *target  = hitSlopTarget(changed.x, changed.y, targetX, targetY);
             _slopTarget   = target ? target->weak_from_this() : std::weak_ptr<Div>{};
-            e.x           = targetX;
-            e.y           = targetY;
+            changed.x     = targetX;
+            changed.y     = targetY;
         } else if (auto target = _slopTarget.lock()) {
             _slopTarget   = {};
-            float targetX = e.x;
-            float targetY = e.y;
-            if (hitSlopTarget(e.x, e.y, targetX, targetY) == target.get()) {
-                e.x = targetX;
-                e.y = targetY;
+            float targetX = changed.x;
+            float targetY = changed.y;
+            if (hitSlopTarget(changed.x, changed.y, targetX, targetY) == target.get()) {
+                changed.x = targetX;
+                changed.y = targetY;
             }
         }
-        e.windowX = e.x;
-        e.windowY = e.y;
+        changed.windowX = changed.x;
+        changed.windowY = changed.y;
 
-        if (e.down) {
-            _buttons |= static_cast<unsigned>(e.button);
+        if (changed.down) {
+            _buttons |= static_cast<unsigned>(changed.button);
             // Count the presses in a row, unless the backend did (SDL does, with the system's settings) or the touch
             // gestures
-            if (e.clickCount == 0) {
+            if (changed.clickCount == 0) {
                 const auto now   = std::chrono::steady_clock::now();
-                const bool again = e.button == _lastPressButton && now - _lastPress <= multiClickDelay
+                const bool again = changed.button == _lastPressButton && now - _lastPress <= multiClickDelay
                                    && std::hypot(event.x - _lastPressX, event.y - _lastPressY) <= multiClickDistance;
                 _clickCount = again ? _clickCount + 1 : 1;
                 _lastPress  = now;
             } else {
-                _clickCount = e.clickCount;
+                _clickCount = changed.clickCount;
             }
-            _lastPressButton = e.button;
-            _lastPressX      = event.x;
-            _lastPressY      = event.y;
-            e.clickCount     = _clickCount;
+            _lastPressButton   = changed.button;
+            _lastPressX        = event.x;
+            _lastPressY        = event.y;
+            changed.clickCount = _clickCount;
         } else {
-            _buttons &= ~static_cast<unsigned>(e.button);
+            _buttons &= ~static_cast<unsigned>(changed.button);
             // The release and its click count as their press did
-            e.clickCount = e.button == _lastPressButton ? _clickCount : 1;
+            changed.clickCount = changed.button == _lastPressButton ? _clickCount : 1;
         }
-        e.buttons = _buttons;
+        changed.buttons = _buttons;
 
-        auto res = Div::handleMouseButtonChange(e);
+        auto res = Div::handleMouseButtonChange(changed);
 
         // The context menu on the right button's press, as on macOS and Linux, or its release, as on Windows; a touch
         // long press is a right press, held: on the press
-        const bool contextOnRelease = _contextMenuOnRelease && e.source != InputMode::Touch;
-        if (e.down) {
-            handleMousePress(e);
-            if (e.button == MouseButton::RIGHT && !contextOnRelease) {
-                handleContextMenuRequest(e);
+        const bool contextOnRelease = _contextMenuOnRelease && changed.source != InputMode::Touch;
+        if (changed.down) {
+            handleMousePress(changed);
+            if (changed.button == MouseButton::RIGHT && !contextOnRelease) {
+                handleContextMenuRequest(changed);
             }
         } else {
-            handleClick(e);
-            if (e.button == MouseButton::LEFT && e.clickCount >= 2) {
-                handleDoubleClick(e);
+            handleClick(changed);
+            if (changed.button == MouseButton::LEFT && changed.clickCount >= 2) {
+                handleDoubleClick(changed);
             }
-            handleMouseRelease(e);
-            if (e.button == MouseButton::RIGHT && contextOnRelease) {
-                handleContextMenuRequest(e);
+            handleMouseRelease(changed);
+            if (changed.button == MouseButton::RIGHT && contextOnRelease) {
+                handleContextMenuRequest(changed);
             }
         }
 
@@ -1625,7 +1631,7 @@ namespace psychic_ui {
         }
         // Go backwards since we want to cancel as soon as possible when a child handles it
         // Everyone in the focus path gets the key events, focusEnabled or not
-        if (Div *div = deepest(_focusPath, [](const Div *d) { return d->keyPressed.hasSubscriptions(); })) {
+        if (Div *div = deepest(_focusPath, [](const Div *candidate) { return candidate->keyPressed.hasSubscriptions(); })) {
             div->keyPressed.emit(key, mod);
             return true;
         }
@@ -1635,7 +1641,7 @@ namespace psychic_ui {
     bool Window::handleKeyRepeat(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         // Everyone in the focus path gets the key events, focusEnabled or not
-        if (Div *div = deepest(_focusPath, [](const Div *d) { return d->keyRepeated.hasSubscriptions(); })) {
+        if (Div *div = deepest(_focusPath, [](const Div *candidate) { return candidate->keyRepeated.hasSubscriptions(); })) {
             div->keyRepeated.emit(key, mod);
             return true;
         }
@@ -1645,7 +1651,7 @@ namespace psychic_ui {
     bool Window::handleKeyRelease(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         // Everyone in the focus path gets the key events, focusEnabled or not
-        if (Div *div = deepest(_focusPath, [](const Div *d) { return d->keyReleased.hasSubscriptions(); })) {
+        if (Div *div = deepest(_focusPath, [](const Div *candidate) { return candidate->keyReleased.hasSubscriptions(); })) {
             div->keyReleased.emit(key, mod);
             return true;
         }
@@ -1655,7 +1661,7 @@ namespace psychic_ui {
     bool Window::handleType(const icu::UnicodeString &character) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
         // The deepest div on the focus path with a subscriber gets the characters
-        if (Div *div = deepest(_focusPath, [](const Div *d) { return d->typed.hasSubscriptions(); })) {
+        if (Div *div = deepest(_focusPath, [](const Div *candidate) { return candidate->typed.hasSubscriptions(); })) {
             div->typed.emit(character);
             return true;
         }

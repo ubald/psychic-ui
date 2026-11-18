@@ -25,8 +25,8 @@ namespace psychic_ui {
         // The backdrop: the whole overlay, the panel in its middle
         _defaultStyle.left(0)
             .top(0)
-            .width(100_pct)
-            .height(100_pct)
+            .width(Full)
+            .height(Full)
             .alignItems(Align::Center)
             .justify(Justify::Center);
 

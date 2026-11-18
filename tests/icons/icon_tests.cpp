@@ -54,10 +54,10 @@ namespace {
         SkPixmap pixmap;
         REQUIRE(surface->peekPixels(&pixmap));
         SkIRect bounds = SkIRect::MakeEmpty();
-        for (int y = 0; y < pixmap.height(); ++y) {
-            for (int x = 0; x < pixmap.width(); ++x) {
-                if (pixmap.getColor(x, y) != SK_ColorWHITE) {
-                    bounds.join(SkIRect::MakeXYWH(x, y, 1, 1));
+        for (int row = 0; row < pixmap.height(); ++row) {
+            for (int column = 0; column < pixmap.width(); ++column) {
+                if (pixmap.getColor(column, row) != SK_ColorWHITE) {
+                    bounds.join(SkIRect::MakeXYWH(column, row, 1, 1));
                 }
             }
         }
@@ -192,9 +192,9 @@ TEST_CASE("an icon's box is put on the pixel grid", "[icons]") {
     SkPixmap b;
     REQUIRE(aligned->peekPixels(&a));
     REQUIRE(offset->peekPixels(&b));
-    for (int y = 0; y < 32; ++y) {
-        for (int x = 0; x < 32; ++x) {
-            REQUIRE(a.getColor(x, y) == b.getColor(x, y));
+    for (int row = 0; row < 32; ++row) {
+        for (int column = 0; column < 32; ++column) {
+            REQUIRE(a.getColor(column, row) == b.getColor(column, row));
         }
     }
 }

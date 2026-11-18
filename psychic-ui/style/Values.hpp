@@ -92,7 +92,7 @@ namespace psychic_ui {
 
             template<class T>
             requires (std::is_arithmetic_v<T> && !std::same_as<T, bool>)
-            constexpr FloatArg(T v) : value(static_cast<float>(v)) {} // NOLINT(google-explicit-constructor)
+            constexpr FloatArg(T value) : value(static_cast<float>(value)) {} // NOLINT(google-explicit-constructor)
         };
 
         /**

@@ -78,8 +78,8 @@ namespace psychic_ui {
             ),
             Menu::separator(),
             Menu::group("View"),
-            Menu::check("Show fades", true, [this](bool on) { say(on ? "Fades shown" : "Fades hidden"); }),
-            Menu::check("Show timecode", false, [this](bool on) { say(on ? "Timecode shown" : "Timecode hidden"); }, "T"),
+            Menu::check("Show fades", true, [this](bool shown) { say(shown ? "Fades shown" : "Fades hidden"); }),
+            Menu::check("Show timecode", false, [this](bool shown) { say(shown ? "Timecode shown" : "Timecode hidden"); }, "T"),
             Menu::radio(_density, "Comfortable", "comfortable"),
             Menu::radio(_density, "Compact", "compact"),
             Menu::separator(),
@@ -163,9 +163,9 @@ namespace psychic_ui {
 
         auto &motion = group("Motion", "Popups fade and scale from their anchor as they open and close, a little quicker out; tooltips drift toward theirs, toasts slide in from the edge");
         // Ten times slower, to watch them (as with --slow-motion)
-        motion.add<Switch>("Slow motion").onChange([this](bool on) {
+        motion.add<Switch>("Slow motion").onChange([this](bool slow) {
             if (Window *w = window()) {
-                w->animationSpeed(on ? 0.1f : 1.0f);
+                w->animationSpeed(slow ? 0.1f : 1.0f);
             }
         });
 

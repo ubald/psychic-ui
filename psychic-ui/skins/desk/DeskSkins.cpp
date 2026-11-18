@@ -87,16 +87,16 @@ namespace psychic_ui {
     // Only what differs from the default set's rules, which loaded just before these: on equal weight, ours win. The
     // default rules already follow the theme and the density's sizes (text, icons and hit slop steps included).
     void DeskSkins::load(StyleManager *manager) {
-        const Theme      &theme = manager->theme();
-        const Palette    &p     = theme.palette;
-        const Typography &t     = theme.type;
-        const Metrics    &m     = theme.metrics;
-        const Radii      &r     = m.radius;
-        const Sizes      &s     = manager->sizes();
-        const bool        touch = manager->density() == Density::Touch;
-        const Parts      &parts = touch ? touchParts : pointerParts;
+        const Theme      &theme   = manager->theme();
+        const Palette    &palette = theme.palette;
+        const Typography &t       = theme.type;
+        const Metrics    &metrics = theme.metrics;
+        const Radii      &r       = metrics.radius;
+        const Sizes      &s       = manager->sizes();
+        const bool        touch   = manager->density() == Density::Touch;
+        const Parts      &parts   = touch ? touchParts : pointerParts;
 
-        const float iconMd = m.iconMd + s.iconStep;
+        const float iconMd = metrics.iconMd + s.iconStep;
 
         // By touch, hit slop takes a target of this size to 44 px (never under the theme's); none with a pointer
         const auto reach = [&](const float size) {
@@ -105,7 +105,7 @@ namespace psychic_ui {
 
         // Bars hold their controls with room around them: the theme's height, more when the controls grow
         const auto bar = [&](const float height) {
-            return std::max(height, s.controlSm + m.space(3));
+            return std::max(height, s.controlSm + metrics.space(3));
         };
 
         const auto rule = [manager](const char *selector) -> Style & {
@@ -134,7 +134,7 @@ namespace psychic_ui {
 
         // region Title bar
 
-        rule("TitleBar").height(bar(m.barHeader));
+        rule("TitleBar").height(bar(metrics.barHeader));
 
         // endregion
 
@@ -159,36 +159,36 @@ namespace psychic_ui {
             .width(parts.field);
 
         rule("Range RangeSkinBase .track")
-            .border(m.border)
+            .border(metrics.border)
             .borderRadius(r.control)
-            .borderColor(p.line)
-            .backgroundColor(p.raised)
+            .borderColor(palette.line)
+            .backgroundColor(palette.raised)
             .overflow(Overflow::Hidden)
-            .transition(Property::borderColor, m.motion.quick());
+            .transition(Property::borderColor, metrics.motion.quick());
         rule("Range RangeSkinBase.horizontal .track").height(Auto); // The field's height, over the default's 4 px
         rule("Range RangeSkinBase.vertical .track").width(Auto);
-        rule("Range:hover RangeSkinBase .track").borderColor(p.lineStrong);
-        rule("Range:active RangeSkinBase .track").borderColor(p.lineStrong);
-        rule("Range:focus-visible RangeSkinBase .track").borderColor(p.accent); // As the fields: no ring
+        rule("Range:hover RangeSkinBase .track").borderColor(palette.lineStrong);
+        rule("Range:active RangeSkinBase .track").borderColor(palette.lineStrong);
+        rule("Range:focus-visible RangeSkinBase .track").borderColor(palette.accent); // As the fields: no ring
 
         rule("Range RangeSkinBase .fill")
             .borderRadius(0)
-            .backgroundColor(p.accent.withAlpha(0x61)); // 38%
+            .backgroundColor(palette.accent.withAlpha(0x61)); // 38%
 
         // By touch, a white tab across the field on the value, so the finger has something to hold
-        const float tab = std::min(parts.grabTab, parts.field - (2 * m.border) - 2);
+        const float tab = std::min(parts.grabTab, parts.field - (2 * metrics.border) - 2);
         rule("Range RangeSkinBase .thumb")
             .display(touch ? Display::Flex : Display::None)
             .borderRadius(r.control)
-            .border(m.border)
-            .borderColor(p.lineStrong);
+            .border(metrics.border)
+            .borderColor(palette.lineStrong);
         rule("Range RangeSkinBase.horizontal .thumb").width(12).height(tab);
         rule("Range RangeSkinBase.vertical .thumb").width(tab).height(12);
 
         // The value inside the field, at its end
         text(rule("Range RangeSkinBase .value"), t.xs, t.regular, s)
             .position(Position::Absolute)
-            .right(m.space(2))
+            .right(metrics.space(2))
             .top(0)
             .width(Auto)
             .height(parts.field)
@@ -204,7 +204,7 @@ namespace psychic_ui {
             .height(parts.switchHeight)
             .paddingHorizontal(1)
             .borderRadius(999)
-            .borderColor(p.line);
+            .borderColor(palette.line);
         rule("Switch .thumb")
             .width(parts.switchHeight - 4)
             .height(parts.switchHeight - 4)
@@ -219,7 +219,7 @@ namespace psychic_ui {
         }
 
         // Color swatches: squares with small corners, 6 px apart, the selected one ringed closer
-        rule("ColorSwatches").gap(m.space(1.5f));
+        rule("ColorSwatches").gap(metrics.space(1.5f));
         rule("ColorSwatches .swatch")
             .width(parts.swatch)
             .height(parts.swatch)
@@ -239,9 +239,9 @@ namespace psychic_ui {
             rule("ScrollBar.vertical .thumb").marginHorizontal(1);
             rule("ScrollBar.horizontal .thumb").marginVertical(1);
         } else {
-            rule("ScrollBar .track").backgroundColor(p.surface);
-            rule("ScrollBar.vertical .track").borderLeft(m.border).borderColor(p.line);
-            rule("ScrollBar.horizontal .track").borderTop(m.border).borderColor(p.line);
+            rule("ScrollBar .track").backgroundColor(palette.surface);
+            rule("ScrollBar.vertical .track").borderLeft(metrics.border).borderColor(palette.line);
+            rule("ScrollBar.horizontal .track").borderTop(metrics.border).borderColor(palette.line);
             rule("ScrollBar .thumb").borderRadius(r.check);
         }
         rule("Scroller ScrollBar.horizontal").marginRight(parts.scrollBar);
@@ -260,10 +260,10 @@ namespace psychic_ui {
         // region Tool bar, tabs
 
         rule("ToolBar")
-            .height(bar(m.barToolbar))
-            .paddingRight(m.gutter);
+            .height(bar(metrics.barToolbar))
+            .paddingRight(metrics.gutter);
 
-        rule("Tabs").minHeight(bar(m.barToolbar));
+        rule("Tabs").minHeight(bar(metrics.barToolbar));
 
         // endregion
 
@@ -271,15 +271,15 @@ namespace psychic_ui {
 
         // Flush panes (the theme's: no inset, no corners): the sidebar on the surface meets the page on a hairline
         rule("Sidebar")
-            .width(m.sidebarWidth + parts.sidebarExtra)
-            .borderRight(m.border)
-            .borderColor(p.line)
-            .backgroundColor(p.surface);
+            .width(metrics.sidebarWidth + parts.sidebarExtra)
+            .borderRight(metrics.border)
+            .borderColor(palette.line)
+            .backgroundColor(palette.surface);
 
         rule("SidebarHeader")
-            .height(bar(m.barHeader))
-            .borderBottom(m.border)
-            .borderColor(p.line);
+            .height(bar(metrics.barHeader))
+            .borderBottom(metrics.border)
+            .borderColor(palette.line);
 
         text(rule("SidebarHeader .mark"), t.xxs, t.semiBold, s)
             .width(18 + s.iconStep)
@@ -289,15 +289,15 @@ namespace psychic_ui {
         // Sections 6 px in, rows 1 px apart
         rule("SidebarSection")
             .gap(1)
-            .padding(m.space(1.5f));
-        rule("SidebarSection:first-child").paddingTop(m.space(1.5f));
+            .padding(metrics.space(1.5f));
+        rule("SidebarSection:first-child").paddingTop(metrics.space(1.5f));
 
         // Rows: 26 px (40 by touch), 12 px text
         text(rule("SidebarItem"), t.base, t.regular, s).height(s.rowSm);
 
         rule("PageHeader")
-            .height(bar(m.barHeader))
-            .paddingRight(m.gutter);
+            .height(bar(metrics.barHeader))
+            .paddingRight(metrics.gutter);
 
         // endregion
 
@@ -310,29 +310,29 @@ namespace psychic_ui {
 
         // List rows: 26 px with a pointer, 40 by touch; two lines grow them
         rule("ListRow")
-            .gap(m.space(2.5f))
-            .paddingVertical(m.space(1));
-        rule("List.md ListRow").paddingVertical(m.space(1));
-        rule("List.sm ListRow").paddingVertical(m.space(0.5f));
+            .gap(metrics.space(2.5f))
+            .paddingVertical(metrics.space(1));
+        rule("List.md ListRow").paddingVertical(metrics.space(1));
+        rule("List.sm ListRow").paddingVertical(metrics.space(0.5f));
         rule("ListRow .text").gap(0);
 
         // A data grid: its header 26 px on the surface layer, cells 12 px apart
         rule("DataGrid .header")
-            .gap(m.space(3))
+            .gap(metrics.space(3))
             .height(parts.gridHeader)
-            .backgroundColor(p.surface);
+            .backgroundColor(palette.surface);
 
         rule("DataGridRow")
-            .gap(m.space(3))
-            .paddingVertical(m.space(1));
-        rule("DataGrid.sm DataGridRow").paddingVertical(m.space(0.5f));
+            .gap(metrics.space(3))
+            .paddingVertical(metrics.space(1));
+        rule("DataGrid.sm DataGridRow").paddingVertical(metrics.space(0.5f));
 
         // A tree: the sidebar's rows; the selection raised, no outline, its icon in the accent
         rule("TreeRow.selected").borderColor(transparent);
-        rule("TreeRow.selected .icon").color(p.accent);
+        rule("TreeRow.selected .icon").color(palette.accent);
 
         // An inspector: section headers are bands between hairlines, fields have their names right-aligned beside them
-        rule("Inspector .heading").paddingVertical(m.space(2.5f));
+        rule("Inspector .heading").paddingVertical(metrics.space(2.5f));
         rule("Inspector .media")
             .width(28 + s.iconStep)
             .height(28 + s.iconStep)
@@ -341,19 +341,19 @@ namespace psychic_ui {
         rule("InspectorSection .header")
             .minHeight(parts.gridHeader)
             .padding(0)
-            .paddingHorizontal(m.space(2.5f))
-            .borderBottom(m.border)
-            .borderColor(p.line)
-            .backgroundColor(p.raised.withAlpha(0x8C)); // 55%
-        text(rule("InspectorSection .header .title"), t.xs, t.medium, s).color(p.text);
+            .paddingHorizontal(metrics.space(2.5f))
+            .borderBottom(metrics.border)
+            .borderColor(palette.line)
+            .backgroundColor(palette.raised.withAlpha(0x8C)); // 55%
+        text(rule("InspectorSection .header .title"), t.xs, t.medium, s).color(palette.text);
 
         rule("InspectorSection .body")
-            .gap(m.space(1))
-            .paddingTop(m.space(2))
-            .paddingBottom(m.space(2.5f));
+            .gap(metrics.space(1))
+            .paddingTop(metrics.space(2))
+            .paddingBottom(metrics.space(2.5f));
 
         rule("InspectorField")
-            .gap(m.space(2.5f))
+            .gap(metrics.space(2.5f))
             .alignItems(Align::Center)
             .minHeight(s.controlSm);
         rule("InspectorField .name")
@@ -372,11 +372,11 @@ namespace psychic_ui {
 
         // Chips: a small control, 22 px (36 by touch), small text
         text(rule("Chip"), t.xs, t.regular, s)
-            .gap(m.space(1))
+            .gap(metrics.space(1))
             .height(s.controlSm)
-            .paddingLeft(m.space(2))
-            .paddingRight(m.space(1.5f));
-        rule("Chip.removable").paddingRight(m.space(1));
+            .paddingLeft(metrics.space(2))
+            .paddingRight(metrics.space(1.5f));
+        rule("Chip.removable").paddingRight(metrics.space(1));
 
         // Key caps: 16 px squares
         rule("Kbd .key")
@@ -385,7 +385,7 @@ namespace psychic_ui {
             .lineHeight(14 + s.textStep);
 
         // Empty states: a smaller tile, closer
-        rule("EmptyState").paddingVertical(m.space(12));
+        rule("EmptyState").paddingVertical(metrics.space(12));
         rule("EmptyState .icon-tile")
             .width(32 + s.iconStep)
             .height(32 + s.iconStep)

@@ -13,7 +13,7 @@ TEST_CASE("C13: NumberStepper keeps the value it shows, rounded to its decimals"
     auto             window = std::make_shared<TestWindow>();
     FakeSystemWindow sys{window, 800, 600};
     double           last    = 0;
-    auto            &stepper = window->appContainer().add<NumberStepper>(0, [&](double v) { last = v; });
+    auto            &stepper = window->appContainer().add<NumberStepper>(0, [&](double value) { last = value; });
     stepper.decimals(0);
     sys.layout();
     window->requestFocus(&stepper, true);

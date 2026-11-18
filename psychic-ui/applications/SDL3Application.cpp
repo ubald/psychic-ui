@@ -219,8 +219,8 @@ namespace psychic_ui {
                 }
             } else if (*wait > std::chrono::nanoseconds::zero()) {
                 // Rounded up: waking before the timer would only wait again
-                const auto ms = std::chrono::ceil<std::chrono::milliseconds>(*wait).count();
-                if (SDL_WaitEventTimeout(&event, static_cast<Sint32>(std::min<long long>(ms, INT32_MAX)))) {
+                const auto milliseconds = std::chrono::ceil<std::chrono::milliseconds>(*wait).count();
+                if (SDL_WaitEventTimeout(&event, static_cast<Sint32>(std::min<long long>(milliseconds, INT32_MAX)))) {
                     dispatch(event);
                 }
             }

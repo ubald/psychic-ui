@@ -106,54 +106,54 @@ namespace {
         }
 
         [[nodiscard]] SDL_Event event(SDL_EventType type) const {
-            SDL_Event e{};
-            e.type = type;
+            SDL_Event sdlEvent{};
+            sdlEvent.type = type;
             // windowID is at the same place in every event that has one
-            e.window.windowID = SDL_GetWindowID(sdlWindow);
-            return e;
+            sdlEvent.window.windowID = SDL_GetWindowID(sdlWindow);
+            return sdlEvent;
         }
 
         /**
          * A finger event, at window coordinates, timed in milliseconds
          */
         [[nodiscard]] bool finger(SDL_EventType type, float x, float y, Uint64 milliseconds, SDL_TouchID device = touchScreen, SDL_FingerID id = 1) const {
-            SDL_Event e{};
-            e.type              = type;
-            e.tfinger.timestamp = milliseconds * 1'000'000;
-            e.tfinger.windowID  = SDL_GetWindowID(sdlWindow);
-            e.tfinger.touchID   = device;
-            e.tfinger.fingerID  = id;
-            e.tfinger.x         = x / 800.0f;
-            e.tfinger.y         = y / 600.0f;
-            return adapter->handleEvent(e);
+            SDL_Event sdlEvent{};
+            sdlEvent.type              = type;
+            sdlEvent.tfinger.timestamp = milliseconds * 1'000'000;
+            sdlEvent.tfinger.windowID  = SDL_GetWindowID(sdlWindow);
+            sdlEvent.tfinger.touchID   = device;
+            sdlEvent.tfinger.fingerID  = id;
+            sdlEvent.tfinger.x         = x / 800.0f;
+            sdlEvent.tfinger.y         = y / 600.0f;
+            return adapter->handleEvent(sdlEvent);
         }
 
         /**
          * The mouse events SDL makes of a touch (or of a pen, or a real mouse's, by `which`)
          */
         void mouse(SDL_EventType type, float x, float y, SDL_MouseID which) const {
-            auto e = event(type);
+            auto sdlEvent = event(type);
             if (type == SDL_EVENT_MOUSE_MOTION) {
-                e.motion.which = which;
-                e.motion.x     = x;
-                e.motion.y     = y;
+                sdlEvent.motion.which = which;
+                sdlEvent.motion.x     = x;
+                sdlEvent.motion.y     = y;
             } else {
-                e.button.which  = which;
-                e.button.button = SDL_BUTTON_LEFT;
-                e.button.down   = type == SDL_EVENT_MOUSE_BUTTON_DOWN;
-                e.button.x      = x;
-                e.button.y      = y;
+                sdlEvent.button.which  = which;
+                sdlEvent.button.button = SDL_BUTTON_LEFT;
+                sdlEvent.button.down   = type == SDL_EVENT_MOUSE_BUTTON_DOWN;
+                sdlEvent.button.x      = x;
+                sdlEvent.button.y      = y;
             }
-            adapter->handleEvent(e);
+            adapter->handleEvent(sdlEvent);
         }
 
         [[nodiscard]] bool button(SDL_EventType type, float x, float y) const {
-            auto e = event(type);
-            e.button.button = SDL_BUTTON_LEFT;
-            e.button.down   = type == SDL_EVENT_MOUSE_BUTTON_DOWN;
-            e.button.x      = x;
-            e.button.y      = y;
-            return adapter->handleEvent(e);
+            auto sdlEvent = event(type);
+            sdlEvent.button.button = SDL_BUTTON_LEFT;
+            sdlEvent.button.down   = type == SDL_EVENT_MOUSE_BUTTON_DOWN;
+            sdlEvent.button.x      = x;
+            sdlEvent.button.y      = y;
+            return adapter->handleEvent(sdlEvent);
         }
     };
 }
@@ -175,9 +175,9 @@ TEST_CASE("SDL3: the theme follows the system's light and dark mode", "[backend]
 
     const auto systemGoes = [&](ColorScheme scheme) {
         adapter.scheme = scheme;
-        SDL_Event e{};
-        e.type = SDL_EVENT_SYSTEM_THEME_CHANGED; // Names no window
-        CHECK(sdl.adapter->handleEvent(e));
+        SDL_Event sdlEvent{};
+        sdlEvent.type = SDL_EVENT_SYSTEM_THEME_CHANGED; // Names no window
+        CHECK(sdl.adapter->handleEvent(sdlEvent));
         sdl.layout();
     };
 
@@ -237,9 +237,9 @@ TEST_CASE("SDL3: a window opening on a light system starts light", "[backend][sd
 
 TEST_CASE("SDL3: events for another window are left alone", "[backend][sdl3]") {
     SDL3Fixture sdl;
-    auto e = sdl.event(SDL_EVENT_WINDOW_CLOSE_REQUESTED);
-    e.window.windowID += 1000;
-    CHECK_FALSE(sdl.adapter->handleEvent(e));
+    auto sdlEvent = sdl.event(SDL_EVENT_WINDOW_CLOSE_REQUESTED);
+    sdlEvent.window.windowID += 1000;
+    CHECK_FALSE(sdl.adapter->handleEvent(sdlEvent));
     CHECK(sdl.window->windowVisible());
 }
 
@@ -324,9 +324,9 @@ TEST_CASE("SDL3: keys and text reach the focused div", "[backend][sdl3]") {
     sdl.adapter->handleEvent(key);
     key.key.repeat = true;
     sdl.adapter->handleEvent(key);
-    auto up = sdl.event(SDL_EVENT_KEY_UP);
-    up.key.key = SDLK_A;
-    sdl.adapter->handleEvent(up);
+    auto keyUp = sdl.event(SDL_EVENT_KEY_UP);
+    keyUp.key.key = SDLK_A;
+    sdl.adapter->handleEvent(keyUp);
 
     REQUIRE(downs.size() == 1);
     CHECK(downs[0] == Key::A);

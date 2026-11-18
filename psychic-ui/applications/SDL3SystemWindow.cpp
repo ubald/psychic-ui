@@ -365,27 +365,27 @@ namespace psychic_ui {
         }
     }
 
-    bool SDL3SystemWindow::handleEvent(const SDL_Event &e) {
-        if (e.type == SDL_EVENT_SYSTEM_THEME_CHANGED) {
+    bool SDL3SystemWindow::handleEvent(const SDL_Event &event) {
+        if (event.type == SDL_EVENT_SYSTEM_THEME_CHANGED) {
             // For every window: it names none
             _window->handleColorSchemeChange(colorScheme());
             return true;
         }
 
-        if (SDL_GetWindowFromEvent(&e) != _sdlWindow) {
+        if (SDL_GetWindowFromEvent(&event) != _sdlWindow) {
             return false;
         }
 
-        switch (e.type) {
+        switch (event.type) {
             case SDL_EVENT_WINDOW_MOVED:
-                _x = e.window.data1;
-                _y = e.window.data2;
+                _x = event.window.data1;
+                _y = event.window.data2;
                 _window->windowMoved(_x, _y);
                 break;
 
             case SDL_EVENT_WINDOW_RESIZED: {
-                _width  = e.window.data1;
-                _height = e.window.data2;
+                _width  = event.window.data1;
+                _height = event.window.data2;
                 // SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED follows when the pixel size changed too
                 const float density = SDL_GetWindowPixelDensity(_sdlWindow);
                 _fbWidth  = static_cast<int>(std::lround(static_cast<float>(_width) * (density > 0 ? density : 1.0f)));
@@ -395,8 +395,8 @@ namespace psychic_ui {
             }
 
             case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-                _fbWidth  = e.window.data1;
-                _fbHeight = e.window.data2;
+                _fbWidth  = event.window.data1;
+                _fbHeight = event.window.data2;
                 _window->windowResized(_width, _height);
                 break;
 
@@ -432,20 +432,20 @@ namespace psychic_ui {
                 break;
 
             case SDL_EVENT_KEY_DOWN:
-                if (e.key.repeat) {
-                    _window->handleKeyRepeat(mapKey(e.key.key), mapMods(e.key.mod));
+                if (event.key.repeat) {
+                    _window->handleKeyRepeat(mapKey(event.key.key), mapMods(event.key.mod));
                 } else {
-                    _window->handleKeyPress(mapKey(e.key.key), mapMods(e.key.mod));
+                    _window->handleKeyPress(mapKey(event.key.key), mapMods(event.key.mod));
                 }
                 break;
 
             case SDL_EVENT_KEY_UP:
-                _window->handleKeyRelease(mapKey(e.key.key), mapMods(e.key.mod));
+                _window->handleKeyRelease(mapKey(event.key.key), mapMods(event.key.mod));
                 break;
 
             case SDL_EVENT_TEXT_INPUT: {
                 // One code point at a time, like typed characters, even when an input method commits several
-                const icu::UnicodeString text = icu::UnicodeString::fromUTF8(e.text.text);
+                const icu::UnicodeString text = icu::UnicodeString::fromUTF8(event.text.text);
                 for (int32_t i = 0; i < text.length(); i = text.moveIndex32(i, 1)) {
                     _window->handleType(icu::UnicodeString(text.char32At(i)));
                 }
@@ -453,13 +453,13 @@ namespace psychic_ui {
             }
 
             case SDL_EVENT_MOUSE_MOTION:
-                if (!fromMouse(e.motion.which)) {
+                if (!fromMouse(event.motion.which)) {
                     break; // Made of a touch or a pen, which we follow ourselves
                 }
                 // A real mouse moved: back to the pointer density
                 _window->handleInputModeChange(InputMode::Pointer);
-                _mouseX = e.motion.x;
-                _mouseY = e.motion.y;
+                _mouseX = event.motion.x;
+                _mouseY = event.motion.y;
 
                 if (_dragging) {
                     float mouseX = 0;
@@ -477,18 +477,18 @@ namespace psychic_ui {
 
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
             case SDL_EVENT_MOUSE_BUTTON_UP: {
-                const MouseButton button = mapButton(e.button.button);
-                if (button == MouseButton::NONE || !fromMouse(e.button.which)) {
+                const MouseButton button = mapButton(event.button.button);
+                if (button == MouseButton::NONE || !fromMouse(event.button.which)) {
                     break;
                 }
                 _window->handleInputModeChange(InputMode::Pointer);
-                const bool down = e.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
-                _mouseX = e.button.x;
-                _mouseY = e.button.y;
+                const bool down = event.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
+                _mouseX = event.button.x;
+                _mouseY = event.button.y;
                 // SDL counts the clicks with the system's double click time and distance
                 _window->handleMouseButtonChange({
                     .x = _mouseX, .y = _mouseY, .button = button, .down = down, .modifiers = mapMods(SDL_GetModState()),
-                    .clickCount = e.button.clicks
+                    .clickCount = event.button.clicks
                 });
                 break;
             }
@@ -498,8 +498,8 @@ namespace psychic_ui {
                 break;
 
             case SDL_EVENT_DROP_FILE:
-                if (e.drop.data) {
-                    _droppedFiles.emplace_back(e.drop.data);
+                if (event.drop.data) {
+                    _droppedFiles.emplace_back(event.drop.data);
                 }
                 break;
 
@@ -511,13 +511,13 @@ namespace psychic_ui {
                 break;
 
             case SDL_EVENT_MOUSE_WHEEL: {
-                if (e.wheel.which == SDL_TOUCH_MOUSEID) {
+                if (event.wheel.which == SDL_TOUCH_MOUSEID) {
                     break;
                 }
-                const float direction = e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1.0f : 1.0f;
+                const float direction = event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1.0f : 1.0f;
                 _window->handleMouseScroll({
-                    .x = e.wheel.mouse_x, .y = e.wheel.mouse_y, .modifiers = mapMods(SDL_GetModState()),
-                    .scrollX = e.wheel.x * direction, .scrollY = e.wheel.y * direction
+                    .x = event.wheel.mouse_x, .y = event.wheel.mouse_y, .modifiers = mapMods(SDL_GetModState()),
+                    .scrollX = event.wheel.x * direction, .scrollY = event.wheel.y * direction
                 });
                 break;
             }
@@ -526,7 +526,7 @@ namespace psychic_ui {
             case SDL_EVENT_FINGER_MOTION:
             case SDL_EVENT_FINGER_UP:
             case SDL_EVENT_FINGER_CANCELED:
-                handleFingerEvent(e.tfinger);
+                handleFingerEvent(event.tfinger);
                 break;
 
             // A pen works like a mouse, its tip being the left button, but reports the pen mode
@@ -538,21 +538,21 @@ namespace psychic_ui {
 
             case SDL_EVENT_PEN_DOWN:
             case SDL_EVENT_PEN_UP:
-                handlePenButton(MouseButton::LEFT, e.ptouch.down, e.ptouch.x, e.ptouch.y);
+                handlePenButton(MouseButton::LEFT, event.ptouch.down, event.ptouch.x, event.ptouch.y);
                 break;
 
             case SDL_EVENT_PEN_BUTTON_DOWN:
             case SDL_EVENT_PEN_BUTTON_UP:
                 handlePenButton(
-                    mapPenButton(e.pbutton.button),
-                    e.pbutton.down, e.pbutton.x, e.pbutton.y
+                    mapPenButton(event.pbutton.button),
+                    event.pbutton.down, event.pbutton.x, event.pbutton.y
                 );
                 break;
 
             case SDL_EVENT_PEN_MOTION:
                 _window->handleInputModeChange(InputMode::Pen);
-                _mouseX = e.pmotion.x;
-                _mouseY = e.pmotion.y;
+                _mouseX = event.pmotion.x;
+                _mouseY = event.pmotion.y;
                 _window->handleMouseMove({
                     .x = _mouseX, .y = _mouseY, .modifiers = mapMods(SDL_GetModState()), .source = InputMode::Pen
                 }, false);

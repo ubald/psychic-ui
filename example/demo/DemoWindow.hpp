@@ -184,16 +184,16 @@ namespace psychic_ui {
         auto &layout   = sidebar.section("Layout");
         auto &assets   = sidebar.section("Assets");
         assets.grow(1); // Pushes the last section to the bottom
-        for (Page &p: _pages) {
+        for (Page &entry: _pages) {
             SidebarSection *section = &controls;
-            if (p.name == "Divs" || p.name == "Scroller" || p.name == "Canvas" || p.name == "Motion" || p.name == "Typography") {
+            if (entry.name == "Divs" || entry.name == "Scroller" || entry.name == "Canvas" || entry.name == "Motion" || entry.name == "Typography") {
                 section = &layout;
-            } else if (p.name == "Colors" || p.name == "Icons") {
+            } else if (entry.name == "Colors" || entry.name == "Icons") {
                 section = &assets;
             }
-            p.item = &section->item(p.name, p.icon);
-            if (p.name == "Icons") {
-                p.item->count(std::to_string(IconRegistry::shared().names().size()));
+            entry.item = &section->item(entry.name, entry.icon);
+            if (entry.name == "Icons") {
+                entry.item->count(std::to_string(IconRegistry::shared().names().size()));
             }
         }
 
@@ -204,9 +204,9 @@ namespace psychic_ui {
 
         sidebar.onChange(
             [this](SidebarItem *item) {
-                for (const Page &p: _pages) {
-                    if (p.item == item) {
-                        show(p);
+                for (const Page &entry: _pages) {
+                    if (entry.item == item) {
+                        show(entry);
                         return;
                     }
                 }
@@ -309,7 +309,7 @@ namespace psychic_ui {
     }
 
     inline bool DemoWindow::showPage(const std::string &name) {
-        const auto page = std::ranges::find_if(_pages, [&name](const Page &p) { return p.name == name || keyOf(p.name) == name; });
+        const auto page = std::ranges::find_if(_pages, [&name](const Page &candidate) { return candidate.name == name || keyOf(candidate.name) == name; });
         if (page == _pages.end()) {
             return false;
         }
@@ -319,8 +319,8 @@ namespace psychic_ui {
 
     inline std::string DemoWindow::keyOf(std::string_view name) {
         std::string key{name};
-        for (char &c: key) {
-            c = c == ' ' ? '-' : static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        for (char &character: key) {
+            character = character == ' ' ? '-' : static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
         }
         return key;
     }

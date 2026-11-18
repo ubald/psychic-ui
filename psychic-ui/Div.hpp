@@ -329,13 +329,13 @@ namespace psychic_ui {
         // region Animation
 
         /**
-         * Move a number from `from` to `to` with a timing, calling `update` with each value (in
-         * `Window::updateAnimations`, once per frame, the last time with `to`). Fire and forget: it ends with this
+         * Move a number from `from` to `target` with a timing, calling `update` with each value (in
+         * `Window::updateAnimations`, once per frame, the last time with `target`). Fire and forget: it ends with this
          * div, or when it gets there. At once when the div isn't in a window or the window reduces motion.
          *
          *     div.animate(0.0f, 1.0f, Timing{150ms, Ease::Out}, [this](float t) { _reveal = t; });
          */
-        void animate(float from, float to, const Timing &timing, std::function<void(float)> update);
+        void animate(float from, float target, const Timing &timing, std::function<void(float)> update);
 
         /**
          * A class it has for its first style in a window only (its first style after it is added), lost before its
@@ -487,8 +487,8 @@ namespace psychic_ui {
         // style like any other: it is the only input of the layout. The getters below read the layout's output,
         // so they are only up to date after the window's layout pass.
 
-        void localToGlobal(int &gx, int &gy, int x = 0, int y = 0) const;
-        void globalToLocal(int &lx, int &ly, int x = 0, int y = 0) const;
+        void localToGlobal(int &globalX, int &globalY, int x = 0, int y = 0) const;
+        void globalToLocal(int &localX, int &localY, int x = 0, int y = 0) const;
         int x() const;
         int y() const;
         int getWidth() const;
@@ -855,16 +855,16 @@ namespace psychic_ui {
                 return nullptr;
             }
             // After the tracked children before it (the list follows the children's order)
-            auto at = list.begin();
+            auto position = list.begin();
             for (const auto &other: _children) {
                 if (other.get() == &child) {
                     break;
                 }
-                if (at != list.end() && other.get() == at->get()) {
-                    ++at;
+                if (position != list.end() && other.get() == position->get()) {
+                    ++position;
                 }
             }
-            list.insert(at, std::shared_ptr<T>(child.shared_from_this(), typed));
+            list.insert(position, std::shared_ptr<T>(child.shared_from_this(), typed));
             return typed;
         }
 

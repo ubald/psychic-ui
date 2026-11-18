@@ -30,21 +30,21 @@ namespace psychic_ui {
             }
             const int last = static_cast<int>(_colors.size()) - 1;
             const int from = _focused >= 0 ? _focused : _selected;
-            int       to   = -2;
+            int       next = -2;
             switch (key) {
                 case Key::LEFT:
                 case Key::UP:
-                    to = from < 0 ? last : std::max(from - 1, 0);
+                    next = from < 0 ? last : std::max(from - 1, 0);
                     break;
                 case Key::RIGHT:
                 case Key::DOWN:
-                    to = from < 0 ? 0 : std::min(from + 1, last);
+                    next = from < 0 ? 0 : std::min(from + 1, last);
                     break;
                 case Key::HOME:
-                    to = 0;
+                    next = 0;
                     break;
                 case Key::END:
-                    to = last;
+                    next = last;
                     break;
                 case Key::SPACE:
                 case Key::ENTER:
@@ -55,7 +55,7 @@ namespace psychic_ui {
                 default:
                     return;
             }
-            updateFocused(to);
+            updateFocused(next);
             // The keyboard is in use: the ring shows even after a click focused the group
             if (window() && !window()->focusVisible()) {
                 window()->requestFocus(this, true);

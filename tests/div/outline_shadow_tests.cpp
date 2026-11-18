@@ -44,12 +44,12 @@ namespace {
 
         // The rendered color at a point of a div, in its own coordinates
         [[nodiscard]] SkColor at(const Div &div, int x, int y) const {
-            int gx = 0;
-            int gy = 0;
-            div.localToGlobal(gx, gy, x, y);
+            int globalX = 0;
+            int globalY = 0;
+            div.localToGlobal(globalX, globalY, x, y);
             SkPixmap pixmap;
             REQUIRE(surface->peekPixels(&pixmap));
-            return pixmap.getColor(gx, gy);
+            return pixmap.getColor(globalX, globalY);
         }
     };
 

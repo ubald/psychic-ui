@@ -78,14 +78,14 @@ TEST_CASE("Float's themes", "[skins][float]") {
 }
 
 TEST_CASE("Float installs over the default set", "[skins][float]") {
-    Fixture f;
-    auto &shell  = f.window->appContainer().add<AppShell>();
+    Fixture fixture;
+    auto &shell  = fixture.window->appContainer().add<AppShell>();
     auto &button = shell.page().add<Button>("Go").skin("primary");
-    f.window->skinSet<FloatSkins>();
-    f.layout();
+    fixture.window->skinSet<FloatSkins>();
+    fixture.layout();
 
-    REQUIRE(f.window->styleManager()->skinSet()->name() == "Float");
-    CHECK(f.theme() == themes::floatLight.name);
+    REQUIRE(fixture.window->styleManager()->skinSet()->name() == "Float");
+    CHECK(fixture.theme() == themes::floatLight.name);
 
     // The default set's skins, Float's rules over the default set's
     CHECK(std::dynamic_pointer_cast<ButtonSkinBase>(button.skin()) != nullptr);
@@ -104,116 +104,116 @@ TEST_CASE("Float installs over the default set", "[skins][float]") {
     CHECK(shell.sidebar().x() == theme.metrics.frameInset);
 
     // The dots are the theme's, dark too
-    f.window->theme(themes::floatDark);
-    f.layout();
+    fixture.window->theme(themes::floatDark);
+    fixture.layout();
     CHECK(shell.computedStyle().dotGridColor() == themes::floatDark.palette.canvasDot);
 }
 
 TEST_CASE("switching to Float live re-hatches skins and keeps the components' state", "[skins][float][switch]") {
-    Fixture f;
-    auto &app   = f.window->appContainer();
+    Fixture fixture;
+    auto &app   = fixture.window->appContainer();
     auto &input = app.add<TextInput>("Typed before");
     auto &list  = app.add<List>();
     list.row("Ada");
-    auto &grace = list.row("Grace");
-    auto &on    = app.add<Switch>("On").checked(true);
-    f.layout();
+    auto &grace    = list.row("Grace");
+    auto &onSwitch = app.add<Switch>("On").checked(true);
+    fixture.layout();
     list.select(&grace);
-    f.layout();
+    fixture.layout();
     const auto inputSkin = input.skin();
-    const auto switchSkin = on.skin();
+    const auto switchSkin = onSwitch.skin();
 
-    f.window->skinSet<FloatSkins>();
-    f.layout();
+    fixture.window->skinSet<FloatSkins>();
+    fixture.layout();
 
     CHECK(input.skin() != inputSkin);
-    CHECK(on.skin() != switchSkin);
+    CHECK(onSwitch.skin() != switchSkin);
     CHECK(input.text() == "Typed before");
     CHECK(input.skin()->textView()->text() == "Typed before");
     CHECK(list.selection() == &grace);
     CHECK(grace.computedStyle().backgroundColor() == themes::floatLight.palette.accentSoft);
-    CHECK(on.checked());
+    CHECK(onSwitch.checked());
 
     // And back
-    f.window->skinSet<PivotalSkins>();
-    f.layout();
+    fixture.window->skinSet<PivotalSkins>();
+    fixture.layout();
     CHECK(input.text() == "Typed before");
     CHECK(list.selection() == &grace);
-    CHECK(on.checked());
+    CHECK(onSwitch.checked());
 }
 
 TEST_CASE("which theme a skin set switch picks", "[skins][theme]") {
-    const Fixture f;
+    const Fixture fixture;
 
     SECTION("following the system, the new set's theme for the scheme") {
-        f.window->skinSet<FloatSkins>();
-        CHECK(f.theme() == "Float Light"); // The system doesn't say: the set's default
-        f.window->handleColorSchemeChange(ColorScheme::Dark);
-        CHECK(f.theme() == "Float Dark");
-        f.window->skinSet<PivotalSkins>();
-        CHECK(f.theme() == "Pivotal Dark");
-        f.window->handleColorSchemeChange(ColorScheme::Light);
-        CHECK(f.theme() == "Pivotal Light");
-        f.window->skinSet<FloatSkins>();
-        CHECK(f.theme() == "Float Light");
-        CHECK(f.window->followsSystemTheme());
+        fixture.window->skinSet<FloatSkins>();
+        CHECK(fixture.theme() == "Float Light"); // The system doesn't say: the set's default
+        fixture.window->handleColorSchemeChange(ColorScheme::Dark);
+        CHECK(fixture.theme() == "Float Dark");
+        fixture.window->skinSet<PivotalSkins>();
+        CHECK(fixture.theme() == "Pivotal Dark");
+        fixture.window->handleColorSchemeChange(ColorScheme::Light);
+        CHECK(fixture.theme() == "Pivotal Light");
+        fixture.window->skinSet<FloatSkins>();
+        CHECK(fixture.theme() == "Float Light");
+        CHECK(fixture.window->followsSystemTheme());
     }
 
     SECTION("a picked theme of another set gives way to the new set's of the same scheme, still picked") {
-        f.window->theme(themes::oneLight);
-        REQUIRE_FALSE(f.window->followsSystemTheme());
-        f.window->handleColorSchemeChange(ColorScheme::Dark); // Ignored: the theme is picked
-        f.window->skinSet<FloatSkins>();
-        CHECK(f.theme() == "Float Light"); // One Light is light, whatever the system
-        CHECK_FALSE(f.window->followsSystemTheme());
+        fixture.window->theme(themes::oneLight);
+        REQUIRE_FALSE(fixture.window->followsSystemTheme());
+        fixture.window->handleColorSchemeChange(ColorScheme::Dark); // Ignored: the theme is picked
+        fixture.window->skinSet<FloatSkins>();
+        CHECK(fixture.theme() == "Float Light"); // One Light is light, whatever the system
+        CHECK_FALSE(fixture.window->followsSystemTheme());
 
-        f.window->theme(themes::floatDark);
-        f.window->skinSet<PivotalSkins>();
-        CHECK(f.theme() == "Pivotal Dark");
-        CHECK_FALSE(f.window->followsSystemTheme());
+        fixture.window->theme(themes::floatDark);
+        fixture.window->skinSet<PivotalSkins>();
+        CHECK(fixture.theme() == "Pivotal Dark");
+        CHECK_FALSE(fixture.window->followsSystemTheme());
 
-        f.window->theme(themes::pivotalLight);
-        f.window->skinSet<FloatSkins>();
-        CHECK(f.theme() == "Float Light");
-        f.window->handleColorSchemeChange(ColorScheme::Light);
-        f.window->handleColorSchemeChange(ColorScheme::Dark);
-        CHECK(f.theme() == "Float Light"); // Still picked
+        fixture.window->theme(themes::pivotalLight);
+        fixture.window->skinSet<FloatSkins>();
+        CHECK(fixture.theme() == "Float Light");
+        fixture.window->handleColorSchemeChange(ColorScheme::Light);
+        fixture.window->handleColorSchemeChange(ColorScheme::Dark);
+        CHECK(fixture.theme() == "Float Light"); // Still picked
     }
 
     SECTION("a picked theme of the new set stays") {
-        f.window->theme(themes::floatDark); // Any theme works with any set
-        f.window->skinSet<FloatSkins>();
-        CHECK(f.theme() == "Float Dark");
-        CHECK_FALSE(f.window->followsSystemTheme());
-        f.window->handleColorSchemeChange(ColorScheme::Light); // Still picked: the system doesn't change it
-        CHECK(f.theme() == "Float Dark");
+        fixture.window->theme(themes::floatDark); // Any theme works with any set
+        fixture.window->skinSet<FloatSkins>();
+        CHECK(fixture.theme() == "Float Dark");
+        CHECK_FALSE(fixture.window->followsSystemTheme());
+        fixture.window->handleColorSchemeChange(ColorScheme::Light); // Still picked: the system doesn't change it
+        CHECK(fixture.theme() == "Float Dark");
 
         // Installing the same set again keeps it too
-        f.window->skinSet<FloatSkins>();
-        CHECK(f.theme() == "Float Dark");
+        fixture.window->skinSet<FloatSkins>();
+        CHECK(fixture.theme() == "Float Dark");
 
         // One Dark is the default set's: it stays across a switch back
-        f.window->theme(themes::oneDark);
-        f.window->skinSet<PivotalSkins>();
-        CHECK(f.theme() == "One Dark");
-        CHECK_FALSE(f.window->followsSystemTheme());
+        fixture.window->theme(themes::oneDark);
+        fixture.window->skinSet<PivotalSkins>();
+        CHECK(fixture.theme() == "One Dark");
+        CHECK_FALSE(fixture.window->followsSystemTheme());
     }
 
     SECTION("following the system with a pair: it stays only if both are the new set's, else the new set's own") {
-        f.window->followSystemTheme(themes::oneLight, themes::oneDark); // Both the default set's
-        f.window->skinSet<PivotalSkins>();
-        CHECK(f.theme() == "One Dark");
-        f.window->skinSet<FloatSkins>();
-        CHECK(f.theme() == "Float Light");
-        f.window->handleColorSchemeChange(ColorScheme::Dark);
-        CHECK(f.theme() == "Float Dark");
-        CHECK(f.window->followsSystemTheme());
+        fixture.window->followSystemTheme(themes::oneLight, themes::oneDark); // Both the default set's
+        fixture.window->skinSet<PivotalSkins>();
+        CHECK(fixture.theme() == "One Dark");
+        fixture.window->skinSet<FloatSkins>();
+        CHECK(fixture.theme() == "Float Light");
+        fixture.window->handleColorSchemeChange(ColorScheme::Dark);
+        CHECK(fixture.theme() == "Float Dark");
+        CHECK(fixture.window->followsSystemTheme());
 
         // A pair of the new set's stays
-        f.window->followSystemTheme(themes::floatLight, themes::floatDark);
-        f.window->skinSet<FloatSkins>();
-        CHECK(f.theme() == "Float Dark");
-        f.window->handleColorSchemeChange(ColorScheme::Light);
-        CHECK(f.theme() == "Float Light");
+        fixture.window->followSystemTheme(themes::floatLight, themes::floatDark);
+        fixture.window->skinSet<FloatSkins>();
+        CHECK(fixture.theme() == "Float Dark");
+        fixture.window->handleColorSchemeChange(ColorScheme::Light);
+        CHECK(fixture.theme() == "Float Light");
     }
 }

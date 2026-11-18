@@ -22,11 +22,11 @@ namespace psychic_ui::showcase {
                 std::array<std::uint32_t, 256> t{};
                 std::uint32_t                  n = 0;
                 for (std::uint32_t &entry: t) {
-                    std::uint32_t c = n++;
+                    std::uint32_t value = n++;
                     for (int k = 0; k < 8; ++k) {
-                        c = c & 1 ? 0xEDB88320u ^ (c >> 1) : c >> 1;
+                        value = value & 1 ? 0xEDB88320u ^ (value >> 1) : value >> 1;
                     }
-                    entry = c;
+                    entry = value;
                 }
                 return t;
             }();
@@ -123,13 +123,13 @@ namespace psychic_ui::showcase {
         }
 
         void match(BitWriter &out, const int length, const int distance) {
-            const std::size_t l = lastNotPast(lengthBase, length);
-            literal(out, 257 + static_cast<int>(l));
-            out.bits(length - lengthBase.at(l), lengthExtra.at(l));
+            const std::size_t lengthCode = lastNotPast(lengthBase, length);
+            literal(out, 257 + static_cast<int>(lengthCode));
+            out.bits(length - lengthBase.at(lengthCode), lengthExtra.at(lengthCode));
 
-            const std::size_t d = lastNotPast(distanceBase, distance);
-            out.code(static_cast<std::uint32_t>(d), 5);
-            out.bits(distance - distanceBase.at(d), distanceExtra.at(d));
+            const std::size_t distanceCode = lastNotPast(distanceBase, distance);
+            out.code(static_cast<std::uint32_t>(distanceCode), 5);
+            out.bits(distance - distanceBase.at(distanceCode), distanceExtra.at(distanceCode));
         }
 
         /**
@@ -207,27 +207,27 @@ namespace psychic_ui::showcase {
 
         // region PNG
 
-        int paeth(const int a, const int b, const int c) {
-            const int p  = a + b - c;
-            const int pa = std::abs(p - a);
-            const int pb = std::abs(p - b);
-            const int pc = std::abs(p - c);
-            if (pa <= pb && pa <= pc) {
+        int paeth(const int a, const int b, const int upLeft) {
+            const int estimate = a + b - upLeft;
+            const int toLeft   = std::abs(estimate - a);
+            const int toUp     = std::abs(estimate - b);
+            const int toUpLeft = std::abs(estimate - upLeft);
+            if (toLeft <= toUp && toLeft <= toUpLeft) {
                 return a;
             }
-            return pb <= pc ? b : c;
+            return toUp <= toUpLeft ? b : upLeft;
         }
 
         /**
          * What a PNG filter predicts a byte from: the byte to its left (a), above (b) and above left (c)
          */
-        int predict(const int filter, const int a, const int b, const int c) {
+        int predict(const int filter, const int a, const int b, const int upLeft) {
             switch (filter) {
                 case 0: return 0;
                 case 1: return a;
                 case 2: return b;
                 case 3: return (a + b) / 2;
-                default: return paeth(a, b, c);
+                default: return paeth(a, b, upLeft);
             }
         }
 
@@ -249,11 +249,11 @@ namespace psychic_ui::showcase {
             const auto        pixels       = std::span{frame.rgba};
             const auto        width        = static_cast<std::size_t>(frame.width);
             const auto        bytes        = static_cast<std::size_t>(channels);
-            for (int y = 0; y < frame.height; ++y) {
-                const auto source = pixels.subspan(static_cast<std::size_t>(y) * sourceStride, sourceStride);
-                for (std::size_t x = 0; x < width; ++x) {
-                    for (std::size_t c = 0; c < bytes; ++c) {
-                        row[(x * bytes) + c] = source[(x * 4) + c];
+            for (int line = 0; line < frame.height; ++line) {
+                const auto source = pixels.subspan(static_cast<std::size_t>(line) * sourceStride, sourceStride);
+                for (std::size_t pixel = 0; pixel < width; ++pixel) {
+                    for (std::size_t channel = 0; channel < bytes; ++channel) {
+                        row[(pixel * bytes) + channel] = source[(pixel * 4) + channel];
                     }
                 }
                 std::size_t bestSum = SIZE_MAX;
@@ -262,11 +262,11 @@ namespace psychic_ui::showcase {
                 for (auto &candidate: candidates) {
                     std::size_t sum = 0;
                     for (std::size_t i = 0; i < stride; ++i) {
-                        const bool left  = i >= bytes;
-                        const int  a     = left ? row[i - bytes] : 0;
-                        const int  b     = previous[i];
-                        const int  c     = left ? previous[i - bytes] : 0;
-                        const auto value = static_cast<std::uint8_t>(row[i] - predict(filter, a, b, c));
+                        const bool left   = i >= bytes;
+                        const int  a      = left ? row[i - bytes] : 0;
+                        const int  b      = previous[i];
+                        const int  upLeft = left ? previous[i - bytes] : 0;
+                        const auto value  = static_cast<std::uint8_t>(row[i] - predict(filter, a, b, upLeft));
                         candidate[i] = value;
                         sum += static_cast<std::size_t>(std::abs(static_cast<std::int8_t>(value)));
                     }
@@ -326,23 +326,23 @@ namespace psychic_ui::showcase {
          * none does: a frame can't be empty)
          */
         Region changed(const PngFrame &before, const PngFrame &after) {
-            int        left   = after.width;
-            int        top    = after.height;
-            int        right  = -1;
-            int        bottom = -1;
-            const auto from   = std::span{before.rgba};
-            const auto to     = std::span{after.rgba};
-            for (int y = 0; y < after.height; ++y) {
-                const std::size_t row = static_cast<std::size_t>(y) * after.width * 4;
-                for (int x = 0; x < after.width; ++x) {
-                    const std::size_t i = row + (static_cast<std::size_t>(x) * 4);
-                    if (std::ranges::equal(from.subspan(i, 4), to.subspan(i, 4))) {
+            int        left         = after.width;
+            int        top          = after.height;
+            int        right        = -1;
+            int        bottom       = -1;
+            const auto beforePixels = std::span{before.rgba};
+            const auto afterPixels  = std::span{after.rgba};
+            for (int line = 0; line < after.height; ++line) {
+                const std::size_t row = static_cast<std::size_t>(line) * after.width * 4;
+                for (int column = 0; column < after.width; ++column) {
+                    const std::size_t i = row + (static_cast<std::size_t>(column) * 4);
+                    if (std::ranges::equal(beforePixels.subspan(i, 4), afterPixels.subspan(i, 4))) {
                         continue;
                     }
-                    left   = std::min(left, x);
-                    right  = std::max(right, x);
-                    top    = std::min(top, y);
-                    bottom = std::max(bottom, y);
+                    left   = std::min(left, column);
+                    right  = std::max(right, column);
+                    top    = std::min(top, line);
+                    bottom = std::max(bottom, line);
                 }
             }
             if (right < 0) {
@@ -357,8 +357,8 @@ namespace psychic_ui::showcase {
             }
             PngFrame part{.width = region.width, .height = region.height, .rgba = {}};
             part.rgba.reserve(static_cast<std::size_t>(region.width) * region.height * 4);
-            for (int y = region.y; y < region.y + region.height; ++y) {
-                const auto begin = frame.rgba.begin() + (static_cast<std::ptrdiff_t>(y) * frame.width + region.x) * 4;
+            for (int line = region.y; line < region.y + region.height; ++line) {
+                const auto begin = frame.rgba.begin() + (static_cast<std::ptrdiff_t>(line) * frame.width + region.x) * 4;
                 part.rgba.insert(part.rgba.end(), begin, begin + static_cast<std::ptrdiff_t>(region.width) * 4);
             }
             return part;
@@ -399,10 +399,10 @@ namespace psychic_ui::showcase {
         }
 
         std::uint32_t sequence = 0;
-        for (std::size_t f = 0; f < frames.size(); ++f) {
+        for (std::size_t index = 0; index < frames.size(); ++index) {
             // After the first, a frame only holds what changed since the one before, which stays under it
-            const Region   region = f == 0 ? Region{.x = 0, .y = 0, .width = width, .height = height} : changed(frames[f - 1], frames[f]);
-            const PngFrame part   = crop(frames[f], region);
+            const Region   region = index == 0 ? Region{.x = 0, .y = 0, .width = width, .height = height} : changed(frames[index - 1], frames[index]);
+            const PngFrame part   = crop(frames[index], region);
             if (animated) {
                 std::vector<std::uint8_t> control{};
                 put32(control, sequence++);
@@ -410,14 +410,14 @@ namespace psychic_ui::showcase {
                 put32(control, static_cast<std::uint32_t>(region.height));
                 put32(control, static_cast<std::uint32_t>(region.x));
                 put32(control, static_cast<std::uint32_t>(region.y));
-                put16(control, static_cast<std::uint16_t>(f < delaysMilliseconds.size() ? delaysMilliseconds[f] : 100));
+                put16(control, static_cast<std::uint16_t>(index < delaysMilliseconds.size() ? delaysMilliseconds[index] : 100));
                 put16(control, 1000);
                 control.push_back(0); // Leave the frame as it is for the next
                 control.push_back(0); // Replace, don't blend
                 chunk(out, "fcTL", control);
             }
             std::vector<std::uint8_t> data = zlib(filtered(part, channels));
-            if (f == 0) {
+            if (index == 0) {
                 chunk(out, "IDAT", data);
             } else {
                 std::vector<std::uint8_t> frameData{};

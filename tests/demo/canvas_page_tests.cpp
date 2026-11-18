@@ -82,21 +82,21 @@ namespace {
         }
     };
 
-    void checkCanvas(const Fixture &f, const Theme &theme) {
+    void checkCanvas(const Fixture &fixture, const Theme &theme) {
         INFO(theme.name);
-        const Palette &p = theme.palette;
-        CHECK(f.page->computedStyle().backgroundColor() == p.frame);
-        CHECK(f.page->computedStyle().dotGridColor() == p.canvasDot);
+        const Palette &palette = theme.palette;
+        CHECK(fixture.page->computedStyle().backgroundColor() == palette.frame);
+        CHECK(fixture.page->computedStyle().dotGridColor() == palette.canvasDot);
 
         // The inspector floats at the top right, the tool bar centered at the bottom
-        auto *inspector = f.find<Inspector>();
-        auto *tools     = f.find<ToolBar>();
+        auto *inspector = fixture.find<Inspector>();
+        auto *tools     = fixture.find<ToolBar>();
         REQUIRE(inspector != nullptr);
         REQUIRE(tools != nullptr);
-        const auto width = static_cast<float>(f.page->getWidth());
+        const auto width = static_cast<float>(fixture.page->getWidth());
         CHECK(inspector->x() + inspector->getWidth() == width - theme.metrics.space(4));
         CHECK(std::abs(tools->x() + (tools->getWidth() / 2.0f) - (width / 2.0f)) < 1);
-        CHECK(tools->parent()->y() + tools->parent()->getHeight() == f.page->getHeight() - theme.metrics.space(5));
+        CHECK(tools->parent()->y() + tools->parent()->getHeight() == fixture.page->getHeight() - theme.metrics.space(5));
 
         // With the theme's panel elevation, no border
         CHECK(inspector->computedStyle().shadowColor() == theme.elevation.panel.color);
@@ -109,55 +109,55 @@ namespace {
         CHECK(inspector->computedStyle().borderRadius() == theme.metrics.radius.surface);
 
         // One tool at a time, in the accent
-        const Button *current = f.currentTool();
+        const Button *current = fixture.currentTool();
         REQUIRE(current != nullptr);
-        CHECK(current->skin()->computedStyle().backgroundColor() == p.accent);
-        CHECK(current->skin()->computedStyle().color() == p.onAccent);
+        CHECK(current->skin()->computedStyle().backgroundColor() == palette.accent);
+        CHECK(current->skin()->computedStyle().color() == palette.onAccent);
     }
 }
 
 TEST_CASE("the demo's Canvas page under every skin set", "[demo][canvas]") {
-    Fixture f;
+    Fixture fixture;
 
     SECTION("the default set") {
-        checkCanvas(f, themes::pivotalDark);
+        checkCanvas(fixture, themes::pivotalDark);
         for (const Theme *theme: {&themes::pivotalLight, &themes::oneDark, &themes::oneLight, &themes::psychic}) {
-            f.window->theme(*theme);
-            f.layout();
-            checkCanvas(f, *theme);
+            fixture.window->theme(*theme);
+            fixture.layout();
+            checkCanvas(fixture, *theme);
         }
     }
 
     SECTION("Float") {
-        f.window->skinSet<FloatSkins>();
-        f.layout();
-        checkCanvas(f, themes::floatLight);
-        f.window->theme(themes::floatDark);
-        f.layout();
-        checkCanvas(f, themes::floatDark);
+        fixture.window->skinSet<FloatSkins>();
+        fixture.layout();
+        checkCanvas(fixture, themes::floatLight);
+        fixture.window->theme(themes::floatDark);
+        fixture.layout();
+        checkCanvas(fixture, themes::floatDark);
     }
 
     SECTION("Desk, at both densities") {
-        f.window->skinSet<DeskSkins>();
-        f.layout();
-        checkCanvas(f, themes::deskDark);
-        f.window->theme(themes::deskLight);
-        f.layout();
-        checkCanvas(f, themes::deskLight);
-        f.window->handleInputModeChange(InputMode::Touch);
-        f.layout();
-        checkCanvas(f, themes::deskLight);
-        f.window->handleInputModeChange(InputMode::Pointer);
+        fixture.window->skinSet<DeskSkins>();
+        fixture.layout();
+        checkCanvas(fixture, themes::deskDark);
+        fixture.window->theme(themes::deskLight);
+        fixture.layout();
+        checkCanvas(fixture, themes::deskLight);
+        fixture.window->handleInputModeChange(InputMode::Touch);
+        fixture.layout();
+        checkCanvas(fixture, themes::deskLight);
+        fixture.window->handleInputModeChange(InputMode::Pointer);
     }
 
     SECTION("picking another tool") {
-        auto *tools = f.find<ToolBar>();
+        auto *tools = fixture.find<ToolBar>();
         REQUIRE(tools != nullptr);
         auto *text = dynamic_cast<Button *>(tools->children()[3].get());
         REQUIRE(text != nullptr);
         text->clicked.emit(text->mouseEventAtCenter());
-        f.layout();
-        CHECK(f.currentTool() == text);
+        fixture.layout();
+        CHECK(fixture.currentTool() == text);
         int selected = 0;
         for (const auto &child: tools->children()) {
             if (auto *tool = dynamic_cast<Button *>(child.get()); tool && tool->selected()) {

@@ -139,10 +139,10 @@ TEST_CASE("every named theme has a panel elevation, lower than its overlays'", "
                               &themes::psychic, &themes::floatLight, &themes::floatDark,
                               &themes::deskDark, &themes::deskLight}) {
         INFO(named->name);
-        const Elevation &e = named->elevation;
-        CHECK(e.panel.color.alpha() > 0);
-        CHECK(e.panelContact.color.alpha() > 0);
-        CHECK(e.panel.blur <= e.overlay.blur);
-        CHECK(e.panel.offsetY <= e.overlay.offsetY);
+        const Elevation &elevation = named->elevation;
+        CHECK(elevation.panel.color.alpha() > 0);
+        CHECK(elevation.panelContact.color.alpha() > 0);
+        CHECK(elevation.panel.blur <= elevation.overlay.blur);
+        CHECK(elevation.panel.offsetY <= elevation.overlay.offsetY);
     }
 }

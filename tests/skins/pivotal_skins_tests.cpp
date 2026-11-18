@@ -76,9 +76,9 @@ namespace {
 }
 
 TEST_CASE("Pivotal skins: the slider's track, fill and thumb follow the value", "[skins][pivotal][range]") {
-    Fixture f;
-    auto &range = f.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.25f, nullptr).width(300);
-    f.layout();
+    Fixture fixture;
+    auto &range = fixture.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.25f, nullptr).width(300);
+    fixture.layout();
     REQUIRE(range.skin());
     const Div *track = part(*range.skin(), "track");
     const Div *fill  = part(*range.skin(), "fill");
@@ -91,10 +91,10 @@ TEST_CASE("Pivotal skins: the slider's track, fill and thumb follow the value", 
 
     // Pivotal's: a 4 px track in the strong line color, the accent's fill, a 14 px thumb, the value after them
     CHECK(track->getHeight() == 4);
-    CHECK(track->computedStyle().backgroundColor() == f.theme.palette.lineStrong);
-    CHECK(fill->computedStyle().backgroundColor() == f.theme.palette.accent);
+    CHECK(track->computedStyle().backgroundColor() == fixture.theme.palette.lineStrong);
+    CHECK(fill->computedStyle().backgroundColor() == fixture.theme.palette.accent);
     CHECK(thumb->getWidth() == 14);
-    CHECK(thumb->computedStyle().shadowColor() == f.theme.elevation.thumb.color);
+    CHECK(thumb->computedStyle().shadowColor() == fixture.theme.elevation.thumb.color);
     CHECK(left(*value) > left(*track) + track->getWidth() - 1);
 
     CHECK(fill->getWidth() == Catch::Approx(track->getWidth() * 0.25f).margin(0.5f));
@@ -102,7 +102,7 @@ TEST_CASE("Pivotal skins: the slider's track, fill and thumb follow the value", 
     CHECK(centerX(*thumb) == Catch::Approx(left(*track) + (track->getWidth() * 0.25f)).margin(1.0f));
 
     range.value(0.75f);
-    f.layout();
+    fixture.layout();
     CHECK(fill->getWidth() == Catch::Approx(track->getWidth() * 0.75f).margin(0.5f));
     CHECK(centerX(*thumb) == Catch::Approx(left(*track) + (track->getWidth() * 0.75f)).margin(1.0f));
 
@@ -110,17 +110,17 @@ TEST_CASE("Pivotal skins: the slider's track, fill and thumb follow the value", 
     int x = 0;
     int y = 0;
     track->localToGlobal(x, y, track->getWidth() / 2, 2);
-    f.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = true});
-    f.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = false});
+    fixture.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = true});
+    fixture.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = false});
     CHECK(range.value() == Catch::Approx(0.5f).margin(0.01f));
 }
 
 TEST_CASE("Pivotal skins: a vertical slider fills from the bottom", "[skins][pivotal][range]") {
-    Fixture f;
-    auto &range = f.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.25f, nullptr)
+    Fixture fixture;
+    auto &range = fixture.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.25f, nullptr)
                    .orientation(Orientation::Vertical)
                    .height(200);
-    f.layout();
+    fixture.layout();
     const Div *track = part(*range.skin(), "track");
     const Div *fill  = part(*range.skin(), "fill");
     REQUIRE(track);
@@ -132,157 +132,157 @@ TEST_CASE("Pivotal skins: a vertical slider fills from the bottom", "[skins][piv
 }
 
 TEST_CASE("Pivotal skins: the keyboard's focus shows the focus ring, a click's doesn't", "[skins][pivotal][focus]") {
-    Fixture f;
-    auto &first  = f.window->appContainer().add<Button>("First");
-    auto &check  = f.window->appContainer().add<CheckBox>("Check");
-    auto &range  = f.window->appContainer().add<Range<float>>();
-    auto &hidden = f.window->appContainer().add<Button>("Hidden").visible(false);
-    auto &last   = f.window->appContainer().add<Button>("Last").enabled(false);
-    f.layout();
+    Fixture fixture;
+    auto &first  = fixture.window->appContainer().add<Button>("First");
+    auto &check  = fixture.window->appContainer().add<CheckBox>("Check");
+    auto &range  = fixture.window->appContainer().add<Range<float>>();
+    auto &hidden = fixture.window->appContainer().add<Button>("Hidden").visible(false);
+    auto &last   = fixture.window->appContainer().add<Button>("Last").enabled(false);
+    fixture.layout();
     CHECK(first.computedStyle().outlineWidth() == 0.0f);
 
     // Tab goes through what takes the focus, in order, skipping what is hidden or disabled, and wraps around
-    f.tab();
+    fixture.tab();
     CHECK(first.hasFocus());
-    CHECK(f.window->focusVisible());
-    CHECK(first.computedStyle().outlineWidth() == f.theme.metrics.focusRing);
-    CHECK(first.computedStyle().outlineOffset() == f.theme.metrics.focusRingOffset);
-    CHECK(first.computedStyle().outlineColor() == f.theme.palette.accent);
+    CHECK(fixture.window->focusVisible());
+    CHECK(first.computedStyle().outlineWidth() == fixture.theme.metrics.focusRing);
+    CHECK(first.computedStyle().outlineOffset() == fixture.theme.metrics.focusRingOffset);
+    CHECK(first.computedStyle().outlineColor() == fixture.theme.palette.accent);
 
-    f.tab();
+    fixture.tab();
     CHECK(check.hasFocus());
     CHECK(first.computedStyle().outlineWidth() == 0.0f);
     const Div *box = part(*check.skin(), "box");
     REQUIRE(box);
-    CHECK(box->computedStyle().outlineWidth() == f.theme.metrics.focusRing); // On the box
+    CHECK(box->computedStyle().outlineWidth() == fixture.theme.metrics.focusRing); // On the box
 
-    f.tab();
+    fixture.tab();
     CHECK(range.hasFocus());
     const Div *thumb = part(*range.skin(), "thumb");
     REQUIRE(thumb);
-    CHECK(thumb->computedStyle().outlineWidth() == f.theme.metrics.focusRing); // Around the thumb
+    CHECK(thumb->computedStyle().outlineWidth() == fixture.theme.metrics.focusRing); // Around the thumb
 
-    f.tab();
+    fixture.tab();
     CHECK(first.hasFocus()); // Wrapped, past the hidden and the disabled ones
     CHECK_FALSE(hidden.hasFocus());
     CHECK_FALSE(last.hasFocus());
 
-    f.tab(true);
+    fixture.tab(true);
     CHECK(range.hasFocus());
 
     // The keyboard works them
     const float before = range.getLinearPercentage();
-    f.window->handleKeyPress(Key::RIGHT, Mod{});
+    fixture.window->handleKeyPress(Key::RIGHT, Mod{});
     CHECK(range.getLinearPercentage() == Catch::Approx(before + 0.01f));
-    f.tab(true);
+    fixture.tab(true);
     CHECK(check.hasFocus());
-    f.window->handleKeyPress(Key::SPACE, Mod{});
+    fixture.window->handleKeyPress(Key::SPACE, Mod{});
     CHECK(check.checked());
     int clicks = 0;
     first.onClick([&]() { ++clicks; });
-    f.tab(true);
-    f.window->handleKeyPress(Key::ENTER, Mod{});
+    fixture.tab(true);
+    fixture.window->handleKeyPress(Key::ENTER, Mod{});
     CHECK(clicks == 1);
 
     // A click focuses without the ring
-    f.click(first);
+    fixture.click(first);
     CHECK(first.hasFocus());
-    CHECK_FALSE(f.window->focusVisible());
+    CHECK_FALSE(fixture.window->focusVisible());
     CHECK(first.computedStyle().outlineWidth() == 0.0f);
 }
 
 TEST_CASE("Pivotal skins: a text field shows its focus with the accent's border", "[skins][pivotal][focus]") {
-    Fixture f;
-    auto &input = f.window->appContainer().add<TextInput>("Text");
-    f.layout();
-    CHECK(input.computedStyle().borderColor() == f.theme.palette.line);
-    f.click(input);
+    Fixture fixture;
+    auto &input = fixture.window->appContainer().add<TextInput>("Text");
+    fixture.layout();
+    CHECK(input.computedStyle().borderColor() == fixture.theme.palette.line);
+    fixture.click(input);
     CHECK(input.hasFocus());
-    CHECK(input.computedStyle().borderColor() == f.theme.palette.accent);
+    CHECK(input.computedStyle().borderColor() == fixture.theme.palette.accent);
     CHECK(input.computedStyle().outlineWidth() == 0.0f);
 }
 
 TEST_CASE("Pivotal skins: buttons are pills, their variants skins", "[skins][pivotal][button]") {
-    Fixture f;
-    auto &secondary = f.window->appContainer().add<Button>("Secondary");
-    auto &primary   = f.window->appContainer().add<Button>("Primary").skin("primary");
-    auto &ghost     = f.window->appContainer().add<Button>("Ghost").skin("ghost");
-    auto &withIcon  = f.window->appContainer().add<Button>("Add").icon("plus");
-    f.layout();
+    Fixture fixture;
+    auto &secondary = fixture.window->appContainer().add<Button>("Secondary");
+    auto &primary   = fixture.window->appContainer().add<Button>("Primary").skin("primary");
+    auto &ghost     = fixture.window->appContainer().add<Button>("Ghost").skin("ghost");
+    auto &withIcon  = fixture.window->appContainer().add<Button>("Add").icon("plus");
+    fixture.layout();
 
-    CHECK(secondary.getHeight() == f.theme.metrics.pointer.controlMd);
+    CHECK(secondary.getHeight() == fixture.theme.metrics.pointer.controlMd);
     CHECK(secondary.skin()->getHeight() == secondary.getHeight()); // The skin fills its button
     CHECK(secondary.computedStyle().borderRadius() >= secondary.getHeight() / 2);
-    CHECK(secondary.skin()->computedStyle().backgroundColor() == f.theme.palette.raised);
+    CHECK(secondary.skin()->computedStyle().backgroundColor() == fixture.theme.palette.raised);
     CHECK(primary.skin()->classNames().contains("primary"));
-    CHECK(primary.skin()->computedStyle().backgroundColor() == f.theme.palette.accent);
-    CHECK(primary.skin()->computedStyle().color() == f.theme.palette.onAccent);
+    CHECK(primary.skin()->computedStyle().backgroundColor() == fixture.theme.palette.accent);
+    CHECK(primary.skin()->computedStyle().color() == fixture.theme.palette.onAccent);
     CHECK(ghost.skin()->computedStyle().backgroundColor().alpha() == 0);
 
     // Toggled (`:active`, as pressed): held as a hover, filled with the strong hairline's color in its outline
     secondary.toggle(true).selected(true);
     primary.toggle(true).selected(true);
-    f.layout();
-    CHECK(secondary.skin()->computedStyle().backgroundColor() == f.theme.palette.lineStrong);
-    CHECK(secondary.skin()->computedStyle().borderColor() == f.theme.palette.lineStrong);
-    CHECK(primary.skin()->computedStyle().backgroundColor() == f.theme.palette.accentHover); // Its variant's own
+    fixture.layout();
+    CHECK(secondary.skin()->computedStyle().backgroundColor() == fixture.theme.palette.lineStrong);
+    CHECK(secondary.skin()->computedStyle().borderColor() == fixture.theme.palette.lineStrong);
+    CHECK(primary.skin()->computedStyle().backgroundColor() == fixture.theme.palette.accentHover); // Its variant's own
     secondary.selected(false);
-    f.layout();
-    CHECK(secondary.skin()->computedStyle().backgroundColor() == f.theme.palette.raised);
-    CHECK(secondary.skin()->computedStyle().borderColor() == f.theme.palette.line);
+    fixture.layout();
+    CHECK(secondary.skin()->computedStyle().backgroundColor() == fixture.theme.palette.raised);
+    CHECK(secondary.skin()->computedStyle().borderColor() == fixture.theme.palette.line);
 
     const Div *icon = part(*withIcon.skin(), "icon");
     REQUIRE(icon);
     CHECK(icon->computedStyle().display() == Display::Flex);
-    CHECK(icon->getWidth() == f.theme.metrics.iconSm);
+    CHECK(icon->getWidth() == fixture.theme.metrics.iconSm);
     CHECK(part(*secondary.skin(), "icon")->computedStyle().display() == Display::None);
 
     // An icon alone, on a square
-    auto &iconButton = f.window->appContainer().add<Button>().icon("more").addClassName("icon-button");
-    f.layout();
-    CHECK(iconButton.getWidth() == f.theme.metrics.pointer.controlSm);
-    CHECK(iconButton.getHeight() == f.theme.metrics.pointer.controlSm);
+    auto &iconButton = fixture.window->appContainer().add<Button>().icon("more").addClassName("icon-button");
+    fixture.layout();
+    CHECK(iconButton.getWidth() == fixture.theme.metrics.pointer.controlSm);
+    CHECK(iconButton.getHeight() == fixture.theme.metrics.pointer.controlSm);
     const Div *alone = part(*iconButton.skin(), "icon");
     REQUIRE(alone);
-    CHECK(alone->getWidth() == f.theme.metrics.iconMd);
-    CHECK(alone->getHeight() == f.theme.metrics.iconMd);
+    CHECK(alone->getWidth() == fixture.theme.metrics.iconMd);
+    CHECK(alone->getHeight() == fixture.theme.metrics.iconMd);
     CHECK(part(*iconButton.skin(), "label")->computedStyle().display() == Display::None);
 }
 
 TEST_CASE("Pivotal skins: a checked check box fills its box with the accent", "[skins][pivotal][checkbox]") {
-    Fixture f;
-    auto &check = f.window->appContainer().add<CheckBox>("Check");
-    f.layout();
+    Fixture fixture;
+    auto &check = fixture.window->appContainer().add<CheckBox>("Check");
+    fixture.layout();
     const Div *box = part(*check.skin(), "box");
     REQUIRE(box);
     CHECK(box->getWidth() == 14);
-    CHECK(box->computedStyle().backgroundColor() == f.theme.palette.page);
-    f.click(check);
+    CHECK(box->computedStyle().backgroundColor() == fixture.theme.palette.page);
+    fixture.click(check);
     CHECK(check.checked());
     CHECK(check.classNames().contains("checked"));
-    CHECK(box->computedStyle().backgroundColor() == f.theme.palette.accent);
+    CHECK(box->computedStyle().backgroundColor() == fixture.theme.palette.accent);
 }
 
 TEST_CASE("Pivotal skins: menus float on the theme's two-layer shadow", "[skins][pivotal][menu]") {
-    Fixture f;
-    f.window->openMenu({Menu::item("Copy", []() {}, "Ctrl+C", "copy")}, 10, 10);
-    f.layout();
-    REQUIRE(f.window->overlay().children().size() == 1);
-    const Style &menu = f.window->overlay().children().front()->computedStyle();
-    CHECK(menu.backgroundColor() == f.theme.palette.overlay);
-    CHECK(menu.borderRadius() == f.theme.metrics.radius.popup);
-    CHECK(menu.shadowColor() == f.theme.elevation.overlay.color);
-    CHECK(menu.shadowSpread() == f.theme.elevation.overlay.spread);
-    CHECK(menu.shadow2Color() == f.theme.elevation.overlayContact.color);
-    CHECK(menu.shadow2Blur() == f.theme.elevation.overlayContact.blur);
+    Fixture fixture;
+    fixture.window->openMenu({Menu::item("Copy", []() {}, "Ctrl+C", "copy")}, 10, 10);
+    fixture.layout();
+    REQUIRE(fixture.window->overlay().children().size() == 1);
+    const Style &menu = fixture.window->overlay().children().front()->computedStyle();
+    CHECK(menu.backgroundColor() == fixture.theme.palette.overlay);
+    CHECK(menu.borderRadius() == fixture.theme.metrics.radius.popup);
+    CHECK(menu.shadowColor() == fixture.theme.elevation.overlay.color);
+    CHECK(menu.shadowSpread() == fixture.theme.elevation.overlay.spread);
+    CHECK(menu.shadow2Color() == fixture.theme.elevation.overlayContact.color);
+    CHECK(menu.shadow2Blur() == fixture.theme.elevation.overlayContact.blur);
 }
 
 TEST_CASE("Pivotal skins: the window controls are grey until the pointer is over them", "[skins][pivotal][window-controls]") {
-    Fixture f;
-    auto &controls = f.window->appContainer().add<WindowControls>();
-    f.layout();
+    Fixture fixture;
+    auto &controls = fixture.window->appContainer().add<WindowControls>();
+    fixture.layout();
     const std::array dots{&controls.closeButton(), &controls.minimizeButton(), &controls.maximizeButton()};
-    const Palette &p = f.theme.palette;
+    const Palette &palette = fixture.theme.palette;
 
     const auto colors = [&]() {
         return std::vector{
@@ -292,11 +292,11 @@ TEST_CASE("Pivotal skins: the window controls are grey until the pointer is over
         };
     };
     const auto moveTo = [&](int x, int y) {
-        f.window->handleMouseMove({.x = static_cast<float>(x), .y = static_cast<float>(y)}, false);
-        f.layout();
+        fixture.window->handleMouseMove({.x = static_cast<float>(x), .y = static_cast<float>(y)}, false);
+        fixture.layout();
     };
-    const std::vector grey{p.lineStrong, p.lineStrong, p.lineStrong};
-    const std::vector lit{p.danger, p.warning, p.success};
+    const std::vector grey{palette.lineStrong, palette.lineStrong, palette.lineStrong};
+    const std::vector lit{palette.danger, palette.warning, palette.success};
 
     CHECK(colors() == grey);
 
@@ -320,21 +320,21 @@ TEST_CASE("Pivotal skins: the window controls are grey until the pointer is over
 }
 
 TEST_CASE("Pivotal skins: a menu's labels line up when some rows have an icon", "[skins][pivotal][menu]") {
-    Fixture f;
+    Fixture fixture;
 
     const auto labelsLeft = [&](const std::vector<std::shared_ptr<MenuItem>> &items) {
-        f.window->openMenu(items, 10, 10);
-        f.layout();
+        fixture.window->openMenu(items, 10, 10);
+        fixture.layout();
         std::vector<float> lefts{};
-        REQUIRE(f.window->overlay().children().size() == 1);
-        const Div &menu = *f.window->overlay().children().front();
+        REQUIRE(fixture.window->overlay().children().size() == 1);
+        const Div &menu = *fixture.window->overlay().children().front();
         for (const auto &row: menu.children()) {
             const Div *label = part(*row, "label");
             REQUIRE(label);
             lefts.push_back(left(*label) - left(*row));
         }
-        f.window->closeMenu();
-        f.layout();
+        fixture.window->closeMenu();
+        fixture.layout();
         return lefts;
     };
 
@@ -354,33 +354,33 @@ TEST_CASE("Pivotal skins: a menu's labels line up when some rows have an icon", 
     });
     REQUIRE(plain.size() == 2);
     CHECK(plain[0] == plain[1]);
-    CHECK(plain[0] == f.theme.metrics.space(2));
-    CHECK(mixed[0] == plain[0] + f.theme.metrics.iconMd + f.theme.metrics.space(2));
+    CHECK(plain[0] == fixture.theme.metrics.space(2));
+    CHECK(mixed[0] == plain[0] + fixture.theme.metrics.iconMd + fixture.theme.metrics.space(2));
 
     // Only a submenu's row shows its arrow
-    f.window->openMenu({Menu::item("Copy", []() {}), Menu::item("More", {Menu::item("Nothing", []() {})})}, 10, 10);
-    f.layout();
-    const Div &menu = *f.window->overlay().children().front();
+    fixture.window->openMenu({Menu::item("Copy", []() {}), Menu::item("More", {Menu::item("Nothing", []() {})})}, 10, 10);
+    fixture.layout();
+    const Div &menu = *fixture.window->overlay().children().front();
     REQUIRE(menu.children().size() == 2);
     CHECK(part(*menu.children()[0], "arrow")->computedStyle().display() == Display::None);
     CHECK(part(*menu.children()[1], "arrow")->computedStyle().display() == Display::Flex);
-    f.window->closeMenu();
+    fixture.window->closeMenu();
 }
 
 TEST_CASE("Pivotal skins: a tool bar's current tool is in the accent", "[skins][pivotal][toolbar]") {
-    Fixture f;
-    auto &bar     = f.window->appContainer().add<ToolBar>();
+    Fixture fixture;
+    auto &bar     = fixture.window->appContainer().add<ToolBar>();
     auto &current = bar.add<Button>().icon("plus").toggle(true).autoToggle(false).selected(true);
     auto &other   = bar.add<Button>().icon("search").toggle(true).autoToggle(false);
     auto &action  = bar.add<Button>("Run");
-    f.layout();
-    CHECK(current.skin()->computedStyle().backgroundColor() == f.theme.palette.accent);
-    CHECK(current.skin()->computedStyle().color() == f.theme.palette.onAccent);
+    fixture.layout();
+    CHECK(current.skin()->computedStyle().backgroundColor() == fixture.theme.palette.accent);
+    CHECK(current.skin()->computedStyle().color() == fixture.theme.palette.onAccent);
     CHECK(other.skin()->computedStyle().backgroundColor().alpha() == 0); // Quiet at rest
     CHECK(action.skin()->computedStyle().backgroundColor().alpha() == 0);
 
     // Outside a tool bar, a toggled quiet button is only raised
-    auto &quiet = f.window->appContainer().add<Button>().icon("plus").skin("quiet").toggle(true).selected(true);
-    f.layout();
-    CHECK(quiet.skin()->computedStyle().backgroundColor() == f.theme.palette.raised);
+    auto &quiet = fixture.window->appContainer().add<Button>().icon("plus").skin("quiet").toggle(true).selected(true);
+    fixture.layout();
+    CHECK(quiet.skin()->computedStyle().backgroundColor() == fixture.theme.palette.raised);
 }

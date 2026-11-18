@@ -119,8 +119,8 @@ namespace psychic_ui {
         }
         auto [begin, end] = selection();
         if (begin == end) {
-            const unsigned int to = target(direction, unit, geometry);
-            std::tie(begin, end) = std::minmax(_caret, to);
+            const unsigned int destination = target(direction, unit, geometry);
+            std::tie(begin, end) = std::minmax(_caret, destination);
         }
         return replace(begin, end, icu::UnicodeString{});
     }
@@ -135,8 +135,8 @@ namespace psychic_ui {
             const unsigned int side = direction == Direction::Backward ? begin : end;
             return place(side, side);
         }
-        const unsigned int to = target(direction, unit, geometry);
-        return place(extend ? _anchor : to, to);
+        const unsigned int destination = target(direction, unit, geometry);
+        return place(extend ? _anchor : destination, destination);
     }
 
     unsigned int TextEditing::target(Direction direction, Unit unit, const TextGeometry &geometry) {
@@ -190,11 +190,11 @@ namespace psychic_ui {
 
     bool TextEditing::isWhitespace(unsigned int begin, unsigned int end) const {
         for (auto i = static_cast<int32_t>(begin); std::cmp_less(i, end);) {
-            const UChar32 c = _text.char32At(i);
-            if (!u_isUWhiteSpace(c)) {
+            const UChar32 character = _text.char32At(i);
+            if (!u_isUWhiteSpace(character)) {
                 return false;
             }
-            i += U16_LENGTH(c);
+            i += U16_LENGTH(character);
         }
         return true;
     }
@@ -239,8 +239,8 @@ namespace psychic_ui {
             return {0, 0};
         }
         // The segment the character at the index starts or is in (the last one at the end)
-        auto at = static_cast<int32_t>(std::min(index, length() - 1));
-        const int32_t begin = iterator.isBoundary(at) ? at : iterator.preceding(at);
+        auto start = static_cast<int32_t>(std::min(index, length() - 1));
+        const int32_t begin = iterator.isBoundary(start) ? start : iterator.preceding(start);
         const int32_t end   = iterator.following(begin);
         return {
             begin == icu::BreakIterator::DONE ? 0 : static_cast<unsigned int>(begin),

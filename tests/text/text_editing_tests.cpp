@@ -56,7 +56,7 @@ namespace {
             }
             // Then along the line, to the nearest column, never past its line return
             const int column = std::max(0, static_cast<int>(std::lround(x / 10.0f)));
-            for (int c = 0; c < column && i < text.length() && text.charAt(i) != u'\n'; ++c) {
+            for (int step = 0; step < column && i < text.length() && text.charAt(i) != u'\n'; ++step) {
                 ++i;
             }
             return static_cast<unsigned int>(i);
@@ -84,8 +84,8 @@ namespace {
             editing.setText(icu::UnicodeString::fromUTF8(text));
         }
 
-        Edit key(Key k, Mod m = Mod{}) {
-            return editing.handleKey(k, m, geometry, clipboard);
+        Edit key(Key k, Mod mod = Mod{}) {
+            return editing.handleKey(k, mod, geometry, clipboard);
         }
 
         Edit type(const std::string &str) {
@@ -103,210 +103,210 @@ namespace {
 }
 
 TEST_CASE("TextEditing inserts at the caret and moves it by what was inserted", "[text][editing-model]") {
-    Model m{};
-    CHECK(m.type("a") == (Edit::Text | Edit::Caret));
-    m.type(grinning);
-    m.type("b");
-    CHECK(m.text() == "a" + grinning + "b");
-    CHECK(m.editing.caret() == 4);
+    Model model{};
+    CHECK(model.type("a") == (Edit::Text | Edit::Caret));
+    model.type(grinning);
+    model.type("b");
+    CHECK(model.text() == "a" + grinning + "b");
+    CHECK(model.editing.caret() == 4);
     // A whole string at once
-    m.editing.select(1, 1);
-    m.type("xyz");
-    CHECK(m.text() == "axyz" + grinning + "b");
-    CHECK(m.editing.caret() == 4);
+    model.editing.select(1, 1);
+    model.type("xyz");
+    CHECK(model.text() == "axyz" + grinning + "b");
+    CHECK(model.editing.caret() == 4);
 }
 
 TEST_CASE("TextEditing steps over whole graphemes", "[text][editing-model]") {
     SECTION("a character outside the BMP") {
-        Model m{"x" + grinning + "y"};
-        m.key(Key::END);
-        CHECK(m.editing.caret() == 4);
-        m.key(Key::LEFT);
-        CHECK(m.editing.caret() == 3);
-        m.key(Key::LEFT);
-        CHECK(m.editing.caret() == 1);
-        m.key(Key::RIGHT);
-        CHECK(m.editing.caret() == 3);
-        m.key(Key::BACKSPACE);
-        CHECK(m.text() == "xy");
-        CHECK(m.editing.caret() == 1);
+        Model model{"x" + grinning + "y"};
+        model.key(Key::END);
+        CHECK(model.editing.caret() == 4);
+        model.key(Key::LEFT);
+        CHECK(model.editing.caret() == 3);
+        model.key(Key::LEFT);
+        CHECK(model.editing.caret() == 1);
+        model.key(Key::RIGHT);
+        CHECK(model.editing.caret() == 3);
+        model.key(Key::BACKSPACE);
+        CHECK(model.text() == "xy");
+        CHECK(model.editing.caret() == 1);
     }
 
     SECTION("an emoji sequence joined by zero-width joiners") {
-        Model m{family + "!"};
-        m.key(Key::RIGHT);
-        CHECK(m.editing.caret() == 8);
-        m.key(Key::DELETE);
-        CHECK(m.text() == family);
-        m.key(Key::BACKSPACE);
-        CHECK(m.text().empty());
+        Model model{family + "!"};
+        model.key(Key::RIGHT);
+        CHECK(model.editing.caret() == 8);
+        model.key(Key::DELETE);
+        CHECK(model.text() == family);
+        model.key(Key::BACKSPACE);
+        CHECK(model.text().empty());
     }
 
     SECTION("a letter and its combining mark") {
-        Model m{eAcute + "t"};
-        m.key(Key::RIGHT);
-        CHECK(m.editing.caret() == 2);
-        m.key(Key::LEFT);
-        m.key(Key::DELETE);
-        CHECK(m.text() == "t");
+        Model model{eAcute + "t"};
+        model.key(Key::RIGHT);
+        CHECK(model.editing.caret() == 2);
+        model.key(Key::LEFT);
+        model.key(Key::DELETE);
+        CHECK(model.text() == "t");
     }
 
     SECTION("the edges stay put") {
-        Model m{"ab"};
-        CHECK(m.key(Key::LEFT) == Edit::None);
-        CHECK(m.key(Key::BACKSPACE) == Edit::None);
-        m.key(Key::END);
-        CHECK(m.key(Key::RIGHT) == Edit::None);
-        CHECK(m.key(Key::DELETE) == Edit::None);
-        CHECK(m.text() == "ab");
+        Model model{"ab"};
+        CHECK(model.key(Key::LEFT) == Edit::None);
+        CHECK(model.key(Key::BACKSPACE) == Edit::None);
+        model.key(Key::END);
+        CHECK(model.key(Key::RIGHT) == Edit::None);
+        CHECK(model.key(Key::DELETE) == Edit::None);
+        CHECK(model.text() == "ab");
     }
 }
 
 TEST_CASE("TextEditing moves and erases by words", "[text][editing-model]") {
-    Model m{"Hello brave  world"};
+    Model model{"Hello brave  world"};
 
     SECTION("Ctrl+Right goes to the next word's end, past whitespace") {
-        m.key(Key::RIGHT, ctrl);
-        CHECK(m.editing.caret() == 5);
-        m.key(Key::RIGHT, ctrl);
-        CHECK(m.editing.caret() == 11);
-        m.key(Key::RIGHT, ctrl);
-        CHECK(m.editing.caret() == 18);
-        CHECK(m.key(Key::RIGHT, ctrl) == Edit::None);
+        model.key(Key::RIGHT, ctrl);
+        CHECK(model.editing.caret() == 5);
+        model.key(Key::RIGHT, ctrl);
+        CHECK(model.editing.caret() == 11);
+        model.key(Key::RIGHT, ctrl);
+        CHECK(model.editing.caret() == 18);
+        CHECK(model.key(Key::RIGHT, ctrl) == Edit::None);
     }
 
     SECTION("Ctrl+Left goes to the previous word's start, past whitespace") {
-        m.key(Key::END);
-        m.key(Key::LEFT, ctrl);
-        CHECK(m.editing.caret() == 13);
-        m.key(Key::LEFT, ctrl);
-        CHECK(m.editing.caret() == 6);
+        model.key(Key::END);
+        model.key(Key::LEFT, ctrl);
+        CHECK(model.editing.caret() == 13);
+        model.key(Key::LEFT, ctrl);
+        CHECK(model.editing.caret() == 6);
         // From inside a word, its own start
-        m.editing.select(8, 8);
-        m.key(Key::LEFT, ctrl);
-        CHECK(m.editing.caret() == 6);
-        m.key(Key::LEFT, ctrl);
-        CHECK(m.editing.caret() == 0);
+        model.editing.select(8, 8);
+        model.key(Key::LEFT, ctrl);
+        CHECK(model.editing.caret() == 6);
+        model.key(Key::LEFT, ctrl);
+        CHECK(model.editing.caret() == 0);
     }
 
     SECTION("Ctrl+Backspace and Ctrl+Delete erase as far") {
-        m.editing.select(11, 11);
-        m.key(Key::BACKSPACE, ctrl);
-        CHECK(m.text() == "Hello   world");
-        m.key(Key::DELETE, ctrl);
-        CHECK(m.text() == "Hello ");
+        model.editing.select(11, 11);
+        model.key(Key::BACKSPACE, ctrl);
+        CHECK(model.text() == "Hello   world");
+        model.key(Key::DELETE, ctrl);
+        CHECK(model.text() == "Hello ");
     }
 
     SECTION("a double click selects the word it lands on, not the space before it") {
-        m.editing.selectAt(6, 2, false);
-        CHECK(m.editing.selection() == std::make_pair(6u, 11u));
-        m.editing.selectAt(8, 2, false);
-        CHECK(m.editing.selection() == std::make_pair(6u, 11u));
+        model.editing.selectAt(6, 2, false);
+        CHECK(model.editing.selection() == std::make_pair(6u, 11u));
+        model.editing.selectAt(8, 2, false);
+        CHECK(model.editing.selection() == std::make_pair(6u, 11u));
         // Past the end, the last word
-        m.editing.selectAt(18, 2, false);
-        CHECK(m.editing.selection() == std::make_pair(13u, 18u));
+        model.editing.selectAt(18, 2, false);
+        CHECK(model.editing.selection() == std::make_pair(13u, 18u));
     }
 }
 
 TEST_CASE("TextEditing selects with the mouse", "[text][editing-model]") {
-    Model m{"Hello brave world. Second one."};
+    Model model{"Hello brave world. Second one."};
 
     SECTION("a press puts the caret, a drag selects from it") {
-        CHECK(m.editing.selectAt(3, 1, false) == Edit::Caret);
-        CHECK(m.editing.selection() == std::make_pair(3u, 3u));
-        m.editing.dragTo(8);
-        CHECK(m.editing.anchor() == 3);
-        CHECK(m.editing.caret() == 8);
-        m.editing.dragTo(1);
-        CHECK(m.editing.selection() == std::make_pair(1u, 3u));
+        CHECK(model.editing.selectAt(3, 1, false) == Edit::Caret);
+        CHECK(model.editing.selection() == std::make_pair(3u, 3u));
+        model.editing.dragTo(8);
+        CHECK(model.editing.anchor() == 3);
+        CHECK(model.editing.caret() == 8);
+        model.editing.dragTo(1);
+        CHECK(model.editing.selection() == std::make_pair(1u, 3u));
     }
 
     SECTION("Shift extends from the anchor") {
-        m.editing.selectAt(3, 1, false);
-        m.editing.selectAt(9, 1, true);
-        CHECK(m.editing.anchor() == 3);
-        CHECK(m.editing.caret() == 9);
+        model.editing.selectAt(3, 1, false);
+        model.editing.selectAt(9, 1, true);
+        CHECK(model.editing.anchor() == 3);
+        CHECK(model.editing.caret() == 9);
     }
 
     SECTION("dragging after a double click keeps the word") {
-        m.editing.selectAt(8, 2, false);
-        m.editing.dragTo(14);
-        CHECK(m.editing.selection() == std::make_pair(6u, 14u));
-        m.editing.dragTo(2);
-        CHECK(m.editing.selection() == std::make_pair(2u, 11u));
-        CHECK(m.editing.caret() == 2);
+        model.editing.selectAt(8, 2, false);
+        model.editing.dragTo(14);
+        CHECK(model.editing.selection() == std::make_pair(6u, 14u));
+        model.editing.dragTo(2);
+        CHECK(model.editing.selection() == std::make_pair(2u, 11u));
+        CHECK(model.editing.caret() == 2);
     }
 
     SECTION("three clicks select the sentence, four everything") {
-        m.editing.selectAt(3, 3, false);
-        CHECK(m.editing.selection() == std::make_pair(0u, 19u));
-        m.editing.selectAt(3, 4, false);
-        CHECK(m.editing.selection() == std::make_pair(0u, 30u));
+        model.editing.selectAt(3, 3, false);
+        CHECK(model.editing.selection() == std::make_pair(0u, 19u));
+        model.editing.selectAt(3, 4, false);
+        CHECK(model.editing.selection() == std::make_pair(0u, 30u));
     }
 }
 
 TEST_CASE("TextEditing removes a selection first", "[text][editing-model]") {
     SECTION("select all then Delete with the caret at the end") {
-        Model m{"hello"};
-        m.key(Key::END);
-        m.key(Key::A, ctrl);
-        CHECK(m.editing.selection() == std::make_pair(0u, 5u));
-        CHECK(m.key(Key::DELETE) == (Edit::Text | Edit::Caret));
-        CHECK(m.text().empty());
+        Model model{"hello"};
+        model.key(Key::END);
+        model.key(Key::A, ctrl);
+        CHECK(model.editing.selection() == std::make_pair(0u, 5u));
+        CHECK(model.key(Key::DELETE) == (Edit::Text | Edit::Caret));
+        CHECK(model.text().empty());
     }
 
     SECTION("select all then Backspace with the caret at the start") {
-        Model m{"hello"};
-        m.key(Key::A, ctrl);
-        m.key(Key::BACKSPACE);
-        CHECK(m.text().empty());
+        Model model{"hello"};
+        model.key(Key::A, ctrl);
+        model.key(Key::BACKSPACE);
+        CHECK(model.text().empty());
     }
 
     SECTION("typing replaces it") {
-        Model m{"hello"};
-        m.editing.select(1, 4);
-        m.type("ipp");
-        CHECK(m.text() == "hippo");
-        CHECK(m.editing.caret() == 4);
+        Model model{"hello"};
+        model.editing.select(1, 4);
+        model.type("ipp");
+        CHECK(model.text() == "hippo");
+        CHECK(model.editing.caret() == 4);
     }
 }
 
 TEST_CASE("TextEditing extends the selection with Shift", "[text][editing-model]") {
-    Model m{"Hello world"};
-    m.key(Key::RIGHT, shift);
-    m.key(Key::RIGHT, shift);
-    CHECK(m.editing.anchor() == 0);
-    CHECK(m.editing.selection() == std::make_pair(0u, 2u));
-    m.key(Key::RIGHT, ctrlShift);
-    CHECK(m.editing.selection() == std::make_pair(0u, 5u));
-    m.key(Key::END, shift);
-    CHECK(m.editing.selection() == std::make_pair(0u, 11u));
-    m.key(Key::LEFT, shift);
-    CHECK(m.editing.selection() == std::make_pair(0u, 10u));
+    Model model{"Hello world"};
+    model.key(Key::RIGHT, shift);
+    model.key(Key::RIGHT, shift);
+    CHECK(model.editing.anchor() == 0);
+    CHECK(model.editing.selection() == std::make_pair(0u, 2u));
+    model.key(Key::RIGHT, ctrlShift);
+    CHECK(model.editing.selection() == std::make_pair(0u, 5u));
+    model.key(Key::END, shift);
+    CHECK(model.editing.selection() == std::make_pair(0u, 11u));
+    model.key(Key::LEFT, shift);
+    CHECK(model.editing.selection() == std::make_pair(0u, 10u));
     // Back past the anchor, the other way
-    m.key(Key::HOME);
-    m.editing.select(5, 5);
-    m.key(Key::LEFT, shift);
-    m.key(Key::LEFT, shift);
-    CHECK(m.editing.anchor() == 5);
-    CHECK(m.editing.caret() == 3);
-    CHECK(m.editing.selection() == std::make_pair(3u, 5u));
+    model.key(Key::HOME);
+    model.editing.select(5, 5);
+    model.key(Key::LEFT, shift);
+    model.key(Key::LEFT, shift);
+    CHECK(model.editing.anchor() == 5);
+    CHECK(model.editing.caret() == 3);
+    CHECK(model.editing.selection() == std::make_pair(3u, 5u));
     // An arrow without Shift collapses it to its side
-    m.key(Key::RIGHT);
-    CHECK(m.editing.selection() == std::make_pair(5u, 5u));
-    m.editing.select(2, 7);
-    m.key(Key::LEFT);
-    CHECK(m.editing.selection() == std::make_pair(2u, 2u));
+    model.key(Key::RIGHT);
+    CHECK(model.editing.selection() == std::make_pair(5u, 5u));
+    model.editing.select(2, 7);
+    model.key(Key::LEFT);
+    CHECK(model.editing.selection() == std::make_pair(2u, 2u));
 }
 
 TEST_CASE("TextEditing keeps one line on one line", "[text][editing-model]") {
-    Model m{"Hello "};
-    m.key(Key::END);
-    m.clipboard.text = "big\nwide\r\nworld";
-    m.key(Key::V, ctrl);
-    CHECK(m.text() == "Hello big wide world");
-    CHECK(m.editing.caret() == 20);
-    CHECK(m.key(Key::ENTER) == Edit::None);
+    Model model{"Hello "};
+    model.key(Key::END);
+    model.clipboard.text = "big\nwide\r\nworld";
+    model.key(Key::V, ctrl);
+    CHECK(model.text() == "Hello big wide world");
+    CHECK(model.editing.caret() == 20);
+    CHECK(model.key(Key::ENTER) == Edit::None);
 
     SECTION("but not several") {
         Model lines{"", true};
@@ -318,77 +318,77 @@ TEST_CASE("TextEditing keeps one line on one line", "[text][editing-model]") {
 }
 
 TEST_CASE("TextEditing copies and cuts the selection", "[text][editing-model]") {
-    Model m{"Hello wörld"};
-    m.editing.select(6, 11);
-    CHECK(m.key(Key::C, ctrl) == Edit::None);
-    CHECK(m.clipboard.text == "wörld");
-    m.key(Key::X, ctrl);
-    CHECK(m.text() == "Hello ");
+    Model model{"Hello wörld"};
+    model.editing.select(6, 11);
+    CHECK(model.key(Key::C, ctrl) == Edit::None);
+    CHECK(model.clipboard.text == "wörld");
+    model.key(Key::X, ctrl);
+    CHECK(model.text() == "Hello ");
     // Without the modifier, nothing
-    m.clipboard.text = "x";
-    CHECK(m.key(Key::V) == Edit::None);
-    CHECK(m.text() == "Hello ");
+    model.clipboard.text = "x";
+    CHECK(model.key(Key::V) == Edit::None);
+    CHECK(model.text() == "Hello ");
 }
 
 TEST_CASE("TextEditing moves between lines in the column it keeps", "[text][editing-model]") {
     // Columns: 6, 2, 8
-    Model m{"abcdef\nab\nabcdefgh", true};
-    m.editing.select(5, 5); // Column 5 on the first line
+    Model model{"abcdef\nab\nabcdefgh", true};
+    model.editing.select(5, 5); // Column 5 on the first line
 
-    m.key(Key::DOWN);
-    CHECK(m.editing.caret() == 9); // The second line is shorter: its end
-    m.key(Key::DOWN);
-    CHECK(m.editing.caret() == 15); // Back in column 5
-    m.key(Key::UP);
-    m.key(Key::UP);
-    CHECK(m.editing.caret() == 5);
+    model.key(Key::DOWN);
+    CHECK(model.editing.caret() == 9); // The second line is shorter: its end
+    model.key(Key::DOWN);
+    CHECK(model.editing.caret() == 15); // Back in column 5
+    model.key(Key::UP);
+    model.key(Key::UP);
+    CHECK(model.editing.caret() == 5);
 
     SECTION("past the first and last lines, the text's edges") {
-        m.key(Key::UP);
-        CHECK(m.editing.caret() == 0);
-        m.key(Key::END, ctrl);
-        m.key(Key::DOWN);
-        CHECK(m.editing.caret() == 18);
+        model.key(Key::UP);
+        CHECK(model.editing.caret() == 0);
+        model.key(Key::END, ctrl);
+        model.key(Key::DOWN);
+        CHECK(model.editing.caret() == 18);
     }
 
     SECTION("a horizontal move forgets the column") {
-        m.key(Key::DOWN);
-        m.key(Key::LEFT);
-        m.key(Key::DOWN);
-        CHECK(m.editing.caret() == 11);
+        model.key(Key::DOWN);
+        model.key(Key::LEFT);
+        model.key(Key::DOWN);
+        CHECK(model.editing.caret() == 11);
     }
 
     SECTION("Home and End go to the line's edges, Ctrl to the text's") {
-        m.key(Key::DOWN);
-        m.key(Key::HOME);
-        CHECK(m.editing.caret() == 7);
-        m.key(Key::END);
-        CHECK(m.editing.caret() == 9);
-        m.key(Key::HOME, ctrl);
-        CHECK(m.editing.caret() == 0);
+        model.key(Key::DOWN);
+        model.key(Key::HOME);
+        CHECK(model.editing.caret() == 7);
+        model.key(Key::END);
+        CHECK(model.editing.caret() == 9);
+        model.key(Key::HOME, ctrl);
+        CHECK(model.editing.caret() == 0);
     }
 
     SECTION("Shift+Down selects to the line below") {
-        m.key(Key::DOWN, shift);
-        CHECK(m.editing.selection() == std::make_pair(5u, 9u));
+        model.key(Key::DOWN, shift);
+        CHECK(model.editing.selection() == std::make_pair(5u, 9u));
     }
 }
 
 TEST_CASE("Read-only TextEditing refuses edits but selects, moves and copies", "[text][editing-model]") {
-    Model m{"Hello world"};
-    m.editing.setReadOnly(true);
-    CHECK(m.type("x") == Edit::None);
-    CHECK(m.key(Key::DELETE) == Edit::None);
-    CHECK(m.key(Key::RIGHT, shift) == Edit::Caret);
-    CHECK(m.key(Key::BACKSPACE) == Edit::None);
-    m.key(Key::A, ctrl);
-    m.key(Key::C, ctrl);
-    CHECK(m.clipboard.text == "Hello world");
-    CHECK(m.key(Key::X, ctrl) == Edit::None);
-    m.clipboard.text = "pasted";
-    CHECK(m.key(Key::V, ctrl) == Edit::None);
-    CHECK(m.text() == "Hello world");
-    CHECK(m.editing.selection() == std::make_pair(0u, 11u));
+    Model model{"Hello world"};
+    model.editing.setReadOnly(true);
+    CHECK(model.type("x") == Edit::None);
+    CHECK(model.key(Key::DELETE) == Edit::None);
+    CHECK(model.key(Key::RIGHT, shift) == Edit::Caret);
+    CHECK(model.key(Key::BACKSPACE) == Edit::None);
+    model.key(Key::A, ctrl);
+    model.key(Key::C, ctrl);
+    CHECK(model.clipboard.text == "Hello world");
+    CHECK(model.key(Key::X, ctrl) == Edit::None);
+    model.clipboard.text = "pasted";
+    CHECK(model.key(Key::V, ctrl) == Edit::None);
+    CHECK(model.text() == "Hello world");
+    CHECK(model.editing.selection() == std::make_pair(0u, 11u));
 }
 
 TEST_CASE("TextEditing survives a move", "[text][editing-model]") {

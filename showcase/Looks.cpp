@@ -40,8 +40,8 @@ namespace psychic_ui::showcase {
         };
         for (const Theme *theme: all) {
             std::string name{theme->name};
-            for (char &c: name) {
-                c = c == ' ' ? '-' : static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            for (char &character: name) {
+                character = character == ' ' ? '-' : static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
             }
             if (name == key) {
                 return theme;

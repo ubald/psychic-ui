@@ -31,17 +31,17 @@ namespace psychic_ui {
          * Negative, zero or positive as a sorts before, with or after b
          */
         int compareValues(const std::string &a, const std::string &b) {
-            double na = 0;
-            double nb = 0;
-            if (leadingNumber(a, na) && leadingNumber(b, nb) && na != nb) {
-                return na < nb ? -1 : 1;
+            double numberA = 0;
+            double numberB = 0;
+            if (leadingNumber(a, numberA) && leadingNumber(b, numberB) && numberA != numberB) {
+                return numberA < numberB ? -1 : 1;
             }
             const auto length = std::min(a.size(), b.size());
             for (std::size_t i = 0; i < length; ++i) {
-                const int ca = std::tolower(static_cast<unsigned char>(a[i]));
-                const int cb = std::tolower(static_cast<unsigned char>(b[i]));
-                if (ca != cb) {
-                    return ca < cb ? -1 : 1;
+                const int charA = std::tolower(static_cast<unsigned char>(a[i]));
+                const int charB = std::tolower(static_cast<unsigned char>(b[i]));
+                if (charA != charB) {
+                    return charA < charB ? -1 : 1;
                 }
             }
             if (a.size() == b.size()) {
@@ -112,8 +112,8 @@ namespace psychic_ui {
         _body = &viewport.add<Div>();
         _body->addClassName("body")
              .direction(Direction::Column)
-             .width(100_pct)
-             .height(100_pct)
+             .width(Full)
+             .height(Full)
              .overflow(Overflow::Scroll);
         viewport.add<ScrollBar>(*_body)
                 .position(Position::Absolute)
@@ -156,17 +156,17 @@ namespace psychic_ui {
         if (column >= _columns.size()) {
             return;
         }
-        const DataGridColumn &c = _columns[column];
+        const DataGridColumn &spec = _columns[column];
         cell.direction(Direction::Row)
             .alignItems(Align::Center)
             .minWidth(0)
-            .justify(c.align == TextAlign::End ? Justify::End : Justify::Start);
-        if (c.width > 0) {
-            cell.width(c.width).grow(0).shrink(0);
+            .justify(spec.align == TextAlign::End ? Justify::End : Justify::Start);
+        if (spec.width > 0) {
+            cell.width(spec.width).grow(0).shrink(0);
         } else {
             cell.basis(0).grow(1).shrink(1);
         }
-        if (c.align == TextAlign::End) {
+        if (spec.align == TextAlign::End) {
             cell.addClassName("end");
         } else {
             cell.removeClassName("end");

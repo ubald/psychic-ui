@@ -56,15 +56,15 @@ namespace psychic_ui {
             const Div  *segment = _segments[i];
             const auto  left    = static_cast<float>(segment->x());
             const float right   = left + static_cast<float>(segment->getWidth());
-            const auto  px      = static_cast<float>(x);
-            float       d       = 0.0f; // Inside it
-            if (px < left) {
-                d = left - px;
-            } else if (px >= right) {
-                d = px - right + 1;
+            const auto  pointX  = static_cast<float>(x);
+            float       away    = 0.0f; // Inside it
+            if (pointX < left) {
+                away = left - pointX;
+            } else if (pointX >= right) {
+                away = pointX - right + 1;
             }
-            if (d < distance) {
-                distance = d;
+            if (away < distance) {
+                distance = away;
                 nearest  = static_cast<int>(i);
             }
         }

@@ -71,13 +71,13 @@ namespace psychic_ui {
     }
 
     void RangeSkinBase::placeParts() {
-        const Length at = Length::percent(_value * 100.0f);
+        const Length offset = Length::percent(_value * 100.0f);
         if (_vertical) {
-            _fill->left(0).right(0).bottom(0).top(Auto).width(Auto).height(at);
-            _thumbAnchor->left(50_pct).bottom(at).top(Auto);
+            _fill->left(0).right(0).bottom(0).top(Auto).width(Auto).height(offset);
+            _thumbAnchor->left(50_pct).bottom(offset).top(Auto);
         } else {
-            _fill->left(0).top(0).bottom(0).right(Auto).height(Auto).width(at);
-            _thumbAnchor->left(at).top(50_pct).bottom(Auto);
+            _fill->left(0).top(0).bottom(0).right(Auto).height(Auto).width(offset);
+            _thumbAnchor->left(offset).top(50_pct).bottom(Auto);
         }
     }
 

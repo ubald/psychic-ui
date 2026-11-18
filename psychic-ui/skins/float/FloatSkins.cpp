@@ -61,10 +61,10 @@ namespace psychic_ui {
 
     // Only what differs from the default set's rules, which loaded just before these: on equal weight, ours win
     void FloatSkins::load(StyleManager *manager) {
-        const Theme   &theme = manager->theme();
-        const Palette &p     = theme.palette;
-        const Metrics &m     = theme.metrics;
-        const Radii   &r     = m.radius;
+        const Theme   &theme   = manager->theme();
+        const Palette &palette = theme.palette;
+        const Metrics &metrics = theme.metrics;
+        const Radii   &r       = metrics.radius;
 
         const auto rule = [manager](const char *selector) -> Style & {
             return manager->style(selector);
@@ -74,18 +74,18 @@ namespace psychic_ui {
 
         // The frame is a canvas: its grey, dotted every 16 px like a design tool's
         rule("AppShell")
-            .backgroundColor(p.frame)
-            .dotGridColor(p.canvasDot)
+            .backgroundColor(palette.frame)
+            .dotGridColor(palette.canvasDot)
             .dotGridSpacing(16)
             .dotGridRadius(1);
 
         // The sidebar and the page float over it, the canvas showing around them
         floatingPanel(rule("Sidebar"), theme)
-            .margin(m.frameInset)
+            .margin(metrics.frameInset)
             .marginRight(0);
-        rule("AppShell .main").paddingLeft(m.frameInset);
+        rule("AppShell .main").paddingLeft(metrics.frameInset);
         floatingPanel(rule("AppShell .page"), theme)
-            .backgroundColor(p.page)
+            .backgroundColor(palette.page)
             .borderRadius(r.page);
 
         // Sections set apart by their headings, not by hairlines
@@ -93,8 +93,8 @@ namespace psychic_ui {
 
         // The current item: the selection's soft violet, its text and icon in the accent
         rule("SidebarItem.current")
-            .color(p.accentText)
-            .backgroundColor(p.accentSoft);
+            .color(palette.accentText)
+            .backgroundColor(palette.accentSoft);
 
         // endregion
 
@@ -110,7 +110,7 @@ namespace psychic_ui {
 
         // A white thumb on a white panel: a hairline ring under its drop shadow keeps it visible
         rule("Range .thumb")
-            .shadow2Color(p.lineStrong)
+            .shadow2Color(palette.lineStrong)
             .shadow2Spread(1);
 
         // Round avatars and color chips, whatever the radii
@@ -130,20 +130,20 @@ namespace psychic_ui {
         for (const char *row: {"ListRow", "DataGridRow"}) {
             const std::string name{row};
             rule(row).borderBottom(0);
-            rule((name + ":hover").c_str()).backgroundColor(p.hover);
+            rule((name + ":hover").c_str()).backgroundColor(palette.hover);
             rule((name + ".selected").c_str())
                 .borderLeftColor(transparent)
-                .backgroundColor(p.accentSoft);
-            rule((name + ".sliding.selected").c_str()).backgroundColor(p.accentSoft.over(p.page)); // Opaque, as it slides
+                .backgroundColor(palette.accentSoft);
+            rule((name + ".sliding.selected").c_str()).backgroundColor(palette.accentSoft.over(palette.page)); // Opaque, as it slides
         }
-        rule("ListRow.selected .title").color(p.accentText);
-        rule("DataGridRow.selected").color(p.accentText);
+        rule("ListRow.selected .title").color(palette.accentText);
+        rule("DataGridRow.selected").color(palette.accentText);
 
         rule("TreeRow.selected")
-            .color(p.accentText)
+            .color(palette.accentText)
             .borderColor(transparent)
-            .backgroundColor(p.accentSoft);
-        rule("TreeRow.selected .icon").color(p.accent);
+            .backgroundColor(palette.accentSoft);
+        rule("TreeRow.selected .icon").color(palette.accent);
 
         // endregion
     }

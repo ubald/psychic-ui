@@ -265,9 +265,9 @@ namespace psychic_ui {
 
     template<class T>
     void Range<T>::updateValue(const T value) {
-        const float v = std::max(_min, std::min(value, _max));
-        if (v != _value) {
-            _value = v;
+        const float clamped = std::max(_min, std::min(value, _max));
+        if (clamped != _value) {
+            _value = clamped;
             changed.emit(_value);
             if (_skin) {
                 _skin->setValue(getLinearPercentage());
@@ -282,19 +282,19 @@ namespace psychic_ui {
 
     template<class T>
     void Range<T>::setLinearPercentage(const float percent) {
-        float v = percent;
+        float fraction = percent;
         switch (_mode) {
             case RangeMode::Logarithmic:
-                v = std::log((percent * 9.0f) + 1.0f) * std::numbers::log10e_v<float>;
+                fraction = std::log((percent * 9.0f) + 1.0f) * std::numbers::log10e_v<float>;
                 break;
             case RangeMode::LogarithmicInverse:
-                v = 1.0f - (std::log(((1.0f - percent) * 9.0f) + 1.0f) * std::numbers::log10e_v<float>);
+                fraction = 1.0f - (std::log(((1.0f - percent) * 9.0f) + 1.0f) * std::numbers::log10e_v<float>);
                 break;
             default:
                 break;
         }
-        v = (v * (static_cast<float>(_max) - static_cast<float >(_min))) + static_cast<float >(_min);
-        updateValue(static_cast<T>(std::is_floating_point_v<T> ? v : std::round(v)));
+        fraction = (fraction * (static_cast<float>(_max) - static_cast<float >(_min))) + static_cast<float >(_min);
+        updateValue(static_cast<T>(std::is_floating_point_v<T> ? fraction : std::round(fraction)));
     }
 
     template<class T>
@@ -307,14 +307,14 @@ namespace psychic_ui {
 
     template<class T>
     float Range<T>::getLinearPercentageFor(const T value) const {
-        const float v = getPercentageFor(value);
+        const float fraction = getPercentageFor(value);
         switch (_mode) {
             case RangeMode::Logarithmic:
-                return ((float) std::pow(10, v) - 1.0f) / 9.0f;
+                return ((float) std::pow(10, fraction) - 1.0f) / 9.0f;
             case RangeMode::LogarithmicInverse:
-                return 1.0f - (((float) std::pow(10, 1.0f - v) - 1.0f) / 9.0f);
+                return 1.0f - (((float) std::pow(10, 1.0f - fraction) - 1.0f) / 9.0f);
             default:
-                return v;
+                return fraction;
         }
     }
 

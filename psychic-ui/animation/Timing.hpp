@@ -52,14 +52,14 @@ namespace psychic_ui {
         // CSS's named curves
         static const Ease Linear;   // linear
         static const Ease Standard; // ease, CSS's default: a quick start, a long settle
-        static const Ease In;       // ease-in
+        static const Ease In;       // ease-in NOLINT(readability-identifier-length): CSS's name, beside Out and InOut
         static const Ease Out;      // ease-out
         static const Ease InOut;    // ease-in-out
     };
 
     inline constexpr Ease Ease::Linear{.x1 = 0.0f, .y1 = 0.0f, .x2 = 1.0f, .y2 = 1.0f};
     inline constexpr Ease Ease::Standard{.x1 = 0.25f, .y1 = 0.1f, .x2 = 0.25f, .y2 = 1.0f};
-    inline constexpr Ease Ease::In{.x1 = 0.42f, .y1 = 0.0f, .x2 = 1.0f, .y2 = 1.0f};
+    inline constexpr Ease Ease::In{.x1 = 0.42f, .y1 = 0.0f, .x2 = 1.0f, .y2 = 1.0f}; // NOLINT(readability-identifier-length): CSS's ease-in
     inline constexpr Ease Ease::Out{.x1 = 0.0f, .y1 = 0.0f, .x2 = 0.58f, .y2 = 1.0f};
     inline constexpr Ease Ease::InOut{.x1 = 0.42f, .y1 = 0.0f, .x2 = 0.58f, .y2 = 1.0f};
 
@@ -81,11 +81,11 @@ namespace psychic_ui {
         [[nodiscard]] float dampingRatio() const;
 
         /**
-         * Where it is `t` seconds after it had an offset of `x0` and a velocity of `v0` (the closed form, so the frame
-         * rate doesn't change the motion): settled once the offset is within `tolerance` and the velocity within
-         * `tolerance` × max(ω, 1), or after `maxTime`
+         * Where it is `t` seconds after it had an offset of `offset0` and a velocity of `velocity0` (the closed form, so
+         * the frame rate doesn't change the motion): settled once the offset is within `tolerance` and the velocity
+         * within `tolerance` × max(ω, 1), or after `maxTime`
          */
-        [[nodiscard]] Approach approach(float x0, float v0, float t, float tolerance) const;
+        [[nodiscard]] Approach approach(float offset0, float velocity0, float t, float tolerance) const;
 
         constexpr bool operator==(const Spring &) const = default;
 

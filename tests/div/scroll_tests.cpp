@@ -25,52 +25,52 @@ namespace {
 
 // C5: Div.cpp doesn't correct the scroll offset when the content shrinks
 TEST_CASE("C5: the scroll offset follows content that shrinks", "[div][scroll][!shouldfail]") {
-    Scrolling f;
-    auto     &viewport = f.viewport();
+    Scrolling fixture;
+    auto     &viewport = fixture.viewport();
     auto     &content  = viewport.add<Div>().width(200).height(1000).shrink(0);
-    f.sys.layout();
+    fixture.sys.layout();
     viewport.scrollBy(0, -800);
     REQUIRE(viewport.scrollY() == -800);
     content.height(100);
-    f.sys.layout();
+    fixture.sys.layout();
     CHECK(viewport.scrollY() == 0);
-    f.wheel(3);
+    fixture.wheel(3);
     CHECK(viewport.scrollY() == 0);
 }
 
 // C6: a wheel delta becomes ceil(delta) * 2 px
 TEST_CASE("C6: fractional wheel deltas scroll both ways alike", "[div][scroll][!shouldfail]") {
-    Scrolling f;
-    auto     &viewport = f.viewport();
+    Scrolling fixture;
+    auto     &viewport = fixture.viewport();
     viewport.add<Div>().width(200).height(1000).shrink(0);
-    f.sys.layout();
+    fixture.sys.layout();
     viewport.scrollBy(0, -400);
-    f.wheel(-0.5);
+    fixture.wheel(-0.5);
     const int down = -400 - viewport.scrollY();
     CHECK(down > 0);
-    f.wheel(0.5);
+    fixture.wheel(0.5);
     CHECK(viewport.scrollY() == -400);
 }
 
 TEST_CASE("C6: a wheel notch scrolls more than 2 px", "[div][scroll][!shouldfail]") {
     // How far is to be decided (browsers move about 40 to 100 px); 2 px is a tenth of a line
-    Scrolling f;
-    auto     &viewport = f.viewport();
+    Scrolling fixture;
+    auto     &viewport = fixture.viewport();
     viewport.add<Div>().width(200).height(1000).shrink(0);
-    f.sys.layout();
-    f.wheel(-1);
+    fixture.sys.layout();
+    fixture.wheel(-1);
     CHECK(viewport.scrollY() < -2);
 }
 
 // C7: every scroller on the path takes the wheel event
 TEST_CASE("C7: a wheel event scrolls the innermost scroller only", "[div][scroll][!shouldfail]") {
-    Scrolling f;
-    auto     &outer = f.viewport();
+    Scrolling fixture;
+    auto     &outer = fixture.viewport();
     auto     &inner = outer.add<Div>().width(200).height(100).shrink(0).overflow(Overflow::Scroll);
     inner.add<Div>().width(200).height(1000).shrink(0);
     outer.add<Div>().width(200).height(1000).shrink(0);
-    f.sys.layout();
-    f.wheel(-3);
+    fixture.sys.layout();
+    fixture.wheel(-3);
     CHECK(inner.scrollY() < 0);
     CHECK(outer.scrollY() == 0);
 }

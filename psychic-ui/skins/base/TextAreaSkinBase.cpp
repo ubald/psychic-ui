@@ -19,7 +19,7 @@ namespace psychic_ui {
         _text = text.get();
         _text->addClassName("text")
              .multiline(true)
-             .minHeight(100_pct); // The whole viewport, empty or not
+             .minHeight(Full); // The whole viewport, empty or not
         _viewport = &add<Scroller>(text);
         _viewport->addClassName("viewport");
     }

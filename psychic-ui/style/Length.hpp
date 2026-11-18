@@ -26,7 +26,7 @@ namespace psychic_ui {
          */
         template<class T>
         requires (std::is_arithmetic_v<T> && !std::same_as<T, bool>)
-        constexpr Length(T px) : value(static_cast<float>(px)) {} // NOLINT(google-explicit-constructor): 24 means 24px
+        constexpr Length(T pixels) : value(static_cast<float>(pixels)) {} // NOLINT(google-explicit-constructor): 24 means 24px
 
         static constexpr Length px(float value) { return Length{value, Unit::Px}; }
 
@@ -59,6 +59,11 @@ namespace psychic_ui {
      * The `auto` length: `width(Auto)`, `margin(Auto)`
      */
     inline constexpr Length Auto{0.0f, Length::Unit::Auto};
+
+    /**
+     * All of the parent, `100_pct`: `width(Full)`, `height(Full)`
+     */
+    inline constexpr Length Full{100.0f, Length::Unit::Percent};
 
     inline namespace literals {
         /**

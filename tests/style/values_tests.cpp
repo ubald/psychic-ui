@@ -23,7 +23,7 @@ namespace {
     template<class S> concept FontFromZero = requires(S s) { s.fontFamily(0); };
     template<class S> concept FontFromNull = requires(S s) { s.fontFamily(nullptr); };
     template<class S> concept FontFromLiteral = requires(S s) { s.fontFamily("Arial"); };
-    template<class S> concept FontFromString = requires(S s, std::string f) { s.fontFamily(f); };
+    template<class S> concept FontFromString = requires(S s, std::string family) { s.fontFamily(family); };
     template<class S> concept WidthFromString = requires(S s) { s.width("100"); };
     template<class S> concept WidthFromBool = requires(S s) { s.width(true); };
     template<class S> concept WidthFromInt = requires(S s) { s.width(100); };
@@ -69,20 +69,20 @@ static_assert(!HasFlexDirection<Style>, "the flex axis is `direction`");
 
 TEST_CASE("lengths", "[style][values]") {
     SECTION("a number is pixels") {
-        constexpr Length l = 24;
-        STATIC_REQUIRE(l.isPx());
-        STATIC_REQUIRE(l.value == 24.0f);
+        constexpr Length length = 24;
+        STATIC_REQUIRE(length.isPx());
+        STATIC_REQUIRE(length.value == 24.0f);
         STATIC_REQUIRE(Length{1.5} == Length::px(1.5f));
         STATIC_REQUIRE(24_px == Length{24});
         STATIC_REQUIRE(2.5_px == Length::px(2.5f));
     }
 
     SECTION("percents are 0-100, like CSS") {
-        constexpr Length l = 50_pct;
-        STATIC_REQUIRE(l.isPercent());
-        STATIC_REQUIRE(l.value == 50.0f);
+        constexpr Length length = 50_pct;
+        STATIC_REQUIRE(length.isPercent());
+        STATIC_REQUIRE(length.value == 50.0f);
         STATIC_REQUIRE(12.5_pct == Length::percent(12.5f));
-        STATIC_REQUIRE(l.resolve(200.0f) == 100.0f);
+        STATIC_REQUIRE(length.resolve(200.0f) == 100.0f);
     }
 
     SECTION("auto is a unit, not a NaN") {

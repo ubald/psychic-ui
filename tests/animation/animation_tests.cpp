@@ -115,11 +115,11 @@ TEST_CASE("A timing answers where a value is as an offset from its target", "[an
 
     // A curved ease's velocity is its Bézier's derivative: dy/dx by a finite difference of `at`
     const Timing   out{200ms, Ease::Out};
-    const float    h    = 1e-3f;
-    const float    dydx = (Ease::Out.at(0.25f + h) - Ease::Out.at(0.25f - h)) / (2.0f * h);
-    const Approach at   = out.approach(2.0f, 0.0f, 0.05f, 1e-3f);
-    CHECK(at.offset == Approx(2.0f * (1.0f - Ease::Out.at(0.25f))));
-    CHECK(at.velocity == Approx(-2.0f * dydx / 0.2f).epsilon(1e-2));
+    const float    h        = 1e-3f;
+    const float    dydx     = (Ease::Out.at(0.25f + h) - Ease::Out.at(0.25f - h)) / (2.0f * h);
+    const Approach approach = out.approach(2.0f, 0.0f, 0.05f, 1e-3f);
+    CHECK(approach.offset == Approx(2.0f * (1.0f - Ease::Out.at(0.25f))));
+    CHECK(approach.velocity == Approx(-2.0f * dydx / 0.2f).epsilon(1e-2));
 
     // A spring settles within its tolerance, and keeps its velocity on a retarget where a curve starts from rest
     const Timing snappy{Spring::Snappy};
@@ -191,7 +191,7 @@ TEST_CASE("A spring settles on its target, overshooting when underdamped", "[ani
     Tween gentle{{0.0f}, 1};
     gentle.retarget({100.0f}, Timing{Spring::Gentle}, 0ms);
     most = 0.0f;
-    for (auto t = 0ms; t < 3s && gentle.advance(t); t += 16ms) {
+    for (auto tick = 0ms; tick < 3s && gentle.advance(tick); tick += 16ms) {
         most = std::max(most, gentle.value()[0]);
     }
     CHECK_FALSE(gentle.running());
@@ -203,8 +203,8 @@ TEST_CASE("A spring is the same whatever the frame rate", "[animation][spring]")
     Tween b{{0.0f}, 1};
     a.retarget({100.0f}, Timing{Spring::Bouncy}, 0ms);
     b.retarget({100.0f}, Timing{Spring::Bouncy}, 0ms);
-    for (auto t = 0ms; t <= 120ms; t += 8ms) {
-        a.advance(t);
+    for (auto time = 0ms; time <= 120ms; time += 8ms) {
+        a.advance(time);
     }
     b.advance(120ms);
     CHECK(a.value()[0] == Approx(b.value()[0]).margin(1e-3));
@@ -214,14 +214,14 @@ TEST_CASE("A spring keeps its velocity when retargeted; a curve starts from rest
     Tween spring{{0.0f}, 1};
     spring.retarget({100.0f}, Timing{Spring::Snappy}, 0ms);
     spring.advance(50ms);
-    const float at = spring.value()[0];
+    const float value = spring.value()[0];
     CHECK(spring.velocity()[0] > 0.0f);
 
     // Sent back: it still moves forward for a moment, then turns
     spring.retarget({0.0f}, Timing{Spring::Snappy}, 50ms);
     spring.advance(55ms);
-    CHECK(spring.value()[0] > at);
-    for (auto t = 60ms; t < 3s && spring.advance(t); t += 16ms) {}
+    CHECK(spring.value()[0] > value);
+    for (auto time = 60ms; time < 3s && spring.advance(time); time += 16ms) {}
     CHECK(spring.value()[0] == 0.0f);
 
     Tween curve{{0.0f}, 1};
@@ -561,8 +561,8 @@ TEST_CASE("A switch's thumb springs to its side", "[animation][switch]") {
     window->updateStylesAndLayout();
     const int between = thumb->x();
     CHECK(between > off);
-    for (auto t = 1056ms; t < 3s && window->animating(); t += 16ms) {
-        window->updateAnimations(t);
+    for (auto time = 1056ms; time < 3s && window->animating(); time += 16ms) {
+        window->updateAnimations(time);
         window->updateStylesAndLayout();
     }
     CHECK_FALSE(window->animating());

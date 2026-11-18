@@ -26,12 +26,12 @@ namespace psychic_ui {
         auto &scroller = add<Div>()
             .shrink(1)
             .grow(1)
-            .height(100_pct)
+            .height(Full)
             .padding(24)
             .overflow(Overflow::Scroll);
 
         add<ScrollBar>(scroller)
-            .height(100_pct);
+            .height(Full);
 
         // Inter, from Pivotal's extra-small to medium text
         auto &samples = scroller.add<Div>().addClassName("inter-samples");

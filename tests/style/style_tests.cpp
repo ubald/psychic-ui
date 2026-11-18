@@ -226,9 +226,9 @@ TEST_CASE( "Styles compare by value, auto included", "[style]" ) {
     REQUIRE(a == b);
 
     SECTION("an unset property differs from one set to its default") {
-        Style c;
-        REQUIRE(c != a);
-        REQUIRE(c.diff(a) == mask({Property::width, Property::lineHeight}));
+        Style unset;
+        REQUIRE(unset != a);
+        REQUIRE(unset.diff(a) == mask({Property::width, Property::lineHeight}));
     }
 
     SECTION("diff lists the changed properties") {

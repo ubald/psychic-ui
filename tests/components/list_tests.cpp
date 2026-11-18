@@ -91,128 +91,128 @@ namespace {
 // region List
 
 TEST_CASE("List: rows of a title, secondary text, leading and trailing parts", "[components][list]") {
-    ListFixture f;
-    CHECK(f.list.rows() == std::vector<SelectableRow *>{f.ada, f.grace, f.alan});
-    CHECK(f.ada->title() == "Ada Lovelace");
-    CHECK(f.ada->secondary() == "ada@example.com");
-    CHECK(f.grace->secondary().empty());
+    ListFixture fixture;
+    CHECK(fixture.list.rows() == std::vector<SelectableRow *>{fixture.ada, fixture.grace, fixture.alan});
+    CHECK(fixture.ada->title() == "Ada Lovelace");
+    CHECK(fixture.ada->secondary() == "ada@example.com");
+    CHECK(fixture.grace->secondary().empty());
 
     // Pivotal's default rows: 48 px, between hairlines, on the page's gutter
-    CHECK(f.grace->getHeight() == f.theme.metrics.pointer.rowMd + f.theme.metrics.space(2));
-    CHECK(f.ada->getHeight() > f.grace->getHeight()); // Two lines of text
-    CHECK(f.ada->computedStyle().borderBottom() == f.theme.metrics.border);
-    CHECK(f.alan->computedStyle().borderBottom() == 0.0f); // The last one
-    CHECK(f.ada->computedStyle().paddingRight() == f.theme.metrics.gutter);
+    CHECK(fixture.grace->getHeight() == fixture.theme.metrics.pointer.rowMd + fixture.theme.metrics.space(2));
+    CHECK(fixture.ada->getHeight() > fixture.grace->getHeight()); // Two lines of text
+    CHECK(fixture.ada->computedStyle().borderBottom() == fixture.theme.metrics.border);
+    CHECK(fixture.alan->computedStyle().borderBottom() == 0.0f); // The last one
+    CHECK(fixture.ada->computedStyle().paddingRight() == fixture.theme.metrics.gutter);
 
     // The parts: an avatar leads Ada, a meta and a badge trail
-    const Div &lead = f.ada->leading();
+    const Div &lead = fixture.ada->leading();
     REQUIRE(lead.children().size() == 1);
     auto avatar = std::dynamic_pointer_cast<Avatar>(lead.children()[0]);
     REQUIRE(avatar);
     CHECK(avatar->initials() == "AL");
-    CHECK(f.alan->trailing().children().size() == 1);
+    CHECK(fixture.alan->trailing().children().size() == 1);
 
     // Another lead replaces it
-    f.ada->icon("user");
+    fixture.ada->icon("user");
     CHECK(lead.children().size() == 1);
     CHECK(std::dynamic_pointer_cast<Icon>(lead.children()[0]));
 }
 
 TEST_CASE("List: a click selects a row, one at a time", "[components][list]") {
-    ListFixture f;
+    ListFixture fixture;
     std::vector<ListRow *> changes{};
-    f.list.onSelectionChange([&](ListRow *row) { changes.push_back(row); });
-    CHECK(f.list.selection() == nullptr);
-    CHECK(f.list.selectedIndex() == -1);
+    fixture.list.onSelectionChange([&](ListRow *row) { changes.push_back(row); });
+    CHECK(fixture.list.selection() == nullptr);
+    CHECK(fixture.list.selectedIndex() == -1);
 
-    f.click(*f.grace);
-    CHECK(f.list.selectedRow() == f.grace);
-    CHECK(f.grace->selected());
-    CHECK(f.grace->classNames().contains("selected"));
-    CHECK(f.grace->computedStyle().backgroundColor() == f.theme.palette.raised);
-    CHECK(f.grace->computedStyle().borderLeftColor() == f.theme.palette.accent);
-    CHECK(f.list.selectedIndex() == 1);
+    fixture.click(*fixture.grace);
+    CHECK(fixture.list.selectedRow() == fixture.grace);
+    CHECK(fixture.grace->selected());
+    CHECK(fixture.grace->classNames().contains("selected"));
+    CHECK(fixture.grace->computedStyle().backgroundColor() == fixture.theme.palette.raised);
+    CHECK(fixture.grace->computedStyle().borderLeftColor() == fixture.theme.palette.accent);
+    CHECK(fixture.list.selectedIndex() == 1);
 
-    f.click(*f.alan);
-    CHECK(f.alan->selected());
-    CHECK_FALSE(f.grace->selected());
-    CHECK_FALSE(f.grace->classNames().contains("selected"));
+    fixture.click(*fixture.alan);
+    CHECK(fixture.alan->selected());
+    CHECK_FALSE(fixture.grace->selected());
+    CHECK_FALSE(fixture.grace->classNames().contains("selected"));
 
-    f.click(*f.alan); // Already selected: no change
-    f.alan->selected(false);
-    CHECK(f.list.selection() == nullptr);
-    f.list.select(0);
-    CHECK(f.ada->selected());
-    f.list.select(nullptr);
-    CHECK(changes == std::vector<ListRow *>{f.grace, f.alan, nullptr, f.ada, nullptr});
+    fixture.click(*fixture.alan); // Already selected: no change
+    fixture.alan->selected(false);
+    CHECK(fixture.list.selection() == nullptr);
+    fixture.list.select(0);
+    CHECK(fixture.ada->selected());
+    fixture.list.select(nullptr);
+    CHECK(changes == std::vector<ListRow *>{fixture.grace, fixture.alan, nullptr, fixture.ada, nullptr});
 }
 
 TEST_CASE("List: Tab enters at one row, the arrows move the selection", "[components][list]") {
-    ListFixture f;
+    ListFixture fixture;
     // Only the first row is in the Tab order
-    CHECK(f.ada->focusEnabled());
-    CHECK_FALSE(f.grace->focusEnabled());
-    CHECK_FALSE(f.alan->focusEnabled());
+    CHECK(fixture.ada->focusEnabled());
+    CHECK_FALSE(fixture.grace->focusEnabled());
+    CHECK_FALSE(fixture.alan->focusEnabled());
 
-    f.key(Key::TAB);
-    CHECK(f.ada->hasFocus());
-    CHECK(f.ada->computedStyle().outlineWidth() == f.theme.metrics.focusRing);
-    CHECK(f.list.selection() == nullptr); // Focus alone doesn't select
+    fixture.key(Key::TAB);
+    CHECK(fixture.ada->hasFocus());
+    CHECK(fixture.ada->computedStyle().outlineWidth() == fixture.theme.metrics.focusRing);
+    CHECK(fixture.list.selection() == nullptr); // Focus alone doesn't select
 
-    f.key(Key::DOWN); // From the focused row
-    CHECK(f.list.selection() == f.grace);
-    CHECK(f.grace->hasFocus());
-    CHECK(f.grace->focusEnabled()); // The Tab stop follows the selection
-    CHECK_FALSE(f.ada->focusEnabled());
-    f.key(Key::DOWN);
-    f.key(Key::DOWN); // Stops at the last
-    CHECK(f.list.selection() == f.alan);
-    f.key(Key::UP);
-    CHECK(f.list.selection() == f.grace);
-    f.key(Key::HOME);
-    CHECK(f.list.selection() == f.ada);
-    f.key(Key::END);
-    CHECK(f.list.selection() == f.alan);
+    fixture.key(Key::DOWN); // From the focused row
+    CHECK(fixture.list.selection() == fixture.grace);
+    CHECK(fixture.grace->hasFocus());
+    CHECK(fixture.grace->focusEnabled()); // The Tab stop follows the selection
+    CHECK_FALSE(fixture.ada->focusEnabled());
+    fixture.key(Key::DOWN);
+    fixture.key(Key::DOWN); // Stops at the last
+    CHECK(fixture.list.selection() == fixture.alan);
+    fixture.key(Key::UP);
+    CHECK(fixture.list.selection() == fixture.grace);
+    fixture.key(Key::HOME);
+    CHECK(fixture.list.selection() == fixture.ada);
+    fixture.key(Key::END);
+    CHECK(fixture.list.selection() == fixture.alan);
 
     // Disabled rows are skipped
-    f.grace->enabled(false);
-    f.layout();
-    f.key(Key::UP);
-    CHECK(f.list.selection() == f.ada);
+    fixture.grace->enabled(false);
+    fixture.layout();
+    fixture.key(Key::UP);
+    CHECK(fixture.list.selection() == fixture.ada);
 }
 
 TEST_CASE("List: a row going away stops being the selection", "[components][list]") {
-    ListFixture f;
+    ListFixture fixture;
     ListRow *last = nullptr;
     int     calls = 0;
-    f.list.onSelectionChange([&](ListRow *row) { last = row; ++calls; });
-    f.list.select(f.grace);
-    f.list.remove(*f.grace);
-    f.layout();
-    CHECK(f.list.selection() == nullptr);
+    fixture.list.onSelectionChange([&](ListRow *row) { last = row; ++calls; });
+    fixture.list.select(fixture.grace);
+    fixture.list.remove(*fixture.grace);
+    fixture.layout();
+    CHECK(fixture.list.selection() == nullptr);
     CHECK(last == nullptr);
     CHECK(calls == 2);
     // A row selected before it joined becomes the selection
     auto row = std::make_shared<ListRow>("Margaret Hamilton");
     row->selected(true);
-    f.list.add(row);
-    CHECK(f.list.selection() == row.get());
+    fixture.list.add(row);
+    CHECK(fixture.list.selection() == row.get());
 }
 
 TEST_CASE("List: the keyboard scrolls the selection into view", "[components][list]") {
-    Fixture f;
-    auto &scroller = f.window->appContainer().add<Div>().height(100).overflow(Overflow::Scroll);
+    Fixture fixture;
+    auto &scroller = fixture.window->appContainer().add<Div>().height(100).overflow(Overflow::Scroll);
     auto &list     = scroller.add<List>();
     for (int i = 0; i < 10; ++i) {
         list.row("Row " + std::to_string(i));
     }
-    f.layout();
-    f.key(Key::TAB);
-    f.key(Key::END);
+    fixture.layout();
+    fixture.key(Key::TAB);
+    fixture.key(Key::END);
     const int rowHeight = list.rows().back()->getHeight();
     CHECK(scroller.scrollY() == 100 - (list.getHeight()));
     CHECK(list.rows().back()->y() + scroller.scrollY() + rowHeight == 100);
-    f.key(Key::HOME);
+    fixture.key(Key::HOME);
     CHECK(scroller.scrollY() == 0);
 }
 
@@ -221,18 +221,18 @@ TEST_CASE("List: the keyboard scrolls the selection into view", "[components][li
 // region Data grid
 
 TEST_CASE("DataGrid: a header and rows of cells in columns", "[components][datagrid]") {
-    Fixture f;
-    auto &grid = f.window->appContainer().add<DataGrid>()
+    Fixture fixture;
+    auto &grid = fixture.window->appContainer().add<DataGrid>()
                   .height(300)
                   .columns({{"Name"}, {.title = "Size", .width = 80, .align = TextAlign::End}, {.title = "Kind", .width = 120, .sortable = false}});
     auto &a = grid.row({"beta.txt", "12", "Text"});
     grid.row({"Alpha.png", "3", "Image"});
     grid.row({"gamma.wav", "120", "Audio"});
-    f.layout();
+    fixture.layout();
 
     CHECK(grid.columns().size() == 3);
     CHECK(grid.header().children().size() == 3);
-    CHECK(grid.header().getHeight() == f.theme.metrics.barToolbar);
+    CHECK(grid.header().getHeight() == fixture.theme.metrics.barToolbar);
     CHECK(a.cellCount() == 3);
     CHECK(a.cell(1).getWidth() == 80);
     CHECK(a.cell(2).getWidth() == 120);
@@ -249,14 +249,14 @@ TEST_CASE("DataGrid: a header and rows of cells in columns", "[components][datag
 }
 
 TEST_CASE("DataGrid: clicking a header sorts, ascending, descending, then as added", "[components][datagrid]") {
-    Fixture f;
-    auto &grid = f.window->appContainer().add<DataGrid>()
+    Fixture fixture;
+    auto &grid = fixture.window->appContainer().add<DataGrid>()
                   .height(300)
                   .columns({{"Name"}, {.title = "Size", .width = 80, .align = TextAlign::End}, {.title = "Kind", .width = 120, .sortable = false}});
     grid.row({"beta.txt", "12", "Text"});
     grid.row({"Alpha.png", "3", "Image"});
     grid.row({"gamma.wav", "120", "Audio"});
-    f.layout();
+    fixture.layout();
     std::vector<std::pair<int, SortOrder>> sorts{};
     grid.onSortChange([&](int column, SortOrder order) { sorts.emplace_back(column, order); });
 
@@ -265,23 +265,23 @@ TEST_CASE("DataGrid: clicking a header sorts, ascending, descending, then as add
     Div &size = *grid.header().children()[1]->children()[0];
     Div &kind = *grid.header().children()[2]; // Not sortable: its title only
 
-    f.click(name);
+    fixture.click(name);
     CHECK(values(grid, 0) == std::vector<std::string>{"Alpha.png", "beta.txt", "gamma.wav"}); // Without case
     CHECK(name.classNames().contains("sorted"));
-    f.click(name);
+    fixture.click(name);
     CHECK(values(grid, 0) == std::vector<std::string>{"gamma.wav", "beta.txt", "Alpha.png"});
-    f.click(name);
+    fixture.click(name);
     CHECK(values(grid, 0) == std::vector<std::string>{"beta.txt", "Alpha.png", "gamma.wav"});
     CHECK_FALSE(name.classNames().contains("sorted"));
 
     // Figures as numbers
-    f.click(size);
+    fixture.click(size);
     CHECK(values(grid, 1) == std::vector<std::string>{"3", "12", "120"});
     CHECK(grid.sortColumn() == 1);
     CHECK(grid.sortOrder() == SortOrder::Ascending);
 
     // Not sortable
-    f.click(kind);
+    fixture.click(kind);
     CHECK(grid.sortColumn() == 1);
 
     // A row added while sorted goes in its place
@@ -298,53 +298,53 @@ TEST_CASE("DataGrid: clicking a header sorts, ascending, descending, then as add
 }
 
 TEST_CASE("DataGrid: the selection and the focus survive a sort", "[components][datagrid]") {
-    Fixture f;
-    auto &grid = f.window->appContainer().add<DataGrid>()
+    Fixture fixture;
+    auto &grid = fixture.window->appContainer().add<DataGrid>()
                   .height(300)
                   .columns({{"Name"}, {"Size", 80}});
     auto &b = grid.row({"b", "2"});
     auto &a = grid.row({"a", "1"});
-    f.layout();
+    fixture.layout();
     std::vector<DataGridRow *> changes{};
     grid.onSelectionChange([&](DataGridRow *row) { changes.push_back(row); });
 
-    f.key(Key::TAB); // The first row: the grid's Tab stop comes after its sortable headers
+    fixture.key(Key::TAB); // The first row: the grid's Tab stop comes after its sortable headers
     while (!b.hasFocus() && !a.hasFocus()) {
-        f.key(Key::TAB);
+        fixture.key(Key::TAB);
     }
     CHECK(b.hasFocus());
-    f.key(Key::DOWN);
+    fixture.key(Key::DOWN);
     CHECK(grid.selectedRow() == &a);
     grid.sort(0, SortOrder::Ascending);
-    f.layout();
+    fixture.layout();
     CHECK(grid.selectedRow() == &a);
     CHECK(a.selected());
     CHECK(a.hasFocus());
     CHECK(grid.selectedIndex() == 0);
-    f.key(Key::DOWN);
+    fixture.key(Key::DOWN);
     CHECK(grid.selectedRow() == &b);
     CHECK(changes == std::vector<DataGridRow *>{&a, &b});
 }
 
 TEST_CASE("DataGrid: the rows scroll under the header", "[components][datagrid]") {
-    Fixture f;
-    auto &grid = f.window->appContainer().add<DataGrid>()
+    Fixture fixture;
+    auto &grid = fixture.window->appContainer().add<DataGrid>()
                   .height(200)
                   .columns({{"Name"}});
     for (int i = 0; i < 20; ++i) {
         grid.row({"Row " + std::to_string(i)});
     }
-    f.layout();
+    fixture.layout();
     CHECK(grid.body().getHeight() == 200 - grid.header().getHeight());
     CHECK(grid.body().contentHeight() > grid.body().getHeight());
     grid.select(19);
-    f.key(Key::TAB);
+    fixture.key(Key::TAB);
     while (!grid.dataRows().back()->hasFocus()) {
-        f.key(Key::TAB);
+        fixture.key(Key::TAB);
     }
-    f.key(Key::HOME);
+    fixture.key(Key::HOME);
     CHECK(grid.body().scrollY() == 0);
-    f.key(Key::END);
+    fixture.key(Key::END);
     CHECK(grid.body().scrollY() < 0);
     CHECK(grid.header().y() == 0); // The header stays
 }
@@ -374,25 +374,25 @@ namespace {
 }
 
 TEST_CASE("Tree: nested nodes, indented, collapsed at first", "[components][tree]") {
-    TreeFixture f;
-    CHECK(f.src->level() == 0);
-    CHECK(f.ui->level() == 1);
-    CHECK(f.div->level() == 2);
-    CHECK(f.div->parentNode() == f.ui);
-    CHECK(f.src->parentNode() == nullptr);
-    CHECK(f.src->nodes() == std::vector<TreeNode *>{f.ui, f.main});
-    CHECK(f.tree.nodes() == std::vector<TreeNode *>{f.src, f.readme});
-    CHECK(f.src->hasChildren());
-    CHECK_FALSE(f.main->hasChildren());
+    TreeFixture fixture;
+    CHECK(fixture.src->level() == 0);
+    CHECK(fixture.ui->level() == 1);
+    CHECK(fixture.div->level() == 2);
+    CHECK(fixture.div->parentNode() == fixture.ui);
+    CHECK(fixture.src->parentNode() == nullptr);
+    CHECK(fixture.src->nodes() == std::vector<TreeNode *>{fixture.ui, fixture.main});
+    CHECK(fixture.tree.nodes() == std::vector<TreeNode *>{fixture.src, fixture.readme});
+    CHECK(fixture.src->hasChildren());
+    CHECK_FALSE(fixture.main->hasChildren());
 
     // Only the top rows show
-    CHECK(f.tree.rows() == std::vector<SelectableRow *>{&f.src->row(), &f.readme->row()});
-    CHECK(f.src->row().getHeight() == f.theme.metrics.pointer.rowSm);
+    CHECK(fixture.tree.rows() == std::vector<SelectableRow *>{&fixture.src->row(), &fixture.readme->row()});
+    CHECK(fixture.src->row().getHeight() == fixture.theme.metrics.pointer.rowSm);
 
-    f.src->expanded(true);
-    f.ui->expanded(true);
-    f.layout();
-    CHECK(f.tree.rows() == std::vector<SelectableRow *>{&f.src->row(), &f.ui->row(), &f.div->row(), &f.main->row(), &f.readme->row()});
+    fixture.src->expanded(true);
+    fixture.ui->expanded(true);
+    fixture.layout();
+    CHECK(fixture.tree.rows() == std::vector<SelectableRow *>{&fixture.src->row(), &fixture.ui->row(), &fixture.div->row(), &fixture.main->row(), &fixture.readme->row()});
     // A step per level, the icons lined up across levels (leaves keep the chevron's column)
     int srcIcon = 0;
     int mainIcon = 0;
@@ -405,89 +405,89 @@ TEST_CASE("Tree: nested nodes, indented, collapsed at first", "[components][tree
             }
         }
     };
-    iconX(f.src, srcIcon);
-    iconX(f.main, mainIcon);
-    iconX(f.div, divIcon);
-    CHECK(mainIcon - srcIcon == static_cast<int>(f.tree.indent()));
-    CHECK(divIcon - srcIcon == 2 * static_cast<int>(f.tree.indent()));
+    iconX(fixture.src, srcIcon);
+    iconX(fixture.main, mainIcon);
+    iconX(fixture.div, divIcon);
+    CHECK(mainIcon - srcIcon == static_cast<int>(fixture.tree.indent()));
+    CHECK(divIcon - srcIcon == 2 * static_cast<int>(fixture.tree.indent()));
 }
 
 TEST_CASE("Tree: the chevron expands and collapses", "[components][tree]") {
-    TreeFixture f;
+    TreeFixture fixture;
     std::vector<std::pair<TreeNode *, bool>> changes{};
-    f.tree.onExpansionChange([&](TreeNode *node, bool expanded) { changes.emplace_back(node, expanded); });
+    fixture.tree.onExpansionChange([&](TreeNode *node, bool expanded) { changes.emplace_back(node, expanded); });
     Div *chevron = nullptr;
-    for (const auto &child: f.src->row().children()) {
+    for (const auto &child: fixture.src->row().children()) {
         if (child->classNames().contains("disclosure")) {
             chevron = child.get();
         }
     }
     REQUIRE(chevron);
-    f.click(*chevron);
-    CHECK(f.src->expanded());
-    CHECK(f.src->classNames().contains("expanded"));
-    CHECK(f.tree.selection() == nullptr); // The chevron doesn't select
-    f.click(*chevron);
-    CHECK_FALSE(f.src->expanded());
-    f.src->toggle();
-    CHECK(changes == std::vector<std::pair<TreeNode *, bool>>{{f.src, true}, {f.src, false}, {f.src, true}});
+    fixture.click(*chevron);
+    CHECK(fixture.src->expanded());
+    CHECK(fixture.src->classNames().contains("expanded"));
+    CHECK(fixture.tree.selection() == nullptr); // The chevron doesn't select
+    fixture.click(*chevron);
+    CHECK_FALSE(fixture.src->expanded());
+    fixture.src->toggle();
+    CHECK(changes == std::vector<std::pair<TreeNode *, bool>>{{fixture.src, true}, {fixture.src, false}, {fixture.src, true}});
 
     // Collapsing a node that holds the selection selects it
-    f.ui->expanded(true);
-    f.layout();
-    f.click(f.div->row());
-    CHECK(f.tree.selectedNode() == f.div);
-    f.src->expanded(false);
-    CHECK(f.tree.selectedNode() == f.src);
+    fixture.ui->expanded(true);
+    fixture.layout();
+    fixture.click(fixture.div->row());
+    CHECK(fixture.tree.selectedNode() == fixture.div);
+    fixture.src->expanded(false);
+    CHECK(fixture.tree.selectedNode() == fixture.src);
 }
 
 TEST_CASE("Tree: the keyboard walks and opens the tree", "[components][tree]") {
-    TreeFixture f;
-    f.key(Key::TAB);
-    CHECK(f.src->row().hasFocus());
-    CHECK(f.tree.selectedNode() == nullptr);
-    f.key(Key::SPACE); // Selects the focused row
-    CHECK(f.tree.selectedNode() == f.src);
-    f.key(Key::RIGHT); // Expands
-    CHECK(f.src->expanded());
-    CHECK(f.tree.selectedNode() == f.src);
-    f.key(Key::RIGHT); // To the first child
-    CHECK(f.tree.selectedNode() == f.ui);
-    f.key(Key::RIGHT);
-    f.key(Key::RIGHT);
-    CHECK(f.tree.selectedNode() == f.div);
-    f.key(Key::RIGHT); // A leaf: nothing
-    CHECK(f.tree.selectedNode() == f.div);
-    f.key(Key::DOWN);
-    CHECK(f.tree.selectedNode() == f.main);
-    f.key(Key::UP);
-    f.key(Key::LEFT); // A leaf: to its parent
-    CHECK(f.tree.selectedNode() == f.ui);
-    f.key(Key::LEFT); // Collapses
-    CHECK_FALSE(f.ui->expanded());
-    CHECK(f.tree.selectedNode() == f.ui);
-    f.key(Key::DOWN);
-    CHECK(f.tree.selectedNode() == f.main); // Past the collapsed children
-    f.key(Key::END);
-    CHECK(f.tree.selectedNode() == f.readme);
-    f.key(Key::HOME);
-    f.key(Key::ENTER); // Toggles
-    CHECK_FALSE(f.src->expanded());
-    CHECK(f.src->row().hasFocus());
+    TreeFixture fixture;
+    fixture.key(Key::TAB);
+    CHECK(fixture.src->row().hasFocus());
+    CHECK(fixture.tree.selectedNode() == nullptr);
+    fixture.key(Key::SPACE); // Selects the focused row
+    CHECK(fixture.tree.selectedNode() == fixture.src);
+    fixture.key(Key::RIGHT); // Expands
+    CHECK(fixture.src->expanded());
+    CHECK(fixture.tree.selectedNode() == fixture.src);
+    fixture.key(Key::RIGHT); // To the first child
+    CHECK(fixture.tree.selectedNode() == fixture.ui);
+    fixture.key(Key::RIGHT);
+    fixture.key(Key::RIGHT);
+    CHECK(fixture.tree.selectedNode() == fixture.div);
+    fixture.key(Key::RIGHT); // A leaf: nothing
+    CHECK(fixture.tree.selectedNode() == fixture.div);
+    fixture.key(Key::DOWN);
+    CHECK(fixture.tree.selectedNode() == fixture.main);
+    fixture.key(Key::UP);
+    fixture.key(Key::LEFT); // A leaf: to its parent
+    CHECK(fixture.tree.selectedNode() == fixture.ui);
+    fixture.key(Key::LEFT); // Collapses
+    CHECK_FALSE(fixture.ui->expanded());
+    CHECK(fixture.tree.selectedNode() == fixture.ui);
+    fixture.key(Key::DOWN);
+    CHECK(fixture.tree.selectedNode() == fixture.main); // Past the collapsed children
+    fixture.key(Key::END);
+    CHECK(fixture.tree.selectedNode() == fixture.readme);
+    fixture.key(Key::HOME);
+    fixture.key(Key::ENTER); // Toggles
+    CHECK_FALSE(fixture.src->expanded());
+    CHECK(fixture.src->row().hasFocus());
 }
 
 TEST_CASE("Tree: a subtree built apart joins the tree", "[components][tree]") {
-    TreeFixture f;
+    TreeFixture fixture;
     auto lib = std::make_shared<TreeNode>("lib", "folder");
     auto &color = lib->node("color", "folder");
     color.node("Color.hpp", "file");
-    f.tree.add(lib);
+    fixture.tree.add(lib);
     lib->expanded(true);
-    f.layout();
+    fixture.layout();
     CHECK(color.level() == 1);
     CHECK(color.nodes().front()->level() == 2);
-    f.tree.select(&color.row());
-    CHECK(f.tree.selectedNode() == &color);
+    fixture.tree.select(&color.row());
+    CHECK(fixture.tree.selectedNode() == &color);
 }
 
 // endregion
@@ -495,18 +495,18 @@ TEST_CASE("Tree: a subtree built apart joins the tree", "[components][tree]") {
 // region Inspector, badges, chips, avatars, keys, empty states
 
 TEST_CASE("Inspector: sections of label and value fields", "[components][inspector]") {
-    Fixture f;
-    auto &inspector = f.window->appContainer().add<Inspector>().width(320).title("Cue 12", "Fade").icon("play");
+    Fixture fixture;
+    auto &inspector = fixture.window->appContainer().add<Inspector>().width(320).title("Cue 12", "Fade").icon("play");
     auto &timing    = inspector.section("Timing");
     auto &duration  = timing.field("Duration", "3.0 s");
     auto &loop      = timing.field("Loop");
     loop.value().add<Badge>("On", Tone::Success);
-    f.layout();
+    fixture.layout();
 
     CHECK(timing.title() == "Timing");
     CHECK(duration.label() == "Duration");
     CHECK(duration.text() == "3.0 s");
-    CHECK(inspector.computedStyle().backgroundColor() == f.theme.palette.surface);
+    CHECK(inspector.computedStyle().backgroundColor() == fixture.theme.palette.surface);
     // Two columns: the labels a fixed width, the values after them, lined up
     int durationX = 0;
     int loopX     = 0;
@@ -518,36 +518,36 @@ TEST_CASE("Inspector: sections of label and value fields", "[components][inspect
 }
 
 TEST_CASE("Badges, status dots and chips take their tone's class", "[components][badge]") {
-    Fixture f;
-    auto &row   = f.window->appContainer().add<Div>().row();
+    Fixture fixture;
+    auto &row   = fixture.window->appContainer().add<Div>().row();
     auto &badge = row.add<Badge>("Live", Tone::Success);
     auto &dot   = row.add<StatusDot>(Tone::Danger);
     auto &chip  = row.add<Chip>("Open", Tone::Accent);
-    f.layout();
-    const Palette &p = f.theme.palette;
+    fixture.layout();
+    const Palette &palette = fixture.theme.palette;
 
     CHECK(badge.classNames().contains("success"));
-    CHECK(badge.computedStyle().color() == p.success);
-    CHECK(badge.getHeight() == f.theme.metrics.pointer.controlXs);
+    CHECK(badge.computedStyle().color() == palette.success);
+    CHECK(badge.getHeight() == fixture.theme.metrics.pointer.controlXs);
     badge.tone(Tone::Warning);
-    f.layout();
+    fixture.layout();
     CHECK_FALSE(badge.classNames().contains("success"));
-    CHECK(badge.computedStyle().color() == p.warningText);
+    CHECK(badge.computedStyle().color() == palette.warningText);
 
     CHECK(dot.getWidth() == 6);
-    CHECK(dot.computedStyle().backgroundColor() == p.danger);
-    CHECK(chip.computedStyle().color() == p.accentText);
-    CHECK(chip.getHeight() == f.theme.metrics.pointer.controlMd);
+    CHECK(dot.computedStyle().backgroundColor() == palette.danger);
+    CHECK(chip.computedStyle().color() == palette.accentText);
+    CHECK(chip.getHeight() == fixture.theme.metrics.pointer.controlMd);
 }
 
 TEST_CASE("Chip: removable, dismissed by its x or the keyboard", "[components][badge]") {
-    Fixture f;
-    auto &chip = f.window->appContainer().add<Chip>("Status: Open").alignSelf(Align::Start);
+    Fixture fixture;
+    auto &chip = fixture.window->appContainer().add<Chip>("Status: Open").alignSelf(Align::Start);
     int  dismissals = 0;
     int  clicks     = 0;
     chip.onDismiss([&]() { ++dismissals; });
     chip.onClick([&]() { ++clicks; });
-    f.layout();
+    fixture.layout();
 
     Div *x = chip.children().back().get();
     CHECK(x->computedStyle().display() == Display::None);
@@ -555,25 +555,25 @@ TEST_CASE("Chip: removable, dismissed by its x or the keyboard", "[components][b
     CHECK(dismissals == 0);
 
     chip.removable(true);
-    f.layout();
+    fixture.layout();
     CHECK(x->computedStyle().display() == Display::Flex);
-    f.click(*x);
+    fixture.click(*x);
     CHECK(dismissals == 1);
     CHECK(clicks == 0); // The x isn't the chip's click
-    f.click(chip.children()[1].operator*()); // The label
+    fixture.click(chip.children()[1].operator*()); // The label
     CHECK(clicks == 1);
 
-    f.key(Key::TAB);
+    fixture.key(Key::TAB);
     CHECK(chip.hasFocus());
-    f.key(Key::BACKSPACE);
-    f.key(Key::DELETE);
+    fixture.key(Key::BACKSPACE);
+    fixture.key(Key::DELETE);
     CHECK(dismissals == 3);
-    f.key(Key::ENTER);
+    fixture.key(Key::ENTER);
     CHECK(clicks == 2);
 
     chip.selected(true);
-    f.layout();
-    CHECK(chip.computedStyle().backgroundColor() == f.theme.palette.raised);
+    fixture.layout();
+    CHECK(chip.computedStyle().backgroundColor() == fixture.theme.palette.raised);
 }
 
 TEST_CASE("Avatar: initials, sizes, a status and a tint", "[components][avatar]") {
@@ -584,12 +584,12 @@ TEST_CASE("Avatar: initials, sizes, a status and a tint", "[components][avatar]"
     CHECK(Avatar::initialsOf("  ") == "");
     CHECK(Avatar::initialsOf("élodie roy") == "éR");
 
-    Fixture f;
-    auto &avatar = f.window->appContainer().add<Avatar>("Ada Lovelace").alignSelf(Align::Start);
-    f.layout();
-    CHECK(avatar.getWidth() == f.theme.metrics.pointer.controlSm);
+    Fixture fixture;
+    auto &avatar = fixture.window->appContainer().add<Avatar>("Ada Lovelace").alignSelf(Align::Start);
+    fixture.layout();
+    CHECK(avatar.getWidth() == fixture.theme.metrics.pointer.controlSm);
     avatar.size(AvatarSize::Large).status(Tone::Success);
-    f.layout();
+    fixture.layout();
     CHECK(avatar.getWidth() == 32);
     CHECK(avatar.getHeight() == 32);
     REQUIRE(avatar.skin());
@@ -611,12 +611,12 @@ TEST_CASE("Avatar: initials, sizes, a status and a tint", "[components][avatar]"
     // The initials contrast with every hue: at least 3:1 (WCAG's large text), white or near black
     for (const Color hue: hues) {
         const Color text = PivotalAvatarSkin::initialsOn(hue);
-        const auto  lum  = [](const Color c) {
-            const auto ch = [](std::uint32_t v) {
-                const double x = static_cast<double>(v & 0xFFu) / 255.0;
+        const auto  lum  = [](const Color color) {
+            const auto channel = [](std::uint32_t value) {
+                const double x = static_cast<double>(value & 0xFFu) / 255.0;
                 return x <= 0.04045 ? x / 12.92 : std::pow((x + 0.055) / 1.055, 2.4);
             };
-            return (0.2126 * ch(c.argb() >> 16)) + (0.7152 * ch(c.argb() >> 8)) + (0.0722 * ch(c.argb()));
+            return (0.2126 * channel(color.argb() >> 16)) + (0.7152 * channel(color.argb() >> 8)) + (0.0722 * channel(color.argb()));
         };
         const double a = lum(hue);
         const double b = lum(text);
@@ -626,18 +626,18 @@ TEST_CASE("Avatar: initials, sizes, a status and a tint", "[components][avatar]"
     CHECK(PivotalAvatarSkin::initialsOn(rgb(0x5E6AD2)) == rgb(0xFFFFFF)); // Indigo: white
 
     avatar.colorful(true);
-    f.layout();
+    fixture.layout();
     const Div *initials = skin->children()[0].get();
     CHECK(initials->computedStyle().color() == PivotalAvatarSkin::initialsOn(tint));
     avatar.colorful(false);
-    f.layout();
-    CHECK(initials->computedStyle().color() == f.theme.palette.textSecondary);
+    fixture.layout();
+    CHECK(initials->computedStyle().color() == fixture.theme.palette.textSecondary);
 }
 
 TEST_CASE("Kbd: a cap per key", "[components][kbd]") {
-    Fixture f;
-    auto &kbd = f.window->appContainer().add<Kbd>("⌘ K").alignSelf(Align::Start);
-    f.layout();
+    Fixture fixture;
+    auto &kbd = fixture.window->appContainer().add<Kbd>("⌘ K").alignSelf(Align::Start);
+    fixture.layout();
     CHECK(kbd.caps() == std::vector<std::string>{"⌘", "K"});
     CHECK(kbd.children()[0]->getHeight() == 18);
     CHECK(kbd.children()[1]->getWidth() >= 18);
@@ -646,17 +646,17 @@ TEST_CASE("Kbd: a cap per key", "[components][kbd]") {
 }
 
 TEST_CASE("EmptyState: an icon, a title, text and an action", "[components][empty]") {
-    Fixture f;
-    auto &empty = f.window->appContainer().add<EmptyState>("inbox", "No messages", "New messages show up here.");
+    Fixture fixture;
+    auto &empty = fixture.window->appContainer().add<EmptyState>("inbox", "No messages", "New messages show up here.");
     int  clicks = 0;
     empty.action("Compose").onClick([&]() { ++clicks; });
-    f.layout();
+    fixture.layout();
     CHECK(empty.title() == "No messages");
     CHECK(empty.description() == "New messages show up here.");
     REQUIRE(empty.actionButton());
     CHECK(&empty.action("Write") == empty.actionButton()); // The same button, relabeled
     CHECK(empty.actionButton()->label() == "Write");
-    f.click(*empty.actionButton());
+    fixture.click(*empty.actionButton());
     CHECK(clicks == 1);
 }
 

@@ -41,15 +41,15 @@ namespace {
         }
     };
 
-    template<class D> concept VisibleFromString = requires(D d) { d.visible("false"); };
-    template<class D> concept ColorFromInt = requires(D d) { d.color(0xFF0000); };
-    template<class D> concept FontFromZero = requires(D d) { d.fontFamily(0); };
-    template<class D> concept OverflowFromString = requires(D d) { d.overflow("scroll"); };
-    template<class D> concept EnabledFromString = requires(D d) { d.enabled("false"); };
-    template<class D> concept ToggleFromInt = requires(D d) { d.toggle(1); };
-    template<class D> concept MutableStyle = requires(D d) { d.style().padding(1); };
-    template<class D> concept PublicTag = requires(D d) { d.tag("x"); };
-    template<class D> concept OldSetters = requires(D d) { d.setWidth(1); } || requires(D d) { d.setEnabled(true); };
+    template<class D> concept VisibleFromString = requires(D div) { div.visible("false"); };
+    template<class D> concept ColorFromInt = requires(D div) { div.color(0xFF0000); };
+    template<class D> concept FontFromZero = requires(D div) { div.fontFamily(0); };
+    template<class D> concept OverflowFromString = requires(D div) { div.overflow("scroll"); };
+    template<class D> concept EnabledFromString = requires(D div) { div.enabled("false"); };
+    template<class D> concept ToggleFromInt = requires(D div) { div.toggle(1); };
+    template<class D> concept MutableStyle = requires(D div) { div.style().padding(1); };
+    template<class D> concept PublicTag = requires(D div) { div.tag("x"); };
+    template<class D> concept OldSetters = requires(D div) { div.setWidth(1); } || requires(D div) { div.setEnabled(true); };
 }
 
 // The base's setters return the derived type, whatever the order

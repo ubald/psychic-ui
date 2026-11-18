@@ -71,8 +71,8 @@ namespace psychic_ui {
         if (!entry.shape) {
             IconShape shape{.grid = entry.grid, .paths = {}};
             shape.paths.reserve(entry.elements.size());
-            for (const auto &[paint, d]: entry.elements) {
-                auto path = SkParsePath::FromSVGString(d.c_str());
+            for (const auto &[paint, data]: entry.elements) {
+                auto path = SkParsePath::FromSVGString(data.c_str());
                 if (!path || path->isEmpty()) {
                     entry.invalid = true;
                     report(name, "icon path data doesn't parse");

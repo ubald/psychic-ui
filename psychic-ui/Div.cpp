@@ -14,6 +14,7 @@
 #include "include/core/SkBlurTypes.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkClipOp.h"
+#include "include/core/SkColor.h"
 #include "include/core/SkMaskFilter.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkPoint.h"
@@ -289,8 +290,8 @@ namespace psychic_ui {
     int Div::childIndex(const Div *child) const {
         auto it = std::ranges::find_if(
             _children,
-            [child](const auto &c) {
-                return c.get() == child;
+            [child](const auto &candidate) {
+                return candidate.get() == child;
             }
         );
         return it == _children.cend() ? -1 : (int) std::distance(_children.cbegin(), it);
@@ -377,22 +378,22 @@ namespace psychic_ui {
 
     // region Position & Dimensions
 
-    void Div::localToGlobal(int &gx, int &gy, const int x, const int y) const {
+    void Div::localToGlobal(int &globalX, int &globalY, const int x, const int y) const {
         int lgx = _x + x;
         int lgy = _y + y;
         if (_parent) {
             _parent->localToGlobal(lgx, lgy, lgx, lgy);
         }
-        gx = lgx + _scrollX;
-        gy = lgy + _scrollY;
+        globalX = lgx + _scrollX;
+        globalY = lgy + _scrollY;
     }
 
-    void Div::globalToLocal(int &lx, int &ly, const int x, const int y) const {
-        int gx = 0;
-        int gy = 0;
-        localToGlobal(gx, gy);
-        lx = x - gx;
-        ly = y - gy;
+    void Div::globalToLocal(int &localX, int &localY, const int x, const int y) const {
+        int globalX = 0;
+        int globalY = 0;
+        localToGlobal(globalX, globalY);
+        localX = x - globalX;
+        localY = y - globalY;
     }
 
     int Div::x() const {
@@ -522,7 +523,7 @@ namespace psychic_ui {
     }
 
     void Div::updateStyle() {
-        if (auto *sm = styleManager()) {
+        if (auto *manager = styleManager()) {
             // Its first style in a window: with its starting class, until the window lets it go
             Window *w = window();
             if (w && !_startingClass.empty() && !_startingApplied && _styledIn != w && !w->reducedMotion()) {
@@ -531,11 +532,11 @@ namespace psychic_ui {
                     w->_startingDivs.push_back(weak_from_this());
                 }
             }
-            Style computed = sm->computeStyle(this);
+            Style computed = manager->computeStyle(this);
             // The transitions' current values replace what they blend to
             updateTransitions(computed);
             _styledIn         = window();
-            _styledGeneration = sm->rulesGeneration();
+            _styledGeneration = manager->rulesGeneration();
             // Only what changed reaches Yoga, everything the first time
             const PropertyMask changed = _layoutInitialized ? _computedStyle.diff(computed) : PropertyMask{}.set();
             _computedStyle     = computed;
@@ -1091,41 +1092,51 @@ namespace psychic_ui {
             }
             paint.setStrokeWidth(SkIntToScalar(1));
 
-            paint.setColor(0x7FFF0000);
-            const SkRect mRect = _marginRect.makeInset(0.5f, 0.5f);
+            // Each box in its color, on the pixels' centers
+            constexpr float   halfPixel      = 0.5f;
+            constexpr SkColor marginColor    = 0x7FFF0000;
+            constexpr SkColor borderBoxColor = 0x7F00FF00;
+            constexpr SkColor paddingColor   = 0x7F0000FF;
+            constexpr SkColor boundsColor    = 0x30FFFF00;
+            constexpr SkColor borderColor    = 0x7F00FFFF;
+            constexpr SkColor pressedColor   = 0x30FFFFFF;
+            constexpr SkColor hoveredColor   = 0x10FFFFFF;
+
+            paint.setColor(marginColor);
+            const SkRect mRect = _marginRect.makeInset(halfPixel, halfPixel);
             canvas->drawRect(mRect, paint);
 
-            paint.setColor(0x7F00FF00);
-            const SkRect dRect = _rect.makeInset(0.5f, 0.5f);
+            paint.setColor(borderBoxColor);
+            const SkRect dRect = _rect.makeInset(halfPixel, halfPixel);
             canvas->drawRect(dRect, paint);
 
-            paint.setColor(0x7F0000FF);
-            const SkRect pRect = _paddedRect.makeInset(0.5f, 0.5f);
+            paint.setColor(paddingColor);
+            const SkRect pRect = _paddedRect.makeInset(halfPixel, halfPixel);
             canvas->drawRect(pRect, paint);
 
-            paint.setColor(0x30FFFF00);
+            paint.setColor(boundsColor);
             SkRect bRect = SkRect::MakeLTRB((float) _boundsLeft, (float) _boundsTop, (float) _boundsRight, (float) _boundsBottom);
-            bRect.inset(0.5f, 0.5f);
+            bRect.inset(halfPixel, halfPixel);
             canvas->drawRect(bRect, paint);
 
             if (_borderLeft > 0 || _borderTop > 0 || _borderRight > 0 || _borderBottom > 0) {
-                paint.setColor(0x7F00FFFF);
+                paint.setColor(borderColor);
                 canvas->drawRect(
                     SkRect::MakeLTRB(
-                        _rect.left() + _borderLeft + 0.5f,
-                        _rect.top() + _borderTop + 0.5f,
-                        _rect.right() - _borderRight - 0.5f,
-                        _rect.bottom() - _borderBottom - 0.5f
+                        _rect.left() + _borderLeft + halfPixel,
+                        _rect.top() + _borderTop + halfPixel,
+                        _rect.right() - _borderRight - halfPixel,
+                        _rect.bottom() - _borderBottom - halfPixel
                     ), paint
                 );
             }
 
             if (_mouseDown) {
-                paint.setColor(0x30FFFFFF);
+                paint.setColor(pressedColor);
                 paint.setStrokeWidth(2);
                 canvas->drawRect(_rect.makeInset(1.0f, 1.0f), paint);
             } else if (_mouseOver) {
-                paint.setColor(0x10FFFFFF);
+                paint.setColor(hoveredColor);
                 paint.setStrokeWidth(2);
                 canvas->drawRect(_rect.makeInset(1.0f, 1.0f), paint);
             }
@@ -1173,7 +1184,7 @@ namespace psychic_ui {
             paint.setAntiAlias(true);
             paint.setColor(color.argb());
             if (blur > 0.0f) {
-                paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, blur / 2.0f));
+                paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, blur / 2));
             }
             SkRRect shape = _roundRect.makeOffset(x, y);
             if (spread != 0.0f) {
@@ -1219,7 +1230,7 @@ namespace psychic_ui {
         paint.setAntiAlias(true);
         paint.setColor(style.dotGridColor().argb());
         paint.setStrokeCap(SkPaint::kRound_Cap);
-        paint.setStrokeWidth(radius * 2.0f);
+        paint.setStrokeWidth(radius * 2);
         canvas->save();
         canvas->clipRRect(_roundRect, true);
         canvas->drawPoints(SkCanvas::kPoints_PointMode, dots, paint);
@@ -1250,17 +1261,17 @@ namespace psychic_ui {
             return;
         }
 
-        const bool aa = _computedStyle.antiAlias();
+        const bool antiAlias = _computedStyle.antiAlias();
         if (_drawRoundRect && _drawBorder) {
             SkRRect roundRect;
             // TODO: Offset for unequal borders
-            const float hb = _computedStyle.border() / 2;
-            _roundRect.inset(hb, hb, &roundRect);
-            canvas->clipRRect(roundRect, aa);
+            const float halfBorder = _computedStyle.border() / 2;
+            _roundRect.inset(halfBorder, halfBorder, &roundRect);
+            canvas->clipRRect(roundRect, antiAlias);
         } else if (_drawRoundRect) {
-            canvas->clipRRect(_roundRect, aa);
+            canvas->clipRRect(_roundRect, antiAlias);
         } else {
-            canvas->clipRect(_rect, aa);
+            canvas->clipRect(_rect, antiAlias);
         }
     }
 
@@ -1272,12 +1283,12 @@ namespace psychic_ui {
             paint.setColor(_computedStyle.backgroundColor().argb());
             paint.setAntiAlias(_computedStyle.antiAlias());
 
-            const float hb = _computedStyle.border() / 2;
+            const float halfBorder = _computedStyle.border() / 2;
             if (_drawComplexRoundRect) {
                 SkRRect roundRect = _roundRect;
                 if (_drawBackground && _drawBorder) {
                     // TODO: Offset for unequal borders
-                    roundRect.inset(hb, hb);
+                    roundRect.inset(halfBorder, halfBorder);
                 }
 
                 if (_drawBackground) {
@@ -1295,7 +1306,7 @@ namespace psychic_ui {
                 if (_drawBackground && !_drawBorder) {
                     canvas->drawRoundRect(_rect, _radiusTopLeft, _radiusTopLeft, paint);
                 } else if (_drawBorder) {
-                    const SkRect inset = _rect.makeInset(hb, hb);
+                    const SkRect inset = _rect.makeInset(halfBorder, halfBorder);
                     if (_drawBackground) {
                         canvas->drawRoundRect(inset, _radiusTopLeft, _radiusTopLeft, paint);
                     }
@@ -1310,7 +1321,7 @@ namespace psychic_ui {
                     canvas->drawRect(_rect, paint);
                 }
                 if (_drawBorder && !_drawComplexBorders) {
-                    const SkRect inset = _rect.makeInset(hb, hb);
+                    const SkRect inset = _rect.makeInset(halfBorder, halfBorder);
                     paint.setStyle(SkPaint::kStroke_Style);
                     paint.setColor(_computedStyle.borderColor().argb());
                     paint.setStrokeWidth(_computedStyle.border());
@@ -1343,8 +1354,8 @@ namespace psychic_ui {
                     draw = false;
                 }
                 if (draw) {
-                    const float hw = _borderLeft / 2.0f;
-                    canvas->drawLine(_rect.left() + hw, _rect.top() - 0.5f, _rect.left() + hw, _rect.bottom() + 0.5f, paint);
+                    const float halfWidth = _borderLeft / 2.0f;
+                    canvas->drawLine(_rect.left() + halfWidth, _rect.top() - 0.5f, _rect.left() + halfWidth, _rect.bottom() + 0.5f, paint);
                 }
             }
 
@@ -1361,8 +1372,8 @@ namespace psychic_ui {
                     draw = false;
                 }
                 if (draw) {
-                    const float hw = _borderRight / 2.0f;
-                    canvas->drawLine(_rect.right() - hw, _rect.top() - 0.5f, _rect.right() - hw, _rect.bottom() + 0.5f, paint);
+                    const float halfWidth = _borderRight / 2.0f;
+                    canvas->drawLine(_rect.right() - halfWidth, _rect.top() - 0.5f, _rect.right() - halfWidth, _rect.bottom() + 0.5f, paint);
                 }
             }
 
@@ -1379,8 +1390,8 @@ namespace psychic_ui {
                     draw = false;
                 }
                 if (draw) {
-                    const float hw = _borderTop / 2.0f;
-                    canvas->drawLine(_rect.left() - 0.5f, _rect.top() + hw, _rect.right() + 0.5f, _rect.top() + hw, paint);
+                    const float halfWidth = _borderTop / 2.0f;
+                    canvas->drawLine(_rect.left() - 0.5f, _rect.top() + halfWidth, _rect.right() + 0.5f, _rect.top() + halfWidth, paint);
                 }
             }
 
@@ -1397,8 +1408,8 @@ namespace psychic_ui {
                     draw = false;
                 }
                 if (draw) {
-                    const float hw = _borderBottom / 2.0f;
-                    canvas->drawLine(_rect.left() - 0.5f, _rect.bottom() - hw, _rect.right() + 0.5f, _rect.bottom() - hw, paint);
+                    const float halfWidth = _borderBottom / 2.0f;
+                    canvas->drawLine(_rect.left() - 0.5f, _rect.bottom() - halfWidth, _rect.right() + 0.5f, _rect.bottom() - halfWidth, paint);
                 }
             }
         }
@@ -1477,8 +1488,8 @@ namespace psychic_ui {
         localToGlobal(windowX, windowY);
         MouseEvent event{};
         // The center of the border box, in content coordinates
-        event.x       = (static_cast<float>(_width) / 2.0f) - static_cast<float>(_scrollX);
-        event.y       = (static_cast<float>(_height) / 2.0f) - static_cast<float>(_scrollY);
+        event.x       = (static_cast<float>(_width) / 2) - static_cast<float>(_scrollX);
+        event.y       = (static_cast<float>(_height) / 2) - static_cast<float>(_scrollY);
         event.windowX = static_cast<float>(windowX) + event.x;
         event.windowY = static_cast<float>(windowY) + event.y;
         event.fromKeyboard = true;
@@ -1829,25 +1840,25 @@ namespace psychic_ui {
         bool moved = false;
 
         if (_width < _boundsRight - _boundsLeft) {
-            const int sx = std::min(
+            const int clampedX = std::min(
                 0, std::max(
                     _width - (_boundsRight - _boundsLeft),
                     _scrollX + ((int) std::ceil(scrollX) * 2)
                 ));
 
-            moved |= _scrollX != sx;
-            _scrollX = sx;
+            moved |= _scrollX != clampedX;
+            _scrollX = clampedX;
         }
 
         if (_height < _boundsBottom - _boundsTop) {
-            const int sy = std::min(
+            const int clampedY = std::min(
                 0, std::max(
                     _height - (_boundsBottom - _boundsTop),
                     _scrollY + ((int) std::ceil(scrollY) * 2)
                 ));
 
-            moved |= _scrollY != sy;
-            _scrollY = sy;
+            moved |= _scrollY != clampedY;
+            _scrollY = clampedY;
         }
 
         if (moved) {
@@ -1881,18 +1892,18 @@ namespace psychic_ui {
     }
 
     bool Div::scrollBy(const int deltaX, const int deltaY) {
-        int sx = _scrollX;
-        int sy = _scrollY;
+        int targetX = _scrollX;
+        int targetY = _scrollY;
         if (_width < contentWidth()) {
-            sx = std::clamp(_scrollX + deltaX, _width - contentWidth(), 0);
+            targetX = std::clamp(_scrollX + deltaX, _width - contentWidth(), 0);
         }
         if (_height < contentHeight()) {
-            sy = std::clamp(_scrollY + deltaY, _height - contentHeight(), 0);
+            targetY = std::clamp(_scrollY + deltaY, _height - contentHeight(), 0);
         }
-        if (sx == _scrollX && sy == _scrollY) {
+        if (targetX == _scrollX && targetY == _scrollY) {
             return false;
         }
-        scrollTo(sx, sy);
+        scrollTo(targetX, targetY);
         return true;
     }
 

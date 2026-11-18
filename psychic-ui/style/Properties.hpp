@@ -211,11 +211,11 @@ namespace psychic_ui {
     using PropertyMask = std::bitset<propertyCount>;
 
     constexpr PropertyMask mask(std::initializer_list<Property> properties) {
-        PropertyMask m;
+        PropertyMask result;
         for (auto property: properties) {
-            m.set(index(property));
+            result.set(index(property));
         }
-        return m;
+        return result;
     }
 
     /**
@@ -280,22 +280,22 @@ namespace psychic_ui {
      * Properties a Div takes from its parent when nothing sets them
      */
     inline constexpr PropertyMask inheritedProperties = [] {
-        PropertyMask m;
-        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) if (inherited) { m.set(index(Property::name)); }
+        PropertyMask result;
+        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) if (inherited) { result.set(index(Property::name)); }
         PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
         #undef PSYCHIC_UI_X
-        return m;
+        return result;
     }();
 
     /**
      * Properties Yoga reads: changing one of them means a new layout
      */
     inline constexpr PropertyMask layoutProperties = [] {
-        PropertyMask m;
-        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) if (layout) { m.set(index(Property::name)); }
+        PropertyMask result;
+        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) if (layout) { result.set(index(Property::name)); }
         PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
         #undef PSYCHIC_UI_X
-        return m;
+        return result;
     }();
 
     /**
@@ -307,11 +307,11 @@ namespace psychic_ui {
      * Properties a `transition` can blend
      */
     inline constexpr PropertyMask animatableProperties = [] {
-        PropertyMask m;
-        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) if (animatable) { m.set(index(Property::name)); }
+        PropertyMask result;
+        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) if (animatable) { result.set(index(Property::name)); }
         PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
         #undef PSYCHIC_UI_X
-        return m;
+        return result;
     }();
 
     /**

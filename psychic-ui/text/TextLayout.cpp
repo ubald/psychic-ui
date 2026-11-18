@@ -67,16 +67,16 @@ namespace psychic_ui {
             ColorPainter(SkCanvas *canvas, SkColor color) : _canvas(canvas), _color(color) {}
 
             void drawTextBlob(const sk_sp<SkTextBlob> &blob, SkScalar x, SkScalar y, const SkPaintOrID &paint) override {
-                SkPaint p = std::get<SkPaint>(paint);
-                p.setColor(_color);
-                _canvas->drawTextBlob(blob, x, y, p);
+                SkPaint colored = std::get<SkPaint>(paint);
+                colored.setColor(_color);
+                _canvas->drawTextBlob(blob, x, y, colored);
             }
 
             // What follows only paints what this layout never builds (shadows, backgrounds, decorations)
             void drawTextShadow(const sk_sp<SkTextBlob> &blob, SkScalar x, SkScalar y, SkColor color, SkScalar /*blurSigma*/) override {
-                SkPaint p;
-                p.setColor(color);
-                _canvas->drawTextBlob(blob, x, y, p);
+                SkPaint shadow;
+                shadow.setColor(color);
+                _canvas->drawTextBlob(blob, x, y, shadow);
             }
 
             void drawRect(const SkRect &rect, const SkPaintOrID &paint) override {
@@ -91,8 +91,8 @@ namespace psychic_ui {
                 _canvas->drawPath(path, style.skPaint());
             }
 
-            void drawLine(SkScalar x0, SkScalar y0, SkScalar x1, SkScalar y1, const DecorationStyle &style) override {
-                _canvas->drawLine(x0, y0, x1, y1, style.skPaint());
+            void drawLine(SkScalar startX, SkScalar startY, SkScalar endX, SkScalar endY, const DecorationStyle &style) override {
+                _canvas->drawLine(startX, startY, endX, endY, style.skPaint());
             }
 
             void clipRect(const SkRect &rect) override { _canvas->clipRect(rect); }
@@ -213,9 +213,9 @@ namespace psychic_ui {
         } else {
             // One line: line returns lay out as spaces (like Label), one for one so indices hold
             std::u16string oneLine = _text;
-            for (auto &c: oneLine) {
-                if (c == u'\n' || c == u'\r' || c == u'\u2028' || c == u'\u2029' || c == u'\v' || c == u'\f' || c == u'\u0085') {
-                    c = u' ';
+            for (auto &unit: oneLine) {
+                if (unit == u'\n' || unit == u'\r' || unit == u'\u2028' || unit == u'\u2029' || unit == u'\v' || unit == u'\f' || unit == u'\u0085') {
+                    unit = u' ';
                 }
             }
             builder->addText(oneLine);
@@ -354,7 +354,7 @@ namespace psychic_ui {
             return width;
         }
         tl::Paragraph::GlyphClusterInfo cluster{};
-        if (!paragraph->getClosestGlyphClusterAt(width, _style.lineHeight / 2.0f, &cluster)) {
+        if (!paragraph->getClosestGlyphClusterAt(width, _style.lineHeight / 2, &cluster)) {
             return width;
         }
         return cluster.fBounds.fRight <= width ? cluster.fBounds.fRight : cluster.fBounds.fLeft;
