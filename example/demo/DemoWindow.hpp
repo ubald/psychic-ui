@@ -12,6 +12,7 @@
 #include <vector>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/AppShell.hpp>
+#include <psychic-ui/components/PageHeader.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/MenuBar.hpp>

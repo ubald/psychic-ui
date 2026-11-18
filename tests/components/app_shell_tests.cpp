@@ -2,6 +2,7 @@
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/AppShell.hpp>
+#include <psychic-ui/components/PageHeader.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
