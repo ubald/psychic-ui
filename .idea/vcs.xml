@@ -14,7 +14,6 @@
     <mapping directory="$PROJECT_DIR$/extlib/external/skia/third_party/externals/freetype" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/extlib/external/skia/third_party/externals/harfbuzz" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/extlib/external/skia/third_party/externals/icu" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/extlib/external/skia/third_party/externals/imgui" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/extlib/external/skia/third_party/externals/jsoncpp" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/extlib/external/skia/third_party/externals/libjpeg-turbo" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/extlib/external/skia/third_party/externals/libpng" vcs="Git" />

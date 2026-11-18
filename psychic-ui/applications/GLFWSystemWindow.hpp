@@ -10,9 +10,9 @@ struct GLFWcursor;
 namespace psychic_ui {
 
     /**
-     * Shows a Psychic UI `Window` in a GLFW window that a host application owns, the way Dear ImGui's
-     * `imgui_impl_glfw` embeds ImGui. The host initializes GLFW, creates the window with an OpenGL 3.3+
-     * context and runs the loop; the adapter only installs its input callbacks and draws on request:
+     * Shows a Psychic UI `Window` in a GLFW window that a host application owns. The host initializes GLFW,
+     * creates the window with an OpenGL 3.3+ context and runs the loop; the adapter only installs its input
+     * callbacks over the host's, chaining to them, and draws on request:
      *
      *     GLFWwindow *glfwWindow = glfwCreateWindow(1280, 720, "Host", nullptr, nullptr);
      *     glfwMakeContextCurrent(glfwWindow);

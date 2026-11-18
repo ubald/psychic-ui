@@ -1,6 +1,6 @@
 /**
  * A GLFW application that embeds Psychic UI: it owns GLFW, the window, its OpenGL context and the loop,
- * and hands the window to a `GLFWSystemWindow`, the way it would hand it to Dear ImGui's GLFW backend.
+ * and hands the window to a `GLFWSystemWindow`, which installs its callbacks over the host's and chains to them.
  */
 
 #include <chrono>

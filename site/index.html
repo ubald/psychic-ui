@@ -132,8 +132,8 @@
                     component setters chain in any order, and misuse, like a string where a number belongs, doesn't
                     compile.</p>
                 <p><code>SDL3Application</code> runs windows on their own. An application that already has a window
-                    and a loop embeds Psychic UI through an SDL3 or GLFW adapter instead, the way Dear ImGui's backends
-                    work.</p>
+                    and a loop embeds Psychic UI through an SDL3 or GLFW adapter instead: the adapter translates the window's
+                    events and chains to the host's callbacks, and the host keeps the window and the loop.</p>
                 <p>Looks belong in stylesheets, written from the theme, so they follow it when it changes.</p>
             </div>
             <div>
