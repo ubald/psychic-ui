@@ -60,12 +60,12 @@ namespace psychic_ui {
         int   nearest  = -1;
         float distance = std::numeric_limits<float>::max();
         for (std::size_t i = 0; i < _swatches.size(); ++i) {
-            const Div  *swatch = _swatches[i];
-            const float dx     = static_cast<float>(x) - (static_cast<float>(swatch->x()) + static_cast<float>(swatch->getWidth()) / 2.0f);
-            const float dy     = static_cast<float>(y) - (static_cast<float>(swatch->y()) + static_cast<float>(swatch->getHeight()) / 2.0f);
-            const float d      = (dx * dx) + (dy * dy);
-            if (d < distance) {
-                distance = d;
+            const Div  *swatch  = _swatches[i];
+            const float dx      = static_cast<float>(x) - (static_cast<float>(swatch->x()) + static_cast<float>(swatch->getWidth()) / 2.0f);
+            const float dy      = static_cast<float>(y) - (static_cast<float>(swatch->y()) + static_cast<float>(swatch->getHeight()) / 2.0f);
+            const float squared = (dx * dx) + (dy * dy);
+            if (squared < distance) {
+                distance = squared;
                 nearest  = static_cast<int>(i);
             }
         }
