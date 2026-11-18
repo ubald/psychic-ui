@@ -1,5 +1,5 @@
 // Handlers that remove, close or restyle what is dispatching them, from the review's stress cases
-// (docs/review-2026-11.md): clean under AddressSanitizer, kept as regression tests. The cases that found
+// (review-2026-11.md): clean under AddressSanitizer, kept as regression tests. The cases that found
 // bugs are the hidden [asan] tests in tests/asan/use_after_free_tests.cpp.
 #include <chrono>
 #include <memory>

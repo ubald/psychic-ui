@@ -1,4 +1,4 @@
-// C2 from docs/review-2026-11.md, through a TextInput: fixed by TextEditing
+// C2 from review-2026-11.md, through a TextInput: fixed by TextEditing
 #include <catch2/catch_test_macros.hpp>
 #include <unicode/unistr.h>
 #include <psychic-ui/components/Text.hpp>

@@ -1,4 +1,4 @@
-// Known bugs from docs/review-2026-11.md, tagged [!shouldfail]: remove the tag in the commit that fixes one.
+// Known bugs from review-2026-11.md, tagged [!shouldfail]: remove the tag in the commit that fixes one.
 #include <memory>
 #include <type_traits>
 #include <catch2/catch_test_macros.hpp>

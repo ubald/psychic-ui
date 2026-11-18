@@ -115,7 +115,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         animation/animation_tests.cpp
         animation/layout_transition_tests.cpp
         components/reentrancy_tests.cpp
-        # Known bugs ([!shouldfail]) and hidden use-after-free cases ([asan]) from docs/review-2026-11.md
+        # Known bugs ([!shouldfail]) and hidden use-after-free cases ([asan]) from review-2026-11.md
         keyboard/key_routing_tests.cpp
         text/editing_tests.cpp
         style/selector_tests.cpp

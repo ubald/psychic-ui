@@ -1,4 +1,4 @@
-// Use-after-free and crash paths from docs/review-2026-11.md (section Memory), hidden: they need AddressSanitizer
+// Use-after-free and crash paths from review-2026-11.md (section Memory), hidden: they need AddressSanitizer
 // to show anything, and without it they may pass by luck or crash the whole run. Run them with the asan preset:
 //   cmake --preset asan && cmake --build --preset asan -j"$(nproc)" --target psychic-ui-tests
 //   ./build/asan/tests/psychic-ui-tests "[asan]"
