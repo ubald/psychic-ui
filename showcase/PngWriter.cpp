@@ -4,26 +4,31 @@
 #include <array>
 #include <cstdlib>
 #include <fstream>
+#include <iterator>
+#include <span>
+#include <string_view>
+#include <utility>
 
 namespace psychic_ui::showcase {
     namespace {
         // region Checksums
 
-        std::uint32_t crc32(const std::uint8_t *data, std::size_t size, std::uint32_t crc = 0) {
+        std::uint32_t crc32(const std::span<const std::uint8_t> data, std::uint32_t crc = 0) {
             static const std::array<std::uint32_t, 256> table = [] {
                 std::array<std::uint32_t, 256> t{};
-                for (std::uint32_t n = 0; n < 256; ++n) {
-                    std::uint32_t c = n;
+                std::uint32_t                  n = 0;
+                for (std::uint32_t &entry: t) {
+                    std::uint32_t c = n++;
                     for (int k = 0; k < 8; ++k) {
                         c = c & 1 ? 0xEDB88320u ^ (c >> 1) : c >> 1;
                     }
-                    t[n] = c;
+                    entry = c;
                 }
                 return t;
             }();
             crc = ~crc;
-            for (std::size_t i = 0; i < size; ++i) {
-                crc = table[(crc ^ data[i]) & 0xFF] ^ (crc >> 8);
+            for (const std::uint8_t byte: data) {
+                crc = table.at((crc ^ byte) & 0xFF) ^ (crc >> 8);
             }
             return ~crc;
         }
@@ -47,13 +52,13 @@ namespace psychic_ui::showcase {
          */
         class BitWriter {
         public:
-            explicit BitWriter(std::vector<std::uint8_t> &out) : _out(out) {}
+            explicit BitWriter(std::vector<std::uint8_t> &out) : _out(&out) {}
 
             void bits(std::uint32_t value, int count) {
                 _bits |= value << _count;
                 _count += count;
                 while (_count >= 8) {
-                    _out.push_back(static_cast<std::uint8_t>(_bits & 0xFF));
+                    _out->push_back(static_cast<std::uint8_t>(_bits & 0xFF));
                     _bits >>= 8;
                     _count -= 8;
                 }
@@ -69,14 +74,14 @@ namespace psychic_ui::showcase {
 
             void flush() {
                 if (_count > 0) {
-                    _out.push_back(static_cast<std::uint8_t>(_bits & 0xFF));
+                    _out->push_back(static_cast<std::uint8_t>(_bits & 0xFF));
                 }
                 _bits  = 0;
                 _count = 0;
             }
 
         private:
-            std::vector<std::uint8_t> &_out;
+            std::vector<std::uint8_t> *_out; // Not owned: the stream it writes to outlives it
             std::uint32_t             _bits{0};
             int                       _count{0};
         };
@@ -105,20 +110,22 @@ namespace psychic_ui::showcase {
             }
         }
 
-        void match(BitWriter &out, const int length, const int distance) {
-            int l = static_cast<int>(lengthBase.size()) - 1;
-            while (lengthBase[l] > length) {
-                --l;
-            }
-            literal(out, 257 + l);
-            out.bits(length - lengthBase[l], lengthExtra[l]);
+        /**
+         * The index of the last base not past a value: its code
+         */
+        template<std::size_t N>
+        std::size_t lastNotPast(const std::array<int, N> &bases, const int value) {
+            return static_cast<std::size_t>(std::ranges::upper_bound(bases, value) - bases.begin()) - 1;
+        }
 
-            int d = static_cast<int>(distanceBase.size()) - 1;
-            while (distanceBase[d] > distance) {
-                --d;
-            }
-            out.code(d, 5);
-            out.bits(distance - distanceBase[d], distanceExtra[d]);
+        void match(BitWriter &out, const int length, const int distance) {
+            const std::size_t l = lastNotPast(lengthBase, length);
+            literal(out, 257 + static_cast<int>(l));
+            out.bits(length - lengthBase.at(l), lengthExtra.at(l));
+
+            const std::size_t d = lastNotPast(distanceBase, distance);
+            out.code(static_cast<std::uint32_t>(d), 5);
+            out.bits(distance - distanceBase.at(d), distanceExtra.at(d));
         }
 
         /**
@@ -201,7 +208,23 @@ namespace psychic_ui::showcase {
             const int pa = std::abs(p - a);
             const int pb = std::abs(p - b);
             const int pc = std::abs(p - c);
-            return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+            if (pa <= pb && pa <= pc) {
+                return a;
+            }
+            return pb <= pc ? b : c;
+        }
+
+        /**
+         * What a PNG filter predicts a byte from: the byte to its left (a), above (b) and above left (c)
+         */
+        int predict(const int filter, const int a, const int b, const int c) {
+            switch (filter) {
+                case 0: return 0;
+                case 1: return a;
+                case 2: return b;
+                case 3: return (a + b) / 2;
+                default: return paeth(a, b, c);
+            }
         }
 
         /**
@@ -218,33 +241,40 @@ namespace psychic_ui::showcase {
                 candidate.resize(stride);
             }
 
+            const std::size_t sourceStride = static_cast<std::size_t>(frame.width) * 4;
+            const auto        pixels       = std::span{frame.rgba};
+            const auto        width        = static_cast<std::size_t>(frame.width);
+            const auto        bytes        = static_cast<std::size_t>(channels);
             for (int y = 0; y < frame.height; ++y) {
-                const std::uint8_t *source = frame.rgba.data() + static_cast<std::size_t>(y) * frame.width * 4;
-                for (int x = 0; x < frame.width; ++x) {
-                    for (int c = 0; c < channels; ++c) {
-                        row[static_cast<std::size_t>(x) * channels + c] = source[x * 4 + c];
+                const auto source = pixels.subspan(static_cast<std::size_t>(y) * sourceStride, sourceStride);
+                for (std::size_t x = 0; x < width; ++x) {
+                    for (std::size_t c = 0; c < bytes; ++c) {
+                        row[(x * bytes) + c] = source[(x * 4) + c];
                     }
                 }
                 std::size_t bestSum = SIZE_MAX;
                 int         best    = 0;
-                for (int filter = 0; filter < 5; ++filter) {
+                int filter = 0;
+                for (auto &candidate: candidates) {
                     std::size_t sum = 0;
                     for (std::size_t i = 0; i < stride; ++i) {
-                        const int a     = i >= static_cast<std::size_t>(channels) ? row[i - channels] : 0;
-                        const int b     = previous[i];
-                        const int c     = i >= static_cast<std::size_t>(channels) ? previous[i - channels] : 0;
-                        const int guess = filter == 0 ? 0 : filter == 1 ? a : filter == 2 ? b : filter == 3 ? (a + b) / 2 : paeth(a, b, c);
-                        const auto value = static_cast<std::uint8_t>(row[i] - guess);
-                        candidates[filter][i] = value;
+                        const bool left  = i >= bytes;
+                        const int  a     = left ? row[i - bytes] : 0;
+                        const int  b     = previous[i];
+                        const int  c     = left ? previous[i - bytes] : 0;
+                        const auto value = static_cast<std::uint8_t>(row[i] - predict(filter, a, b, c));
+                        candidate[i] = value;
                         sum += static_cast<std::size_t>(std::abs(static_cast<std::int8_t>(value)));
                     }
                     if (sum < bestSum) {
                         bestSum = sum;
                         best    = filter;
                     }
+                    ++filter;
                 }
+                const auto &chosen = candidates.at(static_cast<std::size_t>(best));
                 out.push_back(static_cast<std::uint8_t>(best));
-                out.insert(out.end(), candidates[best].begin(), candidates[best].end());
+                out.insert(out.end(), chosen.begin(), chosen.end());
                 previous.swap(row);
             }
             return out;
@@ -261,12 +291,12 @@ namespace psychic_ui::showcase {
             out.push_back(static_cast<std::uint8_t>(value & 0xFF));
         }
 
-        void chunk(std::vector<std::uint8_t> &out, const char *type, const std::vector<std::uint8_t> &data) {
+        void chunk(std::vector<std::uint8_t> &out, const std::string_view type, const std::vector<std::uint8_t> &data) {
             put32(out, static_cast<std::uint32_t>(data.size()));
             const std::size_t start = out.size();
-            out.insert(out.end(), type, type + 4);
+            out.insert(out.end(), type.begin(), type.end());
             out.insert(out.end(), data.begin(), data.end());
-            put32(out, crc32(out.data() + start, out.size() - start));
+            put32(out, crc32(std::span{out}.subspan(start)));
         }
 
         bool opaque(std::span<const PngFrame> frames) {
@@ -292,12 +322,17 @@ namespace psychic_ui::showcase {
          * none does: a frame can't be empty)
          */
         Region changed(const PngFrame &before, const PngFrame &after) {
-            int left = after.width, top = after.height, right = -1, bottom = -1;
+            int        left   = after.width;
+            int        top    = after.height;
+            int        right  = -1;
+            int        bottom = -1;
+            const auto from   = std::span{before.rgba};
+            const auto to     = std::span{after.rgba};
             for (int y = 0; y < after.height; ++y) {
                 const std::size_t row = static_cast<std::size_t>(y) * after.width * 4;
                 for (int x = 0; x < after.width; ++x) {
-                    const std::size_t i = row + static_cast<std::size_t>(x) * 4;
-                    if (std::equal(&before.rgba[i], &before.rgba[i] + 4, &after.rgba[i])) {
+                    const std::size_t i = row + (static_cast<std::size_t>(x) * 4);
+                    if (std::ranges::equal(from.subspan(i, 4), to.subspan(i, 4))) {
                         continue;
                     }
                     left   = std::min(left, x);
@@ -394,7 +429,7 @@ namespace psychic_ui::showcase {
 
     bool PngWriter::write(const std::string &path, const std::vector<std::uint8_t> &png) {
         std::ofstream file(path, std::ios::binary);
-        file.write(reinterpret_cast<const char *>(png.data()), static_cast<std::streamsize>(png.size()));
+        std::ranges::copy(png, std::ostreambuf_iterator<char>(file));
         return static_cast<bool>(file);
     }
 }
