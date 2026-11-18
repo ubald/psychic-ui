@@ -1,4 +1,6 @@
 #include <memory>
+#include <string_view>
+#include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/AppShell.hpp>
 #include <psychic-ui/components/Button.hpp>
@@ -7,6 +9,9 @@
 #include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/skins/base/ButtonSkinBase.hpp>
 #include <psychic-ui/skins/float/FloatSkins.hpp>
+#include <psychic-ui/skins/pivotal/PivotalSkins.hpp>
+#include <psychic-ui/style/Color.hpp>
+#include <psychic-ui/themes/Theme.hpp>
 #include <psychic-ui/themes/desk.hpp>
 #include <psychic-ui/themes/float.hpp>
 #include <psychic-ui/themes/one-dark.hpp>

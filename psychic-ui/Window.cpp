@@ -6,19 +6,50 @@
 #include <iterator>
 #include <ranges>
 #include <utility>
-#include <yoga/Yoga.h>
-#include "include/core/SkColorSpace.h"
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <ratio>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <unicode/unistr.h>
+#include <yoga/YGEnums.h>
+#include <yoga/YGNode.h>
+// The null color space passed to WrapBackendRenderTarget is an sk_sp<SkColorSpace>, whose destructor needs the type
+#include "include/core/SkColorSpace.h" // IWYU pragma: keep
+#include "include/core/SkColorType.h"
+#include "include/core/SkScalar.h"
 #include "include/core/SkSurface.h"
+#include "include/core/SkSurfaceProps.h"
 #include "include/gpu/ganesh/GrBackendSurface.h"
+#include "include/gpu/ganesh/GrTypes.h"
 #include "include/gpu/ganesh/SkSurfaceGanesh.h"
 #include "include/gpu/ganesh/gl/GrGLAssembleInterface.h"
 #include "include/gpu/ganesh/gl/GrGLBackendSurface.h"
 #include "include/gpu/ganesh/gl/GrGLDirectContext.h"
 #include "include/gpu/ganesh/gl/GrGLInterface.h"
+#include "include/gpu/ganesh/gl/GrGLTypes.h"
+#include "Div.hpp"
+#include "Overlay.hpp"
+#include "Popup.hpp"
+#include "SystemWindow.hpp"
 #include "Window.hpp"
+#include "animation/Animation.hpp"
+#include "components/Menu.hpp"
 #include "components/MenuButton.hpp"
 #include "components/Toast.hpp"
 #include "components/Tooltip.hpp"
+#include "psychic-ui.hpp"
+#include "skins/SkinSet.hpp"
+#include "style/Length.hpp"
+#include "style/StyleManager.hpp"
+#include "style/Values.hpp"
+#include "themes/Theme.hpp"
 
 namespace {
     // GL_RGBA8, the default framebuffer's format

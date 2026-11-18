@@ -1,7 +1,9 @@
 #include <array>
+#include <memory>
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <vector>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Avatar.hpp>
 #include <psychic-ui/components/Badge.hpp>
@@ -13,7 +15,9 @@
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/List.hpp>
 #include <psychic-ui/components/StatusDot.hpp>
+#include <psychic-ui/components/Tone.hpp>
 #include <psychic-ui/components/Tree.hpp>
+#include <psychic-ui/style/Values.hpp>
 #include "../Compose.hpp"
 #include "../Looks.hpp"
 #include "../Scene.hpp"

@@ -1,14 +1,25 @@
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <psychic-ui/Div.hpp>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/animation/Animation.hpp>
 #include <psychic-ui/animation/Interpolation.hpp>
+#include <psychic-ui/animation/Timing.hpp>
+#include <psychic-ui/animation/Tween.hpp>
 #include <psychic-ui/components/Switch.hpp>
 #include <psychic-ui/components/Toast.hpp>
+#include <psychic-ui/style/Color.hpp>
+#include <psychic-ui/style/Length.hpp>
+#include <psychic-ui/style/Properties.hpp>
+#include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include "../backends/fake_system_window.hpp"
 

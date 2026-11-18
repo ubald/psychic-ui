@@ -1,7 +1,10 @@
+#include <memory>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Button.hpp>
+#include <psychic-ui/components/Menu.hpp>
 #include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/components/TitleBar.hpp>
+#include <psychic-ui/psychic-ui.hpp>
 #include "fake_system_window.hpp"
 
 using namespace psychic_ui;

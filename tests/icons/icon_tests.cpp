@@ -1,14 +1,25 @@
+#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
 #include "include/core/SkSurface.h"
+#include <psychic-ui/Div.hpp>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Icon.hpp>
 #include <psychic-ui/icons/IconRegistry.hpp>
+#include <psychic-ui/icons/IconSet.hpp>
 #include <psychic-ui/paint/Icon.hpp>
+#include <psychic-ui/style/Color.hpp>
+#include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/style/Values.hpp>
 
 using namespace psychic_ui;
 

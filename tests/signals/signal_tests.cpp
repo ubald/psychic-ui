@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -6,6 +7,7 @@
 #include <vector>
 #include <psychic-ui/signals/Observer.hpp>
 #include <psychic-ui/signals/Signal.hpp>
+#include <psychic-ui/signals/Slot.hpp>
 
 using namespace psychic_ui;
 

@@ -1,4 +1,7 @@
 #include "AppShell.hpp"
+#include "Sidebar.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
 

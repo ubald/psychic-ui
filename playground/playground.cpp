@@ -1,4 +1,6 @@
+#include <exception>
 #include <iostream>
+#include <memory>
 #include "playground.hpp"
 #include <psychic-ui/applications/SDL3Application.hpp>
 

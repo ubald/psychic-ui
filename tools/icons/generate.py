@@ -228,6 +228,7 @@ def write(path, symbol, header, icons, grid, stroke):
     lines += ["// " + h if h else "//" for h in header]
     lines += [
         "",
+        "#include <span>",
         '#include "psychic-ui/icons/IconSet.hpp"',
         "",
         "namespace psychic_ui::icons {",

@@ -1,6 +1,11 @@
+#include <memory>
 #include <sstream>
+#include <string>
+#include <vector>
 #include "Kbd.hpp"
 #include "Label.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
     Kbd::Kbd(const std::string &keys) :

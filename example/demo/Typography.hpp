@@ -5,6 +5,7 @@
 #include <psychic-ui/components/Box.hpp>
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/Text.hpp>
+#include <example/demo.hpp>
 
 namespace psychic_ui {
 

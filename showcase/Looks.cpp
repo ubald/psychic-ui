@@ -1,7 +1,11 @@
 #include "Looks.hpp"
+#include "Scene.hpp"
 
 #include <cctype>
+#include <memory>
 #include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/skins/desk/DeskSkins.hpp>

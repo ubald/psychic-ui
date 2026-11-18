@@ -1,4 +1,5 @@
 #include "ToolBar.hpp"
+#include "psychic-ui/Div.hpp"
 
 namespace psychic_ui {
 

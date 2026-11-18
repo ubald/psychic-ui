@@ -1,10 +1,16 @@
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <initializer_list>
 #include <iostream>
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
+#include "Properties.hpp"
 #include "Style.hpp"
+#include "psychic-ui/animation/Timing.hpp"
 
 namespace psychic_ui {
 

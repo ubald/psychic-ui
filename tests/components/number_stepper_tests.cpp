@@ -1,6 +1,8 @@
 // Fixed bugs from review-2026-11.md (C13, C14), kept as regression tests.
+#include <memory>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/NumberStepper.hpp>
+#include <psychic-ui/psychic-ui.hpp>
 #include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;

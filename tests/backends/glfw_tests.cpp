@@ -1,5 +1,14 @@
 #include <array>
+#include <chrono>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
 #include <catch2/catch_test_macros.hpp>
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSurface.h"
+#include <psychic-ui/psychic-ui.hpp>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <psychic-ui/applications/GLFWSystemWindow.hpp>

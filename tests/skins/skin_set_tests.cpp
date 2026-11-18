@@ -1,15 +1,22 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <typeinfo>
+#include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/Skin.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/CheckBox.hpp>
+#include <psychic-ui/components/MenuButton.hpp>
 #include <psychic-ui/components/Range.hpp>
+#include <psychic-ui/components/ScrollBar.hpp>
 #include <psychic-ui/components/Scroller.hpp>
 #include <psychic-ui/components/TextArea.hpp>
 #include <psychic-ui/components/TextInput.hpp>
+#include <psychic-ui/skins/SkinSet.hpp>
 #include <psychic-ui/skins/base/ButtonSkinBase.hpp>
 #include <psychic-ui/skins/base/CheckBoxSkinBase.hpp>
 #include <psychic-ui/skins/base/MenuButtonSkinBase.hpp>
@@ -20,6 +27,8 @@
 #include <psychic-ui/skins/pivotal/PivotalSkins.hpp>
 #include <psychic-ui/skins/pivotal/TabButtonSkin.hpp>
 #include <psychic-ui/skins/pivotal/TitleBarButtonSkin.hpp>
+#include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/themes/Theme.hpp>
 #include <psychic-ui/themes/one-light.hpp>
 #include "../backends/fake_system_window.hpp"
 

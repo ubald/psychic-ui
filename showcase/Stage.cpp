@@ -1,9 +1,20 @@
+#include <chrono>
+#include <cstddef>
+#include <memory>
+#include <utility>
+#include "HeadlessSystemWindow.hpp"
+#include "PngWriter.hpp"
 #include "Stage.hpp"
 
+#include "include/core/SkAlphaType.h"
 #include "include/core/SkCanvas.h"
+#include "include/core/SkColorType.h"
 #include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkRefCnt.h"
 #include "include/core/SkSurface.h"
 #include <psychic-ui/Window.hpp>
+#include <psychic-ui/psychic-ui.hpp>
 
 namespace psychic_ui::showcase {
     Stage::Stage(std::shared_ptr<Window> window, const int width, const int height, const float pixelRatio) :

@@ -1,4 +1,6 @@
+#include <string>
 #include "Label.hpp"
+#include "Text.hpp"
 
 namespace psychic_ui {
 

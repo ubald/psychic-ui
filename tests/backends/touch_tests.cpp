@@ -1,7 +1,16 @@
+#include <chrono>
+#include <cstddef>
+#include <memory>
+#include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/CheckBox.hpp>
 #include <psychic-ui/components/Range.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/style/StyleSheet.hpp>
+#include <psychic-ui/style/Values.hpp>
+#include <psychic-ui/themes/Theme.hpp>
 #include <psychic-ui/themes/one-dark.hpp>
 #include "fake_system_window.hpp"
 

@@ -1,6 +1,9 @@
 // Known bugs from review-2026-11.md, tagged [!shouldfail]: remove the tag in the commit that fixes one.
+#include <memory>
 #include <catch2/catch_test_macros.hpp>
 #include "../backends/fake_system_window.hpp"
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/style/Values.hpp>
 
 using namespace psychic_ui;
 using namespace psychic_ui_tests;

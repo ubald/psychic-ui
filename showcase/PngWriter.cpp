@@ -2,12 +2,16 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <fstream>
+#include <ios>
 #include <iterator>
 #include <span>
+#include <string>
 #include <string_view>
-#include <utility>
+#include <vector>
 
 namespace psychic_ui::showcase {
     namespace {

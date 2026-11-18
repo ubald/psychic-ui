@@ -1,9 +1,15 @@
-#include <cmath>
+#include <cstddef>
 #include <limits>
 #include <utility>
+#include <vector>
+#include "include/core/SkCanvas.h"
 #include "psychic-ui/components/Icon.hpp"
 #include "psychic-ui/components/Label.hpp"
 #include "SegmentedControlSkinBase.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/components/SegmentedControl.hpp"
+#include "psychic-ui/paint/Box.hpp"
+#include "SkinState.hpp"
 
 namespace psychic_ui {
     SegmentedControlSkinBase::SegmentedControlSkinBase() :

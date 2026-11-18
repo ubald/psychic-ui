@@ -1,6 +1,14 @@
+#include <cstddef>
+#include <memory>
+#include <utility>
+#include <vector>
+#include "DataContainer.hpp"
+#include "Menu.hpp"
 #include "MenuBar.hpp"
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/Window.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/Popup.hpp>
 
 namespace psychic_ui {
 

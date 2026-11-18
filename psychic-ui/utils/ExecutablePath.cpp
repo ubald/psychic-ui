@@ -1,5 +1,4 @@
-#include <algorithm>
-#include <string>
+#include <filesystem>
 #include <system_error>
 #include "ExecutablePath.hpp"
 
@@ -10,9 +9,12 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+#include <string>
 #include <windows.h>
 #elifdef __APPLE__
+#include <algorithm>
 #include <cstdint>
+#include <string>
 #include <mach-o/dyld.h>
 #endif
 

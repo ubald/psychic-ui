@@ -1,6 +1,8 @@
 #include <cstddef>
 #include <functional>
+#include <ostream>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include "Atom.hpp"
 #include "../utils/NoDestructor.hpp"

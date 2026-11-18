@@ -1,3 +1,6 @@
+#include <memory>
+#include <string>
+#include <vector>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/CheckBox.hpp>
@@ -17,6 +20,8 @@
 #include <psychic-ui/components/Tabs.hpp>
 #include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/components/ToolBar.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Color.hpp>
 #include "../Compose.hpp"
 #include "../Looks.hpp"
 #include "../Scene.hpp"

@@ -1,6 +1,9 @@
 #include "ShowcaseStyleSheet.hpp"
 
+#include <psychic-ui/style/Length.hpp>
 #include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/style/Values.hpp>
+#include <psychic-ui/themes/Theme.hpp>
 
 namespace psychic_ui::showcase {
     using namespace psychic_ui::literals;

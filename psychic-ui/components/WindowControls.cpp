@@ -1,6 +1,8 @@
 #include "WindowControls.hpp"
 #include "Button.hpp"
 #include "psychic-ui/Window.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
 

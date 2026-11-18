@@ -1,5 +1,12 @@
+#include <string>
+#include <string_view>
 #include "Chip.hpp"
 #include "Icon.hpp"
+#include "Label.hpp"
+#include "Tone.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/psychic-ui.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
     Chip::Chip(const std::string &label, const Tone tone) :

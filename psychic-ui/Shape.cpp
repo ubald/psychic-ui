@@ -1,6 +1,8 @@
 #include "Shape.hpp"
 
+#include <functional>
 #include <utility>
+#include "include/core/SkCanvas.h"
 
 namespace psychic_ui {
 

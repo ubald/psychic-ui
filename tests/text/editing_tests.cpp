@@ -1,8 +1,11 @@
 // C2 from review-2026-11.md, through a TextInput: fixed by TextEditing
+#include <memory>
+#include <string>
 #include <catch2/catch_test_macros.hpp>
+#include <unicode/umachine.h>
 #include <unicode/unistr.h>
-#include <psychic-ui/components/Text.hpp>
 #include <psychic-ui/components/TextInput.hpp>
+#include <psychic-ui/psychic-ui.hpp>
 #include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;

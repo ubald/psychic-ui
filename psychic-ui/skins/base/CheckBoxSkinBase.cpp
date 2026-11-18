@@ -1,5 +1,13 @@
+#include "include/core/SkCanvas.h"
+#include "include/core/SkRect.h"
 #include "psychic-ui/paint/Icon.hpp"
 #include "CheckBoxSkinBase.hpp"
+#include "psychic-ui/Shape.hpp"
+#include "psychic-ui/components/CheckBox.hpp"
+#include "psychic-ui/components/Label.hpp"
+#include "psychic-ui/paint/Box.hpp"
+#include "SkinState.hpp"
+#include "psychic-ui/style/Style.hpp"
 
 namespace psychic_ui {
     CheckBoxSkinBase::CheckBoxSkinBase() :

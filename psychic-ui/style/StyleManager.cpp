@@ -1,8 +1,25 @@
 #include <algorithm>
+#include <cctype>
+#include <cstddef>
+#include <filesystem>
+#include <functional>
+#include <memory>
 #include <stdexcept>
+#include <string>
+#include <typeindex>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 #include "StyleManager.hpp"
 #include "../Div.hpp"
+#include "../skins/SkinSet.hpp"
+#include "StyleSelector.hpp"
+#include "StyleSheet.hpp"
+#include "../themes/Theme.hpp"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "modules/skparagraph/include/FontCollection.h"
 #include "modules/skparagraph/include/TypefaceFontProvider.h"
 
 #ifdef __APPLE__

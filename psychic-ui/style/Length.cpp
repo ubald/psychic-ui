@@ -1,3 +1,4 @@
+#include <ostream>
 #include "Length.hpp"
 
 namespace psychic_ui {

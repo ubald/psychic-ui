@@ -1,7 +1,13 @@
 #include <algorithm>
+#include <string>
+#include "include/core/SkCanvas.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkPathBuilder.h"
+#include "include/core/SkPoint.h"
+#include "Label.hpp"
 #include "Tooltip.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/Popup.hpp"
 
 namespace psychic_ui {
 

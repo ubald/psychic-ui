@@ -1,4 +1,6 @@
 #include <iomanip>
+#include <ios>
+#include <ostream>
 #include "Color.hpp"
 
 namespace psychic_ui {

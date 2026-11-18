@@ -2,6 +2,8 @@
 #include <cmath>
 #include <cstdint>
 #include "Interpolation.hpp"
+#include "Tween.hpp"
+#include "psychic-ui/style/Color.hpp"
 
 namespace psychic_ui {
 

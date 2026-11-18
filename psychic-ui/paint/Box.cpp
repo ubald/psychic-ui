@@ -1,6 +1,10 @@
+#include "include/core/SkCanvas.h"
 #include "include/core/SkPaint.h"
+#include "include/core/SkRRect.h"
 #include "Box.hpp"
 #include "psychic-ui/Div.hpp"
+#include "psychic-ui/style/Color.hpp"
+#include "psychic-ui/style/Style.hpp"
 
 namespace psychic_ui::paint {
 

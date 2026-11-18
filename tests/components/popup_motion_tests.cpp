@@ -1,15 +1,25 @@
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/Popup.hpp>
+#include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Dialog.hpp>
 #include <psychic-ui/components/Menu.hpp>
-#include <psychic-ui/components/MenuButton.hpp>
+#include <psychic-ui/components/MenuButton.hpp> // IWYU pragma: keep: a MenuButton passed as a Div, which include-cleaner misses
 #include <psychic-ui/components/Select.hpp>
 #include <psychic-ui/components/Toast.hpp>
 #include <psychic-ui/components/Tooltip.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Properties.hpp>
+#include <psychic-ui/style/Values.hpp>
+#include <psychic-ui/themes/Theme.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include "../backends/fake_system_window.hpp"
 

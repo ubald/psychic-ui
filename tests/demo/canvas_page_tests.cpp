@@ -1,12 +1,17 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Inspector.hpp>
 #include <psychic-ui/components/ToolBar.hpp>
-#include <psychic-ui/skins/desk/DeskSkins.hpp>
-#include <psychic-ui/skins/float/FloatSkins.hpp>
+#include <psychic-ui/skins/float/FloatSkins.hpp> // IWYU pragma: keep: skinSet<FloatSkins>(), which include-cleaner misses
+#include <psychic-ui/skins/desk/DeskSkins.hpp> // IWYU pragma: keep: skinSet<DeskSkins>(), which include-cleaner misses
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Length.hpp>
+#include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/themes/Theme.hpp>
 #include <psychic-ui/themes/desk.hpp>
 #include <psychic-ui/themes/float.hpp>
 #include <psychic-ui/themes/one-dark.hpp>

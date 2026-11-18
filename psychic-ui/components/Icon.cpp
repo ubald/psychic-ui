@@ -1,6 +1,10 @@
 #include <algorithm>
+#include <string_view>
+#include "include/core/SkCanvas.h"
 #include "psychic-ui/paint/Icon.hpp"
 #include "Icon.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/Measure.hpp"
 
 namespace psychic_ui {
 

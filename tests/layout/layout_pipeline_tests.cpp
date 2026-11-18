@@ -4,6 +4,8 @@
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/components/ToolBar.hpp>
+#include <psychic-ui/style/Length.hpp>
+#include <psychic-ui/style/Values.hpp>
 
 using namespace psychic_ui;
 

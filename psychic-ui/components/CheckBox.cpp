@@ -1,6 +1,9 @@
-#include <iostream>
+#include <functional>
+#include <string>
 #include <utility>
 #include "CheckBox.hpp"
+#include "psychic-ui/Component.hpp"
+#include "psychic-ui/psychic-ui.hpp"
 
 namespace psychic_ui {
 

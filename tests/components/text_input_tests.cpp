@@ -1,11 +1,17 @@
 // TextInput on TextField: the field takes the focus, the keys, typing and the mouse, and drives its skin's view
 #include <catch2/catch_test_macros.hpp>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+#include <unicode/umachine.h>
 #include <unicode/unistr.h>
+#include "include/core/SkRect.h"
 #include <psychic-ui/components/Text.hpp>
 #include <psychic-ui/components/TextInput.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Values.hpp>
+#include <psychic-ui/themes/Theme.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include "../backends/fake_system_window.hpp"
 

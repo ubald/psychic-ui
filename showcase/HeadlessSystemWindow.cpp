@@ -1,4 +1,7 @@
+#include <memory>
+#include <utility>
 #include "HeadlessSystemWindow.hpp"
+#include <psychic-ui/SystemWindow.hpp>
 #include <psychic-ui/Window.hpp>
 
 namespace psychic_ui::showcase {

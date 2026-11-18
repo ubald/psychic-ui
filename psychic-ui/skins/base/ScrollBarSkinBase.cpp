@@ -1,4 +1,9 @@
+#include "include/core/SkRect.h"
 #include "ScrollBarSkinBase.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/components/ScrollBar.hpp"
+#include "psychic-ui/style/Length.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
 

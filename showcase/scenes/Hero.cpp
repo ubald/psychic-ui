@@ -1,11 +1,20 @@
 // The demo's window and pages are header-only: this is the one file that includes them
-#include "example/demo.hpp"
+#include <chrono>
+#include <functional>
+#include <memory>
+#include <string>
+#include <vector>
 #include "example/demo/DemoWindow.hpp"
 
 #include "../Compose.hpp"
 #include "../Looks.hpp"
 #include "../Scene.hpp"
 #include "../Stage.hpp"
+#include "example/demo-stylesheet.hpp"
+#include "example/demo/Canvas.hpp"
+#include <psychic-ui/components/Button.hpp>
+#include <psychic-ui/style/Length.hpp>
+#include <psychic-ui/style/Values.hpp>
 
 namespace psychic_ui::showcase {
     using namespace psychic_ui::literals;

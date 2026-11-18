@@ -1,4 +1,7 @@
+#include <string>
 #include "SearchField.hpp"
+#include "TextField.hpp"
+#include "psychic-ui/psychic-ui.hpp"
 
 namespace psychic_ui {
 

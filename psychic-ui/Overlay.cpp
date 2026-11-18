@@ -1,9 +1,20 @@
 #include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <cstddef>
+#include <memory>
+#include <optional>
 #include <ranges>
-#include "yoga/Yoga.h"
+#include <vector>
+#include "include/core/SkRect.h"
+#include "yoga/YGNode.h"
+#include "Div.hpp"
 #include "Overlay.hpp"
+#include "Popup.hpp"
 #include "Window.hpp"
+#include "psychic-ui.hpp"
+#include "style/Length.hpp"
+#include "style/Values.hpp"
 
 namespace psychic_ui {
 

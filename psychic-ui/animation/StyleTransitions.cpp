@@ -1,12 +1,24 @@
 #include <algorithm>
+#include <cctype>
+#include <chrono>
 #include <cmath>
+#include <cstddef>
+#include <functional>
+#include <memory>
 #include <optional>
+#include <string>
 #include <type_traits>
 #include <utility>
+#include "Animation.hpp"
 #include "Interpolation.hpp"
 #include "StyleTransitions.hpp"
+#include "Timing.hpp"
+#include "Tween.hpp"
 #include "psychic-ui/Div.hpp"
 #include "psychic-ui/Window.hpp"
+#include "psychic-ui/style/Properties.hpp"
+#include "psychic-ui/style/Style.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
 

@@ -1,4 +1,6 @@
+#include <string>
 #include "TextArea.hpp"
+#include "TextField.hpp"
 
 namespace psychic_ui {
 

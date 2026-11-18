@@ -1,6 +1,14 @@
+#include <algorithm>
 #include <cmath>
+#include <string>
+#include <unicode/unistr.h>
+#include "include/core/SkRect.h"
 #include "psychic-ui/Window.hpp"
 #include "TextField.hpp"
+#include "psychic-ui/Div.hpp"
+#include "Text.hpp"
+#include "psychic-ui/psychic-ui.hpp"
+#include "psychic-ui/text/TextEditing.hpp"
 
 namespace psychic_ui {
 

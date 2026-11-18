@@ -1,5 +1,4 @@
-#include <iostream>
-#include <utility>
+#include "../Component.hpp"
 #include "../components/Menu.hpp"
 #include "MenuButton.hpp"
 

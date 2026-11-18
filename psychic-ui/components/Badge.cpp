@@ -1,4 +1,9 @@
+#include <string>
 #include "Badge.hpp"
+#include "Label.hpp"
+#include "Tone.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
     Badge::Badge(const std::string &label, const Tone tone) :

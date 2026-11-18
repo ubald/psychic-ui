@@ -1,5 +1,11 @@
+#include <chrono>
+#include <memory>
+#include <vector>
 #include <catch2/catch_test_macros.hpp>
+#include <psychic-ui/Div.hpp>
 #include <psychic-ui/components/Button.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Values.hpp>
 #include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;

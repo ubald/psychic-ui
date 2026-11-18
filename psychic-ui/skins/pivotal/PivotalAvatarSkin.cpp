@@ -1,7 +1,15 @@
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <string_view>
+#include "include/core/SkCanvas.h"
 #include "psychic-ui/themes/palette.hpp"
 #include "PivotalAvatarSkin.hpp"
+#include "psychic-ui/components/Avatar.hpp"
+#include "psychic-ui/paint/Box.hpp"
+#include "psychic-ui/skins/base/AvatarSkinBase.hpp"
+#include "psychic-ui/skins/base/SkinState.hpp"
+#include "psychic-ui/style/Color.hpp"
 
 namespace psychic_ui {
     namespace {

@@ -1,8 +1,16 @@
 #include <algorithm>
+#include <memory>
 #include "psychic-ui/style/StyleManager.hpp"
 #include "psychic-ui/skins/pivotal/PivotalSkins.hpp"
 #include "psychic-ui/themes/desk.hpp"
 #include "DeskSkins.hpp"
+#include "psychic-ui/skins/SkinSet.hpp"
+#include "psychic-ui/style/Color.hpp"
+#include "psychic-ui/style/Length.hpp"
+#include "psychic-ui/style/Properties.hpp"
+#include "psychic-ui/style/Style.hpp"
+#include "psychic-ui/style/Values.hpp"
+#include "psychic-ui/themes/Theme.hpp"
 
 namespace psychic_ui {
     namespace {

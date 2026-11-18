@@ -1,6 +1,12 @@
+#include <initializer_list>
 #include <iostream>
+#include <span>
+#include <string_view>
+#include <utility>
+#include <vector>
 #include "include/utils/SkParsePath.h"
 #include "IconRegistry.hpp"
+#include "IconSet.hpp"
 
 namespace psychic_ui {
 

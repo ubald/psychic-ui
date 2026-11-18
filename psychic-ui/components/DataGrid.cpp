@@ -1,11 +1,19 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 #include "DataGrid.hpp"
 #include "Icon.hpp"
 #include "Label.hpp"
+#include "Rows.hpp"
 #include "ScrollBar.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/psychic-ui.hpp"
+#include "psychic-ui/style/Length.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
     namespace {

@@ -1,4 +1,12 @@
+#include "include/core/SkCanvas.h"
+#include "SkinState.hpp"
 #include "TextInputSkinBase.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/components/Label.hpp"
+#include "psychic-ui/components/Text.hpp"
+#include "psychic-ui/components/TextInput.hpp"
+#include "psychic-ui/paint/Box.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
 

@@ -1,6 +1,8 @@
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <ostream>
+#include <ratio>
 #include "Timing.hpp"
 
 namespace psychic_ui {

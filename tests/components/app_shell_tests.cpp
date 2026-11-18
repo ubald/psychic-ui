@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <memory>
+#include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/AppShell.hpp>
@@ -7,6 +8,11 @@
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
+#include <psychic-ui/components/Sidebar.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Length.hpp>
+#include <psychic-ui/style/Values.hpp>
+#include <psychic-ui/themes/Theme.hpp>
 #include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;

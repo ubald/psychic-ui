@@ -1,8 +1,12 @@
+#include <string>
+#include <string_view>
 #include "EmptyState.hpp"
 #include "Button.hpp"
 #include "Icon.hpp"
 #include "Label.hpp"
 #include "Text.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
     EmptyState::EmptyState(const std::string &icon, const std::string &title, const std::string &description) :
