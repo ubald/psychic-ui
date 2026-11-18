@@ -423,13 +423,13 @@ TEST_CASE("SDL3: dragging a range follows the mouse, through its skin's geometry
     const float trackX = static_cast<float>(track.x());
     const float width  = static_cast<float>(track.getWidth());
     REQUIRE(width > 100.0f);
-    const SkPoint quarter = inWindow(*skin, trackX + width * 0.25f, 10.0f);
+    const SkPoint quarter = inWindow(*skin, trackX + (width * 0.25f), 10.0f);
     CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, quarter.x(), quarter.y()));
     CHECK(range.value() == Catch::Approx(0.25f).margin(0.01f));
     CHECK(range.active());
 
     // Dragging, even off the range, keeps following the mouse
-    const SkPoint threeQuarters = inWindow(*skin, trackX + width * 0.75f, 300.0f);
+    const SkPoint threeQuarters = inWindow(*skin, trackX + (width * 0.75f), 300.0f);
     moveTo(sdl, threeQuarters.x(), threeQuarters.y());
     CHECK(range.value() == Catch::Approx(0.75f).margin(0.01f));
     moveTo(sdl, quarter.x() - 500.0f, quarter.y());
@@ -496,13 +496,13 @@ TEST_CASE("SDL3: dragging a scroll bar's thumb scrolls its viewport", "[backend]
     const float free          = track.height() - thumb.height();
     const int   contentScroll = scroller.viewport()->contentHeight() - scroller.viewport()->getHeight();
     REQUIRE(contentScroll > 0);
-    moveTo(sdl, grab.x() + 300.0f, grab.y() + free / 2.0f); // Off the bar sideways too
-    CHECK(scroller.viewport()->scrollY() == Catch::Approx(-contentScroll / 2.0).margin(contentScroll / free + 1.0));
-    moveTo(sdl, grab.x(), grab.y() + 10 * free); // Past the end
+    moveTo(sdl, grab.x() + 300.0f, grab.y() + (free / 2.0f)); // Off the bar sideways too
+    CHECK(scroller.viewport()->scrollY() == Catch::Approx(-contentScroll / 2.0).margin((contentScroll / free) + 1.0));
+    moveTo(sdl, grab.x(), grab.y() + (10 * free)); // Past the end
     CHECK(scroller.viewport()->scrollY() == -contentScroll);
 
     // Released, it stops
-    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, grab.x(), grab.y() + 10 * free));
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, grab.x(), grab.y() + (10 * free)));
     moveTo(sdl, grab.x(), grab.y());
     CHECK(scroller.viewport()->scrollY() == -contentScroll);
 }

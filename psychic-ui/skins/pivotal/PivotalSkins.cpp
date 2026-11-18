@@ -797,7 +797,7 @@ namespace psychic_ui {
             .padding(m.gutterCard);
 
         text(rule("Dialog .description"), t.sm, t.regular, s)
-            .lineHeight(t.sm.size * 1.625f + s.textStep)
+            .lineHeight((t.sm.size * 1.625f) + s.textStep)
             .color(p.textMuted);
 
         rule("Dialog .footer")

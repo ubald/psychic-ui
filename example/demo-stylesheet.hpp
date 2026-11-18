@@ -122,7 +122,7 @@ public:
 
         // Ten chips a row: a grid
         manager->style("Inputs ColorSwatches")
-               .maxWidth(10 * 20 + 9 * 4);
+               .maxWidth((10 * 20) + (9 * 4));
 
         manager->style("Inputs .event")
                .marginTop(m.space(1));

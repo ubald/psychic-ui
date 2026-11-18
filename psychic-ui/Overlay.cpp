@@ -67,7 +67,7 @@ namespace psychic_ui {
             float x = 0;
             switch (align) {
                 case PopupAlign::Start: x = anchor.left() + alignOffset; break;
-                case PopupAlign::Center: x = anchor.centerX() - width / 2.0f + alignOffset; break;
+                case PopupAlign::Center: x = anchor.centerX() - (width / 2.0f) + alignOffset; break;
                 case PopupAlign::End: x = anchor.right() - width - alignOffset; break;
             }
             placement.x = shift(x, width, bounds.left(), bounds.right());
@@ -76,7 +76,7 @@ namespace psychic_ui {
             float y = 0;
             switch (align) {
                 case PopupAlign::Start: y = anchor.top() + alignOffset; break;
-                case PopupAlign::Center: y = anchor.centerY() - height / 2.0f + alignOffset; break;
+                case PopupAlign::Center: y = anchor.centerY() - (height / 2.0f) + alignOffset; break;
                 case PopupAlign::End: y = anchor.bottom() - height - alignOffset; break;
             }
             placement.x = shift(main, width, bounds.left(), bounds.right());

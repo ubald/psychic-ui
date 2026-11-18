@@ -115,7 +115,7 @@ namespace {
             window->handleTouchPress(50.0f, 90.0f, time);
             for (int i = 1; i <= 6; ++i) {
                 time += 10ms;
-                window->handleTouchMove(50.0f, 90.0f - 10.0f * static_cast<float>(i), time);
+                window->handleTouchMove(50.0f, 90.0f - (10.0f * static_cast<float>(i)), time);
             }
             window->handleTouchRelease(50.0f, 30.0f, time);
         }

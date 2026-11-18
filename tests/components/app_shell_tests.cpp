@@ -79,7 +79,7 @@ TEST_CASE("AppShell: the sidebar the window's height, the page inset beside it",
     CHECK(pageX == shellX + static_cast<int>(sidebar.getWidth()));
     CHECK(pageY == shellY + static_cast<int>(inset));
     CHECK(page.getWidth() == s.shell.getWidth() - sidebar.getWidth() - inset);
-    CHECK(page.getHeight() == s.shell.getHeight() - 2 * inset);
+    CHECK(page.getHeight() == s.shell.getHeight() - (2 * inset));
     CHECK(page.computedStyle().borderRadius() == s.theme.metrics.radius.page);
     CHECK(page.computedStyle().overflow() == Overflow::Hidden);
     CHECK(page.computedStyle().backgroundColor() == s.theme.palette.page);

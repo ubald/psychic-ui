@@ -82,7 +82,7 @@ namespace {
             int x = 0;
             int y = 0;
             div.localToGlobal(x, y);
-            return {x - div.scrollX() + div.getWidth() / 2, y - div.scrollY() + div.getHeight() / 2};
+            return {x - div.scrollX() + (div.getWidth() / 2), y - div.scrollY() + (div.getHeight() / 2)};
         }
 
         std::size_t inOverlay() const { return window->overlay().children().size(); }

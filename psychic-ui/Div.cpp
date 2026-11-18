@@ -532,7 +532,7 @@ namespace psychic_ui {
         // A Gaussian reaches about 3 sigmas, 1.5 blur radii
         const Style &paint = _computedStyle;
         const auto shadowReach = [](Color color, float blur, float x, float y, float spread) {
-            return color.alpha() > 0 ? std::max(0.0f, blur * 1.5f + std::max(std::abs(x), std::abs(y)) + spread) : 0.0f;
+            return color.alpha() > 0 ? std::max(0.0f, (blur * 1.5f) + std::max(std::abs(x), std::abs(y)) + spread) : 0.0f;
         };
         _paintOutset = std::max({
             paint.outlineWidth() > 0.0f ? std::max(0.0f, paint.outlineOffset() + paint.outlineWidth()) : 0.0f,
@@ -1164,15 +1164,15 @@ namespace psychic_ui {
             return;
         }
         const float half   = spacing / 2.0f;
-        const float firstX = _rect.left() + half + std::floor((visible.left() - _rect.left()) / spacing) * spacing;
-        const float firstY = _rect.top() + half + std::floor((visible.top() - _rect.top()) / spacing) * spacing;
+        const float firstX = _rect.left() + half + (std::floor((visible.left() - _rect.left()) / spacing) * spacing);
+        const float firstY = _rect.top() + half + (std::floor((visible.top() - _rect.top()) / spacing) * spacing);
         const int columns = std::max(0, static_cast<int>(std::ceil((visible.right() + radius - firstX) / spacing)));
         const int rows    = std::max(0, static_cast<int>(std::ceil((visible.bottom() + radius - firstY) / spacing)));
         std::vector<SkPoint> dots{};
         dots.reserve(static_cast<size_t>(columns) * rows);
         for (int row = 0; row < rows; ++row) {
             for (int column = 0; column < columns; ++column) {
-                dots.push_back({firstX + column * spacing, firstY + row * spacing});
+                dots.push_back({firstX + (column * spacing), firstY + (row * spacing)});
             }
         }
         // Round points are discs of the stroke's width, in one call
@@ -1200,7 +1200,7 @@ namespace psychic_ui {
         paint.setColor(style.outlineColor().argb());
         // The stroke's center line, half its width outside the offset; corners stay concentric with the border's
         SkRRect line;
-        const float outset = style.outlineOffset() + width / 2.0f;
+        const float outset = style.outlineOffset() + (width / 2.0f);
         _roundRect.outset(outset, outset, &line);
         canvas->drawRRect(line, paint);
     }
@@ -1438,8 +1438,8 @@ namespace psychic_ui {
         localToGlobal(windowX, windowY);
         MouseEvent event{};
         // The center of the border box, in content coordinates
-        event.x       = static_cast<float>(_width) / 2.0f - static_cast<float>(_scrollX);
-        event.y       = static_cast<float>(_height) / 2.0f - static_cast<float>(_scrollY);
+        event.x       = (static_cast<float>(_width) / 2.0f) - static_cast<float>(_scrollX);
+        event.y       = (static_cast<float>(_height) / 2.0f) - static_cast<float>(_scrollY);
         event.windowX = static_cast<float>(windowX) + event.x;
         event.windowY = static_cast<float>(windowY) + event.y;
         event.fromKeyboard = true;
@@ -1790,7 +1790,7 @@ namespace psychic_ui {
             int sx = std::min(
                 0, std::max(
                     _width - (_boundsRight - _boundsLeft),
-                    _scrollX + (int) std::ceil(scrollX) * 2
+                    _scrollX + ((int) std::ceil(scrollX) * 2)
                 ));
 
             moved |= _scrollX != sx;
@@ -1801,7 +1801,7 @@ namespace psychic_ui {
             int sy = std::min(
                 0, std::max(
                     _height - (_boundsBottom - _boundsTop),
-                    _scrollY + (int) std::ceil(scrollY) * 2
+                    _scrollY + ((int) std::ceil(scrollY) * 2)
                 ));
 
             moved |= _scrollY != sy;

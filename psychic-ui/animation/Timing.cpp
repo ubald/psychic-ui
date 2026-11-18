@@ -16,16 +16,16 @@ namespace psychic_ui {
             float cy, by, ay;
 
             explicit Bezier(const Ease &ease) :
-                cx(3.0f * ease.x1), bx(3.0f * (ease.x2 - ease.x1) - cx), ax(1.0f - cx - bx),
-                cy(3.0f * ease.y1), by(3.0f * (ease.y2 - ease.y1) - cy), ay(1.0f - cy - by) {}
+                cx(3.0f * ease.x1), bx((3.0f * (ease.x2 - ease.x1)) - cx), ax(1.0f - cx - bx),
+                cy(3.0f * ease.y1), by((3.0f * (ease.y2 - ease.y1)) - cy), ay(1.0f - cy - by) {}
 
             float x(float t) const { return ((ax * t + bx) * t + cx) * t; }
 
             float y(float t) const { return ((ay * t + by) * t + cy) * t; }
 
-            float dx(float t) const { return (3.0f * ax * t + 2.0f * bx) * t + cx; }
+            float dx(float t) const { return ((3.0f * ax * t + 2.0f * bx) * t) + cx; }
 
-            float dy(float t) const { return (3.0f * ay * t + 2.0f * by) * t + cy; }
+            float dy(float t) const { return ((3.0f * ay * t + 2.0f * by) * t) + cy; }
 
             /**
              * The t whose x is the progress: Newton's method, then bisection where the slope is too flat for it
@@ -122,14 +122,14 @@ namespace psychic_ui {
         float       v    = 0.0f;
         if (std::abs(zeta - 1.0f) < 1e-4f) {
             // Critically damped
-            const float b = v0 + omega * x0;
+            const float b = v0 + (omega * x0);
             const float e = std::exp(-omega * t);
             x = e * (x0 + b * t);
             v = e * (b - omega * (x0 + b * t));
         } else if (zeta < 1.0f) {
             // Underdamped: it oscillates as it decays
             const float a  = zeta * omega;
-            const float wd = omega * std::sqrt(1.0f - zeta * zeta);
+            const float wd = omega * std::sqrt(1.0f - (zeta * zeta));
             const float b  = (v0 + a * x0) / wd;
             const float e  = std::exp(-a * t);
             const float c  = std::cos(wd * t);
@@ -138,15 +138,15 @@ namespace psychic_ui {
             v = e * ((-a * x0 + b * wd) * c + (-a * b - x0 * wd) * s);
         } else {
             // Overdamped: two decaying exponentials
-            const float root = omega * std::sqrt(zeta * zeta - 1.0f);
-            const float r1   = -zeta * omega + root;
-            const float r2   = -zeta * omega - root;
+            const float root = omega * std::sqrt((zeta * zeta) - 1.0f);
+            const float r1   = (-zeta * omega) + root;
+            const float r2   = (-zeta * omega) - root;
             const float c2   = (v0 - r1 * x0) / (r2 - r1);
             const float c1   = x0 - c2;
             const float e1   = std::exp(r1 * t);
             const float e2   = std::exp(r2 * t);
-            x = c1 * e1 + c2 * e2;
-            v = c1 * r1 * e1 + c2 * r2 * e2;
+            x = (c1 * e1) + (c2 * e2);
+            v = (c1 * r1 * e1) + (c2 * r2 * e2);
         }
         const bool within = std::abs(x) <= tolerance && std::abs(v) <= tolerance * std::max(omega, 1.0f);
         return {.offset = x, .velocity = v, .settled = within || t >= std::chrono::duration<float>(maxTime).count()};

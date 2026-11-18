@@ -46,7 +46,7 @@ namespace psychic_ui {
     float SwitchSkinBase::positionAt(const int x, const int /*y*/) const {
         // The track is our child, so its position is in our coordinates; the space before the thumb starts its
         // content box, and the spaces on either side share the thumb's travel
-        const float start  = _track->x() + _before->x() + _thumb->getWidth() / 2.0f;
+        const float start  = _track->x() + _before->x() + (_thumb->getWidth() / 2.0f);
         const float travel = _before->getWidth() + _after->getWidth();
         return travel > 0 ? (static_cast<float>(x) - start) / travel : 0.0f;
     }

@@ -154,7 +154,7 @@ namespace {
 
         static std::pair<int, int> center(const Div &div) {
             const auto [x, y] = origin(div);
-            return {x + div.getWidth() / 2, y + div.getHeight() / 2};
+            return {x + (div.getWidth() / 2), y + (div.getHeight() / 2)};
         }
 
         std::size_t popupCount() const { return window->overlay().children().size(); }

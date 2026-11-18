@@ -70,7 +70,7 @@ TEST_CASE("text lays out in Inter at small sizes, slightly hinted", "[text][font
         REQUIRE(width != fallback.maxContentWidth());
         REQUIRE(medium.maxContentWidth() > width);
         // Linear advances: the width scales with the size, not rounded per glyph
-        REQUIRE(std::abs(width / size - layout(manager, "Inter", 100.0f).maxContentWidth() / 100.0f) < 0.02f);
+        REQUIRE(std::abs((width / size) - (layout(manager, "Inter", 100.0f).maxContentWidth() / 100.0f)) < 0.02f);
 
         auto surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(400, 40));
         surface->getCanvas()->clear(SK_ColorWHITE);

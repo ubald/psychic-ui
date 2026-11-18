@@ -606,7 +606,7 @@ TEST_CASE("Avatar: initials, sizes, a status and a tint", "[components][avatar]"
                 const double x = static_cast<double>(v & 0xFFu) / 255.0;
                 return x <= 0.04045 ? x / 12.92 : std::pow((x + 0.055) / 1.055, 2.4);
             };
-            return 0.2126 * ch(c.argb() >> 16) + 0.7152 * ch(c.argb() >> 8) + 0.0722 * ch(c.argb());
+            return (0.2126 * ch(c.argb() >> 16)) + (0.7152 * ch(c.argb() >> 8)) + (0.0722 * ch(c.argb()));
         };
         const double a = lum(hue);
         const double b = lum(text);

@@ -1139,8 +1139,8 @@ namespace psychic_ui {
                 panBy(dx, dy);
                 if (dt > 0) {
                     // Mostly the latest movement's speed, smoothed a little
-                    _panVelocityX = 0.6f * dx / dt + 0.4f * _panVelocityX;
-                    _panVelocityY = 0.6f * dy / dt + 0.4f * _panVelocityY;
+                    _panVelocityX = (0.6f * dx / dt) + (0.4f * _panVelocityX);
+                    _panVelocityY = (0.6f * dy / dt) + (0.4f * _panVelocityY);
                 }
                 break;
 
@@ -1328,8 +1328,8 @@ namespace psychic_ui {
                     && search.y >= static_cast<float>(std::max(top - reach, clipTop))
                     && search.y < static_cast<float>(std::min(bottom + reach, clipBottom))) {
                     const float distance = std::hypot(
-                        search.x - static_cast<float>(left + right) / 2.0f,
-                        search.y - static_cast<float>(top + bottom) / 2.0f
+                        search.x - (static_cast<float>(left + right) / 2.0f),
+                        search.y - (static_cast<float>(top + bottom) / 2.0f)
                     );
                     // On equal distances, the one on top (later in the tree)
                     if (!search.target || distance <= search.distance) {

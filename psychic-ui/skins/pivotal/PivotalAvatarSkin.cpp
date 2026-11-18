@@ -17,7 +17,7 @@ namespace psychic_ui {
                 return c <= 0.04045 ? c / 12.92 : std::pow((c + 0.055) / 1.055, 2.4);
             };
             const std::uint32_t argb = color.argb();
-            return 0.2126 * channel(argb >> 16) + 0.7152 * channel(argb >> 8) + 0.0722 * channel(argb);
+            return (0.2126 * channel(argb >> 16)) + (0.7152 * channel(argb >> 8)) + (0.0722 * channel(argb));
         }
 
         double contrast(const Color a, const Color b) {

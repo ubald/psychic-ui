@@ -286,7 +286,7 @@ namespace psychic_ui {
                 v = std::log((percent * 9.0f) + 1.0f) * std::numbers::log10e_v<float>;
                 break;
             case RangeMode::LogarithmicInverse:
-                v = 1.0f - std::log(((1.0f - percent) * 9.0f) + 1.0f) * std::numbers::log10e_v<float>;
+                v = 1.0f - (std::log(((1.0f - percent) * 9.0f) + 1.0f) * std::numbers::log10e_v<float>);
                 break;
             default:
                 break;
@@ -310,7 +310,7 @@ namespace psychic_ui {
             case RangeMode::Logarithmic:
                 return ((float) std::pow(10, v) - 1.0f) / 9.0f;
             case RangeMode::LogarithmicInverse:
-                return 1.0f - ((float) std::pow(10, 1.0f - v) - 1.0f) / 9.0f;
+                return 1.0f - (((float) std::pow(10, 1.0f - v) - 1.0f) / 9.0f);
             default:
                 return v;
         }

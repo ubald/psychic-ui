@@ -54,7 +54,7 @@ namespace psychic_ui {
             const Div  *swatch = _swatches[i];
             const float dx     = static_cast<float>(x) - (static_cast<float>(swatch->x()) + static_cast<float>(swatch->getWidth()) / 2.0f);
             const float dy     = static_cast<float>(y) - (static_cast<float>(swatch->y()) + static_cast<float>(swatch->getHeight()) / 2.0f);
-            const float d      = dx * dx + dy * dy;
+            const float d      = (dx * dx) + (dy * dy);
             if (d < distance) {
                 distance = d;
                 nearest  = static_cast<int>(i);

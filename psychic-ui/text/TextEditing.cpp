@@ -217,7 +217,7 @@ namespace psychic_ui {
                 if (!_goalX) {
                     _goalX = caret.fLeft;
                 }
-                const float        y     = forward ? caret.fBottom + caret.height() / 2.0f : caret.fTop - caret.height() / 2.0f;
+                const float        y     = forward ? caret.fBottom + (caret.height() / 2.0f) : caret.fTop - (caret.height() / 2.0f);
                 const unsigned int index = geometry->indexAt(*_goalX, y);
                 if (geometry->caretRect(index).fTop == caret.fTop) {
                     // No line there: the first line goes to the start, the last to the end

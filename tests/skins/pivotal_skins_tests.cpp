@@ -56,7 +56,7 @@ namespace {
         int x = 0;
         int y = 0;
         div.localToGlobal(x, y);
-        return static_cast<float>(x) + div.getWidth() / 2.0f;
+        return static_cast<float>(x) + (div.getWidth() / 2.0f);
     }
 
     float left(const Div &div) {
@@ -91,12 +91,12 @@ TEST_CASE("Pivotal skins: the slider's track, fill and thumb follow the value", 
 
     CHECK(fill->getWidth() == Catch::Approx(track->getWidth() * 0.25f).margin(0.5f));
     CHECK(left(*fill) == Catch::Approx(left(*track)).margin(0.5f));
-    CHECK(centerX(*thumb) == Catch::Approx(left(*track) + track->getWidth() * 0.25f).margin(1.0f));
+    CHECK(centerX(*thumb) == Catch::Approx(left(*track) + (track->getWidth() * 0.25f)).margin(1.0f));
 
     range.value(0.75f);
     f.layout();
     CHECK(fill->getWidth() == Catch::Approx(track->getWidth() * 0.75f).margin(0.5f));
-    CHECK(centerX(*thumb) == Catch::Approx(left(*track) + track->getWidth() * 0.75f).margin(1.0f));
+    CHECK(centerX(*thumb) == Catch::Approx(left(*track) + (track->getWidth() * 0.75f)).margin(1.0f));
 
     // A press picks the value under it along the track
     int x = 0;

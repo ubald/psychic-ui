@@ -65,11 +65,11 @@ namespace psychic_ui {
             Div::draw(canvas);
             constexpr float size  = 20.0f;
             const float     inset = (_rect.height() - size) / 2.0f;
-            const float     x     = _rect.left() + inset + _position.value() * (_rect.width() - size - 2.0f * inset);
+            const float     x     = _rect.left() + inset + (_position.value() * (_rect.width() - size - 2.0f * inset));
             SkPaint paint;
             paint.setAntiAlias(true);
             paint.setColor(_computedStyle.color().argb());
-            canvas->drawCircle(x + size / 2.0f, _rect.centerY(), size / 2.0f, paint);
+            canvas->drawCircle(x + (size / 2.0f), _rect.centerY(), size / 2.0f, paint);
         }
     };
 
@@ -110,7 +110,7 @@ namespace psychic_ui {
             // Room for an overshoot above and an undershoot below
             const SkRect plot = _rect.makeInset(10.0f, _rect.height() * 0.2f);
             const auto   at   = [&plot](float t, float v) {
-                return SkPoint{plot.left() + t * plot.width(), plot.bottom() - v * plot.height()};
+                return SkPoint{plot.left() + (t * plot.width()), plot.bottom() - (v * plot.height())};
             };
 
             SkPaint line;

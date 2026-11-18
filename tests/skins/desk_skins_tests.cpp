@@ -146,7 +146,7 @@ TEST_CASE("Desk skins: its themes are Pivotal's colors at desk sizes", "[skins][
         CHECK(m.touch.rowSm == 40);
         CHECK(m.touch.textStep == 1);
         CHECK(m.touch.iconStep == 2);
-        CHECK(m.touch.rowSm + 2 * m.touch.hitSlop >= 44);
+        CHECK(m.touch.rowSm + (2 * m.touch.hitSlop) >= 44);
         CHECK(theme->type.sm.size == 11.5f);
     }
 }
@@ -260,11 +260,11 @@ TEST_CASE("Desk skins: touch switches to touch sizes, and back", "[skins][desk][
     CHECK(button.computedStyle().iconSize() == themes::deskDark.metrics.iconSm + 2);
 
     // Hit slop fills the rest up to 44 px
-    CHECK(button.getHeight() + 2 * button.computedStyle().hitSlop() >= 44);
-    CHECK(box->getHeight() + 2 * checkBox.computedStyle().hitSlop() >= 44);
-    CHECK(range.getHeight() + 2 * range.computedStyle().hitSlop() >= 44);
-    CHECK(track->getHeight() + 2 * toggle.computedStyle().hitSlop() >= 44);
-    CHECK(swatch->getHeight() + 2 * swatches.computedStyle().hitSlop() >= 44);
+    CHECK(button.getHeight() + (2 * button.computedStyle().hitSlop()) >= 44);
+    CHECK(box->getHeight() + (2 * checkBox.computedStyle().hitSlop()) >= 44);
+    CHECK(range.getHeight() + (2 * range.computedStyle().hitSlop()) >= 44);
+    CHECK(track->getHeight() + (2 * toggle.computedStyle().hitSlop()) >= 44);
+    CHECK(swatch->getHeight() + (2 * swatches.computedStyle().hitSlop()) >= 44);
 
     // Back with the next mouse motion
     f.touch(false);

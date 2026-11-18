@@ -77,7 +77,7 @@ namespace psychic_ui {
         // The track is our child: its position is in our coordinates
         if (_vertical) {
             const float height = _track->getHeight();
-            return height > 0 ? 1.0f - (static_cast<float>(y) - _track->y()) / height : 0.0f;
+            return height > 0 ? 1.0f - ((static_cast<float>(y) - _track->y()) / height) : 0.0f;
         }
         const float width = _track->getWidth();
         return width > 0 ? (static_cast<float>(x) - _track->x()) / width : 0.0f;
