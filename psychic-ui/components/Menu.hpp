@@ -5,7 +5,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include "psychic-ui/Overlay.hpp"
+#include "psychic-ui/Popup.hpp"
 
 namespace psychic_ui {
 

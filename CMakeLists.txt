@@ -334,6 +334,8 @@ set(SOURCE_FILES
     psychic-ui/Measure.hpp
     psychic-ui/Overlay.cpp
     psychic-ui/Overlay.hpp
+    psychic-ui/Popup.cpp
+    psychic-ui/Popup.hpp
     psychic-ui/opengl.hpp
     psychic-ui/psychic-ui.hpp
     psychic-ui/Shape.cpp

@@ -2,7 +2,7 @@
 
 #include <functional>
 #include <string>
-#include "psychic-ui/Overlay.hpp"
+#include "psychic-ui/Popup.hpp"
 #include "Button.hpp"
 #include "Icon.hpp"
 #include "Label.hpp"

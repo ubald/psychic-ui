@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "psychic-ui/Overlay.hpp"
+#include "psychic-ui/Popup.hpp"
 #include "Label.hpp"
 
 namespace psychic_ui {

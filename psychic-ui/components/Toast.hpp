@@ -6,7 +6,7 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include "psychic-ui/Overlay.hpp"
+#include "psychic-ui/Popup.hpp"
 #include "Button.hpp"
 #include "Icon.hpp"
 #include "Label.hpp"
