@@ -192,7 +192,16 @@ TEST_CASE("switching skin sets hatches every component again", "[skins][switch]"
         CHECK(view->text() == "Some text");
         CHECK(input.selection() == std::pair{2u, 6u});
         CHECK(view->selection() == std::pair{2u, 6u});
-        CHECK(area.textScroller()->parent() == area.skin().get());
+        // So does the text area's, inside its own viewport
+        Text *areaView = area.skin()->textView();
+        REQUIRE(areaView);
+        CHECK(areaView != areaSkin->textView());
+        CHECK(areaView->text() == "Some more text");
+        Div *ancestor = areaView->parent();
+        while (ancestor && ancestor != area.skin().get()) {
+            ancestor = ancestor->parent();
+        }
+        CHECK(ancestor == area.skin().get());
 
         // Every component in the scroller too (its scroll bars)
         for (const auto &child: scroller.children()) {

@@ -19,9 +19,9 @@ namespace psychic_ui {
      * What every text field shares, written once: a component that takes the focus, the keys, typing and the mouse
      * itself and edits its text through a `TextEditing`, shown by its skin's view (`SkinT::textView()`, a `Text`
      * part the skin creates and owns). After every edit it shows the text, the selection and the caret in the view,
-     * reveals the caret once laid out (scrolling one line), tells the window where the caret is (for the on-screen
-     * keyboard and an input method's candidates) and emits `changed` when the text changed. A new skin gets the whole
-     * state. While disabled it ignores input; read-only (`readOnly(true)`), it refuses edits but keeps the
+     * reveals the caret once laid out (scrolling one line, or the viewport around several lines), tells the window
+     * where the caret is (for the on-screen keyboard and an input method's candidates) and emits `changed` when the
+     * text changed. A new skin gets the whole state. While disabled it ignores input; read-only (`readOnly(true)`), it refuses edits but keeps the
      * selection, the caret's moves and copying, without showing the caret.
      *
      * Subclasses see the keys first (`fieldKey`) and show what follows the text (`textChanged`).
@@ -272,14 +272,18 @@ namespace psychic_ui {
         if (!view) {
             return;
         }
+        // One line scrolls itself; several lines scroll the view's viewport (the skin's, the nearest scrolling ancestor)
         view->reveal(_editing.caret());
+        const SkRect caret = view->caretRect(_editing.caret());
+        if (_editing.multiline()) {
+            view->scrollIntoView(caret);
+        }
 
         // Where the caret's line is, across the view, in window coordinates
         Window *window = this->window();
         if (!window || !this->_focused || !editable()) {
             return;
         }
-        const SkRect caret = view->caretRect(_editing.caret());
         int          x     = 0;
         int          y     = 0;
         view->localToGlobal(x, y, 0, static_cast<int>(caret.fTop));

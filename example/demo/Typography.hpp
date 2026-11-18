@@ -99,25 +99,21 @@ namespace psychic_ui {
             left.add<Label>("Automatic Line Height");
 
             left.add<Text>(lorem)
-                .editable(true)
                 .multiline(true)
                 .lineHeight(Auto)
                 .fontSize(10);
 
             left.add<Text>(lorem)
-                .editable(true)
                 .multiline(true)
                 .lineHeight(Auto)
                 .fontSize(12);
 
             left.add<Text>(lorem)
-                .editable(true)
                 .multiline(true)
                 .lineHeight(Auto)
                 .fontSize(16);
 
             left.add<Text>(lorem)
-                .editable(true)
                 .multiline(true)
                 .lineHeight(Auto)
                 .fontSize(24);
@@ -130,26 +126,22 @@ namespace psychic_ui {
             right.add<Label>("Manual Line Height");
 
             right.add<Text>(lorem + "\n" + lorem)
-                 .editable(true)
                  .multiline(true)
                  .padding(12)
                  .fontSize(10)
                  .lineHeight(12);
 
             right.add<Text>(lorem)
-                 .editable(true)
                  .multiline(true)
                  .fontSize(12)
                  .lineHeight(14);
 
             right.add<Text>(lorem)
-                 .editable(true)
                  .multiline(true)
                  .fontSize(16)
                  .lineHeight(18);
 
             right.add<Text>(lorem)
-                 .editable(true)
                  .multiline(true)
                  .fontSize(24)
                  .lineHeight(28);
