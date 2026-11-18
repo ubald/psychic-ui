@@ -1,7 +1,7 @@
 #pragma once
 
 #include "psychic-ui/components/Avatar.hpp"
-#include "psychic-ui/components/Badge.hpp"
+#include "psychic-ui/components/StatusDot.hpp"
 #include "psychic-ui/components/Label.hpp"
 #include "psychic-ui/paint/Box.hpp"
 #include "SkinState.hpp"

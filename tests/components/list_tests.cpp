@@ -8,6 +8,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Avatar.hpp>
 #include <psychic-ui/components/Badge.hpp>
+#include <psychic-ui/components/Chip.hpp>
+#include <psychic-ui/components/StatusDot.hpp>
 #include <psychic-ui/components/DataGrid.hpp>
 #include <psychic-ui/components/EmptyState.hpp>
 #include <psychic-ui/components/Button.hpp>

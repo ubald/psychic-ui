@@ -5,6 +5,7 @@
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/components/Avatar.hpp>
 #include <psychic-ui/components/Badge.hpp>
+#include <psychic-ui/components/Chip.hpp>
 #include <psychic-ui/components/Box.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/CheckBox.hpp>
@@ -15,6 +16,7 @@
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/List.hpp>
 #include <psychic-ui/components/ScrollBar.hpp>
+#include <psychic-ui/components/StatusDot.hpp>
 #include <psychic-ui/components/Tree.hpp>
 
 namespace psychic_ui {

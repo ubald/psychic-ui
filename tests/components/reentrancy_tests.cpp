@@ -18,7 +18,7 @@
 #include <psychic-ui/components/Tree.hpp>
 #include <psychic-ui/components/DataGrid.hpp>
 #include <psychic-ui/components/Switch.hpp>
-#include <psychic-ui/components/Badge.hpp>
+#include <psychic-ui/components/Chip.hpp>
 #include <psychic-ui/components/Sidebar.hpp>
 #include <psychic-ui/components/SegmentedControl.hpp>
 #include <psychic-ui/components/ColorSwatches.hpp>

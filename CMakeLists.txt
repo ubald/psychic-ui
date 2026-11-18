@@ -205,6 +205,10 @@ set(SOURCE_FILES
     psychic-ui/components/Avatar.hpp
     psychic-ui/components/Badge.cpp
     psychic-ui/components/Badge.hpp
+    psychic-ui/components/Chip.cpp
+    psychic-ui/components/Chip.hpp
+    psychic-ui/components/StatusDot.cpp
+    psychic-ui/components/StatusDot.hpp
     psychic-ui/components/DataGrid.cpp
     psychic-ui/components/DataGrid.hpp
     psychic-ui/components/EmptyState.cpp
@@ -219,6 +223,7 @@ set(SOURCE_FILES
     psychic-ui/components/Rows.hpp
     psychic-ui/components/Tree.cpp
     psychic-ui/components/Tree.hpp
+    psychic-ui/components/Tone.cpp
     psychic-ui/components/Tone.hpp
     psychic-ui/components/WindowControls.cpp
     psychic-ui/components/WindowControls.hpp
