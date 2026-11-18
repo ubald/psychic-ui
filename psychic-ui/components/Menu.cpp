@@ -86,11 +86,8 @@ namespace psychic_ui {
     }
 
     Menu *Menu::root() {
-        Menu *menu = this;
-        while (auto owner = dynamic_cast<Menu *>(menu->owner())) {
-            menu = owner;
-        }
-        return menu;
+        auto *owner = dynamic_cast<Menu *>(this->owner());
+        return owner ? owner->root() : this;
     }
 
     void Menu::highlight(const int index, const bool openSubmenu) {
