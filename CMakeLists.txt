@@ -256,6 +256,8 @@ set(SOURCE_FILES
     psychic-ui/icons/PivotalIcons.cpp
     psychic-ui/paint/Box.cpp
     psychic-ui/paint/Box.hpp
+    psychic-ui/paint/Crisp.cpp
+    psychic-ui/paint/Crisp.hpp
     psychic-ui/paint/Icon.cpp
     psychic-ui/paint/Icon.hpp
     psychic-ui/paint/Marks.cpp
