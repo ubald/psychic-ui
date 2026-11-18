@@ -5,9 +5,8 @@
 #
 # Captures the showcase (tools/showcase/capture.sh, with the CMake preset, debug by default; configured first if
 # its build directory has none) into a temporary directory, lays the site out there (site/ at the root, the
-# captures in showcase/, the bold variant site-bold/ in bold/, which reads the same captures from ../showcase/,
-# the API reference in html/, generated fresh by Doxygen from the doc target's Doxyfile with its output there
-# instead of the checkout's docs/), and makes that tree the gh-pages branch as one commit without a parent,
+# captures in showcase/, the API reference in html/, generated fresh by Doxygen from the doc target's Doxyfile
+# with its output there instead of the checkout's docs/), and makes that tree the gh-pages branch as one commit without a parent,
 # replacing whatever the branch held: recaptures never pile up in any history. Neither the working tree nor the
 # index is touched. Nothing is pushed: the script prints the command that does it. It needs Doxygen, which the
 # flake's shell has; outside direnv, run it there: nix develop -c tools/showcase/publish.sh
@@ -42,8 +41,6 @@ fi
 "$root/tools/showcase/capture.sh" "$preset" --out "$site/showcase"
 
 cp -R site/. "$site/"
-mkdir "$site/bold"
-cp -R site-bold/. "$site/bold/"
 
 # The doc target's Doxyfile with its output in the site (its html/ is the site's html/), read from the standard input
 {
