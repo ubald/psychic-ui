@@ -1229,6 +1229,8 @@ namespace psychic_ui {
         void drawShadow(SkCanvas *canvas);
         void drawDotGrid(SkCanvas *canvas);
         void drawOutline(SkCanvas *canvas);
+        void drawRoundedSides(SkCanvas *canvas) const; // Unequal borders on a rounded div
+        void drawSideLines(SkCanvas *canvas) const;    // Unequal borders on a square div
 
         bool _drawBackground{false};
         bool _drawBorder{false};
