@@ -192,11 +192,16 @@ namespace psychic_ui {
         #undef PSYCHIC_UI_X
     };
 
-    inline constexpr std::size_t propertyCount = 0
-        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) + 1
+    /**
+     * Every property, in declaration order
+     */
+    inline constexpr std::array allProperties{
+        #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) Property::name,
         PSYCHIC_UI_STYLE_PROPERTIES(PSYCHIC_UI_X)
         #undef PSYCHIC_UI_X
-        ;
+    };
+
+    inline constexpr std::size_t propertyCount = allProperties.size();
 
     constexpr std::size_t index(Property property) { return static_cast<std::size_t>(property); }
 
