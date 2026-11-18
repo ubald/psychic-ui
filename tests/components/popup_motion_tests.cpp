@@ -318,7 +318,7 @@ TEST_CASE("The tooltip of the same div comes back while it fades out", "[popup-m
 
 TEST_CASE("A select's list leaving doesn't count as open", "[popup-motion][select]") {
     Motions f{};
-    Select &select = f.window->appContainer().add<Select>(std::vector<std::string>{"A", "B"});
+    auto &select = f.window->appContainer().add<Select>(std::vector<std::string>{"A", "B"});
     f.frame(0ms);
     f.click(select);
     f.frame(100ms);
@@ -342,7 +342,7 @@ TEST_CASE("A select's list leaving doesn't count as open", "[popup-motion][selec
 TEST_CASE("A dialog leaves: no focus trap nor backdrop meanwhile", "[popup-motion][dialog]") {
     Motions f{};
     f.window->requestFocus(&f.first);
-    Dialog &dialog = f.window->overlay().open<Dialog>("Rename");
+    auto &dialog = f.window->overlay().open<Dialog>("Rename");
     f.frame(0ms);
     f.frame(motion.medium);
     REQUIRE(f.window->overlay().focusScope() == &dialog);

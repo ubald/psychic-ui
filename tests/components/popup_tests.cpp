@@ -684,8 +684,8 @@ TEST_CASE("A touch long press opens the context menu instead of the tooltip", "[
     ContextMenus f{};
     f.area.tooltip("Tip");
     const auto [ax, ay] = Popups::origin(f.area);
-    const float x = static_cast<float>(ax + 250);
-    const float y = static_cast<float>(ay + 150);
+    const auto x = static_cast<float>(ax + 250);
+    const auto y = static_cast<float>(ay + 150);
     f.window->handleTouchPress(x, y, 0ms);
     f.window->updateGestures(Window::longPressDelay);
     f.layout();

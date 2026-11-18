@@ -47,9 +47,9 @@ namespace psychic_ui {
         float distance = std::numeric_limits<float>::max();
         for (std::size_t i = 0; i < _segments.size(); ++i) {
             const Div  *segment = _segments[i];
-            const float left    = static_cast<float>(segment->x());
+            const auto  left    = static_cast<float>(segment->x());
             const float right   = left + static_cast<float>(segment->getWidth());
-            const float px      = static_cast<float>(x);
+            const auto  px      = static_cast<float>(x);
             const float d       = px < left ? left - px : (px >= right ? px - right + 1 : 0.0f);
             if (d < distance) {
                 distance = d;

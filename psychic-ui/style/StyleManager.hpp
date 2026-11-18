@@ -52,7 +52,7 @@ namespace psychic_ui {
          */
         template<typename T>
         void loadStyleSheet(bool reset = false) {
-            static_assert(std::is_base_of<StyleSheet, T>::value, "T must extend StyleSheet");
+            static_assert(std::is_base_of_v<StyleSheet, T>, "T must extend StyleSheet");
             if (reset) {
                 this->reset();
             }

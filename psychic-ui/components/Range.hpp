@@ -75,7 +75,7 @@ namespace psychic_ui {
 
     template<class T>
     class Range : public internal::RangeBase {
-        static_assert(std::is_arithmetic<T>::value, "Ranges can only use numeric types.");
+        static_assert(std::is_arithmetic_v<T>, "Ranges can only use numeric types.");
     public:
         Range(T min, T max, std::function<void(T)> onChangeCallback);
         Range(T min, T max, T value, std::function<void(T)> onChangeCallback);
@@ -174,14 +174,14 @@ namespace psychic_ui {
             changed.subscribe(std::forward<std::function<void(T)>>(onChangeCallback));
         }
 
-        _step = std::is_floating_point<T>::value ? 0.01f : 1;
+        _step = std::is_floating_point_v<T> ? 0.01f : 1;
 
         checkRange();
 
         mouseScrolled.subscribe(
             [this](const MouseEvent &event) {
                 const double scrollY = event.scrollY;
-                if (std::is_floating_point<T>::value) {
+                if (std::is_floating_point_v<T>) {
                     updateValue(_value + (scrollY * _step));
                 } else {
                     // Event the smallest movement should yield a result
@@ -292,7 +292,7 @@ namespace psychic_ui {
                 break;
         }
         v = (v * (static_cast<float>(_max) - static_cast<float >(_min))) + static_cast<float >(_min);
-        updateValue(static_cast<T>(std::is_floating_point<T>::value ? v : std::round(v)));
+        updateValue(static_cast<T>(std::is_floating_point_v<T> ? v : std::round(v)));
     }
 
     template<class T>

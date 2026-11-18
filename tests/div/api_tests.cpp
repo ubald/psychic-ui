@@ -126,7 +126,7 @@ TEST_CASE("the parent owns what add<T> creates", "[div][api]") {
     auto               parent = std::make_shared<Div>();
     std::weak_ptr<Div> child;
     {
-        Label &label = parent->add<Label>("owned");
+        auto &label = parent->add<Label>("owned");
         child = label.weak_from_this();
         REQUIRE(child.use_count() == 1); // Only the parent holds it
         REQUIRE(label.parent() == parent.get());

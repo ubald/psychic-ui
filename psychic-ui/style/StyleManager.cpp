@@ -297,7 +297,7 @@ namespace psychic_ui {
     std::vector<std::string> StyleManager::matchedSelectors(const Div *component) {
         std::vector<std::string> selectors;
         if (_universal) {
-            selectors.push_back("*");
+            selectors.emplace_back("*");
         }
         match(component);
         for (const auto &[weight, index]: _matches) {

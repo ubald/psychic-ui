@@ -595,7 +595,7 @@ namespace psychic_ui {
 
     void Window::post(std::function<void()> task) {
         {
-            const std::lock_guard lock(_postedMutex);
+            const std::scoped_lock lock(_postedMutex);
             _posted.push_back(std::move(task));
             _hasPosted = true;
         }
@@ -609,7 +609,7 @@ namespace psychic_ui {
         }
         std::vector<std::function<void()>> batch{};
         {
-            const std::lock_guard lock(_postedMutex);
+            const std::scoped_lock lock(_postedMutex);
             batch.swap(_posted);
             _hasPosted = false;
         }
@@ -619,7 +619,7 @@ namespace psychic_ui {
                 (*task)();
             } catch (...) {
                 // The rest of the batch goes back in front of what was posted meanwhile
-                const std::lock_guard lock(_postedMutex);
+                const std::scoped_lock lock(_postedMutex);
                 _posted.insert(_posted.begin(), std::make_move_iterator(task + 1), std::make_move_iterator(batch.end()));
                 _hasPosted = !_posted.empty();
                 throw;

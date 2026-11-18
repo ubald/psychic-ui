@@ -309,7 +309,7 @@ namespace psychic_ui {
     SkRect TextLayout::caretRect(unsigned int index) {
         auto                  *paragraph = laidOut();
         const tl::LineMetrics &line      = lineAt(index);
-        float                  x         = static_cast<float>(line.fLeft);
+        auto                   x         = static_cast<float>(line.fLeft);
         if (index > line.fStartIndex) {
             // After the grapheme before the caret
             tl::Paragraph::GlyphInfo glyph{};

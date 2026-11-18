@@ -425,8 +425,8 @@ TEST_CASE("SDL3: dragging a range follows the mouse, through its skin's geometry
     // The default slider's values are along its `.track` part, its first child
     const Div  &track  = *skin->children().front();
     REQUIRE(track.classNames().contains("track"));
-    const float trackX = static_cast<float>(track.x());
-    const float width  = static_cast<float>(track.getWidth());
+    const auto  trackX = static_cast<float>(track.x());
+    const auto  width  = static_cast<float>(track.getWidth());
     REQUIRE(width > 100.0f);
     const SkPoint quarter = inWindow(*skin, trackX + (width * 0.25f), 10.0f);
     CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, quarter.x(), quarter.y()));
@@ -646,7 +646,7 @@ TEST_CASE("SDL3: a focused text field tells SDL where its caret is, by mouse or 
     int left = 0;
     int top  = 0;
     input.localToGlobal(left, top);
-    const float x = static_cast<float>(left + 100);
+    const auto  x = static_cast<float>(left + 100);
     const float y = static_cast<float>(top) + (input.getHeight() / 2.0f);
 
     // With a mouse, for an input method's candidates
