@@ -1,3 +1,4 @@
+#include <array>
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -1085,7 +1086,7 @@ namespace psychic_ui {
             paint.setBlendMode(SkBlendMode::kPlus);
             paint.setStyle(SkPaint::kStroke_Style);
             if (dashed) {
-                const SkScalar intervals[] = {1.0f, 1.0f};
+                constexpr std::array intervals{1.0f, 1.0f};
                 paint.setPathEffect(SkDashPathEffect::Make(intervals, 0));
             }
             paint.setStrokeWidth(SkIntToScalar(1));

@@ -1,3 +1,4 @@
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -280,7 +281,7 @@ TEST_CASE("Pivotal skins: the window controls are grey until the pointer is over
     Fixture f;
     auto &controls = f.window->appContainer().add<WindowControls>();
     f.layout();
-    Button *dots[] = {&controls.closeButton(), &controls.minimizeButton(), &controls.maximizeButton()};
+    const std::array dots{&controls.closeButton(), &controls.minimizeButton(), &controls.maximizeButton()};
     const Palette &p = f.theme.palette;
 
     const auto colors = [&]() {

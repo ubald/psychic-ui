@@ -130,7 +130,7 @@ namespace psychic_ui {
         // interface, which only knows GLX on Linux and fails in an EGL context (Wayland)
         auto interface = GrGLMakeAssembledInterface(
             _systemWindow,
-            [](void *ctx, const char name[]) -> GrGLFuncPtr {
+            [](void *ctx, const char *name) -> GrGLFuncPtr {
                 // Skia also asks for eglQueryString, only to list EGL extensions it can do without. A GLX
                 // loader returns a stub for any name, which crashes when called, so it gets none.
                 if (std::strncmp(name, "egl", 3) == 0) {
