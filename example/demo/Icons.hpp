@@ -17,7 +17,7 @@ namespace psychic_ui {
         IconsPanel();
     };
 
-    IconsPanel::IconsPanel() : Div() {
+    inline IconsPanel::IconsPanel() : Div() {
         tag("Icons")
             .classNames({"demo-panel"})
             .direction(Direction::Row)

@@ -10,7 +10,7 @@ namespace psychic_ui {
         Divs();
     };
 
-    Divs::Divs() : Div() {
+    inline Divs::Divs() : Div() {
         tag("Divs")
             .classNames({"demo-panel"})
             .direction(Direction::Row)

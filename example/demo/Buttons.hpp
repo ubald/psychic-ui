@@ -19,14 +19,14 @@ namespace psychic_ui {
         Div &group(const std::string &title, const std::string &caption);
     };
 
-    Div &Buttons::group(const std::string &title, const std::string &caption) {
+    inline Div &Buttons::group(const std::string &title, const std::string &caption) {
         auto &group = add<VBox>().addClassName("group");
         group.add<Label>(title).addClassName("h4");
         group.add<Label>(caption).addClassName("text-tertiary");
         return group.add<HBox>().addClassName("row");
     }
 
-    Buttons::Buttons() : Div() {
+    inline Buttons::Buttons() : Div() {
         tag("Buttons")
             .classNames({"demo-panel"});
 

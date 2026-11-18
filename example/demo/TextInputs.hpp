@@ -15,7 +15,7 @@ namespace psychic_ui {
     };
 
 
-    TextInputs::TextInputs() : Div() {
+    inline TextInputs::TextInputs() : Div() {
         tag("TextInputs")
             .classNames({"demo-panel"})
             .direction(Direction::Row)

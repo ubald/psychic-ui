@@ -164,14 +164,14 @@ namespace psychic_ui {
         void showTokens();
     };
 
-    Div &MotionPanel::group(const std::string &title, const std::string &caption) {
+    inline Div &MotionPanel::group(const std::string &title, const std::string &caption) {
         auto &group = add<VBox>().addClassName("group");
         group.add<Label>(title).addClassName("h4");
         group.add<Label>(caption).addClassName("text-tertiary");
         return group;
     }
 
-    MotionPanel::MotionPanel() : Div() {
+    inline MotionPanel::MotionPanel() : Div() {
         tag("Motion")
             .classNames({"demo-panel"});
 
@@ -281,12 +281,12 @@ namespace psychic_ui {
         // endregion
     }
 
-    void MotionPanel::addedToRender() {
+    inline void MotionPanel::addedToRender() {
         Div::addedToRender();
         _reduced->checked(window()->reducedMotion());
     }
 
-    void MotionPanel::styleUpdated() {
+    inline void MotionPanel::styleUpdated() {
         Div::styleUpdated();
         // The tokens of the theme in use, again when it changes
         if (const Theme &theme = styleManager()->theme(); theme.name != _theme) {
@@ -295,7 +295,7 @@ namespace psychic_ui {
         }
     }
 
-    void MotionPanel::showTokens() {
+    inline void MotionPanel::showTokens() {
         const auto &motion = styleManager()->theme().metrics.motion;
         const auto    ease   = [](const Ease &e) { return std::format("cubic-bezier({}, {}, {}, {})", e.x1, e.y1, e.x2, e.y2); };
         _tokens->text(std::format(
@@ -305,7 +305,7 @@ namespace psychic_ui {
         ));
     }
 
-    void MotionPanel::play() {
+    inline void MotionPanel::play() {
         _on = !_on;
         for (Div *puck: _pucks) {
             puck->left(_on ? 100_pct : 0_pct);

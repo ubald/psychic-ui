@@ -44,14 +44,14 @@ namespace psychic_ui {
         void inspect(const DataGridRow *row);
     };
 
-    Div &Lists::group(Div &parent, const std::string &title, const std::string &caption) {
+    inline Div &Lists::group(Div &parent, const std::string &title, const std::string &caption) {
         auto &group = parent.add<VBox>().addClassName("group");
         group.add<Label>(title).addClassName("h4");
         group.add<Label>(caption).addClassName("text-tertiary");
         return group;
     }
 
-    Lists::Lists() : Div() {
+    inline Lists::Lists() : Div() {
         tag("Lists")
             .direction(Direction::Row)
             .padding(0); // We're using a scroller so no padding
@@ -220,7 +220,7 @@ namespace psychic_ui {
         // endregion
     }
 
-    void Lists::inspect(const DataGridRow *row) {
+    inline void Lists::inspect(const DataGridRow *row) {
         if (!row) {
             _inspector->title("Nothing selected").icon("");
             return;

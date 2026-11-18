@@ -30,7 +30,7 @@ namespace psychic_ui {
         Div &group(const std::string &title, const std::string &caption, Label *&event);
     };
 
-    Div &Inputs::group(const std::string &title, const std::string &caption, Label *&event) {
+    inline Div &Inputs::group(const std::string &title, const std::string &caption, Label *&event) {
         auto &group = add<VBox>().addClassName("group");
         group.add<Label>(title).addClassName("h4");
         group.add<Label>(caption).addClassName("text-tertiary");
@@ -39,7 +39,7 @@ namespace psychic_ui {
         return row;
     }
 
-    Inputs::Inputs() : Div() {
+    inline Inputs::Inputs() : Div() {
         tag("Inputs")
             .classNames({"demo-panel"});
 

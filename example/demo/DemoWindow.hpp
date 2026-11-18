@@ -137,7 +137,7 @@ namespace psychic_ui {
         static std::string keyOf(std::string_view name);
     };
 
-    DemoWindow::DemoWindow() :
+    inline DemoWindow::DemoWindow() :
         Window("Psychic UI") {
         _decorated = false;
 
@@ -292,7 +292,7 @@ namespace psychic_ui {
         showPage("Buttons");
     }
 
-    void DemoWindow::show(const Page &page) {
+    inline void DemoWindow::show(const Page &page) {
         if (_panel) {
             _content->remove(_panel);
         }
@@ -305,7 +305,7 @@ namespace psychic_ui {
                 .icon(page.icon);
     }
 
-    bool DemoWindow::showPage(const std::string &name) {
+    inline bool DemoWindow::showPage(const std::string &name) {
         for (const Page &p: _pages) {
             if (p.name == name || keyOf(p.name) == name) {
                 _shell->sidebar().select(p.item);
@@ -315,7 +315,7 @@ namespace psychic_ui {
         return false;
     }
 
-    std::string DemoWindow::keyOf(std::string_view name) {
+    inline std::string DemoWindow::keyOf(std::string_view name) {
         std::string key{name};
         for (char &c: key) {
             c = c == ' ' ? '-' : static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
@@ -323,7 +323,7 @@ namespace psychic_ui {
         return key;
     }
 
-    bool DemoWindow::useSkinSet(const std::string &key) {
+    inline bool DemoWindow::useSkinSet(const std::string &key) {
         for (const NamedSkinSet &set: _skinSets) {
             if (set.key == key) {
                 skinSet(set.make()); // The library settles the theme (see Window::skinSet)
@@ -334,7 +334,7 @@ namespace psychic_ui {
         return false;
     }
 
-    bool DemoWindow::useTheme(const std::string &key) {
+    inline bool DemoWindow::useTheme(const std::string &key) {
         if (key == "system") {
             followSystemTheme();
             themesChanged();
@@ -357,7 +357,7 @@ namespace psychic_ui {
         return false;
     }
 
-    void DemoWindow::themesChanged() {
+    inline void DemoWindow::themesChanged() {
         // The current set's themes, after System
         MenuItems items{Menu::radio(_themeChoice, "System", "system", "", "monitor"), Menu::separator()};
         for (const Theme *own: styleManager()->skinSet()->themes()) {
@@ -378,19 +378,19 @@ namespace psychic_ui {
         _themeItem->count(followsSystemTheme() ? "System" : std::string{theme().name});
     }
 
-    void DemoWindow::openThemeMenu() {
+    inline void DemoWindow::openThemeMenu() {
         // Beside the item, its bottom level with the item's
         openMenu(_themeMenu->items, *_themeItem, Side::Right, PopupAlign::End).sideOffset(8);
     }
 
-    bool DemoWindow::openPopup(const std::string &name) {
+    inline bool DemoWindow::openPopup(const std::string &name) {
         showPage("Popups");
         updateStylesAndLayout(); // The page's anchors are laid out first
         auto popups = std::dynamic_pointer_cast<Popups>(_panel);
         return popups && popups->openPopup(name);
     }
 
-    bool DemoWindow::pressKeys(const std::string &keys) {
+    inline bool DemoWindow::pressKeys(const std::string &keys) {
         static const std::vector<std::pair<std::string, Key>> names{
             {"tab", Key::TAB}, {"up", Key::UP}, {"down", Key::DOWN}, {"left", Key::LEFT}, {"right", Key::RIGHT},
             {"home", Key::HOME}, {"end", Key::END}, {"space", Key::SPACE}, {"enter", Key::ENTER}, {"escape", Key::ESCAPE},
@@ -420,7 +420,7 @@ namespace psychic_ui {
         return true;
     }
 
-    void DemoWindow::scrollPage(const int pixels) {
+    inline void DemoWindow::scrollPage(const int pixels) {
         updateStylesAndLayout();
         std::function<Div *(Div &)> scroller = [&](Div &div) -> Div * {
             if (div.computedStyle().overflow() == Overflow::Scroll) {
@@ -438,22 +438,22 @@ namespace psychic_ui {
         }
     }
 
-    void DemoWindow::forceInputMode(const std::optional<InputMode> mode) {
+    inline void DemoWindow::forceInputMode(const std::optional<InputMode> mode) {
         _forcedInputMode = mode;
         if (mode) {
             Window::handleInputModeChange(*mode);
         }
     }
 
-    void DemoWindow::handleInputModeChange(const InputMode mode) {
+    inline void DemoWindow::handleInputModeChange(const InputMode mode) {
         Window::handleInputModeChange(_forcedInputMode.value_or(mode));
     }
 
-    void DemoWindow::showFps(const bool show) {
+    inline void DemoWindow::showFps(const bool show) {
         fpsLabel->visible(show);
     }
 
-    void DemoWindow::render(SkCanvas *canvas) {
+    inline void DemoWindow::render(SkCanvas *canvas) {
         if (fpsLabel->visible()) {
             std::stringstream stream;
             stream << std::fixed << std::setprecision(3) << fps;

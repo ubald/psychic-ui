@@ -14,7 +14,7 @@ namespace psychic_ui_playground {
         PlaygroundWindow();
     };
 
-    PlaygroundWindow::PlaygroundWindow() :
+    inline PlaygroundWindow::PlaygroundWindow() :
         Window("Playground Application") {
         _decorated = false;
 

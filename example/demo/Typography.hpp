@@ -14,7 +14,7 @@ namespace psychic_ui {
     };
 
 
-    TypographyPanel::TypographyPanel() : Div() {
+    inline TypographyPanel::TypographyPanel() : Div() {
         tag("Typography")
             .classNames({"demo-panel"})
             .direction(Direction::Row)

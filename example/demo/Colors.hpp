@@ -133,7 +133,7 @@ namespace psychic_ui {
         void updateSwatches();
     };
 
-    Colors::Colors() : Div() {
+    inline Colors::Colors() : Div() {
         tag("Colors")
             .classNames({"demo-panel"})
             .direction(Direction::Row)
@@ -662,7 +662,7 @@ namespace psychic_ui {
     /**
      * This is horrible but its only a test/demo
      */
-    void Colors::updateSwatches() {
+    inline void Colors::updateSwatches() {
         primarySwatch->backgroundColor(psychic_ui::rgb(primary.getColor()));
 
         analogous.generate();
