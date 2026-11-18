@@ -12,6 +12,10 @@ namespace psychic_ui::showcase {
     class HeadlessSystemWindow : public SystemWindow {
     public:
         HeadlessSystemWindow(std::shared_ptr<Window> window, int width, int height, float pixelRatio);
+        HeadlessSystemWindow(const HeadlessSystemWindow &) = delete;
+        HeadlessSystemWindow &operator=(const HeadlessSystemWindow &) = delete;
+        HeadlessSystemWindow(HeadlessSystemWindow &&) = delete;
+        HeadlessSystemWindow &operator=(HeadlessSystemWindow &&) = delete;
         ~HeadlessSystemWindow() override;
 
         /**

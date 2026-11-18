@@ -140,7 +140,7 @@ namespace psychic_ui::showcase {
                 field(panel, "Follow on").add<Switch>().checked(true);
             },
             .pose = [](Stage &stage) {
-                static_cast<Select &>(find(stage.window(), "curve")).open();
+                find<Select>(stage.window(), "curve").open();
             },
         }));
 
@@ -156,10 +156,14 @@ namespace psychic_ui::showcase {
                     {"mouse-pointer-2", "Select · V"}, {"hash", "Frame · F"}, {"lightbulb", "Fixture · L"},
                     {"type", "Text · T"}, {"pencil", "Draw · P"},
                 };
+                Button *first = nullptr;
                 for (const auto &[icon, tip]: named) {
-                    tools.add<Button>().icon(icon).tooltip(tip).toggle(true).autoToggle(false);
+                    auto &tool = tools.add<Button>().icon(icon).tooltip(tip).toggle(true).autoToggle(false);
+                    if (!first) {
+                        first = &tool;
+                    }
                 }
-                static_cast<Button &>(*tools.children()[0]).selected(true);
+                first->selected(true);
                 tools.children()[2]->addClassName("hovered");
                 tools.add<Spacer>();
                 tools.add<Button>("Share").icon("link");

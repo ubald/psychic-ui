@@ -1,3 +1,7 @@
+#include <array>
+#include <ranges>
+#include <string>
+#include <string_view>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Avatar.hpp>
 #include <psychic-ui/components/Badge.hpp>
@@ -95,17 +99,17 @@ namespace psychic_ui::showcase {
 
         void tags(Window &window) {
             auto &panel = compose::panel(backdrop(window), "Marks", "Badges, status dots, chips, avatars and key caps");
-            const char *names[]{"Neutral", "Accent", "Success", "Warning", "Danger"};
+            constexpr std::array<std::string_view, std::size(allTones)> names{"Neutral", "Accent", "Success", "Warning", "Danger"};
 
             auto &badges = line(panel);
-            for (std::size_t i = 0; i < std::size(allTones); ++i) {
-                badges.add<Badge>(names[i], allTones[i]);
+            for (const auto &[name, tone]: std::views::zip(names, allTones)) {
+                badges.add<Badge>(std::string{name}, tone);
             }
             auto &dots = line(panel);
-            for (std::size_t i = 0; i < std::size(allTones); ++i) {
+            for (const auto &[name, tone]: std::views::zip(names, allTones)) {
                 auto &item = line(dots);
-                item.add<StatusDot>(allTones[i]);
-                item.add<Label>(names[i]).addClassName("text-secondary");
+                item.add<StatusDot>(tone);
+                item.add<Label>(std::string{name}).addClassName("text-secondary");
             }
             auto &chips = line(panel);
             chips.add<Chip>("All fixtures").selected(true);
