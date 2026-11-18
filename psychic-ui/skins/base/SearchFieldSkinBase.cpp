@@ -7,16 +7,46 @@ namespace psychic_ui {
         _icon = &add<Icon>("search");
         _icon->addClassName("icon")
              .mouseEnabled(false);
+
+        // The text, and under it the placeholder, out of the layout: the box's justify and alignment put it where
+        // the text starts
+        _field = &add<Div>();
+        _field->addClassName("field");
+        _placeholder = &_field->add<Label>();
+        _placeholder->addClassName("placeholder")
+                    .mouseEnabled(false)
+                    .position(Position::Absolute)
+                    .visible(false);
+        _text = &_field->add<Text>(); // Its field takes the mouse
+        _text->addClassName("text");
+
+        // Its field clears itself on a press there (`clearAt`); the mouse reaches it for its hover
+        _clear = &add<Div>();
+        _clear->addClassName("clear")
+              .visible(false);
+        _clear->add<Icon>("x").mouseEnabled(false);
     }
 
-    void SearchFieldSkinBase::addedToComponent() {
-        add(component()->input());
-        add(component()->clearButton());
+    Text *SearchFieldSkinBase::textView() {
+        return _text;
     }
 
-    void SearchFieldSkinBase::removedFromComponent() {
-        remove(component()->input());
-        remove(component()->clearButton());
+    void SearchFieldSkinBase::setPlaceholder(const std::string &placeholder, const bool shown) {
+        _placeholder->text(placeholder);
+        _placeholder->visible(shown);
+    }
+
+    void SearchFieldSkinBase::setClearable(const bool clearable) {
+        _clear->visible(clearable);
+    }
+
+    bool SearchFieldSkinBase::clearAt(const float x, const float y) const {
+        // A child of ours: its place is in our coordinates
+        const auto left = static_cast<float>(_clear->x());
+        const auto top  = static_cast<float>(_clear->y());
+        return _clear->visible()
+               && x >= left && x < left + static_cast<float>(_clear->getWidth())
+               && y >= top && y < top + static_cast<float>(_clear->getHeight());
     }
 
     void SearchFieldSkinBase::draw(SkCanvas *canvas) {

@@ -834,7 +834,7 @@ TEST_CASE("A touch long press shows the tooltip when it opens nothing", "[popup]
 
 // region With the lists and inputs
 
-TEST_CASE("In a dialog, Tab hands the focus to the text fields' text and stays inside", "[popup][dialog][focus][inputs]") {
+TEST_CASE("In a dialog, Tab goes through the text fields and stays inside", "[popup][dialog][focus][inputs]") {
     Popups f{};
     f.key(Key::TAB);
     REQUIRE(f.window->focusedDiv() == &f.first);
@@ -844,17 +844,17 @@ TEST_CASE("In a dialog, Tab hands the focus to the text fields' text and stays i
     auto &stepper = dialog.body().add<NumberStepper>(4);
     auto &cancel  = dialog.action("Cancel");
     f.layout();
-    CHECK(f.window->focusedDiv() == search.focusDelegate()); // Its first field
+    CHECK(f.window->focusedDiv() == &search); // Its first field
 
     std::vector<Div *> visited{};
     for (int i = 0; i < 4; ++i) {
         f.key(Key::TAB);
         visited.push_back(f.window->focusedDiv());
     }
-    // The stepper's text (delegated), Cancel, the close button, the search field's text again
-    CHECK(visited[0] == stepper.focusDelegate());
+    // The stepper, Cancel, the close button, the search field's text again
+    CHECK(visited[0] == &stepper);
     CHECK(visited[1] == &cancel);
-    CHECK(visited[3] == search.focusDelegate());
+    CHECK(visited[3] == &search);
 
     f.key(Key::ESCAPE);
     CHECK(f.popupCount() == 0);
@@ -868,7 +868,7 @@ TEST_CASE("In a dialog, Escape goes to a field that has a use for it before clos
     auto &stepper = dialog.body().add<NumberStepper>(4);
     dialog.action("Cancel");
     f.layout();
-    REQUIRE(f.window->focusedDiv() == search.focusDelegate());
+    REQUIRE(f.window->focusedDiv() == &search);
 
     // With text, Escape clears the search field; empty, it closes the dialog
     search.text("cue");
@@ -878,7 +878,7 @@ TEST_CASE("In a dialog, Escape goes to a field that has a use for it before clos
 
     // A number being typed reverts; as typed, Escape closes
     f.key(Key::TAB);
-    REQUIRE(f.window->focusedDiv() == stepper.focusDelegate());
+    REQUIRE(f.window->focusedDiv() == &stepper);
     CHECK_FALSE(stepper.takesEscape());
     f.window->handleType(icu::UnicodeString("2"));
     f.layout();

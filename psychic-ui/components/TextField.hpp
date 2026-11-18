@@ -19,12 +19,15 @@ namespace psychic_ui {
      * What every text field shares, written once: a component that takes the focus, the keys, typing and the mouse
      * itself and edits its text through a `TextEditing`, shown by its skin's view (`SkinT::textView()`, a `Text`
      * part the skin creates and owns). After every edit it shows the text, the selection and the caret in the view,
-     * reveals the caret once laid out (scrolling one line), tells the window where the caret is (for the on-screen
-     * keyboard and an input method's candidates) and emits `changed` when the text changed. A new skin gets the whole
-     * state. While disabled it ignores input; read-only (`readOnly(true)`), it refuses edits but keeps the
-     * selection, the caret's moves and copying, without showing the caret.
+     * reveals the caret once laid out (scrolling one line, or the viewport around several lines), tells the window
+     * where the caret is (for the on-screen keyboard and an input method's candidates) and, when the text changed,
+     * calls `textEdited`. A new skin gets the whole state. While disabled it ignores input (and doesn't take the
+     * focus); read-only (`readOnly(true)`), it refuses edits but keeps the selection, the caret's moves and copying,
+     * without showing the caret.
      *
-     * Subclasses see the keys first (`fieldKey`) and show what follows the text (`textChanged`).
+     * Subclasses see the keys and the presses first (`fieldKey`, `fieldPress`), show what follows the text
+     * (`textChanged`) and declare their own `changed` signal, with what changes for them (`textEdited`): the text for
+     * `TextInput`, `TextArea` and `SearchField`, the value for `NumberStepper`.
      */
     template<class SkinT>
     class TextField : public Component<SkinT> {
@@ -82,12 +85,6 @@ namespace psychic_ui {
             return _editing.caret();
         }
 
-        /**
-         * The text changed by an edit (typed, erased, cut or pasted), with the new text
-         */
-        Signal<std::string> changed{};
-        PSYCHIC_UI_EVENT(onChange, changed)
-
     protected:
         explicit TextField(const std::string &text, bool multiline);
 
@@ -109,12 +106,24 @@ namespace psychic_ui {
         virtual bool fieldKey(Key /*key*/, Mod /*mod*/) { return false; }
 
         /**
-         * The text changed (edited or set), shown in the view, before `changed`: show what follows it
+         * A left press, before it places the caret or starts a selection (a button part of the skin's)
+         * @return Whether it was used (then the text doesn't see it)
+         */
+        virtual bool fieldPress(const MouseEvent &/*event*/) { return false; }
+
+        /**
+         * The text changed (edited or set), shown in the view, before `textEdited`: show what follows it
          */
         virtual void textChanged() {}
 
         /**
-         * Show what an edit changed, then tell: `changed` when the text changed, once the field is consistent
+         * An edit (typed, erased, cut or pasted) changed the text, once the field is consistent: tell the world. A
+         * handler may remove the field from its parent; it is kept alive meanwhile.
+         */
+        virtual void textEdited() {}
+
+        /**
+         * Show what an edit changed, then tell (`textEdited`) when the text changed, once the field is consistent
          */
         void apply(TextEditing::Edit edit);
 
@@ -216,7 +225,7 @@ namespace psychic_ui {
     template<class SkinT>
     void TextField<SkinT>::handlePress(const MouseEvent &event) {
         const Text *view = this->view();
-        if (!this->_enabled || !view || event.button != MouseButton::LEFT) {
+        if (!this->_enabled || !view || event.button != MouseButton::LEFT || fieldPress(event)) {
             return;
         }
         // In the view's coordinates: a press beside the text goes to its nearest index
@@ -241,16 +250,16 @@ namespace psychic_ui {
             return;
         }
         show();
-        const bool textEdited = has(edit, TextEditing::Edit::Text);
-        if (!textEdited && this->isValid()) {
+        const bool edited = has(edit, TextEditing::Edit::Text);
+        if (!edited && this->isValid()) {
             revealCaret(); // Laid out already: the text is the same
         } else {
             _revealCaret = true;
         }
-        if (textEdited) {
+        if (edited) {
             textChanged();
             const auto keepAlive = this->weak_from_this().lock(); // A handler may remove this field from its parent
-            changed.emit(text());
+            textEdited();
         }
     }
 
@@ -272,14 +281,18 @@ namespace psychic_ui {
         if (!view) {
             return;
         }
+        // One line scrolls itself; several lines scroll the view's viewport (the skin's, the nearest scrolling ancestor)
         view->reveal(_editing.caret());
+        const SkRect caret = view->caretRect(_editing.caret());
+        if (_editing.multiline()) {
+            view->scrollIntoView(caret);
+        }
 
         // Where the caret's line is, across the view, in window coordinates
         Window *window = this->window();
         if (!window || !this->_focused || !editable()) {
             return;
         }
-        const SkRect caret = view->caretRect(_editing.caret());
         int          x     = 0;
         int          y     = 0;
         view->localToGlobal(x, y, 0, static_cast<int>(caret.fTop));

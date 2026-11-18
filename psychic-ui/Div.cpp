@@ -1818,6 +1818,31 @@ namespace psychic_ui {
         }
     }
 
+    void Div::scrollIntoView(const SkRect &rect) {
+        Div *viewport = _parent;
+        while (viewport && viewport->computedStyle().overflow() != Overflow::Scroll) {
+            viewport = viewport->parent();
+        }
+        if (!viewport) {
+            return;
+        }
+        // Where the rectangle is in the viewport, whose own scroll position is left out
+        int dummy = 0;
+        int rectY = 0;
+        localToGlobal(dummy, rectY, 0, static_cast<int>(std::floor(rect.fTop)));
+        int viewportY = 0;
+        viewport->localToGlobal(dummy, viewportY);
+        const int height = static_cast<int>(std::ceil(rect.fBottom) - std::floor(rect.fTop));
+        const int top    = rectY - (viewportY - viewport->scrollY());
+        const int bottom = top + height;
+        if (top < 0) {
+            const int fromStart = top - viewport->scrollY();
+            viewport->scrollY(fromStart < height ? 0 : viewport->scrollY() - top);
+        } else if (bottom > viewport->getHeight()) {
+            viewport->scrollY(viewport->scrollY() - (bottom - viewport->getHeight()));
+        }
+    }
+
     bool Div::scrollBy(const int deltaX, const int deltaY) {
         int sx = _scrollX;
         int sy = _scrollY;

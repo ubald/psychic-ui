@@ -430,13 +430,6 @@ namespace psychic_ui {
         bool hasFocus() const;
 
         /**
-         * Where the focus goes instead when this is the deepest div taking it on the path to the div being focused,
-         * unless that path already passes through it: a text field hands it to its text, so that Tab or a press beside
-         * the text lets one type. A descendant; none by default.
-         */
-        virtual Div *focusDelegate() { return nullptr; }
-
-        /**
          * Whether it has a use for Escape now, while it is on the focus path: then Escape goes to the keys' path
          * instead of closing the topmost popup first (a search field with text clears it, a number stepper being
          * edited reverts). None by default.
@@ -555,6 +548,14 @@ namespace psychic_ui {
          * @return Whether the scroll position changed
          */
         bool scrollBy(int deltaX, int deltaY);
+
+        /**
+         * Scroll the nearest scrolling ancestor (`overflow: scroll`) vertically, just enough for a rectangle of this
+         * div to show; to its start when only what is above the rectangle there would be left out (a border, a
+         * header, a padding)
+         * @param rect In this div's coordinates (from its top-left corner, plus its scroll offset, as `localToGlobal`)
+         */
+        void scrollIntoView(const SkRect &rect);
 
         Signal<int, int> scrolled{};
 

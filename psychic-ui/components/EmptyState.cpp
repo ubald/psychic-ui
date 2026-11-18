@@ -25,8 +25,6 @@ namespace psychic_ui {
 
         _description = &add<Text>();
         _description->multiline(true)
-                    .selectable(false)
-                    .editable(false)
                     .addClassName("description");
         updateDescription(description);
     }

@@ -1,73 +1,72 @@
 #include "SearchField.hpp"
-#include "Icon.hpp"
 
 namespace psychic_ui {
 
     SearchField::SearchField(const std::string &text) :
-        Component(),
-        _input(std::make_shared<TextInput>(text)),
-        _clear(std::make_shared<Div>()) {
+        TextField<SearchFieldSkin>(text, false) {
         tag("SearchField");
-
-        _focusEnabled = true; // The field takes the focus and hands it to its text
-
-        _input->addClassName("input")
-              .placeholder("Search")
-              .focusEnabled(false); // Tab stops once, on the field
-        _input->onChange([this](const std::string &/*text*/) { textChanged(); });
-
-        // Escape and Enter reach the input after its editing, which leaves them alone on one line
-        _input->onKeyPress(
-            [this](const Key key, const Mod /*modifiers*/) {
-                if (key == Key::ESCAPE && !_input->text().empty()) {
-                    updateText("");
-                } else if (key == Key::ENTER) {
-                    submitted.emit(_input->text());
-                }
-            }
-        );
-
-        _clear->addClassName("clear")
-              .cursor(Cursor::Arrow)
-              .visible(!text.empty());
-        _clear->add<Icon>("x").mouseEnabled(false);
-        _clear->onClick([this]() { updateText(""); });
-    }
-
-    std::string SearchField::text() const {
-        return _input->text();
     }
 
     const std::string &SearchField::placeholder() const {
-        return _input->placeholder();
+        return _placeholder;
     }
 
-    std::shared_ptr<TextInput> SearchField::input() {
-        return _input;
+    void SearchField::updatePlaceholder(const std::string &placeholder) {
+        _placeholder = placeholder;
+        textChanged();
     }
 
-    std::shared_ptr<Div> SearchField::clearButton() {
-        return _clear;
-    }
-
-    Div *SearchField::focusDelegate() {
-        return _input.get();
-    }
-
-    void SearchField::updateText(const std::string &text) {
-        if (text != _input->text()) {
-            _input->text(text);
-            textChanged(); // Setting the input's text emits nothing
+    void SearchField::clear() {
+        if (editable()) {
+            apply(_editing.setText(icu::UnicodeString{}));
         }
     }
 
+    bool SearchField::fieldKey(const Key key, const Mod /*mod*/) {
+        switch (key) {
+            case Key::ESCAPE:
+                if (!takesEscape()) {
+                    return false;
+                }
+                clear();
+                return true;
+            case Key::ENTER: {
+                const auto keepAlive = weak_from_this().lock(); // A handler may remove this field from its parent
+                submitted.emit(text());
+                return true;
+            }
+            default:
+                return false;
+        }
+    }
+
+    bool SearchField::fieldPress(const MouseEvent &event) {
+        if (!_skin) {
+            return false;
+        }
+        int x = 0;
+        int y = 0;
+        _skin->globalToLocal(x, y, static_cast<int>(event.windowX), static_cast<int>(event.windowY));
+        if (!_skin->clearAt(static_cast<float>(x), static_cast<float>(y))) {
+            return false;
+        }
+        clear();
+        return true;
+    }
+
     void SearchField::textChanged() {
-        const std::string text = _input->text();
-        _clear->visible(!text.empty());
-        changed.emit(text);
+        if (_skin) {
+            const bool empty = _editing.text().isEmpty();
+            _skin->setPlaceholder(_placeholder, empty && !_placeholder.empty());
+            _skin->setClearable(!empty);
+        }
+    }
+
+    void SearchField::textEdited() {
+        changed.emit(text());
     }
 
     bool SearchField::takesEscape() const {
-        return _enabled && !_input->text().empty();
+        return editable() && !_editing.text().isEmpty();
     }
 }

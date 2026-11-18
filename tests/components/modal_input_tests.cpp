@@ -78,8 +78,8 @@ TEST_CASE("C10: after a touch cancel whose press closed a menu, the next click g
     CHECK(clicks == 1);
 }
 
-// C15: a popup gives the focus back to what had it, even when that has since been disabled or hidden
-TEST_CASE("C15: a menu closing doesn't give the focus back to a trigger disabled meanwhile", "[popup][menu][focus][!shouldfail]") {
+// C15: a popup gives the focus back to what had it, unless that has since been disabled or hidden
+TEST_CASE("C15: a menu closing doesn't give the focus back to a trigger disabled meanwhile", "[popup][menu][focus]") {
     Modal f;
     auto &button = f.button("Menu", 100, 100);
     f.sys.layout();

@@ -402,12 +402,11 @@ namespace psychic_ui {
         rule("TextInput:disabled").opacity(0.5f);
         rule("TextArea:disabled").opacity(0.5f);
 
-        // The selection only shows while its field has the focus (its text inherits the colors); the text inputs
-        // inside a search field or a stepper don't take the focus themselves, their field does
-        for (const char *field: {"TextInput", "TextArea"}) {
+        // The selection only shows while its field has the focus (its text inherits the colors)
+        for (const char *field: {"TextInput", "TextArea", "SearchField", "NumberStepper"}) {
             rule(field).selectionBackgroundColor(transparent);
         }
-        for (const char *focused: {"TextInput:focus", "TextArea:focus", "SearchField:focus .input", "NumberStepper:focus .value"}) {
+        for (const char *focused: {"TextInput:focus", "TextArea:focus", "SearchField:focus", "NumberStepper:focus"}) {
             rule(focused).selectionBackgroundColor(p.accentSoft);
         }
 
@@ -450,18 +449,17 @@ namespace psychic_ui {
             .shrink(0)
             .color(p.textMuted);
 
-        // The text input inside, bare: the field draws it
-        rule("SearchField .input")
+        // The text, and its placeholder at its start, across the room the icon and the clear button leave
+        rule("SearchField .field")
             .grow(1)
             .shrink(1)
             .alignSelf(Align::Stretch)
-            .height(Auto)
-            .paddingHorizontal(0)
-            .border(0)
-            .borderRadius(0)
-            .backgroundColor(transparent);
+            .justify(Justify::Center)
+            .overflow(Overflow::Hidden);
+        rule("SearchField .placeholder").color(p.textMuted);
 
         rule("SearchField .clear")
+            .cursor(Cursor::Arrow)
             .width(s.controlXs)
             .height(s.controlXs)
             .shrink(0)
@@ -554,21 +552,19 @@ namespace psychic_ui {
         rule("NumberStepper:focus").borderColor(p.accent);
         rule("NumberStepper:disabled").opacity(0.5f);
 
-        // The text input inside, bare and centered
+        // The text between the buttons, centered
         rule("NumberStepper .value")
             .grow(1)
             .shrink(1)
-            .height(Auto)
             .minWidth(0)
+            .alignSelf(Align::Center)
             .paddingHorizontal(m.space(1))
-            .border(0)
-            .borderRadius(0)
-            .backgroundColor(transparent)
-            .textAlign(TextAlign::Center);
-        rule("NumberStepper .value:disabled").opacity(1.0f); // The stepper fades already
+            .textAlign(TextAlign::Center)
+            .cursor(Cursor::IBeam);
 
         for (const char *button: {"NumberStepper .decrement", "NumberStepper .increment"}) {
             rule(button)
+                .cursor(Cursor::Arrow)
                 .width(s.controlMd)
                 .shrink(0)
                 .alignItems(Align::Center)

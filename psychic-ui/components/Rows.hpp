@@ -172,10 +172,5 @@ namespace psychic_ui {
          * Put rows back in a container in a new order (the same rows), keeping the selection and the focus
          */
         void reorder(Div &container, const std::vector<std::shared_ptr<Div>> &children);
-
-        /**
-         * Scroll the nearest scrolling ancestor of a div so that it shows the div
-         */
-        static void scrollIntoView(Div &div);
     };
 }

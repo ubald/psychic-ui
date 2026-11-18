@@ -449,7 +449,6 @@ TEST_CASE("A Label keeps its text as set and is as tall as its line height", "[t
 
     CHECK(label.text() == "two\nlines");
     CHECK(label.getHeight() == 8.0f);
-    CHECK_FALSE(label.selectable());
     CHECK_FALSE(label.multiline());
     CHECK(label.tags().back() == "label");
 }

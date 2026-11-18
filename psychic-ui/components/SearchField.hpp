@@ -1,12 +1,12 @@
 #pragma once
 
-#include <memory>
 #include <string>
 #include "psychic-ui/psychic-ui.hpp"
 #include "psychic-ui/Component.hpp"
 #include "psychic-ui/Skin.hpp"
 #include "psychic-ui/signals/Signal.hpp"
-#include "TextInput.hpp"
+#include "Text.hpp"
+#include "TextField.hpp"
 
 namespace psychic_ui {
     class SearchField;
@@ -18,58 +18,49 @@ namespace psychic_ui {
         }
 
         /**
-         * Show the component's parts, which it owns (`input()`, `clearButton()`), among the skin's children; take
-         * them out again when the skin is replaced
+         * The `.text` part, which the skin creates and owns: the view showing the text, the selection and the caret
          */
-        void addedToComponent() override = 0;
-        void removedFromComponent() override = 0;
+        virtual Text *textView() = 0;
+
+        /**
+         * What the field shows while it is empty (the `.placeholder` part), and whether it shows now
+         */
+        virtual void setPlaceholder(const std::string &/*placeholder*/, bool /*shown*/) {}
+
+        /**
+         * Whether the field has text to clear: shows the `.clear` part
+         */
+        virtual void setClearable(bool /*clearable*/) {}
+
+        /**
+         * Whether a press at this point (in the skin's coordinates) clears the field
+         */
+        virtual bool clearAt(float x, float y) const = 0;
     };
 
     /**
      * @class SearchField
      *
-     * A text field for a query: a search icon, the text (a TextInput, with its placeholder, "Search" by default),
-     * and a clear button while it isn't empty. Escape clears it, Enter submits it.
-     * The field owns its input and clear button (the `.input` and `.clear` parts, which its skin shows), so a new
-     * skin keeps the text.
+     * A text field for a query: its skin shows a search icon, the text, with a placeholder while it is empty
+     * ("Search" by default), and a clear button while it has text. Escape clears it, Enter submits it.
      */
-    class SearchField : public Component<SearchFieldSkin> {
+    class SearchField : public TextField<SearchFieldSkin> {
     public:
         explicit SearchField(const std::string &text = "");
 
-        std::string text() const;
-
-        template<class Self>
-        Self &text(this Self &self, const std::string &text) {
-            static_cast<SearchField &>(self).updateText(text);
-            return self;
-        }
-
+        /**
+         * What the field shows while it is empty (the skin's `.placeholder` part); "Search" by default
+         */
         const std::string &placeholder() const;
 
         template<class Self>
         Self &placeholder(this Self &self, const std::string &placeholder) {
-            static_cast<SearchField &>(self)._input->placeholder(placeholder);
+            static_cast<SearchField &>(self).updatePlaceholder(placeholder);
             return self;
         }
 
         /**
-         * The `.input` part: the text input, borderless inside the field
-         */
-        std::shared_ptr<TextInput> input();
-
-        /**
-         * The `.clear` part: clears the field when clicked, hidden while it is empty
-         */
-        std::shared_ptr<Div> clearButton();
-
-        /**
-         * The input: Tab, or a press anywhere on the field, lets one type
-         */
-        Div *focusDelegate() override;
-
-        /**
-         * The text changed (typed, set or cleared), with the new text
+         * The text changed by an edit (typed, erased, cut, pasted or cleared), with the new text
          */
         Signal<std::string> changed{};
         PSYCHIC_UI_EVENT(onChange, changed)
@@ -86,10 +77,18 @@ namespace psychic_ui {
         bool takesEscape() const override;
 
     protected:
-        std::shared_ptr<TextInput> _input{nullptr};
-        std::shared_ptr<Div>       _clear{nullptr};
+        std::string _placeholder{"Search"};
 
-        void updateText(const std::string &text);
-        void textChanged();
+        void updatePlaceholder(const std::string &placeholder);
+
+        /**
+         * Empty the field, an edit (`changed` follows)
+         */
+        void clear();
+
+        bool fieldKey(Key key, Mod mod) override;
+        bool fieldPress(const MouseEvent &event) override;
+        void textChanged() override;
+        void textEdited() override;
     };
 }

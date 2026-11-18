@@ -5,14 +5,18 @@ namespace psychic_ui {
     TextAreaSkinBase::TextAreaSkinBase() :
         TextAreaSkin() {
         tag("TextAreaSkinBase");
+        // The viewport's content, held by its child list; its field takes the mouse
+        auto text = std::make_shared<Text>();
+        _text = text.get();
+        _text->addClassName("text")
+             .multiline(true)
+             .minHeight(100_pct); // The whole viewport, empty or not
+        _viewport = &add<Scroller>(text);
+        _viewport->addClassName("viewport");
     }
 
-    void TextAreaSkinBase::addedToComponent() {
-        add(component()->textScroller());
-    }
-
-    void TextAreaSkinBase::removedFromComponent() {
-        remove(component()->textScroller());
+    Text *TextAreaSkinBase::textView() {
+        return _text;
     }
 
     void TextAreaSkinBase::draw(SkCanvas *canvas) {

@@ -1,29 +1,42 @@
 #pragma once
 
 #include <functional>
-#include <memory>
 #include <string>
 #include "psychic-ui/psychic-ui.hpp"
 #include "psychic-ui/Component.hpp"
 #include "psychic-ui/Skin.hpp"
 #include "psychic-ui/signals/Signal.hpp"
-#include "TextInput.hpp"
+#include "Text.hpp"
+#include "TextField.hpp"
 
 namespace psychic_ui {
     class NumberStepper;
 
     class NumberStepperSkin : public Skin<NumberStepper> {
     public:
+        /**
+         * What a press lands on
+         */
+        enum class Part { None, Decrement, Increment };
+
         NumberStepperSkin() : Skin<NumberStepper>() {
             tag("NumberStepperSkin");
         }
 
         /**
-         * Show the component's parts, which it owns (`decrementButton()`, `input()`, `incrementButton()`), among the
-         * skin's children; take them out again when the skin is replaced
+         * The `.value` part, which the skin creates and owns: the view showing the text, the selection and the caret
          */
-        void addedToComponent() override = 0;
-        void removedFromComponent() override = 0;
+        virtual Text *textView() = 0;
+
+        /**
+         * Whether the value can go down and up: the button parts are `:disabled` at the bounds
+         */
+        virtual void setBounds(bool /*canDecrement*/, bool /*canIncrement*/) {}
+
+        /**
+         * Which button a press at this point (in the skin's coordinates) is on, if any
+         */
+        virtual Part partAt(float x, float y) const = 0;
     };
 
     /**
@@ -31,11 +44,12 @@ namespace psychic_ui {
      *
      * A number with − and + on either side: the buttons, Up and Down (Shift for ten steps), and the mouse wheel
      * while it has the focus step it; typing a number and pressing Enter (or leaving the field) sets it, Escape
-     * gives the typed text up. The value stays within `min()` and `max()`; a button at its bound is disabled.
-     * There is no press-and-hold repeat (no timer yet): holding Up or Down repeats instead.
-     * The stepper owns its parts (`.decrement`, `.value`, a TextInput, and `.increment`), which its skin shows.
+     * gives the typed text up. The value stays within `min()` and `max()`, and what is typed or stepped is rounded
+     * to the decimals shown; a button at its bound is disabled. There is no press-and-hold repeat (no timer yet):
+     * holding Up or Down repeats instead. Its skin shows the buttons (`.decrement`, `.increment`) and the text
+     * (`.value`), and says which button a press is on.
      */
-    class NumberStepper : public Component<NumberStepperSkin> {
+    class NumberStepper : public TextField<NumberStepperSkin> {
     public:
         explicit NumberStepper(double value = 0, std::function<void(double)> onChangeCallback = nullptr);
 
@@ -100,7 +114,8 @@ namespace psychic_ui {
         }
 
         /**
-         * Step the value up (or down with a negative count) by `count` steps, clamped
+         * Step the value up (or down with a negative count) by `count` steps, clamped and rounded to the decimals
+         * shown; a step finer than them moves by one of their units
          */
         void stepBy(int count);
 
@@ -110,28 +125,12 @@ namespace psychic_ui {
         std::string valueString() const;
 
         /**
-         * The `.value` part, the text input
-         */
-        std::shared_ptr<TextInput> input();
-
-        /**
-         * The `.decrement` and `.increment` parts, the buttons
-         */
-        std::shared_ptr<Div> decrementButton();
-        std::shared_ptr<Div> incrementButton();
-
-        /**
-         * The input: Tab, or a press anywhere on the stepper, lets one type
-         */
-        Div *focusDelegate() override;
-
-        /**
          * With the focus, the wheel steps it; otherwise it scrolls what is around it
          */
         MouseEventStatus handleMouseScroll(const MouseEvent &event) override;
 
         /**
-         * The value changed, with the new value
+         * The value changed, with the new value (the text's own edits aren't changes until they are set)
          */
         Signal<double> changed{};
         PSYCHIC_UI_EVENT(onChange, changed)
@@ -142,14 +141,11 @@ namespace psychic_ui {
         bool takesEscape() const override;
 
     protected:
-        double                     _value{0};
-        double                     _min{-1e9};
-        double                     _max{1e9};
-        double                     _step{1};
-        int                        _decimals{-1};
-        std::shared_ptr<Div>       _decrement{nullptr};
-        std::shared_ptr<TextInput> _input{nullptr};
-        std::shared_ptr<Div>       _increment{nullptr};
+        double _value{0};
+        double _min{-1e9};
+        double _max{1e9};
+        double _step{1};
+        int    _decimals{-1};
 
         void updateValue(double value);
         void updateRange(double min, double max);
@@ -157,15 +153,24 @@ namespace psychic_ui {
         void updateDecimals(int decimals);
 
         /**
-         * Set the value from what was typed, or show the value again if it isn't a number
+         * 10 to the power of the decimals shown
+         */
+        double scale() const;
+
+        /**
+         * Set the value from what was typed, rounded to the decimals shown, or show the value again if it isn't a
+         * number
          */
         void commit();
 
         /**
-         * Show the value, and disable the buttons at the bounds
+         * Show the value, and the bounds
          */
         void refresh();
 
+        bool fieldKey(Key key, Mod mod) override;
+        bool fieldPress(const MouseEvent &event) override;
+        void skinChanged() override;
         void enabledChanged() override;
     };
 }

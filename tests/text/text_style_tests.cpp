@@ -86,16 +86,14 @@ TEST_CASE("Selection and caret colors are inherited, so a field's parts take its
 TEST_CASE("The caret is painted in caretColor, else in the text's color", "[text][style]") {
     Scene s;
     auto &text = s.window->appContainer().add<Text>("");
-    text.editable(true)
+    text.caretVisible(true) // As a field shows it while it has the focus
         .color(rgb(0x0000FF))
         .position(Position::Absolute)
         .left(20)
         .top(20)
         .width(100);
     s.render();
-    s.window->requestFocus(&text);
-    s.render();
-    const int middle = text.getHeight() / 2;
+    const int middle = static_cast<int>(text.getHeight() / 2.0f);
     CHECK(s.at(text, 0, middle) == SkColorSetRGB(0x00, 0x00, 0xFF));
 
     text.caretColor(rgb(0xFF0000));

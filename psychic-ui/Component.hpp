@@ -67,15 +67,12 @@ namespace psychic_ui {
     void Component<T>::updateSkin(std::shared_ptr<T> skin) {
         if (skin != _skin) {
             if (_skin) {
-                _skin->removedFromComponent();
                 this->remove(_skin);
             }
             _skin = std::move(skin);
             if (_skin) {
-                // Skin is always in the back so the component can add more
-                // children if need be (ie: TextInput overlays its text)
+                // The skin is always child 0, behind what the component adds itself
                 this->add(0, _skin);
-                _skin->addedToComponent();
             }
             skinChanged();
         }

@@ -101,7 +101,7 @@ namespace psychic_ui {
      * row or move with Up, Down, Home and End. Rows are ListRows (`row(...)`), or any SelectableRow.
      *
      * Its event is `onSelectionChange`/`selectionChanged`, not `onSelect`/`selected`: `selected` is the rows' state
-     * getter, and the name follows `Text`'s `selectionChanged`.
+     * getter.
      *
      *     auto &list = add<List>();
      *     list.row("Inbox", "3 unread").icon("inbox");

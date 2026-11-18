@@ -3,6 +3,7 @@
 #include <limits>
 #include <cstring>
 #include <iostream>
+#include <iterator>
 #include <ranges>
 #include <utility>
 #include <yoga/Yoga.h>
@@ -1237,27 +1238,18 @@ namespace psychic_ui {
         }
 
         // Build the path
-        const auto pathTo = [](Div *div) {
-            std::vector<Div *> path{};
-            for (Div *c = div; c != nullptr; c = c->parent()) {
-                path.insert(path.begin(), c);
-            }
-            return path;
-        };
-        std::vector<Div *> path = pathTo(component);
+        std::vector<Div *> path{};
+        for (Div *c = component; c != nullptr; c = c->parent()) {
+            path.insert(path.begin(), c);
+        }
 
-        // The deepest div taking the focus may hand it on to a descendant (a text field to its text)
-        for (auto it = path.rbegin(); it != path.rend(); ++it) {
-            if ((*it)->focusEnabled()) {
-                Div *delegate = (*it)->focusDelegate();
-                if (delegate && std::ranges::find(path, delegate) == path.cend()) {
-                    std::vector<Div *> delegated = pathTo(delegate);
-                    if (std::ranges::find(delegated, *it) != delegated.cend()) {
-                        path = std::move(delegated);
-                    }
-                }
-                break;
-            }
+        // A disabled or hidden div doesn't take the focus (a press on a disabled field, a popup giving it back to a
+        // trigger disabled meanwhile): when the deepest div that would is one, the path stops at its parent
+        const auto reversed = std::views::reverse(path);
+        const auto taker    = std::ranges::find_if(reversed, [](const Div *div) { return div->focusEnabled(); });
+        if (taker != reversed.end()
+            && (!(*taker)->enabled() || !(*taker)->visible() || (*taker)->computedStyle().display() == Display::None)) {
+            path.erase(std::prev(taker.base()), path.end());
         }
 
         // Compare with current and unfocus

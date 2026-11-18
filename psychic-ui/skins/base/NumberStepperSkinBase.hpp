@@ -1,23 +1,32 @@
 #pragma once
 
 #include "psychic-ui/components/NumberStepper.hpp"
+#include "psychic-ui/components/Text.hpp"
 #include "psychic-ui/paint/Box.hpp"
 #include "SkinState.hpp"
 
 namespace psychic_ui {
     /**
-     * What every number stepper skin shares: it shows the stepper's parts in a row, the `.decrement` button, the
-     * `.value` input and the `.increment` button (the stepper owns them, so that they keep their state when the
-     * skin changes). A skin set's stepper paints the field's chrome around them; its rules make the input borderless
-     * (`NumberStepper .value`) and the buttons' looks (`NumberStepper .decrement:hover`, `:disabled`).
+     * What every number stepper skin shares, its parts, in a row, all children, which its child list owns: the
+     * `.decrement` button (a `minus` Icon), the `.value` part (the view its stepper drives) and the `.increment`
+     * button (a `plus` Icon). The buttons are Divs the mouse reaches, for their hover and pressed looks, and
+     * `:disabled` at the bounds; the stepper steps on a press there (`partAt`). A skin set's stepper paints the
+     * field's chrome around them; its rules give the buttons their looks (`NumberStepper .decrement:hover`,
+     * `:disabled`).
      */
     class NumberStepperSkinBase : public NumberStepperSkin {
     public:
         NumberStepperSkinBase();
 
+        Text *textView() override;
+        void setBounds(bool canDecrement, bool canIncrement) override;
+        Part partAt(float x, float y) const override;
+
     protected:
-        void addedToComponent() override;
-        void removedFromComponent() override;
+        Div  *_decrement{nullptr}; // The `.decrement` part
+        Text *_value{nullptr};     // The `.value` part
+        Div  *_increment{nullptr}; // The `.increment` part
+
         void draw(SkCanvas *canvas) final;
 
         /**

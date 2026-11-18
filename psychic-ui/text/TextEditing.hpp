@@ -7,8 +7,8 @@
 #include <utility>
 #include <unicode/brkiter.h>
 #include <unicode/unistr.h>
-#include "include/core/SkRect.h"
 #include "psychic-ui/psychic-ui.hpp"
+#include "TextGeometry.hpp"
 
 namespace psychic_ui {
 
@@ -17,7 +17,7 @@ namespace psychic_ui {
      *
      * The editing model of a text: the text itself, an anchor and a caret (the selection is what lies between them),
      * the column that line moves keep, and what keys, typing and the mouse do to them. No Div: what shows the text
-     * answers the geometry questions (`Geometry`), and the clipboard is given (`Clipboard`).
+     * answers the geometry questions (`TextGeometry`), and the clipboard is given (`Clipboard`).
      *
      * Every index is in UTF-16 code units, like icu::UnicodeString's, and moves step over whole grapheme clusters
      * (an emoji, a letter and its combining marks). Nothing is emitted: every operation returns what it changed
@@ -49,29 +49,6 @@ namespace psychic_ui {
             Line,     // The line above or below, in the column kept (needs the geometry)
             LineEdge, // The start or the end of the caret's line (needs the geometry)
             All       // The start or the end of the text
-        };
-
-        /**
-         * What shows the text answers these, in its own coordinates
-         */
-        class Geometry {
-        public:
-            Geometry() = default;
-            Geometry(const Geometry &) = delete;
-            Geometry &operator=(const Geometry &) = delete;
-            Geometry(Geometry &&) = delete;
-            Geometry &operator=(Geometry &&) = delete;
-            virtual ~Geometry() = default;
-
-            /**
-             * The caret before the character at the index: a zero-width rectangle across its line
-             */
-            virtual SkRect caretRect(unsigned int index) const = 0;
-
-            /**
-             * The caret index closest to a point
-             */
-            virtual unsigned int indexAt(float x, float y) const = 0;
         };
 
         /**
@@ -144,13 +121,13 @@ namespace psychic_ui {
         /**
          * Remove the selection, or else from the caret to where a move would go
          */
-        Edit erase(Direction direction, Unit unit, const Geometry *geometry = nullptr);
+        Edit erase(Direction direction, Unit unit, const TextGeometry *geometry = nullptr);
 
         /**
          * Move the caret, extending the selection from the anchor or collapsing it. Without extending, a grapheme
          * move with a selection collapses it to its side. Line and line edge moves need the geometry.
          */
-        Edit move(Direction direction, Unit unit, bool extend, const Geometry *geometry = nullptr);
+        Edit move(Direction direction, Unit unit, bool extend, const TextGeometry *geometry = nullptr);
 
         /**
          * A press at the index: the caret there (1 click, or extending the selection), the word (2), the sentence
@@ -168,7 +145,7 @@ namespace psychic_ui {
          * (Ctrl or Super)
          * @return What changed, `Edit::None` for a key it has no use for
          */
-        Edit handleKey(Key key, Mod mod, const Geometry &geometry, Clipboard &clipboard);
+        Edit handleKey(Key key, Mod mod, const TextGeometry &geometry, Clipboard &clipboard);
 
         /**
          * Word and sentence boundaries around an index, for double and triple clicks
@@ -205,7 +182,7 @@ namespace psychic_ui {
         /**
          * Where a move from the caret goes
          */
-        unsigned int target(Direction direction, Unit unit, const Geometry *geometry);
+        unsigned int target(Direction direction, Unit unit, const TextGeometry *geometry);
 
         /**
          * Set the anchor and the caret, saying whether they changed

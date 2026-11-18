@@ -53,7 +53,6 @@ namespace psychic_ui {
 
         _description = &_body->add<Text>();
         _description->multiline(true)
-                    .selectable(false)
                     .addClassName("description")
                     .display(Display::None);
 
