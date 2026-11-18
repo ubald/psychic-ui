@@ -9,7 +9,6 @@ namespace psychic_ui {
         auto text = std::make_shared<Text>();
         _text = text.get();
         _text->addClassName("text")
-             .selectable(false)
              .multiline(true)
              .minHeight(100_pct); // The whole viewport, empty or not
         _viewport = &add<Scroller>(text);
