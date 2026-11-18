@@ -129,6 +129,13 @@ namespace psychic_ui {
         return items;
     }
 
+    SidebarItem *Sidebar::current() const {
+        // The selection, found among the items (a row of another kind is none of them)
+        const auto all = items();
+        const auto it  = std::ranges::find(all, _selection);
+        return it != all.end() ? *it : nullptr;
+    }
+
     void Sidebar::selectionUpdated() {
         changed.emit(current());
     }

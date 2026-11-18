@@ -53,7 +53,11 @@ namespace psychic_ui {
 
     void ScrollBarSkinBase::updateScrollBar(bool enabled, float scrollPosition, float contentRatio) {
         this->enabled(enabled);
-        if (component()->scrollDirection() == ScrollDirection::Vertical) {
+        const ScrollBar *bar = component();
+        if (!bar) {
+            return;
+        }
+        if (bar->scrollDirection() == ScrollDirection::Vertical) {
             _thumb->top((int) (scrollPosition * (float) (_track->getHeight() - _thumb->getHeight())))
                   .height(Length::percent(contentRatio * 100.0f));
         } else {

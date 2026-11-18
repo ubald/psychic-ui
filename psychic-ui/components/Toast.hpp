@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -83,6 +84,7 @@ namespace psychic_ui {
         friend class ToastStack;
 
         ToastOptions                            _options{};
+        ToastStack                              *_stack{nullptr}; // The stack that added it, while it is in it
         std::chrono::nanoseconds                _elapsed{0};
         std::optional<std::chrono::nanoseconds> _last{};
 
@@ -95,6 +97,11 @@ namespace psychic_ui {
          * When its timeout runs out, if it isn't paused
          */
         std::optional<std::chrono::nanoseconds> deadline() const;
+
+        /**
+         * It leaves its stack: the stack forgets it
+         */
+        void removed() override;
     };
 
     /**
@@ -121,7 +128,10 @@ namespace psychic_ui {
         std::optional<std::chrono::nanoseconds> nextUpdate() const override;
 
     protected:
-        bool _paused{false}; // The mouse was over the stack at the last update
+        friend class Toast;
+
+        std::vector<std::shared_ptr<Toast>> _toasts{}; // Its children, typed, oldest first, those leaving too
+        bool                                _paused{false}; // The mouse was over the stack at the last update
 
         void update(std::chrono::nanoseconds now) override;
     };

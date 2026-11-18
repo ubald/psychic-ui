@@ -8,8 +8,9 @@ namespace psychic_ui {
 
     // region Row
 
-    TreeRow::TreeRow() :
-        SelectableRow() {
+    TreeRow::TreeRow(TreeNode &node) :
+        SelectableRow(),
+        _node(&node) {
         tag("TreeRow");
 
         _indent = &add<Div>();
@@ -20,8 +21,8 @@ namespace psychic_ui {
                    .shrink(0);
         _disclosure->onClick(
             [this]() {
-                if (TreeNode *n = node(); n && n->hasChildren()) {
-                    n->toggle();
+                if (_node->hasChildren()) {
+                    _node->toggle();
                 }
             }
         );
@@ -39,15 +40,11 @@ namespace psychic_ui {
 
         doubleClicked.subscribe(
             [this]() {
-                if (TreeNode *n = node(); n && n->hasChildren()) {
-                    n->toggle();
+                if (_node->hasChildren()) {
+                    _node->toggle();
                 }
             }
         );
-    }
-
-    TreeNode *TreeRow::node() {
-        return dynamic_cast<TreeNode *>(parent());
     }
 
     // endregion
@@ -59,7 +56,7 @@ namespace psychic_ui {
         tag("TreeNode");
         _defaultStyle.direction(Direction::Column)
             .shrink(0);
-        _row = &add<TreeRow>();
+        _row = &add<TreeRow>(*this);
         _children = &add<Div>();
         _children->addClassName("children")
                  .direction(Direction::Column)
@@ -227,7 +224,7 @@ namespace psychic_ui {
 
     TreeNode *Tree::selectedNode() const {
         auto *row = dynamic_cast<TreeRow *>(_selection);
-        return row ? row->node() : nullptr;
+        return row ? &row->node() : nullptr;
     }
 
     void Tree::selectionUpdated() {
@@ -279,7 +276,7 @@ namespace psychic_ui {
 
     bool Tree::handleRowKey(SelectableRow *row, const Key key, const Mod mod) {
         auto *     treeRow = dynamic_cast<TreeRow *>(row);
-        TreeNode *node   = treeRow ? treeRow->node() : nullptr;
+        TreeNode *node   = treeRow ? &treeRow->node() : nullptr;
         if (node) {
             switch (key) {
                 case Key::RIGHT:

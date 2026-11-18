@@ -780,12 +780,12 @@ namespace psychic_ui {
          * found the way the mouse events are dispatched. The overlay is only on the path where a popup takes the
          * mouse, or everywhere under a modal popup.
          */
-        bool hitPath(Div *div, float x, float y, std::vector<Div *> &path);
+        bool hitPath(const Overlay &overlay, Div *div, float x, float y, std::vector<Div *> &path);
     }
 
     Div *Window::tooltipTargetAt(const float x, const float y) {
         std::vector<Div *> path{};
-        hitPath(this, x, y, path);
+        hitPath(*_overlay, this, x, y, path);
         return deepest(path, [](const Div *div) { return !div->tooltip().empty(); });
     }
 
@@ -967,20 +967,19 @@ namespace psychic_ui {
          * The divs a press at this point (in `div`'s parent's coordinates) goes through, outermost first,
          * found the way the mouse events are dispatched
          */
-        bool hitPath(Div *div, const float x, const float y, std::vector<Div *> &path) {
+        bool hitPath(const Overlay &overlay, Div *div, const float x, const float y, std::vector<Div *> &path) {
             if (!div->visible() || !div->boundsContains(x, y)) {
                 return false;
             }
             const float localX = x - static_cast<float>(div->x() + div->scrollX());
             const float localY = y - static_cast<float>(div->y() + div->scrollY());
-            if (auto *overlay = dynamic_cast<Overlay *>(div)) {
+            if (div == &overlay) {
                 // Only where a popup takes the mouse, or under a modal popup
                 const std::size_t size = path.size();
                 path.push_back(div);
-                const auto &children = overlay->children();
-                for (const auto &child: std::views::reverse(children)) {
-                    auto *popup = dynamic_cast<Popup *>(child.get());
-                    if ((popup->mouseEnabled() || popup->mouseChildren()) && hitPath(popup, localX, localY, path)) {
+                for (const auto &popup: std::views::reverse(overlay.allPopups())) {
+                    if ((popup->mouseEnabled() || popup->mouseChildren())
+                        && hitPath(overlay, popup.get(), localX, localY, path)) {
                         return true;
                     }
                     if (popup->modal()) {
@@ -994,7 +993,7 @@ namespace psychic_ui {
             if (div->mouseChildren()) {
                 const auto &children = div->children();
                 for (const auto &child: std::views::reverse(children)) {
-                    if (hitPath(child.get(), localX, localY, path)) {
+                    if (hitPath(overlay, child.get(), localX, localY, path)) {
                         break;
                     }
                 }
@@ -1005,7 +1004,7 @@ namespace psychic_ui {
 
     Div *Window::scrollTargetAt(const float x, const float y, const bool horizontal) {
         std::vector<Div *> path{};
-        hitPath(this, x, y, path);
+        hitPath(*_overlay, this, x, y, path);
         return deepest(path, [horizontal](const Div *div) {
             return div->computedStyle().overflow() == Overflow::Scroll
                    && (horizontal ? div->getWidth() < div->contentWidth() : div->getHeight() < div->contentHeight());
@@ -1047,8 +1046,9 @@ namespace psychic_ui {
         handleMouseMove(touchEvent(_touchStartX, _touchStartY), false);
         _touchPhase  = TouchPhase::Pressing;
         _touchButton = button;
-        const std::size_t popups = _overlay->children().size();
-        const Popup *top = popups ? dynamic_cast<Popup *>(_overlay->children().back().get()) : nullptr;
+        const auto        &stack  = _overlay->allPopups();
+        const std::size_t popups = stack.size();
+        const Popup       *top    = stack.empty() ? nullptr : stack.back().get();
 
         // Taps in a row count on the touch clock, with a finger's precision
         MouseEvent press = touchEvent(_touchStartX, _touchStartY, button, true);
@@ -1060,8 +1060,7 @@ namespace psychic_ui {
 
         // A long press is the context press first: when it opened nothing (no new popup on top), the tooltip of what
         // is under the finger shows instead, until the finger lifts
-        const bool opened = _overlay->children().size() > popups
-                            || (!_overlay->children().empty() && _overlay->children().back().get() != top);
+        const bool opened = stack.size() > popups || (!stack.empty() && stack.back().get() != top);
         if (button == MouseButton::RIGHT && !opened) {
             if (Div *target = tooltipTargetAt(_touchStartX, _touchStartY)) {
                 showTooltip(*target);
@@ -1355,7 +1354,7 @@ namespace psychic_ui {
     Div *Window::hitSlopTarget(const float x, const float y, float &targetX, float &targetY) {
         // What the press lands on keeps it, if anything there takes presses
         std::vector<Div *> path{};
-        hitPath(this, x, y, path);
+        hitPath(*_overlay, this, x, y, path);
         if (std::ranges::any_of(path, [](const Div *div) { return takesPresses(*div); })) {
             return nullptr;
         }

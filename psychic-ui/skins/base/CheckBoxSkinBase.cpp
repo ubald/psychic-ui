@@ -27,7 +27,7 @@ namespace psychic_ui {
         if (box.border > 0) {
             paint::stroke(canvas, box.strokeLine(), style.borderColor(), box.border, style.antiAlias());
         }
-        if (component()->checked()) {
+        if (const CheckBox *check = component(); check && check->checked()) {
             // The mark is 2 px smaller than the box, as Pivotal draws it (12 px in 14), in the box's icon stroke
             const SkRect mark = box.outer.rect().makeInset(1.0f, 1.0f);
             paint::icon(canvas, "check", mark, style.color(), style.iconStrokeWidth());

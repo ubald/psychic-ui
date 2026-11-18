@@ -52,7 +52,7 @@ namespace {
     struct SDL3Fixture {
         SDL_Window                        *sdlWindow{nullptr};
         std::shared_ptr<TestWindow>       window{std::make_shared<TestWindow>()};
-        std::unique_ptr<SDL3SystemWindow> adapter{};
+        std::unique_ptr<TouchAdapter>     adapter{};
         sk_sp<SkSurface>                  surface{SkSurfaces::Raster(SkImageInfo::MakeN32Premul(800, 600))};
 
         explicit SDL3Fixture(SDL_WindowFlags flags = 0) {
@@ -142,7 +142,7 @@ TEST_CASE("SDL3: the adapter reads the SDL window", "[backend][sdl3]") {
 
 TEST_CASE("SDL3: the theme follows the system's light and dark mode", "[backend][sdl3][theme]") {
     SDL3Fixture sdl;
-    auto &adapter = dynamic_cast<TouchAdapter &>(*sdl.adapter);
+    auto &adapter = *sdl.adapter;
     auto &div     = sdl.window->appContainer().add<Div>().addClassName("probe");
     std::vector<ColorScheme> changes{};
     sdl.window->onColorSchemeChange([&](ColorScheme scheme) { changes.push_back(scheme); });

@@ -731,9 +731,11 @@ TEST_CASE("ColorSwatches: a chip picked by a press, or by the keyboard's own foc
 
 TEST_CASE("Inputs: by touch, they look the same and take presses from around them", "[components][inputs][touch]") {
     Inputs f;
+    auto              &search = f.column.add<SearchField>();
+    auto              &toggle = f.column.add<Switch>("On");
     std::vector<Div *> controls{
-        &f.column.add<SearchField>(),
-        &f.column.add<Switch>("On"),
+        &search,
+        &toggle,
         &f.column.add<SegmentedControl>(std::vector<Segment>{{"A"}, {"B"}}),
         &f.column.add<NumberStepper>(),
         &f.column.add<ColorSwatches>(),
@@ -757,9 +759,8 @@ TEST_CASE("Inputs: by touch, they look the same and take presses from around the
     CHECK(touchSizes == sizes);
 
     // A press just outside the switch reaches it
-    auto *toggle = dynamic_cast<Switch *>(controls[1]);
-    const auto [x, y] = Inputs::at(*toggle, toggle->getWidth() / 2, toggle->getHeight() + 4);
+    const auto [x, y] = Inputs::at(toggle, toggle.getWidth() / 2, toggle.getHeight() + 4);
     f.press(x, y);
     f.release(x, y);
-    CHECK(toggle->checked());
+    CHECK(toggle.checked());
 }

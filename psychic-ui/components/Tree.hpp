@@ -19,12 +19,20 @@ namespace psychic_ui {
      */
     class TreeRow : public SelectableRow {
     public:
-        TreeRow();
+        /**
+         * The row of this node, made by it
+         */
+        explicit TreeRow(TreeNode &node);
 
-        TreeNode *node();
+        /**
+         * The node it is the row of, its parent
+         */
+        TreeNode &node() const { return *_node; }
 
     protected:
         friend class TreeNode;
+
+        TreeNode *_node; // Our parent, which made us
 
         // Children: our child list owns them
         Div   *_indent{nullptr};
