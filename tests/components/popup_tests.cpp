@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -154,7 +155,7 @@ namespace {
 
         static std::pair<int, int> center(const Div &div) {
             const auto [x, y] = origin(div);
-            return {x + div.getWidth() / 2, y + div.getHeight() / 2};
+            return {x + (div.getWidth() / 2), y + (div.getHeight() / 2)};
         }
 
         std::size_t popupCount() const { return window->overlay().children().size(); }
@@ -172,7 +173,7 @@ namespace {
 
 TEST_CASE("A menu opens under its anchor, and above it at the window's bottom", "[popup][menu]") {
     Popups f{};
-    Menu &menu = f.window->openMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, f.first);
+    const Menu &menu = f.window->openMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, f.first);
     f.layout();
     const auto [ax, ay] = Popups::origin(f.first);
     const auto [mx, my] = Popups::origin(menu);
@@ -219,7 +220,7 @@ TEST_CASE("A press outside a menu closes it and goes no further", "[popup][menu]
 
 TEST_CASE("A press inside a menu doesn't close it, Escape does", "[popup][menu][dismiss]") {
     Popups f{};
-    Menu &menu = f.window->openMenu({Menu::check("Check", false)}, f.first);
+    const Menu &menu = f.window->openMenu({Menu::check("Check", false)}, f.first);
     f.layout();
     f.click(*menu.rows()[0]); // A check item keeps the menu open
     CHECK(f.popupCount() == 1);
@@ -316,7 +317,7 @@ TEST_CASE("Submenus open by hover, Right and Enter, and close by Left and Escape
 
     SECTION("hover") {
         f.hover(*menu.rows()[1]);
-        Menu *sub = menu.submenu();
+        const Menu *sub = menu.submenu();
         REQUIRE(sub != nullptr);
         CHECK(sub->owner() == &menu);
         CHECK(f.window->focusedDiv() == &menu); // Hovering leaves the focus
@@ -334,7 +335,7 @@ TEST_CASE("Submenus open by hover, Right and Enter, and close by Left and Escape
         f.key(Key::DOWN);
         f.key(Key::DOWN);
         f.key(Key::RIGHT);
-        Menu *sub = menu.submenu();
+        const Menu *sub = menu.submenu();
         REQUIRE(sub != nullptr);
         CHECK(f.window->focusedDiv() == sub);
         CHECK(sub->highlighted() == 0);
@@ -368,10 +369,10 @@ TEST_CASE("A submenu flips to the left at the window's right edge", "[popup][men
     Popups f{};
     f.bar.justify(Justify::End);
     f.layout();
-    Menu &menu = f.window->openMenu({Menu::item("More", {Menu::item("Deep", []() {})})}, f.second, Side::Bottom, PopupAlign::End);
+    const Menu &menu = f.window->openMenu({Menu::item("More", {Menu::item("Deep", []() {})})}, f.second, Side::Bottom, PopupAlign::End);
     f.layout();
     f.hover(*menu.rows()[0]);
-    Menu *sub = menu.submenu();
+    const Menu *sub = menu.submenu();
     REQUIRE(sub != nullptr);
     f.layout();
     CHECK(sub->placedSide() == Side::Left);
@@ -383,13 +384,13 @@ TEST_CASE("Check and radio items keep their state and the menu open", "[popup][m
     std::vector<bool> toggles{};
     std::string       picked{};
     auto group = std::make_shared<MenuRadioGroup>("a", [&](const std::string &value) { picked = value; });
-    MenuItems items{
+    const MenuItems items{
         Menu::check("Check", false, [&](bool on) { toggles.push_back(on); }),
         Menu::radio(group, "A", "a"),
         Menu::radio(group, "B", "b"),
         Menu::item("Plain", []() {}),
     };
-    Menu &menu = f.window->openMenu(items, f.first);
+    const Menu &menu = f.window->openMenu(items, f.first);
     f.layout();
     CHECK(menu.rows()[1]->checked());
     CHECK(hasClass(*menu.rows()[1], "checked"));
@@ -405,13 +406,13 @@ TEST_CASE("Check and radio items keep their state and the menu open", "[popup][m
     CHECK(menu.rows()[2]->checked());
 
     // Every row keeps the check column
-    for (MenuButton *button: menu.rows()) {
+    for (const MenuButton *button: menu.rows()) {
         CHECK(button->checkColumn());
     }
 
     // The items remember, the next menu shows it
     f.key(Key::ESCAPE);
-    Menu &again = f.window->openMenu(items, f.first);
+    const Menu &again = f.window->openMenu(items, f.first);
     f.layout();
     CHECK(again.rows()[0]->checked());
     CHECK(again.rows()[2]->checked());
@@ -426,7 +427,8 @@ TEST_CASE("Menu bars switch menus with Left and Right", "[popup][menu][keyboard]
         }
     );
     f.layout();
-    auto *file = static_cast<Button *>(bar.children()[0].get());
+    auto *file = dynamic_cast<Button *>(bar.children()[0].get()); // The bar's first trigger
+    REQUIRE(file);
     f.click(*file);
     REQUIRE(f.top<Menu>() != nullptr);
     CHECK(f.top<Menu>()->rows()[0]->menuItem()->label == "New");
@@ -440,7 +442,7 @@ TEST_CASE("Menu bars switch menus with Left and Right", "[popup][menu][keyboard]
 
 TEST_CASE("A context menu opens at a point, inside the window", "[popup][menu]") {
     Popups f{};
-    Menu &menu = f.window->openContextMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, 790, 590);
+    const Menu &menu = f.window->openContextMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, 790, 590);
     f.layout();
     CHECK(hasClass(menu, "context"));
     const auto [x, y] = Popups::origin(menu);
@@ -684,8 +686,8 @@ TEST_CASE("A touch long press opens the context menu instead of the tooltip", "[
     ContextMenus f{};
     f.area.tooltip("Tip");
     const auto [ax, ay] = Popups::origin(f.area);
-    const float x = static_cast<float>(ax + 250);
-    const float y = static_cast<float>(ay + 150);
+    const auto x = static_cast<float>(ax + 250);
+    const auto y = static_cast<float>(ay + 150);
     f.window->handleTouchPress(x, y, 0ms);
     f.window->updateGestures(Window::longPressDelay);
     f.layout();
@@ -711,7 +713,7 @@ TEST_CASE("A select opens its options under it and changes by the keyboard", "[p
     CHECK(select.value() == "Medium");
 
     f.click(select);
-    Menu *list = select.menu();
+    const Menu *list = select.menu();
     REQUIRE(list != nullptr);
     CHECK(hasClass(select, "open"));
     CHECK(hasClass(*list, "listbox"));
@@ -809,7 +811,7 @@ TEST_CASE("A tooltip sits above its anchor when there is room", "[popup][tooltip
     f.window->updatePopups(Window::tooltipDelay);
     REQUIRE(f.window->tooltip() != nullptr);
     f.layout();
-    Tooltip &tooltip = *f.window->tooltip();
+    const Tooltip &tooltip = *f.window->tooltip();
     CHECK(tooltip.placedSide() == Side::Top);
     CHECK(Popups::origin(tooltip).second + tooltip.getHeight() == Popups::origin(f.first).second - 6);
     // It takes no mouse
@@ -909,7 +911,7 @@ TEST_CASE("A list scrolling in a dialog ends with its padding after the last row
     auto &dialog = f.window->overlay().open<Dialog>("People");
     auto &list   = dialog.body().add<List>();
     list.height(120.0f).padding(8.0f).overflow(Overflow::Scroll);
-    ListRow *last = nullptr;
+    const ListRow *last = nullptr;
     for (int i = 0; i < 12; ++i) {
         last = &list.row("Row " + std::to_string(i));
     }
@@ -1060,14 +1062,132 @@ TEST_CASE("A menu over a dialog closes first", "[popup][dialog][menu]") {
 
 // endregion
 
+// region Typed children
+
+namespace {
+    /**
+     * A popup whose removed() doesn't call the base: the overlay tracks it all the same
+     */
+    class SelfishPopup : public Popup {
+    public:
+        int removals{0};
+
+    protected:
+        void removed() override { ++removals; }
+    };
+
+    /**
+     * A toast whose removed() doesn't call the base: the stack tracks it all the same
+     */
+    class SelfishToast : public Toast {
+    public:
+        explicit SelfishToast(const ToastOptions &options) : Toast(options) {}
+
+        int removals{0};
+
+    protected:
+        void removed() override { ++removals; }
+    };
+
+    bool tracked(const Overlay &overlay, const Popup &popup) {
+        return std::ranges::any_of(overlay.allPopups(), [&popup](const auto &other) { return other.get() == &popup; });
+    }
+}
+
+TEST_CASE("The overlay tracks its popups however they come and go", "[popup][overlay]") {
+    Popups  f{};
+    Overlay &overlay = f.window->overlay();
+
+    SECTION("removed by Div::remove") {
+        auto &popup = overlay.open<Popup>();
+        REQUIRE(tracked(overlay, popup));
+        REQUIRE(popup.isOpen());
+        overlay.remove(popup);
+        CHECK_FALSE(tracked(overlay, popup));
+    }
+
+    SECTION("removed by removeAll") {
+        const auto popup = std::make_shared<Popup>();
+        overlay.open(popup);
+        overlay.removeAll();
+        CHECK(overlay.allPopups().empty());
+        CHECK_FALSE(popup->isOpen());
+    }
+
+    SECTION("a subclass's removed() that doesn't call the base") {
+        const auto popup = std::make_shared<SelfishPopup>();
+        overlay.open(popup);
+        REQUIRE(tracked(overlay, *popup));
+        overlay.remove(popup);
+        CHECK(popup->removals == 1);
+        CHECK_FALSE(tracked(overlay, *popup));
+        CHECK_FALSE(popup->isOpen());
+    }
+
+    SECTION("added with Div::add, then moved to another div") {
+        const auto popup = std::make_shared<Popup>();
+        overlay.add(popup);
+        CHECK(tracked(overlay, *popup));
+        CHECK(popup->isOpen());
+        f.bar.add(popup);
+        CHECK(popup->parent() == &f.bar);
+        CHECK_FALSE(tracked(overlay, *popup));
+        CHECK_FALSE(popup->isOpen());
+    }
+
+    SECTION("in the children's order") {
+        auto &bottom = overlay.open<Popup>();
+        auto &top    = overlay.open<Popup>();
+        const auto middle = std::make_shared<Popup>();
+        overlay.add(overlay.childIndex(&top), middle);
+        std::vector<Popup *> order{};
+        for (const auto &child: overlay.children()) {
+            if (auto *popup = dynamic_cast<Popup *>(child.get())) {
+                order.push_back(popup);
+            }
+        }
+        std::vector<Popup *> popups{};
+        for (const auto &popup: overlay.allPopups()) {
+            popups.push_back(popup.get());
+        }
+        CHECK(popups == order);
+        CHECK(std::ranges::find(popups, &bottom) < std::ranges::find(popups, middle.get()));
+        CHECK(std::ranges::find(popups, middle.get()) < std::ranges::find(popups, &top));
+    }
+}
+
+TEST_CASE("The toast stack tracks its toasts however they come and go", "[popup][toast]") {
+    const Popups f{};
+    ToastStack   &stack = f.window->toasts();
+    Div          &asDiv = stack; // Its own add makes a toast from options
+
+    SECTION("removed by Div::remove") {
+        auto &toast = f.window->toast({.title = "One", .timeout = 0s});
+        REQUIRE(stack.toasts().size() == 1);
+        stack.remove(toast);
+        CHECK(stack.toasts().empty());
+    }
+
+    SECTION("a subclass's removed() that doesn't call the base") {
+        const auto toast = std::make_shared<SelfishToast>(ToastOptions{.title = "Two", .timeout = 0s});
+        asDiv.add(toast);
+        REQUIRE(stack.toasts() == std::vector<Toast *>{toast.get()});
+        stack.removeAll();
+        CHECK(toast->removals == 1);
+        CHECK(stack.toasts().empty());
+    }
+}
+
+// endregion
+
 // region Toasts
 
 TEST_CASE("Toasts time out, held while the mouse is over them", "[popup][toast]") {
     Popups f{};
-    ToastOptions options{.title = "Saved", .timeout = 5s};
-    Toast &toast = f.window->toast(options);
+    const ToastOptions options{.title = "Saved", .timeout = 5s};
+    const Toast &toast = f.window->toast(options);
     f.layout();
-    ToastStack &stack = f.window->toasts();
+    const ToastStack &stack = f.window->toasts();
     CHECK(hasClass(toast, "info"));
     // In the bottom right corner, inside the window's 1 px border
     const auto [x, y] = Popups::origin(toast);
@@ -1108,8 +1228,8 @@ TEST_CASE("A toast's actions and close button dismiss it; the stack keeps a few"
 
     Button *retry = nullptr;
     std::function<void(Div &)> find = [&](Div &div) {
-        for (auto &child: div.children()) {
-            if (auto button = dynamic_cast<Button *>(child.get()); button && button->label() == "Retry") {
+        for (const auto &child: div.children()) {
+            if (auto *button = dynamic_cast<Button *>(child.get()); button && button->label() == "Retry") {
                 retry = button;
             }
             find(*child);

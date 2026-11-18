@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <utility>
 #include "Menu.hpp"
 #include "Label.hpp"
 #include <psychic-ui/components/MenuButton.hpp>
@@ -17,8 +18,8 @@ namespace psychic_ui {
         _defaultStyle.direction(Direction::Column);
 
         // When a row has an icon (or a check mark), every row keeps the column
-        const bool icons  = _iconColumn = std::any_of(items.begin(), items.end(), [](const auto &item) { return !item->icon.empty(); });
-        const bool checks = _checkColumn = std::any_of(items.begin(), items.end(), [](const auto &item) {
+        const bool icons  = _iconColumn = std::ranges::any_of(items, [](const auto &item) { return !item->icon.empty(); });
+        const bool checks = _checkColumn = std::ranges::any_of(items, [](const auto &item) {
             return dynamic_cast<CheckMenuItem *>(item.get()) || dynamic_cast<RadioMenuItem *>(item.get());
         });
 
@@ -46,6 +47,7 @@ namespace psychic_ui {
 
             const int index = static_cast<int>(_rows.size());
             _rows.push_back(&row);
+            _rowItems.push_back(item.get());
             // The rows own these slots, and the menu owns the rows
             row.onMouseEnter([this, index]() { highlight(index, true); });
             row.onMouseExit(
@@ -86,20 +88,17 @@ namespace psychic_ui {
     }
 
     Menu *Menu::root() {
-        Menu *menu = this;
-        while (auto owner = dynamic_cast<Menu *>(menu->owner())) {
-            menu = owner;
-        }
-        return menu;
+        auto *owner = dynamic_cast<Menu *>(this->owner());
+        return owner ? owner->root() : this;
     }
 
     void Menu::highlight(const int index, const bool openSubmenu) {
-        if (index < -1 || index >= static_cast<int>(_rows.size())) {
+        if (index < -1 || std::cmp_greater_equal(index, _rows.size())) {
             return;
         }
         _highlighted = index;
         for (std::size_t i = 0; i < _rows.size(); ++i) {
-            _rows[i]->selected(static_cast<int>(i) == index);
+            _rows[i]->selected(std::cmp_equal(i, index));
         }
         if (!openSubmenu) {
             return;
@@ -132,7 +131,7 @@ namespace psychic_ui {
 
     void Menu::openSubmenu(const int index, const bool focus) {
         auto *row = _rows[index];
-        auto *sub = dynamic_cast<const SubMenuItem *>(row->menuItem());
+        const auto *sub = dynamic_cast<const SubMenuItem *>(row->menuItem());
         if (!sub) {
             return;
         }
@@ -216,22 +215,22 @@ namespace psychic_ui {
     }
 
     void Menu::choose(const int index) {
-        if (index < 0 || index >= static_cast<int>(_rows.size()) || !_rows[index]->enabled()) {
+        if (index < 0 || std::cmp_greater_equal(index, _rows.size()) || !_rows[index]->enabled()) {
             return;
         }
-        auto *item = const_cast<MenuItem *>(_rows[index]->menuItem()); // Ours: the menu holds its items
-        if (auto simple = dynamic_cast<SimpleMenuItem *>(item)) {
+        MenuItem *item = _rowItems[index];
+        if (auto *simple = dynamic_cast<SimpleMenuItem *>(item)) {
             finish(simple->callback);
         } else if (dynamic_cast<SubMenuItem *>(item)) {
             openSubmenu(index, true);
-        } else if (auto check = dynamic_cast<CheckMenuItem *>(item)) {
+        } else if (auto *check = dynamic_cast<CheckMenuItem *>(item)) {
             check->checked = !check->checked;
             highlight(index);
             refreshRows();
             if (check->callback) {
                 check->callback(check->checked);
             }
-        } else if (auto radio = dynamic_cast<RadioMenuItem *>(item)) {
+        } else if (auto *radio = dynamic_cast<RadioMenuItem *>(item)) {
             const bool changed = radio->group && radio->group->value != radio->value;
             if (radio->group) {
                 radio->group->value = radio->value;
@@ -274,7 +273,7 @@ namespace psychic_ui {
             case Key::RIGHT:
                 if (_highlighted >= 0 && dynamic_cast<const SubMenuItem *>(_rows[_highlighted]->menuItem())) {
                     openSubmenu(_highlighted, true);
-                } else if (Menu *top = root(); top->navigatedOut) {
+                } else if (const Menu *top = root(); top->navigatedOut) {
                     auto out = top->navigatedOut;
                     out(1);
                 }

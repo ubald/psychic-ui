@@ -1,7 +1,9 @@
 #include <algorithm>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <unicode/uchar.h>
 #include "TextEditing.hpp"
 
@@ -49,7 +51,7 @@ namespace psychic_ui {
     }
 
     TextEditing::Edit TextEditing::setText(const icu::UnicodeString &text) {
-        Edit edit = _text == text ? Edit::None : Edit::Text;
+        const Edit edit = _text == text ? Edit::None : Edit::Text;
         _text     = text;
         _goalX.reset();
         _pressed = {0, 0};
@@ -153,7 +155,7 @@ namespace psychic_ui {
                 if (!_goalX) {
                     _goalX = caret.fLeft;
                 }
-                const float        y     = forward ? caret.fBottom + caret.height() / 2.0f : caret.fTop - caret.height() / 2.0f;
+                const float        y     = forward ? caret.fBottom + (caret.height() / 2.0f) : caret.fTop - (caret.height() / 2.0f);
                 const unsigned int index = geometry.indexAt(*_goalX, y);
                 if (geometry.caretRect(index).fTop == caret.fTop) {
                     // No line there: the first line goes to the start, the last to the end
@@ -176,7 +178,7 @@ namespace psychic_ui {
     }
 
     bool TextEditing::isWhitespace(unsigned int begin, unsigned int end) const {
-        for (int32_t i = static_cast<int32_t>(begin); i < static_cast<int32_t>(end);) {
+        for (auto i = static_cast<int32_t>(begin); std::cmp_less(i, end);) {
             const UChar32 c = _text.char32At(i);
             if (!u_isUWhiteSpace(c)) {
                 return false;
@@ -227,8 +229,8 @@ namespace psychic_ui {
         }
         // The segment the character at the index starts or is in (the last one at the end)
         auto at = static_cast<int32_t>(std::min(index, length() - 1));
-        int32_t begin = iterator.isBoundary(at) ? at : iterator.preceding(at);
-        int32_t end   = iterator.following(begin);
+        const int32_t begin = iterator.isBoundary(at) ? at : iterator.preceding(at);
+        const int32_t end   = iterator.following(begin);
         return {
             begin == icu::BreakIterator::DONE ? 0 : static_cast<unsigned int>(begin),
             end == icu::BreakIterator::DONE ? length() : static_cast<unsigned int>(end)

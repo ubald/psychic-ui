@@ -102,7 +102,7 @@ TEST_CASE("colors", "[style][values]") {
     }
 
     SECTION("psychic-color colors convert, opaque") {
-        psychic_color::HSB hsb{0x0C83EB};
+        const psychic_color::HSB hsb{0x0C83EB};
         REQUIRE(Color{hsb}.argb() == (0xFF000000u | hsb.getColor()));
         REQUIRE(Color{hsb}.withAlpha(0x40).argb() == hsb.getColorAlpha(0x40));
     }

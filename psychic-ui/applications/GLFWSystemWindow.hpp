@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <memory>
 #include "../SystemWindow.hpp"
 
@@ -39,6 +40,10 @@ namespace psychic_ui {
     public:
         GLFWSystemWindow(std::shared_ptr<Window> window, GLFWwindow *glfwWindow);
         ~GLFWSystemWindow() override;
+        GLFWSystemWindow(const GLFWSystemWindow &) = delete;
+        GLFWSystemWindow &operator=(const GLFWSystemWindow &) = delete;
+        GLFWSystemWindow(GLFWSystemWindow &&) = delete;
+        GLFWSystemWindow &operator=(GLFWSystemWindow &&) = delete;
 
         GLFWwindow *glfwWindow() const;
 
@@ -47,7 +52,7 @@ namespace psychic_ui {
          * GLFW window as to be closed and returns false.
          */
         bool render() override;
-        void *glProcAddress(const char *name) const override;
+        GLProc glProcAddress(const char *name) const override;
 
         void setTitle(const std::string &title) override;
         void setFullscreen(bool fullscreen) override;
@@ -84,7 +89,7 @@ namespace psychic_ui {
         /**
          * System cursors, indexed by `Cursor`
          */
-        GLFWcursor *_cursors[6]{};
+        std::array<GLFWcursor *, 6> _cursors{};
 
         /**
          * Where the window was grabbed, in window coordinates, while dragging it

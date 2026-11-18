@@ -65,11 +65,11 @@ namespace psychic_ui {
             Div::draw(canvas);
             constexpr float size  = 20.0f;
             const float     inset = (_rect.height() - size) / 2.0f;
-            const float     x     = _rect.left() + inset + _position.value() * (_rect.width() - size - 2.0f * inset);
+            const float     x     = _rect.left() + inset + (_position.value() * (_rect.width() - size - 2.0f * inset));
             SkPaint paint;
             paint.setAntiAlias(true);
             paint.setColor(_computedStyle.color().argb());
-            canvas->drawCircle(x + size / 2.0f, _rect.centerY(), size / 2.0f, paint);
+            canvas->drawCircle(x + (size / 2.0f), _rect.centerY(), size / 2.0f, paint);
         }
     };
 
@@ -110,7 +110,7 @@ namespace psychic_ui {
             // Room for an overshoot above and an undershoot below
             const SkRect plot = _rect.makeInset(10.0f, _rect.height() * 0.2f);
             const auto   at   = [&plot](float t, float v) {
-                return SkPoint{plot.left() + t * plot.width(), plot.bottom() - v * plot.height()};
+                return SkPoint{plot.left() + (t * plot.width()), plot.bottom() - (v * plot.height())};
             };
 
             SkPaint line;
@@ -164,14 +164,14 @@ namespace psychic_ui {
         void showTokens();
     };
 
-    Div &MotionPanel::group(const std::string &title, const std::string &caption) {
+    inline Div &MotionPanel::group(const std::string &title, const std::string &caption) {
         auto &group = add<VBox>().addClassName("group");
         group.add<Label>(title).addClassName("h4");
         group.add<Label>(caption).addClassName("text-tertiary");
         return group;
     }
 
-    MotionPanel::MotionPanel() : Div() {
+    inline MotionPanel::MotionPanel() : Div() {
         tag("Motion")
             .classNames({"demo-panel"});
 
@@ -281,12 +281,12 @@ namespace psychic_ui {
         // endregion
     }
 
-    void MotionPanel::addedToRender() {
+    inline void MotionPanel::addedToRender() {
         Div::addedToRender();
         _reduced->checked(window()->reducedMotion());
     }
 
-    void MotionPanel::styleUpdated() {
+    inline void MotionPanel::styleUpdated() {
         Div::styleUpdated();
         // The tokens of the theme in use, again when it changes
         if (const Theme &theme = styleManager()->theme(); theme.name != _theme) {
@@ -295,7 +295,7 @@ namespace psychic_ui {
         }
     }
 
-    void MotionPanel::showTokens() {
+    inline void MotionPanel::showTokens() {
         const auto &motion = styleManager()->theme().metrics.motion;
         const auto    ease   = [](const Ease &e) { return std::format("cubic-bezier({}, {}, {}, {})", e.x1, e.y1, e.x2, e.y2); };
         _tokens->text(std::format(
@@ -305,7 +305,7 @@ namespace psychic_ui {
         ));
     }
 
-    void MotionPanel::play() {
+    inline void MotionPanel::play() {
         _on = !_on;
         for (Div *puck: _pucks) {
             puck->left(_on ? 100_pct : 0_pct);

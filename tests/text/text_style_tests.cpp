@@ -37,8 +37,9 @@ namespace {
             window->render(surface->getCanvas());
         }
 
-        SkColor at(const Div &div, int x, int y) {
-            int gx = 0, gy = 0;
+        SkColor at(const Div &div, int x, int y) const {
+            int gx = 0;
+            int gy = 0;
             div.localToGlobal(gx, gy, x, y);
             SkPixmap pixmap;
             REQUIRE(surface->peekPixels(&pixmap));
@@ -92,7 +93,7 @@ TEST_CASE("The caret is painted in caretColor, else in the text's color", "[text
         .top(20)
         .width(100);
     s.render();
-    const int middle = static_cast<int>(text.getHeight() / 2.0f);
+    const int middle = text.getHeight() / 2;
     CHECK(s.at(text, 0, middle) == SkColorSetRGB(0x00, 0x00, 0xFF));
 
     text.caretColor(rgb(0xFF0000));
@@ -109,7 +110,7 @@ TEST_CASE("A hovered button's label blends its color without building a paragrap
     const Label *label = nullptr;
     std::function<void(const Div &)> find = [&](const Div &div) {
         for (const auto &child: div.children()) {
-            if (auto *l = dynamic_cast<const Label *>(child.get()); l && l->classNames().contains("label")) {
+            if (const auto *l = dynamic_cast<const Label *>(child.get()); l && l->classNames().contains("label")) {
                 label = l;
             }
             find(*child);
@@ -121,8 +122,9 @@ TEST_CASE("A hovered button's label blends its color without building a paragrap
 
     const auto built = TextLayout::paragraphsBuilt();
     window->updateAnimations(1000ms);
-    int x = 0, y = 0;
-    button.localToGlobal(x, y, static_cast<int>(button.getWidth() / 2.0f), static_cast<int>(button.getHeight() / 2.0f));
+    int x = 0;
+    int y = 0;
+    button.localToGlobal(x, y, button.getWidth() / 2, button.getHeight() / 2);
     window->handleMouseMove({.x = static_cast<float>(x), .y = static_cast<float>(y)}, false);
     system.layout();
     std::vector<Color> colors{};

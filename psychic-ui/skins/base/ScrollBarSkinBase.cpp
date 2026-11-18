@@ -17,11 +17,11 @@ namespace psychic_ui {
     }
 
     SkRect ScrollBarSkinBase::trackRect() const {
-        return SkRect::MakeXYWH(_track->x(), _track->y(), _track->getWidth(), _track->getHeight());
+        return SkRect::Make(SkIRect::MakeXYWH(_track->x(), _track->y(), _track->getWidth(), _track->getHeight()));
     }
 
     SkRect ScrollBarSkinBase::thumbRect() const {
-        return SkRect::MakeXYWH(_thumb->x(), _thumb->y(), _thumb->getWidth(), _thumb->getHeight());
+        return SkRect::Make(SkIRect::MakeXYWH(_thumb->x(), _thumb->y(), _thumb->getWidth(), _thumb->getHeight()));
     }
 
     void ScrollBarSkinBase::added() {
@@ -53,7 +53,11 @@ namespace psychic_ui {
 
     void ScrollBarSkinBase::updateScrollBar(bool enabled, float scrollPosition, float contentRatio) {
         this->enabled(enabled);
-        if (component()->scrollDirection() == ScrollDirection::Vertical) {
+        const ScrollBar *bar = component();
+        if (!bar) {
+            return;
+        }
+        if (bar->scrollDirection() == ScrollDirection::Vertical) {
             _thumb->top((int) (scrollPosition * (float) (_track->getHeight() - _thumb->getHeight())))
                   .height(Length::percent(contentRatio * 100.0f));
         } else {

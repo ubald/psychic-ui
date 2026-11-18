@@ -17,7 +17,7 @@ namespace psychic_ui {
         IconsPanel();
     };
 
-    IconsPanel::IconsPanel() : Div() {
+    inline IconsPanel::IconsPanel() : Div() {
         tag("Icons")
             .classNames({"demo-panel"})
             .direction(Direction::Row)
@@ -35,9 +35,9 @@ namespace psychic_ui {
 
         // Inter, from Pivotal's extra-small to medium text
         auto &samples = scroller.add<Div>().addClassName("inter-samples");
-        for (auto family: {"Inter", "Inter Medium"}) {
+        for (const auto *family: {"Inter", "Inter Medium"}) {
             auto &column = samples.add<Div>().addClassName("column");
-            for (float size: {11.0f, 12.0f, 13.0f, 14.0f}) {
+            for (const float size: {11.0f, 12.0f, 13.0f, 14.0f}) {
                 column.add<Label>(std::string{family} + " " + std::to_string(static_cast<int>(size)) + " px: The quick brown fox jumps over the lazy dog 0123456789")
                        .fontFamily(family)
                        .fontSize(size);

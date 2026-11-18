@@ -186,9 +186,9 @@ namespace psychic_ui::showcase {
             .build = [](Window &window) { fixtureGrid(window); },
             .motion = {
                 .beats = {
-                    {300, [](Stage &stage) { static_cast<DataGrid &>(find(stage.window(), "grid")).sort(2, SortOrder::Descending); }},
-                    {1500, [](Stage &stage) { static_cast<DataGrid &>(find(stage.window(), "grid")).sort(0, SortOrder::Ascending); }},
-                    {2700, [](Stage &stage) { static_cast<DataGrid &>(find(stage.window(), "grid")).sort(0, SortOrder::None); }},
+                    {300, [](Stage &stage) { find<DataGrid>(stage.window(), "grid").sort(2, SortOrder::Descending); }},
+                    {1500, [](Stage &stage) { find<DataGrid>(stage.window(), "grid").sort(0, SortOrder::Ascending); }},
+                    {2700, [](Stage &stage) { find<DataGrid>(stage.window(), "grid").sort(0, SortOrder::None); }},
                 },
                 .duration = 3900,
                 .step = 20,

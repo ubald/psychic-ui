@@ -101,7 +101,7 @@ TEST_CASE("A div clicked through dispatch removes itself", "[signals][lifetime]"
         root.removeAll(); // Destroys the dispatching div and its parent
         REQUIRE(raw->clicked.subscriptionCount() == 1); // Still alive while dispatching
     });
-    std::weak_ptr<Div> weakItem = item.weak_from_this();
+    const std::weak_ptr<Div> weakItem = item.weak_from_this();
     window->clickAt(50, 50);
     REQUIRE(clicked == 1);
     REQUIRE(root.childCount() == 0);
@@ -138,7 +138,8 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
     REQUIRE(file != nullptr);
 
     SECTION("clicking an item closes the menu that holds it") {
-        int x = 0, y = 0;
+        int x = 0;
+        int y = 0;
         HeadlessWindow::center(file, x, y);
         window->clickAt(x, y);
         auto item = findButton(window->overlay(), "New");
@@ -146,7 +147,7 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
         REQUIRE(std::static_pointer_cast<Button>(file)->selected());
 
         HeadlessWindow::center(item, x, y);
-        std::weak_ptr<Div> weakItem = item;
+        const std::weak_ptr<Div> weakItem = item;
         item.reset();
         window->clickAt(x, y);
         REQUIRE(newClicked == 1);
@@ -161,7 +162,8 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
     }
 
     SECTION("an item's own onClick emitted directly") {
-        int x = 0, y = 0;
+        int x = 0;
+        int y = 0;
         HeadlessWindow::center(file, x, y);
         window->clickAt(x, y);
         auto item = findButton(window->overlay(), "New");
@@ -173,7 +175,8 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
     }
 
     SECTION("hovering a submenu then closing frees its buttons") {
-        int x = 0, y = 0;
+        int x = 0;
+        int y = 0;
         HeadlessWindow::center(file, x, y);
         window->clickAt(x, y);
         auto recent = findButton(window->overlay(), "Recent");
@@ -182,7 +185,7 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
         window->handleMouseMove({.x = static_cast<float>(x), .y = static_cast<float>(y)}, false);
         window->layout();
         REQUIRE(findButton(window->overlay(), "Nothing") != nullptr);
-        std::weak_ptr<Div> weakRecent = recent;
+        const std::weak_ptr<Div> weakRecent = recent;
         recent.reset();
         window->closeMenu();
         REQUIRE(weakRecent.expired());

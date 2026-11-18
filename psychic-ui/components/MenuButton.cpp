@@ -39,10 +39,10 @@ namespace psychic_ui {
     }
 
     bool MenuButton::checked() const {
-        if (auto check = dynamic_cast<const CheckMenuItem *>(_menuItem)) {
+        if (const auto *check = dynamic_cast<const CheckMenuItem *>(_menuItem)) {
             return check->checked;
         }
-        if (auto radio = dynamic_cast<const RadioMenuItem *>(_menuItem)) {
+        if (const auto *radio = dynamic_cast<const RadioMenuItem *>(_menuItem)) {
             return radio->checked();
         }
         return false;

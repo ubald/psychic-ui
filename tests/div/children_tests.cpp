@@ -30,7 +30,7 @@ namespace {
         REQUIRE(YGNodeGetChildCount(parent._yogaNode) == parent.childCount());
         std::string names;
         for (unsigned int i = 0; i < parent.childCount(); ++i) {
-            auto child = dynamic_cast<TestDiv *>(parent.at(i));
+            auto *child = dynamic_cast<TestDiv *>(parent.at(i));
             REQUIRE(child != nullptr);
             REQUIRE(YGNodeGetChild(parent._yogaNode, i) == child->_yogaNode);
             REQUIRE(parent.childIndex(child) == (int) i);
@@ -121,7 +121,7 @@ TEST_CASE("children are kept in document order, matching yoga", "[div][children]
         parent->removeAll();
         REQUIRE(parent->childCount() == 0);
         REQUIRE(YGNodeGetChildCount(parent->_yogaNode) == 0);
-        for (auto &child: {a, b, c}) {
+        for (const auto &child: {a, b, c}) {
             REQUIRE(child->parent() == nullptr);
             REQUIRE(YGNodeGetOwner(child->_yogaNode) == nullptr);
         }
@@ -213,7 +213,7 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
     layout();
 
     SECTION("the last child added is hit") {
-        REQUIRE(root->handleMouseButtonChange({.x = 50, .y = 50, .button = LEFT, .down = true}) == Handled);
+        REQUIRE(root->handleMouseButtonChange({.x = 50, .y = 50, .button = MouseButton::LEFT, .down = true}) == MouseEventStatus::Handled);
         REQUIRE(hits == "c");
     }
 
@@ -223,13 +223,13 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
         d->position(Position::Absolute).width(100).height(100);
         d->mouseButtonChanged.subscribe([&hits]() { hits += "d"; });
         layout();
-        root->handleMouseButtonChange({.x = 50, .y = 50, .button = LEFT, .down = true});
+        root->handleMouseButtonChange({.x = 50, .y = 50, .button = MouseButton::LEFT, .down = true});
         REQUIRE(hits == "c");
         root->remove(children[2]);
         root->remove(children[1]);
         root->remove(children[0]);
         layout();
-        root->handleMouseButtonChange({.x = 50, .y = 50, .button = LEFT, .down = true});
+        root->handleMouseButtonChange({.x = 50, .y = 50, .button = MouseButton::LEFT, .down = true});
         REQUIRE(hits == "cd");
     }
 

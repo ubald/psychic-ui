@@ -137,7 +137,7 @@ namespace psychic_ui {
         static std::string keyOf(std::string_view name);
     };
 
-    DemoWindow::DemoWindow() :
+    inline DemoWindow::DemoWindow() :
         Window("Psychic UI") {
         _decorated = false;
 
@@ -185,10 +185,13 @@ namespace psychic_ui {
         auto &assets   = sidebar.section("Assets");
         assets.grow(1); // Pushes the last section to the bottom
         for (Page &p: _pages) {
-            SidebarSection &section = p.name == "Divs" || p.name == "Scroller" || p.name == "Canvas" || p.name == "Motion" || p.name == "Typography"
-                                      ? layout
-                                      : p.name == "Colors" || p.name == "Icons" ? assets : controls;
-            p.item = &section.item(p.name, p.icon);
+            SidebarSection *section = &controls;
+            if (p.name == "Divs" || p.name == "Scroller" || p.name == "Canvas" || p.name == "Motion" || p.name == "Typography") {
+                section = &layout;
+            } else if (p.name == "Colors" || p.name == "Icons") {
+                section = &assets;
+            }
+            p.item = &section->item(p.name, p.icon);
             if (p.name == "Icons") {
                 p.item->count(std::to_string(IconRegistry::shared().names().size()));
             }
@@ -216,7 +219,7 @@ namespace psychic_ui {
 
         Div &panel = _shell->page();
 
-        std::vector<std::shared_ptr<MenuItem>> menus{
+        const std::vector<std::shared_ptr<MenuItem>> menus{
             Menu::item(
                 "File", {
                     Menu::item("New", []() {}, "Ctrl+N", "plus"),
@@ -292,7 +295,7 @@ namespace psychic_ui {
         showPage("Buttons");
     }
 
-    void DemoWindow::show(const Page &page) {
+    inline void DemoWindow::show(const Page &page) {
         if (_panel) {
             _content->remove(_panel);
         }
@@ -305,17 +308,16 @@ namespace psychic_ui {
                 .icon(page.icon);
     }
 
-    bool DemoWindow::showPage(const std::string &name) {
-        for (Page &p: _pages) {
-            if (p.name == name || keyOf(p.name) == name) {
-                _shell->sidebar().select(p.item);
-                return true;
-            }
+    inline bool DemoWindow::showPage(const std::string &name) {
+        const auto page = std::ranges::find_if(_pages, [&name](const Page &p) { return p.name == name || keyOf(p.name) == name; });
+        if (page == _pages.end()) {
+            return false;
         }
-        return false;
+        _shell->sidebar().select(page->item);
+        return true;
     }
 
-    std::string DemoWindow::keyOf(std::string_view name) {
+    inline std::string DemoWindow::keyOf(std::string_view name) {
         std::string key{name};
         for (char &c: key) {
             c = c == ' ' ? '-' : static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
@@ -323,18 +325,17 @@ namespace psychic_ui {
         return key;
     }
 
-    bool DemoWindow::useSkinSet(const std::string &key) {
-        for (const NamedSkinSet &set: _skinSets) {
-            if (set.key == key) {
-                skinSet(set.make()); // The library settles the theme (see Window::skinSet)
-                themesChanged();
-                return true;
-            }
+    inline bool DemoWindow::useSkinSet(const std::string &key) {
+        const auto set = std::ranges::find_if(_skinSets, [&key](const NamedSkinSet &named) { return named.key == key; });
+        if (set == _skinSets.end()) {
+            return false;
         }
-        return false;
+        skinSet(set->make()); // The library settles the theme (see Window::skinSet)
+        themesChanged();
+        return true;
     }
 
-    bool DemoWindow::useTheme(const std::string &key) {
+    inline bool DemoWindow::useTheme(const std::string &key) {
         if (key == "system") {
             followSystemTheme();
             themesChanged();
@@ -347,17 +348,16 @@ namespace psychic_ui {
                 candidates.push_back(other);
             }
         }
-        for (const Theme *candidate: candidates) {
-            if (keyOf(candidate->name) == key || candidate->name == key) {
-                theme(*candidate);
-                themesChanged();
-                return true;
-            }
+        const auto candidate = std::ranges::find_if(candidates, [&key](const Theme *t) { return keyOf(t->name) == key || t->name == key; });
+        if (candidate == candidates.end()) {
+            return false;
         }
-        return false;
+        theme(**candidate);
+        themesChanged();
+        return true;
     }
 
-    void DemoWindow::themesChanged() {
+    inline void DemoWindow::themesChanged() {
         // The current set's themes, after System
         MenuItems items{Menu::radio(_themeChoice, "System", "system", "", "monitor"), Menu::separator()};
         for (const Theme *own: styleManager()->skinSet()->themes()) {
@@ -378,19 +378,19 @@ namespace psychic_ui {
         _themeItem->count(followsSystemTheme() ? "System" : std::string{theme().name});
     }
 
-    void DemoWindow::openThemeMenu() {
+    inline void DemoWindow::openThemeMenu() {
         // Beside the item, its bottom level with the item's
         openMenu(_themeMenu->items, *_themeItem, Side::Right, PopupAlign::End).sideOffset(8);
     }
 
-    bool DemoWindow::openPopup(const std::string &name) {
+    inline bool DemoWindow::openPopup(const std::string &name) {
         showPage("Popups");
         updateStylesAndLayout(); // The page's anchors are laid out first
         auto popups = std::dynamic_pointer_cast<Popups>(_panel);
         return popups && popups->openPopup(name);
     }
 
-    bool DemoWindow::pressKeys(const std::string &keys) {
+    inline bool DemoWindow::pressKeys(const std::string &keys) {
         static const std::vector<std::pair<std::string, Key>> names{
             {"tab", Key::TAB}, {"up", Key::UP}, {"down", Key::DOWN}, {"left", Key::LEFT}, {"right", Key::RIGHT},
             {"home", Key::HOME}, {"end", Key::END}, {"space", Key::SPACE}, {"enter", Key::ENTER}, {"escape", Key::ESCAPE},
@@ -408,7 +408,7 @@ namespace psychic_ui {
                 mod.shift = true;
                 name      = name.substr(6);
             }
-            const auto found = std::find_if(names.begin(), names.end(), [&](const auto &n) { return n.first == name; });
+            const auto found = std::ranges::find_if(names, [&](const auto &n) { return n.first == name; });
             if (found == names.end()) {
                 return false;
             }
@@ -420,13 +420,14 @@ namespace psychic_ui {
         return true;
     }
 
-    void DemoWindow::scrollPage(const int pixels) {
+    inline void DemoWindow::scrollPage(const int pixels) {
         updateStylesAndLayout();
         std::function<Div *(Div &)> scroller = [&](Div &div) -> Div * {
             if (div.computedStyle().overflow() == Overflow::Scroll) {
                 return &div;
             }
             for (const auto &child: div.children()) {
+                // NOLINTNEXTLINE(misc-const-correctness): returned as a mutable pointer, which the check misses
                 if (Div *found = scroller(*child)) {
                     return found;
                 }
@@ -438,22 +439,22 @@ namespace psychic_ui {
         }
     }
 
-    void DemoWindow::forceInputMode(const std::optional<InputMode> mode) {
+    inline void DemoWindow::forceInputMode(const std::optional<InputMode> mode) {
         _forcedInputMode = mode;
         if (mode) {
             Window::handleInputModeChange(*mode);
         }
     }
 
-    void DemoWindow::handleInputModeChange(const InputMode mode) {
+    inline void DemoWindow::handleInputModeChange(const InputMode mode) {
         Window::handleInputModeChange(_forcedInputMode.value_or(mode));
     }
 
-    void DemoWindow::showFps(const bool show) {
+    inline void DemoWindow::showFps(const bool show) {
         fpsLabel->visible(show);
     }
 
-    void DemoWindow::render(SkCanvas *canvas) {
+    inline void DemoWindow::render(SkCanvas *canvas) {
         if (fpsLabel->visible()) {
             std::stringstream stream;
             stream << std::fixed << std::setprecision(3) << fps;

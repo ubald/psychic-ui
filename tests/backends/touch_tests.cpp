@@ -10,7 +10,7 @@ using namespace psychic_ui_tests;
 
 TEST_CASE("The window starts in pointer mode and reports changes once", "[backend][touch]") {
     auto window = std::make_shared<TestWindow>();
-    FakeSystemWindow systemWindow(window);
+    const FakeSystemWindow systemWindow(window);
     CHECK(window->inputMode() == InputMode::Pointer);
 
     std::vector<InputMode> modes{};
@@ -115,7 +115,7 @@ namespace {
             window->handleTouchPress(50.0f, 90.0f, time);
             for (int i = 1; i <= 6; ++i) {
                 time += 10ms;
-                window->handleTouchMove(50.0f, 90.0f - 10.0f * static_cast<float>(i), time);
+                window->handleTouchMove(50.0f, 90.0f - (10.0f * static_cast<float>(i)), time);
             }
             window->handleTouchRelease(50.0f, 30.0f, time);
         }
@@ -142,7 +142,7 @@ TEST_CASE("Touch: a tap clicks once where the finger landed", "[backend][touch]"
 }
 
 TEST_CASE("Touch: a drag starts past the slop, from where the finger landed", "[backend][touch]") {
-    TouchFixture f;
+    const TouchFixture f;
     f.window->handleTouchPress(20.0f, 20.0f, 1s);
     f.window->handleTouchMove(25.0f, 20.0f, 1s + 10ms);
     CHECK(f.presses == 0);
@@ -182,7 +182,7 @@ TEST_CASE("Touch: a long press is also noticed when the finger lifts", "[backend
 }
 
 TEST_CASE("Touch: a cancelled drag releases without clicking", "[backend][touch]") {
-    TouchFixture f;
+    const TouchFixture f;
     f.window->handleTouchPress(20.0f, 20.0f, 1s);
     f.window->handleTouchMove(40.0f, 20.0f, 1s + 10ms);
     f.window->handleTouchMove(30.0f, 20.0f, 1s + 20ms);
@@ -258,7 +258,7 @@ TEST_CASE("Touch: kinetic scrolling stops at the end of the content", "[backend]
 }
 
 TEST_CASE("Touch: a pan that rests before lifting doesn't fling", "[backend][touch][scroll]") {
-    ScrollFixture f;
+    const ScrollFixture f;
     f.window->handleTouchPress(50.0f, 90.0f, 1s);
     f.window->handleTouchMove(50.0f, 60.0f, 1s + 30ms);
     f.window->handleTouchRelease(50.0f, 60.0f, 1s + 300ms);
@@ -267,7 +267,7 @@ TEST_CASE("Touch: a pan that rests before lifting doesn't fling", "[backend][tou
 }
 
 TEST_CASE("Touch: a drag across a vertical scroller drags what is under the finger", "[backend][touch][scroll]") {
-    ScrollFixture f;
+    const ScrollFixture f;
     f.window->handleTouchPress(50.0f, 50.0f, 1s);
     f.window->handleTouchMove(80.0f, 52.0f, 1s + 20ms); // Mostly horizontal: nothing scrolls that way
     CHECK(f.contentPresses == 1);
@@ -349,7 +349,7 @@ TEST_CASE("Hit slop: what takes presses keeps them", "[backend][touch][hitslop]"
 }
 
 TEST_CASE("Hit slop: a release away from the slop doesn't click", "[backend][touch][hitslop]") {
-    SlopFixture f;
+    const SlopFixture f;
     f.window->handleMouseButtonChange({.x = static_cast<float>(f.aLeft - 6), .y = static_cast<float>(f.aTop + 12), .button = MouseButton::LEFT, .down = true});
     f.window->handleMouseButtonChange({.x = static_cast<float>(f.aLeft - 60), .y = static_cast<float>(f.aTop + 12), .button = MouseButton::LEFT, .down = false});
     CHECK(f.aClicks == 0);
@@ -358,7 +358,7 @@ TEST_CASE("Hit slop: a release away from the slop doesn't click", "[backend][tou
 
 TEST_CASE("Hit slop: a tap near a div clicks it", "[backend][touch][hitslop]") {
     using namespace std::chrono_literals;
-    SlopFixture f;
+    const SlopFixture f;
     f.window->handleTouchPress(static_cast<float>(f.aLeft + 30), static_cast<float>(f.aTop - 5), 1s);
     f.window->handleTouchRelease(static_cast<float>(f.aLeft + 30), static_cast<float>(f.aTop - 5), 1s + 50ms);
     CHECK(f.bClicks == 1);

@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -121,8 +122,11 @@ namespace psychic_ui {
         std::optional<std::chrono::nanoseconds> nextUpdate() const override;
 
     protected:
-        bool _paused{false}; // The mouse was over the stack at the last update
+        std::vector<std::shared_ptr<Toast>> _toasts{}; // Its children, typed (`childAdded`), oldest first, those leaving too
+        bool                                _paused{false}; // The mouse was over the stack at the last update
 
         void update(std::chrono::nanoseconds now) override;
+        void childAdded(Div &child) override;
+        void childRemoved(Div &child) override;
     };
 }

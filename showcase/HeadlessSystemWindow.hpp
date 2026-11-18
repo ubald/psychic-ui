@@ -12,6 +12,10 @@ namespace psychic_ui::showcase {
     class HeadlessSystemWindow : public SystemWindow {
     public:
         HeadlessSystemWindow(std::shared_ptr<Window> window, int width, int height, float pixelRatio);
+        HeadlessSystemWindow(const HeadlessSystemWindow &) = delete;
+        HeadlessSystemWindow &operator=(const HeadlessSystemWindow &) = delete;
+        HeadlessSystemWindow(HeadlessSystemWindow &&) = delete;
+        HeadlessSystemWindow &operator=(HeadlessSystemWindow &&) = delete;
         ~HeadlessSystemWindow() override;
 
         /**
@@ -21,7 +25,7 @@ namespace psychic_ui::showcase {
         std::chrono::nanoseconds gestureTime() const override { return _now; }
 
         bool render() override { return false; } // Captures draw the window themselves, into their own canvas
-        void *glProcAddress(const char * /*name*/) const override { return nullptr; }
+        GLProc glProcAddress(const char * /*name*/) const override { return nullptr; }
 
         void setTitle(const std::string & /*title*/) override {}
         void setFullscreen(bool /*fullscreen*/) override {}

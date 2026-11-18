@@ -3,14 +3,13 @@
 
 namespace psychic_ui {
 
-    Button::Button(const std::string &label, ClickCallback onClickCallback) :
-        Component() {
+    Button::Button(std::string label, ClickCallback onClickCallback) :
+        Component(),
+        _label(std::move(label)) {
         tag("Button");
 
         _mouseChildren = false; // !important
         _focusEnabled  = true;  // Tab reaches it; Space or Enter clicks it
-
-        _label = label;
 
         keyPressed.subscribe(
             [this](const Key key, const Mod /*modifiers*/) {

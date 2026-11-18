@@ -42,7 +42,7 @@ namespace psychic_ui {
      */
     class Switch : public Component<SwitchSkin> {
     public:
-        explicit Switch(const std::string &label = "", std::function<void(bool)> onChangeCallback = nullptr);
+        explicit Switch(std::string label = "", std::function<void(bool)> onChangeCallback = nullptr);
 
         explicit Switch(std::function<void(bool)> onChangeCallback) : Switch("", std::move(onChangeCallback)) {}
 

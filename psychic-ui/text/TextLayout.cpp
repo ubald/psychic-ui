@@ -25,7 +25,13 @@ namespace psychic_ui {
             }
         }
 
-        std::size_t built = 0; // Paragraphs built, by every TextLayout
+        /**
+         * The paragraphs every TextLayout has built
+         */
+        std::size_t &built() {
+            static std::size_t count = 0;
+            return count;
+        }
 
         /**
          * Paints a paragraph in one color, whatever the color it was built with: SkParagraph keeps the
@@ -77,7 +83,7 @@ namespace psychic_ui {
         };
 
         sk_sp<SkUnicode> unicode() {
-            static sk_sp<SkUnicode> unicode = SkUnicodes::ICU::Make();
+            static const sk_sp<SkUnicode> unicode = SkUnicodes::ICU::Make();
             return unicode;
         }
 
@@ -103,11 +109,11 @@ namespace psychic_ui {
     TextLayout::TextLayout() = default;
 
     std::size_t TextLayout::paragraphsBuilt() {
-        return built;
+        return built();
     }
 
     void TextLayout::setText(const icu::UnicodeString &text) {
-        _text.assign(reinterpret_cast<const char16_t *>(text.getBuffer()), static_cast<size_t>(text.length()));
+        _text.assign(text.getBuffer(), static_cast<size_t>(text.length()));
         changed();
     }
 
@@ -138,10 +144,10 @@ namespace psychic_ui {
     }
 
     std::unique_ptr<tl::Paragraph> TextLayout::build() const {
-        ++built;
+        ++built();
         // Line heights are multiples of the font size; every line gets exactly the line height
-        float height = _style.fontSize > 0.0f ? _style.lineHeight / _style.fontSize : 1.0f;
-        std::vector<SkString> families{SkString(_style.fontFamily.c_str())};
+        const float height = _style.fontSize > 0.0f ? _style.lineHeight / _style.fontSize : 1.0f;
+        const std::vector<SkString> families{SkString(_style.fontFamily.c_str())};
 
         tl::TextStyle textStyle{};
         textStyle.setColor(SK_ColorBLACK); // Painted in the color given to `paint`
@@ -300,16 +306,14 @@ namespace psychic_ui {
 
     const tl::LineMetrics &TextLayout::lineAt(unsigned int index) const {
         // The last line starting at or before the index
-        auto line = std::upper_bound(_lines.begin(), _lines.end(), index, [](unsigned int i, const tl::LineMetrics &l) {
-            return i < l.fStartIndex;
-        });
+        auto line = std::ranges::upper_bound(_lines, std::size_t{index}, std::ranges::less{}, &tl::LineMetrics::fStartIndex);
         return line == _lines.begin() ? _lines.front() : *std::prev(line);
     }
 
     SkRect TextLayout::caretRect(unsigned int index) {
         auto                  *paragraph = laidOut();
         const tl::LineMetrics &line      = lineAt(index);
-        float                  x         = static_cast<float>(line.fLeft);
+        auto                   x         = static_cast<float>(line.fLeft);
         if (index > line.fStartIndex) {
             // After the grapheme before the caret
             tl::Paragraph::GlyphInfo glyph{};

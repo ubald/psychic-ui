@@ -37,7 +37,7 @@ namespace psychic_ui {
         // A spring settles within a thousandth of its way, or of a pixel or a color step
         float span = 0.0f;
         for (std::size_t i = 0; i < _count; ++i) {
-            span = std::max(span, std::abs(_target[i] - _from[i]));
+            span = std::max(span, std::abs(_target.at(i) - _from.at(i)));
         }
         _tolerance = std::max(span * 1e-3f, 1e-4f);
     }
@@ -57,9 +57,9 @@ namespace psychic_ui {
         }
         bool done = true;
         for (std::size_t i = 0; i < _count; ++i) {
-            const Approach approach = _timing.approach(_from[i] - _target[i], _initialVelocity[i], elapsed, _tolerance);
-            _value[i]    = _target[i] + approach.offset;
-            _velocity[i] = approach.velocity;
+            const Approach approach = _timing.approach(_from.at(i) - _target.at(i), _initialVelocity.at(i), elapsed, _tolerance);
+            _value.at(i)    = _target.at(i) + approach.offset;
+            _velocity.at(i) = approach.velocity;
             done         = done && approach.settled;
         }
 

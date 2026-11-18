@@ -8,8 +8,9 @@ namespace psychic_ui {
 
     // region Row
 
-    TreeRow::TreeRow() :
-        SelectableRow() {
+    TreeRow::TreeRow(TreeNode &node) :
+        SelectableRow(),
+        _node(&node) {
         tag("TreeRow");
 
         _indent = &add<Div>();
@@ -20,8 +21,8 @@ namespace psychic_ui {
                    .shrink(0);
         _disclosure->onClick(
             [this]() {
-                if (TreeNode *n = node(); n && n->hasChildren()) {
-                    n->toggle();
+                if (_node->hasChildren()) {
+                    _node->toggle();
                 }
             }
         );
@@ -39,15 +40,11 @@ namespace psychic_ui {
 
         doubleClicked.subscribe(
             [this]() {
-                if (TreeNode *n = node(); n && n->hasChildren()) {
-                    n->toggle();
+                if (_node->hasChildren()) {
+                    _node->toggle();
                 }
             }
         );
-    }
-
-    TreeNode *TreeRow::node() const {
-        return dynamic_cast<TreeNode *>(const_cast<Div *>(parent()));
     }
 
     // endregion
@@ -59,7 +56,7 @@ namespace psychic_ui {
         tag("TreeNode");
         _defaultStyle.direction(Direction::Column)
             .shrink(0);
-        _row = &add<TreeRow>();
+        _row = &add<TreeRow>(*this);
         _children = &add<Div>();
         _children->addClassName("children")
                  .direction(Direction::Column)
@@ -89,16 +86,16 @@ namespace psychic_ui {
         return !_children->children().empty();
     }
 
-    TreeNode *TreeNode::parentNode() const {
+    TreeNode *TreeNode::parentNode() {
         // In its parent node's `.children`
-        const Div *container = parent();
-        return container ? dynamic_cast<TreeNode *>(const_cast<Div *>(container->parent())) : nullptr;
+        Div *container = parent();
+        return container ? dynamic_cast<TreeNode *>(container->parent()) : nullptr;
     }
 
-    Tree *TreeNode::tree() const {
-        for (const Div *div = parent(); div; div = div->parent()) {
-            if (auto t = dynamic_cast<const Tree *>(div)) {
-                return const_cast<Tree *>(t);
+    Tree *TreeNode::tree() {
+        for (Div *div = parent(); div; div = div->parent()) {
+            if (auto *t = dynamic_cast<Tree *>(div)) {
+                return t;
             }
         }
         return nullptr;
@@ -145,7 +142,11 @@ namespace psychic_ui {
     }
 
     void TreeNode::updateDisclosure() {
-        _row->_disclosure->name(!hasChildren() ? "" : _expanded ? "chevron-down" : "disclosure");
+        std::string icon{};
+        if (hasChildren()) {
+            icon = _expanded ? "chevron-down" : "disclosure";
+        }
+        _row->_disclosure->name(icon);
     }
 
     void TreeNode::added() {
@@ -164,7 +165,7 @@ namespace psychic_ui {
     }
 
     void TreeNode::updateLevel(const float indent) {
-        if (TreeNode *parentNode = this->parentNode()) {
+        if (const TreeNode *parentNode = this->parentNode()) {
             _level = parentNode->_level + 1;
         }
         _row->_indent->width(static_cast<float>(_level) * indent);
@@ -199,7 +200,7 @@ namespace psychic_ui {
 
     namespace {
         void visibleRows(const std::vector<TreeNode *> &nodes, std::vector<SelectableRow *> &rows) {
-            for (TreeNode *node: nodes) {
+            for (const TreeNode *node: nodes) {
                 rows.push_back(&node->row());
                 if (node->expanded()) {
                     visibleRows(node->nodes(), rows);
@@ -222,8 +223,8 @@ namespace psychic_ui {
     }
 
     TreeNode *Tree::selectedNode() const {
-        auto row = dynamic_cast<TreeRow *>(_selection);
-        return row ? row->node() : nullptr;
+        auto *row = dynamic_cast<TreeRow *>(_selection);
+        return row ? &row->node() : nullptr;
     }
 
     void Tree::selectionUpdated() {
@@ -240,7 +241,7 @@ namespace psychic_ui {
     void Tree::adopt(TreeNode &node) {
         std::vector<TreeNode *> subtree{};
         allNodes(node, subtree);
-        for (TreeNode *n: subtree) {
+        for (const TreeNode *n: subtree) {
             rowAdded(n->_row);
         }
         if (!_tabStop || !_selection) {
@@ -274,8 +275,8 @@ namespace psychic_ui {
     }
 
     bool Tree::handleRowKey(SelectableRow *row, const Key key, const Mod mod) {
-        auto     treeRow = dynamic_cast<TreeRow *>(row);
-        TreeNode *node   = treeRow ? treeRow->node() : nullptr;
+        auto *     treeRow = dynamic_cast<TreeRow *>(row);
+        TreeNode *node   = treeRow ? &treeRow->node() : nullptr;
         if (node) {
             switch (key) {
                 case Key::RIGHT:
@@ -290,7 +291,7 @@ namespace psychic_ui {
                 case Key::LEFT:
                     if (node->hasChildren() && node->expanded()) {
                         node->expanded(false);
-                    } else if (TreeNode *up = node->parentNode()) {
+                    } else if (const TreeNode *up = node->parentNode()) {
                         moveTo(&up->row());
                     }
                     return true;

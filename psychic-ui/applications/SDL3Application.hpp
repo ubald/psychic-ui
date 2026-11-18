@@ -25,6 +25,8 @@ namespace psychic_ui {
 
         SDL3Application(const SDL3Application &) = delete;
         SDL3Application &operator=(const SDL3Application &) = delete;
+        SDL3Application(SDL3Application &&) = delete;
+        SDL3Application &operator=(SDL3Application &&) = delete;
 
         /**
          * Creates the window's SDL window and GL context, from the window's title, size and flags
@@ -49,6 +51,11 @@ namespace psychic_ui {
             std::unique_ptr<SDL3SystemWindow> systemWindow{};
             bool                              dirty{true}; // An event came for it (or it just opened): draw it
 
+            OwnedWindow() = default;
+            OwnedWindow(const OwnedWindow &) = delete;
+            OwnedWindow &operator=(const OwnedWindow &) = delete;
+            OwnedWindow(OwnedWindow &&) = delete;
+            OwnedWindow &operator=(OwnedWindow &&) = delete;
             ~OwnedWindow();
         };
 

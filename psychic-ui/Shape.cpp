@@ -13,7 +13,7 @@ namespace psychic_ui {
         if (_drawFunc) {
             // Allow drawing from 0,0 in callback
             canvas->save();
-            canvas->translate(_x, _y);
+            canvas->translate(static_cast<float>(_x), static_cast<float>(_y));
             _drawFunc(this, canvas);
             canvas->restore();
         }

@@ -36,6 +36,10 @@ namespace psychic_ui::showcase {
          */
         explicit Stage(std::shared_ptr<Window> window);
 
+        Stage(const Stage &) = delete;
+        Stage &operator=(const Stage &) = delete;
+        Stage(Stage &&) = delete;
+        Stage &operator=(Stage &&) = delete;
         ~Stage();
 
         Window &window() const { return *_window; }

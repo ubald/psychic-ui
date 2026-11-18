@@ -95,7 +95,7 @@ TEST_CASE("List: rows of a title, secondary text, leading and trailing parts", "
     CHECK(f.ada->computedStyle().paddingRight() == f.theme.metrics.gutter);
 
     // The parts: an avatar leads Ada, a meta and a badge trail
-    Div &lead = f.ada->leading();
+    const Div &lead = f.ada->leading();
     REQUIRE(lead.children().size() == 1);
     auto avatar = std::dynamic_pointer_cast<Avatar>(lead.children()[0]);
     REQUIRE(avatar);
@@ -606,7 +606,7 @@ TEST_CASE("Avatar: initials, sizes, a status and a tint", "[components][avatar]"
                 const double x = static_cast<double>(v & 0xFFu) / 255.0;
                 return x <= 0.04045 ? x / 12.92 : std::pow((x + 0.055) / 1.055, 2.4);
             };
-            return 0.2126 * ch(c.argb() >> 16) + 0.7152 * ch(c.argb() >> 8) + 0.0722 * ch(c.argb());
+            return (0.2126 * ch(c.argb() >> 16)) + (0.7152 * ch(c.argb() >> 8)) + (0.0722 * ch(c.argb()));
         };
         const double a = lum(hue);
         const double b = lum(text);
@@ -617,7 +617,7 @@ TEST_CASE("Avatar: initials, sizes, a status and a tint", "[components][avatar]"
 
     avatar.colorful(true);
     f.layout();
-    Div *initials = skin->children()[0].get();
+    const Div *initials = skin->children()[0].get();
     CHECK(initials->computedStyle().color() == PivotalAvatarSkin::initialsOn(tint));
     avatar.colorful(false);
     f.layout();

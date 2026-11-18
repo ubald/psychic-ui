@@ -23,11 +23,15 @@ namespace psychic_ui {
         bool        enabled{true};
         bool        danger{false}; // An action that destroys: in the danger color
 
-        explicit MenuItem(const std::string &itemLabel, const std::string &itemShortcut = "", const std::string &itemIcon = "") :
-            label(itemLabel),
-            shortcut(itemShortcut),
-            icon(itemIcon) {}
+        explicit MenuItem(std::string itemLabel, std::string itemShortcut = "", std::string itemIcon = "") :
+            label(std::move(itemLabel)),
+            shortcut(std::move(itemShortcut)),
+            icon(std::move(itemIcon)) {}
 
+        MenuItem(const MenuItem &) = delete;
+        MenuItem &operator=(const MenuItem &) = delete;
+        MenuItem(MenuItem &&) = delete;
+        MenuItem &operator=(MenuItem &&) = delete;
         virtual ~MenuItem() = default;
     };
 
@@ -142,7 +146,7 @@ namespace psychic_ui {
         /**
          * An item that calls `callback`, with an optional shortcut shown after its label and an icon before it
          */
-        inline static std::shared_ptr<SimpleMenuItem>
+        static std::shared_ptr<SimpleMenuItem>
         item(const std::string &label, std::function<void()> callback, const std::string &shortcut = "", const std::string &icon = "") {
             return std::make_shared<SimpleMenuItem>(label, std::move(callback), shortcut, icon);
         }
@@ -150,7 +154,7 @@ namespace psychic_ui {
         /**
          * An item opening a submenu of these items
          */
-        inline static std::shared_ptr<SubMenuItem>
+        static std::shared_ptr<SubMenuItem>
         item(const std::string &label, const MenuItems &items, const std::string &shortcut = "", const std::string &icon = "") {
             return std::make_shared<SubMenuItem>(label, items, shortcut, icon);
         }
@@ -158,7 +162,7 @@ namespace psychic_ui {
         /**
          * A checkable item
          */
-        inline static std::shared_ptr<CheckMenuItem>
+        static std::shared_ptr<CheckMenuItem>
         check(const std::string &label, bool checked, std::function<void(bool)> callback = nullptr, const std::string &shortcut = "",
               const std::string &icon = "") {
             return std::make_shared<CheckMenuItem>(label, checked, std::move(callback), shortcut, icon);
@@ -167,20 +171,20 @@ namespace psychic_ui {
         /**
          * A radio item: one of `group`'s values
          */
-        inline static std::shared_ptr<RadioMenuItem>
+        static std::shared_ptr<RadioMenuItem>
         radio(const std::shared_ptr<MenuRadioGroup> &group, const std::string &label, const std::string &value,
               const std::string &shortcut = "", const std::string &icon = "") {
             return std::make_shared<RadioMenuItem>(group, label, value, shortcut, icon);
         }
 
-        inline static std::shared_ptr<SeparatorMenuItem> separator() {
+        static std::shared_ptr<SeparatorMenuItem> separator() {
             return std::make_shared<SeparatorMenuItem>();
         }
 
         /**
          * A group label
          */
-        inline static std::shared_ptr<GroupMenuItem> group(const std::string &label) {
+        static std::shared_ptr<GroupMenuItem> group(const std::string &label) {
             return std::make_shared<GroupMenuItem>(label);
         }
 
@@ -227,6 +231,7 @@ namespace psychic_ui {
     protected:
         MenuItems                 _items{};
         std::vector<MenuButton *> _rows{};      // Children: our child list owns them
+        std::vector<MenuItem *>   _rowItems{};  // Each row's item, from `_items`
         int                       _highlighted{-1};
         std::weak_ptr<Menu>       _submenu{};
         int                       _submenuRow{-1};

@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <ranges>
 #include "yoga/Yoga.h"
 #include "Overlay.hpp"
 #include "Window.hpp"
@@ -67,7 +68,7 @@ namespace psychic_ui {
             float x = 0;
             switch (align) {
                 case PopupAlign::Start: x = anchor.left() + alignOffset; break;
-                case PopupAlign::Center: x = anchor.centerX() - width / 2.0f + alignOffset; break;
+                case PopupAlign::Center: x = anchor.centerX() - (width / 2.0f) + alignOffset; break;
                 case PopupAlign::End: x = anchor.right() - width - alignOffset; break;
             }
             placement.x = shift(x, width, bounds.left(), bounds.right());
@@ -76,7 +77,7 @@ namespace psychic_ui {
             float y = 0;
             switch (align) {
                 case PopupAlign::Start: y = anchor.top() + alignOffset; break;
-                case PopupAlign::Center: y = anchor.centerY() - height / 2.0f + alignOffset; break;
+                case PopupAlign::Center: y = anchor.centerY() - (height / 2.0f) + alignOffset; break;
                 case PopupAlign::End: y = anchor.bottom() - height - alignOffset; break;
             }
             placement.x = shift(main, width, bounds.left(), bounds.right());
@@ -104,7 +105,7 @@ namespace psychic_ui {
             // Back before it left: it stays, on top, and its transitions head back from where they are
             popup->cancelExit();
             raise(*popup);
-            Window *w = window();
+            const Window *w = window();
             Div    *focused = w ? w->focusedDiv() : nullptr;
             popup->_focusBefore = focused ? focused->weak_from_this() : std::weak_ptr<Div>{};
             popup->opened();
@@ -115,10 +116,10 @@ namespace psychic_ui {
         } else if (popup->isOpen()) {
             popup->close();
         }
-        Window *w = window();
+        const Window *w = window();
         Div    *focused = w ? w->focusedDiv() : nullptr;
         popup->_focusBefore = focused ? focused->weak_from_this() : std::weak_ptr<Div>{};
-        add(popup);
+        add(popup); // Tracked by childAdded
         popup->_laidOut = false;
         popup->opened();
         return *popup;
@@ -136,14 +137,37 @@ namespace psychic_ui {
         YGNodeRemoveChild(_yogaNode, popup._yogaNode);
         YGNodeInsertChild(_yogaNode, popup._yogaNode, YGNodeGetChildCount(_yogaNode));
         invalidateEndChildrenStyle();
+        if (const auto it = std::ranges::find(_popups, &popup, &std::shared_ptr<Popup>::get); it != _popups.end()) {
+            std::ranges::rotate(it, it + 1, _popups.end());
+        }
+    }
+
+    Overlay::~Overlay() {
+        for (const auto &popup: _popups) {
+            popup->_overlay = nullptr; // One held elsewhere outlives it
+        }
+    }
+
+    void Overlay::childAdded(Div &child) {
+        Div::childAdded(child);
+        if (Popup *popup = trackChild(_popups, child)) {
+            popup->_overlay = this;
+        }
+    }
+
+    void Overlay::childRemoved(Div &child) {
+        if (Popup *popup = untrackChild(_popups, child)) {
+            popup->_overlay = nullptr;
+        }
+        Div::childRemoved(child);
     }
 
     std::vector<Popup *> Overlay::popups() const {
         std::vector<Popup *> list{};
-        list.reserve(_children.size());
-        for (const auto &child: _children) {
-            if (auto *popup = static_cast<Popup *>(child.get()); !popup->exiting()) {
-                list.push_back(popup);
+        list.reserve(_popups.size());
+        for (const auto &popup: _popups) {
+            if (!popup->exiting()) {
+                list.push_back(popup.get());
             }
         }
         return list;
@@ -153,9 +177,8 @@ namespace psychic_ui {
         const auto keepAlive = popup.shared_from_this();
 
         // What it opened first, topmost first
-        auto children = _children;
-        for (auto it = children.rbegin(); it != children.rend(); ++it) {
-            auto *other = static_cast<Popup *>(it->get());
+        const auto popups = _popups;
+        for (const auto &other: std::views::reverse(popups)) {
             if (other->_owner == &popup && other->isOpen()) {
                 other->close();
             }
@@ -186,8 +209,8 @@ namespace psychic_ui {
 
         // It leaves once its transitions are over (at once with reduced motion)
         popup.exit("exiting", [this, &popup]() {
-            for (const auto &child: _children) {
-                if (auto *other = static_cast<Popup *>(child.get()); other->_owner == &popup) {
+            for (const auto &other: _popups) {
+                if (other->_owner == &popup) {
                     other->_owner = nullptr; // Its owner goes
                 }
             }
@@ -234,9 +257,8 @@ namespace psychic_ui {
         localToGlobal(originX, originY);
         const SkRect bounds = SkRect::MakeWH(static_cast<float>(_width), static_cast<float>(_height));
 
-        auto children = _children; // Closing one changes them
-        for (auto &child: children) {
-            auto *popup = static_cast<Popup *>(child.get());
+        auto popups = _popups; // Closing one changes them
+        for (const auto &popup: popups) {
             if (!popup->_anchored || popup->_parent != this || popup->exiting()) {
                 continue; // Leaving: it stays where it was
             }
@@ -301,9 +323,8 @@ namespace psychic_ui {
         }
 
         // The popups laid out for the first time since they opened
-        children = _children;
-        for (auto &child: children) {
-            auto *popup = static_cast<Popup *>(child.get());
+        popups = _popups;
+        for (const auto &popup: popups) {
             if (!popup->_laidOut && popup->_parent == this && !popup->exiting()) {
                 popup->_laidOut = true;
                 popup->laidOut();
@@ -314,9 +335,8 @@ namespace psychic_ui {
 
     bool Overlay::pressOutside(const int x, const int y, const bool contextPress) {
         bool closedModal = false;
-        auto children    = _children;
-        for (auto it = children.rbegin(); it != children.rend(); ++it) {
-            auto *popup = static_cast<Popup *>(it->get());
+        const auto popups = _popups;
+        for (const auto &popup: std::views::reverse(popups)) {
             if (popup->_parent != this || popup->exiting()) {
                 continue; // Closed with its owner, or leaving
             }
@@ -337,9 +357,8 @@ namespace psychic_ui {
     }
 
     bool Overlay::dismissTop() {
-        auto children = _children;
-        for (auto it = children.rbegin(); it != children.rend(); ++it) {
-            auto *popup = static_cast<Popup *>(it->get());
+        const auto popups = _popups;
+        for (const auto &popup: std::views::reverse(popups)) {
             if (popup->_parent != this || popup->exiting()) {
                 continue;
             }
@@ -355,35 +374,31 @@ namespace psychic_ui {
     }
 
     bool Overlay::modal() const {
-        return std::any_of(_children.begin(), _children.end(), [](const auto &child) {
-            return static_cast<const Popup *>(child.get())->modal();
-        });
+        return std::ranges::any_of(_popups, [](const auto &popup) { return popup->modal(); });
     }
 
     Popup *Overlay::focusScope() const {
-        for (auto it = _children.rbegin(); it != _children.rend(); ++it) {
-            auto *popup = static_cast<Popup *>(it->get());
+        for (const auto &popup: std::views::reverse(_popups)) {
             if (popup->_trapFocus && !popup->exiting()) {
-                return popup;
+                return popup.get();
             }
         }
         return nullptr;
     }
 
     Popup *Overlay::popupAt(const int x, const int y) const {
-        for (auto it = _children.rbegin(); it != _children.rend(); ++it) {
-            auto *popup = static_cast<Popup *>(it->get());
+        for (const auto &popup: std::views::reverse(_popups)) {
             if (popup->visible() && popup->mouseEnabled() && !popup->exiting() && surfaceContains(*popup, x, y)) {
-                return popup;
+                return popup.get();
             }
         }
         return nullptr;
     }
 
     void Overlay::update(const std::chrono::nanoseconds now) {
-        auto children = _children; // A toast's timer closes it
-        for (auto &child: children) {
-            if (auto *popup = static_cast<Popup *>(child.get()); popup->parent() == this && !popup->exiting()) {
+        const auto popups = _popups; // A toast's timer closes it
+        for (const auto &popup: popups) {
+            if (popup->parent() == this && !popup->exiting()) {
                 popup->update(now);
             }
         }
@@ -391,13 +406,13 @@ namespace psychic_ui {
 
     std::optional<std::chrono::nanoseconds> Overlay::nextUpdate() const {
         std::optional<std::chrono::nanoseconds> next{};
-        for (const auto &child: _children) {
-            if (static_cast<const Popup *>(child.get())->exiting()) {
+        for (const auto &popup: _popups) {
+            if (popup->exiting()) {
                 continue;
             }
-            const auto popup = static_cast<const Popup *>(child.get())->nextUpdate();
-            if (popup && (!next || *popup < *next)) {
-                next = popup;
+            const auto update = popup->nextUpdate();
+            if (update && (!next || *update < *next)) {
+                next = update;
             }
         }
         return next;
@@ -432,24 +447,24 @@ namespace psychic_ui {
     }
 
     template<class F>
-    MouseEventStatus Overlay::dispatch(const MouseEvent &event, F &&handler) {
+    MouseEventStatus Overlay::dispatch(const MouseEvent &event, const F &handler) {
         const auto keepAlive = weak_from_this().lock(); // A handler may close popups
         if (!_visible) {
-            return Out;
+            return MouseEventStatus::Out;
         }
         const MouseEvent local = movedTo(
             event,
             event.x - static_cast<float>(_x + _scrollX),
             event.y - static_cast<float>(_y + _scrollY)
         );
-        for (auto &child: childrenTopmostFirst()) {
-            if (child->parent() != this) {
+        const auto popups = _popups; // A handler may close popups
+        for (const auto &popup: std::views::reverse(popups)) {
+            if (popup->parent() != this) {
                 continue; // Closed by an earlier handler
             }
-            auto *popup = static_cast<Popup *>(child.get());
             if (popup->mouseEnabled() || popup->mouseChildren()) {
                 auto res = handler(*popup, local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     return res;
                 }
             }
@@ -460,42 +475,42 @@ namespace psychic_ui {
                         continue;
                     }
                     auto res = handler(*div, inParentOf(*div, event));
-                    if (res != Out) {
+                    if (res != MouseEventStatus::Out) {
                         return res;
                     }
                 }
-                return Handled; // Nothing under it gets it
+                return MouseEventStatus::Handled; // Nothing under it gets it
             }
         }
-        return Out;
+        return MouseEventStatus::Out;
     }
 
     MouseEventStatus Overlay::handleMouseMove(const MouseEvent &event, bool handled) {
         const auto keepAlive = weak_from_this().lock();
         if (!_visible) {
-            return Out;
+            return MouseEventStatus::Out;
         }
         const MouseEvent local = movedTo(
             event,
             event.x - static_cast<float>(_x + _scrollX),
             event.y - static_cast<float>(_y + _scrollY)
         );
-        MouseEventStatus ret     = Out;
+        MouseEventStatus ret     = MouseEventStatus::Out;
         bool             blocked = false;
         const auto       move    = [&](Div &div, const MouseEvent &moved) {
             auto res = div.handleMouseMove(moved, handled);
-            if (res != Out) {
+            if (res != MouseEventStatus::Out) {
                 handled = true;
-                if (ret != Handled) {
+                if (ret != MouseEventStatus::Handled) {
                     ret = res;
                 }
             }
         };
-        for (auto &child: childrenTopmostFirst()) {
-            if (child->parent() != this) {
+        const auto popups = _popups;
+        for (const auto &popup: std::views::reverse(popups)) {
+            if (popup->parent() != this) {
                 continue;
             }
-            auto *popup = static_cast<Popup *>(child.get());
             if (!popup->mouseEnabled() && !popup->mouseChildren()) {
                 continue;
             }
@@ -512,7 +527,7 @@ namespace psychic_ui {
                 handled = true;
             }
         }
-        return blocked ? Handled : ret;
+        return blocked ? MouseEventStatus::Handled : ret;
     }
 
     MouseEventStatus Overlay::handleMouseButtonChange(const MouseEvent &event) {

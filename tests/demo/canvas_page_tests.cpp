@@ -54,6 +54,7 @@ namespace {
                     if (accept(child.get())) {
                         return child.get();
                     }
+                    // NOLINTNEXTLINE(misc-const-correctness): returned as a mutable pointer, which the check misses
                     if (Div *found = search(child.get())) {
                         return found;
                     }
@@ -87,9 +88,9 @@ namespace {
         auto *tools     = f.find<ToolBar>();
         REQUIRE(inspector != nullptr);
         REQUIRE(tools != nullptr);
-        const float width = f.page->getWidth();
+        const auto width = static_cast<float>(f.page->getWidth());
         CHECK(inspector->x() + inspector->getWidth() == width - theme.metrics.space(4));
-        CHECK(std::abs(tools->x() + tools->getWidth() / 2 - width / 2) < 1);
+        CHECK(std::abs(tools->x() + (tools->getWidth() / 2.0f) - (width / 2.0f)) < 1);
         CHECK(tools->parent()->y() + tools->parent()->getHeight() == f.page->getHeight() - theme.metrics.space(5));
 
         // With the theme's panel elevation, no border
@@ -103,7 +104,7 @@ namespace {
         CHECK(inspector->computedStyle().borderRadius() == theme.metrics.radius.surface);
 
         // One tool at a time, in the accent
-        Button *current = f.currentTool();
+        const Button *current = f.currentTool();
         REQUIRE(current != nullptr);
         CHECK(current->skin()->computedStyle().backgroundColor() == p.accent);
         CHECK(current->skin()->computedStyle().color() == p.onAccent);

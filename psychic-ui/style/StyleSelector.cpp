@@ -46,7 +46,7 @@ namespace psychic_ui {
                 }
 
                 if (newToken) {
-                    std::size_t pos = static_cast<std::size_t >(std::distance(selectorItem.cbegin(), it)) + offset;
+                    const std::size_t pos = static_cast<std::size_t >(std::distance(selectorItem.cbegin(), it)) + offset;
                     if (pos - lastTokenPos != 0) {
                         switch (token) {
                             case Token::Tag:
@@ -59,7 +59,7 @@ namespace psychic_ui {
                                 r->_classes.push_back(selectorItem.substr(lastTokenPos, pos - lastTokenPos));
                                 break;
                             case Token::Pseudo:
-                                std::string pseudo = selectorItem.substr(lastTokenPos, pos - lastTokenPos);
+                                const std::string pseudo = selectorItem.substr(lastTokenPos, pos - lastTokenPos);
                                 if (pseudo == "focus") {
                                     r->_pseudo.insert(Pseudo::Focus);
                                 } else if (pseudo == "focus-visible") {
@@ -131,9 +131,8 @@ namespace psychic_ui {
         }
 
         // Match classes
-        if (!std::all_of(
-            _classes.cbegin(),
-            _classes.cend(),
+        if (!std::ranges::all_of(
+            _classes,
             [&component](const auto &className) {
                 return std::find(
                     component->classNames().cbegin(),
@@ -146,9 +145,8 @@ namespace psychic_ui {
         }
 
         // Match pseudo
-        if (!std::all_of(
-            _pseudo.cbegin(),
-            _pseudo.cend(),
+        if (!std::ranges::all_of(
+            _pseudo,
             [&component](const auto &pseudo) {
                 switch (pseudo) {
                     case Pseudo::Hover:
@@ -160,7 +158,7 @@ namespace psychic_ui {
                         if (!component->focusEnabled() || !component->hasFocus()) {
                             return false;
                         }
-                        const Window *window = const_cast<Div *>(component)->window();
+                        const Window *window = component->window();
                         return window && window->focusVisible();
                     }
                     case Pseudo::Active:
@@ -176,7 +174,7 @@ namespace psychic_ui {
                                && component->parent()->childIndex(component) == (int) component->parent()->childCount() - 1;
                     case Pseudo::Touch: {
                         // The window's input mode: `Window:touch Button` and `Button:touch` both work
-                        const Window *window = const_cast<Div *>(component)->window();
+                        const Window *window = component->window();
                         return window && window->inputMode() == InputMode::Touch;
                     }
                 }
@@ -231,6 +229,10 @@ namespace psychic_ui {
         for (const auto &pseudo: _pseudo) {
             switch (pseudo) {
                 case Pseudo::Hover:
+                case Pseudo::Empty:
+                case Pseudo::FirstChild:
+                case Pseudo::LastChild:
+                case Pseudo::Touch:
                     w += 1;
                     break;
                 case Pseudo::Active:
@@ -242,18 +244,6 @@ namespace psychic_ui {
                     break;
                 case Pseudo::Disabled:
                     w += 4;
-                    break;
-                case Pseudo::Empty:
-                    w += 1;
-                    break;
-                case Pseudo::FirstChild:
-                    w += 1;
-                    break;
-                case Pseudo::LastChild:
-                    w += 1;
-                    break;
-                case Pseudo::Touch:
-                    w += 1;
                     break;
             }
         }

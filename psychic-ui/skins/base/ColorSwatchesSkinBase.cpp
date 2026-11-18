@@ -1,4 +1,5 @@
 #include <limits>
+#include <utility>
 #include "ColorSwatchesSkinBase.hpp"
 
 namespace psychic_ui {
@@ -8,7 +9,7 @@ namespace psychic_ui {
     }
 
     void ColorSwatchesSkinBase::setColors(const std::vector<Color> &colors) {
-        for (Div *swatch: _swatches) {
+        for (const Div *swatch: _swatches) {
             remove(*swatch);
         }
         _swatches.clear();
@@ -27,21 +28,21 @@ namespace psychic_ui {
     }
 
     void ColorSwatchesSkinBase::setFocused(const int index) {
-        if (_focused >= 0 && _focused < static_cast<int>(_swatches.size())) {
+        if (_focused >= 0 && std::cmp_less(_focused, _swatches.size())) {
             _swatches[static_cast<std::size_t>(_focused)]->removeClassName("focused");
         }
         _focused = index;
-        if (_focused >= 0 && _focused < static_cast<int>(_swatches.size())) {
+        if (_focused >= 0 && std::cmp_less(_focused, _swatches.size())) {
             _swatches[static_cast<std::size_t>(_focused)]->addClassName("focused");
         }
     }
 
     void ColorSwatchesSkinBase::setSelected(const int index) {
-        if (_selected >= 0 && _selected < static_cast<int>(_swatches.size())) {
+        if (_selected >= 0 && std::cmp_less(_selected, _swatches.size())) {
             _swatches[static_cast<std::size_t>(_selected)]->removeClassName("selected");
         }
         _selected = index;
-        if (_selected >= 0 && _selected < static_cast<int>(_swatches.size())) {
+        if (_selected >= 0 && std::cmp_less(_selected, _swatches.size())) {
             _swatches[static_cast<std::size_t>(_selected)]->addClassName("selected");
         }
     }
@@ -54,7 +55,7 @@ namespace psychic_ui {
             const Div  *swatch = _swatches[i];
             const float dx     = static_cast<float>(x) - (static_cast<float>(swatch->x()) + static_cast<float>(swatch->getWidth()) / 2.0f);
             const float dy     = static_cast<float>(y) - (static_cast<float>(swatch->y()) + static_cast<float>(swatch->getHeight()) / 2.0f);
-            const float d      = dx * dx + dy * dy;
+            const float d      = (dx * dx) + (dy * dy);
             if (d < distance) {
                 distance = d;
                 nearest  = static_cast<int>(i);

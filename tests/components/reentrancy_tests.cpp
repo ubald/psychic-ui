@@ -4,6 +4,7 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Button.hpp>
@@ -41,9 +42,10 @@ namespace {
         std::shared_ptr<TestWindow>       window{std::make_shared<TestWindow>()};
         std::unique_ptr<FakeSystemWindow> sys{std::make_unique<FakeSystemWindow>(window, 800, 600)};
 
-        void layout() { sys->layout(); }
+        void layout() const { sys->layout(); }
         static std::pair<float, float> center(const Div &div) {
-            int x = 0, y = 0;
+            int x = 0;
+            int y = 0;
             div.localToGlobal(x, y, div.getWidth() / 2, div.getHeight() / 2);
             return {float(x), float(y)};
         }
@@ -133,7 +135,7 @@ TEST_CASE("Reentrancy: remove focused div on blur", "[reentrancy]") {
 }
 
 TEST_CASE("Reentrancy: close a popup from its closed handler", "[reentrancy]") {
-    F f;
+    const F f;
     auto &b = f.window->appContainer().add<Button>("a");
     f.layout();
     Menu &m = f.window->openMenu({Menu::item("One", []() {})}, b);
@@ -177,8 +179,8 @@ TEST_CASE("Reentrancy: a menu item callback closes the menu itself and the windo
     F f;
     auto &b = f.window->appContainer().add<Button>("a");
     f.layout();
-    Window *w = f.window.get();
-    Menu   &m = w->openMenu({Menu::item("One", [w]() { w->closeMenu(); w->overlay().closeAll<Popup>(); })}, b);
+    Window     *w = f.window.get();
+    const Menu &m = w->openMenu({Menu::item("One", [w]() { w->closeMenu(); w->overlay().closeAll<Popup>(); })}, b);
     (void) m;
     f.layout();
     auto *row = m.rows().at(0); (void) row;
@@ -297,7 +299,9 @@ TEST_CASE("Reentrancy: remove a tree node holding the selection / collapse durin
     kid.expanded(true);
     f.layout();
     tree.onExpansionChange([&kid](TreeNode *node, bool) {
-        if (node == &kid && kid.parent()) kid.parent()->remove(kid);
+        if (node == &kid && kid.parent()) {
+            kid.parent()->remove(kid);
+        }
     });
     tree.onSelectionChange([](TreeNode *) {});
     f.key(Key::TAB);
@@ -313,7 +317,9 @@ TEST_CASE("Reentrancy: sort a data grid from its selection change and remove row
     F f;
     auto &grid = f.window->appContainer().add<DataGrid>();
     grid.columns({{"Name"}, {.title = "Size", .width = 80}});
-    for (int i = 0; i < 6; ++i) grid.row({"n" + std::to_string(i), std::to_string(10 - i)});
+    for (int i = 0; i < 6; ++i) {
+        grid.row({"n" + std::to_string(i), std::to_string(10 - i)});
+    }
     f.layout();
     grid.onSelectionChange([&grid](DataGridRow *) { grid.sort(1, SortOrder::Ascending); });
     f.key(Key::TAB);
@@ -332,7 +338,11 @@ TEST_CASE("Reentrancy: change theme and skin set inside styleUpdated / mid event
     Window *w = f.window.get();
     int     n = 0;
     b.onClick([w, &n]() {
-        if (n++ % 2) w->skinSet<FloatSkins>(); else w->skinSet<PivotalSkins>();
+        if (n++ % 2) {
+            w->skinSet<FloatSkins>();
+        } else {
+            w->skinSet<PivotalSkins>();
+        }
         w->theme(themes::pivotalLight);
     });
     f.click(b);
@@ -351,7 +361,9 @@ namespace {
         explicit ThemeFlipper(Window *w) : w(w) {}
         void styleUpdated() override {
             Div::styleUpdated();
-            if (n++ < 3) w->theme(n % 2 ? themes::pivotalLight : themes::pivotalDark);
+            if (n++ < 3) {
+                w->theme(n % 2 ? themes::pivotalLight : themes::pivotalDark);
+            }
         }
     };
     struct SkinFlipper : Div {
@@ -360,13 +372,19 @@ namespace {
         explicit SkinFlipper(Window *w) : w(w) {}
         void styleUpdated() override {
             Div::styleUpdated();
-            if (n++ < 3) { if (n % 2) w->skinSet<FloatSkins>(); else w->skinSet<PivotalSkins>(); }
+            if (n++ < 3) {
+                if (n % 2) {
+                    w->skinSet<FloatSkins>();
+                } else {
+                    w->skinSet<PivotalSkins>();
+                }
+            }
         }
     };
 }
 
 TEST_CASE("Reentrancy: theme switched inside styleUpdated", "[reentrancy]") {
-    F f;
+    const F f;
     f.window->appContainer().add<Button>("a");
     f.window->appContainer().add<ThemeFlipper>(f.window.get());
     f.window->appContainer().add<TextInput>("t");
@@ -375,7 +393,7 @@ TEST_CASE("Reentrancy: theme switched inside styleUpdated", "[reentrancy]") {
 }
 
 TEST_CASE("Reentrancy: skin set switched inside styleUpdated", "[reentrancy]") {
-    F f;
+    const F f;
     f.window->appContainer().add<Button>("a");
     f.window->appContainer().add<SkinFlipper>(f.window.get());
     f.window->appContainer().add<TextInput>("t");
@@ -407,8 +425,10 @@ TEST_CASE("Reentrancy: toast action removes all toasts and opens a dialog", "[re
     f.layout();
     Div *btn = nullptr;
     std::function<void(Div &)> find = [&](Div &d) {
-        for (auto &c: d.children()) {
-            if (auto *bb = dynamic_cast<Button *>(c.get()); bb && !btn) btn = bb;
+        for (const auto &c: d.children()) {
+            if (auto *bb = dynamic_cast<Button *>(c.get()); bb && !btn) {
+                btn = bb;
+            }
             find(*c);
         }
     };
@@ -420,7 +440,7 @@ TEST_CASE("Reentrancy: toast action removes all toasts and opens a dialog", "[re
 }
 
 TEST_CASE("Reentrancy: toasts time out while one is being clicked away; more than the limit", "[reentrancy]") {
-    F f;
+    const F f;
     Window *w = f.window.get();
     for (int i = 0; i < 8; ++i) {
         w->toast({.title = "t" + std::to_string(i), .timeout = 1ms});
@@ -442,7 +462,7 @@ TEST_CASE("Reentrancy: dialog action closes and removes the opener", "[reentranc
     auto &b      = parent.add<Button>("open");
     f.layout();
     f.key(Key::TAB);
-    Window *w = f.window.get();
+    const Window *w = f.window.get();
     auto   &d = w->overlay().open<Dialog>("Hi");
     d.action("OK", [&parent, &b]() { parent.remove(b); });
     d.body().add<TextInput>("x");
@@ -500,7 +520,7 @@ TEST_CASE("Reentrancy: context menu whose item removes the div with the context 
 }
 
 TEST_CASE("Reentrancy: touch long press then remove target before release", "[reentrancy]") {
-    F f;
+    const F f;
     auto &parent = f.window->appContainer().add<Div>();
     auto &b      = parent.add<Button>("x").tooltip("tip");
     f.layout();
@@ -517,10 +537,12 @@ TEST_CASE("Reentrancy: touch long press then remove target before release", "[re
 }
 
 TEST_CASE("Reentrancy: touch pan a scroller and remove it mid-fling", "[reentrancy]") {
-    F f;
+    const F f;
     auto &parent = f.window->appContainer().add<Div>();
     auto &sc     = parent.add<Div>().size(200, 200).overflow(Overflow::Scroll);
-    for (int i = 0; i < 30; ++i) sc.add<Div>().height(40);
+    for (int i = 0; i < 30; ++i) {
+        sc.add<Div>().height(40);
+    }
     f.layout();
     auto [x, y] = F::center(sc);
     auto t0     = std::chrono::steady_clock::now().time_since_epoch();
@@ -607,9 +629,15 @@ TEST_CASE("Reentrancy: data grid removes the selected row on selection change (k
     F f;
     auto &grid = f.window->appContainer().add<DataGrid>();
     grid.columns({{"Name"}});
-    for (int i = 0; i < 5; ++i) grid.row({"n" + std::to_string(i)});
+    for (int i = 0; i < 5; ++i) {
+        grid.row({"n" + std::to_string(i)});
+    }
     f.layout();
-    grid.onSelectionChange([](DataGridRow *r) { if (r && r->parent()) r->parent()->remove(*r); });
+    grid.onSelectionChange([](DataGridRow *r) {
+        if (r && r->parent()) {
+            r->parent()->remove(*r);
+        }
+    });
     f.key(Key::TAB);
     f.key(Key::DOWN);
     f.key(Key::DOWN);
@@ -623,7 +651,11 @@ TEST_CASE("Reentrancy: list removes itself on selection change (click)", "[reent
     auto &a      = list.row("a");
     list.row("b");
     f.layout();
-    list.onSelectionChange([&parent, &list](ListRow *) { if (list.parent()) parent.remove(list); });
+    list.onSelectionChange([&parent, &list](ListRow *) {
+        if (list.parent()) {
+            parent.remove(list);
+        }
+    });
     f.click(a);
     f.layout();
 }
@@ -636,7 +668,7 @@ TEST_CASE("Reentrancy: menu bar removed by its own item", "[reentrancy]") {
         Menu::item("File", {Menu::item("Quit", [&parent, &bar]() { parent.remove(*bar); })}),
         Menu::item("Edit", {Menu::item("Copy", []() {})})});
     f.layout();
-    Div *trigger = bar->children().size() > 1 ? bar->children()[1].get() : bar->children()[0].get();
+    const Div *trigger = bar->children().size() > 1 ? bar->children()[1].get() : bar->children()[0].get();
     f.click(*trigger);
     f.key(Key::DOWN);
     f.key(Key::ENTER);
@@ -656,20 +688,42 @@ TEST_CASE("Reentrancy: window destroyed with focus and hover inside", "[reentran
     f.reset();
 }
 
-#define SELF_REMOVE_ON_CHANGE(NAME, TYPE, CTOR, KEYS)                                               \
-TEST_CASE("Reentrancy: " NAME, "[reentrancy]") {                                                    \
-    F f;                                                                                            \
-    auto &parent = f.window->appContainer().add<Div>();                                             \
-    auto &w      = parent.add<TYPE> CTOR;                                                           \
-    f.layout();                                                                                     \
-    w.onChange([&parent, &w]() { if (w.parent()) parent.remove(w); });                              \
-    f.key(Key::TAB);                                                                                \
-    for (Key k: KEYS) f.key(k);                                                                     \
-    f.layout();                                                                                     \
-    f.key(Key::TAB);                                                                                \
+namespace {
+    /**
+     * A component that removes itself from its parent when it changes, then the keys that change it
+     */
+    template<class T, class... Args>
+    void removeItselfOnChange(const std::vector<Key> &keys, Args &&...args) {
+        F f;
+        auto &parent = f.window->appContainer().add<Div>();
+        auto &w      = parent.add<T>(std::forward<Args>(args)...);
+        f.layout();
+        w.onChange([&parent, &w]() {
+            if (w.parent()) {
+                parent.remove(w);
+            }
+        });
+        f.key(Key::TAB);
+        for (const Key k: keys) {
+            f.key(k);
+        }
+        f.layout();
+        f.key(Key::TAB);
+    }
 }
-#define K(...) std::vector<Key>{__VA_ARGS__}
-SELF_REMOVE_ON_CHANGE("switch removes itself on change", Switch, ("s"), K(Key::SPACE, Key::ENTER))
-SELF_REMOVE_ON_CHANGE("checkbox removes itself on change", CheckBox, ("c"), K(Key::SPACE, Key::SPACE))
-SELF_REMOVE_ON_CHANGE("segmented control removes itself on change", SegmentedControl, (std::vector<Segment>{{"A"}, {"B"}, {"C"}}), K(Key::RIGHT, Key::RIGHT, Key::END))
-SELF_REMOVE_ON_CHANGE("number stepper removes itself on change", NumberStepper, (1.0), K(Key::UP, Key::UP, Key::DOWN))
+
+TEST_CASE("Reentrancy: switch removes itself on change", "[reentrancy]") {
+    removeItselfOnChange<Switch>({Key::SPACE, Key::ENTER}, std::string{"s"});
+}
+
+TEST_CASE("Reentrancy: checkbox removes itself on change", "[reentrancy]") {
+    removeItselfOnChange<CheckBox>({Key::SPACE, Key::SPACE}, std::string{"c"});
+}
+
+TEST_CASE("Reentrancy: segmented control removes itself on change", "[reentrancy]") {
+    removeItselfOnChange<SegmentedControl>({Key::RIGHT, Key::RIGHT, Key::END}, std::vector<Segment>{{"A"}, {"B"}, {"C"}});
+}
+
+TEST_CASE("Reentrancy: number stepper removes itself on change", "[reentrancy]") {
+    removeItselfOnChange<NumberStepper>({Key::UP, Key::UP, Key::DOWN}, 1.0);
+}

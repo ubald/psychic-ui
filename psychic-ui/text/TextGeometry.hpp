@@ -12,6 +12,11 @@ namespace psychic_ui {
      */
     class TextGeometry {
     public:
+        TextGeometry() = default;
+        TextGeometry(const TextGeometry &) = delete;
+        TextGeometry &operator=(const TextGeometry &) = delete;
+        TextGeometry(TextGeometry &&) = delete;
+        TextGeometry &operator=(TextGeometry &&) = delete;
         virtual ~TextGeometry() = default;
 
         /**

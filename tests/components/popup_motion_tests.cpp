@@ -82,7 +82,7 @@ namespace {
             int x = 0;
             int y = 0;
             div.localToGlobal(x, y);
-            return {x - div.scrollX() + div.getWidth() / 2, y - div.scrollY() + div.getHeight() / 2};
+            return {x - div.scrollX() + (div.getWidth() / 2), y - div.scrollY() + (div.getHeight() / 2)};
         }
 
         std::size_t inOverlay() const { return window->overlay().children().size(); }
@@ -99,7 +99,7 @@ namespace {
 
 TEST_CASE("A menu enters from its anchor: its entering style first, then settled", "[popup-motion][menu]") {
     Motions f{};
-    Menu &menu = f.window->openMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, f.first);
+    const Menu &menu = f.window->openMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, f.first);
     // Its first style has the starting class
     CHECK(hasClass(menu, "entering"));
     CHECK(opacityOf(menu) == 0.0f);
@@ -137,7 +137,7 @@ TEST_CASE("A tooltip enters from a few pixels toward its anchor", "[popup-motion
     f.hover(f.first);
     f.frame(1000ms);
     f.frame(1000ms + Window::tooltipDelay);
-    Tooltip *tooltip = f.window->tooltip();
+    const Tooltip *tooltip = f.window->tooltip();
     REQUIRE(tooltip != nullptr);
     // Below its anchor (no room above): it starts up, toward it
     CHECK(tooltip->placedSide() == Side::Bottom);
@@ -151,7 +151,7 @@ TEST_CASE("A tooltip enters from a few pixels toward its anchor", "[popup-motion
 
 TEST_CASE("A dialog's scrim fades in and its panel scales up", "[popup-motion][dialog]") {
     Motions f{};
-    Dialog &dialog = f.window->overlay().open<Dialog>("Rename");
+    const Dialog &dialog = f.window->overlay().open<Dialog>("Rename");
     f.frame(0ms);
     CHECK(opacityOf(dialog) == 0.0f);
     CHECK(dialog.panel().computedStyle().scale() == Approx(0.97f));
@@ -257,7 +257,7 @@ TEST_CASE("Opening a menu while another leaves", "[popup-motion][menu]") {
 
 TEST_CASE("Hovering back onto a submenu's row while it leaves brings it back", "[popup-motion][menu]") {
     Motions f{};
-    Menu &menu = f.window->openMenu(
+    const Menu &menu = f.window->openMenu(
         {Menu::item("Recent", {Menu::item("A", []() {}), Menu::item("B", []() {})}), Menu::item("Other", []() {})},
         f.first
     );
@@ -266,7 +266,7 @@ TEST_CASE("Hovering back onto a submenu's row while it leaves brings it back", "
     f.hover(*menu.rows()[0]);
     f.frame(2 * motion.medium);
     f.frame(3 * motion.medium);
-    Menu *sub = menu.submenu();
+    const Menu *sub = menu.submenu();
     REQUIRE(sub != nullptr);
     CHECK(opacityOf(*sub) == 1.0f);
 
@@ -318,7 +318,7 @@ TEST_CASE("The tooltip of the same div comes back while it fades out", "[popup-m
 
 TEST_CASE("A select's list leaving doesn't count as open", "[popup-motion][select]") {
     Motions f{};
-    Select &select = f.window->appContainer().add<Select>(std::vector<std::string>{"A", "B"});
+    auto &select = f.window->appContainer().add<Select>(std::vector<std::string>{"A", "B"});
     f.frame(0ms);
     f.click(select);
     f.frame(100ms);
@@ -342,7 +342,7 @@ TEST_CASE("A select's list leaving doesn't count as open", "[popup-motion][selec
 TEST_CASE("A dialog leaves: no focus trap nor backdrop meanwhile", "[popup-motion][dialog]") {
     Motions f{};
     f.window->requestFocus(&f.first);
-    Dialog &dialog = f.window->overlay().open<Dialog>("Rename");
+    auto &dialog = f.window->overlay().open<Dialog>("Rename");
     f.frame(0ms);
     f.frame(motion.medium);
     REQUIRE(f.window->overlay().focusScope() == &dialog);
@@ -400,7 +400,7 @@ TEST_CASE("Toasts slide in from under the stack's edge and out fading; those lea
 
     // One more: the oldest only fades, where it is
     f.frame(1000ms);
-    Toast *oldest = f.window->toasts().toasts().front();
+    const Toast *oldest = f.window->toasts().toasts().front();
     f.window->toast({.title = "Toast 3", .timeout = 0s});
     CHECK(oldest->exiting());
     CHECK(hasClass(*oldest, "limited"));

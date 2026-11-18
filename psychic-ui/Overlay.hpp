@@ -3,6 +3,7 @@
 #include <chrono>
 #include <optional>
 #include <memory>
+#include <ranges>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -40,6 +41,11 @@ namespace psychic_ui {
     class Overlay : public Div {
     public:
         Overlay();
+        ~Overlay() override;
+        Overlay(const Overlay &) = delete;
+        Overlay &operator=(const Overlay &) = delete;
+        Overlay(Overlay &&) = delete;
+        Overlay &operator=(Overlay &&) = delete;
 
         /**
          * Open a popup: construct it, add it on top, then let it take the focus
@@ -61,13 +67,18 @@ namespace psychic_ui {
         std::vector<Popup *> popups() const;
 
         /**
+         * Every popup opened in it, bottom first, those leaving too: its children, typed
+         */
+        const std::vector<std::shared_ptr<Popup>> &allPopups() const { return _popups; }
+
+        /**
          * The topmost open popup that is a T, or nullptr
          */
         template<class T>
         T *top() const {
-            for (auto it = _children.rbegin(); it != _children.rend(); ++it) {
-                if (auto popup = dynamic_cast<T *>(it->get()); popup && !popup->exiting()) {
-                    return popup;
+            for (const auto &popup: std::views::reverse(_popups)) {
+                if (auto *found = dynamic_cast<T *>(popup.get()); found && !found->exiting()) {
+                    return found;
                 }
             }
             return nullptr;
@@ -78,10 +89,9 @@ namespace psychic_ui {
          */
         template<class T>
         void closeAll() {
-            auto children = _children; // Closing one closes those it owns, and frees them
-            for (auto &child: children) {
-                auto *popup = static_cast<Popup *>(child.get());
-                if (dynamic_cast<T *>(popup) && popup->isOpen()) {
+            const auto popups = _popups; // Closing one closes those it owns, and frees them
+            for (const auto &popup: popups) {
+                if (dynamic_cast<T *>(popup.get()) && popup->isOpen()) {
                     popup->close();
                 }
             }
@@ -141,7 +151,16 @@ namespace psychic_ui {
     protected:
         friend class Popup;
 
+        /**
+         * The popups in it, in its children's order, those leaving too: kept by `childAdded` and `childRemoved`,
+         * whatever adds or removes them
+         */
+        std::vector<std::shared_ptr<Popup>> _popups{};
+
         void close(Popup &popup);
+
+        void childAdded(Div &child) override;
+        void childRemoved(Div &child) override;
 
         /**
          * Put an open popup on top without taking it out (it keeps its style and transitions)
@@ -158,6 +177,6 @@ namespace psychic_ui {
          * pass-through divs and no further
          */
         template<class F>
-        MouseEventStatus dispatch(const MouseEvent &event, F &&handler);
+        MouseEventStatus dispatch(const MouseEvent &event, const F &handler);
     };
 }

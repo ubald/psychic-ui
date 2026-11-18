@@ -16,7 +16,11 @@ namespace psychic_ui {
     class SelectableRow : public Div {
     public:
         SelectableRow();
-        ~SelectableRow();
+        ~SelectableRow() override;
+        SelectableRow(const SelectableRow &) = delete;
+        SelectableRow &operator=(const SelectableRow &) = delete;
+        SelectableRow(SelectableRow &&) = delete;
+        SelectableRow &operator=(SelectableRow &&) = delete;
 
         /**
          * Whether it is its group's selection
@@ -35,7 +39,7 @@ namespace psychic_ui {
         /**
          * The group it is in, or nullptr
          */
-        RowGroup *group() const;
+        RowGroup *group();
 
     protected:
         friend class RowGroup;
@@ -77,7 +81,11 @@ namespace psychic_ui {
     class RowGroup : public Div {
     public:
         RowGroup();
-        ~RowGroup();
+        ~RowGroup() override;
+        RowGroup(const RowGroup &) = delete;
+        RowGroup &operator=(const RowGroup &) = delete;
+        RowGroup(RowGroup &&) = delete;
+        RowGroup &operator=(RowGroup &&) = delete;
 
         /**
          * The rows the keyboard moves along, in order: every row, but a tree leaves out the collapsed ones

@@ -60,6 +60,11 @@ namespace psychic_ui_tests {
             _window->open(this);
         }
 
+        FakeSystemWindow(const FakeSystemWindow &) = delete;
+        FakeSystemWindow &operator=(const FakeSystemWindow &) = delete;
+        FakeSystemWindow(FakeSystemWindow &&) = delete;
+        FakeSystemWindow &operator=(FakeSystemWindow &&) = delete;
+
         ~FakeSystemWindow() override {
             detach();
         }
@@ -73,7 +78,7 @@ namespace psychic_ui_tests {
             return true;
         }
 
-        void *glProcAddress(const char * /*name*/) const override { return nullptr; }
+        GLProc glProcAddress(const char * /*name*/) const override { return nullptr; }
 
         void setTitle(const std::string & /*title*/) override {}
         void setFullscreen(bool /*fullscreen*/) override {}

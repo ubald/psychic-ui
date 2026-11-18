@@ -1,16 +1,16 @@
 #include <iostream>
+#include <utility>
 #include "CheckBox.hpp"
 
 namespace psychic_ui {
 
-    CheckBox::CheckBox(const std::string &label, std::function<void(bool)> onChangeCallback) :
-        Component() {
+    CheckBox::CheckBox(std::string label, std::function<void(bool)> onChangeCallback) :
+        Component(),
+        _label(std::move(label)) {
         tag("CheckBox");
 
         _mouseChildren = false; // !important
         _focusEnabled  = true;  // Tab reaches it; Space toggles it
-
-        _label = label;
 
         keyPressed.subscribe(
             [this](const Key key, const Mod /*modifiers*/) {

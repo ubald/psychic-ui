@@ -201,7 +201,7 @@ namespace psychic_ui::showcase {
                .direction(Direction::Row)
                .wrap(Wrap::Wrap)
                .gap(m.space(1.5f))
-               .width(12 * 36 + 11 * m.space(1.5f));
+               .width((12 * 36) + (11 * m.space(1.5f)));
 
         manager->style(".icon-tile")
                .width(36)

@@ -1,10 +1,12 @@
 #pragma once
 
 #include <cmath>
+#include <cstdint>
 #include <numbers>
 #include <sstream>
 #include <iomanip>
 #include <functional>
+#include <utility>
 #include "psychic-ui/psychic-ui.hpp"
 #include "psychic-ui/Div.hpp"
 #include "psychic-ui/Component.hpp"
@@ -67,7 +69,7 @@ namespace psychic_ui {
         };
     }
 
-    enum class RangeMode {
+    enum class RangeMode : std::uint8_t {
         Linear,
         Logarithmic,
         LogarithmicInverse
@@ -75,7 +77,7 @@ namespace psychic_ui {
 
     template<class T>
     class Range : public internal::RangeBase {
-        static_assert(std::is_arithmetic<T>::value, "Ranges can only use numeric types.");
+        static_assert(std::is_arithmetic_v<T>, "Ranges can only use numeric types.");
     public:
         Range(T min, T max, std::function<void(T)> onChangeCallback);
         Range(T min, T max, T value, std::function<void(T)> onChangeCallback);
@@ -102,7 +104,7 @@ namespace psychic_ui {
             return self;
         }
 
-        const T min() const;
+        T min() const;
 
         template<class Self>
         Self &min(this Self &self, T min) {
@@ -110,7 +112,7 @@ namespace psychic_ui {
             return self;
         }
 
-        const T max() const;
+        T max() const;
 
         template<class Self>
         Self &max(this Self &self, T max) {
@@ -118,7 +120,7 @@ namespace psychic_ui {
             return self;
         }
 
-        const T step() const;
+        T step() const;
 
         template<class Self>
         Self &step(this Self &self, T step) {
@@ -126,7 +128,7 @@ namespace psychic_ui {
             return self;
         }
 
-        const T value() const;
+        T value() const;
 
         /**
          * Set the value, clamped to the range
@@ -163,7 +165,7 @@ namespace psychic_ui {
         void updateValue(T value);
         float getPercentageFor(T value) const;
         float getLinearPercentageFor(T value) const;
-        float nearestValidValue(T value, T step) const;
+        float nearestValidValue(T value, T interval) const;
     };
 
     template<class T>
@@ -174,14 +176,14 @@ namespace psychic_ui {
             changed.subscribe(std::forward<std::function<void(T)>>(onChangeCallback));
         }
 
-        _step = std::is_floating_point<T>::value ? 0.01f : 1;
+        _step = std::is_floating_point_v<T> ? 0.01f : 1;
 
         checkRange();
 
         mouseScrolled.subscribe(
             [this](const MouseEvent &event) {
                 const double scrollY = event.scrollY;
-                if (std::is_floating_point<T>::value) {
+                if (std::is_floating_point_v<T>) {
                     updateValue(_value + (scrollY * _step));
                 } else {
                     // Event the smallest movement should yield a result
@@ -193,15 +195,15 @@ namespace psychic_ui {
 
     template<class T>
     Range<T>::Range(T min, T max, std::function<void(T)> onChangeCallback) :
-        Range(min, max, static_cast<T>(0), onChangeCallback) {}
+        Range(min, max, static_cast<T>(0), std::move(onChangeCallback)) {}
 
     template<class T>
     Range<T>::Range(T value, std::function<void(T)> onChangeCallback) :
-        Range(static_cast<T>(0), static_cast<T>(1), value, onChangeCallback) {}
+        Range(static_cast<T>(0), static_cast<T>(1), value, std::move(onChangeCallback)) {}
 
     template<class T>
     Range<T>::Range(std::function<void(T)> onChangeCallback) :
-        Range(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0), onChangeCallback) {}
+        Range(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0), std::move(onChangeCallback)) {}
 
     template<class T>
     Range<T>::Range() :
@@ -230,7 +232,7 @@ namespace psychic_ui {
     }
 
     template<class T>
-    const T Range<T>::min() const {
+    T Range<T>::min() const {
         return _min;
     }
 
@@ -241,7 +243,7 @@ namespace psychic_ui {
     }
 
     template<class T>
-    const T Range<T>::max() const {
+    T Range<T>::max() const {
         return _max;
     }
 
@@ -252,18 +254,18 @@ namespace psychic_ui {
     }
 
     template<class T>
-    const T Range<T>::step() const {
+    T Range<T>::step() const {
         return _step;
     }
 
     template<class T>
-    const T Range<T>::value() const {
+    T Range<T>::value() const {
         return _value;
     }
 
     template<class T>
     void Range<T>::updateValue(const T value) {
-        float v = std::max(_min, std::min(value, _max));
+        const float v = std::max(_min, std::min(value, _max));
         if (v != _value) {
             _value = v;
             changed.emit(_value);
@@ -280,20 +282,19 @@ namespace psychic_ui {
 
     template<class T>
     void Range<T>::setLinearPercentage(const float percent) {
-        float v;
+        float v = percent;
         switch (_mode) {
             case RangeMode::Logarithmic:
                 v = std::log((percent * 9.0f) + 1.0f) * std::numbers::log10e_v<float>;
                 break;
             case RangeMode::LogarithmicInverse:
-                v = 1.0f - std::log(((1.0f - percent) * 9.0f) + 1.0f) * std::numbers::log10e_v<float>;
+                v = 1.0f - (std::log(((1.0f - percent) * 9.0f) + 1.0f) * std::numbers::log10e_v<float>);
                 break;
             default:
-                v = percent;
                 break;
         }
         v = (v * (static_cast<float>(_max) - static_cast<float >(_min))) + static_cast<float >(_min);
-        updateValue(static_cast<T>(std::is_floating_point<T>::value ? v : std::round(v)));
+        updateValue(static_cast<T>(std::is_floating_point_v<T> ? v : std::round(v)));
     }
 
     template<class T>
@@ -306,12 +307,12 @@ namespace psychic_ui {
 
     template<class T>
     float Range<T>::getLinearPercentageFor(const T value) const {
-        float v = getPercentageFor(value);
+        const float v = getPercentageFor(value);
         switch (_mode) {
             case RangeMode::Logarithmic:
                 return ((float) std::pow(10, v) - 1.0f) / 9.0f;
             case RangeMode::LogarithmicInverse:
-                return 1.0f - ((float) std::pow(10, 1.0f - v) - 1.0f) / 9.0f;
+                return 1.0f - (((float) std::pow(10, 1.0f - v) - 1.0f) / 9.0f);
             default:
                 return v;
         }

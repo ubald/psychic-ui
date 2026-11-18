@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <memory>
+#include <utility>
 #include "Toast.hpp"
 
 namespace psychic_ui {
@@ -89,14 +91,14 @@ namespace psychic_ui {
     }
 
     void Toast::dismiss() {
-        Div *stack = parent();
+        const Div *stack = parent();
         if (!stack || exiting()) {
             return;
         }
         const auto keepAlive = shared_from_this();
         // One with another under it fades where it is, rather than sliding down over it
         const auto &siblings = stack->children();
-        const auto self      = std::find_if(siblings.begin(), siblings.end(), [this](const auto &c) { return c.get() == this; });
+        const auto self      = std::ranges::find_if(siblings, [this](const auto &c) { return c.get() == this; });
         if (std::any_of(self, siblings.end(), [this](const auto &c) { return c.get() != this && !c->exiting(); })) {
             addClassName("in-place");
         }
@@ -163,14 +165,24 @@ namespace psychic_ui {
             shown.front()->addClassName("limited");
             shown.front()->dismiss();
         }
-        return Div::add<Toast>(options);
+        return Div::add<Toast>(options); // Tracked by childAdded
+    }
+
+    void ToastStack::childAdded(Div &child) {
+        Popup::childAdded(child);
+        trackChild(_toasts, child);
+    }
+
+    void ToastStack::childRemoved(Div &child) {
+        untrackChild(_toasts, child);
+        Popup::childRemoved(child);
     }
 
     std::vector<Toast *> ToastStack::toasts() const {
         std::vector<Toast *> list{};
-        for (const auto &child: _children) {
-            if (!child->exiting()) {
-                list.push_back(static_cast<Toast *>(child.get()));
+        for (const auto &toast: _toasts) {
+            if (!toast->exiting()) {
+                list.push_back(toast.get());
             }
         }
         return list;
@@ -182,10 +194,10 @@ namespace psychic_ui {
         // leaving brings the next one)
         const bool paused = mouseOver() || _paused;
         _paused = mouseOver();
-        auto       children = _children; // A toast that times out leaves
-        for (auto &child: children) {
-            if (child->parent() == this && !child->exiting()) {
-                static_cast<Toast *>(child.get())->advance(now, paused);
+        const auto toasts = _toasts; // A toast that times out leaves
+        for (const auto &toast: toasts) {
+            if (toast->parent() == this && !toast->exiting()) {
+                toast->advance(now, paused);
             }
         }
     }
@@ -195,11 +207,11 @@ namespace psychic_ui {
             return std::nullopt; // Held: the mouse leaving brings the next frame
         }
         std::optional<std::chrono::nanoseconds> next{};
-        for (const auto &child: _children) {
-            if (child->exiting()) {
+        for (const auto &toast: _toasts) {
+            if (toast->exiting()) {
                 continue;
             }
-            const auto deadline = static_cast<const Toast *>(child.get())->deadline();
+            const auto deadline = toast->deadline();
             if (deadline && (!next || *deadline < *next)) {
                 next = deadline;
             }

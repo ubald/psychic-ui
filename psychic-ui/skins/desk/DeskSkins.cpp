@@ -168,7 +168,7 @@ namespace psychic_ui {
             .backgroundColor(p.accent.withAlpha(0x61)); // 38%
 
         // By touch, a white tab across the field on the value, so the finger has something to hold
-        const float tab = std::min(parts.grabTab, parts.field - 2 * m.border - 2);
+        const float tab = std::min(parts.grabTab, parts.field - (2 * m.border) - 2);
         rule("Range RangeSkinBase .thumb")
             .display(touch ? Display::Flex : Display::None)
             .borderRadius(r.control)
@@ -203,8 +203,8 @@ namespace psychic_ui {
             .borderRadius(999);
 
         // Number stepper: − and + square-ish at the ends
-        rule("NumberStepper").width(s.controlMd + 2 * parts.stepperButton + 40);
-        rule("NumberStepper.small").width(s.controlSm + 2 * parts.stepperButton + 32);
+        rule("NumberStepper").width(s.controlMd + (2 * parts.stepperButton) + 40);
+        rule("NumberStepper.small").width(s.controlSm + (2 * parts.stepperButton) + 32);
         for (const char *button: {"NumberStepper .decrement", "NumberStepper .increment",
                                   "NumberStepper.small .decrement", "NumberStepper.small .increment"}) {
             rule(button).width(parts.stepperButton);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstdint>
 #include <string>
 #include <chrono>
 #include <functional>
@@ -31,9 +32,14 @@ namespace psychic_ui {
     class Window : public Div {
     public:
         explicit Window(std::string title);
-        virtual ~Window();
+        ~Window() override;
+        Window(const Window &) = delete;
+        Window &operator=(const Window &) = delete;
+        Window(Window &&) = delete;
+        Window &operator=(Window &&) = delete;
 
         Window *window() override;
+        const Window *window() const override;
 
         std::string getTitle() const;
         void setTitle(const std::string &title);
@@ -50,7 +56,7 @@ namespace psychic_ui {
 
         void toggleMaximized();
         bool maximized() const;
-        void setMaximized(bool minimized);
+        void setMaximized(bool maximized);
 
         void toggleFullscreen();
         bool getFullscreen() const;
@@ -800,7 +806,7 @@ namespace psychic_ui {
 
         // region Touch
 
-        enum class TouchPhase {
+        enum class TouchPhase : std::uint8_t {
             None,     // No finger down
             Pending,  // Down, within the slop: a tap, a long press, a drag or a pan
             Pressing, // Pressing a mouse button (_touchButton): a drag or a long press

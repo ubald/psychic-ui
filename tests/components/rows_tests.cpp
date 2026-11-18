@@ -12,7 +12,7 @@ using namespace psychic_ui_tests;
 // C4: DataGrid.cpp compares cells with strtod, which reads "Nancy" as NaN and "Infra" as infinity
 TEST_CASE("C4: DataGrid sorts words that start like nan or inf as text", "[components][datagrid][!shouldfail]") {
     auto             window = std::make_shared<TestWindow>();
-    FakeSystemWindow sys{window, 800, 600};
+    const FakeSystemWindow sys{window, 800, 600};
     auto            &grid = window->appContainer().add<DataGrid>().columns({{"Name"}});
     grid.row({"Nancy"});
     grid.row({"Infra"});

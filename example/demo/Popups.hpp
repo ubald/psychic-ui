@@ -47,14 +47,14 @@ namespace psychic_ui {
         void say(const std::string &text);
     };
 
-    Div &Popups::group(const std::string &title, const std::string &caption) {
+    inline Div &Popups::group(const std::string &title, const std::string &caption) {
         auto &group = add<VBox>().addClassName("group");
         group.add<Label>(title).addClassName("h4");
         group.add<Label>(caption).addClassName("text-tertiary");
         return group.add<HBox>().addClassName("row");
     }
 
-    Popups::Popups() : Div() {
+    inline Popups::Popups() : Div() {
         tag("Popups")
             .classNames({"demo-panel"});
 
@@ -175,11 +175,11 @@ namespace psychic_ui {
         _status->addClassName("status").addClassName("text-secondary");
     }
 
-    void Popups::say(const std::string &text) {
+    inline void Popups::say(const std::string &text) {
         _status->text(text);
     }
 
-    void Popups::openDialog() {
+    inline void Popups::openDialog() {
         auto &dialog = window()->overlay().open<Dialog>("Rename cue");
         dialog.icon("pencil")
               .description("Cue names show in the cue list and on the stage manager's screen.");
@@ -188,7 +188,7 @@ namespace psychic_ui {
         dialog.action("Rename", [this]() { say("Renamed"); }, "primary");
     }
 
-    void Popups::openConfirm() {
+    inline void Popups::openConfirm() {
         auto &dialog = window()->overlay().open<Dialog>("Delete cue 12?");
         dialog.icon("trash")
               .description("Its fades and follow-ons go with it. This can't be undone.")
@@ -197,7 +197,7 @@ namespace psychic_ui {
         dialog.action("Delete", [this]() { say("Deleted"); }, "danger");
     }
 
-    void Popups::showToast(const ToastVariant variant, const bool sticky) {
+    inline void Popups::showToast(const ToastVariant variant, const bool sticky) {
         ToastOptions options{};
         options.variant = variant;
         switch (variant) {
@@ -230,7 +230,7 @@ namespace psychic_ui {
         window()->toast(options);
     }
 
-    bool Popups::openPopup(const std::string &name) {
+    inline bool Popups::openPopup(const std::string &name) {
         Window *w = window();
         if (!w) {
             return false;

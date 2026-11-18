@@ -1,3 +1,4 @@
+#include <array>
 #include <catch2/catch_test_macros.hpp>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -9,11 +10,11 @@ using namespace psychic_ui_tests;
 
 namespace {
     // What the host's own callbacks saw
-    int hostKeys    = 0;
-    int hostButtons = 0;
+    int hostKeys    = 0; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables): GLFW's C callbacks capture nothing
+    int hostButtons = 0; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables): GLFW's C callbacks capture nothing
 
-    void hostKeyCallback(GLFWwindow *, int, int, int, int) { ++hostKeys; }
-    void hostButtonCallback(GLFWwindow *, int, int, int) { ++hostButtons; }
+    void hostKeyCallback(GLFWwindow * /*window*/, int /*key*/, int /*scancode*/, int /*action*/, int /*mods*/) { ++hostKeys; }
+    void hostButtonCallback(GLFWwindow * /*window*/, int /*button*/, int /*action*/, int /*mods*/) { ++hostButtons; }
 
     /**
      * A host on GLFW's null platform: real GLFW windows, no display, no GL context.
@@ -36,6 +37,11 @@ namespace {
             glfwSetKeyCallback(glfwWindow, hostKeyCallback);
             glfwSetMouseButtonCallback(glfwWindow, hostButtonCallback);
         }
+
+        GLFWHost(const GLFWHost &) = delete;
+        GLFWHost &operator=(const GLFWHost &) = delete;
+        GLFWHost(GLFWHost &&) = delete;
+        GLFWHost &operator=(GLFWHost &&) = delete;
 
         ~GLFWHost() {
             glfwDestroyWindow(glfwWindow);
@@ -82,7 +88,7 @@ TEST_CASE("GLFW: the adapter chains to the host's callbacks and gives them back"
     div.onMousePress([&]() { ++downs; });
 
     {
-        GLFWSystemWindow adapter(host.window, host.glfwWindow);
+        const GLFWSystemWindow adapter(host.window, host.glfwWindow);
         CHECK(host.window->windowWidth() == 800);
         host.layout();
         host.window->requestFocus(&div);
@@ -109,19 +115,19 @@ TEST_CASE("GLFW: the adapter chains to the host's callbacks and gives them back"
 }
 
 TEST_CASE("GLFW: a window has one adapter at a time", "[backend][glfw]") {
-    GLFWHost host;
-    GLFWSystemWindow adapter(host.window, host.glfwWindow);
+    const GLFWHost host;
+    const GLFWSystemWindow adapter(host.window, host.glfwWindow);
     CHECK_THROWS_AS(GLFWSystemWindow(std::make_shared<TestWindow>(), host.glfwWindow), std::invalid_argument);
 }
 
 TEST_CASE("GLFW: drops, clipboard and window dragging", "[backend][glfw]") {
-    GLFWHost host;
-    GLFWSystemWindow adapter(host.window, host.glfwWindow);
+    const GLFWHost host;
+    const GLFWSystemWindow adapter(host.window, host.glfwWindow);
 
     auto drop = glfwSetDropCallback(host.glfwWindow, nullptr);
     glfwSetDropCallback(host.glfwWindow, drop);
-    const char *paths[] = {"/tmp/a.txt", "/tmp/b.png"};
-    drop(host.glfwWindow, 2, paths);
+    std::array<const char *, 2> paths{"/tmp/a.txt", "/tmp/b.png"};
+    drop(host.glfwWindow, 2, paths.data());
     CHECK(host.window->dropped == std::vector<std::string>{"/tmp/a.txt", "/tmp/b.png"});
 
     host.window->setClipboardText("from Psychic UI ✓");
@@ -134,7 +140,7 @@ TEST_CASE("GLFW: drops, clipboard and window dragging", "[backend][glfw]") {
 
 TEST_CASE("GLFW: no touch input, the window stays in pointer mode", "[backend][glfw][touch]") {
     GLFWHost host;
-    GLFWSystemWindow adapter(host.window, host.glfwWindow);
+    const GLFWSystemWindow adapter(host.window, host.glfwWindow);
     host.layout();
     host.cursorCallback()(host.glfwWindow, 50.0, 50.0);
     host.buttonCallback()(host.glfwWindow, GLFW_MOUSE_BUTTON_LEFT, GLFW_PRESS, 0);
@@ -172,7 +178,7 @@ TEST_CASE("GLFW: scrolls carry the modifiers of the last key or button event", "
     GLFWHost host;
     auto &div = host.window->appContainer().add<Div>();
     div.width(100.0f).height(100.0f);
-    GLFWSystemWindow adapter(host.window, host.glfwWindow);
+    const GLFWSystemWindow adapter(host.window, host.glfwWindow);
     host.layout();
     std::vector<MouseEvent> scrolls{};
     std::vector<MouseEvent> presses{};

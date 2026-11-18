@@ -35,9 +35,13 @@ namespace {
         }
 
         SDL_TouchDeviceType touchDeviceType(SDL_TouchID touchID) const override {
-            return touchID == touchScreen ? SDL_TOUCH_DEVICE_DIRECT
-                   : touchID == trackpad ? SDL_TOUCH_DEVICE_INDIRECT_ABSOLUTE
-                   : SDL_TOUCH_DEVICE_INVALID;
+            if (touchID == touchScreen) {
+                return SDL_TOUCH_DEVICE_DIRECT;
+            }
+            if (touchID == trackpad) {
+                return SDL_TOUCH_DEVICE_INDIRECT_ABSOLUTE;
+            }
+            return SDL_TOUCH_DEVICE_INVALID;
         }
     };
 
@@ -48,7 +52,7 @@ namespace {
     struct SDL3Fixture {
         SDL_Window                        *sdlWindow{nullptr};
         std::shared_ptr<TestWindow>       window{std::make_shared<TestWindow>()};
-        std::unique_ptr<SDL3SystemWindow> adapter{};
+        std::unique_ptr<TouchAdapter>     adapter{};
         sk_sp<SkSurface>                  surface{SkSurfaces::Raster(SkImageInfo::MakeN32Premul(800, 600))};
 
         explicit SDL3Fixture(SDL_WindowFlags flags = 0) {
@@ -58,6 +62,11 @@ namespace {
             REQUIRE(sdlWindow != nullptr);
             adapter = std::make_unique<TouchAdapter>(window, sdlWindow, nullptr);
         }
+
+        SDL3Fixture(const SDL3Fixture &) = delete;
+        SDL3Fixture &operator=(const SDL3Fixture &) = delete;
+        SDL3Fixture(SDL3Fixture &&) = delete;
+        SDL3Fixture &operator=(SDL3Fixture &&) = delete;
 
         ~SDL3Fixture() {
             adapter.reset();
@@ -81,7 +90,7 @@ namespace {
         /**
          * A finger event, at window coordinates, timed in milliseconds
          */
-        bool finger(SDL_EventType type, float x, float y, Uint64 milliseconds, SDL_TouchID device = touchScreen, SDL_FingerID id = 1) {
+        bool finger(SDL_EventType type, float x, float y, Uint64 milliseconds, SDL_TouchID device = touchScreen, SDL_FingerID id = 1) const {
             SDL_Event e{};
             e.type              = type;
             e.tfinger.timestamp = milliseconds * 1'000'000;
@@ -96,7 +105,7 @@ namespace {
         /**
          * The mouse events SDL makes of a touch (or of a pen, or a real mouse's, by `which`)
          */
-        void mouse(SDL_EventType type, float x, float y, SDL_MouseID which) {
+        void mouse(SDL_EventType type, float x, float y, SDL_MouseID which) const {
             auto e = event(type);
             if (type == SDL_EVENT_MOUSE_MOTION) {
                 e.motion.which = which;
@@ -112,7 +121,7 @@ namespace {
             adapter->handleEvent(e);
         }
 
-        bool button(SDL_EventType type, float x, float y) {
+        bool button(SDL_EventType type, float x, float y) const {
             auto e = event(type);
             e.button.button = SDL_BUTTON_LEFT;
             e.button.down   = type == SDL_EVENT_MOUSE_BUTTON_DOWN;
@@ -133,7 +142,7 @@ TEST_CASE("SDL3: the adapter reads the SDL window", "[backend][sdl3]") {
 
 TEST_CASE("SDL3: the theme follows the system's light and dark mode", "[backend][sdl3][theme]") {
     SDL3Fixture sdl;
-    auto &adapter = static_cast<TouchAdapter &>(*sdl.adapter);
+    auto &adapter = *sdl.adapter;
     auto &div     = sdl.window->appContainer().add<Div>().addClassName("probe");
     std::vector<ColorScheme> changes{};
     sdl.window->onColorSchemeChange([&](ColorScheme scheme) { changes.push_back(scheme); });
@@ -355,7 +364,7 @@ TEST_CASE("SDL3: hit testing", "[backend][sdl3][drag]") {
 
     // The title bar's empty part moves the window, its buttons don't
     CHECK(sdl.adapter->hitTest(700, titleBar.getHeight() / 2) == SDL_HITTEST_DRAGGABLE);
-    Button &close = titleBar.controls().closeButton();
+    const Button &close = titleBar.controls().closeButton();
     int closeX = 0;
     int closeY = 0;
     close.localToGlobal(closeX, closeY, close.getWidth() / 2, close.getHeight() / 2);
@@ -374,7 +383,7 @@ TEST_CASE("SDL3: hit testing", "[backend][sdl3][drag]") {
 }
 
 TEST_CASE("SDL3: the clipboard", "[backend][sdl3][clipboard]") {
-    SDL3Fixture sdl;
+    const SDL3Fixture sdl;
     sdl.window->setClipboardText("from Psychic UI ✓");
     CHECK(sdl.window->clipboardText() == "from Psychic UI ✓");
     CHECK(SDL_HasClipboardText());
@@ -420,16 +429,16 @@ TEST_CASE("SDL3: dragging a range follows the mouse, through its skin's geometry
     // The default slider's values are along its `.track` part, its first child
     const Div  &track  = *skin->children().front();
     REQUIRE(track.classNames().contains("track"));
-    const float trackX = static_cast<float>(track.x());
-    const float width  = static_cast<float>(track.getWidth());
+    const auto  trackX = static_cast<float>(track.x());
+    const auto  width  = static_cast<float>(track.getWidth());
     REQUIRE(width > 100.0f);
-    const SkPoint quarter = inWindow(*skin, trackX + width * 0.25f, 10.0f);
+    const SkPoint quarter = inWindow(*skin, trackX + (width * 0.25f), 10.0f);
     CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, quarter.x(), quarter.y()));
     CHECK(range.value() == Catch::Approx(0.25f).margin(0.01f));
     CHECK(range.active());
 
     // Dragging, even off the range, keeps following the mouse
-    const SkPoint threeQuarters = inWindow(*skin, trackX + width * 0.75f, 300.0f);
+    const SkPoint threeQuarters = inWindow(*skin, trackX + (width * 0.75f), 300.0f);
     moveTo(sdl, threeQuarters.x(), threeQuarters.y());
     CHECK(range.value() == Catch::Approx(0.75f).margin(0.01f));
     moveTo(sdl, quarter.x() - 500.0f, quarter.y());
@@ -466,7 +475,7 @@ TEST_CASE("SDL3: dragging a scroll bar's thumb scrolls its viewport", "[backend]
     sdl.layout();
     sdl.layout(); // The thumb is sized from the first layout
 
-    ScrollBar *scrollBar = nullptr;
+    const ScrollBar *scrollBar = nullptr;
     for (const auto &child: scroller.children()) {
         for (const auto &grandChild: child->children()) { // Beside the viewport, in a row
             auto bar = std::dynamic_pointer_cast<ScrollBar>(grandChild);
@@ -496,13 +505,13 @@ TEST_CASE("SDL3: dragging a scroll bar's thumb scrolls its viewport", "[backend]
     const float free          = track.height() - thumb.height();
     const int   contentScroll = scroller.viewport()->contentHeight() - scroller.viewport()->getHeight();
     REQUIRE(contentScroll > 0);
-    moveTo(sdl, grab.x() + 300.0f, grab.y() + free / 2.0f); // Off the bar sideways too
-    CHECK(scroller.viewport()->scrollY() == Catch::Approx(-contentScroll / 2.0).margin(contentScroll / free + 1.0));
-    moveTo(sdl, grab.x(), grab.y() + 10 * free); // Past the end
+    moveTo(sdl, grab.x() + 300.0f, grab.y() + (free / 2.0f)); // Off the bar sideways too
+    CHECK(scroller.viewport()->scrollY() == Catch::Approx(-contentScroll / 2.0).margin((contentScroll / free) + 1.0));
+    moveTo(sdl, grab.x(), grab.y() + (10 * free)); // Past the end
     CHECK(scroller.viewport()->scrollY() == -contentScroll);
 
     // Released, it stops
-    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, grab.x(), grab.y() + 10 * free));
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, grab.x(), grab.y() + (10 * free)));
     moveTo(sdl, grab.x(), grab.y());
     CHECK(scroller.viewport()->scrollY() == -contentScroll);
 }
@@ -641,8 +650,8 @@ TEST_CASE("SDL3: a focused text field tells SDL where its caret is, by mouse or 
     int left = 0;
     int top  = 0;
     input.localToGlobal(left, top);
-    const float x = static_cast<float>(left + 100);
-    const float y = static_cast<float>(top + input.getHeight() / 2);
+    const auto  x = static_cast<float>(left + 100);
+    const float y = static_cast<float>(top) + (static_cast<float>(input.getHeight()) / 2.0f);
 
     // With a mouse, for an input method's candidates
     sdl.mouse(SDL_EVENT_MOUSE_MOTION, x, y, 1);

@@ -32,6 +32,8 @@ namespace psychic_ui {
         Signal() = default;
         Signal(const Signal &) = delete;
         Signal &operator=(const Signal &) = delete;
+        Signal(Signal &&) = delete;
+        Signal &operator=(Signal &&) = delete;
 
         ~Signal() {
             // Disconnect every slot: a running emission skips them, and releases them once it ends
@@ -91,13 +93,13 @@ namespace psychic_ui {
                 return;
             }
             // From here on, only use locals: a handler can destroy this signal
-            std::shared_ptr<detail::SignalCore<T...>> core = _core;
-            Emitting emitting{*core};
+            const std::shared_ptr<detail::SignalCore<T...>> core = _core;
+            const Emitting emitting{*core};
             // By index over a snapshot of the size: slots connected by a handler wait for the next emission
             for (std::size_t i = 0, n = core->slots.size(); i < n; ++i) {
                 // The core keeps the slot, and only compacts once no emission runs, so the callback stays valid even
                 // if the slot disconnects itself
-                Slot<T...> &slot = *core->slots[i];
+                const Slot<T...> &slot = *core->slots[i];
                 if (!slot._connected) {
                     continue;
                 }
@@ -107,15 +109,20 @@ namespace psychic_ui {
 
     private:
         struct Emitting {
-            detail::SignalCore<T...> &core;
+            detail::SignalCore<T...> *core;
 
-            explicit Emitting(detail::SignalCore<T...> &core) : core(core) {
-                ++core.emitting;
+            explicit Emitting(detail::SignalCore<T...> &emitted) : core(&emitted) {
+                ++core->emitting;
             }
 
+            Emitting(const Emitting &) = delete;
+            Emitting &operator=(const Emitting &) = delete;
+            Emitting(Emitting &&) = delete;
+            Emitting &operator=(Emitting &&) = delete;
+
             ~Emitting() {
-                --core.emitting;
-                core.compact();
+                --core->emitting;
+                core->compact();
             }
         };
 

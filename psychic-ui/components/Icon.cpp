@@ -37,8 +37,8 @@ namespace psychic_ui {
         }
         const float size = std::min({_computedStyle.iconSize(), _paddedRect.width(), _paddedRect.height()});
         const SkRect box = SkRect::MakeXYWH(
-            _paddedRect.centerX() - size / 2.0f,
-            _paddedRect.centerY() - size / 2.0f,
+            _paddedRect.centerX() - (size / 2.0f),
+            _paddedRect.centerY() - (size / 2.0f),
             size,
             size
         );

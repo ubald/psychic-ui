@@ -1,5 +1,7 @@
 // The editing model alone: no Div, a fake geometry
+#include <cmath>
 #include <string>
+#include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <unicode/unistr.h>
@@ -20,13 +22,13 @@ namespace {
      */
     class FakeGeometry final : public TextGeometry {
     public:
-        explicit FakeGeometry(const TextEditing &editing) : _editing(editing) {}
+        explicit FakeGeometry(const TextEditing &editing) : _editing(&editing) {}
 
         SkRect caretRect(unsigned int index) const override {
-            const auto &text   = _editing.text();
+            const auto &text   = _editing->text();
             int         line   = 0;
             int         column = 0;
-            for (int32_t i = 0; i < static_cast<int32_t>(index) && i < text.length(); ++i) {
+            for (int32_t i = 0; std::cmp_less(i, index) && i < text.length(); ++i) {
                 if (text.charAt(i) == u'\n') {
                     ++line;
                     column = 0;
@@ -34,11 +36,11 @@ namespace {
                     ++column;
                 }
             }
-            return SkRect::MakeXYWH(column * 10.0f, line * 20.0f, 0.0f, 20.0f);
+            return SkRect::MakeXYWH(static_cast<float>(column) * 10.0f, static_cast<float>(line) * 20.0f, 0.0f, 20.0f);
         }
 
         unsigned int indexAt(float x, float y) const override {
-            const auto &text   = _editing.text();
+            const auto &text   = _editing->text();
             const int   target = std::max(0, static_cast<int>(y / 20.0f));
             int         line   = 0;
             int32_t     i      = 0;
@@ -48,7 +50,7 @@ namespace {
                 }
             }
             // Then along the line, to the nearest column, never past its line return
-            const int column = std::max(0, static_cast<int>(x / 10.0f + 0.5f));
+            const int column = std::max(0, static_cast<int>(std::lround(x / 10.0f)));
             for (int c = 0; c < column && i < text.length() && text.charAt(i) != u'\n'; ++c) {
                 ++i;
             }
@@ -56,7 +58,7 @@ namespace {
         }
 
     private:
-        const TextEditing &_editing;
+        const TextEditing *_editing;
     };
 
     class FakeClipboard final : public TextEditing::Clipboard {

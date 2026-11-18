@@ -18,6 +18,8 @@ namespace psychic_ui {
         Observer() = default;
         Observer(const Observer &) = delete;
         Observer &operator=(const Observer &) = delete;
+        Observer(Observer &&) = delete;
+        Observer &operator=(Observer &&) = delete;
 
         ~Observer() {
             // Disconnecting can release callbacks, whose captures could call back into us: the slots move to a local

@@ -125,7 +125,7 @@ namespace psychic_ui {
         virtual std::vector<const Theme *> themes() const {
             std::vector<const Theme *> own{};
             for (const Theme *theme: {&lightTheme(), &darkTheme(), &defaultTheme()}) {
-                if (std::find(own.begin(), own.end(), theme) == own.end()) {
+                if (std::ranges::find(own, theme) == own.end()) {
                     own.push_back(theme);
                 }
             }
@@ -136,12 +136,7 @@ namespace psychic_ui {
          * Whether the theme is one of the set's (`themes()`), by name
          */
         bool hasTheme(const Theme &theme) const {
-            for (const Theme *own: themes()) {
-                if (own->name == theme.name) {
-                    return true;
-                }
-            }
-            return false;
+            return std::ranges::any_of(themes(), [&theme](const Theme *own) { return own->name == theme.name; });
         }
 
         virtual void registerSkins(SkinRegistry &skins) const = 0;

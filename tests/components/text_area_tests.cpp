@@ -89,7 +89,7 @@ namespace {
         }
 
         void type(const std::string &text) {
-            for (char c: text) {
+            for (const char c: text) {
                 window->handleType(icu::UnicodeString(static_cast<UChar32>(c)));
             }
             layout();
@@ -191,7 +191,7 @@ TEST_CASE("TextArea: a new skin keeps the text, the selection and the caret in v
     const std::string text   = f.area.text();
     const int         scroll = f.viewport().scrollY();
     REQUIRE(scroll < 0);
-    Text *before = &f.view();
+    const Text *before = &f.view();
 
     f.area.skin(std::make_shared<TextAreaSkinBase>());
     f.layout();

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 #include <string>
@@ -8,7 +9,7 @@
 namespace psychic_ui {
     class Div;
 
-    enum class Pseudo {
+    enum class Pseudo : std::uint8_t {
         Focus,
         FocusVisible,
         Hover,
@@ -20,7 +21,7 @@ namespace psychic_ui {
         Touch
     };
 
-    enum class Token {
+    enum class Token : std::uint8_t {
         Tag,
         Id,
         Class,

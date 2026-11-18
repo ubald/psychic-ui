@@ -2,7 +2,9 @@
 #include <filesystem>
 #include <iostream>
 #include <set>
+#include <span>
 #include <string>
+#include <utility>
 #include <vector>
 #include <psychic-ui/Window.hpp>
 #include "PngWriter.hpp"
@@ -60,7 +62,7 @@ namespace {
                 if (time == motion.still) {
                     const std::filesystem::path still = directory / (scene.name + "-still.png");
                     if (!PngWriter::write(still.string(), PngWriter::encode(frame))) {
-                        std::cerr << "Could not write " << still << std::endl;
+                        std::cerr << "Could not write " << still << '\n';
                         return false;
                     }
                 }
@@ -75,7 +77,7 @@ namespace {
         }
         const std::filesystem::path path = directory / (scene.name + ".png");
         if (!PngWriter::write(path.string(), png)) {
-            std::cerr << "Could not write " << path << std::endl;
+            std::cerr << "Could not write " << path << '\n';
             return false;
         }
         return true;
@@ -114,15 +116,16 @@ int main(int argc, char **argv) {
     std::set<std::string> only{};
     std::string           liveScene{};
     bool                  list = false;
-    for (int i = 1; i < argc; ++i) {
-        const std::string arg  = argv[i];
-        const bool        more = i + 1 < argc;
+    const std::span<char *> args{argv, static_cast<std::size_t>(argc)};
+    for (std::size_t i = 1; i < args.size(); ++i) {
+        const std::string arg  = args[i];
+        const bool        more = i + 1 < args.size();
         if (arg == "--out" && more) {
-            out = argv[++i];
+            out = args[++i];
         } else if (arg == "--scene" && more) {
-            only.insert(argv[++i]);
+            only.insert(args[++i]);
         } else if (arg == "--live" && more) {
-            liveScene = argv[++i];
+            liveScene = args[++i];
         } else if (arg == "--list") {
             list = true;
         } else {
@@ -149,9 +152,9 @@ int main(int argc, char **argv) {
                     return 0;
                 }
             }
-            std::cerr << "Unknown scene: " << liveScene << std::endl;
+            std::cerr << "Unknown scene: " << liveScene << '\n';
             #else
-            std::cerr << "Built without SDL3: no live window" << std::endl;
+            std::cerr << "Built without SDL3: no live window" << '\n';
             #endif
             return 1;
         }
@@ -176,17 +179,17 @@ int main(int argc, char **argv) {
                 failed = true;
             }
             const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
-            std::cout << scene.name << ".png  " << ms.count() << " ms" << std::endl;
+            std::cout << scene.name << ".png  " << ms.count() << " ms" << '\n';
         }
         const auto total = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - begin);
-        std::cout << written << " scenes in " << total.count() << " ms" << std::endl;
-        if (!only.empty() && written != static_cast<int>(only.size())) {
-            std::cerr << "Some scenes named weren't found" << std::endl;
+        std::cout << written << " scenes in " << total.count() << " ms" << '\n';
+        if (!only.empty() && std::cmp_not_equal(written, only.size())) {
+            std::cerr << "Some scenes named weren't found" << '\n';
             return 1;
         }
         return failed ? 1 : 0;
     } catch (const std::exception &e) {
-        std::cerr << "Caught a fatal error: " << e.what() << std::endl;
+        std::cerr << "Caught a fatal error: " << e.what() << '\n';
         return 1;
     }
 }

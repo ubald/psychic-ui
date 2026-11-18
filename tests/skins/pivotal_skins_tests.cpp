@@ -44,7 +44,8 @@ namespace {
         if (root.classNames().contains(className)) {
             return &root;
         }
-        for (auto &child: root.children()) {
+        for (const auto &child: root.children()) {
+            // NOLINTNEXTLINE(misc-const-correctness): returned as a mutable pointer, which the check misses
             if (Div *found = part(*child, className)) {
                 return found;
             }
@@ -56,7 +57,7 @@ namespace {
         int x = 0;
         int y = 0;
         div.localToGlobal(x, y);
-        return static_cast<float>(x) + div.getWidth() / 2.0f;
+        return static_cast<float>(x) + (static_cast<float>(div.getWidth()) / 2.0f);
     }
 
     float left(const Div &div) {
@@ -72,10 +73,10 @@ TEST_CASE("Pivotal skins: the slider's track, fill and thumb follow the value", 
     auto &range = f.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.25f, nullptr).width(300);
     f.layout();
     REQUIRE(range.skin());
-    Div *track = part(*range.skin(), "track");
-    Div *fill  = part(*range.skin(), "fill");
-    Div *thumb = part(*range.skin(), "thumb");
-    Div *value = part(*range.skin(), "value");
+    const Div *track = part(*range.skin(), "track");
+    const Div *fill  = part(*range.skin(), "fill");
+    const Div *thumb = part(*range.skin(), "thumb");
+    const Div *value = part(*range.skin(), "value");
     REQUIRE(track);
     REQUIRE(fill);
     REQUIRE(thumb);
@@ -91,17 +92,17 @@ TEST_CASE("Pivotal skins: the slider's track, fill and thumb follow the value", 
 
     CHECK(fill->getWidth() == Catch::Approx(track->getWidth() * 0.25f).margin(0.5f));
     CHECK(left(*fill) == Catch::Approx(left(*track)).margin(0.5f));
-    CHECK(centerX(*thumb) == Catch::Approx(left(*track) + track->getWidth() * 0.25f).margin(1.0f));
+    CHECK(centerX(*thumb) == Catch::Approx(left(*track) + (track->getWidth() * 0.25f)).margin(1.0f));
 
     range.value(0.75f);
     f.layout();
     CHECK(fill->getWidth() == Catch::Approx(track->getWidth() * 0.75f).margin(0.5f));
-    CHECK(centerX(*thumb) == Catch::Approx(left(*track) + track->getWidth() * 0.75f).margin(1.0f));
+    CHECK(centerX(*thumb) == Catch::Approx(left(*track) + (track->getWidth() * 0.75f)).margin(1.0f));
 
     // A press picks the value under it along the track
     int x = 0;
     int y = 0;
-    track->localToGlobal(x, y, static_cast<int>(track->getWidth() / 2), 2);
+    track->localToGlobal(x, y, track->getWidth() / 2, 2);
     f.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = true});
     f.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = false});
     CHECK(range.value() == Catch::Approx(0.5f).margin(0.01f));
@@ -113,8 +114,8 @@ TEST_CASE("Pivotal skins: a vertical slider fills from the bottom", "[skins][piv
                    .orientation(Orientation::Vertical)
                    .height(200);
     f.layout();
-    Div *track = part(*range.skin(), "track");
-    Div *fill  = part(*range.skin(), "fill");
+    const Div *track = part(*range.skin(), "track");
+    const Div *fill  = part(*range.skin(), "fill");
     REQUIRE(track);
     REQUIRE(fill);
     CHECK(range.skin()->classNames().contains("vertical"));
@@ -144,13 +145,13 @@ TEST_CASE("Pivotal skins: the keyboard's focus shows the focus ring, a click's d
     f.tab();
     CHECK(check.hasFocus());
     CHECK(first.computedStyle().outlineWidth() == 0.0f);
-    Div *box = part(*check.skin(), "box");
+    const Div *box = part(*check.skin(), "box");
     REQUIRE(box);
     CHECK(box->computedStyle().outlineWidth() == f.theme.metrics.focusRing); // On the box
 
     f.tab();
     CHECK(range.hasFocus());
-    Div *thumb = part(*range.skin(), "thumb");
+    const Div *thumb = part(*range.skin(), "thumb");
     REQUIRE(thumb);
     CHECK(thumb->computedStyle().outlineWidth() == f.theme.metrics.focusRing); // Around the thumb
 
@@ -223,7 +224,7 @@ TEST_CASE("Pivotal skins: buttons are pills, their variants skins", "[skins][piv
     CHECK(secondary.skin()->computedStyle().backgroundColor() == f.theme.palette.raised);
     CHECK(secondary.skin()->computedStyle().borderColor() == f.theme.palette.line);
 
-    Div *icon = part(*withIcon.skin(), "icon");
+    const Div *icon = part(*withIcon.skin(), "icon");
     REQUIRE(icon);
     CHECK(icon->computedStyle().display() == Display::Flex);
     CHECK(icon->getWidth() == f.theme.metrics.iconSm);
@@ -234,7 +235,7 @@ TEST_CASE("Pivotal skins: buttons are pills, their variants skins", "[skins][piv
     f.layout();
     CHECK(iconButton.getWidth() == f.theme.metrics.pointer.controlSm);
     CHECK(iconButton.getHeight() == f.theme.metrics.pointer.controlSm);
-    Div *alone = part(*iconButton.skin(), "icon");
+    const Div *alone = part(*iconButton.skin(), "icon");
     REQUIRE(alone);
     CHECK(alone->getWidth() == f.theme.metrics.iconMd);
     CHECK(alone->getHeight() == f.theme.metrics.iconMd);
@@ -245,7 +246,7 @@ TEST_CASE("Pivotal skins: a checked check box fills its box with the accent", "[
     Fixture f;
     auto &check = f.window->appContainer().add<CheckBox>("Check");
     f.layout();
-    Div *box = part(*check.skin(), "box");
+    const Div *box = part(*check.skin(), "box");
     REQUIRE(box);
     CHECK(box->getWidth() == 14);
     CHECK(box->computedStyle().backgroundColor() == f.theme.palette.page);
@@ -319,9 +320,9 @@ TEST_CASE("Pivotal skins: a menu's labels line up when some rows have an icon", 
         f.layout();
         std::vector<float> lefts{};
         REQUIRE(f.window->overlay().children().size() == 1);
-        Div &menu = *f.window->overlay().children().front();
-        for (auto &row: menu.children()) {
-            Div *label = part(*row, "label");
+        const Div &menu = *f.window->overlay().children().front();
+        for (const auto &row: menu.children()) {
+            const Div *label = part(*row, "label");
             REQUIRE(label);
             lefts.push_back(left(*label) - left(*row));
         }
@@ -352,7 +353,7 @@ TEST_CASE("Pivotal skins: a menu's labels line up when some rows have an icon", 
     // Only a submenu's row shows its arrow
     f.window->openMenu({Menu::item("Copy", []() {}), Menu::item("More", {Menu::item("Nothing", []() {})})}, 10, 10);
     f.layout();
-    Div &menu = *f.window->overlay().children().front();
+    const Div &menu = *f.window->overlay().children().front();
     REQUIRE(menu.children().size() == 2);
     CHECK(part(*menu.children()[0], "arrow")->computedStyle().display() == Display::None);
     CHECK(part(*menu.children()[1], "arrow")->computedStyle().display() == Display::Flex);

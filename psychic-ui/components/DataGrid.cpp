@@ -1,7 +1,7 @@
 #include <algorithm>
-#include <cassert>
 #include <cctype>
 #include <cstdlib>
+#include <utility>
 #include "DataGrid.hpp"
 #include "Icon.hpp"
 #include "Label.hpp"
@@ -14,7 +14,7 @@ namespace psychic_ui {
          */
         bool leadingNumber(const std::string &text, double &number) {
             const char *start = text.c_str();
-            char       *end   = nullptr;
+            char       *end   = nullptr; // NOLINT(misc-const-correctness): std::strtod's end is a char **
             number = std::strtod(start, &end);
             return end != start;
         }
@@ -36,7 +36,10 @@ namespace psychic_ui {
                     return ca < cb ? -1 : 1;
                 }
             }
-            return a.size() == b.size() ? 0 : a.size() < b.size() ? -1 : 1;
+            if (a.size() == b.size()) {
+                return 0;
+            }
+            return a.size() < b.size() ? -1 : 1;
         }
     }
 
@@ -52,8 +55,7 @@ namespace psychic_ui {
     }
 
     Div &DataGridRow::cell(const std::size_t column) const {
-        assert(column < _cells.size());
-        return *_cells[column];
+        return *_cells.at(column);
     }
 
     std::string DataGridRow::value(const std::size_t column) const {
@@ -165,7 +167,7 @@ namespace psychic_ui {
 
     void DataGrid::updateColumns(std::vector<DataGridColumn> columns) {
         _columns = std::move(columns);
-        if (_sortColumn >= static_cast<int>(_columns.size())) {
+        if (std::cmp_greater_equal(_sortColumn, _columns.size())) {
             _sortColumn = -1;
             _sortOrder  = SortOrder::None;
         }
@@ -204,7 +206,7 @@ namespace psychic_ui {
             );
             _sortButtons.push_back(&sort);
         }
-        for (DataGridRow *row: dataRows()) {
+        for (const DataGridRow *row: dataRows()) {
             for (std::size_t i = 0; i < row->cellCount(); ++i) {
                 styleCell(row->cell(i), i);
             }
@@ -223,7 +225,7 @@ namespace psychic_ui {
     }
 
     void DataGrid::updateSort(int column, SortOrder order) {
-        if (column < 0 || column >= static_cast<int>(_columns.size()) || order == SortOrder::None) {
+        if (column < 0 || std::cmp_greater_equal(column, _columns.size()) || order == SortOrder::None) {
             column = -1;
             order  = SortOrder::None;
         }
@@ -248,8 +250,8 @@ namespace psychic_ui {
             }
         }
         const auto column = static_cast<std::size_t>(std::max(_sortColumn, 0));
-        std::stable_sort(
-            rows.begin(), rows.end(), [this, column](const auto &a, const auto &b) {
+        std::ranges::stable_sort(
+            rows, [this, column](const auto &a, const auto &b) {
                 if (_sortOrder == SortOrder::None) {
                     return a->_order < b->_order;
                 }
@@ -273,7 +275,7 @@ namespace psychic_ui {
                 continue;
             }
             Div        &sort   = *_sortButtons[i];
-            const bool sorted = static_cast<int>(i) == _sortColumn;
+            const bool sorted = std::cmp_equal(i, _sortColumn);
             if (sorted) {
                 sort.addClassName("sorted");
             } else {

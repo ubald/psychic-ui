@@ -9,7 +9,7 @@ namespace psychic_ui::paint {
         paint.setAntiAlias(antiAlias);
         paint.setStyle(SkPaint::kFill_Style);
         paint.setColor(color.argb());
-        SkPath path = SkPathBuilder()
+        const SkPath path = SkPathBuilder()
             .moveTo(bounds.left(), bounds.top())
             .lineTo(bounds.right(), bounds.centerY())
             .lineTo(bounds.left(), bounds.bottom())

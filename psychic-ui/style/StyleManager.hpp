@@ -34,6 +34,9 @@ namespace psychic_ui {
         StyleManager() = default;
         StyleManager(const StyleManager &) = delete;
         StyleManager &operator=(const StyleManager &) = delete;
+        StyleManager(StyleManager &&) = delete;
+        StyleManager &operator=(StyleManager &&) = delete;
+        ~StyleManager() = default;
 
         /**
          * Forget the fonts, the skin set, the loaded stylesheets and every rule.
@@ -49,7 +52,7 @@ namespace psychic_ui {
          */
         template<typename T>
         void loadStyleSheet(bool reset = false) {
-            static_assert(std::is_base_of<StyleSheet, T>::value, "T must extend StyleSheet");
+            static_assert(std::is_base_of_v<StyleSheet, T>, "T must extend StyleSheet");
             if (reset) {
                 this->reset();
             }

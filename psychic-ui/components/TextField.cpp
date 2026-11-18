@@ -84,7 +84,7 @@ namespace psychic_ui {
     }
 
     void TextFieldBase::handleKey(const Key key, const Mod mod) {
-        Text *view = this->view();
+        const Text *view = this->view();
         if (!_enabled || !view) {
             return;
         }
@@ -97,7 +97,7 @@ namespace psychic_ui {
     }
 
     void TextFieldBase::handlePress(const MouseEvent &event) {
-        Text *view = this->view();
+        const Text *view = this->view();
         if (!_enabled || !view || event.button != MouseButton::LEFT) {
             return;
         }

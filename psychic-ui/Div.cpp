@@ -1,7 +1,7 @@
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 #include "include/core/SkBlurTypes.h"
 #include "include/core/SkMaskFilter.h"
 #include "include/core/SkPaint.h"
@@ -29,16 +29,21 @@ namespace psychic_ui {
             ~YogaConfig() {
                 YGConfigFree(config);
             }
+
+            YogaConfig(const YogaConfig &) = delete;
+            YogaConfig &operator=(const YogaConfig &) = delete;
+            YogaConfig(YogaConfig &&) = delete;
+            YogaConfig &operator=(YogaConfig &&) = delete;
         };
 
         YGConfigRef yogaConfig() {
-            static YogaConfig yogaConfig;
+            static const YogaConfig yogaConfig;
             return yogaConfig.config;
         }
 
         // Class names are matched in lower case
         std::string lowercase(std::string string) {
-            std::transform(string.begin(), string.end(), string.begin(), ::tolower);
+            std::ranges::transform(string, string.begin(), ::tolower);
             return string;
         }
     }
@@ -80,7 +85,7 @@ namespace psychic_ui {
         if (!_id.empty()) {
             str += "#" + _id;
         }
-        for (auto &className: _classNames) {
+        for (const auto &className: _classNames) {
             str += "." + className;
         }
         return str;
@@ -96,6 +101,10 @@ namespace psychic_ui {
         return _parent ? _parent->window() : nullptr;
     }
 
+    const Window *Div::window() const {
+        return _parent ? std::as_const(*_parent).window() : nullptr;
+    }
+
     Div *Div::parent() {
         return _parent;
     }
@@ -109,6 +118,7 @@ namespace psychic_ui {
             if (_parent) {
                 removedFromRenderRecursive();
                 removed();
+                _parent->childRemoved(*this);
                 if (_focused) {
                     window()->requestFocus(_parent);
                 }
@@ -118,6 +128,7 @@ namespace psychic_ui {
             _depth  = _parent ? _parent->depth() + 1 : 0;
             if (_parent) {
                 added();
+                _parent->childAdded(*this);
                 if (window()) {
                     addedToRenderRecursive();
                 }
@@ -138,6 +149,10 @@ namespace psychic_ui {
     void Div::added() {}
 
     void Div::removed() {}
+
+    void Div::childAdded(Div &/*child*/) {}
+
+    void Div::childRemoved(Div &/*child*/) {}
 
     void Div::addedToRenderRecursive() {
         // Update the depth first so that styles have access to it
@@ -187,8 +202,16 @@ namespace psychic_ui {
     }
 
     void Div::insertChild(unsigned int index, std::shared_ptr<Div> child) {
-        assert(child != nullptr);
-        assert(index <= childCount());
+        if (!child) {
+            throw std::invalid_argument("Div: adding no child");
+        }
+        Div *const former = child->_parent;
+        if (index > childCount() - (former == this ? 1 : 0)) {
+            throw std::out_of_range("Div: adding a child past the end of the children");
+        }
+        if (former) {
+            former->remove(*child); // Moved: it leaves its parent first (we hold it meanwhile)
+        }
         // The current first/last children may lose their :first-child/:last-child state
         invalidateEndChildrenStyle();
         // Insert before setting the parent so that the child's first style pass sees its index
@@ -199,20 +222,20 @@ namespace psychic_ui {
     }
 
     void Div::remove(const std::shared_ptr<Div> &child) {
-        assert(child != nullptr);
-        remove(*child);
+        if (child) {
+            remove(*child);
+        }
     }
 
     void Div::remove(const Div &child) {
-        int index = childIndex(&child);
+        const int index = childIndex(&child);
         if (index >= 0) {
             remove((unsigned int) index);
         }
     }
 
     void Div::remove(unsigned int index) {
-        assert(index < childCount());
-        std::shared_ptr<Div> child = _children[index];
+        const std::shared_ptr<Div> child = _children.at(index);
         _children.erase(_children.cbegin() + index);
         YGNodeRemoveChild(_yogaNode, child->_yogaNode);
         // The new first/last children gain their :first-child/:last-child state
@@ -233,15 +256,12 @@ namespace psychic_ui {
     }
 
     int Div::childIndex(const std::shared_ptr<Div> &child) const {
-        assert(child != nullptr);
         return childIndex(child.get());
     }
 
     int Div::childIndex(const Div *child) const {
-        assert(child != nullptr);
-        auto it = std::find_if(
-            _children.cbegin(),
-            _children.cend(),
+        auto it = std::ranges::find_if(
+            _children,
             [child](const auto &c) {
                 return c.get() == child;
             }
@@ -250,13 +270,11 @@ namespace psychic_ui {
     }
 
     const Div *Div::at(unsigned int index) const {
-        assert(index < childCount());
-        return _children[index].get();
+        return _children.at(index).get();
     }
 
     Div *Div::at(unsigned int index) {
-        assert(index < childCount());
-        return _children[index].get();
+        return _children.at(index).get();
     }
 
     std::vector<std::shared_ptr<Div>> Div::childrenTopmostFirst() const {
@@ -318,16 +336,14 @@ namespace psychic_ui {
     // region Hit Tests
 
     bool Div::contains(const float x, const float y) const {
-        return x >= _x && x < _x + _width && y >= _y && y < _y + _height;
+        return SkRect::Make(SkIRect::MakeXYWH(_x, _y, _width, _height)).contains(x, y);
     }
 
     bool Div::boundsContains(const float x, const float y) const {
         if (_computedStyle.overflow() == Overflow::Visible) {
-            return x >= _boundsLeft && x < _boundsRight && y >= _boundsTop && y < _boundsBottom;
-        } else {
-            // TODO: Keep right and bottom cached
-            return x >= _x && x < _x + _width && y >= _y && y < _y + _height;
+            return SkRect::Make(SkIRect::MakeLTRB(_boundsLeft, _boundsTop, _boundsRight, _boundsBottom)).contains(x, y);
         }
+        return contains(x, y);
     }
 
     // endregion
@@ -377,11 +393,11 @@ namespace psychic_ui {
     StyleManager *Div::styleManager() const {
         if (_styleManager) {
             return _styleManager.get();
-        } else if (_parent) {
-            return _parent->styleManager();
-        } else {
-            return nullptr;
         }
+        if (_parent) {
+            return _parent->styleManager();
+        }
+        return nullptr;
     }
 
     void Div::setStyleManager(std::shared_ptr<StyleManager> styleManager) {
@@ -398,7 +414,7 @@ namespace psychic_ui {
     }
 
     void Div::addTag(std::string tag) {
-        std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
+        std::ranges::transform(tag, tag.begin(), ::tolower);
         _tags.push_back(tag);
         invalidateStyle();
     }
@@ -416,7 +432,7 @@ namespace psychic_ui {
     }
 
     void Div::updateId(std::string id) {
-        std::transform(id.begin(), id.end(), id.begin(), ::tolower);
+        std::ranges::transform(id, id.begin(), ::tolower);
         if (id != _id) {
             _id = std::move(id);
             invalidateStyle();
@@ -427,10 +443,10 @@ namespace psychic_ui {
         return _classNames;
     }
 
-    void Div::updateClassNames(std::unordered_set<std::string> classNames) {
+    void Div::updateClassNames(const std::unordered_set<std::string> &classNames) {
         std::unordered_set<std::string> lcClassNames;
         for (std::string className: classNames) {
-            std::transform(className.begin(), className.end(), className.begin(), ::tolower);
+            std::ranges::transform(className, className.begin(), ::tolower);
             lcClassNames.insert(std::move(className));
         }
         if (lcClassNames != _classNames) {
@@ -440,8 +456,8 @@ namespace psychic_ui {
     }
 
     void Div::updateClassName(std::string className, bool present) {
-        std::transform(className.begin(), className.end(), className.begin(), ::tolower);
-        bool changed = present ? _classNames.insert(std::move(className)).second : _classNames.erase(className) > 0;
+        std::ranges::transform(className, className.begin(), ::tolower);
+        const bool changed = present ? _classNames.insert(std::move(className)).second : _classNames.erase(className) > 0;
         if (changed) {
             invalidateStyle();
         }
@@ -479,7 +495,7 @@ namespace psychic_ui {
     }
 
     void Div::updateStyle() {
-        if (auto sm = styleManager()) {
+        if (auto *sm = styleManager()) {
             // Its first style in a window: with its starting class, until the window lets it go
             Window *w = window();
             if (w && !_startingClass.empty() && !_startingApplied && _styledIn != w && !w->reducedMotion()) {
@@ -494,7 +510,7 @@ namespace psychic_ui {
             _styledIn         = window();
             _styledGeneration = sm->rulesGeneration();
             // Only what changed reaches Yoga, everything the first time
-            PropertyMask changed = _layoutInitialized ? _computedStyle.diff(computed) : PropertyMask{}.set();
+            const PropertyMask changed = _layoutInitialized ? _computedStyle.diff(computed) : PropertyMask{}.set();
             _computedStyle     = computed;
             _layoutInitialized = true;
             updateLayout(changed);
@@ -532,7 +548,7 @@ namespace psychic_ui {
         // A Gaussian reaches about 3 sigmas, 1.5 blur radii
         const Style &paint = _computedStyle;
         const auto shadowReach = [](Color color, float blur, float x, float y, float spread) {
-            return color.alpha() > 0 ? std::max(0.0f, blur * 1.5f + std::max(std::abs(x), std::abs(y)) + spread) : 0.0f;
+            return color.alpha() > 0 ? std::max(0.0f, (blur * 1.5f) + std::max(std::abs(x), std::abs(y)) + spread) : 0.0f;
         };
         _paintOutset = std::max({
             paint.outlineWidth() > 0.0f ? std::max(0.0f, paint.outlineOffset() + paint.outlineWidth()) : 0.0f,
@@ -587,14 +603,12 @@ namespace psychic_ui {
                          || _radiusBottomLeft != 0
                          || _radiusBottomRight != 0;
 
-        _drawComplexRoundRect = !(
-            _radiusTopLeft == _radiusTopRight
-            && _radiusTopRight == _radiusBottomLeft
-            && _radiusBottomLeft == _radiusBottomRight
-        );
+        _drawComplexRoundRect = _radiusTopLeft != _radiusTopRight
+                                || _radiusTopRight != _radiusBottomLeft
+                                || _radiusBottomLeft != _radiusBottomRight;
 
         // The layout may not change, but the rounded rect must follow the radii
-        _roundRect.setRectRadii(_rect, _radii);
+        _roundRect.setRectRadii(_rect, _radii.data());
         // endregion
 
         // region Background
@@ -634,12 +648,12 @@ namespace psychic_ui {
         YGNodeSetMeasureFunc(
             _yogaNode,
             [](YGNodeConstRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
-                auto div = static_cast<Div *>(YGNodeGetContext(node));
+                auto *div = static_cast<Div *>(YGNodeGetContext(node));
                 if (!div) {
-                    std::cerr << "Could not find div to measure" << std::endl;
+                    std::cerr << "Could not find div to measure\n";
                     return YGSize{};
                 }
-                Size size = div->measure(toConstraint(width, widthMode), toConstraint(height, heightMode));
+                const Size size = div->measure(toConstraint(width, widthMode), toConstraint(height, heightMode));
                 return YGSize{size.width, size.height};
             }
         );
@@ -907,14 +921,14 @@ namespace psychic_ui {
         _x = (int) std::ceil(YGNodeLayoutGetLeft(_yogaNode));
         _y = (int) std::ceil(YGNodeLayoutGetTop(_yogaNode));
 
-        int previousWidth  = _width;
-        int previousHeight = _height;
+        const int previousWidth  = _width;
+        const int previousHeight = _height;
 
         _width  = (int) std::ceil(YGNodeLayoutGetWidth(_yogaNode));
         _height = (int) std::ceil(YGNodeLayoutGetHeight(_yogaNode));
 
-        _rect.setLTRB(_x, _y, _x + _width, _y + _height);
-        _roundRect.setRectRadii(_rect, _radii);
+        _rect = SkRect::Make(SkIRect::MakeXYWH(_x, _y, _width, _height));
+        _roundRect.setRectRadii(_rect, _radii.data());
 
         _marginLeft   = YGNodeLayoutGetMargin(_yogaNode, YGEdgeLeft);
         _marginTop    = YGNodeLayoutGetMargin(_yogaNode, YGEdgeTop);
@@ -922,10 +936,10 @@ namespace psychic_ui {
         _marginBottom = YGNodeLayoutGetMargin(_yogaNode, YGEdgeBottom);
 
         _marginRect.setLTRB(
-            _x - _marginLeft,
-            _y - _marginTop,
-            _x + _width + _marginRight,
-            _y + _height + _marginBottom
+            _rect.left() - _marginLeft,
+            _rect.top() - _marginTop,
+            _rect.right() + _marginRight,
+            _rect.bottom() + _marginBottom
         );
 
         _borderLeft   = YGNodeLayoutGetBorder(_yogaNode, YGEdgeLeft);
@@ -934,10 +948,10 @@ namespace psychic_ui {
         _borderBottom = YGNodeLayoutGetBorder(_yogaNode, YGEdgeBottom);
 
         _paddedRect.setLTRB(
-            _x + YGNodeLayoutGetPadding(_yogaNode, YGEdgeLeft) + _borderLeft,
-            _y + YGNodeLayoutGetPadding(_yogaNode, YGEdgeTop) + _borderTop,
-            _x + _width - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeRight) + _borderRight),
-            _y + _height - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeBottom) + _borderBottom)
+            _rect.left() + YGNodeLayoutGetPadding(_yogaNode, YGEdgeLeft) + _borderLeft,
+            _rect.top() + YGNodeLayoutGetPadding(_yogaNode, YGEdgeTop) + _borderTop,
+            _rect.right() - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeRight) + _borderRight),
+            _rect.bottom() - (YGNodeLayoutGetPadding(_yogaNode, YGEdgeBottom) + _borderBottom)
         );
 
         _drawBorder = _borderLeft != 0
@@ -945,11 +959,9 @@ namespace psychic_ui {
                       || _borderTop != 0
                       || _borderBottom != 0;
 
-        _drawComplexBorders = !(
-            _borderLeft == _borderRight
-            && _borderRight == _borderTop
-            && _borderTop == _borderBottom
-        );
+        _drawComplexBorders = _borderLeft != _borderRight
+                              || _borderRight != _borderTop
+                              || _borderTop != _borderBottom;
 
 
         // Children should also update
@@ -970,8 +982,8 @@ namespace psychic_ui {
             _boundsRight  = std::max(_boundsRight, _x + child->boundsRight() + endPaddingX);
             _boundsBottom = std::max(_boundsBottom, _y + child->boundsBottom() + endPaddingY);
         }
-        SkRect previousBoundsRect = _boundsRect;
-        _boundsRect.setLTRB(_boundsLeft, _boundsTop, _boundsRight, _boundsBottom);
+        const SkRect previousBoundsRect = _boundsRect;
+        _boundsRect = SkRect::Make(SkIRect::MakeLTRB(_boundsLeft, _boundsTop, _boundsRight, _boundsBottom));
 
         layoutReady = true;
 
@@ -1006,7 +1018,7 @@ namespace psychic_ui {
         const float translateX = computed.translateX().resolve(_rect.width()) + layoutOffsetX();
         const float translateY = computed.translateY().resolve(_rect.height()) + layoutOffsetY();
         const bool  transformed = translateX != 0.0f || translateY != 0.0f || scaleX != 1.0f || scaleY != 1.0f;
-        SkAutoCanvasRestore transform(canvas, transformed);
+        const SkAutoCanvasRestore transform(canvas, transformed);
         if (transformed) {
             const float originX = _rect.left() + computed.transformOriginX().resolve(_rect.width());
             const float originY = _rect.top() + computed.transformOriginY().resolve(_rect.height());
@@ -1038,7 +1050,7 @@ namespace psychic_ui {
 
         clip(canvas);
 
-        canvas->translate(_scrollX, _scrollY);
+        canvas->translate(static_cast<float>(_scrollX), static_cast<float>(_scrollY));
 
         // region Debug
         #ifdef DEBUG_LAYOUT
@@ -1053,15 +1065,15 @@ namespace psychic_ui {
             paint.setStrokeWidth(SkIntToScalar(1));
 
             paint.setColor(0x7FFF0000);
-            SkRect mRect = _marginRect.makeInset(0.5f, 0.5f);
+            const SkRect mRect = _marginRect.makeInset(0.5f, 0.5f);
             canvas->drawRect(mRect, paint);
 
             paint.setColor(0x7F00FF00);
-            SkRect dRect = _rect.makeInset(0.5f, 0.5f);
+            const SkRect dRect = _rect.makeInset(0.5f, 0.5f);
             canvas->drawRect(dRect, paint);
 
             paint.setColor(0x7F0000FF);
-            SkRect pRect = _paddedRect.makeInset(0.5f, 0.5f);
+            const SkRect pRect = _paddedRect.makeInset(0.5f, 0.5f);
             canvas->drawRect(pRect, paint);
 
             paint.setColor(0x30FFFF00);
@@ -1073,10 +1085,10 @@ namespace psychic_ui {
                 paint.setColor(0x7F00FFFF);
                 canvas->drawRect(
                     SkRect{
-                        _x + _borderLeft + 0.5f,
-                        _y + _borderTop + 0.5f,
-                        _x + _rect.width() - _borderRight - 0.5f,
-                        _y + _rect.height() - _borderBottom - 0.5f
+                        _rect.left() + _borderLeft + 0.5f,
+                        _rect.top() + _borderTop + 0.5f,
+                        _rect.right() - _borderRight - 0.5f,
+                        _rect.bottom() - _borderBottom - 0.5f
                     }, paint
                 );
             }
@@ -1084,17 +1096,17 @@ namespace psychic_ui {
             if (_mouseDown) {
                 paint.setColor(0x30FFFFFF);
                 paint.setStrokeWidth(2);
-                canvas->drawRect({_x + 1.f, _y + 1.f, _x + _width - 1.f, _y + _height - 1.f}, paint);
+                canvas->drawRect(_rect.makeInset(1.0f, 1.0f), paint);
             } else if (_mouseOver) {
                 paint.setColor(0x10FFFFFF);
                 paint.setStrokeWidth(2);
-                canvas->drawRect({_x + 1.f, _y + 1.f, _x + _width - 1.f, _y + _height - 1.f}, paint);
+                canvas->drawRect(_rect.makeInset(1.0f, 1.0f), paint);
             }
         }
         #endif
         // endregion
 
-        canvas->translate(_x, _y);
+        canvas->translate(static_cast<float>(_x), static_cast<float>(_y));
 
         // Back-to-front: children are in document order, the last one is on top, except that those sliding to their
         // layout places go over those that don't (rows crossing as they are sorted, or passing over children fading in)
@@ -1164,15 +1176,15 @@ namespace psychic_ui {
             return;
         }
         const float half   = spacing / 2.0f;
-        const float firstX = _rect.left() + half + std::floor((visible.left() - _rect.left()) / spacing) * spacing;
-        const float firstY = _rect.top() + half + std::floor((visible.top() - _rect.top()) / spacing) * spacing;
+        const float firstX = _rect.left() + half + (std::floor((visible.left() - _rect.left()) / spacing) * spacing);
+        const float firstY = _rect.top() + half + (std::floor((visible.top() - _rect.top()) / spacing) * spacing);
         const int columns = std::max(0, static_cast<int>(std::ceil((visible.right() + radius - firstX) / spacing)));
         const int rows    = std::max(0, static_cast<int>(std::ceil((visible.bottom() + radius - firstY) / spacing)));
         std::vector<SkPoint> dots{};
         dots.reserve(static_cast<size_t>(columns) * rows);
         for (int row = 0; row < rows; ++row) {
             for (int column = 0; column < columns; ++column) {
-                dots.push_back({firstX + column * spacing, firstY + row * spacing});
+                dots.push_back({firstX + (static_cast<float>(column) * spacing), firstY + (static_cast<float>(row) * spacing)});
             }
         }
         // Round points are discs of the stroke's width, in one call
@@ -1200,22 +1212,22 @@ namespace psychic_ui {
         paint.setColor(style.outlineColor().argb());
         // The stroke's center line, half its width outside the offset; corners stay concentric with the border's
         SkRRect line;
-        const float outset = style.outlineOffset() + width / 2.0f;
+        const float outset = style.outlineOffset() + (width / 2.0f);
         _roundRect.outset(outset, outset, &line);
         canvas->drawRRect(line, paint);
     }
 
     void Div::clip(SkCanvas *canvas) {
-        bool clip = _computedStyle.overflow() != Overflow::Visible;
+        const bool clip = _computedStyle.overflow() != Overflow::Visible;
         if (!clip) {
             return;
         }
 
-        bool aa = _computedStyle.antiAlias();
+        const bool aa = _computedStyle.antiAlias();
         if (_drawRoundRect && _drawBorder) {
             SkRRect roundRect;
             // TODO: Offset for unequal borders
-            float   hb = _computedStyle.border() / 2;
+            const float hb = _computedStyle.border() / 2;
             _roundRect.inset(hb, hb, &roundRect);
             canvas->clipRRect(roundRect, aa);
         } else if (_drawRoundRect) {
@@ -1233,7 +1245,7 @@ namespace psychic_ui {
             paint.setColor(_computedStyle.backgroundColor().argb());
             paint.setAntiAlias(_computedStyle.antiAlias());
 
-            float hb = _computedStyle.border() / 2;
+            const float hb = _computedStyle.border() / 2;
             if (_drawComplexRoundRect) {
                 SkRRect roundRect = _roundRect;
                 if (_drawBackground && _drawBorder) {
@@ -1256,7 +1268,7 @@ namespace psychic_ui {
                 if (_drawBackground && !_drawBorder) {
                     canvas->drawRoundRect(_rect, _radiusTopLeft, _radiusTopLeft, paint);
                 } else if (_drawBorder) {
-                    SkRect inset = _rect.makeInset(hb, hb);
+                    const SkRect inset = _rect.makeInset(hb, hb);
                     if (_drawBackground) {
                         canvas->drawRoundRect(inset, _radiusTopLeft, _radiusTopLeft, paint);
                     }
@@ -1271,7 +1283,7 @@ namespace psychic_ui {
                     canvas->drawRect(_rect, paint);
                 }
                 if (_drawBorder && !_drawComplexBorders) {
-                    SkRect inset = _rect.makeInset(hb, hb);
+                    const SkRect inset = _rect.makeInset(hb, hb);
                     paint.setStyle(SkPaint::kStroke_Style);
                     paint.setColor(_computedStyle.borderColor().argb());
                     paint.setStrokeWidth(_computedStyle.border());
@@ -1304,7 +1316,7 @@ namespace psychic_ui {
                     draw = false;
                 }
                 if (draw) {
-                    float hw = _borderLeft / 2.0f;
+                    const float hw = _borderLeft / 2.0f;
                     canvas->drawLine(_rect.left() + hw, _rect.top() - 0.5f, _rect.left() + hw, _rect.bottom() + 0.5f, paint);
                 }
             }
@@ -1322,7 +1334,7 @@ namespace psychic_ui {
                     draw = false;
                 }
                 if (draw) {
-                    float hw = _borderRight / 2.0f;
+                    const float hw = _borderRight / 2.0f;
                     canvas->drawLine(_rect.right() - hw, _rect.top() - 0.5f, _rect.right() - hw, _rect.bottom() + 0.5f, paint);
                 }
             }
@@ -1340,7 +1352,7 @@ namespace psychic_ui {
                     draw = false;
                 }
                 if (draw) {
-                    float hw = _borderTop / 2.0f;
+                    const float hw = _borderTop / 2.0f;
                     canvas->drawLine(_rect.left() - 0.5f, _rect.top() + hw, _rect.right() + 0.5f, _rect.top() + hw, paint);
                 }
             }
@@ -1358,7 +1370,7 @@ namespace psychic_ui {
                     draw = false;
                 }
                 if (draw) {
-                    float hw = _borderBottom / 2.0f;
+                    const float hw = _borderBottom / 2.0f;
                     canvas->drawLine(_rect.left() - 0.5f, _rect.bottom() - hw, _rect.right() + 0.5f, _rect.bottom() - hw, paint);
                 }
             }
@@ -1438,12 +1450,12 @@ namespace psychic_ui {
         localToGlobal(windowX, windowY);
         MouseEvent event{};
         // The center of the border box, in content coordinates
-        event.x       = static_cast<float>(_width) / 2.0f - static_cast<float>(_scrollX);
-        event.y       = static_cast<float>(_height) / 2.0f - static_cast<float>(_scrollY);
+        event.x       = (static_cast<float>(_width) / 2.0f) - static_cast<float>(_scrollX);
+        event.y       = (static_cast<float>(_height) / 2.0f) - static_cast<float>(_scrollY);
         event.windowX = static_cast<float>(windowX) + event.x;
         event.windowY = static_cast<float>(windowY) + event.y;
         event.fromKeyboard = true;
-        if (Window *w = window()) {
+        if (const Window *w = window()) {
             event.source = w->inputMode();
         }
         return event;
@@ -1452,11 +1464,11 @@ namespace psychic_ui {
     MouseEventStatus Div::handleMouseButtonChange(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(event.x, event.y)) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1465,31 +1477,31 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleMouseButtonChange(local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     ret = res;
                     break;
                 }
             }
         }
 
-        if (_mouseEnabled && ret != Handled && mouseButtonChanged.hasSubscriptions()) {
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && mouseButtonChanged.hasSubscriptions()) {
             mouseButtonChanged.emit(local);
-            ret = Handled;
+            ret = MouseEventStatus::Handled;
         }
 
-        return ret == Out ? Over : ret;
+        return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
     }
 
     MouseEventStatus Div::handleMousePress(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(event.x, event.y)) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         setMouseDown(true);
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1498,42 +1510,42 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleMousePress(local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     ret = res;
                     break;
                 }
             }
         }
 
-        if (ret == Out) {
+        if (ret == MouseEventStatus::Out) {
             // We're the deepest we're gonna get, do a focus request
             window()->requestFocus(this);
         }
 
-        if (_mouseEnabled && ret != Handled && mousePressed.hasSubscriptions()) {
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && mousePressed.hasSubscriptions()) {
             mousePressed.emit(local);
-            ret = Handled;
+            ret = MouseEventStatus::Handled;
         }
 
         // onClick swallows left button presses, otherwise a parent might hijack them
-        return ret == Handled || (event.button == MouseButton::LEFT && clicked.hasSubscriptions()) ? Handled : Over;
+        return ret == MouseEventStatus::Handled || (event.button == MouseButton::LEFT && clicked.hasSubscriptions()) ? MouseEventStatus::Handled : MouseEventStatus::Over;
     }
 
     MouseEventStatus Div::handleMouseRelease(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
-        bool isOver  = boundsContains(event.x, event.y);
-        bool wasDown = _mouseDown;
+        const bool isOver  = boundsContains(event.x, event.y);
+        const bool wasDown = _mouseDown;
 
         if (isOver || wasDown) {
             setMouseDown(false);
         }
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren && (isOver || wasDown)) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1542,14 +1554,17 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleMouseRelease(local);
-                if (res == Over) {
+                if (res == MouseEventStatus::Over) {
                     ret = res;
                 }
             }
         }
 
         if (!_mouseEnabled) {
-            return isOver ? (ret == Out ? Over : ret) : Out;
+            if (!isOver) {
+                return MouseEventStatus::Out;
+            }
+            return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
         }
 
         // A press that started here ends here, wherever it is released (a drag stops even outside): mouseReleased
@@ -1559,33 +1574,33 @@ namespace psychic_ui {
         if (wasDown && !isOver) {
             mouseReleasedOutside.emit(local);
         }
-        if (wasDown || (isOver && ret != Handled)) {
+        if (wasDown || (isOver && ret != MouseEventStatus::Handled)) {
             mouseReleased.emit(local);
             if (isOver && hadSubscriptions) {
-                ret = Handled;
+                ret = MouseEventStatus::Handled;
             }
         }
 
         if (!isOver) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
-        return ret == Out ? Over : ret;
+        return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
     }
 
     MouseEventStatus Div::handleClick(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(event.x, event.y)) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         // Only the left button clicks: a right click (or a touch long press, which is one) is for mousePressed
         if (!_mouseDown || event.button != MouseButton::LEFT) {
-            return Over;
+            return MouseEventStatus::Over;
         }
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1594,33 +1609,33 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleClick(local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     ret = res;
                     break;
                 }
             }
         }
 
-        if (_mouseEnabled && ret != Handled && clicked.hasSubscriptions()) {
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && clicked.hasSubscriptions()) {
             clicked.emit(local);
-            ret = Handled;
+            ret = MouseEventStatus::Handled;
         }
 
-        return ret == Out ? Over : ret;
+        return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
     }
 
     MouseEventStatus Div::handleDoubleClick(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(event.x, event.y)) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         if (!_mouseDown) {
-            return Over;
+            return MouseEventStatus::Over;
         }
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1629,29 +1644,29 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleDoubleClick(local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     ret = res;
                     break;
                 }
             }
         }
 
-        if (_mouseEnabled && ret != Handled && doubleClicked.hasSubscriptions()) {
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && doubleClicked.hasSubscriptions()) {
             doubleClicked.emit(local);
-            ret = Handled;
+            ret = MouseEventStatus::Handled;
         }
 
-        return ret == Out ? Over : ret;
+        return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
     }
 
     MouseEventStatus Div::handleContextMenuRequest(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(event.x, event.y)) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1660,7 +1675,7 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleContextMenuRequest(local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     ret = res;
                     break;
                 }
@@ -1668,12 +1683,12 @@ namespace psychic_ui {
         }
 
         // The deepest div that asks for it gets it, once
-        if (_mouseEnabled && ret != Handled && contextMenuRequested.hasSubscriptions()) {
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && contextMenuRequested.hasSubscriptions()) {
             contextMenuRequested.emit(local);
-            ret = Handled;
+            ret = MouseEventStatus::Handled;
         }
 
-        return ret == Out ? Over : ret;
+        return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
     }
 
     // endregion
@@ -1709,26 +1724,26 @@ namespace psychic_ui {
     MouseEventStatus Div::handleMouseMove(const MouseEvent &event, bool handled) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
-        bool isOver  = boundsContains(event.x, event.y);
-        bool wasOver = _mouseOver;
+        const bool isOver  = boundsContains(event.x, event.y);
+        const bool wasOver = _mouseOver;
 
         if (!isOver && wasOver) {
             handleMouseExit(event);
         }
 
-        bool allowOutsideMovement = this == window();
+        const bool allowOutsideMovement = this == window();
 
         if (!isOver && !allowOutsideMovement) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         // From now on we're over the div, unless we"re on window, which allow for the mouse to move outside
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (isOver) {
             if (!handled) {
@@ -1742,9 +1757,9 @@ namespace psychic_ui {
                         continue; // Removed by an earlier handler
                     }
                     auto res = child->handleMouseMove(local, handled);
-                    if (res != Out) {
+                    if (res != MouseEventStatus::Out) {
                         handled = true;
-                        if (ret != Handled) {
+                        if (ret != MouseEventStatus::Handled) {
                             ret = res;
                         }
                     }
@@ -1757,11 +1772,11 @@ namespace psychic_ui {
                 mouseEntered.emit(local);
             }
             mouseMoved.emit(local);
-            if (!handled && isOver && ret != Handled) {
+            if (!handled && isOver && ret != MouseEventStatus::Handled) {
                 window()->setCursor(_computedStyle.cursor());
-                ret = Handled;
+                ret = MouseEventStatus::Handled;
             } else if (isOver) {
-                ret = Over;
+                ret = MouseEventStatus::Over;
             }
         }
 
@@ -1787,10 +1802,10 @@ namespace psychic_ui {
         bool moved = false;
 
         if (_width < _boundsRight - _boundsLeft) {
-            int sx = std::min(
+            const int sx = std::min(
                 0, std::max(
                     _width - (_boundsRight - _boundsLeft),
-                    _scrollX + (int) std::ceil(scrollX) * 2
+                    _scrollX + ((int) std::ceil(scrollX) * 2)
                 ));
 
             moved |= _scrollX != sx;
@@ -1798,10 +1813,10 @@ namespace psychic_ui {
         }
 
         if (_height < _boundsBottom - _boundsTop) {
-            int sy = std::min(
+            const int sy = std::min(
                 0, std::max(
                     _height - (_boundsBottom - _boundsTop),
-                    _scrollY + (int) std::ceil(scrollY) * 2
+                    _scrollY + ((int) std::ceil(scrollY) * 2)
                 ));
 
             moved |= _scrollY != sy;
@@ -1857,11 +1872,11 @@ namespace psychic_ui {
     MouseEventStatus Div::handleMouseScroll(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(event.x, event.y)) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1870,24 +1885,24 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleMouseScroll(local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     ret = res;
                     break;
                 }
             }
         }
 
-        if (_mouseEnabled && ret != Handled && mouseScrolled.hasSubscriptions()) {
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && mouseScrolled.hasSubscriptions()) {
             mouseScrolled.emit(local);
-            ret = Handled;
+            ret = MouseEventStatus::Handled;
         }
 
-        if (ret != Handled && _computedStyle.overflow() == Overflow::Scroll) {
+        if (ret != MouseEventStatus::Handled && _computedStyle.overflow() == Overflow::Scroll) {
             // TODO: Cancel if already handled, we can't scroll two divs at the same time
             scroll(event.scrollX, event.scrollY);
         }
 
-        return ret == Out ? Over : ret;
+        return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
     }
 
     // endregion

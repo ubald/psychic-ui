@@ -214,7 +214,19 @@ namespace psychic_ui {
         /**
          * The part that counts as inside it (itself unless a subclass says otherwise)
          */
-        Div &surface() const { return _surface ? *_surface : const_cast<Popup &>(*this); }
+        Div &surface() {
+            if (_surface) {
+                return *_surface;
+            }
+            return *this;
+        }
+
+        const Div &surface() const {
+            if (_surface) {
+                return *_surface;
+            }
+            return *this;
+        }
 
         // endregion
 
@@ -261,6 +273,7 @@ namespace psychic_ui {
         bool _restoreFocus{true};
 
         std::vector<std::weak_ptr<Div>> _passThrough{};
+        Overlay                         *_overlay{nullptr}; // Its parent, the overlay, set and cleared by it
         Popup                           *_owner{nullptr};
         Div                             *_surface{nullptr}; // A descendant, or nullptr for itself
         std::weak_ptr<Div>              _focusBefore{};     // What had the focus when it opened

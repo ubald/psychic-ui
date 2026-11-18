@@ -80,8 +80,8 @@ namespace psychic_ui {
         return true;
     }
 
-    void *SDL3SystemWindow::glProcAddress(const char *name) const {
-        return reinterpret_cast<void *>(SDL_GL_GetProcAddress(name));
+    SystemWindow::GLProc SDL3SystemWindow::glProcAddress(const char *name) const {
+        return SDL_GL_GetProcAddress(name);
     }
 
     // region Window operations
@@ -138,8 +138,8 @@ namespace psychic_ui {
 
     void SDL3SystemWindow::setCursor(Cursor cursor) {
         const auto index = static_cast<std::size_t>(cursor);
-        if (index < std::size(_cursors) && _cursors[index]) {
-            SDL_SetCursor(_cursors[index]);
+        if (index < _cursors.size() && _cursors.at(index)) {
+            SDL_SetCursor(_cursors.at(index));
         }
     }
 
@@ -244,24 +244,37 @@ namespace psychic_ui {
 
     // region Events
 
-    static MouseButton mapButton(Uint8 button) {
-        switch (button) {
-            case SDL_BUTTON_LEFT: return MouseButton::LEFT;
-            case SDL_BUTTON_MIDDLE: return MouseButton::MIDDLE;
-            case SDL_BUTTON_RIGHT: return MouseButton::RIGHT;
-            default: return static_cast<MouseButton>(0);
+    namespace {
+        MouseButton mapButton(Uint8 button) {
+            switch (button) {
+                case SDL_BUTTON_LEFT: return MouseButton::LEFT;
+                case SDL_BUTTON_MIDDLE: return MouseButton::MIDDLE;
+                case SDL_BUTTON_RIGHT: return MouseButton::RIGHT;
+                default: return MouseButton::NONE;
+            }
+        }
+
+        /**
+         * A pen's barrel buttons: the first one is the right button, the second the middle one
+         */
+        MouseButton mapPenButton(Uint8 button) {
+            switch (button) {
+                case 1: return MouseButton::RIGHT;
+                case 2: return MouseButton::MIDDLE;
+                default: return MouseButton::NONE;
+            }
+        }
+
+        /**
+         * Where a mouse event came from: SDL makes mouse events of touches and pens too, which we make our own
+         */
+        bool fromMouse(const SDL_MouseID which) {
+            return which != SDL_TOUCH_MOUSEID && which != SDL_PEN_MOUSEID;
         }
     }
 
     SDL_TouchDeviceType SDL3SystemWindow::touchDeviceType(const SDL_TouchID touchID) const {
         return SDL_GetTouchDeviceType(touchID);
-    }
-
-    /**
-     * Where a mouse event came from: SDL makes mouse events of touches and pens too, which we make our own
-     */
-    static bool fromMouse(const SDL_MouseID which) {
-        return which != SDL_TOUCH_MOUSEID && which != SDL_PEN_MOUSEID;
     }
 
     void SDL3SystemWindow::handleFingerEvent(const SDL_TouchFingerEvent &finger) {
@@ -307,10 +320,11 @@ namespace psychic_ui {
 
     void SDL3SystemWindow::handlePenButton(const MouseButton button, const bool down, const float x, const float y) {
         _window->handleInputModeChange(InputMode::Pen);
-        if (button == 0 || ((_penButtons & button) != 0) == down) {
+        const auto bit = static_cast<unsigned>(button);
+        if (button == MouseButton::NONE || ((_penButtons & bit) != 0) == down) {
             return;
         }
-        _penButtons = down ? (_penButtons | button) : (_penButtons & ~button);
+        _penButtons = down ? (_penButtons | bit) : (_penButtons & ~bit);
         _mouseX     = x;
         _mouseY     = y;
         _window->handleMouseButtonChange({
@@ -443,7 +457,7 @@ namespace psychic_ui {
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
             case SDL_EVENT_MOUSE_BUTTON_UP: {
                 const MouseButton button = mapButton(e.button.button);
-                if (button == 0 || !fromMouse(e.button.which)) {
+                if (button == MouseButton::NONE || !fromMouse(e.button.which)) {
                     break;
                 }
                 _window->handleInputModeChange(InputMode::Pointer);
@@ -508,9 +522,8 @@ namespace psychic_ui {
 
             case SDL_EVENT_PEN_BUTTON_DOWN:
             case SDL_EVENT_PEN_BUTTON_UP:
-                // The barrel buttons: the first one is the right button, the second the middle one
                 handlePenButton(
-                    e.pbutton.button == 1 ? MouseButton::RIGHT : e.pbutton.button == 2 ? MouseButton::MIDDLE : static_cast<MouseButton>(0),
+                    mapPenButton(e.pbutton.button),
                     e.pbutton.down, e.pbutton.x, e.pbutton.y
                 );
                 break;

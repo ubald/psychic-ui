@@ -13,7 +13,7 @@ namespace psychic_ui {
         Scrollers();
     };
 
-    Scrollers::Scrollers() : Div() {
+    inline Scrollers::Scrollers() : Div() {
         tag("Scrollers")
             .classNames({"demo-panel"})
             .padding(48);

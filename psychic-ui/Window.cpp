@@ -4,6 +4,7 @@
 #include <cstring>
 #include <iostream>
 #include <iterator>
+#include <ranges>
 #include <utility>
 #include <yoga/Yoga.h>
 #include "include/core/SkColorSpace.h"
@@ -63,6 +64,10 @@ namespace psychic_ui {
         return this;
     }
 
+    const Window *Window::window() const {
+        return this;
+    }
+
     // endregion
 
     // region Lifecycle
@@ -100,7 +105,7 @@ namespace psychic_ui {
                 if (std::strncmp(name, "egl", 3) == 0) {
                     return nullptr;
                 }
-                return reinterpret_cast<GrGLFuncPtr>(static_cast<SystemWindow *>(ctx)->glProcAddress(name));
+                return static_cast<SystemWindow *>(ctx)->glProcAddress(name);
             }
         );
         if (!interface) {
@@ -135,7 +140,7 @@ namespace psychic_ui {
         framebufferInfo.fFormat = GL_RGBA8_FORMAT;
 
         // In pixels; `drawAll` scales the canvas to the window's units
-        GrBackendRenderTarget backendRenderTarget = GrBackendRenderTargets::MakeGL(
+        const GrBackendRenderTarget backendRenderTarget = GrBackendRenderTargets::MakeGL(
             _systemWindow->getFramebufferWidth(),
             _systemWindow->getFramebufferHeight(),
             _systemWindow->getSamples(),
@@ -148,7 +153,7 @@ namespace psychic_ui {
         // on Linux (contrast 0.2, gamma 1.2) keep the weight the same both ways, as Pivotal looks in a browser.
         constexpr SkScalar textContrast = 0.2f;
         constexpr SkScalar textGamma    = 1.2f;
-        SkSurfaceProps props(0, kRGB_H_SkPixelGeometry, textContrast, textGamma);
+        const SkSurfaceProps props(0, kRGB_H_SkPixelGeometry, textContrast, textGamma);
 
         _sk_surface = SkSurfaces::WrapBackendRenderTarget(
             _sk_context.get(),
@@ -159,7 +164,7 @@ namespace psychic_ui {
             &props
         );
         if (!_sk_surface) {
-            std::cerr << "Psychic UI: Skia could not wrap the window's framebuffer" << std::endl;
+            std::cerr << "Psychic UI: Skia could not wrap the window's framebuffer\n";
             return;
         }
         _sk_canvas = _sk_surface->getCanvas();
@@ -292,21 +297,30 @@ namespace psychic_ui {
     /**
      * Whether the point, in `div`'s coordinates, is on a visible descendant that handles mouse buttons or clicks
      */
-    static bool interactiveChildAt(const Div &div, const int x, const int y) {
-        for (const auto &child : div.children()) {
-            const int localX = x - child->x();
-            const int localY = y - child->y();
-            if (!child->visible() || !child->mouseEnabled()
-                || localX < 0 || localY < 0 || localX >= child->getWidth() || localY >= child->getHeight()) {
-                continue;
-            }
-            if (child->mouseButtonChanged.hasSubscriptions() || child->mousePressed.hasSubscriptions()
-                || child->mouseReleased.hasSubscriptions() || child->clicked.hasSubscriptions()
-                || interactiveChildAt(*child, localX, localY)) {
-                return true;
-            }
+    namespace {
+        /**
+         * The deepest div of a path (the root first) that `accept`s, if one does
+         */
+        template<class Accept>
+        Div *deepest(const std::vector<Div *> &path, Accept accept) {
+            const auto reversed = std::views::reverse(path);
+            const auto found    = std::ranges::find_if(reversed, accept);
+            return found != reversed.end() ? *found : nullptr;
         }
-        return false;
+
+        bool interactiveChildAt(const Div &div, const int x, const int y) {
+            return std::ranges::any_of(div.children(), [x, y](const auto &child) {
+                const int localX = x - child->x();
+                const int localY = y - child->y();
+                if (!child->visible() || !child->mouseEnabled()
+                    || localX < 0 || localY < 0 || localX >= child->getWidth() || localY >= child->getHeight()) {
+                    return false;
+                }
+                return child->mouseButtonChanged.hasSubscriptions() || child->mousePressed.hasSubscriptions()
+                       || child->mouseReleased.hasSubscriptions() || child->clicked.hasSubscriptions()
+                       || interactiveChildAt(*child, localX, localY);
+            });
+        }
     }
 
     bool Window::isDragArea(const int x, const int y) {
@@ -394,10 +408,10 @@ namespace psychic_ui {
                 laidOut = true;
                 #ifdef DEBUG_LAYOUT
                 if (debugLayout) {
-                    std::cout << "Layout dirty!" << std::endl;
+                    std::cout << "Layout dirty!\n";
                 }
                 #endif
-                YGNodeCalculateLayout(_yogaNode, width, height, YGDirectionLTR);
+                YGNodeCalculateLayout(_yogaNode, static_cast<float>(width), static_cast<float>(height), YGDirectionLTR);
                 layoutUpdated();
             }
         };
@@ -514,10 +528,7 @@ namespace psychic_ui {
 
         // Performance
         ++frames;
-        double delta = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::high_resolution_clock::now()
-            - lastReport
-        ).count();
+        const double delta = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - lastReport).count();
         if (delta >= 500) {
             lastReport = std::chrono::high_resolution_clock::now();
             fps        = frames / (delta / 1000.0f);
@@ -599,7 +610,7 @@ namespace psychic_ui {
 
     void Window::post(std::function<void()> task) {
         {
-            std::lock_guard lock(_postedMutex);
+            const std::scoped_lock lock(_postedMutex);
             _posted.push_back(std::move(task));
             _hasPosted = true;
         }
@@ -613,7 +624,7 @@ namespace psychic_ui {
         }
         std::vector<std::function<void()>> batch{};
         {
-            std::lock_guard lock(_postedMutex);
+            const std::scoped_lock lock(_postedMutex);
             batch.swap(_posted);
             _hasPosted = false;
         }
@@ -623,7 +634,7 @@ namespace psychic_ui {
                 (*task)();
             } catch (...) {
                 // The rest of the batch goes back in front of what was posted meanwhile
-                std::lock_guard lock(_postedMutex);
+                const std::scoped_lock lock(_postedMutex);
                 _posted.insert(_posted.begin(), std::make_move_iterator(task + 1), std::make_move_iterator(batch.end()));
                 _hasPosted = !_posted.empty();
                 throw;
@@ -646,7 +657,7 @@ namespace psychic_ui {
         _animationClockFresh = true;
 
         // A callback may start animations: they land in the emptied list, and keep going after these
-        std::vector<std::weak_ptr<Animation>> scheduled = std::move(_scheduledAnimations);
+        const std::vector<std::weak_ptr<Animation>> scheduled = std::move(_scheduledAnimations);
         _scheduledAnimations.clear();
         std::vector<std::weak_ptr<Animation>> kept{};
         for (const auto &weak: scheduled) {
@@ -679,8 +690,8 @@ namespace psychic_ui {
         if (_flinging) {
             return true;
         }
-        return std::any_of(
-            _scheduledAnimations.begin(), _scheduledAnimations.end(),
+        return std::ranges::any_of(
+            _scheduledAnimations,
             [this](const auto &weak) {
                 const auto animation = weak.lock();
                 return animation && animation->_scheduledIn == this;
@@ -694,7 +705,7 @@ namespace psychic_ui {
             return;
         }
         // What moves gets there now
-        std::vector<std::weak_ptr<Animation>> scheduled = std::move(_scheduledAnimations);
+        const std::vector<std::weak_ptr<Animation>> scheduled = std::move(_scheduledAnimations);
         _scheduledAnimations.clear();
         for (const auto &weak: scheduled) {
             if (const auto animation = weak.lock(); animation && animation->_scheduledIn == this) {
@@ -772,18 +783,13 @@ namespace psychic_ui {
          * found the way the mouse events are dispatched. The overlay is only on the path where a popup takes the
          * mouse, or everywhere under a modal popup.
          */
-        bool hitPath(Div *div, float x, float y, std::vector<Div *> &path);
+        bool hitPath(const Overlay &overlay, Div *div, float x, float y, std::vector<Div *> &path);
     }
 
     Div *Window::tooltipTargetAt(const float x, const float y) {
         std::vector<Div *> path{};
-        hitPath(this, x, y, path);
-        for (auto div = path.rbegin(); div != path.rend(); ++div) {
-            if (!(*div)->tooltip().empty()) {
-                return *div;
-            }
-        }
-        return nullptr;
+        hitPath(*_overlay, this, x, y, path);
+        return deepest(path, [](const Div *div) { return !div->tooltip().empty(); });
     }
 
     MouseEventStatus Window::handleMouseMove(const MouseEvent &event, const bool handled) {
@@ -878,10 +884,10 @@ namespace psychic_ui {
         // `followSystemTheme` if both are the new set's, else with the new set's own light and dark themes.
         if (!_followSystemTheme) {
             const Theme &picked = styleManager()->theme();
-            Theme        theme  = skinSet->hasTheme(picked)
+            const Theme  theme  = skinSet->hasTheme(picked)
                                       ? picked
                                       : skinSet->theme(picked.scheme == ColorScheme::Light ? ColorScheme::Light : ColorScheme::Dark);
-            styleManager()->skinSet(std::move(skinSet), std::move(theme));
+            styleManager()->skinSet(std::move(skinSet), theme);
             updateRuntimeStyles(); // Clearing the rules dropped the runtime ones too
             return;
         }
@@ -964,20 +970,19 @@ namespace psychic_ui {
          * The divs a press at this point (in `div`'s parent's coordinates) goes through, outermost first,
          * found the way the mouse events are dispatched
          */
-        bool hitPath(Div *div, const float x, const float y, std::vector<Div *> &path) {
+        bool hitPath(const Overlay &overlay, Div *div, const float x, const float y, std::vector<Div *> &path) {
             if (!div->visible() || !div->boundsContains(x, y)) {
                 return false;
             }
             const float localX = x - static_cast<float>(div->x() + div->scrollX());
             const float localY = y - static_cast<float>(div->y() + div->scrollY());
-            if (auto overlay = dynamic_cast<Overlay *>(div)) {
+            if (div == &overlay) {
                 // Only where a popup takes the mouse, or under a modal popup
                 const std::size_t size = path.size();
                 path.push_back(div);
-                const auto &children = overlay->children();
-                for (auto child = children.rbegin(); child != children.rend(); ++child) {
-                    auto *popup = static_cast<Popup *>(child->get());
-                    if ((popup->mouseEnabled() || popup->mouseChildren()) && hitPath(popup, localX, localY, path)) {
+                for (const auto &popup: std::views::reverse(overlay.allPopups())) {
+                    if ((popup->mouseEnabled() || popup->mouseChildren())
+                        && hitPath(overlay, popup.get(), localX, localY, path)) {
                         return true;
                     }
                     if (popup->modal()) {
@@ -990,8 +995,8 @@ namespace psychic_ui {
             path.push_back(div);
             if (div->mouseChildren()) {
                 const auto &children = div->children();
-                for (auto child = children.rbegin(); child != children.rend(); ++child) {
-                    if (hitPath(child->get(), localX, localY, path)) {
+                for (const auto &child: std::views::reverse(children)) {
+                    if (hitPath(overlay, child.get(), localX, localY, path)) {
                         break;
                     }
                 }
@@ -1002,14 +1007,11 @@ namespace psychic_ui {
 
     Div *Window::scrollTargetAt(const float x, const float y, const bool horizontal) {
         std::vector<Div *> path{};
-        hitPath(this, x, y, path);
-        for (auto div = path.rbegin(); div != path.rend(); ++div) {
-            if ((*div)->computedStyle().overflow() == Overflow::Scroll
-                && (horizontal ? (*div)->getWidth() < (*div)->contentWidth() : (*div)->getHeight() < (*div)->contentHeight())) {
-                return *div;
-            }
-        }
-        return nullptr;
+        hitPath(*_overlay, this, x, y, path);
+        return deepest(path, [horizontal](const Div *div) {
+            return div->computedStyle().overflow() == Overflow::Scroll
+                   && (horizontal ? div->getWidth() < div->contentWidth() : div->getHeight() < div->contentHeight());
+        });
     }
 
     void Window::handleTouchPress(const float x, const float y, const GestureTime time) {
@@ -1047,8 +1049,9 @@ namespace psychic_ui {
         handleMouseMove(touchEvent(_touchStartX, _touchStartY), false);
         _touchPhase  = TouchPhase::Pressing;
         _touchButton = button;
-        const std::size_t popups = _overlay->children().size();
-        Popup *top = popups ? static_cast<Popup *>(_overlay->children().back().get()) : nullptr;
+        const auto        &stack  = _overlay->allPopups();
+        const std::size_t popups = stack.size();
+        const Popup       *top    = stack.empty() ? nullptr : stack.back().get();
 
         // Taps in a row count on the touch clock, with a finger's precision
         MouseEvent press = touchEvent(_touchStartX, _touchStartY, button, true);
@@ -1060,8 +1063,7 @@ namespace psychic_ui {
 
         // A long press is the context press first: when it opened nothing (no new popup on top), the tooltip of what
         // is under the finger shows instead, until the finger lifts
-        const bool opened = _overlay->children().size() > popups
-                            || (!_overlay->children().empty() && _overlay->children().back().get() != top);
+        const bool opened = stack.size() > popups || (!stack.empty() && stack.back().get() != top);
         if (button == MouseButton::RIGHT && !opened) {
             if (Div *target = tooltipTargetAt(_touchStartX, _touchStartY)) {
                 showTooltip(*target);
@@ -1143,8 +1145,8 @@ namespace psychic_ui {
                 panBy(dx, dy);
                 if (dt > 0) {
                     // Mostly the latest movement's speed, smoothed a little
-                    _panVelocityX = 0.6f * dx / dt + 0.4f * _panVelocityX;
-                    _panVelocityY = 0.6f * dy / dt + 0.4f * _panVelocityY;
+                    _panVelocityX = (0.6f * dx / dt) + (0.4f * _panVelocityX);
+                    _panVelocityY = (0.6f * dy / dt) + (0.4f * _panVelocityY);
                 }
                 break;
 
@@ -1245,15 +1247,16 @@ namespace psychic_ui {
 
         // A disabled or hidden div doesn't take the focus (a press on a disabled field, a popup giving it back to a
         // trigger disabled meanwhile): when the deepest div that would is one, the path stops at its parent
-        const auto taker = std::find_if(path.crbegin(), path.crend(), [](const Div *div) { return div->focusEnabled(); });
-        if (taker != path.crend()
+        const auto reversed = std::views::reverse(path);
+        const auto taker    = std::ranges::find_if(reversed, [](const Div *div) { return div->focusEnabled(); });
+        if (taker != reversed.end()
             && (!(*taker)->enabled() || !(*taker)->visible() || (*taker)->computedStyle().display() == Display::None)) {
             path.erase(std::prev(taker.base()), path.end());
         }
 
         // Compare with current and unfocus
         for (Div *div: _focusPath) {
-            auto it = std::find(path.cbegin(), path.cend(), div);
+            auto it = std::ranges::find(path, div);
             if (it == path.cend()) {
                 div->setFocused(false);
                 div->blurred.emit();
@@ -1284,8 +1287,8 @@ namespace psychic_ui {
         }
 
         struct SlopSearch {
-            float x;
-            float y;
+            float x{0};
+            float y{0};
             Div   *target{nullptr};
             float distance{0};
             // The target's visible part (window coordinates), where the press moves to
@@ -1322,8 +1325,8 @@ namespace psychic_ui {
                     && search.y >= static_cast<float>(std::max(top - reach, clipTop))
                     && search.y < static_cast<float>(std::min(bottom + reach, clipBottom))) {
                     const float distance = std::hypot(
-                        search.x - static_cast<float>(left + right) / 2.0f,
-                        search.y - static_cast<float>(top + bottom) / 2.0f
+                        search.x - (static_cast<float>(left + right) / 2.0f),
+                        search.y - (static_cast<float>(top + bottom) / 2.0f)
                     );
                     // On equal distances, the one on top (later in the tree)
                     if (!search.target || distance <= search.distance) {
@@ -1354,8 +1357,8 @@ namespace psychic_ui {
     Div *Window::hitSlopTarget(const float x, const float y, float &targetX, float &targetY) {
         // What the press lands on keeps it, if anything there takes presses
         std::vector<Div *> path{};
-        hitPath(this, x, y, path);
-        if (std::any_of(path.begin(), path.end(), [](const Div *div) { return takesPresses(*div); })) {
+        hitPath(*_overlay, this, x, y, path);
+        if (std::ranges::any_of(path, [](const Div *div) { return takesPresses(*div); })) {
             return nullptr;
         }
 
@@ -1402,11 +1405,11 @@ namespace psychic_ui {
             if (_overlay->pressOutside(static_cast<int>(e.x), static_cast<int>(e.y), e.button == MouseButton::RIGHT)) {
                 _pressSwallowed  = true;
                 _swallowedButton = e.button;
-                return Handled;
+                return MouseEventStatus::Handled;
             }
         } else if (_pressSwallowed && e.button == _swallowedButton) {
             _pressSwallowed = false;
-            return Handled;
+            return MouseEventStatus::Handled;
         }
 
         // Through hit slop, the press and its release land on the target's edge
@@ -1483,8 +1486,7 @@ namespace psychic_ui {
         }
         // At the focused div's center, for the deepest div of the focus path that asks for it
         const MouseEvent center = _focusPath.back()->mouseEventAtCenter();
-        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
-            Div *div = *focused;
+        for (Div *div: std::views::reverse(_focusPath)) {
             if (!div->mouseEnabled() || !div->contextMenuRequested.hasSubscriptions()) {
                 continue;
             }
@@ -1543,7 +1545,7 @@ namespace psychic_ui {
         if (div->focusEnabled()) {
             list.push_back(div);
         }
-        for (auto &child: div->children()) {
+        for (const auto &child: div->children()) {
             focusables(child.get(), list);
         }
     }
@@ -1559,19 +1561,11 @@ namespace psychic_ui {
         if (list.empty()) {
             return false;
         }
-        Div *current = nullptr;
-        for (auto it = _focusPath.rbegin(); it != _focusPath.rend(); ++it) {
-            if ((*it)->focusEnabled()) {
-                current = *it;
-                break;
-            }
-        }
-        auto       found = std::find(list.begin(), list.end(), current);
+        const Div *current = deepest(_focusPath, [](const Div *div) { return div->focusEnabled(); });
+        auto       found = std::ranges::find(list, current);
         const auto count = static_cast<std::ptrdiff_t>(list.size());
-        std::ptrdiff_t index;
-        if (found == list.end()) {
-            index = backwards ? count - 1 : 0;
-        } else {
+        std::ptrdiff_t index = backwards ? count - 1 : 0;
+        if (found != list.end()) {
             index = (std::distance(list.begin(), found) + (backwards ? count - 1 : 1)) % count;
         }
         requestFocus(list[static_cast<std::size_t>(index)], true);
@@ -1584,7 +1578,7 @@ namespace psychic_ui {
         // Escape closes the topmost popup before anyone else sees it, unless the focus is in a field that has a use
         // for it (a search field with text, a number being typed), as browsers do
         if (key == Key::ESCAPE
-            && std::none_of(_focusPath.begin(), _focusPath.end(), [](const Div *div) { return div->takesEscape(); })
+            && std::ranges::none_of(_focusPath, [](const Div *div) { return div->takesEscape(); })
             && _overlay->dismissTop()) {
             return true;
         }
@@ -1599,52 +1593,40 @@ namespace psychic_ui {
             return true;
         }
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
-            // Everyone in the focus path gets the key events, focusEnabled or not
-            Div *div = (*focused);
-            if (div->keyPressed.hasSubscriptions()) {
-                div->keyPressed.emit(key, mod);
-                return true;
-            }
+        // Everyone in the focus path gets the key events, focusEnabled or not
+        if (Div *div = deepest(_focusPath, [](const Div *d) { return d->keyPressed.hasSubscriptions(); })) {
+            div->keyPressed.emit(key, mod);
+            return true;
         }
         return false;
     }
 
     bool Window::handleKeyRepeat(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
-            // Everyone in the focus path gets the key events, focusEnabled or not
-            Div *div = (*focused);
-            if (div->keyRepeated.hasSubscriptions()) {
-                div->keyRepeated.emit(key, mod);
-                return true;
-            }
+        // Everyone in the focus path gets the key events, focusEnabled or not
+        if (Div *div = deepest(_focusPath, [](const Div *d) { return d->keyRepeated.hasSubscriptions(); })) {
+            div->keyRepeated.emit(key, mod);
+            return true;
         }
         return false;
     }
 
     bool Window::handleKeyRelease(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
-            // Everyone in the focus path gets the key events, focusEnabled or not
-            Div *div = (*focused);
-            if (div->keyReleased.hasSubscriptions()) {
-                div->keyReleased.emit(key, mod);
-                return true;
-            }
+        // Everyone in the focus path gets the key events, focusEnabled or not
+        if (Div *div = deepest(_focusPath, [](const Div *d) { return d->keyReleased.hasSubscriptions(); })) {
+            div->keyReleased.emit(key, mod);
+            return true;
         }
         return false;
     }
 
     bool Window::handleType(const icu::UnicodeString &character) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
-            // The deepest div on the focus path with a subscriber gets the characters
-            Div *div = (*focused);
-            if (div->typed.hasSubscriptions()) {
-                div->typed.emit(character);
-                return true;
-            }
+        // The deepest div on the focus path with a subscriber gets the characters
+        if (Div *div = deepest(_focusPath, [](const Div *d) { return d->typed.hasSubscriptions(); })) {
+            div->typed.emit(character);
+            return true;
         }
         return false;
     }

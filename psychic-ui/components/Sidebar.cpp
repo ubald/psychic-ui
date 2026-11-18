@@ -21,7 +21,7 @@ namespace psychic_ui {
               .display(Display::None);
     }
 
-    Sidebar *SidebarItem::sidebar() const {
+    Sidebar *SidebarItem::sidebar() {
         return dynamic_cast<Sidebar *>(group());
     }
 
@@ -127,6 +127,13 @@ namespace psychic_ui {
         std::vector<SidebarItem *> items{};
         collectItems(*_sections, items);
         return items;
+    }
+
+    SidebarItem *Sidebar::current() const {
+        // The selection, found among the items (a row of another kind is none of them)
+        const auto all = items();
+        const auto it  = std::ranges::find(all, _selection);
+        return it != all.end() ? *it : nullptr;
     }
 
     void Sidebar::selectionUpdated() {

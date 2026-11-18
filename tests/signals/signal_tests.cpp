@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 #include <psychic-ui/signals/Observer.hpp>
 #include <psychic-ui/signals/Signal.hpp>
@@ -20,6 +21,10 @@ static_assert(std::is_nothrow_move_constructible_v<ScopedSlot>);
 static_assert(std::has_virtual_destructor_v<SlotBase>);
 
 namespace {
+    ScopedSlot takeFrom(ScopedSlot &holder) {
+        return std::move(holder);
+    }
+
     struct Listener : Observer {
         template<class... T, class F>
         std::shared_ptr<Slot<T...>> listen(Signal<T...> &signal, F &&callback) {
@@ -37,6 +42,11 @@ namespace {
         int      *destroyed;
 
         explicit Owner(int *destroyed) : destroyed(destroyed) {}
+
+        Owner(const Owner &) = delete;
+        Owner &operator=(const Owner &) = delete;
+        Owner(Owner &&) = delete;
+        Owner &operator=(Owner &&) = delete;
 
         ~Owner() {
             ++*destroyed;
@@ -58,7 +68,7 @@ TEST_CASE("Signal basics", "[signals]") {
 
     SECTION("emits rvalues and lvalues") {
         signal.emit(1, 2);
-        int x = 10;
+        const int x = 10;
         signal.emit(x, x);
         REQUIRE(sum == 23);
     }
@@ -99,7 +109,9 @@ TEST_CASE("Signal arguments are converted once and passed by reference", "[signa
 TEST_CASE("Disconnecting during emission", "[signals]") {
     Signal<int>                    signal;
     std::vector<std::string>       calls{};
-    std::shared_ptr<Slot<int>>     first, second, third;
+    std::shared_ptr<Slot<int>>     first;
+    std::shared_ptr<Slot<int>>     second;
+    std::shared_ptr<Slot<int>>     third;
 
     SECTION("a slot disconnecting itself doesn't skip the next one") {
         first  = signal.subscribe([&](int) { calls.emplace_back("first"); first->disconnect(); });
@@ -273,7 +285,7 @@ TEST_CASE("ScopedSlot", "[signals]") {
 
     SECTION("disconnects when destroyed") {
         {
-            ScopedSlot scoped = signal.subscribe([&](int v) { sum += v; });
+            const ScopedSlot scoped = signal.subscribe([&](int v) { sum += v; });
         }
         signal.emit(1);
         REQUIRE(sum == 0);
@@ -291,8 +303,10 @@ TEST_CASE("ScopedSlot", "[signals]") {
     }
 
     SECTION("move keeps a single owner") {
+        // The slot moves out of a holder that stays in use, as a member would: what the holder keeps
+        // is what this checks, an empty slot whose disconnect leaves the new owner's subscription alone
         ScopedSlot a = signal.subscribe([&](int v) { sum += v; });
-        ScopedSlot b = std::move(a);
+        const ScopedSlot b = takeFrom(a);
         REQUIRE_FALSE(a.connected());
         a.disconnect();
         signal.emit(1);

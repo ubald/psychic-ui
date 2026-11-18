@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -43,6 +44,10 @@ namespace psychic_ui {
          */
         SDL3SystemWindow(std::shared_ptr<Window> window, SDL_Window *sdlWindow, SDL_GLContext glContext);
         ~SDL3SystemWindow() override;
+        SDL3SystemWindow(const SDL3SystemWindow &) = delete;
+        SDL3SystemWindow &operator=(const SDL3SystemWindow &) = delete;
+        SDL3SystemWindow(SDL3SystemWindow &&) = delete;
+        SDL3SystemWindow &operator=(SDL3SystemWindow &&) = delete;
 
         SDL_Window *sdlWindow() const;
 
@@ -53,7 +58,7 @@ namespace psychic_ui {
         bool handleEvent(const SDL_Event &event);
 
         bool render() override;
-        void *glProcAddress(const char *name) const override;
+        GLProc glProcAddress(const char *name) const override;
 
         void setTitle(const std::string &title) override;
         void setFullscreen(bool fullscreen) override;
@@ -123,7 +128,7 @@ namespace psychic_ui {
         /**
          * System cursors, indexed by `Cursor`
          */
-        SDL_Cursor *_cursors[6]{};
+        std::array<SDL_Cursor *, 6> _cursors{};
 
         /**
          * Where the window was grabbed, relative to its position, while dragging it ourselves
@@ -142,7 +147,7 @@ namespace psychic_ui {
         /**
          * Buttons held with the pen, mouse style (the tip is the left button)
          */
-        int _penButtons{0};
+        unsigned _penButtons{0};
 
         /**
          * What kind of touch device sent finger events: only touch screens (direct) are followed,

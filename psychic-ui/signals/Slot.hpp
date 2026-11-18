@@ -60,6 +60,8 @@ namespace psychic_ui {
         SlotBase() = default;
         SlotBase(const SlotBase &) = delete;
         SlotBase &operator=(const SlotBase &) = delete;
+        SlotBase(SlotBase &&) = delete;
+        SlotBase &operator=(SlotBase &&) = delete;
         virtual ~SlotBase() = default;
 
         /**
@@ -89,6 +91,7 @@ namespace psychic_ui {
             _core(std::move(core)),
             _callback(std::move(callback)) {}
 
+        // NOLINTNEXTLINE(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
         void disconnect() override {
             if (!_connected) {
                 return;
@@ -101,6 +104,7 @@ namespace psychic_ui {
             }
         }
 
+        // NOLINTNEXTLINE(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
         bool connected() const override {
             return _connected;
         }

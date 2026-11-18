@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+#include <array>
 #include <concepts>
 #include <cstdint>
 #include <utility>
@@ -37,7 +39,7 @@ namespace psychic_ui {
     /**
      * Return status of the mouse event methods
      */
-    enum MouseEventStatus {
+    enum class MouseEventStatus : std::uint8_t {
         /**
          * Mouse was outside the component
          */
@@ -91,6 +93,9 @@ namespace psychic_ui {
          */
         Div &operator=(const Div &) = delete;
 
+        Div(Div &&) = delete;
+        Div &operator=(Div &&) = delete;
+
         /**
          * Get a string representing this Div for debug purposes
          * @return String used to identify a component in a log
@@ -104,6 +109,7 @@ namespace psychic_ui {
          * @return Pointer to owning window, if any
          */
         virtual Window *window();
+        virtual const Window *window() const;
 
         /**
          * If the div is included in a parent, returns a pointer to that parent
@@ -156,7 +162,9 @@ namespace psychic_ui {
         }
 
         /**
-         * Add an existing child at index (in document order)
+         * Add an existing child at index (in document order), at most childCount(): std::out_of_range past it,
+         * std::invalid_argument for no child. A child that has a parent leaves it first (this one too: the index is
+         * then among the other children), as the DOM moves a node.
          * @return The child
          */
         template<class T>
@@ -168,23 +176,24 @@ namespace psychic_ui {
         }
 
         /**
-         * Add an existing child last
+         * Add an existing child last (moved there if it is one already)
          * @return The child
          */
         template<class T>
         requires std::derived_from<T, Div>
         T &add(std::shared_ptr<T> child) {
-            return add(childCount(), std::move(child));
+            const unsigned int index = child && child->parent() == this ? childCount() - 1 : childCount();
+            return add(index, std::move(child));
         }
 
         /**
          * Remove a child by index
-         * @param index Index of the child to remove, must be < childCount()
+         * @param index Index of the child to remove, < childCount() (std::out_of_range otherwise)
          */
         void remove(unsigned int index);
 
         /**
-         * Remove a child, does nothing if it isn't one
+         * Remove a child, does nothing if it isn't one (nullptr included)
          */
         void remove(const std::shared_ptr<Div> &child);
         void remove(const Div &child);
@@ -196,14 +205,14 @@ namespace psychic_ui {
 
         /**
          * Get the child at index, in document order (0 is the first child, drawn at the back)
-         * @param index Index of the child to retrieve, must be < childCount()
+         * @param index Index of the child to retrieve, < childCount() (std::out_of_range otherwise)
          * @return Const pointer to the Div at index
          */
         const Div *at(unsigned int index) const;
 
         /**
          * Get the child at index, in document order (0 is the first child, drawn at the back)
-         * @param index Index of the child to retrieve, must be < childCount()
+         * @param index Index of the child to retrieve, < childCount() (std::out_of_range otherwise)
          * @return Pointer to the Div at index
          */
         Div *at(unsigned int index);
@@ -232,10 +241,11 @@ namespace psychic_ui {
         //
         //     add<Button>("Toggle").enabled(false).toggle(true).padding(24).direction(Direction::Row);
         //
-        // Read values back from computedStyle(), as of the last style pass.
+        // Read values back from computedStyle(), as of the last style pass. They return `Self &`, written
+        // `decltype(auto)` (of `self`, a `Self &`) so that the macro's text has no operator outside parentheses.
         #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) \
             template<class Self> \
-            Self &name(this Self &self, Argument value) { \
+            decltype(auto) name(this Self &self, Argument value) { \
                 static_cast<Div &>(self)._inlineStyle.name(value); \
                 return self; \
             }
@@ -623,8 +633,8 @@ namespace psychic_ui {
          * Replace the class names, matched by `.class` selectors (case insensitive)
          */
         template<class Self>
-        Self &classNames(this Self &self, std::unordered_set<std::string> classNames) {
-            static_cast<Div &>(self).updateClassNames(std::move(classNames));
+        Self &classNames(this Self &self, const std::unordered_set<std::string> &classNames) {
+            static_cast<Div &>(self).updateClassNames(classNames);
             return self;
         }
 
@@ -818,6 +828,61 @@ namespace psychic_ui {
 
         virtual void added();
         virtual void removed();
+
+        /**
+         * A child joined this div, by any path (`add`, or moved here from another parent): it is in the children,
+         * its parent is this one and its `added()` ran, before its first style. For a div that keeps a typed list of
+         * some of its children (the overlay's popups, the toast stack's toasts), so that the children owe it nothing.
+         */
+        virtual void childAdded(Div &child);
+
+        /**
+         * A child left this div, by any path (`remove`, `removeAll`, added to another parent): it is out of the
+         * children and its `removed()` ran, before the focus it had moves (its `parent()` still answers this one
+         * until the call returns). The counterpart of `childAdded`.
+         */
+        virtual void childRemoved(Div &child);
+
+        /**
+         * From `childAdded`: put the child in `list`, the children that are a T in document order, if it is one
+         * @return The child as a T, or nullptr
+         */
+        template<class T>
+        requires std::derived_from<T, Div>
+        T *trackChild(std::vector<std::shared_ptr<T>> &list, Div &child) const {
+            auto *typed = dynamic_cast<T *>(&child);
+            if (!typed) {
+                return nullptr;
+            }
+            // After the tracked children before it (the list follows the children's order)
+            auto at = list.begin();
+            for (const auto &other: _children) {
+                if (other.get() == &child) {
+                    break;
+                }
+                if (at != list.end() && other.get() == at->get()) {
+                    ++at;
+                }
+            }
+            list.insert(at, std::shared_ptr<T>(child.shared_from_this(), typed));
+            return typed;
+        }
+
+        /**
+         * From `childRemoved`: take the child out of `list`
+         * @return The child as a T, or nullptr if it wasn't in it
+         */
+        template<class T>
+        requires std::derived_from<T, Div>
+        static T *untrackChild(std::vector<std::shared_ptr<T>> &list, const Div &child) {
+            const auto it = std::ranges::find(list, &child, [](const auto &tracked) -> const Div * { return tracked.get(); });
+            if (it == list.end()) {
+                return nullptr;
+            }
+            T *typed = it->get(); // NOLINT(misc-const-correctness): returned mutable, for the parent to update it
+            list.erase(it);
+            return typed;
+        }
         virtual void addedToRender();
         virtual void removedFromRender();
 
@@ -842,7 +907,7 @@ namespace psychic_ui {
 
         void updateEnabled(bool enabled);
         void updateId(std::string id);
-        void updateClassNames(std::unordered_set<std::string> classNames);
+        void updateClassNames(const std::unordered_set<std::string> &classNames);
         void updateClassName(std::string className, bool present);
         void scrollTo(int scrollX, int scrollY);
 
@@ -1175,12 +1240,7 @@ namespace psychic_ui {
         float    _radiusTopRight{0.0f};
         float    _radiusBottomLeft{0.0f};
         float    _radiusBottomRight{0.0f};
-        SkVector _radii[4]{
-            {0.0f, 0.0f},
-            {0.0f, 0.0f},
-            {0.0f, 0.0f},
-            {0.0f, 0.0f}
-        };
+        std::array<SkVector, 4> _radii{}; // Top left, top right, bottom right, bottom left, as Skia wants them
 
         float _borderLeft{0.0f};
         float _borderRight{0.0f};

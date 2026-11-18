@@ -26,7 +26,8 @@ TEST_CASE("C3: a div hidden mid-press hears the release and stops being pressed"
     auto   &row = f.window->appContainer().add<Div>().position(Position::Absolute).left(0).top(0).width(400).height(100).direction(Direction::Row);
     auto   &a   = row.add<Div>().width(100).height(100);
     auto   &b   = row.add<Div>().width(100).height(100);
-    int     clicks = 0, released = 0;
+    int     clicks = 0;
+    int     released = 0;
     b.onClick([&] { ++clicks; });
     b.onMouseRelease([&] { ++released; });
     f.sys.layout();

@@ -85,7 +85,7 @@ namespace {
         }
 
         void type(const std::string &text) {
-            for (char c: text) {
+            for (const char c: text) {
                 window->handleType(icu::UnicodeString(static_cast<UChar32>(c)));
             }
             layout();
@@ -96,12 +96,13 @@ namespace {
 
     template<class T>
     T *part(Div &root, const std::string &className) {
-        for (auto &child: root.children()) {
+        for (const auto &child: root.children()) {
             if (child->classNames().contains(className)) {
                 if (auto *found = dynamic_cast<T *>(child.get())) {
                     return found;
                 }
             }
+            // NOLINTNEXTLINE(misc-const-correctness): returned as a mutable pointer, which the check misses
             if (T *found = part<T>(*child, className)) {
                 return found;
             }
@@ -111,7 +112,7 @@ namespace {
 
     std::vector<Div *> parts(Div &root, const std::string &className) {
         std::vector<Div *> found{};
-        for (auto &child: root.children()) {
+        for (const auto &child: root.children()) {
             if (child->classNames().contains(className)) {
                 found.push_back(child.get());
             }
@@ -147,7 +148,7 @@ TEST_CASE("TextInput: a placeholder while it is empty", "[components][inputs]") 
     Inputs f;
     auto &input = f.column.add<TextInput>().placeholder("Name");
     f.layout();
-    Label *placeholder = part<Label>(input, "placeholder");
+    const Label *placeholder = part<Label>(input, "placeholder");
     REQUIRE(placeholder);
     CHECK(placeholder->text() == "Name");
     CHECK(placeholder->visible());
@@ -185,10 +186,10 @@ TEST_CASE("SearchField: icon, text, and a clear button while not empty", "[compo
     f.layout();
 
     REQUIRE(is<SearchFieldSkinBase>(search.skin()));
-    Div   *icon        = part<Icon>(search, "icon");
-    Text  *text        = part<Text>(search, "text");
-    Div   *clear       = part<Div>(search, "clear");
-    Label *placeholder = part<Label>(search, "placeholder");
+    const Div  *icon        = part<Icon>(search, "icon");
+    Text       *text        = part<Text>(search, "text");
+    const Div  *clear       = part<Div>(search, "clear");
+    const auto *placeholder = part<Label>(search, "placeholder");
     REQUIRE(icon);
     REQUIRE(text);
     REQUIRE(clear);
@@ -228,7 +229,7 @@ TEST_CASE("SearchField: Escape clears it, once, then leaves the key alone", "[co
     std::vector<std::string> changes{};
     search.onChange([&](const std::string &text) { changes.push_back(text); });
     f.layout();
-    Div *clear = part<Div>(search, "clear");
+    const Div *clear = part<Div>(search, "clear");
     CHECK(clear->visible());
 
     f.tab();
@@ -253,7 +254,7 @@ TEST_CASE("SearchField: a press on the clear button clears it, and the field kee
     f.type("fixtures");
     changes.clear();
 
-    Div *clear = part<Div>(search, "clear");
+    const Div *clear = part<Div>(search, "clear");
     REQUIRE(clear->visible());
     const auto [cx, cy] = Inputs::center(*clear);
     int x = 0;
@@ -280,7 +281,7 @@ TEST_CASE("SearchField: a press anywhere on it lets one type", "[components][inp
     Inputs f;
     auto &search = f.column.add<SearchField>().width(240);
     f.layout();
-    Div *icon = part<Icon>(search, "icon");
+    const Div *icon = part<Icon>(search, "icon");
     f.click(*icon);
     CHECK(search.hasFocus());
     CHECK_FALSE(f.window->focusVisible());
@@ -327,8 +328,8 @@ TEST_CASE("Switch: a click, Space or Enter flips it", "[components][inputs][swit
     f.layout();
 
     REQUIRE(is<SwitchSkinBase>(toggle.skin()));
-    Div *track = part<Div>(toggle, "track");
-    Div *thumb = part<Div>(toggle, "thumb");
+    const Div *track = part<Div>(toggle, "track");
+    const Div *thumb = part<Div>(toggle, "thumb");
     REQUIRE(track);
     REQUIRE(thumb);
     CHECK(track->getWidth() == 30);
@@ -364,7 +365,7 @@ TEST_CASE("Switch: the thumb drags, and lands on the nearer side", "[components]
     std::vector<bool> changes{};
     toggle.onChange([&](bool on) { changes.push_back(on); });
     f.layout();
-    Div *thumb = part<Div>(toggle, "thumb");
+    const Div *thumb = part<Div>(toggle, "thumb");
     auto [x, y] = Inputs::center(*thumb);
 
     // A little way: back off, no change and no click
@@ -467,8 +468,8 @@ TEST_CASE("NumberStepper: the buttons step it within its range", "[components][i
     f.layout();
 
     REQUIRE(is<NumberStepperSkinBase>(stepper.skin()));
-    Div  &minus = *part<Div>(stepper, "decrement");
-    Div  &plus  = *part<Div>(stepper, "increment");
+    const Div &minus = *part<Div>(stepper, "decrement");
+    const Div &plus  = *part<Div>(stepper, "increment");
     Text &value = *part<Text>(stepper, "value");
     CHECK(&value == stepper.skin()->textView());
     CHECK(stepper.getWidth() == f.theme.metrics.pointer.controlMd * 4);
@@ -731,16 +732,18 @@ TEST_CASE("ColorSwatches: a chip picked by a press, or by the keyboard's own foc
 
 TEST_CASE("Inputs: by touch, they look the same and take presses from around them", "[components][inputs][touch]") {
     Inputs f;
-    std::vector<Div *> controls{
-        &f.column.add<SearchField>(),
-        &f.column.add<Switch>("On"),
+    auto                    &search = f.column.add<SearchField>();
+    auto                    &toggle = f.column.add<Switch>("On");
+    const std::vector<Div *> controls{
+        &search,
+        &toggle,
         &f.column.add<SegmentedControl>(std::vector<Segment>{{"A"}, {"B"}}),
         &f.column.add<NumberStepper>(),
         &f.column.add<ColorSwatches>(),
     };
     f.layout();
     std::vector<int> sizes{};
-    for (Div *control: controls) {
+    for (const Div *control: controls) {
         CHECK(control->computedStyle().hitSlop() == 0.0f);
         sizes.push_back(control->getWidth());
         sizes.push_back(control->getHeight());
@@ -749,7 +752,7 @@ TEST_CASE("Inputs: by touch, they look the same and take presses from around the
     f.window->handleInputModeChange(InputMode::Touch);
     f.layout();
     std::vector<int> touchSizes{};
-    for (Div *control: controls) {
+    for (const Div *control: controls) {
         CHECK(control->computedStyle().hitSlop() == f.theme.metrics.touch.hitSlop);
         touchSizes.push_back(control->getWidth());
         touchSizes.push_back(control->getHeight());
@@ -757,9 +760,8 @@ TEST_CASE("Inputs: by touch, they look the same and take presses from around the
     CHECK(touchSizes == sizes);
 
     // A press just outside the switch reaches it
-    auto *toggle = static_cast<Switch *>(controls[1]);
-    const auto [x, y] = Inputs::at(*toggle, toggle->getWidth() / 2, toggle->getHeight() + 4);
+    const auto [x, y] = Inputs::at(toggle, toggle.getWidth() / 2, toggle.getHeight() + 4);
     f.press(x, y);
     f.release(x, y);
-    CHECK(toggle->checked());
+    CHECK(toggle.checked());
 }

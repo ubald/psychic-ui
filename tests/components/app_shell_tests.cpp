@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <memory>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
@@ -79,7 +80,7 @@ TEST_CASE("AppShell: the sidebar the window's height, the page inset beside it",
     CHECK(pageX == shellX + static_cast<int>(sidebar.getWidth()));
     CHECK(pageY == shellY + static_cast<int>(inset));
     CHECK(page.getWidth() == s.shell.getWidth() - sidebar.getWidth() - inset);
-    CHECK(page.getHeight() == s.shell.getHeight() - 2 * inset);
+    CHECK(page.getHeight() == s.shell.getHeight() - (2 * inset));
     CHECK(page.computedStyle().borderRadius() == s.theme.metrics.radius.page);
     CHECK(page.computedStyle().overflow() == Overflow::Hidden);
     CHECK(page.computedStyle().backgroundColor() == s.theme.palette.page);
@@ -166,12 +167,7 @@ TEST_CASE("AppShell: the sidebar is one Tab stop, the current item else the firs
     s.layout();
     const auto items = s.shell.sidebar().items();
     const auto inSidebar = [&]() {
-        for (SidebarItem *item: items) {
-            if (item->hasFocus()) {
-                return item;
-            }
-        }
-        return static_cast<SidebarItem *>(nullptr);
+        return std::ranges::any_of(items, [](const SidebarItem *item) { return item->hasFocus(); });
     };
     // Tab until the focus is on an item or the button after the sidebar (the window controls come first)
     const auto tabToStop = [&](const Mod mod = Mod{}) {
@@ -221,7 +217,7 @@ TEST_CASE("AppShell: the sidebar is one Tab stop, the current item else the firs
 }
 
 TEST_CASE("AppShell: the sidebar's header moves the window, its controls and the items don't", "[components][appshell][drag]") {
-    Shell s;
+    const Shell s;
     const SidebarHeader &header = s.shell.sidebar().header();
     int x = 0;
     int y = 0;

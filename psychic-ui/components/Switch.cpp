@@ -1,18 +1,18 @@
 #include <algorithm>
 #include <cstdlib>
+#include <utility>
 #include "Switch.hpp"
 #include "psychic-ui/Window.hpp"
 
 namespace psychic_ui {
 
-    Switch::Switch(const std::string &label, std::function<void(bool)> onChangeCallback) :
-        Component() {
+    Switch::Switch(std::string label, std::function<void(bool)> onChangeCallback) :
+        Component(),
+        _label(std::move(label)) {
         tag("Switch");
 
         _mouseChildren = false;
         _focusEnabled  = true; // Tab reaches it; Space or Enter flips it
-
-        _label = label;
 
         keyPressed.subscribe(
             [this](const Key key, const Mod /*modifiers*/) {
@@ -98,7 +98,10 @@ namespace psychic_ui {
     }
 
     float Switch::thumbPosition() const {
-        return _dragging ? _dragPosition : (_checked ? 1.0f : 0.0f);
+        if (_dragging) {
+            return _dragPosition;
+        }
+        return _checked ? 1.0f : 0.0f;
     }
 
     bool Switch::active() const {

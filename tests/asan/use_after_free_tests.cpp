@@ -8,6 +8,7 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include "include/core/SkSurface.h"
@@ -30,9 +31,10 @@ namespace {
         std::shared_ptr<TestWindow>       window{std::make_shared<TestWindow>()};
         std::unique_ptr<FakeSystemWindow> sys{std::make_unique<FakeSystemWindow>(window, 800, 600)};
 
-        void layout() { sys->layout(); }
+        void layout() const { sys->layout(); }
         static std::pair<float, float> center(const Div &div) {
-            int x = 0, y = 0;
+            int x = 0;
+            int y = 0;
             div.localToGlobal(x, y, div.getWidth() / 2, div.getHeight() / 2);
             return {float(x), float(y)};
         }
@@ -102,7 +104,7 @@ TEST_CASE("M2: a blurred handler on an ancestor moves the focus", "[.][asan]") {
 // M5: Menu.cpp's check branch runs the item's callback in place, and closing the menu destroys it while it runs
 TEST_CASE("M5: a check item's callback closes the menu", "[.][asan]") {
     F           f;
-    std::string payload(200, 'x');
+    const std::string payload(200, 'x');
     std::size_t seen = 0;
     Window     *w    = f.window.get();
     w->openMenu({Menu::check("Toggle", false, [w, payload, &seen](bool) {
@@ -118,10 +120,11 @@ TEST_CASE("M5: a check item's callback closes the menu", "[.][asan]") {
 
 // M6: ~Div doesn't clear its children's _parent
 TEST_CASE("M6: a child outlives its parent", "[.][asan]") {
-    F    f;
+    const F f;
     auto child = std::make_shared<Div>();
     {
-        auto parent = std::shared_ptr<Div>(new Div());
+        // Allocated apart from its control block (not make_shared), so that ASan sees its memory freed
+        auto parent = std::shared_ptr<Div>(std::make_unique<Div>());
         parent->add(child);
     }
     CHECK(child->window() == nullptr); // walks the dangling _parent
@@ -131,10 +134,10 @@ TEST_CASE("M6: a child outlives its parent", "[.][asan]") {
 // M8: removed() fires only on the moved TreeNode, so the first tree keeps the row as its selection, and reaches it
 // after it is freed
 TEST_CASE("M8: a selected row moved to another tree, then freed", "[.][asan]") {
-    F     f;
+    const F f;
     auto &tree1 = f.window->appContainer().add<Tree>();
     auto &tree2 = f.window->appContainer().add<Tree>();
-    auto  keep  = std::shared_ptr<TreeNode>(new TreeNode("a"));
+    auto  keep  = std::shared_ptr<TreeNode>(std::make_unique<TreeNode>("a")); // Apart, as above
     tree1.add(keep);
     tree1.node("b");
     f.layout();
@@ -149,7 +152,7 @@ TEST_CASE("M8: a selected row moved to another tree, then freed", "[.][asan]") {
 
 // M9: Tabs::_selected is null until something is selected, and the first render dereferences it
 TEST_CASE("M9: a TabContainer renders before anything is selected", "[.][asan]") {
-    F f;
+    const F f;
     f.window->appContainer().add<TabContainer<std::string>>(
         std::vector<std::string>{"a", "b"},
         [](const std::string &s) { return s; },
@@ -170,7 +173,9 @@ TEST_CASE("M4: delete rows during selectionChanged", "[.][asan]") {
     (void) c;
     f.layout();
     list.onSelectionChange([&list](ListRow *row) {
-        if (row) list.remove(*row);
+        if (row) {
+            list.remove(*row);
+        }
     });
     f.click(a);
     f.layout();
@@ -185,7 +190,9 @@ TEST_CASE("M4: delete rows during selectionChanged", "[.][asan]") {
 TEST_CASE("M4: clear all rows during selectionChanged, then keys", "[.][asan]") {
     F f;
     auto &list = f.window->appContainer().add<List>();
-    for (int i = 0; i < 5; ++i) list.row("r" + std::to_string(i));
+    for (int i = 0; i < 5; ++i) {
+        list.row("r" + std::to_string(i));
+    }
     f.layout();
     list.onSelectionChange([&list](ListRow *) { list.removeAll(); });
     f.key(Key::TAB);
@@ -201,7 +208,11 @@ TEST_CASE("M3: text input removes itself on change while typing", "[.][asan]") {
     auto &t      = parent.add<TextInput>("");
     f.layout();
     f.click(t);
-    t.onChange([&parent, &t]() { if (t.parent()) parent.remove(t); });
+    t.onChange([&parent, &t]() {
+        if (t.parent()) {
+            parent.remove(t);
+        }
+    });
     f.window->handleType("a");
     f.window->handleType("b");
     f.key(Key::BACKSPACE);
@@ -216,7 +227,11 @@ TEST_CASE("M4: sidebar removes the item on change (keys)", "[.][asan]") {
     sec.item("b");
     sec.item("c");
     f.layout();
-    sb.onChange([](SidebarItem *item) { if (item && item->parent()) item->parent()->remove(*item); });
+    sb.onChange([](SidebarItem *item) {
+        if (item && item->parent()) {
+            item->parent()->remove(*item);
+        }
+    });
     f.key(Key::TAB);
     f.key(Key::DOWN);
     f.key(Key::ENTER);
@@ -235,7 +250,11 @@ TEST_CASE("M4: tree removes the selected node on selection change (keys)", "[.][
     tree.node("b");
     a.expanded(true);
     f.layout();
-    tree.onSelectionChange([](TreeNode *n) { if (n && n->parent()) n->parent()->remove(*n); });
+    tree.onSelectionChange([](TreeNode *n) {
+        if (n && n->parent()) {
+            n->parent()->remove(*n);
+        }
+    });
     f.key(Key::TAB);
     f.key(Key::DOWN);
     f.key(Key::DOWN);
@@ -251,24 +270,44 @@ TEST_CASE("M3: list removes itself on selection change (keys)", "[.][asan]") {
     list.row("a");
     list.row("b");
     f.layout();
-    list.onSelectionChange([&parent, &list](ListRow *) { if (list.parent()) parent.remove(list); });
+    list.onSelectionChange([&parent, &list](ListRow *) {
+        if (list.parent()) {
+            parent.remove(list);
+        }
+    });
     f.key(Key::TAB);
     f.key(Key::DOWN);
     f.layout();
 }
 
-#define SELF_REMOVE_ON_CHANGE(NAME, TYPE, CTOR, KEYS)                                               \
-TEST_CASE("M3: " NAME, "[.][asan]") {                                                               \
-    F f;                                                                                            \
-    auto &parent = f.window->appContainer().add<Div>();                                             \
-    auto &w      = parent.add<TYPE> CTOR;                                                           \
-    f.layout();                                                                                     \
-    w.onChange([&parent, &w]() { if (w.parent()) parent.remove(w); });                              \
-    f.key(Key::TAB);                                                                                \
-    for (Key k: KEYS) f.key(k);                                                                     \
-    f.layout();                                                                                     \
-    f.key(Key::TAB);                                                                                \
+namespace {
+    /**
+     * A component that removes itself from its parent when it changes, then the keys that change it
+     */
+    template<class T, class... Args>
+    void removeItselfOnChange(const std::vector<Key> &keys, Args &&...args) {
+        F f;
+        auto &parent = f.window->appContainer().add<Div>();
+        auto &w      = parent.add<T>(std::forward<Args>(args)...);
+        f.layout();
+        w.onChange([&parent, &w]() {
+            if (w.parent()) {
+                parent.remove(w);
+            }
+        });
+        f.key(Key::TAB);
+        for (const Key k: keys) {
+            f.key(k);
+        }
+        f.layout();
+        f.key(Key::TAB);
+    }
 }
-#define K(...) std::vector<Key>{__VA_ARGS__}
-SELF_REMOVE_ON_CHANGE("color swatches remove themselves on change", ColorSwatches, (), K(Key::RIGHT, Key::SPACE, Key::ENTER))
-SELF_REMOVE_ON_CHANGE("range removes itself on change", Range<int>, (0, 10, 5, nullptr), K(Key::RIGHT, Key::RIGHT, Key::HOME))
+
+TEST_CASE("M3: color swatches remove themselves on change", "[.][asan]") {
+    removeItselfOnChange<ColorSwatches>({Key::RIGHT, Key::SPACE, Key::ENTER});
+}
+
+TEST_CASE("M3: range removes itself on change", "[.][asan]") {
+    removeItselfOnChange<Range<int>>({Key::RIGHT, Key::RIGHT, Key::HOME}, 0, 10, 5, nullptr);
+}

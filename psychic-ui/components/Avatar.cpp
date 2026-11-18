@@ -1,3 +1,4 @@
+#include <array>
 #include <cctype>
 #include <string_view>
 #include <vector>
@@ -5,7 +6,7 @@
 
 namespace psychic_ui {
     namespace {
-        constexpr std::string_view sizeClasses[]{"xs", "sm", "md", "lg"};
+        constexpr std::array<std::string_view, 4> sizeClasses{"xs", "sm", "md", "lg"};
 
         /**
          * The first character of a word, a whole UTF-8 sequence, upper-cased when it is ASCII
@@ -74,9 +75,9 @@ namespace psychic_ui {
     }
 
     void Avatar::updateSize(const AvatarSize size) {
-        removeClassName(std::string{sizeClasses[static_cast<std::size_t>(_size)]});
+        removeClassName(std::string{sizeClasses.at(static_cast<std::size_t>(_size))});
         _size = size;
-        addClassName(std::string{sizeClasses[static_cast<std::size_t>(_size)]});
+        addClassName(std::string{sizeClasses.at(static_cast<std::size_t>(_size))});
     }
 
     void Avatar::updateStatus(const std::optional<Tone> status) {

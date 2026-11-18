@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <utility>
 #include "Rows.hpp"
 #include "psychic-ui/Window.hpp"
 
@@ -44,10 +45,10 @@ namespace psychic_ui {
         Div::removed();
     }
 
-    RowGroup *SelectableRow::group() const {
-        for (const Div *div = parent(); div; div = div->parent()) {
-            if (auto group = dynamic_cast<const RowGroup *>(div)) {
-                return const_cast<RowGroup *>(group);
+    RowGroup *SelectableRow::group() {
+        for (Div *div = parent(); div; div = div->parent()) {
+            if (auto *group = dynamic_cast<RowGroup *>(div)) {
+                return group;
             }
         }
         return nullptr;
@@ -149,7 +150,7 @@ namespace psychic_ui {
             return -1;
         }
         const auto all = rows();
-        const auto it  = std::find(all.begin(), all.end(), _selection);
+        const auto it  = std::ranges::find(all, _selection);
         return it == all.end() ? -1 : static_cast<int>(std::distance(all.begin(), it));
     }
 
@@ -171,7 +172,7 @@ namespace psychic_ui {
 
     void RowGroup::updateSelection(const int index) {
         const auto all = rows();
-        updateSelection(index >= 0 && index < static_cast<int>(all.size()) ? all[static_cast<std::size_t>(index)] : nullptr);
+        updateSelection(index >= 0 && std::cmp_less(index, all.size()) ? all[static_cast<std::size_t>(index)] : nullptr);
     }
 
     void RowGroup::rowAdded(SelectableRow *row) {
@@ -193,8 +194,12 @@ namespace psychic_ui {
         }
         if (!row) {
             const auto all = rows();
-            const auto it  = std::find_if(all.begin(), all.end(), [](SelectableRow *r) { return r->enabled(); });
-            row = it != all.end() ? *it : all.empty() ? nullptr : all.front();
+            const auto it  = std::ranges::find_if(all, [](SelectableRow *r) { return r->enabled(); });
+            if (it != all.end()) {
+                row = *it;
+            } else if (!all.empty()) {
+                row = all.front();
+            }
         }
         if (row == _tabStop) {
             return;
@@ -248,7 +253,7 @@ namespace psychic_ui {
         if (all.empty()) {
             return false;
         }
-        const auto it = std::find(all.begin(), all.end(), row);
+        const auto it = std::ranges::find(all, row);
         switch (key) {
             case Key::DOWN:
                 if (it == all.end()) {

@@ -89,7 +89,7 @@ namespace {
         /**
          * Move a child to another place in the container (a sort)
          */
-        void move(Div &child, std::size_t index) {
+        void move(Div &child, std::size_t index) const {
             auto keep = child.shared_from_this();
             list->remove(child);
             list->add(index, keep);
@@ -102,7 +102,7 @@ namespace {
 }
 
 TEST_CASE("Nothing slides on the first layout", "[animation][layout-transition]") {
-    Column f{};
+    const Column f{};
     CHECK(f.b->y() == 20);
     CHECK(f.b->layoutOffsetY() == 0.0f);
     CHECK_FALSE(f.b->layoutSliding());
@@ -512,9 +512,9 @@ TEST_CASE("A tree's rows below a node slide down as it expands, up as it collaps
 
 TEST_CASE("Toasts slide into the place of one that leaves, which fades where it is", "[animation][layout-transition][toast]") {
     Components f{};
-    Toast &first  = f.window->toast({.title = "First", .timeout = 0s});
-    Toast &second = f.window->toast({.title = "Second", .timeout = 0s});
-    Toast &third  = f.window->toast({.title = "Third", .timeout = 0s});
+    const Toast &first  = f.window->toast({.title = "First", .timeout = 0s});
+    Toast       &second = f.window->toast({.title = "Second", .timeout = 0s});
+    Toast       &third  = f.window->toast({.title = "Third", .timeout = 0s});
     f.frame(0ms);
     f.frame(500ms);
     REQUIRE(f.settled());

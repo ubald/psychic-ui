@@ -8,72 +8,71 @@
 #include <algorithm>
 #include <cctype>
 #include <locale>
+#include <ranges>
 
-namespace psychic_ui {
-    namespace string_utils {
-        // trim from start (in place)
-        static inline void ltrim(std::string &s) {
-            s.erase(
-                s.begin(), std::find_if(
-                    s.begin(), s.end(), [](int ch) {
-                        return !std::isspace(ch);
-                    }
-                ));
-        }
-
-        // trim from end (in place)
-        static inline void rtrim(std::string &s) {
-            s.erase(
-                std::find_if(
-                    s.rbegin(), s.rend(), [](int ch) {
-                        return !std::isspace(ch);
-                    }
-                ).base(), s.end());
-        }
-
-        // trim from both ends (in place)
-        static inline void trim(std::string &s) {
-            ltrim(s);
-            rtrim(s);
-        }
-
-        // trim from start (copying)
-        static inline std::string ltrim_copy(std::string s) {
-            ltrim(s);
-            return s;
-        }
-
-        // trim from end (copying)
-        static inline std::string rtrim_copy(std::string s) {
-            rtrim(s);
-            return s;
-        }
-
-        // trim from both ends (copying)
-        static inline std::string trim_copy(std::string s) {
-            trim(s);
-            return s;
-        }
-
-        static inline std::vector<std::string> split(std::string text, char delimiter, bool removeEmpties = true) {
-            std::vector<std::string> result;
-            std::stringstream        ss;
-            ss.str(text);
-            std::string token;
-            while (std::getline(ss, token, delimiter)) {
-                if (!removeEmpties || !token.empty()) {
-                    result.push_back(token);
+namespace psychic_ui::string_utils {
+    // trim from start (in place)
+    static inline void ltrim(std::string &s) {
+        s.erase(
+            s.begin(), std::ranges::find_if(
+                s, [](int ch) {
+                    return !std::isspace(ch);
                 }
-            }
-            return result;
-        }
-
-        static inline void find_and_replace(std::string &source, std::string const &find, std::string const &replace) {
-            for (std::string::size_type i = 0; (i = source.find(find, i)) != std::string::npos;) {
-                source.replace(i, find.length(), replace);
-                i += replace.length();
-            }
-        }
-
+            ));
     }
+
+    // trim from end (in place)
+    static inline void rtrim(std::string &s) {
+        s.erase(
+            std::ranges::find_if(
+                std::views::reverse(s), [](int ch) {
+                    return !std::isspace(ch);
+                }
+            ).base(), s.end());
+    }
+
+    // trim from both ends (in place)
+    static inline void trim(std::string &s) {
+        ltrim(s);
+        rtrim(s);
+    }
+
+    // trim from start (copying)
+    static inline std::string ltrim_copy(std::string s) {
+        ltrim(s);
+        return s;
+    }
+
+    // trim from end (copying)
+    static inline std::string rtrim_copy(std::string s) {
+        rtrim(s);
+        return s;
+    }
+
+    // trim from both ends (copying)
+    static inline std::string trim_copy(std::string s) {
+        trim(s);
+        return s;
+    }
+
+    static inline std::vector<std::string> split(const std::string &text, char delimiter, bool removeEmpties = true) {
+        std::vector<std::string> result;
+        std::stringstream        ss;
+        ss.str(text);
+        std::string token;
+        while (std::getline(ss, token, delimiter)) {
+            if (!removeEmpties || !token.empty()) {
+                result.push_back(token);
+            }
+        }
+        return result;
+    }
+
+    static inline void find_and_replace(std::string &source, std::string const &find, std::string const &replace) {
+        for (std::string::size_type i = 0; (i = source.find(find, i)) != std::string::npos;) {
+            source.replace(i, find.length(), replace);
+            i += replace.length();
+        }
+    }
+
 }

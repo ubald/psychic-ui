@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -225,9 +226,7 @@ TEST_CASE("Colors interpolate premultiplied", "[animation][color]") {
     const Channels none{};
     // Half-way from transparent: half the alpha, the same red
     Channels half{};
-    for (std::size_t i = 0; i < 4; ++i) {
-        half[i] = (red[i] + none[i]) / 2.0f;
-    }
+    std::ranges::transform(red, none, half.begin(), [](float a, float b) { return (a + b) / 2.0f; });
     CHECK(Interpolation<Color>::value(half, {}).argb() == 0x80FF0000u);
     CHECK(Interpolation<Color>::value(Interpolation<Color>::channels(argb(0x40123456)), {}).argb() == 0x40123456u);
     // A length changes unit at once, but zero is zero in any unit
@@ -243,7 +242,7 @@ TEST_CASE("Colors interpolate premultiplied", "[animation][color]") {
 // region Animated and animate
 
 TEST_CASE("Animated moves with its owner's window, and jumps without one", "[animation][animated]") {
-    Scene scene;
+    const Scene scene;
     Animated<float> value{scene.box, 0.0f, Timing{100ms, Ease::Linear}};
 
     scene.window->updateAnimations(1000ms);
@@ -266,7 +265,7 @@ TEST_CASE("Animated moves with its owner's window, and jumps without one", "[ani
 }
 
 TEST_CASE("An Animated that goes stops being ticked", "[animation][animated]") {
-    Scene scene;
+    const Scene scene;
     {
         Animated<float> value{scene.box, 0.0f, Timing{100ms}};
         scene.window->updateAnimations(0ms);
@@ -418,7 +417,7 @@ TEST_CASE("A color appearing fades in from transparent, and goes at the end", "[
 
 TEST_CASE("Children inherit the blend", "[animation][transition]") {
     Scene scene;
-    Div &child = scene.box->add<Div>();
+    const Div &child = scene.box->add<Div>();
     scene.styles().style(".box").color(rgb(0x000000)).transition(P::color, Timing{100ms, Ease::Linear});
     scene.styles().style(".box.on").color(rgb(0xFFFFFF));
     scene.frame(0ms);

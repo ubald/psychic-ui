@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include "Skin.hpp"
 #include "Div.hpp"
 
@@ -40,11 +41,11 @@ namespace psychic_ui {
     protected:
         void updateSkin(std::shared_ptr<T> skin);
 
-        void draw(SkCanvas */*canvas*/) override {/*Skin Manages drawing*/}
+        void draw(SkCanvas */*canvas*/) override {/*Skin Manages drawing*/} // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
 
-        virtual void skinChanged() {}
+        virtual void skinChanged() {} // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
 
-        void styleUpdated() override;
+        void styleUpdated() override; // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
 
         Atom               _skinName{};
         std::size_t        _skinsGeneration{0};
@@ -72,7 +73,7 @@ namespace psychic_ui {
             if (_skin) {
                 this->remove(_skin);
             }
-            _skin = skin;
+            _skin = std::move(skin);
             if (_skin) {
                 // The skin is always child 0, behind what the component adds itself
                 this->add(0, _skin);

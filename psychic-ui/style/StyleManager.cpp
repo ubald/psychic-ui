@@ -5,9 +5,9 @@
 #include "../Div.hpp"
 #include "modules/skparagraph/include/TypefaceFontProvider.h"
 
-#if defined(__APPLE__)
+#ifdef __APPLE__
 #include "include/ports/SkFontMgr_mac_ct.h"
-#elif defined(_WIN32)
+#elifdef _WIN32
 #include "include/ports/SkTypeface_win.h"
 #else
 #include "include/ports/SkFontMgr_fontconfig.h"
@@ -18,7 +18,7 @@ namespace psychic_ui {
 
     std::shared_ptr<StyleManager> StyleManager::getInstance() {
         // Built on first use, so it doesn't depend on the initialization order of other translation units
-        static std::shared_ptr<StyleManager> instance = std::make_shared<StyleManager>();
+        static const std::shared_ptr<StyleManager> instance = std::make_shared<StyleManager>();
         return instance;
     }
 
@@ -46,8 +46,8 @@ namespace psychic_ui {
     }
 
     void StyleManager::loadStyleSheet(const std::type_index type, const std::function<std::unique_ptr<StyleSheet>()> &make) {
-        auto it = std::find_if(
-            _styleSheets.begin(), _styleSheets.end(),
+        auto it = std::ranges::find_if(
+            _styleSheets,
             [type](const auto &loaded) { return loaded.first == type; }
         );
         StyleSheet *sheet = it != _styleSheets.end()
@@ -115,10 +115,10 @@ namespace psychic_ui {
     }
 
     sk_sp<SkFontMgr> StyleManager::fontManager() {
-        static sk_sp<SkFontMgr> manager =
-            #if defined(__APPLE__)
+        static const sk_sp<SkFontMgr> manager =
+            #ifdef __APPLE__
             SkFontMgr_New_CoreText(nullptr);
-            #elif defined(_WIN32)
+            #elifdef _WIN32
             SkFontMgr_New_DirectWrite();
             #else
             SkFontMgr_New_FontConfig(nullptr, SkFontScanner_Make_FreeType());
@@ -188,7 +188,7 @@ namespace psychic_ui {
     }
 
     Style &StyleManager::style(std::string selectorString) {
-        std::transform(selectorString.begin(), selectorString.end(), selectorString.begin(), ::tolower);
+        std::ranges::transform(selectorString, selectorString.begin(), ::tolower);
         auto it = _declarations.find(selectorString);
         if (it == _declarations.cend()) {
             auto selector = StyleSelector::fromSelector(selectorString);
@@ -230,7 +230,7 @@ namespace psychic_ui {
     }
 
     void StyleManager::matchCandidates(const std::vector<std::size_t> &candidates, const Div *component) {
-        for (std::size_t i: candidates) {
+        for (const std::size_t i: candidates) {
             if (_rules[i]->selector()->matches(component)) {
                 _matches.emplace_back(_rules[i]->weight(), i);
             }
@@ -262,8 +262,9 @@ namespace psychic_ui {
         }
         // Heaviest overlaid last; on equal weight the rule declared last wins, like CSS's order of appearance.
         // (weight, declaration index) pairs are unique once the duplicates (a tag set twice) are dropped.
-        std::sort(_matches.begin(), _matches.end());
-        _matches.erase(std::unique(_matches.begin(), _matches.end()), _matches.end());
+        std::ranges::sort(_matches);
+        const auto duplicates = std::ranges::unique(_matches);
+        _matches.erase(duplicates.begin(), duplicates.end());
     }
 
     Style StyleManager::computeStyle(const Div *component) {
@@ -297,7 +298,7 @@ namespace psychic_ui {
     std::vector<std::string> StyleManager::matchedSelectors(const Div *component) {
         std::vector<std::string> selectors;
         if (_universal) {
-            selectors.push_back("*");
+            selectors.emplace_back("*");
         }
         match(component);
         for (const auto &[weight, index]: _matches) {

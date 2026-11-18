@@ -14,6 +14,7 @@
 using namespace psychic_ui;
 
 namespace {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): the style manager constructs the sheets that record here
     std::vector<std::string> loads{};
 
     /**
@@ -41,7 +42,7 @@ namespace {
 }
 
 TEST_CASE("a style manager starts with Pivotal Dark", "[style][theme]") {
-    StyleManager manager;
+    const StyleManager manager;
     REQUIRE(manager.theme().name == themes::pivotalDark.name);
     REQUIRE(manager.theme().palette.accent == themes::pivotalDark.palette.accent);
 }
@@ -56,7 +57,7 @@ TEST_CASE("switching themes loads the stylesheets again, in order, with the new 
     manager.loadStyleSheet<AppSheet>();
     manager.setValid();
 
-    Style dark = manager.computeStyle(div.get());
+    const Style dark = manager.computeStyle(div.get());
     REQUIRE(dark.backgroundColor() == themes::pivotalDark.palette.accent); // The app's rule wins
     REQUIRE(dark.color() == themes::pivotalDark.palette.text);
 
@@ -64,7 +65,7 @@ TEST_CASE("switching themes loads the stylesheets again, in order, with the new 
     REQUIRE(loads == std::vector<std::string>{"look", "app", "look", "app"});
     REQUIRE_FALSE(manager.valid());
 
-    Style light = manager.computeStyle(div.get());
+    const Style light = manager.computeStyle(div.get());
     REQUIRE(light.backgroundColor() == themes::oneLight.palette.accent); // Still the app's rule
     REQUIRE(light.color() == themes::oneLight.palette.text);             // The look's, with the new values
     REQUIRE(light.padding() == Length{themes::oneLight.metrics.gutter});

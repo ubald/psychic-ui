@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <utility>
 #include "ColorSwatches.hpp"
 #include "psychic-ui/Window.hpp"
 #include "psychic-ui/themes/palette.hpp"
@@ -107,9 +108,9 @@ namespace psychic_ui {
             _skin->setFocused(_focused);
         }
         if (had) {
-            const auto found = std::find(_colors.cbegin(), _colors.cend(), previous);
-            if (found != _colors.cend()) {
-                _selected = static_cast<int>(std::distance(_colors.cbegin(), found));
+            const auto found = std::ranges::find(_colors, previous);
+            if (found != _colors.end()) {
+                _selected = static_cast<int>(std::distance(_colors.begin(), found));
             } else {
                 changed.emit(Color{});
             }
@@ -124,7 +125,7 @@ namespace psychic_ui {
     }
 
     void ColorSwatches::updateSelected(const int index) {
-        const int selected = index >= 0 && index < static_cast<int>(_colors.size()) ? index : -1;
+        const int selected = index >= 0 && std::cmp_less(index, _colors.size()) ? index : -1;
         if (selected != _selected) {
             _selected = selected;
             if (_skin) {
@@ -135,7 +136,7 @@ namespace psychic_ui {
     }
 
     void ColorSwatches::updateFocused(const int index) {
-        const int focused = index >= 0 && index < static_cast<int>(_colors.size()) ? index : -1;
+        const int focused = index >= 0 && std::cmp_less(index, _colors.size()) ? index : -1;
         if (focused != _focused) {
             _focused = focused;
             if (_skin) {
@@ -149,8 +150,8 @@ namespace psychic_ui {
     }
 
     void ColorSwatches::updateValue(const Color color) {
-        const auto found = std::find(_colors.cbegin(), _colors.cend(), color);
-        updateSelected(found != _colors.cend() ? static_cast<int>(std::distance(_colors.cbegin(), found)) : -1);
+        const auto found = std::ranges::find(_colors, color);
+        updateSelected(found != _colors.end() ? static_cast<int>(std::distance(_colors.begin(), found)) : -1);
     }
 
     void ColorSwatches::skinChanged() {

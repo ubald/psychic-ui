@@ -10,9 +10,12 @@ namespace psychic_ui {
     }
 
     void TitleBarButtonSkin::draw(SkCanvas *canvas) {
-        const float   radius = std::min(_width, _height) / 2.0f;
-        const SkPoint center = SkPoint::Make(_width / 2.0f, _height / 2.0f);
-        paint::disc(canvas, center, radius, component()->computedStyle().backgroundColor());
+        const SkRect  bounds = SkRect::Make(SkIRect::MakeWH(_width, _height));
+        const float   radius = std::min(bounds.width(), bounds.height()) / 2.0f;
+        const SkPoint center = bounds.center();
+        if (const Button *button = component()) {
+            paint::disc(canvas, center, radius, button->computedStyle().backgroundColor());
+        }
     }
 
 }

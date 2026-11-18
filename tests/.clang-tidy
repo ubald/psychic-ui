@@ -1,0 +1,3 @@
+# Tests keep their literal values: an expected 24 reads better than a named constant.
+InheritParentConfig: true
+Checks: '-readability-magic-numbers'

@@ -1,6 +1,5 @@
 #include "Compose.hpp"
 
-#include <stdexcept>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Label.hpp>
 
@@ -42,18 +41,11 @@ namespace psychic_ui::showcase::compose {
             return &root;
         }
         for (const auto &child: root.children()) {
+            // NOLINTNEXTLINE(misc-const-correctness): returned as a mutable pointer, which the check misses
             if (Div *found = findIf(*child, accept)) {
                 return found;
             }
         }
         return nullptr;
-    }
-
-    Div &find(Div &root, const std::string &className) {
-        Div *found = findIf(root, [&className](Div &div) { return div.classNames().contains(className); });
-        if (!found) {
-            throw std::runtime_error("No ." + className + " in the scene");
-        }
-        return *found;
     }
 }

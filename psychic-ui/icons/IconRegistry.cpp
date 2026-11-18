@@ -81,7 +81,7 @@ namespace psychic_ui {
 
     void IconRegistry::report(std::string_view name, std::string_view problem) {
         if (_reported.emplace(name).second) {
-            std::cerr << "Psychic UI: " << problem << " \"" << name << "\"" << std::endl;
+            std::cerr << "Psychic UI: " << problem << " \"" << name << "\"\n";
         }
     }
 }

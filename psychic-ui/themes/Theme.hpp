@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <cstdint>
 #include <string_view>
 #include "psychic-ui/animation/Timing.hpp"
 #include "psychic-ui/style/Color.hpp"
@@ -10,7 +11,7 @@ namespace psychic_ui {
     /**
      * Whether a theme is light or dark, and what the system asks for (`Unknown` when it doesn't say)
      */
-    enum class ColorScheme {
+    enum class ColorScheme : std::uint8_t {
         Unknown,
         Light,
         Dark
@@ -120,7 +121,7 @@ namespace psychic_ui {
      * How dense the controls are: for a mouse, trackpad or pen (`Pointer`), or for fingers (`Touch`), which the style
      * manager switches to while the window is in touch mode
      */
-    enum class Density {
+    enum class Density : std::uint8_t {
         Pointer,
         Touch
     };

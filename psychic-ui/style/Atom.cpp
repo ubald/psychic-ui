@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_set>
 #include "Atom.hpp"
+#include "../utils/NoDestructor.hpp"
 
 namespace psychic_ui {
 
@@ -18,7 +19,7 @@ namespace psychic_ui {
          * Node-based, so the strings never move.
          */
         std::unordered_set<std::string, StringHash, std::equal_to<>> &internedStrings() {
-            static auto *strings = new std::unordered_set<std::string, StringHash, std::equal_to<>>();
+            static NoDestructor<std::unordered_set<std::string, StringHash, std::equal_to<>>> strings{};
             return *strings;
         }
 

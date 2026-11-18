@@ -50,7 +50,7 @@ namespace {
     template<typename T>
     T &addText(Root &root, const std::string &text, float size = 14.0f, const std::string &font = FONT) {
         auto &node = root.add<T>(text);
-        node.fontFamily(FONT)
+        node.fontFamily(font)
             .fontSize(size)
             .lineHeight(LINE_HEIGHT);
         return node;
@@ -264,14 +264,14 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
     SECTION("wrapping keeps whole words and lines a line height apart") {
         const std::string str = "one two three four five six";
         layout.setText(icu::UnicodeString::fromUTF8(str));
-        float width = layout.maxContentWidth();
+        const float width = layout.maxContentWidth();
         REQUIRE(layout.lineCountAt(width + 1.0f) == 1);
         layout.layout(width / 2.0f);
         const auto lines = layout.lineCountAt(width / 2.0f);
         REQUIRE(lines >= 2);
         // Lines start on words
         for (unsigned int line = 1; line < lines; ++line) {
-            const unsigned int start = layout.indexAt(0.0f, (line + 0.5f) * LINE_HEIGHT);
+            const unsigned int start = layout.indexAt(0.0f, (static_cast<float>(line) + 0.5f) * LINE_HEIGHT);
             REQUIRE(start > 0);
             REQUIRE(str[start - 1] == ' ');
             REQUIRE(lineOf(start) == line);
@@ -285,7 +285,7 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
         layout.layout(20.0f);
         REQUIRE(layout.lineCountAt(20.0f) == 1);
         REQUIRE(lineOf(27) == 0);
-        float fits = layout.fittingWidth(20.0f);
+        const float fits = layout.fittingWidth(20.0f);
         REQUIRE(fits <= 20.0f);
         REQUIRE(fits > 0.0f);
     }

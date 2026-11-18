@@ -2,6 +2,8 @@
 #include <charconv>
 #include <cmath>
 #include <format>
+#include <memory>
+#include <string_view>
 #include "NumberStepper.hpp"
 
 namespace psychic_ui {
@@ -108,7 +110,7 @@ namespace psychic_ui {
             const auto keepAlive = weak_from_this().lock(); // A handler may remove this stepper from its parent
             commit();
             stepBy(event.scrollY > 0 ? 1 : -1);
-            return Handled;
+            return MouseEventStatus::Handled;
         }
         return TextField::handleMouseScroll(event);
     }
@@ -125,13 +127,14 @@ namespace psychic_ui {
             refresh();
             return;
         }
-        double      value = 0;
-        const char *begin = typed.data() + first;
-        const char *end   = typed.data() + last + 1;
-        if (*begin == '+') {
-            ++begin;
+        double           value = 0;
+        std::string_view number{typed};
+        number = number.substr(first, last + 1 - first);
+        if (number.starts_with('+')) {
+            number.remove_prefix(1);
         }
-        const auto [ptr, error] = std::from_chars(begin, end, value);
+        const char *end = std::to_address(number.end());
+        const auto [ptr, error] = std::from_chars(std::to_address(number.begin()), end, value);
         if (error != std::errc{} || ptr != end || !std::isfinite(value)) {
             refresh();
             return;

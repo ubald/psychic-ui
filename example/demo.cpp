@@ -1,4 +1,6 @@
+#include <cstddef>
 #include <iostream>
+#include <span>
 #include <string>
 #include "demo.hpp"
 #include "example/demo/DemoWindow.hpp"
@@ -30,23 +32,24 @@ int main(int argc, char **argv) {
         std::string open{};
         std::string keys{};
         int         scroll = 0;
-        for (int i = 1; i < argc; ++i) {
-            const std::string arg  = argv[i];
-            const bool        more = i + 1 < argc;
+        const std::span<char *> args{argv, static_cast<std::size_t>(argc)};
+        for (std::size_t i = 1; i < args.size(); ++i) {
+            const std::string arg  = args[i];
+            const bool        more = i + 1 < args.size();
             if (arg == "--skin" && more) {
-                skin = argv[++i];
+                skin = args[++i];
             } else if (arg == "--density" && more) {
-                density = argv[++i];
+                density = args[++i];
             } else if (arg == "--theme" && more) {
-                theme = argv[++i];
+                theme = args[++i];
             } else if (arg == "--page" && more) {
-                page = argv[++i];
+                page = args[++i];
             } else if (arg == "--open" && more) {
-                open = argv[++i];
+                open = args[++i];
             } else if (arg == "--keys" && more) {
-                keys = argv[++i];
+                keys = args[++i];
             } else if (arg == "--scroll" && more) {
-                scroll = std::stoi(argv[++i]);
+                scroll = std::stoi(args[++i]);
             } else if (arg == "--no-fps") {
                 window->showFps(false);
             } else if (arg == "--reduced-motion") {
@@ -54,39 +57,39 @@ int main(int argc, char **argv) {
             } else if (arg == "--slow-motion") {
                 window->animationSpeed(0.1f); // Ten times slower, to look at animations
             } else {
-                std::cerr << "Unknown argument: " << arg << std::endl;
+                std::cerr << "Unknown argument: " << arg << '\n';
             }
         }
 
         if (!skin.empty() && !window->useSkinSet(skin)) {
-            std::cerr << "Unknown skin set: " << skin << std::endl;
+            std::cerr << "Unknown skin set: " << skin << '\n';
         }
         if (density == "touch" || density == "pointer") {
             window->forceInputMode(density == "touch" ? InputMode::Touch : InputMode::Pointer);
         } else if (!density.empty()) {
-            std::cerr << "Unknown density: " << density << std::endl;
+            std::cerr << "Unknown density: " << density << '\n';
         }
         if (!theme.empty() && !window->useTheme(theme)) {
-            std::cerr << "Unknown theme: " << theme << std::endl;
+            std::cerr << "Unknown theme: " << theme << '\n';
         }
         if (!page.empty() && !window->showPage(page)) {
-            std::cerr << "Unknown page: " << page << std::endl;
+            std::cerr << "Unknown page: " << page << '\n';
         }
         // For screenshots
         if (!open.empty() && !window->openPopup(open)) {
-            std::cerr << "Unknown popup: " << open << std::endl;
+            std::cerr << "Unknown popup: " << open << '\n';
         }
         if (scroll != 0) {
             window->scrollPage(scroll);
         }
         // For screenshots of the keyboard's focus
         if (!keys.empty() && !window->pressKeys(keys)) {
-            std::cerr << "Unknown key in: " << keys << std::endl;
+            std::cerr << "Unknown key in: " << keys << '\n';
         }
 
         app.run();
     } catch (const std::exception &e) {
-        std::cerr << "Caught a fatal error: " << e.what() << std::endl;
+        std::cerr << "Caught a fatal error: " << e.what() << '\n';
         return -1;
     }
 

@@ -14,7 +14,9 @@ TEST_CASE("C1: a key a focused Button doesn't use reaches the app's shortcut", "
     auto            &app       = window->appContainer();
     int              shortcuts = 0;
     app.onKeyPress([&](Key key, Mod mod) {
-        if (key == Key::S && mod.ctrl) ++shortcuts;
+        if (key == Key::S && mod.ctrl) {
+            ++shortcuts;
+        }
     });
     auto &button = app.add<Button>("Save");
     sys.layout();
@@ -28,7 +30,9 @@ TEST_CASE("C1: a key a focused list row doesn't use reaches the app's shortcut",
     FakeSystemWindow sys{window, 800, 600};
     int              shortcuts = 0;
     window->appContainer().onKeyPress([&](Key key, Mod) {
-        if (key == Key::DELETE) ++shortcuts;
+        if (key == Key::DELETE) {
+            ++shortcuts;
+        }
     });
     auto &list = window->appContainer().add<List>();
     auto &row  = list.row("One");

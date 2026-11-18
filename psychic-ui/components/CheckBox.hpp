@@ -22,9 +22,9 @@ namespace psychic_ui {
 
     class CheckBox : public Component<CheckBoxSkin> {
     public:
-        CheckBox(const std::string &label, std::function<void(bool)> onChangeCallback);
+        CheckBox(std::string label, std::function<void(bool)> onChangeCallback);
 
-        explicit CheckBox(const std::string &label = "") : CheckBox(label, nullptr) {}
+        explicit CheckBox(std::string label = "") : CheckBox(std::move(label), nullptr) {}
 
         explicit CheckBox(std::function<void(bool)> onChangeCallback) : CheckBox("", std::move(onChangeCallback)) {}
 

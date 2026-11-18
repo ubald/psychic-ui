@@ -84,7 +84,7 @@ namespace psychic_ui {
         /**
          * The sidebar it is in, or nullptr
          */
-        Sidebar *sidebar() const;
+        Sidebar *sidebar();
 
     protected:
         // Children: our child list owns them
@@ -197,7 +197,7 @@ namespace psychic_ui {
         /**
          * The current item, or nullptr
          */
-        SidebarItem *current() const { return static_cast<SidebarItem *>(_selection); }
+        SidebarItem *current() const;
 
         // Make an item current (nullptr for none) with `select(item)`, emitting `changed` when it changes
 

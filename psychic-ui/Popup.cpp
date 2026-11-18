@@ -39,12 +39,12 @@ namespace psychic_ui {
     }
 
     bool Popup::isOpen() const {
-        return dynamic_cast<const Overlay *>(_parent) != nullptr && !exiting();
+        return _overlay != nullptr && !exiting();
     }
 
     void Popup::close() {
-        if (auto overlay = dynamic_cast<Overlay *>(_parent)) {
-            overlay->close(*this);
+        if (_overlay) {
+            _overlay->close(*this);
         }
     }
 }

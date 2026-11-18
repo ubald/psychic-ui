@@ -34,7 +34,7 @@ namespace psychic_ui {
         void pick(Button *tool);
     };
 
-    CanvasPage::CanvasPage() : Div() {
+    inline CanvasPage::CanvasPage() : Div() {
         tag("CanvasPage");
 
         // region Stage, centered under everything
@@ -143,7 +143,7 @@ namespace psychic_ui {
         // endregion
     }
 
-    void CanvasPage::pick(Button *tool) {
+    inline void CanvasPage::pick(Button *tool) {
         // One tool at a time, as a radio group
         for (Button *other: _tools) {
             other->selected(other == tool);
