@@ -109,7 +109,9 @@ TEST_CASE("Signal arguments are converted once and passed by reference", "[signa
 TEST_CASE("Disconnecting during emission", "[signals]") {
     Signal<int>                    signal;
     std::vector<std::string>       calls{};
-    std::shared_ptr<Slot<int>>     first, second, third;
+    std::shared_ptr<Slot<int>>     first;
+    std::shared_ptr<Slot<int>>     second;
+    std::shared_ptr<Slot<int>>     third;
 
     SECTION("a slot disconnecting itself doesn't skip the next one") {
         first  = signal.subscribe([&](int) { calls.emplace_back("first"); first->disconnect(); });

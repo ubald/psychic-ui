@@ -35,7 +35,8 @@ namespace {
 
         // The rendered color at a point of a div, in its own coordinates
         SkColor at(const Div &div, int x, int y) {
-            int gx = 0, gy = 0;
+            int gx = 0;
+            int gy = 0;
             div.localToGlobal(gx, gy, x, y);
             SkPixmap pixmap;
             REQUIRE(surface->peekPixels(&pixmap));

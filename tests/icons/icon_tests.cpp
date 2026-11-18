@@ -176,7 +176,8 @@ TEST_CASE("an icon's box is put on the pixel grid", "[icons]") {
     paint::icon(aligned->getCanvas(), "check", SkRect::MakeXYWH(8, 8, 16, 16), argb(0xFF000000));
     paint::icon(offset->getCanvas(), "check", SkRect::MakeXYWH(7.6f, 7.6f, 16, 16), argb(0xFF000000));
 
-    SkPixmap a, b;
+    SkPixmap a;
+    SkPixmap b;
     REQUIRE(aligned->peekPixels(&a));
     REQUIRE(offset->peekPixels(&b));
     for (int y = 0; y < 32; ++y) {
@@ -212,7 +213,8 @@ TEST_CASE("Icon measures its size and draws inside its box", "[icons]") {
     window->render(surface->getCanvas());
     const SkIRect ink = inkBounds(surface.get());
     REQUIRE_FALSE(ink.isEmpty());
-    int x = 0, y = 0;
+    int x = 0;
+    int y = 0;
     icon.localToGlobal(x, y, 0, 0);
     // Both icons draw inside their own boxes, together inside the row of them
     REQUIRE(SkIRect::MakeXYWH(x, y, 20 + 18, 20).contains(ink));

@@ -11,7 +11,8 @@ TEST_CASE("C11: presses inside a focused field don't focus it again", "[div][foc
     auto             window = std::make_shared<TestWindow>();
     FakeSystemWindow sys{window, 800, 600};
     auto            &input = window->appContainer().add<TextInput>("hello").position(Position::Absolute).left(10).top(10).width(200);
-    int              inputFocused = 0, appFocused = 0;
+    int              inputFocused = 0;
+    int              appFocused = 0;
     input.onFocus([&] { ++inputFocused; });
     window->appContainer().onFocus([&] { ++appFocused; });
     sys.layout();

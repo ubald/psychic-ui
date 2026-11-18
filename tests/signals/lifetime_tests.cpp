@@ -138,7 +138,8 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
     REQUIRE(file != nullptr);
 
     SECTION("clicking an item closes the menu that holds it") {
-        int x = 0, y = 0;
+        int x = 0;
+        int y = 0;
         HeadlessWindow::center(file, x, y);
         window->clickAt(x, y);
         auto item = findButton(window->overlay(), "New");
@@ -161,7 +162,8 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
     }
 
     SECTION("an item's own onClick emitted directly") {
-        int x = 0, y = 0;
+        int x = 0;
+        int y = 0;
         HeadlessWindow::center(file, x, y);
         window->clickAt(x, y);
         auto item = findButton(window->overlay(), "New");
@@ -173,7 +175,8 @@ TEST_CASE("Menus in a headless window", "[signals][lifetime][menu]") {
     }
 
     SECTION("hovering a submenu then closing frees its buttons") {
-        int x = 0, y = 0;
+        int x = 0;
+        int y = 0;
         HeadlessWindow::center(file, x, y);
         window->clickAt(x, y);
         auto recent = findButton(window->overlay(), "Recent");

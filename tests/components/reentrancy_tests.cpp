@@ -44,7 +44,8 @@ namespace {
 
         void layout() { sys->layout(); }
         static std::pair<float, float> center(const Div &div) {
-            int x = 0, y = 0;
+            int x = 0;
+            int y = 0;
             div.localToGlobal(x, y, div.getWidth() / 2, div.getHeight() / 2);
             return {float(x), float(y)};
         }

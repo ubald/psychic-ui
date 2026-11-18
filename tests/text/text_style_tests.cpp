@@ -38,7 +38,8 @@ namespace {
         }
 
         SkColor at(const Div &div, int x, int y) {
-            int gx = 0, gy = 0;
+            int gx = 0;
+            int gy = 0;
             div.localToGlobal(gx, gy, x, y);
             SkPixmap pixmap;
             REQUIRE(surface->peekPixels(&pixmap));
@@ -123,7 +124,8 @@ TEST_CASE("A hovered button's label blends its color without building a paragrap
 
     const auto built = TextLayout::paragraphsBuilt();
     window->updateAnimations(1000ms);
-    int x = 0, y = 0;
+    int x = 0;
+    int y = 0;
     button.localToGlobal(x, y, static_cast<int>(button.getWidth() / 2.0f), static_cast<int>(button.getHeight() / 2.0f));
     window->handleMouseMove({.x = static_cast<float>(x), .y = static_cast<float>(y)}, false);
     system.layout();

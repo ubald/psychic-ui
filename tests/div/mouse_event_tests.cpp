@@ -52,7 +52,12 @@ namespace {
 
 TEST_CASE("Mouse events: every signal gets the event in the div's own coordinates", "[div][events][mouse]") {
     MouseFixture f;
-    std::vector<MouseEvent> entered{}, moved{}, pressed{}, released{}, changed{}, clicked{};
+    std::vector<MouseEvent> entered{};
+    std::vector<MouseEvent> moved{};
+    std::vector<MouseEvent> pressed{};
+    std::vector<MouseEvent> released{};
+    std::vector<MouseEvent> changed{};
+    std::vector<MouseEvent> clicked{};
     f.box.onMouseEnter([&](const MouseEvent &e) { entered.push_back(e); })
          .onMouseMove([&](const MouseEvent &e) { moved.push_back(e); })
          .onMousePress([&](const MouseEvent &e) { pressed.push_back(e); })
@@ -136,7 +141,9 @@ TEST_CASE("Mouse events: every signal gets the event in the div's own coordinate
 
 TEST_CASE("Mouse events: presses in a row count clicks", "[div][events][mouse]") {
     MouseFixture f;
-    std::vector<unsigned> presses{}, clicks{}, doubleClicks{};
+    std::vector<unsigned> presses{};
+    std::vector<unsigned> clicks{};
+    std::vector<unsigned> doubleClicks{};
     f.box.onMousePress([&](const MouseEvent &e) { presses.push_back(e.clickCount); })
          .onClick([&](const MouseEvent &e) { clicks.push_back(e.clickCount); })
          .onDoubleClick([&](const MouseEvent &e) { doubleClicks.push_back(e.clickCount); });
@@ -184,7 +191,9 @@ TEST_CASE("Mouse events: scrolls carry their modifiers", "[div][events][mouse]")
 
 TEST_CASE("Mouse events: touches report their source and count taps on the touch clock", "[div][events][mouse][touch]") {
     MouseFixture f;
-    std::vector<MouseEvent> entered{}, pressed{}, clicked{};
+    std::vector<MouseEvent> entered{};
+    std::vector<MouseEvent> pressed{};
+    std::vector<MouseEvent> clicked{};
     unsigned doubleTaps = 0;
     f.box.onMouseEnter([&](const MouseEvent &e) { entered.push_back(e); })
          .onMousePress([&](const MouseEvent &e) { pressed.push_back(e); })
@@ -220,7 +229,8 @@ TEST_CASE("Mouse events: touches report their source and count taps on the touch
 
 TEST_CASE("Context menus: a right press asks once, the deepest div that listens gets it", "[div][events][mouse][context-menu]") {
     MouseFixture f;
-    std::vector<MouseEvent> innerRequests{}, boxRequests{};
+    std::vector<MouseEvent> innerRequests{};
+    std::vector<MouseEvent> boxRequests{};
     f.inner.onContextMenuRequest([&](const MouseEvent &e) { innerRequests.push_back(e); });
     f.box.onContextMenuRequest([&](const MouseEvent &e) { boxRequests.push_back(e); });
 
