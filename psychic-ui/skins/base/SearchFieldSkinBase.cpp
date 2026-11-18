@@ -18,8 +18,7 @@ namespace psychic_ui {
                     .position(Position::Absolute)
                     .visible(false);
         _text = &_field->add<Text>(); // Its field takes the mouse
-        _text->addClassName("text")
-             .selectable(false);
+        _text->addClassName("text");
 
         // Its field clears itself on a press there (`clearAt`); the mouse reaches it for its hover
         _clear = &add<Div>();

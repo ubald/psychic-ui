@@ -551,6 +551,14 @@ namespace psychic_ui {
          */
         bool scrollBy(int deltaX, int deltaY);
 
+        /**
+         * Scroll the nearest scrolling ancestor (`overflow: scroll`) vertically, just enough for a rectangle of this
+         * div to show; to its start when only what is above the rectangle there would be left out (a border, a
+         * header, a padding)
+         * @param rect In this div's coordinates (from its top-left corner, plus its scroll offset, as `localToGlobal`)
+         */
+        void scrollIntoView(const SkRect &rect);
+
         Signal<int, int> scrolled{};
 
         // endregion

@@ -22,8 +22,7 @@ namespace psychic_ui {
         _decrement->add<Icon>("minus").mouseEnabled(false);
 
         _value = &add<Text>(); // Its stepper takes the mouse
-        _value->addClassName("value")
-              .selectable(false);
+        _value->addClassName("value");
 
         _increment = &add<Div>();
         _increment->addClassName("increment");

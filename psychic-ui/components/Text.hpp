@@ -15,10 +15,8 @@ namespace psychic_ui {
      * selection, whether the caret shows and, on one line, scrolls it to reveal the caret; the view paints them and
      * answers the editing model's geometry questions in its own coordinates (its border box, scrolled). The selection
      * is painted whenever there is one, in the inherited `selectionColor` and `selectionBackgroundColor` (none
-     * while transparent), so rules decide how it looks while its field doesn't have the focus.
-     *
-     * It can still edit itself (`editable`, `selectable`), which only `TextArea` and the demo use until they move to
-     * a field.
+     * while transparent), so rules decide how it looks while its field doesn't have the focus. It takes no input
+     * itself: a text one can select and copy is a read-only field (`TextInput::readOnly`).
      *
      * Measured to its text: the widest line within the width it's given, and as many lines as that takes, each
      * the computed line height (glyphs may overflow a line height smaller than the font's, as in CSS).
@@ -45,28 +43,6 @@ namespace psychic_ui {
             return self;
         }
 
-        bool selectable() const;
-
-        /**
-         * Whether the text can be selected with the mouse
-         */
-        template<class Self>
-        Self &selectable(this Self &self, detail::BoolArg selectable) {
-            static_cast<Text &>(self).updateSelectable(selectable.value);
-            return self;
-        }
-
-        bool editable() const;
-
-        /**
-         * Whether the text can be edited when focused
-         */
-        template<class Self>
-        Self &editable(this Self &self, detail::BoolArg editable) {
-            static_cast<Text &>(self).updateEditable(editable.value);
-            return self;
-        }
-
         bool multiline() const;
 
         /**
@@ -79,10 +55,7 @@ namespace psychic_ui {
         }
 
         /**
-         * Get the selection start and end index.
-         * If both values are equal, then nothing is selected.
-         *
-         * @return Pair of start and end positions of the selection
+         * The selection, sorted: equal when nothing is selected
          */
         std::pair<unsigned int, unsigned int> selection() const;
 
@@ -96,24 +69,14 @@ namespace psychic_ui {
         }
 
         /**
-         * Get the caret position
-         * @return
+         * Where the caret is: the selection's moving end
          */
         unsigned int caret() const;
-
-        /**
-         * Move the caret, which also empties the selection
-         */
-        template<class Self>
-        Self &caret(this Self &self, unsigned int caret) {
-            static_cast<Text &>(self).moveCaret(caret);
-            return self;
-        }
 
         bool caretVisible() const;
 
         /**
-         * Whether the caret shows, for the field driving the view (an editable text shows it while focused)
+         * Whether the caret shows, for the field driving the view
          */
         template<class Self>
         Self &caretVisible(this Self &self, detail::BoolArg visible) {
@@ -135,65 +98,28 @@ namespace psychic_ui {
         SkRect caretRect(unsigned int index) const override;
         unsigned int indexAt(float x, float y) const override;
 
-        Signal<unsigned int, unsigned int> selectionChanged{};
-        Signal<unsigned int>               caretMoved{};
-        Signal<std::string>                changed{};
-
-        PSYCHIC_UI_EVENT(onSelectionChange, selectionChanged)
-        PSYCHIC_UI_EVENT(onCaretMove, caretMoved)
-        PSYCHIC_UI_EVENT(onChange, changed)
-
     protected:
-
-        float       _visibleWidth{0.0f}; // Where one line of static text is cut when it doesn't fit
-        float       _offsetX{0.0f};
-        bool        _caretVisible{false};
-        bool        _selectable{true};
-        bool        _editable{false};
-        TextEditing _editing{};
+        icu::UnicodeString _text{};
+        unsigned int       _anchor{0};
+        unsigned int       _caret{0};
+        bool               _multiline{false};
+        float              _visibleWidth{0.0f}; // Where one line of static text is cut when it doesn't fit
+        float              _offsetX{0.0f};
+        bool               _caretVisible{false};
 
         /**
          * The text's layout (SkParagraph). Mutable: its queries lay the text out on demand.
          */
         mutable TextLayout _textLayout{};
 
-        /**
-         * Whether we're waiting on layout validation to sent the caret signal
-         */
-        bool _pendingCaretSignal{false};
-
-        ScopedSlot                _onMouseMove{}; // On the window, only while selecting
-        std::vector<ScopedSlot>   _selectionSlots{}; // Ours while selectable
-        std::vector<ScopedSlot>   _editionSlots{}; // Ours while editable
-
-        /**
-         * Tell the window where the caret's line is, for the on-screen keyboard and the input method's candidates
-         */
-        void updateTextInputArea();
-
         void updateText(const std::string &text);
-        void updateSelectable(bool selectable);
-        void updateEditable(bool editable);
         void updateMultiline(bool multiline);
         void updateCaretVisible(bool visible);
         void updateSelection(unsigned int anchor, unsigned int caret);
-        void moveCaret(unsigned int caret);
 
-        void subscribeToSelection();
-        void subscribeToEdition();
-
-        void removedFromRender() override;
         void styleUpdated() override;
         Size measure(Constraint width, Constraint height) override;
         void layoutUpdated() override;
         void draw(SkCanvas *canvas) override;
-
-        /**
-         * Show and tell what an edit changed: the text laid out again and `changed`, then the caret (`caretMoved`,
-         * once laid out, so that its position is right) and `selectionChanged`
-         */
-        void apply(TextEditing::Edit edit);
-
-        void handleKey(Key key, Mod mod);
     };
 }

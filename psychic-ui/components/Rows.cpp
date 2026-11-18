@@ -292,32 +292,8 @@ namespace psychic_ui {
         if (window()) {
             window()->requestFocus(row, true);
         }
-        scrollIntoView(*row);
-    }
-
-    void RowGroup::scrollIntoView(Div &div) {
-        Div *viewport = div.parent();
-        while (viewport && viewport->computedStyle().overflow() != Overflow::Scroll) {
-            viewport = viewport->parent();
-        }
-        if (!viewport) {
-            return;
-        }
-        // Where the div is in the viewport, whose own scroll position is left out
-        int divY = 0;
-        int dummy = 0;
-        div.localToGlobal(dummy, divY);
-        int viewportY = 0;
-        viewport->localToGlobal(dummy, viewportY);
-        const int top    = divY - (viewportY - viewport->scrollY());
-        const int bottom = top + div.getHeight();
-        if (top < 0) {
-            // Up to the start when only what is above the first rows would be left out (a border, a header)
-            const int fromStart = top - viewport->scrollY();
-            viewport->scrollY(fromStart < div.getHeight() ? 0 : viewport->scrollY() - top);
-        } else if (bottom > viewport->getHeight()) {
-            viewport->scrollY(viewport->scrollY() - (bottom - viewport->getHeight()));
-        }
+        // Its border box (rows don't scroll)
+        row->scrollIntoView(SkRect::MakeWH(static_cast<float>(row->getWidth()), static_cast<float>(row->getHeight())));
     }
 
     // endregion

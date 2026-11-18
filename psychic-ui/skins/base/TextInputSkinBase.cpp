@@ -13,8 +13,7 @@ namespace psychic_ui {
                     .visible(false);
         // Over the placeholder; its field takes the mouse
         _text = &add<Text>();
-        _text->addClassName("text")
-             .selectable(false);
+        _text->addClassName("text");
     }
 
     Text *TextInputSkinBase::textView() {

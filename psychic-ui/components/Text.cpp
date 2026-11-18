@@ -1,8 +1,6 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include "psychic-ui/Window.hpp"
-#include "psychic-ui/text/WindowClipboard.hpp"
 #include "Text.hpp"
 
 namespace psychic_ui {
@@ -20,59 +18,33 @@ namespace psychic_ui {
         #endif
 
         Text::updateText(text);
-
-        if (_selectable) {
-            subscribeToSelection();
-        }
     }
 
     std::string Text::text() const {
-        return _editing.utf8();
+        std::string utf8{};
+        _text.toUTF8String(utf8);
+        return utf8;
     }
 
     void Text::updateText(const std::string &text) {
         // The caret goes back to the start, the text is only laid out again when it changed
-        if (has(_editing.setText(icu::UnicodeString::fromUTF8(text)), TextEditing::Edit::Text)) {
-            _textLayout.setText(_editing.text());
+        _anchor = 0;
+        _caret  = 0;
+        const icu::UnicodeString text16 = icu::UnicodeString::fromUTF8(text);
+        if (text16 != _text) {
+            _text = text16;
+            _textLayout.setText(_text);
             invalidate();
         }
     }
 
-    bool Text::selectable() const {
-        return _selectable;
-    }
-
-    void Text::updateSelectable(const bool selectable) {
-        if (_selectable != selectable) {
-            _selectionSlots.clear();
-            _selectable = selectable;
-            if (_selectable) {
-                subscribeToSelection();
-            }
-        }
-    }
-
-    bool Text::editable() const {
-        return _editable;
-    }
-
-    void Text::updateEditable(const bool editable) {
-        if (_editable != editable) {
-            _editionSlots.clear();
-            _editable = editable;
-            if (_editable) {
-                subscribeToEdition();
-            }
-        }
-    }
-
     bool Text::multiline() const {
-        return _editing.multiline();
+        return _multiline;
     }
 
     void Text::updateMultiline(const bool multiline) {
-        if (_editing.multiline() != multiline) {
-            _editing.setMultiline(multiline);
+        if (_multiline != multiline) {
+            _multiline = multiline;
             _textLayout.setMultiline(multiline);
             invalidate();
         }
@@ -91,7 +63,7 @@ namespace psychic_ui {
     }
 
     void Text::reveal(const unsigned int index) {
-        if (_editing.multiline()) {
+        if (_multiline) {
             _offsetX = 0.0f;
             return;
         }
@@ -108,82 +80,17 @@ namespace psychic_ui {
     }
 
     std::pair<unsigned int, unsigned int> Text::selection() const {
-        return _editing.selection();
-    };
+        return std::minmax(_anchor, _caret);
+    }
 
-    void Text::updateSelection(unsigned int anchor, unsigned int caret) {
-        apply(_editing.select(anchor, caret));
+    void Text::updateSelection(const unsigned int anchor, const unsigned int caret) {
+        const auto length = static_cast<unsigned int>(_text.length());
+        _anchor = std::min(anchor, length);
+        _caret  = std::min(caret, length);
     }
 
     unsigned int Text::caret() const {
-        return _editing.caret();
-    };
-
-    void Text::moveCaret(unsigned int caret) {
-        apply(_editing.select(caret, caret));
-    }
-
-    void Text::apply(TextEditing::Edit edit) {
-        if (has(edit, TextEditing::Edit::Text)) {
-            _textLayout.setText(_editing.text());
-            invalidate();
-            changed.emit(text());
-        }
-        if (has(edit, TextEditing::Edit::Caret)) {
-            if (isValid()) {
-                caretMoved.emit(_editing.caret());
-            } else {
-                // Wait until the layout is valid to notify,
-                // otherwise the caret position won't be correct.
-                _pendingCaretSignal = true;
-            }
-            auto [begin, end] = _editing.selection();
-            selectionChanged.emit(begin, end);
-        }
-    }
-
-    void Text::subscribeToSelection() {
-        _selectionSlots.emplace_back(mousePressed.subscribe(
-            [this](const MouseEvent &event) {
-                // 1 click: the caret, 2: the word, 3: the sentence, 4: everything
-                apply(_editing.selectAt(indexAt(event.x, event.y), std::max(1u, event.clickCount), event.modifiers.shift));
-                _onMouseMove = window()->mouseMoved.subscribe(
-                    [this](const MouseEvent &move) {
-                        int lx = 0;
-                        int ly = 0;
-                        globalToLocal(lx, ly, static_cast<int>(move.windowX), static_cast<int>(move.windowY));
-                        apply(_editing.dragTo(indexAt(static_cast<float>(lx), static_cast<float>(ly))));
-                    }
-                );
-            }
-        ));
-
-        _selectionSlots.emplace_back(mouseReleased.subscribe(
-            [this] {
-                _onMouseMove.disconnect();
-            }
-        ));
-    }
-
-    void Text::subscribeToEdition() {
-        _editionSlots.emplace_back(focused.subscribe([this]() {
-            window()->startTextInput();
-            updateTextInputArea();
-        }));
-        _editionSlots.emplace_back(caretMoved.subscribe([this](unsigned int /*caret*/) { updateTextInputArea(); }));
-        _editionSlots.emplace_back(blurred.subscribe([this]() { window()->stopTextInput(); }));
-        _editionSlots.emplace_back(keyPressed.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); }));
-        _editionSlots.emplace_back(keyRepeated.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); }));
-        _editionSlots.emplace_back(typed.subscribe(
-            [this](const icu::UnicodeString &str) {
-                apply(_editing.insert(str));
-            }
-        ));
-    }
-
-    void Text::removedFromRender() {
-        Div::removedFromRender();
-        _onMouseMove.disconnect(); // Removed mid-selection: the mouse up won't reach us
+        return _caret;
     }
 
     SkRect Text::caretRect(unsigned int index) const {
@@ -193,11 +100,6 @@ namespace psychic_ui {
 
     unsigned int Text::indexAt(float x, float y) const {
         return _textLayout.indexAt(x - (_paddedRect.fLeft - _rect.fLeft - _offsetX), y - (_paddedRect.fTop - _rect.fTop));
-    }
-
-    void Text::handleKey(Key key, Mod mod) {
-        WindowClipboard clipboard{window()};
-        apply(_editing.handleKey(key, mod, *this, clipboard));
     }
 
     void Text::styleUpdated() {
@@ -235,12 +137,8 @@ namespace psychic_ui {
         _textLayout.layout(_paddedRect.width());
         // One line of static text that doesn't fit is cut after the last character that fits whole (textOverflow's
         // Clip; Ellipsis is the layout's own)
-        const bool cut = !_editing.multiline() && !_editable && _computedStyle.textOverflow() == TextOverflow::Clip;
+        const bool cut = !_multiline && _computedStyle.textOverflow() == TextOverflow::Clip;
         _visibleWidth  = cut ? _textLayout.fittingWidth(_paddedRect.width()) : std::numeric_limits<float>::infinity();
-        if (_pendingCaretSignal) {
-            caretMoved.emit(_editing.caret());
-            _pendingCaretSignal = false;
-        }
     }
 
     void Text::draw(SkCanvas *canvas) {
@@ -257,20 +155,20 @@ namespace psychic_ui {
             const float right      = scrolled ? _paddedRect.fRight + 1.0f : _paddedRect.fLeft + _visibleWidth;
             canvas->clipRect(SkRect::MakeLTRB(_paddedRect.fLeft - (scrolled ? 1.0f : 0.0f), _paddedRect.fTop - lineHeight, right, _paddedRect.fBottom + lineHeight));
         }
-        if (!_editing.text().isEmpty()) {
+        if (!_text.isEmpty()) {
             _textLayout.paint(canvas, left, _paddedRect.fTop, _computedStyle.color().argb());
             const Color background = _computedStyle.selectionBackgroundColor();
-            if (_editing.hasSelection() && background.alpha() > 0) {
-                auto [begin, end] = _editing.selection();
+            if (_anchor != _caret && background.alpha() > 0) {
+                auto [begin, end] = selection();
                 _textLayout.paintSelection(
                     canvas, left, _paddedRect.fTop, begin, end, background.argb(), _computedStyle.selectionColor().argb()
                 );
             }
         }
 
-        if (_caretVisible || (_editable && _focused)) {
+        if (_caretVisible) {
             // A 2 px bar, in the text's color unless caretColor says otherwise
-            const SkRect caret = _textLayout.caretRect(_editing.caret()).makeOffset(left, _paddedRect.fTop);
+            const SkRect caret = _textLayout.caretRect(_caret).makeOffset(left, _paddedRect.fTop);
             SkPaint      paint{};
             paint.setAntiAlias(true);
             paint.setColor((_computedStyle.has(Property::caretColor) ? _computedStyle.caretColor() : _computedStyle.color()).argb());
@@ -279,27 +177,5 @@ namespace psychic_ui {
         if (scrolled || cut) {
             canvas->restore();
         }
-    }
-
-    void Text::updateTextInputArea() {
-        Window *window = this->window();
-        if (!window || !_focused || !_editable) {
-            return;
-        }
-        // The caret's line, across the text, in window coordinates
-        const SkRect caret = _textLayout.caretRect(_editing.caret());
-        int          x     = 0;
-        int          y     = 0;
-        localToGlobal(
-            x, y,
-            static_cast<int>(_paddedRect.fLeft) - _x,
-            static_cast<int>(_paddedRect.fTop + caret.fTop) - _y
-        );
-        window->setTextInputArea(
-            x, y,
-            static_cast<int>(std::ceil(_paddedRect.width())),
-            static_cast<int>(std::ceil(caret.height())),
-            static_cast<int>(caret.fLeft)
-        );
     }
 }

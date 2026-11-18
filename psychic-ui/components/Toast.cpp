@@ -55,7 +55,6 @@ namespace psychic_ui {
         if (!options.description.empty()) {
             text.add<Text>(options.description)
                 .multiline(true)
-                .selectable(false)
                 .addClassName("description");
         }
         if (!options.actions.empty()) {

@@ -7,7 +7,7 @@ namespace psychic_ui {
     /**
      * @class Label
      *
-     * A Text on one line that the mouse doesn't select, tagged `Label`: line returns lay out as spaces, and the text
+     * A Text on one line, tagged `Label`: line returns lay out as spaces, and the text
      * is kept as it was set.
      */
     class Label : public Text {
