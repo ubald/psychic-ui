@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 #include <psychic-ui/signals/Observer.hpp>
 #include <psychic-ui/signals/Signal.hpp>
@@ -20,6 +21,10 @@ static_assert(std::is_nothrow_move_constructible_v<ScopedSlot>);
 static_assert(std::has_virtual_destructor_v<SlotBase>);
 
 namespace {
+    ScopedSlot takeFrom(ScopedSlot &holder) {
+        return std::move(holder);
+    }
+
     struct Listener : Observer {
         template<class... T, class F>
         std::shared_ptr<Slot<T...>> listen(Signal<T...> &signal, F &&callback) {
@@ -291,8 +296,10 @@ TEST_CASE("ScopedSlot", "[signals]") {
     }
 
     SECTION("move keeps a single owner") {
+        // The slot moves out of a holder that stays in use, as a member would: what the holder keeps
+        // is what this checks, an empty slot whose disconnect leaves the new owner's subscription alone
         ScopedSlot a = signal.subscribe([&](int v) { sum += v; });
-        ScopedSlot b = std::move(a);
+        ScopedSlot b = takeFrom(a);
         REQUIRE_FALSE(a.connected());
         a.disconnect();
         signal.emit(1);

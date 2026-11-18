@@ -642,7 +642,7 @@ TEST_CASE("SDL3: a focused text field tells SDL where its caret is, by mouse or 
     int top  = 0;
     input.localToGlobal(left, top);
     const float x = static_cast<float>(left + 100);
-    const float y = static_cast<float>(top + input.getHeight() / 2);
+    const float y = static_cast<float>(top) + (input.getHeight() / 2.0f);
 
     // With a mouse, for an input method's candidates
     sdl.mouse(SDL_EVENT_MOUSE_MOTION, x, y, 1);

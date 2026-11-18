@@ -89,7 +89,7 @@ namespace {
         REQUIRE(tools != nullptr);
         const float width = f.page->getWidth();
         CHECK(inspector->x() + inspector->getWidth() == width - theme.metrics.space(4));
-        CHECK(std::abs(tools->x() + tools->getWidth() / 2 - width / 2) < 1);
+        CHECK(std::abs(tools->x() + (tools->getWidth() / 2.0f) - (width / 2.0f)) < 1);
         CHECK(tools->parent()->y() + tools->parent()->getHeight() == f.page->getHeight() - theme.metrics.space(5));
 
         // With the theme's panel elevation, no border

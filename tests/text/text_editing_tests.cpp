@@ -1,4 +1,5 @@
 // The editing model alone: no Div, a fake geometry
+#include <cmath>
 #include <string>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
@@ -48,7 +49,7 @@ namespace {
                 }
             }
             // Then along the line, to the nearest column, never past its line return
-            const int column = std::max(0, static_cast<int>(x / 10.0f + 0.5f));
+            const int column = std::max(0, static_cast<int>(std::lround(x / 10.0f)));
             for (int c = 0; c < column && i < text.length() && text.charAt(i) != u'\n'; ++c) {
                 ++i;
             }
