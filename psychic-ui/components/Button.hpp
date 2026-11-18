@@ -29,9 +29,9 @@ namespace psychic_ui {
         /**
          * @param onClick Connected to `clicked`, after the button updates its selection
          */
-        Button(const std::string &label, ClickCallback onClick);
+        Button(std::string label, ClickCallback onClick);
 
-        explicit Button(const std::string &label = "") : Button(label, nullptr) {}
+        explicit Button(std::string label = "") : Button(std::move(label), nullptr) {}
 
         explicit Button(ClickCallback onClick) : Button("", std::move(onClick)) {}
 

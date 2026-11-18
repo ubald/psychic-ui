@@ -23,10 +23,10 @@ namespace psychic_ui {
         bool        enabled{true};
         bool        danger{false}; // An action that destroys: in the danger color
 
-        explicit MenuItem(const std::string &itemLabel, const std::string &itemShortcut = "", const std::string &itemIcon = "") :
-            label(itemLabel),
-            shortcut(itemShortcut),
-            icon(itemIcon) {}
+        explicit MenuItem(std::string itemLabel, std::string itemShortcut = "", std::string itemIcon = "") :
+            label(std::move(itemLabel)),
+            shortcut(std::move(itemShortcut)),
+            icon(std::move(itemIcon)) {}
 
         MenuItem(const MenuItem &) = delete;
         MenuItem &operator=(const MenuItem &) = delete;

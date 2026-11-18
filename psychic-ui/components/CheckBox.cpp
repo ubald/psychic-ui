@@ -1,11 +1,12 @@
 #include <iostream>
+#include <utility>
 #include "CheckBox.hpp"
 
 namespace psychic_ui {
 
-    CheckBox::CheckBox(const std::string &label, std::function<void(bool)> onChangeCallback) :
+    CheckBox::CheckBox(std::string label, std::function<void(bool)> onChangeCallback) :
         Component(),
-        _label(label) {
+        _label(std::move(label)) {
         tag("CheckBox");
 
         _mouseChildren = false; // !important

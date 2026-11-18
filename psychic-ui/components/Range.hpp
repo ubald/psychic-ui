@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iomanip>
 #include <functional>
+#include <utility>
 #include "psychic-ui/psychic-ui.hpp"
 #include "psychic-ui/Div.hpp"
 #include "psychic-ui/Component.hpp"
@@ -193,15 +194,15 @@ namespace psychic_ui {
 
     template<class T>
     Range<T>::Range(T min, T max, std::function<void(T)> onChangeCallback) :
-        Range(min, max, static_cast<T>(0), onChangeCallback) {}
+        Range(min, max, static_cast<T>(0), std::move(onChangeCallback)) {}
 
     template<class T>
     Range<T>::Range(T value, std::function<void(T)> onChangeCallback) :
-        Range(static_cast<T>(0), static_cast<T>(1), value, onChangeCallback) {}
+        Range(static_cast<T>(0), static_cast<T>(1), value, std::move(onChangeCallback)) {}
 
     template<class T>
     Range<T>::Range(std::function<void(T)> onChangeCallback) :
-        Range(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0), onChangeCallback) {}
+        Range(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0), std::move(onChangeCallback)) {}
 
     template<class T>
     Range<T>::Range() :

@@ -1,13 +1,14 @@
 #include <algorithm>
 #include <cstdlib>
+#include <utility>
 #include "Switch.hpp"
 #include "psychic-ui/Window.hpp"
 
 namespace psychic_ui {
 
-    Switch::Switch(const std::string &label, std::function<void(bool)> onChangeCallback) :
+    Switch::Switch(std::string label, std::function<void(bool)> onChangeCallback) :
         Component(),
-        _label(label) {
+        _label(std::move(label)) {
         tag("Switch");
 
         _mouseChildren = false;

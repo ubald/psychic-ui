@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility>
 #include "include/core/SkCanvas.h"
 #include "psychic-ui/Div.hpp"
 
@@ -11,7 +12,7 @@ namespace psychic_ui {
         using ContainerData = std::vector<T>;
         using DivCallback = std::function<std::shared_ptr<Div>(const T &)>;
 
-        explicit DataContainer(const ContainerData &data, DivCallback getDiv);
+        explicit DataContainer(ContainerData data, DivCallback getDiv);
 
         const ContainerData &data() const;
 
@@ -40,10 +41,10 @@ namespace psychic_ui {
     };
 
     template<class T>
-    DataContainer<T>::DataContainer(const typename DataContainer<T>::ContainerData &data, DivCallback getDiv) :
+    DataContainer<T>::DataContainer(typename DataContainer<T>::ContainerData data, DivCallback getDiv) :
         Div(),
-        _data(data),
-        _getDiv(getDiv) {
+        _data(std::move(data)),
+        _getDiv(std::move(getDiv)) {
         tag("DataContainer");
     }
 

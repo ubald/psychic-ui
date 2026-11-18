@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include "SDL3Application.hpp"
 #include "../Window.hpp"
 
@@ -89,7 +90,7 @@ namespace psychic_ui {
             SDL_GL_SetSwapInterval(1);
         }
 
-        owned->systemWindow = std::make_unique<SDL3SystemWindow>(window, owned->sdlWindow, owned->glContext);
+        owned->systemWindow = std::make_unique<SDL3SystemWindow>(std::move(window), owned->sdlWindow, owned->glContext);
         // Nothing else draws with this context
         owned->systemWindow->setSharesContext(false);
         const bool hitTest = owned->systemWindow->installHitTest();

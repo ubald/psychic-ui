@@ -24,7 +24,7 @@ namespace psychic_ui {
 
     class TextArea : public Component<TextAreaSkin> {
     public:
-        explicit TextArea(const std::string &text = "");
+        explicit TextArea(std::string text = "");
         const std::string &text() const;
 
         template<class Self>

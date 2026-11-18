@@ -430,7 +430,7 @@ namespace psychic_ui {
         return _classNames;
     }
 
-    void Div::updateClassNames(std::unordered_set<std::string> classNames) {
+    void Div::updateClassNames(const std::unordered_set<std::string> &classNames) {
         std::unordered_set<std::string> lcClassNames;
         for (std::string className: classNames) {
             std::ranges::transform(className, className.begin(), ::tolower);

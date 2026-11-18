@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <functional>
+#include <utility>
 #include "psychic-ui/Div.hpp"
 #include "DataContainer.hpp"
 #include "Tabs.hpp"
@@ -33,12 +34,12 @@ namespace psychic_ui {
     template<class T>
     TabContainer<T>::TabContainer(const TabContainerData &data, LabelCallback getLabel, ComponentCallback getComponent) :
         Div(),
-        _getTabComponentCallback(getComponent) {
+        _getTabComponentCallback(std::move(getComponent)) {
         this->tag("TabContainer");
         _defaultStyle.overflow(Overflow::Hidden);
 
         // Make the tabs component
-        _tabs = &this->template add<Tabs<T>>(data, getLabel, [this](const T &data) { onTabChanged(data); });
+        _tabs = &this->template add<Tabs<T>>(data, std::move(getLabel), [this](const T &data) { onTabChanged(data); });
     }
 
     template<class T>

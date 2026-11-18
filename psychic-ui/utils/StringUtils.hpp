@@ -55,7 +55,7 @@ namespace psychic_ui::string_utils {
         return s;
     }
 
-    static inline std::vector<std::string> split(std::string text, char delimiter, bool removeEmpties = true) {
+    static inline std::vector<std::string> split(const std::string &text, char delimiter, bool removeEmpties = true) {
         std::vector<std::string> result;
         std::stringstream        ss;
         ss.str(text);

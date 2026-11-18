@@ -1,11 +1,12 @@
 #include <cmath>
+#include <utility>
 #include "TextArea.hpp"
 
 namespace psychic_ui {
 
-    TextArea::TextArea(const std::string &text) :
+    TextArea::TextArea(std::string text) :
         Component<TextAreaSkin>(),
-        _text(text),
+        _text(std::move(text)),
         _textDisplay(std::make_shared<Text>(_text)),
         _textScroller(std::make_shared<Scroller>(_textDisplay)) {
         tag("TextArea");
@@ -18,7 +19,7 @@ namespace psychic_ui {
 
         _textDisplay->onChange(
             [this](std::string txt) {
-                _text = txt;
+                _text = std::move(txt);
                 changed.emit(_text);
             }
         );

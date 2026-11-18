@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include "Skin.hpp"
 #include "Div.hpp"
 
@@ -69,7 +70,7 @@ namespace psychic_ui {
                 _skin->removedFromComponent();
                 this->remove(_skin);
             }
-            _skin = skin;
+            _skin = std::move(skin);
             if (_skin) {
                 // Skin is always in the back so the component can add more
                 // children if need be (ie: TextInput overlays its text)

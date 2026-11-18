@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <functional>
 #include <string>
+#include <utility>
 #include "Button.hpp"
 #include "DataContainer.hpp"
 
@@ -42,8 +43,8 @@ namespace psychic_ui {
     template<class T>
     Tabs<T>::Tabs(const TabData &data, LabelCallback getLabel, TabChanged tabChanged) :
         DataContainer<T>(data, [this](const T &item) { return getTab(item); }),
-        _getLabel(getLabel),
-        _tabChanged(tabChanged) {
+        _getLabel(std::move(getLabel)),
+        _tabChanged(std::move(tabChanged)) {
         this->tag("Tabs");
         this->_defaultStyle.shrink(0);
     }

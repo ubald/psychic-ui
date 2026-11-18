@@ -625,8 +625,8 @@ namespace psychic_ui {
          * Replace the class names, matched by `.class` selectors (case insensitive)
          */
         template<class Self>
-        Self &classNames(this Self &self, std::unordered_set<std::string> classNames) {
-            static_cast<Div &>(self).updateClassNames(std::move(classNames));
+        Self &classNames(this Self &self, const std::unordered_set<std::string> &classNames) {
+            static_cast<Div &>(self).updateClassNames(classNames);
             return self;
         }
 
@@ -844,7 +844,7 @@ namespace psychic_ui {
 
         void updateEnabled(bool enabled);
         void updateId(std::string id);
-        void updateClassNames(std::unordered_set<std::string> classNames);
+        void updateClassNames(const std::unordered_set<std::string> &classNames);
         void updateClassName(std::string className, bool present);
         void scrollTo(int scrollX, int scrollY);
 
