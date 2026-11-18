@@ -3,7 +3,6 @@
 #include <cmath>
 #include <format>
 #include "NumberStepper.hpp"
-#include "Icon.hpp"
 
 namespace psychic_ui {
 
@@ -23,61 +22,16 @@ namespace psychic_ui {
     }
 
     NumberStepper::NumberStepper(const double value, std::function<void(double)> onChangeCallback) :
-        Component(),
-        _value(value),
-        _decrement(std::make_shared<Div>()),
-        _input(std::make_shared<TextInput>()),
-        _increment(std::make_shared<Div>()) {
+        TextField<NumberStepperSkin>("", false),
+        _value(value) {
         tag("NumberStepper");
-
-        _focusEnabled = true; // The stepper takes the focus and hands it to its text
 
         if (onChangeCallback) {
             changed.subscribe(std::move(onChangeCallback));
         }
 
-        _decrement->addClassName("decrement")
-                  .cursor(Cursor::Arrow);
-        _decrement->add<Icon>("minus").mouseEnabled(false);
-        _decrement->onClick([this]() { stepBy(-1); });
-
-        _increment->addClassName("increment")
-                  .cursor(Cursor::Arrow);
-        _increment->add<Icon>("plus").mouseEnabled(false);
-        _increment->onClick([this]() { stepBy(1); });
-
-        _input->addClassName("value")
-              .focusEnabled(false); // Tab stops once, on the stepper
-
-        // The input moves its caret on Up and Down first (to the start or the end of its line); `refresh()` sets the
-        // text again, which puts the caret back
-        const auto key = [this](const Key key, const Mod modifiers) {
-            if (!_enabled) {
-                return;
-            }
-            const int steps = modifiers.shift ? 10 : 1;
-            switch (key) {
-                case Key::UP:
-                    commit();
-                    stepBy(steps);
-                    break;
-                case Key::DOWN:
-                    commit();
-                    stepBy(-steps);
-                    break;
-                case Key::ENTER:
-                    commit();
-                    break;
-                case Key::ESCAPE:
-                    refresh();
-                    break;
-                default:
-                    break;
-            }
-        };
-        _input->onKeyPress(key);
-        _input->onKeyRepeat(key);
-        _input->onBlur([this]() { commit(); });
+        // Leaving the field sets what was typed
+        blurred.subscribe([this]() { commit(); });
 
         refresh();
     }
@@ -91,6 +45,7 @@ namespace psychic_ui {
         if (v != _value) {
             _value = v;
             refresh();
+            const auto keepAlive = weak_from_this().lock(); // A handler may remove this stepper from its parent
             changed.emit(_value);
         } else {
             refresh(); // What was typed may differ from the value it gave
@@ -129,59 +84,50 @@ namespace psychic_ui {
         refresh();
     }
 
+    double NumberStepper::scale() const {
+        return std::pow(10.0, _decimals >= 0 ? _decimals : decimalsOf(_step));
+    }
+
     void NumberStepper::stepBy(const int count) {
         if (!_enabled) {
             return;
         }
-        // Rounded to the decimals shown, so that steps of 0.1 don't drift
-        const double scale = std::pow(10.0, _decimals >= 0 ? _decimals : decimalsOf(_step));
-        updateValue(std::round((_value + count * _step) * scale) / scale);
+        // Rounded to the decimals shown, so that steps of 0.1 don't drift; a step they can't show (0.5 with no
+        // decimals) would round back to where it started, so it is one of their units at least
+        const double scale = this->scale();
+        const double step  = std::max(_step, 1.0 / scale);
+        updateValue(std::round((_value + count * step) * scale) / scale);
     }
 
     std::string NumberStepper::valueString() const {
         return std::format("{:.{}f}", _value, _decimals >= 0 ? _decimals : decimalsOf(_step));
     }
 
-    std::shared_ptr<TextInput> NumberStepper::input() {
-        return _input;
-    }
-
-    std::shared_ptr<Div> NumberStepper::decrementButton() {
-        return _decrement;
-    }
-
-    std::shared_ptr<Div> NumberStepper::incrementButton() {
-        return _increment;
-    }
-
-    Div *NumberStepper::focusDelegate() {
-        return _input.get();
-    }
-
     MouseEventStatus NumberStepper::handleMouseScroll(const MouseEvent &event) {
         if (_enabled && hasFocus() && event.scrollY != 0 && boundsContains(event.x, event.y)) {
+            const auto keepAlive = weak_from_this().lock(); // A handler may remove this stepper from its parent
             commit();
             stepBy(event.scrollY > 0 ? 1 : -1);
             return Handled;
         }
-        return Component::handleMouseScroll(event);
+        return TextField::handleMouseScroll(event);
     }
 
     void NumberStepper::commit() {
-        std::string text = _input->text();
+        std::string typed = text();
         // A typographic minus, as the field may show it, is a minus
-        for (std::size_t at = text.find("−"); at != std::string::npos; at = text.find("−")) {
-            text.replace(at, 3, "-");
+        for (std::size_t at = typed.find("−"); at != std::string::npos; at = typed.find("−")) {
+            typed.replace(at, 3, "-");
         }
-        const auto first = text.find_first_not_of(" \t");
-        const auto last  = text.find_last_not_of(" \t");
+        const auto first = typed.find_first_not_of(" \t");
+        const auto last  = typed.find_last_not_of(" \t");
         if (first == std::string::npos) {
             refresh();
             return;
         }
         double      value = 0;
-        const char *begin = text.data() + first;
-        const char *end   = text.data() + last + 1;
+        const char *begin = typed.data() + first;
+        const char *end   = typed.data() + last + 1;
         if (*begin == '+') {
             ++begin;
         }
@@ -190,27 +136,74 @@ namespace psychic_ui {
             refresh();
             return;
         }
-        updateValue(value);
+        // The value is what the field shows
+        const double scale = this->scale();
+        updateValue(std::round(value * scale) / scale);
     }
 
     void NumberStepper::refresh() {
-        const std::string text = valueString();
-        if (_input->text() != text) {
-            _input->text(text);
-            const auto end = static_cast<unsigned int>(text.size()); // Digits: one UTF-16 unit each
-            _input->selection(end, end);
+        const std::string shown = valueString();
+        if (text() != shown) {
+            updateText(shown);
+            const auto end = static_cast<unsigned int>(shown.size()); // Digits: one UTF-16 unit each
+            apply(_editing.select(end, end));
         }
-        _decrement->enabled(_enabled && _value > _min);
-        _increment->enabled(_enabled && _value < _max);
+        if (_skin) {
+            _skin->setBounds(_enabled && _value > _min, _enabled && _value < _max);
+        }
+    }
+
+    bool NumberStepper::fieldKey(const Key key, const Mod mod) {
+        const auto keepAlive = weak_from_this().lock(); // A handler may remove this stepper from its parent
+        const int  steps     = mod.shift ? 10 : 1;
+        switch (key) {
+            case Key::UP:
+                commit();
+                stepBy(steps);
+                return true;
+            case Key::DOWN:
+                commit();
+                stepBy(-steps);
+                return true;
+            case Key::ENTER:
+                commit();
+                return true;
+            case Key::ESCAPE:
+                refresh();
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    bool NumberStepper::fieldPress(const MouseEvent &event) {
+        if (!_skin) {
+            return false;
+        }
+        int x = 0;
+        int y = 0;
+        _skin->globalToLocal(x, y, static_cast<int>(event.windowX), static_cast<int>(event.windowY));
+        const NumberStepperSkin::Part part = _skin->partAt(static_cast<float>(x), static_cast<float>(y));
+        if (part == NumberStepperSkin::Part::None) {
+            return false;
+        }
+        const auto keepAlive = weak_from_this().lock(); // A handler may remove this stepper from its parent
+        commit();
+        stepBy(part == NumberStepperSkin::Part::Increment ? 1 : -1);
+        return true;
+    }
+
+    void NumberStepper::skinChanged() {
+        TextField::skinChanged();
+        refresh();
     }
 
     void NumberStepper::enabledChanged() {
-        Component::enabledChanged();
-        _input->enabled(_enabled);
+        TextField::enabledChanged();
         refresh();
     }
 
     bool NumberStepper::takesEscape() const {
-        return _enabled && _input->text() != valueString();
+        return _enabled && text() != valueString();
     }
 }

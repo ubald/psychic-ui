@@ -467,17 +467,40 @@ TEST_CASE("NumberStepper: the buttons step it within its range", "[components][i
     f.layout();
 
     REQUIRE(is<NumberStepperSkinBase>(stepper.skin()));
-    Div &minus = *stepper.decrementButton();
-    Div &plus  = *stepper.incrementButton();
+    Div  &minus = *part<Div>(stepper, "decrement");
+    Div  &plus  = *part<Div>(stepper, "increment");
+    Text &value = *part<Text>(stepper, "value");
+    CHECK(&value == stepper.skin()->textView());
     CHECK(stepper.getWidth() == f.theme.metrics.pointer.controlMd * 4);
     CHECK(stepper.getHeight() == f.theme.metrics.pointer.controlMd);
-    CHECK(minus.x() < stepper.input()->x());
-    CHECK(stepper.input()->x() < plus.x());
-    CHECK(stepper.input()->text() == "2");
+    CHECK(minus.x() < value.x());
+    CHECK(value.x() < plus.x());
+    CHECK(value.text() == "2");
+    CHECK(stepper.text() == "2");
+    CHECK(minus.computedStyle().cursor() == Cursor::Arrow);
+    CHECK(value.computedStyle().cursor() == Cursor::IBeam);
+
+    // The skin says which button a point is on
+    const auto skinPoint = [&](const Div &div) {
+        const auto [wx, wy] = Inputs::center(div);
+        int x = 0;
+        int y = 0;
+        stepper.skin()->globalToLocal(x, y, wx, wy);
+        return std::pair{static_cast<float>(x), static_cast<float>(y)};
+    };
+    CHECK(stepper.skin()->partAt(skinPoint(minus).first, skinPoint(minus).second) == NumberStepperSkin::Part::Decrement);
+    CHECK(stepper.skin()->partAt(skinPoint(plus).first, skinPoint(plus).second) == NumberStepperSkin::Part::Increment);
+    CHECK(stepper.skin()->partAt(skinPoint(value).first, skinPoint(value).second) == NumberStepperSkin::Part::None);
+
+    // Hovered and pressed, through rules
+    const auto [px, py] = Inputs::center(plus);
+    f.move(px, py);
+    f.layout();
+    CHECK(plus.computedStyle().backgroundColor() == f.theme.palette.line);
 
     f.click(plus);
     CHECK(stepper.value() == 3);
-    CHECK_FALSE(plus.enabled()); // At the maximum
+    CHECK_FALSE(plus.enabled()); // At the maximum: `:disabled`
     CHECK(plus.computedStyle().color() == f.theme.palette.textMuted);
     f.click(plus);
     CHECK(stepper.value() == 3);
@@ -486,13 +509,23 @@ TEST_CASE("NumberStepper: the buttons step it within its range", "[components][i
     f.click(minus);
     CHECK(stepper.value() == 0);
     CHECK_FALSE(minus.enabled());
+    CHECK(plus.enabled());
     CHECK(changes == std::vector<double>{3, 2, 1, 0});
-    CHECK(stepper.input()->text() == "0");
+    CHECK(value.text() == "0");
+    CHECK(stepper.hasFocus()); // A press on a button focuses the stepper
 
     stepper.value(-5);
     CHECK(stepper.value() == 0);
     stepper.max(10).value(12);
     CHECK(stepper.value() == 10);
+
+    // Disabled: both buttons are, and presses do nothing
+    stepper.value(5).enabled(false);
+    f.layout();
+    CHECK_FALSE(minus.enabled());
+    CHECK_FALSE(plus.enabled());
+    f.click(plus);
+    CHECK(stepper.value() == 5);
 }
 
 TEST_CASE("NumberStepper: typed, and stepped by the keys", "[components][inputs][stepper]") {
@@ -500,48 +533,91 @@ TEST_CASE("NumberStepper: typed, and stepped by the keys", "[components][inputs]
     auto &stepper = f.column.add<NumberStepper>(1.5).range(0, 100).step(0.5);
     f.column.add<Switch>(); // Somewhere for Tab to go next
     f.layout();
-    CHECK(stepper.input()->text() == "1.5");
+    CHECK(stepper.text() == "1.5");
 
     f.tab();
-    CHECK(stepper.hasFocus());
-    CHECK(stepper.input()->hasFocus());
+    CHECK(f.window->focusedDiv() == &stepper); // No delegate: the stepper takes the keys
     CHECK(stepper.computedStyle().borderColor() == f.theme.palette.accent);
 
     f.key(Key::UP);
     CHECK(stepper.value() == 2.0);
-    CHECK(stepper.input()->text() == "2.0");
+    CHECK(stepper.text() == "2.0");
+    CHECK(stepper.caret() == 3); // At the end
     f.key(Key::DOWN, Mod{.shift = true});
     CHECK(stepper.value() == 0.0); // Ten steps down, clamped
 
-    // Typing: Enter sets it, clamped
-    stepper.input()->text("");
+    // Typing: Enter sets it, clamped, and rounded to the decimals shown
+    stepper.text("");
     f.type("42.25");
     CHECK(stepper.value() == 0.0); // Not yet
     f.key(Key::ENTER);
-    CHECK(stepper.value() == 42.25);
-    CHECK(stepper.input()->text() == "42.2"); // Shown with the step's decimals (rounded to even)
+    CHECK(stepper.value() == 42.3);
+    CHECK(stepper.text() == "42.3");
 
-    stepper.input()->text("");
+    stepper.text("");
     f.type("500");
     f.key(Key::ENTER);
     CHECK(stepper.value() == 100);
 
     // Not a number: back to the value; Escape gives the typing up
-    stepper.input()->text("");
+    stepper.text("");
     f.type("abc");
     f.key(Key::ENTER);
     CHECK(stepper.value() == 100);
-    CHECK(stepper.input()->text() == "100.0");
-    stepper.input()->text("");
+    CHECK(stepper.text() == "100.0");
+    stepper.text("");
     f.type("7");
+    CHECK(stepper.takesEscape());
     f.key(Key::ESCAPE);
-    CHECK(stepper.input()->text() == "100.0");
+    CHECK(stepper.text() == "100.0");
+    CHECK_FALSE(stepper.takesEscape());
+
+    // The text is edited as any field's: the caret moves, Backspace erases
+    f.key(Key::HOME);
+    f.key(Key::DELETE);
+    CHECK(stepper.text() == "00.0");
+    f.key(Key::ESCAPE);
 
     // Leaving the field sets what was typed
-    stepper.input()->text("");
+    stepper.text("");
     f.type("8");
     f.tab();
     CHECK(stepper.value() == 8);
+    CHECK_FALSE(stepper.hasFocus());
+}
+
+TEST_CASE("NumberStepper: the wheel steps it while it has the focus", "[components][inputs][stepper]") {
+    Inputs f;
+    auto &stepper = f.column.add<NumberStepper>(5).range(0, 10);
+    f.layout();
+    const auto [x, y] = Inputs::center(stepper);
+    const auto scroll = [&](float dy) {
+        f.window->handleMouseScroll({.x = static_cast<float>(x), .y = static_cast<float>(y), .scrollY = dy});
+        f.layout();
+    };
+    scroll(1);
+    CHECK(stepper.value() == 5); // Not focused: it scrolls what is around it
+    f.tab();
+    scroll(1);
+    CHECK(stepper.value() == 6);
+    scroll(-1);
+    scroll(-1);
+    CHECK(stepper.value() == 4);
+}
+
+TEST_CASE("NumberStepper: disabled, it refuses input", "[components][inputs][stepper]") {
+    Inputs f;
+    auto &stepper = f.column.add<NumberStepper>(5).enabled(false);
+    std::vector<double> changes{};
+    stepper.onChange([&](double value) { changes.push_back(value); });
+    f.layout();
+    f.window->requestFocus(&stepper, true);
+    f.type("9");
+    f.key(Key::UP);
+    f.key(Key::ENTER);
+    CHECK(stepper.text() == "5");
+    CHECK(stepper.value() == 5);
+    CHECK(changes.empty());
 }
 
 TEST_CASE("NumberStepper: decimal steps don't drift", "[components][inputs][stepper]") {

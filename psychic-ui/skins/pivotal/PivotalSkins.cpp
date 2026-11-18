@@ -552,21 +552,19 @@ namespace psychic_ui {
         rule("NumberStepper:focus").borderColor(p.accent);
         rule("NumberStepper:disabled").opacity(0.5f);
 
-        // The text input inside, bare and centered
+        // The text between the buttons, centered
         rule("NumberStepper .value")
             .grow(1)
             .shrink(1)
-            .height(Auto)
             .minWidth(0)
+            .alignSelf(Align::Center)
             .paddingHorizontal(m.space(1))
-            .border(0)
-            .borderRadius(0)
-            .backgroundColor(transparent)
-            .textAlign(TextAlign::Center);
-        rule("NumberStepper .value:disabled").opacity(1.0f); // The stepper fades already
+            .textAlign(TextAlign::Center)
+            .cursor(Cursor::IBeam);
 
         for (const char *button: {"NumberStepper .decrement", "NumberStepper .increment"}) {
             rule(button)
+                .cursor(Cursor::Arrow)
                 .width(s.controlMd)
                 .shrink(0)
                 .alignItems(Align::Center)
