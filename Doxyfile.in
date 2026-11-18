@@ -38,7 +38,7 @@ PROJECT_NAME           = "@PACKAGE_NAME@"
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = "@SWITCHER_VERSION_MAJOR@.@SWITCHER_VERSION_MINOR@.@SWITCHER_VERSION_PATCH@"
+PROJECT_NUMBER         = "@PSYCHIC_UI_VERSION_STRING@"
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
