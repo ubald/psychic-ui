@@ -1290,8 +1290,8 @@ namespace psychic_ui {
         }
 
         struct SlopSearch {
-            float x;
-            float y;
+            float x{0};
+            float y{0};
             Div   *target{nullptr};
             float distance{0};
             // The target's visible part (window coordinates), where the press moves to
@@ -1574,10 +1574,8 @@ namespace psychic_ui {
         }
         auto       found = std::find(list.begin(), list.end(), current);
         const auto count = static_cast<std::ptrdiff_t>(list.size());
-        std::ptrdiff_t index;
-        if (found == list.end()) {
-            index = backwards ? count - 1 : 0;
-        } else {
+        std::ptrdiff_t index = backwards ? count - 1 : 0;
+        if (found != list.end()) {
             index = (std::distance(list.begin(), found) + (backwards ? count - 1 : 1)) % count;
         }
         requestFocus(list[static_cast<std::size_t>(index)], true);

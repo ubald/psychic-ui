@@ -12,7 +12,7 @@ namespace psychic_ui {
          * A style property on its way to its value in `StyleTransitions::targets`
          */
         struct RunningTransition {
-            Property property;
+            Property property{};
             Tween    tween;
             bool     targetSet{true}; // Unset at the end: a color fading out to nothing
         };

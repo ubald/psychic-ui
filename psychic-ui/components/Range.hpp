@@ -280,7 +280,7 @@ namespace psychic_ui {
 
     template<class T>
     void Range<T>::setLinearPercentage(const float percent) {
-        float v;
+        float v = percent;
         switch (_mode) {
             case RangeMode::Logarithmic:
                 v = std::log((percent * 9.0f) + 1.0f) * std::numbers::log10e_v<float>;
@@ -289,7 +289,6 @@ namespace psychic_ui {
                 v = 1.0f - std::log(((1.0f - percent) * 9.0f) + 1.0f) * std::numbers::log10e_v<float>;
                 break;
             default:
-                v = percent;
                 break;
         }
         v = (v * (static_cast<float>(_max) - static_cast<float >(_min))) + static_cast<float >(_min);

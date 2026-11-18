@@ -346,7 +346,7 @@ namespace psychic_ui {
     void GLFWSystemWindow::mouseButtonEvent(int button, int action, int mods) {
         _modifiers = mapMods(mods);
 
-        MouseButton btn;
+        MouseButton btn = MouseButton::NONE;
         switch (button) {
             case GLFW_MOUSE_BUTTON_LEFT: btn = MouseButton::LEFT; break;
             case GLFW_MOUSE_BUTTON_MIDDLE: btn = MouseButton::MIDDLE; break;
