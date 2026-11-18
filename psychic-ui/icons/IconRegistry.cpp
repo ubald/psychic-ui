@@ -22,7 +22,7 @@ namespace psychic_ui {
     }
 
     IconRegistry &IconRegistry::add(const IconDefinition &definition) {
-        Entry entry{std::string{definition.name}, definition.grid, {}};
+        Entry entry{.name = std::string{definition.name}, .grid = definition.grid, .elements = {}};
         entry.elements.reserve(definition.elements.size());
         for (const auto &element: definition.elements) {
             entry.elements.emplace_back(element.paint, std::string{element.d});
@@ -69,7 +69,7 @@ namespace psychic_ui {
             return nullptr;
         }
         if (!entry.shape) {
-            IconShape shape{entry.grid, {}};
+            IconShape shape{.grid = entry.grid, .paths = {}};
             shape.paths.reserve(entry.elements.size());
             for (const auto &[paint, d]: entry.elements) {
                 auto path = SkParsePath::FromSVGString(d.c_str());

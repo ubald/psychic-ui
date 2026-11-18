@@ -105,16 +105,16 @@ namespace psychic_ui {
      * body text is `sm`, inputs and menu rows `base`, labels and metadata `xs`
      */
     struct Typography {
-        Font     regular{"Inter", "res/fonts/Inter/Inter-Regular.ttf"};
-        Font     medium{"Inter Medium", "res/fonts/Inter/Inter-Medium.ttf"};
-        Font     semiBold{"Inter SemiBold", "res/fonts/Inter/Inter-SemiBold.ttf"}; // Brand and app titles only
-        TextStep xxs{10, 14};
-        TextStep xs{11, 16};
-        TextStep sm{12, 18};
-        TextStep base{13, 20};
-        TextStep md{14, 20};
-        TextStep xl{18, 26};
-        TextStep xxl{20, 28};
+        Font     regular{.name = "Inter", .path = "res/fonts/Inter/Inter-Regular.ttf"};
+        Font     medium{.name = "Inter Medium", .path = "res/fonts/Inter/Inter-Medium.ttf"};
+        Font     semiBold{.name = "Inter SemiBold", .path = "res/fonts/Inter/Inter-SemiBold.ttf"}; // Brand and app titles only
+        TextStep xxs{.size = 10, .leading = 14};
+        TextStep xs{.size = 11, .leading = 16};
+        TextStep sm{.size = 12, .leading = 18};
+        TextStep base{.size = 13, .leading = 20};
+        TextStep md{.size = 14, .leading = 20};
+        TextStep xl{.size = 18, .leading = 26};
+        TextStep xxl{.size = 20, .leading = 28};
     };
 
     /**
@@ -164,9 +164,9 @@ namespace psychic_ui {
         std::chrono::milliseconds fast{100};   // Hover, press and focus: colors, borders, the focus ring
         std::chrono::milliseconds medium{150}; // A switch's track, a selection moving, a slider's thumb on a key
         std::chrono::milliseconds slow{240};   // What travels further: the default set's grid rows as they're sorted; not Pivotal's, which has two steps
-        Ease                      standard{Ease::Standard};    // CSS's default curve, Pivotal's color transitions'
-        Ease                      out{0.16f, 1.0f, 0.3f, 1.0f}; // Things arriving (--ease-out-quick)
-        Spring                    spring{500.0f, 40.0f};        // Things thrown or dragged: a switch's thumb, barely overshooting
+        Ease                      standard{Ease::Standard};                              // CSS's default curve, Pivotal's color transitions'
+        Ease                      out{.x1 = 0.16f, .y1 = 1.0f, .x2 = 0.3f, .y2 = 1.0f}; // Things arriving (--ease-out-quick)
+        Spring                    spring{.stiffness = 500.0f, .damping = 40.0f};          // Things thrown or dragged: a switch's thumb, barely overshooting
 
         constexpr Timing quick() const { return {fast, standard}; }
 

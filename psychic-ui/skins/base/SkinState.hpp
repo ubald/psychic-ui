@@ -17,7 +17,12 @@ namespace psychic_ui {
             if (!component) {
                 return {};
             }
-            return {component->mouseOver(), component->active(), component->hasFocus(), !component->enabled()};
+            return {
+                .hover    = component->mouseOver(),
+                .active   = component->active(),
+                .focus    = component->hasFocus(),
+                .disabled = !component->enabled()
+            };
         }
     };
 }

@@ -229,7 +229,7 @@ namespace psychic_ui {
                     continue;
                 }
                 detail::RunningTransition &r = _transitions->running.emplace_back(
-                    detail::RunningTransition{property, Tween{from}, computed.has(property)}
+                    detail::RunningTransition{.property = property, .tween = Tween{from}, .targetSet = computed.has(property)}
                 );
                 r.tween.retarget(to, *timing, start);
                 setChannels(computed, property, from, _transitions->targets);
@@ -327,7 +327,12 @@ namespace psychic_ui {
             }
             return;
         }
-        _exit          = std::make_unique<Exit>(Exit{lowercase(className), std::move(done), _mouseEnabled, _mouseChildren});
+        _exit          = std::make_unique<Exit>(Exit{
+            .className     = lowercase(className),
+            .done          = std::move(done),
+            .mouseEnabled  = _mouseEnabled,
+            .mouseChildren = _mouseChildren
+        });
         _mouseEnabled  = false;
         _mouseChildren = false;
         updateClassName(className, true);

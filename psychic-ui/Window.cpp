@@ -1393,7 +1393,7 @@ namespace psychic_ui {
             return nullptr;
         }
 
-        SlopSearch search{x, y};
+        SlopSearch search{.x = x, .y = y};
         constexpr int unbounded = std::numeric_limits<int>::max() / 2;
         findSlopTarget(this, 0, 0, -unbounded, -unbounded, unbounded, unbounded, search);
         if (!search.target) {

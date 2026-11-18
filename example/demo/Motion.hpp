@@ -110,7 +110,7 @@ namespace psychic_ui {
             // Room for an overshoot above and an undershoot below
             const SkRect plot = _rect.makeInset(10.0f, _rect.height() * 0.2f);
             const auto   at   = [&plot](float t, float v) {
-                return SkPoint{plot.left() + (t * plot.width()), plot.bottom() - (v * plot.height())};
+                return SkPoint::Make(plot.left() + (t * plot.width()), plot.bottom() - (v * plot.height()));
             };
 
             SkPaint line;
@@ -202,7 +202,7 @@ namespace psychic_ui {
             _pucks.push_back(&puck);
         };
         lane("Eased · 400 ms, ease-out", Timing{400ms, Ease::Out});
-        lane("Eased · 400 ms, Pivotal's out", Timing{400ms, Ease{0.16f, 1.0f, 0.3f, 1.0f}});
+        lane("Eased · 400 ms, Pivotal's out", Timing{400ms, Ease{.x1 = 0.16f, .y1 = 1.0f, .x2 = 0.3f, .y2 = 1.0f}});
         lane("Spring · Snappy", Timing{Spring::Snappy});
         lane("Spring · Gentle", Timing{Spring::Gentle});
         lane("Instant", Timing{});
@@ -242,7 +242,7 @@ namespace psychic_ui {
                  {"In", Timing{600ms, Ease::In}},
                  {"Out", Timing{600ms, Ease::Out}},
                  {"In out", Timing{600ms, Ease::InOut}},
-                 {"Pivotal's out", Timing{600ms, Ease{0.16f, 1.0f, 0.3f, 1.0f}}},
+                 {"Pivotal's out", Timing{600ms, Ease{.x1 = 0.16f, .y1 = 1.0f, .x2 = 0.3f, .y2 = 1.0f}}},
                  {"Spring · Snappy", Timing{Spring::Snappy}},
                  {"Spring · Bouncy", Timing{Spring::Bouncy}},
              }) {

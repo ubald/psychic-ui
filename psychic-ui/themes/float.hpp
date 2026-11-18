@@ -12,13 +12,13 @@ namespace psychic_ui::themes {
 
     // A bit larger type than Pivotal's: 12 px body, 12.5 px inputs and rows
     inline constexpr Typography floatTypography{
-        .xxs  = {10.5f, 14},
-        .xs   = {11, 16},
-        .sm   = {12, 18},
-        .base = {12.5f, 19},
-        .md   = {13.5f, 20},
-        .xl   = {17, 24},
-        .xxl  = {20, 28},
+        .xxs  = {.size = 10.5f, .leading = 14},
+        .xs   = {.size = 11, .leading = 16},
+        .sm   = {.size = 12, .leading = 18},
+        .base = {.size = 12.5f, .leading = 19},
+        .md   = {.size = 13.5f, .leading = 20},
+        .xl   = {.size = 17, .leading = 24},
+        .xxl  = {.size = 20, .leading = 28},
     };
 
     // Controls 20 / 28 / 30, rows 30 / 34; corners 7 for controls (no pills), 12 for popups, 14 for panels

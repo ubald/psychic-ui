@@ -22,8 +22,8 @@ namespace psychic_ui {
      * `at(x)` is how far along its way a value is (y) at a share of the duration (x, 0 to 1). y may leave 0-1 (an
      * overshoot); the control points' x may not.
      *
-     *     Ease::Out                      // A named curve, CSS's `ease-out`
-     *     Ease{0.16f, 1.0f, 0.3f, 1.0f}  // Any other, as cubic-bezier(0.16, 1, 0.3, 1)
+     *     Ease::Out                                            // A named curve, CSS's `ease-out`
+     *     Ease{.x1 = 0.16f, .y1 = 1.0f, .x2 = 0.3f, .y2 = 1.0f}  // Any other, as cubic-bezier(0.16, 1, 0.3, 1)
      */
     struct Ease {
         float x1{0.0f};
@@ -57,11 +57,11 @@ namespace psychic_ui {
         static const Ease InOut;    // ease-in-out
     };
 
-    inline constexpr Ease Ease::Linear{0.0f, 0.0f, 1.0f, 1.0f};
-    inline constexpr Ease Ease::Standard{0.25f, 0.1f, 0.25f, 1.0f};
-    inline constexpr Ease Ease::In{0.42f, 0.0f, 1.0f, 1.0f};
-    inline constexpr Ease Ease::Out{0.0f, 0.0f, 0.58f, 1.0f};
-    inline constexpr Ease Ease::InOut{0.42f, 0.0f, 0.58f, 1.0f};
+    inline constexpr Ease Ease::Linear{.x1 = 0.0f, .y1 = 0.0f, .x2 = 1.0f, .y2 = 1.0f};
+    inline constexpr Ease Ease::Standard{.x1 = 0.25f, .y1 = 0.1f, .x2 = 0.25f, .y2 = 1.0f};
+    inline constexpr Ease Ease::In{.x1 = 0.42f, .y1 = 0.0f, .x2 = 1.0f, .y2 = 1.0f};
+    inline constexpr Ease Ease::Out{.x1 = 0.0f, .y1 = 0.0f, .x2 = 0.58f, .y2 = 1.0f};
+    inline constexpr Ease Ease::InOut{.x1 = 0.42f, .y1 = 0.0f, .x2 = 0.58f, .y2 = 1.0f};
 
     /**
      * A damped spring pulling a value to its target: no duration, it settles when it gets there. Interrupted, it keeps
@@ -99,9 +99,9 @@ namespace psychic_ui {
         static const Spring Bouncy; // Overshoots and swings back a few times
     };
 
-    inline constexpr Spring Spring::Gentle{170.0f, 26.0f, 1.0f};
-    inline constexpr Spring Spring::Snappy{500.0f, 30.0f, 1.0f};
-    inline constexpr Spring Spring::Bouncy{400.0f, 14.0f, 1.0f};
+    inline constexpr Spring Spring::Gentle{.stiffness = 170.0f, .damping = 26.0f, .mass = 1.0f};
+    inline constexpr Spring Spring::Snappy{.stiffness = 500.0f, .damping = 30.0f, .mass = 1.0f};
+    inline constexpr Spring Spring::Bouncy{.stiffness = 400.0f, .damping = 14.0f, .mass = 1.0f};
 
     /**
      * How a value moves to a new one: a duration along an easing curve, or a spring. The default timing, and a

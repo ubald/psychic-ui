@@ -112,15 +112,15 @@ namespace psychic_ui {
 
         const float fontSize = _computedStyle.fontSize();
         const bool  changed  = _textLayout.setStyle(TextLayoutStyle{
-            styleManager()->fontCollection(),
-            _computedStyle.fontFamily().str(),
-            fontSize,
+            .fonts         = styleManager()->fontCollection(),
+            .fontFamily    = _computedStyle.fontFamily().str(),
+            .fontSize      = fontSize,
             // Auto is 1.5 times the font size, a percent is of the font size
-            _computedStyle.lineHeight().resolve(fontSize, fontSize * 1.5f),
-            _computedStyle.letterSpacing(),
-            _computedStyle.fontSmoothing(),
-            _computedStyle.textAlign(),
-            _computedStyle.textOverflow()
+            .lineHeight    = _computedStyle.lineHeight().resolve(fontSize, fontSize * 1.5f),
+            .letterSpacing = _computedStyle.letterSpacing(),
+            .smoothing     = _computedStyle.fontSmoothing(),
+            .align         = _computedStyle.textAlign(),
+            .overflow      = _computedStyle.textOverflow()
         });
         // Yoga caches measures: re-measure when anything changing the text metrics changes. Colors aren't part of
         // the layout: they are given when painting, so a color transition lays nothing out again
@@ -134,7 +134,7 @@ namespace psychic_ui {
         // so the layout used for painting (at the box's width) is left as it is.
         const float contentWidth = width.apply(std::ceil(_textLayout.maxContentWidth()));
         auto  lines        = std::max<size_t>(1, _textLayout.lineCountAt(contentWidth));
-        return Size{contentWidth, height.apply(static_cast<float>(lines) * _textLayout.style().lineHeight)};
+        return Size{.width = contentWidth, .height = height.apply(static_cast<float>(lines) * _textLayout.style().lineHeight)};
     }
 
     void Text::layoutUpdated() {

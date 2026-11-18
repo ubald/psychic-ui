@@ -662,11 +662,11 @@ namespace psychic_ui {
         Constraint toConstraint(float size, YGMeasureMode mode) {
             switch (mode) {
                 case YGMeasureModeExactly:
-                    return {size, Fit::Exact};
+                    return {.size = size, .fit = Fit::Exact};
                 case YGMeasureModeAtMost:
-                    return {size, Fit::AtMost};
+                    return {.size = size, .fit = Fit::AtMost};
                 default:
-                    return {size, Fit::Unbounded};
+                    return {.size = size, .fit = Fit::Unbounded};
             }
         }
     }
@@ -1024,7 +1024,7 @@ namespace psychic_ui {
     // region Draw
 
     Size Div::measure(Constraint width, Constraint height) {
-        return Size{width.size, height.size};
+        return Size{.width = width.size, .height = height.size};
     }
 
     void Div::render(SkCanvas *canvas) {
@@ -1104,19 +1104,19 @@ namespace psychic_ui {
             canvas->drawRect(pRect, paint);
 
             paint.setColor(0x30FFFF00);
-            SkRect bRect{(float) _boundsLeft, (float) _boundsTop, (float) _boundsRight, (float) _boundsBottom};
+            SkRect bRect = SkRect::MakeLTRB((float) _boundsLeft, (float) _boundsTop, (float) _boundsRight, (float) _boundsBottom);
             bRect.inset(0.5f, 0.5f);
             canvas->drawRect(bRect, paint);
 
             if (_borderLeft > 0 || _borderTop > 0 || _borderRight > 0 || _borderBottom > 0) {
                 paint.setColor(0x7F00FFFF);
                 canvas->drawRect(
-                    SkRect{
+                    SkRect::MakeLTRB(
                         _rect.left() + _borderLeft + 0.5f,
                         _rect.top() + _borderTop + 0.5f,
                         _rect.right() - _borderRight - 0.5f,
                         _rect.bottom() - _borderBottom - 0.5f
-                    }, paint
+                    ), paint
                 );
             }
 

@@ -38,7 +38,7 @@ namespace psychic_ui {
         if (_count == capacity) {
             throw std::length_error("A transition holds at most " + std::to_string(capacity) + " timings");
         }
-        _entries.at(_count++) = Entry{properties, timing};
+        _entries.at(_count++) = Entry{.properties = properties, .timing = timing};
         return *this;
     }
 

@@ -14,13 +14,13 @@ namespace psychic_ui::themes {
      * Desk's type: Inter, a half step under Pivotal's (body 11.5 px, inputs and menus 12, titles 13)
      */
     inline constexpr Typography deskType{
-        .xxs  = {10, 14},
-        .xs   = {11, 16},
-        .sm   = {11.5f, 17},
-        .base = {12, 18},
-        .md   = {13, 18},
-        .xl   = {16, 22},
-        .xxl  = {18, 24},
+        .xxs  = {.size = 10, .leading = 14},
+        .xs   = {.size = 11, .leading = 16},
+        .sm   = {.size = 11.5f, .leading = 17},
+        .base = {.size = 12, .leading = 18},
+        .md   = {.size = 13, .leading = 18},
+        .xl   = {.size = 16, .leading = 22},
+        .xxl  = {.size = 18, .leading = 24},
     };
 
     /**

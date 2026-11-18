@@ -31,7 +31,7 @@ namespace psychic_ui {
         template<class SkinT, class ImplT>
         SkinRegistry &add(std::string_view variant = "") {
             static_assert(std::is_base_of_v<SkinT, ImplT>, "ImplT must implement SkinT");
-            _makers[Key{typeid(SkinT), std::string{variant}}] = [name = std::string{variant}] {
+            _makers[Key{.type = typeid(SkinT), .variant = std::string{variant}}] = [name = std::string{variant}] {
                 auto skin = std::make_shared<ImplT>();
                 if (!name.empty()) {
                     skin->addClassName(name);
@@ -46,7 +46,7 @@ namespace psychic_ui {
          */
         template<class SkinT>
         bool has(std::string_view variant = "") const {
-            return _makers.contains(Key{typeid(SkinT), std::string{variant}});
+            return _makers.contains(Key{.type = typeid(SkinT), .variant = std::string{variant}});
         }
 
         /**
@@ -54,9 +54,9 @@ namespace psychic_ui {
          */
         template<class SkinT>
         std::shared_ptr<SkinT> make(std::string_view variant = "") const {
-            auto it = _makers.find(Key{typeid(SkinT), std::string{variant}});
+            auto it = _makers.find(Key{.type = typeid(SkinT), .variant = std::string{variant}});
             if (it == _makers.cend() && !variant.empty()) {
-                it = _makers.find(Key{typeid(SkinT), std::string{}});
+                it = _makers.find(Key{.type = typeid(SkinT), .variant = std::string{}});
             }
             // The maker made an ImplT, which implements SkinT
             return it != _makers.cend() ? std::static_pointer_cast<SkinT>(it->second()) : nullptr;

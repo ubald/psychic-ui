@@ -20,7 +20,7 @@ namespace {
     protected:
         Size measure(Constraint width, Constraint height) override {
             widthFits.push_back(width.fit);
-            return {width.apply(120), height.apply(30)};
+            return {.width = width.apply(120), .height = height.apply(30)};
         }
     };
 }
