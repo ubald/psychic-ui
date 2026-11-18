@@ -10,12 +10,13 @@ namespace psychic_ui {
         // Past any line's edge, for the line edge moves
         constexpr float far = 1.0e9f;
 
+        // Takes what ICU made, so that it is deleted when it is no use
         std::unique_ptr<icu::BreakIterator> made(icu::BreakIterator *iterator, UErrorCode status) {
-            if (U_FAILURE(status) || !iterator) {
-                delete iterator;
+            std::unique_ptr<icu::BreakIterator> owned{iterator};
+            if (U_FAILURE(status) || !owned) {
                 throw std::runtime_error("TextEditing: ICU break iterator unavailable");
             }
-            return std::unique_ptr<icu::BreakIterator>(iterator);
+            return owned;
         }
     }
 

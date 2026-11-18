@@ -332,6 +332,7 @@ set(SOURCE_FILES
     psychic-ui/themes/ubuntu-type.hpp
     psychic-ui/utils/ColorUtils.hpp
     psychic-ui/utils/Hatcher.hpp
+    psychic-ui/utils/NoDestructor.hpp
     psychic-ui/utils/StringUtils.hpp
     psychic-ui/Component.hpp
     psychic-ui/Div.cpp
