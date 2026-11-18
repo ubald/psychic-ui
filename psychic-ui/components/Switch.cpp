@@ -6,13 +6,12 @@
 namespace psychic_ui {
 
     Switch::Switch(const std::string &label, std::function<void(bool)> onChangeCallback) :
-        Component() {
+        Component(),
+        _label(label) {
         tag("Switch");
 
         _mouseChildren = false;
         _focusEnabled  = true; // Tab reaches it; Space or Enter flips it
-
-        _label = label;
 
         keyPressed.subscribe(
             [this](const Key key, const Mod /*modifiers*/) {

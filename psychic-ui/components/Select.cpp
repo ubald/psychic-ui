@@ -7,7 +7,8 @@ namespace psychic_ui {
 
     Select::Select(std::vector<std::string> options, const int selected) :
         Div(),
-        _options(std::move(options)) {
+        _options(std::move(options)),
+        _selected(selected >= 0 && std::cmp_less(selected, _options.size()) ? selected : -1) {
         tag("Select");
         _focusEnabled  = true;
         _mouseChildren = false; // The field takes the presses and the focus, not its parts
@@ -23,7 +24,6 @@ namespace psychic_ui {
                 .shrink(0)
                 .marginLeft(Length{0, Length::Unit::Auto});
 
-        _selected = selected >= 0 && std::cmp_less(selected, _options.size()) ? selected : -1;
         showValue();
 
         onClick([this]() { isOpen() ? close() : open(); });

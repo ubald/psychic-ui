@@ -5,13 +5,11 @@
 namespace psychic_ui {
 
     SystemWindow::SystemWindow(std::shared_ptr<Window> window) :
-        _window(std::move(window)) {
-
-        _width    = _window->windowWidth();
-        _height   = _window->windowHeight();
-        _fbWidth  = _width;
-        _fbHeight = _height;
-    }
+        _window(std::move(window)),
+        _width(_window->windowWidth()),
+        _height(_window->windowHeight()),
+        _fbWidth(_width),
+        _fbHeight(_height) {}
 
     SystemWindow::~SystemWindow() {
         detach();

@@ -4,13 +4,12 @@
 namespace psychic_ui {
 
     CheckBox::CheckBox(const std::string &label, std::function<void(bool)> onChangeCallback) :
-        Component() {
+        Component(),
+        _label(label) {
         tag("CheckBox");
 
         _mouseChildren = false; // !important
         _focusEnabled  = true;  // Tab reaches it; Space toggles it
-
-        _label = label;
 
         keyPressed.subscribe(
             [this](const Key key, const Mod /*modifiers*/) {
