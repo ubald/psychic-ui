@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -1057,6 +1058,124 @@ TEST_CASE("A menu over a dialog closes first", "[popup][dialog][menu]") {
     f.key(Key::ESCAPE);
     CHECK(f.popupCount() == 1);
     CHECK(f.top<Dialog>() == &dialog);
+}
+
+// endregion
+
+// region Typed children
+
+namespace {
+    /**
+     * A popup whose removed() doesn't call the base: the overlay tracks it all the same
+     */
+    class SelfishPopup : public Popup {
+    public:
+        int removals{0};
+
+    protected:
+        void removed() override { ++removals; }
+    };
+
+    /**
+     * A toast whose removed() doesn't call the base: the stack tracks it all the same
+     */
+    class SelfishToast : public Toast {
+    public:
+        explicit SelfishToast(const ToastOptions &options) : Toast(options) {}
+
+        int removals{0};
+
+    protected:
+        void removed() override { ++removals; }
+    };
+
+    bool tracked(const Overlay &overlay, const Popup &popup) {
+        return std::ranges::any_of(overlay.allPopups(), [&popup](const auto &other) { return other.get() == &popup; });
+    }
+}
+
+TEST_CASE("The overlay tracks its popups however they come and go", "[popup][overlay]") {
+    Popups  f{};
+    Overlay &overlay = f.window->overlay();
+
+    SECTION("removed by Div::remove") {
+        auto &popup = overlay.open<Popup>();
+        REQUIRE(tracked(overlay, popup));
+        REQUIRE(popup.isOpen());
+        overlay.remove(popup);
+        CHECK_FALSE(tracked(overlay, popup));
+    }
+
+    SECTION("removed by removeAll") {
+        const auto popup = std::make_shared<Popup>();
+        overlay.open(popup);
+        overlay.removeAll();
+        CHECK(overlay.allPopups().empty());
+        CHECK_FALSE(popup->isOpen());
+    }
+
+    SECTION("a subclass's removed() that doesn't call the base") {
+        const auto popup = std::make_shared<SelfishPopup>();
+        overlay.open(popup);
+        REQUIRE(tracked(overlay, *popup));
+        overlay.remove(popup);
+        CHECK(popup->removals == 1);
+        CHECK_FALSE(tracked(overlay, *popup));
+        CHECK_FALSE(popup->isOpen());
+    }
+
+    SECTION("added with Div::add, then moved to another div") {
+        const auto popup = std::make_shared<Popup>();
+        overlay.add(popup);
+        CHECK(tracked(overlay, *popup));
+        CHECK(popup->isOpen());
+        f.bar.add(popup);
+        CHECK(popup->parent() == &f.bar);
+        CHECK_FALSE(tracked(overlay, *popup));
+        CHECK_FALSE(popup->isOpen());
+    }
+
+    SECTION("in the children's order") {
+        auto &bottom = overlay.open<Popup>();
+        auto &top    = overlay.open<Popup>();
+        const auto middle = std::make_shared<Popup>();
+        overlay.add(overlay.childIndex(&top), middle);
+        std::vector<Popup *> order{};
+        for (const auto &child: overlay.children()) {
+            if (auto *popup = dynamic_cast<Popup *>(child.get())) {
+                order.push_back(popup);
+            }
+        }
+        std::vector<Popup *> popups{};
+        for (const auto &popup: overlay.allPopups()) {
+            popups.push_back(popup.get());
+        }
+        CHECK(popups == order);
+        CHECK(std::ranges::find(popups, &bottom) < std::ranges::find(popups, middle.get()));
+        CHECK(std::ranges::find(popups, middle.get()) < std::ranges::find(popups, &top));
+    }
+}
+
+TEST_CASE("The toast stack tracks its toasts however they come and go", "[popup][toast]") {
+    const Popups f{};
+    ToastStack   &stack = f.window->toasts();
+    Div          &asDiv = stack; // Its own add makes a toast from options
+
+    SECTION("removed by Div::remove") {
+        auto &toast = f.window->toast({.title = "One", .timeout = 0s});
+        REQUIRE(stack.toasts().size() == 1);
+        stack.remove(toast);
+        CHECK(stack.toasts().empty());
+    }
+
+    SECTION("a subclass's removed() that doesn't call the base") {
+        const auto toast = std::make_shared<SelfishToast>(ToastOptions{.title = "Two", .timeout = 0s});
+        asDiv.add(toast);
+        REQUIRE(stack.toasts() == std::vector<Toast *>{toast.get()});
+        stack.removeAll();
+        CHECK(toast->removals == 1);
+        CHECK(stack.toasts().empty());
+    }
 }
 
 // endregion

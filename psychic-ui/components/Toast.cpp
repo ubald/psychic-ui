@@ -135,14 +135,6 @@ namespace psychic_ui {
         }
     }
 
-    void Toast::removed() {
-        if (_stack) {
-            std::erase_if(_stack->_toasts, [this](const auto &toast) { return toast.get() == this; });
-            _stack = nullptr;
-        }
-        Div::removed();
-    }
-
     std::optional<std::chrono::nanoseconds> Toast::deadline() const {
         if (_options.timeout <= std::chrono::nanoseconds::zero()) {
             return std::nullopt;
@@ -173,11 +165,17 @@ namespace psychic_ui {
             shown.front()->addClassName("limited");
             shown.front()->dismiss();
         }
-        auto toast = std::make_shared<Toast>(options);
-        Toast &added = Div::add(toast);
-        toast->_stack = this;
-        _toasts.push_back(std::move(toast));
-        return added;
+        return Div::add<Toast>(options); // Tracked by childAdded
+    }
+
+    void ToastStack::childAdded(Div &child) {
+        Popup::childAdded(child);
+        trackChild(_toasts, child);
+    }
+
+    void ToastStack::childRemoved(Div &child) {
+        untrackChild(_toasts, child);
+        Popup::childRemoved(child);
     }
 
     std::vector<Toast *> ToastStack::toasts() const {

@@ -118,6 +118,7 @@ namespace psychic_ui {
             if (_parent) {
                 removedFromRenderRecursive();
                 removed();
+                _parent->childRemoved(*this);
                 if (_focused) {
                     window()->requestFocus(_parent);
                 }
@@ -127,6 +128,7 @@ namespace psychic_ui {
             _depth  = _parent ? _parent->depth() + 1 : 0;
             if (_parent) {
                 added();
+                _parent->childAdded(*this);
                 if (window()) {
                     addedToRenderRecursive();
                 }
@@ -147,6 +149,10 @@ namespace psychic_ui {
     void Div::added() {}
 
     void Div::removed() {}
+
+    void Div::childAdded(Div &/*child*/) {}
+
+    void Div::childRemoved(Div &/*child*/) {}
 
     void Div::addedToRenderRecursive() {
         // Update the depth first so that styles have access to it
@@ -199,8 +205,12 @@ namespace psychic_ui {
         if (!child) {
             throw std::invalid_argument("Div: adding no child");
         }
-        if (index > childCount()) {
+        Div *const former = child->_parent;
+        if (index > childCount() - (former == this ? 1 : 0)) {
             throw std::out_of_range("Div: adding a child past the end of the children");
+        }
+        if (former) {
+            former->remove(*child); // Moved: it leaves its parent first (we hold it meanwhile)
         }
         // The current first/last children may lose their :first-child/:last-child state
         invalidateEndChildrenStyle();

@@ -119,9 +119,7 @@ namespace psychic_ui {
         const Window *w = window();
         Div    *focused = w ? w->focusedDiv() : nullptr;
         popup->_focusBefore = focused ? focused->weak_from_this() : std::weak_ptr<Div>{};
-        add(popup);
-        popup->_overlay = this;
-        _popups.push_back(popup);
+        add(popup); // Tracked by childAdded
         popup->_laidOut = false;
         popup->opened();
         return *popup;
@@ -144,8 +142,24 @@ namespace psychic_ui {
         }
     }
 
-    void Overlay::forget(const Popup &popup) {
-        std::erase_if(_popups, [&popup](const auto &other) { return other.get() == &popup; });
+    Overlay::~Overlay() {
+        for (const auto &popup: _popups) {
+            popup->_overlay = nullptr; // One held elsewhere outlives it
+        }
+    }
+
+    void Overlay::childAdded(Div &child) {
+        Div::childAdded(child);
+        if (Popup *popup = trackChild(_popups, child)) {
+            popup->_overlay = this;
+        }
+    }
+
+    void Overlay::childRemoved(Div &child) {
+        if (Popup *popup = untrackChild(_popups, child)) {
+            popup->_overlay = nullptr;
+        }
+        Div::childRemoved(child);
     }
 
     std::vector<Popup *> Overlay::popups() const {

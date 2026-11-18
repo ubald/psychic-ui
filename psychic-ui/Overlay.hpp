@@ -41,6 +41,11 @@ namespace psychic_ui {
     class Overlay : public Div {
     public:
         Overlay();
+        ~Overlay() override;
+        Overlay(const Overlay &) = delete;
+        Overlay &operator=(const Overlay &) = delete;
+        Overlay(Overlay &&) = delete;
+        Overlay &operator=(Overlay &&) = delete;
 
         /**
          * Open a popup: construct it, add it on top, then let it take the focus
@@ -147,17 +152,15 @@ namespace psychic_ui {
         friend class Popup;
 
         /**
-         * The popups opened in it, in its children's order, those leaving too: a popup is in it from `open` until
-         * it leaves the overlay (`Popup::removed`)
+         * The popups in it, in its children's order, those leaving too: kept by `childAdded` and `childRemoved`,
+         * whatever adds or removes them
          */
         std::vector<std::shared_ptr<Popup>> _popups{};
 
         void close(Popup &popup);
 
-        /**
-         * A popup left the overlay
-         */
-        void forget(const Popup &popup);
+        void childAdded(Div &child) override;
+        void childRemoved(Div &child) override;
 
         /**
          * Put an open popup on top without taking it out (it keeps its style and transitions)

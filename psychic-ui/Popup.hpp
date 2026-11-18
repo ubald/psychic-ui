@@ -273,19 +273,13 @@ namespace psychic_ui {
         bool _restoreFocus{true};
 
         std::vector<std::weak_ptr<Div>> _passThrough{};
-        Overlay                         *_overlay{nullptr}; // The overlay it was opened in, while it is there
+        Overlay                         *_overlay{nullptr}; // Its parent, the overlay, set and cleared by it
         Popup                           *_owner{nullptr};
         Div                             *_surface{nullptr}; // A descendant, or nullptr for itself
         std::weak_ptr<Div>              _focusBefore{};     // What had the focus when it opened
         bool                            _laidOut{false};    // `laidOut` was called since it opened
 
         void updateAnchor(Div *anchor, int x, int y);
-
-        /**
-         * It leaves its overlay (closed and gone, or taken out by other means): the overlay forgets it. A subclass
-         * that overrides it calls it.
-         */
-        void removed() override;
 
         /**
          * It went on this side: `placedSide()`, and its class (`side-bottom`...)

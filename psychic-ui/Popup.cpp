@@ -47,12 +47,4 @@ namespace psychic_ui {
             _overlay->close(*this);
         }
     }
-
-    void Popup::removed() {
-        if (_overlay) {
-            _overlay->forget(*this);
-            _overlay = nullptr;
-        }
-        Div::removed();
-    }
 }

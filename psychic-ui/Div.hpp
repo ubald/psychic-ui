@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <concepts>
 #include <cstdint>
@@ -162,7 +163,8 @@ namespace psychic_ui {
 
         /**
          * Add an existing child at index (in document order), at most childCount(): std::out_of_range past it,
-         * std::invalid_argument for no child
+         * std::invalid_argument for no child. A child that has a parent leaves it first (this one too: the index is
+         * then among the other children), as the DOM moves a node.
          * @return The child
          */
         template<class T>
@@ -174,13 +176,14 @@ namespace psychic_ui {
         }
 
         /**
-         * Add an existing child last
+         * Add an existing child last (moved there if it is one already)
          * @return The child
          */
         template<class T>
         requires std::derived_from<T, Div>
         T &add(std::shared_ptr<T> child) {
-            return add(childCount(), std::move(child));
+            const unsigned int index = child && child->parent() == this ? childCount() - 1 : childCount();
+            return add(index, std::move(child));
         }
 
         /**
@@ -825,6 +828,61 @@ namespace psychic_ui {
 
         virtual void added();
         virtual void removed();
+
+        /**
+         * A child joined this div, by any path (`add`, or moved here from another parent): it is in the children,
+         * its parent is this one and its `added()` ran, before its first style. For a div that keeps a typed list of
+         * some of its children (the overlay's popups, the toast stack's toasts), so that the children owe it nothing.
+         */
+        virtual void childAdded(Div &child);
+
+        /**
+         * A child left this div, by any path (`remove`, `removeAll`, added to another parent): it is out of the
+         * children and its `removed()` ran, before the focus it had moves (its `parent()` still answers this one
+         * until the call returns). The counterpart of `childAdded`.
+         */
+        virtual void childRemoved(Div &child);
+
+        /**
+         * From `childAdded`: put the child in `list`, the children that are a T in document order, if it is one
+         * @return The child as a T, or nullptr
+         */
+        template<class T>
+        requires std::derived_from<T, Div>
+        T *trackChild(std::vector<std::shared_ptr<T>> &list, Div &child) const {
+            auto *typed = dynamic_cast<T *>(&child);
+            if (!typed) {
+                return nullptr;
+            }
+            // After the tracked children before it (the list follows the children's order)
+            auto at = list.begin();
+            for (const auto &other: _children) {
+                if (other.get() == &child) {
+                    break;
+                }
+                if (at != list.end() && other.get() == at->get()) {
+                    ++at;
+                }
+            }
+            list.insert(at, std::shared_ptr<T>(child.shared_from_this(), typed));
+            return typed;
+        }
+
+        /**
+         * From `childRemoved`: take the child out of `list`
+         * @return The child as a T, or nullptr if it wasn't in it
+         */
+        template<class T>
+        requires std::derived_from<T, Div>
+        static T *untrackChild(std::vector<std::shared_ptr<T>> &list, const Div &child) {
+            const auto it = std::ranges::find(list, &child, [](const auto &tracked) -> const Div * { return tracked.get(); });
+            if (it == list.end()) {
+                return nullptr;
+            }
+            T *typed = it->get(); // NOLINT(misc-const-correctness): returned mutable, for the parent to update it
+            list.erase(it);
+            return typed;
+        }
         virtual void addedToRender();
         virtual void removedFromRender();
 
