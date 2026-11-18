@@ -2,18 +2,6 @@
 #include "NumberStepperSkinBase.hpp"
 
 namespace psychic_ui {
-    namespace {
-        /**
-         * Whether a point in a div's parent's coordinates is on it
-         */
-        bool isOn(const Div &div, const float x, const float y) {
-            const auto left = static_cast<float>(div.x());
-            const auto top  = static_cast<float>(div.y());
-            return x >= left && x < left + static_cast<float>(div.getWidth())
-                   && y >= top && y < top + static_cast<float>(div.getHeight());
-        }
-    }
-
     NumberStepperSkinBase::NumberStepperSkinBase() :
         NumberStepperSkin() {
         tag("NumberStepperSkinBase");
@@ -40,13 +28,10 @@ namespace psychic_ui {
 
     NumberStepperSkin::Part NumberStepperSkinBase::partAt(const float x, const float y) const {
         // Our children: their places are in our coordinates
-        if (isOn(*_decrement, x, y)) {
+        if (_decrement->contains(x, y)) {
             return Part::Decrement;
         }
-        if (isOn(*_increment, x, y)) {
-            return Part::Increment;
-        }
-        return Part::None;
+        return _increment->contains(x, y) ? Part::Increment : Part::None;
     }
 
     void NumberStepperSkinBase::draw(SkCanvas *canvas) {
