@@ -420,6 +420,14 @@ namespace psychic_ui {
             return self;
         }
 
+        /**
+         * Held down by a mouse button while enabled (`:pressed` in stylesheets), whatever a subclass adds to `active()`
+         */
+        bool pressed() const;
+
+        /**
+         * `:active` in stylesheets: `pressed()`, and what a subclass adds (a selected `Button`)
+         */
         virtual bool active() const;
         bool focusEnabled() const;
 

@@ -371,9 +371,13 @@ namespace psychic_ui {
         }
     }
 
-    bool Div::active() const {
+    bool Div::pressed() const {
         return _enabled && _mouseDown;
-    };
+    }
+
+    bool Div::active() const {
+        return pressed();
+    }
 
     // endregion
 

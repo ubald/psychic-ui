@@ -61,7 +61,7 @@ namespace psychic_ui {
 
         template<class Self>
         Self &toggle(this Self &self, detail::BoolArg toggle) {
-            static_cast<Button &>(self)._toggle = toggle.value;
+            static_cast<Button &>(self).updateToggle(toggle.value);
             return self;
         }
 
@@ -102,7 +102,11 @@ namespace psychic_ui {
         void updateLabel(const std::string &label);
         void updateIcon(const std::string &icon);
         void updateSelected(bool selected);
+        void updateToggle(bool toggle);
         void skinChanged() override;
+
+    private:
+        void updateSelectedClass();
     };
 }
 
