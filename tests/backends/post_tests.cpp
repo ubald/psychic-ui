@@ -56,7 +56,7 @@ TEST_CASE("Tasks posted from other threads all run, waking the system window onc
     int                      count = 0; // Tasks run on this thread
     std::vector<std::thread> threads{};
     threads.reserve(4);
-    for (int t = 0; t < 4; ++t) {
+    for (int round = 0; round < 4; ++round) {
         threads.emplace_back([&window, &count] {
             for (int i = 0; i < 1000; ++i) {
                 window->post([&count] { ++count; });
@@ -88,19 +88,19 @@ TEST_CASE("A task that throws leaves the rest of its batch for the next runPoste
     FakeSystemWindow fake(window);
     fake.layout();
 
-    bool a = false;
-    bool c = false;
-    window->post([&a] { a = true; });
+    bool firstRan = false;
+    bool thirdRan = false;
+    window->post([&firstRan] { firstRan = true; });
     window->post([] { throw std::runtime_error("task"); });
-    window->post([&c] { c = true; });
+    window->post([&thirdRan] { thirdRan = true; });
 
     CHECK_THROWS_AS(window->runPosted(), std::runtime_error);
-    CHECK(a);
-    CHECK_FALSE(c);
+    CHECK(firstRan);
+    CHECK_FALSE(thirdRan);
     CHECK(window->needsFrame());
 
     window->runPosted();
-    CHECK(c);
+    CHECK(thirdRan);
 }
 
 TEST_CASE("Tasks still queued when the window goes are destroyed without running", "[backend][frames][post]") {

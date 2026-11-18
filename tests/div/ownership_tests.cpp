@@ -13,28 +13,28 @@ using namespace psychic_ui_tests;
 TEST_CASE("M7: adding a child that has a parent moves it", "[div][children]") {
     auto             window = std::make_shared<TestWindow>();
     const FakeSystemWindow sys{window, 800, 600};
-    auto            &p1    = window->appContainer().add<Div>();
-    auto            &p2    = window->appContainer().add<Div>();
-    auto             child = std::make_shared<Div>();
-    p1.add(child);
-    p2.add(child);
-    CHECK(p1.childCount() == 0);
-    CHECK(p2.childCount() == 1);
-    CHECK(child->parent() == &p2);
+    auto            &parent1 = window->appContainer().add<Div>();
+    auto            &parent2 = window->appContainer().add<Div>();
+    auto             child   = std::make_shared<Div>();
+    parent1.add(child);
+    parent2.add(child);
+    CHECK(parent1.childCount() == 0);
+    CHECK(parent2.childCount() == 1);
+    CHECK(child->parent() == &parent2);
 }
 
 TEST_CASE("A child added again to its parent moves among its siblings", "[div][children]") {
     auto  parent = std::make_shared<Div>();
     auto  a      = std::make_shared<Div>();
     auto  b      = std::make_shared<Div>();
-    auto  c      = std::make_shared<Div>();
+    auto  child  = std::make_shared<Div>();
     parent->add(a);
     parent->add(b);
-    parent->add(c);
+    parent->add(child);
     parent->add(a); // Last
     CHECK(parent->childIndex(a) == 2);
-    parent->add(0, c); // First
-    CHECK(parent->childIndex(c) == 0);
+    parent->add(0, child); // First
+    CHECK(parent->childIndex(child) == 0);
     CHECK(parent->childIndex(b) == 1);
     CHECK(parent->childCount() == 3);
     CHECK(a->parent() == parent.get());

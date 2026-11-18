@@ -49,90 +49,90 @@ namespace {
 
 TEST_CASE("children are kept in document order, matching yoga", "[div][children]") {
     auto parent = make("p");
-    auto a      = make("a");
-    auto b      = make("b");
-    auto c      = make("c");
+    auto childA = make("a");
+    auto childB = make("b");
+    auto childC = make("c");
 
     SECTION("add appends") {
-        parent->add(a);
-        parent->add(b);
-        parent->add(c);
+        parent->add(childA);
+        parent->add(childB);
+        parent->add(childC);
         REQUIRE(order(*parent) == "abc");
-        REQUIRE(parent->childIndex(a) == 0);
-        REQUIRE(parent->childIndex(c) == 2);
+        REQUIRE(parent->childIndex(childA) == 0);
+        REQUIRE(parent->childIndex(childC) == 2);
     }
 
     SECTION("add at index inserts") {
-        parent->add(0, b);
-        parent->add(0, a);
-        parent->add(2, c);
+        parent->add(0, childB);
+        parent->add(0, childA);
+        parent->add(2, childC);
         REQUIRE(order(*parent) == "abc");
-        auto d = make("d");
-        parent->add(1, d);
+        auto childD = make("d");
+        parent->add(1, childD);
         REQUIRE(order(*parent) == "adbc");
     }
 
     SECTION("childIndex of a stranger is -1") {
-        parent->add(a);
-        REQUIRE(parent->childIndex(b) == -1);
-        REQUIRE(parent->childIndex(b.get()) == -1);
+        parent->add(childA);
+        REQUIRE(parent->childIndex(childB) == -1);
+        REQUIRE(parent->childIndex(childB.get()) == -1);
     }
 
     SECTION("remove by index removes the right child from both lists") {
-        auto d = make("d");
-        parent->add(a);
-        parent->add(b);
-        parent->add(c);
-        parent->add(d);
+        auto childD = make("d");
+        parent->add(childA);
+        parent->add(childB);
+        parent->add(childC);
+        parent->add(childD);
 
         parent->remove(0u);
         REQUIRE(order(*parent) == "bcd");
-        REQUIRE(a->parent() == nullptr);
-        REQUIRE(YGNodeGetOwner(a->_yogaNode) == nullptr);
+        REQUIRE(childA->parent() == nullptr);
+        REQUIRE(YGNodeGetOwner(childA->_yogaNode) == nullptr);
 
         parent->remove(1u);
         REQUIRE(order(*parent) == "bd");
-        REQUIRE(c->parent() == nullptr);
+        REQUIRE(childC->parent() == nullptr);
 
         parent->remove(1u);
         REQUIRE(order(*parent) == "b");
-        REQUIRE(d->parent() == nullptr);
+        REQUIRE(childD->parent() == nullptr);
 
         parent->remove(0u);
         REQUIRE(order(*parent).empty());
-        REQUIRE(b->parent() == nullptr);
+        REQUIRE(childB->parent() == nullptr);
     }
 
     SECTION("remove by pointer") {
-        parent->add(a);
-        parent->add(b);
-        parent->add(c);
-        parent->remove(b);
+        parent->add(childA);
+        parent->add(childB);
+        parent->add(childC);
+        parent->remove(childB);
         REQUIRE(order(*parent) == "ac");
-        REQUIRE(b->parent() == nullptr);
+        REQUIRE(childB->parent() == nullptr);
 
         // Removing a stranger leaves everything alone
         auto other = make("o");
-        other->add(b);
-        parent->remove(b);
+        other->add(childB);
+        parent->remove(childB);
         REQUIRE(order(*parent) == "ac");
-        REQUIRE(b->parent() == other.get());
+        REQUIRE(childB->parent() == other.get());
     }
 
     SECTION("removeAll") {
-        parent->add(a);
-        parent->add(b);
-        parent->add(c);
+        parent->add(childA);
+        parent->add(childB);
+        parent->add(childC);
         parent->removeAll();
         REQUIRE(parent->childCount() == 0);
         REQUIRE(YGNodeGetChildCount(parent->_yogaNode) == 0);
-        for (const auto &child: {a, b, c}) {
+        for (const auto &child: {childA, childB, childC}) {
             REQUIRE(child->parent() == nullptr);
             REQUIRE(YGNodeGetOwner(child->_yogaNode) == nullptr);
         }
         // Children can be re-added after removeAll
-        parent->add(c);
-        parent->add(a);
+        parent->add(childC);
+        parent->add(childA);
         REQUIRE(order(*parent) == "ca");
     }
 }
@@ -155,34 +155,34 @@ TEST_CASE(":first-child and :last-child match the document order", "[div][childr
         return matched(div);
     };
 
-    auto a = make("a");
-    parent->add(a);
-    REQUIRE(matched(a) == "FL");
+    auto childA = make("a");
+    parent->add(childA);
+    REQUIRE(matched(childA) == "FL");
 
-    auto b = make("b");
-    parent->add(b);
-    auto c = make("c");
-    parent->add(c);
-    REQUIRE(restyled(a) == "F");
-    REQUIRE(restyled(b) == "");
-    REQUIRE(restyled(c) == "L");
+    auto childB = make("b");
+    parent->add(childB);
+    auto childC = make("c");
+    parent->add(childC);
+    REQUIRE(restyled(childA) == "F");
+    REQUIRE(restyled(childB) == "");
+    REQUIRE(restyled(childC) == "L");
 
     SECTION("a new child sees its position in its first style pass") {
-        auto d = make("d");
-        parent->add(d);
-        REQUIRE(matched(d) == "L");
-        auto e = make("e");
-        parent->add(0, e);
-        REQUIRE(matched(e) == "F");
-        REQUIRE(restyled(a) == "");
-        REQUIRE(restyled(c) == "");
+        auto childD = make("d");
+        parent->add(childD);
+        REQUIRE(matched(childD) == "L");
+        auto childE = make("e");
+        parent->add(0, childE);
+        REQUIRE(matched(childE) == "F");
+        REQUIRE(restyled(childA) == "");
+        REQUIRE(restyled(childC) == "");
     }
 
     SECTION("removing the ends moves first and last") {
         parent->remove(0u);
-        REQUIRE(restyled(b) == "F");
+        REQUIRE(restyled(childB) == "F");
         parent->remove(1u);
-        REQUIRE(restyled(b) == "FL");
+        REQUIRE(restyled(childB) == "FL");
     }
 }
 
@@ -223,10 +223,10 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
     }
 
     SECTION("a child inserted at the front is under the others") {
-        auto d = make("d");
-        root->add(0, d);
-        d->position(Position::Absolute).width(100).height(100);
-        d->mouseButtonChanged.subscribe([&hits]() { hits += "d"; });
+        auto childD = make("d");
+        root->add(0, childD);
+        childD->position(Position::Absolute).width(100).height(100);
+        childD->mouseButtonChanged.subscribe([&hits]() { hits += "d"; });
         layout();
         root->handleMouseButtonChange({.x = 50, .y = 50, .button = MouseButton::LEFT, .down = true});
         REQUIRE(hits == "c");

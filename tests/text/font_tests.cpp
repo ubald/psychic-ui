@@ -95,9 +95,9 @@ TEST_CASE("text lays out in Inter at small sizes, slightly hinted", "[text][font
         SkPixmap pixmap;
         REQUIRE(surface->peekPixels(&pixmap));
         bool ink = false;
-        for (int y = 0; y < pixmap.height() && !ink; ++y) {
-            for (int x = 0; x < pixmap.width() && !ink; ++x) {
-                ink = pixmap.getColor(x, y) != SK_ColorWHITE;
+        for (int row = 0; row < pixmap.height() && !ink; ++row) {
+            for (int column = 0; column < pixmap.width() && !ink; ++column) {
+                ink = pixmap.getColor(column, row) != SK_ColorWHITE;
             }
         }
         REQUIRE(ink);

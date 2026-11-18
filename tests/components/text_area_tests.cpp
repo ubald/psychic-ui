@@ -76,16 +76,16 @@ namespace {
             return top >= viewportTop && bottom <= viewportTop + viewport().getHeight();
         }
 
-        void press(std::pair<float, float> p, unsigned int clickCount = 0) {
-            window->handleMouseButtonChange({.x = p.first, .y = p.second, .button = MouseButton::LEFT, .down = true, .clickCount = clickCount});
+        void press(std::pair<float, float> point, unsigned int clickCount = 0) {
+            window->handleMouseButtonChange({.x = point.first, .y = point.second, .button = MouseButton::LEFT, .down = true, .clickCount = clickCount});
         }
 
-        void move(std::pair<float, float> p) {
-            window->handleMouseMove({.x = p.first, .y = p.second}, true);
+        void move(std::pair<float, float> point) {
+            window->handleMouseMove({.x = point.first, .y = point.second}, true);
         }
 
-        void release(std::pair<float, float> p) {
-            window->handleMouseButtonChange({.x = p.first, .y = p.second, .button = MouseButton::LEFT, .down = false});
+        void release(std::pair<float, float> point) {
+            window->handleMouseButtonChange({.x = point.first, .y = point.second, .button = MouseButton::LEFT, .down = false});
             layout();
         }
 
@@ -95,8 +95,8 @@ namespace {
         }
 
         void type(const std::string &text) {
-            for (const char c: text) {
-                window->handleType(icu::UnicodeString(static_cast<UChar32>(c)));
+            for (const char character: text) {
+                window->handleType(icu::UnicodeString(static_cast<UChar32>(character)));
             }
             layout();
         }
@@ -121,110 +121,110 @@ namespace {
 }
 
 TEST_CASE("TextArea: Enter inserts a new line", "[components][text-area]") {
-    Area f;
-    f.focus();
-    CHECK(f.area.hasFocus());
-    CHECK(f.area.computedStyle().borderColor() == f.theme.palette.accent); // `TextArea:focus`: the field has it
-    CHECK(f.view().caretVisible());
-    CHECK(f.view().multiline());
+    Area fixture;
+    fixture.focus();
+    CHECK(fixture.area.hasFocus());
+    CHECK(fixture.area.computedStyle().borderColor() == fixture.theme.palette.accent); // `TextArea:focus`: the field has it
+    CHECK(fixture.view().caretVisible());
+    CHECK(fixture.view().multiline());
 
-    f.key(Key::END); // Of the first line
-    f.key(Key::ENTER);
-    f.type("x");
-    CHECK(f.area.text() == "first line\nx\nsecond line");
-    CHECK(f.changes == std::vector<std::string>{"first line\n\nsecond line", "first line\nx\nsecond line"});
-    CHECK(f.view().text() == f.area.text());
-    CHECK(f.area.caret() == 12);
+    fixture.key(Key::END); // Of the first line
+    fixture.key(Key::ENTER);
+    fixture.type("x");
+    CHECK(fixture.area.text() == "first line\nx\nsecond line");
+    CHECK(fixture.changes == std::vector<std::string>{"first line\n\nsecond line", "first line\nx\nsecond line"});
+    CHECK(fixture.view().text() == fixture.area.text());
+    CHECK(fixture.area.caret() == 12);
 }
 
 TEST_CASE("TextArea: the caret scrolls into view when typing past the bottom", "[components][text-area]") {
-    Area f;
-    REQUIRE(f.viewport().scrollY() == 0);
-    f.typePastTheBottom();
-    CHECK(f.viewport().scrollY() < 0);
-    CHECK(f.caretShows());
+    Area fixture;
+    REQUIRE(fixture.viewport().scrollY() == 0);
+    fixture.typePastTheBottom();
+    CHECK(fixture.viewport().scrollY() < 0);
+    CHECK(fixture.caretShows());
 
     // Back to the start, the viewport scrolls back up
-    f.key(Key::HOME, Mod{.ctrl = true});
-    CHECK(f.area.caret() == 0);
-    CHECK(f.viewport().scrollY() == 0);
-    CHECK(f.caretShows());
+    fixture.key(Key::HOME, Mod{.ctrl = true});
+    CHECK(fixture.area.caret() == 0);
+    CHECK(fixture.viewport().scrollY() == 0);
+    CHECK(fixture.caretShows());
 
     // And down again to the end
-    f.key(Key::END, Mod{.ctrl = true});
-    CHECK(f.viewport().scrollY() < 0);
-    CHECK(f.caretShows());
+    fixture.key(Key::END, Mod{.ctrl = true});
+    CHECK(fixture.viewport().scrollY() < 0);
+    CHECK(fixture.caretShows());
 }
 
 TEST_CASE("TextArea: the mouse selects across lines", "[components][text-area][mouse]") {
-    Area f;
-    f.press(f.at(2));
-    f.move(f.at(17));
-    f.release(f.at(17));
-    CHECK(f.area.hasFocus());
-    CHECK(f.area.selection() == std::pair{2u, 17u});
-    CHECK(f.view().selection() == std::pair{2u, 17u});
+    Area fixture;
+    fixture.press(fixture.at(2));
+    fixture.move(fixture.at(17));
+    fixture.release(fixture.at(17));
+    CHECK(fixture.area.hasFocus());
+    CHECK(fixture.area.selection() == std::pair{2u, 17u});
+    CHECK(fixture.view().selection() == std::pair{2u, 17u});
 
     // A press below the text, in the empty viewport, goes to the last line
     int x = 0;
     int y = 0;
-    f.viewport().localToGlobal(x, y, f.viewport().getWidth() - 20, f.viewport().getHeight() - 4);
-    f.press({static_cast<float>(x), static_cast<float>(y)}, 1);
-    f.release({static_cast<float>(x), static_cast<float>(y)});
-    CHECK(f.area.selection() == std::pair{22u, 22u});
+    fixture.viewport().localToGlobal(x, y, fixture.viewport().getWidth() - 20, fixture.viewport().getHeight() - 4);
+    fixture.press({static_cast<float>(x), static_cast<float>(y)}, 1);
+    fixture.release({static_cast<float>(x), static_cast<float>(y)});
+    CHECK(fixture.area.selection() == std::pair{22u, 22u});
 }
 
 TEST_CASE("TextArea: Up and Down keep the caret's column", "[components][text-area]") {
-    Area f;
-    f.area.text("abcdefgh\nab\nabcdefgh");
-    f.focus();
-    f.area.selection(6, 6);
-    f.layout();
+    Area fixture;
+    fixture.area.text("abcdefgh\nab\nabcdefgh");
+    fixture.focus();
+    fixture.area.selection(6, 6);
+    fixture.layout();
 
-    f.key(Key::DOWN);
-    CHECK(f.area.caret() == 11); // The short line's end
-    f.key(Key::DOWN);
-    CHECK(f.area.caret() == 18); // Back in the column
-    f.key(Key::UP);
-    CHECK(f.area.caret() == 11);
-    f.key(Key::UP);
-    CHECK(f.area.caret() == 6);
+    fixture.key(Key::DOWN);
+    CHECK(fixture.area.caret() == 11); // The short line's end
+    fixture.key(Key::DOWN);
+    CHECK(fixture.area.caret() == 18); // Back in the column
+    fixture.key(Key::UP);
+    CHECK(fixture.area.caret() == 11);
+    fixture.key(Key::UP);
+    CHECK(fixture.area.caret() == 6);
 }
 
 TEST_CASE("TextArea: a new skin keeps the text, the selection and the caret in view", "[components][text-area][skin]") {
-    Area f;
-    f.typePastTheBottom();
-    const std::string text   = f.area.text();
-    const int         scroll = f.viewport().scrollY();
+    Area fixture;
+    fixture.typePastTheBottom();
+    const std::string text   = fixture.area.text();
+    const int         scroll = fixture.viewport().scrollY();
     REQUIRE(scroll < 0);
-    const Text *before = &f.view();
+    const Text *before = &fixture.view();
 
-    f.area.skin(std::make_shared<TextAreaSkinBase>());
-    f.layout();
-    REQUIRE(&f.view() != before);
-    CHECK(f.view().text() == text);
-    CHECK(f.view().multiline());
-    CHECK(f.view().caretVisible());
-    CHECK(f.view().selection() == f.area.selection());
-    CHECK(f.viewport().scrollY() == scroll);
-    CHECK(f.caretShows());
+    fixture.area.skin(std::make_shared<TextAreaSkinBase>());
+    fixture.layout();
+    REQUIRE(&fixture.view() != before);
+    CHECK(fixture.view().text() == text);
+    CHECK(fixture.view().multiline());
+    CHECK(fixture.view().caretVisible());
+    CHECK(fixture.view().selection() == fixture.area.selection());
+    CHECK(fixture.viewport().scrollY() == scroll);
+    CHECK(fixture.caretShows());
 
-    f.type("!");
-    CHECK(f.area.text() == text + "!");
+    fixture.type("!");
+    CHECK(fixture.area.text() == text + "!");
 }
 
 TEST_CASE("TextArea: the selection shows only while the field has the focus", "[components][text-area][skins]") {
-    Area f;
-    f.area.selection(0, 5);
-    f.layout();
-    CHECK(f.view().selection() == std::pair{0u, 5u});
-    CHECK(f.view().computedStyle().selectionBackgroundColor().alpha() == 0); // Pivotal hides it
+    Area fixture;
+    fixture.area.selection(0, 5);
+    fixture.layout();
+    CHECK(fixture.view().selection() == std::pair{0u, 5u});
+    CHECK(fixture.view().computedStyle().selectionBackgroundColor().alpha() == 0); // Pivotal hides it
 
-    f.focus();
-    CHECK(f.view().computedStyle().selectionBackgroundColor() == f.theme.palette.accentSoft);
+    fixture.focus();
+    CHECK(fixture.view().computedStyle().selectionBackgroundColor() == fixture.theme.palette.accentSoft);
 
-    f.window->requestFocus(nullptr);
-    f.layout();
-    CHECK(f.view().selection() == std::pair{0u, 5u}); // Kept, hidden
-    CHECK(f.view().computedStyle().selectionBackgroundColor().alpha() == 0);
+    fixture.window->requestFocus(nullptr);
+    fixture.layout();
+    CHECK(fixture.view().selection() == std::pair{0u, 5u}); // Kept, hidden
+    CHECK(fixture.view().computedStyle().selectionBackgroundColor().alpha() == 0);
 }

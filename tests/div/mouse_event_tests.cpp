@@ -57,21 +57,21 @@ namespace {
 }
 
 TEST_CASE("Mouse events: every signal gets the event in the div's own coordinates", "[div][events][mouse]") {
-    MouseFixture f;
+    MouseFixture fixture;
     std::vector<MouseEvent> entered{};
     std::vector<MouseEvent> moved{};
     std::vector<MouseEvent> pressed{};
     std::vector<MouseEvent> released{};
     std::vector<MouseEvent> changed{};
     std::vector<MouseEvent> clicked{};
-    f.box.onMouseEnter([&](const MouseEvent &e) { entered.push_back(e); })
-         .onMouseMove([&](const MouseEvent &e) { moved.push_back(e); })
-         .onMousePress([&](const MouseEvent &e) { pressed.push_back(e); })
-         .onMouseRelease([&](const MouseEvent &e) { released.push_back(e); })
-         .onMouseButtonChange([&](const MouseEvent &e) { changed.push_back(e); })
-         .onClick([&](const MouseEvent &e) { clicked.push_back(e); });
+    fixture.box.onMouseEnter([&](const MouseEvent &event) { entered.push_back(event); })
+         .onMouseMove([&](const MouseEvent &event) { moved.push_back(event); })
+         .onMousePress([&](const MouseEvent &event) { pressed.push_back(event); })
+         .onMouseRelease([&](const MouseEvent &event) { released.push_back(event); })
+         .onMouseButtonChange([&](const MouseEvent &event) { changed.push_back(event); })
+         .onClick([&](const MouseEvent &event) { clicked.push_back(event); });
 
-    f.window->handleMouseMove({.x = 70.5f, .y = 80.0f, .modifiers = {.shift = true}}, false);
+    fixture.window->handleMouseMove({.x = 70.5f, .y = 80.0f, .modifiers = {.shift = true}}, false);
     REQUIRE(entered.size() == 1);
     REQUIRE(moved.size() == 1);
     CHECK(moved[0].x == 50.5f);
@@ -85,7 +85,7 @@ TEST_CASE("Mouse events: every signal gets the event in the div's own coordinate
     CHECK(moved[0].source == InputMode::Pointer);
     CHECK(entered[0].x == 50.5f);
 
-    f.press(70.5f, 80.0f, MouseButton::LEFT, {.ctrl = true});
+    fixture.press(70.5f, 80.0f, MouseButton::LEFT, {.ctrl = true});
     REQUIRE(pressed.size() == 1);
     CHECK(pressed[0].x == 50.5f);
     CHECK(pressed[0].y == 50.0f);
@@ -97,15 +97,15 @@ TEST_CASE("Mouse events: every signal gets the event in the div's own coordinate
     CHECK(pressed[0].clickCount == 1);
 
     // A second button while the first is held
-    f.press(70.5f, 80.0f, MouseButton::RIGHT);
+    fixture.press(70.5f, 80.0f, MouseButton::RIGHT);
     REQUIRE(pressed.size() == 2);
     CHECK(pressed[1].button == MouseButton::RIGHT);
     CHECK(pressed[1].buttons == (left | right));
-    f.window->handleMouseMove({.x = 72.0f, .y = 80.0f}, false);
+    fixture.window->handleMouseMove({.x = 72.0f, .y = 80.0f}, false);
     CHECK(moved.back().buttons == (left | right));
     // Left first: a div's pressed state doesn't tell the buttons apart, any release ends it
-    f.release(72.0f, 80.0f, MouseButton::LEFT);
-    f.release(72.0f, 80.0f, MouseButton::RIGHT);
+    fixture.release(72.0f, 80.0f, MouseButton::LEFT);
+    fixture.release(72.0f, 80.0f, MouseButton::RIGHT);
 
     REQUIRE(released.size() == 2);
     CHECK(released[0].button == MouseButton::LEFT);
@@ -128,63 +128,63 @@ TEST_CASE("Mouse events: every signal gets the event in the div's own coordinate
 
     // The child gets its own coordinates, the window ones stay
     std::vector<MouseEvent> innerPressed{};
-    f.inner.onMousePress([&](const MouseEvent &e) { innerPressed.push_back(e); });
-    f.press(35.0f, 45.0f);
+    fixture.inner.onMousePress([&](const MouseEvent &event) { innerPressed.push_back(event); });
+    fixture.press(35.0f, 45.0f);
     REQUIRE(innerPressed.size() == 1);
     CHECK(innerPressed[0].x == 5.0f);
     CHECK(innerPressed[0].y == 5.0f);
     CHECK(innerPressed[0].windowX == 35.0f);
     CHECK(innerPressed[0].windowY == 45.0f);
-    f.release(35.0f, 45.0f);
+    fixture.release(35.0f, 45.0f);
 
     // Leaving
     std::vector<MouseEvent> exited{};
-    f.box.onMouseExit([&](const MouseEvent &e) { exited.push_back(e); });
-    f.window->handleMouseMove({.x = 300.0f, .y = 300.0f}, false);
+    fixture.box.onMouseExit([&](const MouseEvent &event) { exited.push_back(event); });
+    fixture.window->handleMouseMove({.x = 300.0f, .y = 300.0f}, false);
     REQUIRE(exited.size() == 1);
     CHECK(exited[0].windowX == 300.0f);
 }
 
 TEST_CASE("Mouse events: presses in a row count clicks", "[div][events][mouse]") {
-    MouseFixture f;
+    MouseFixture fixture;
     std::vector<unsigned> presses{};
     std::vector<unsigned> clicks{};
     std::vector<unsigned> doubleClicks{};
-    f.box.onMousePress([&](const MouseEvent &e) { presses.push_back(e.clickCount); })
-         .onClick([&](const MouseEvent &e) { clicks.push_back(e.clickCount); })
-         .onDoubleClick([&](const MouseEvent &e) { doubleClicks.push_back(e.clickCount); });
+    fixture.box.onMousePress([&](const MouseEvent &event) { presses.push_back(event.clickCount); })
+         .onClick([&](const MouseEvent &event) { clicks.push_back(event.clickCount); })
+         .onDoubleClick([&](const MouseEvent &event) { doubleClicks.push_back(event.clickCount); });
 
     for (int i = 0; i < 3; ++i) {
-        f.press(70.0f, 80.0f);
-        f.release(70.0f, 80.0f);
+        fixture.press(70.0f, 80.0f);
+        fixture.release(70.0f, 80.0f);
     }
     CHECK(presses == std::vector<unsigned>{1, 2, 3});
     CHECK(clicks == std::vector<unsigned>{1, 2, 3});
     CHECK(doubleClicks == std::vector<unsigned>{2, 3});
 
     // Another button starts over, and so does a press elsewhere
-    f.press(70.0f, 80.0f, MouseButton::RIGHT);
-    f.release(70.0f, 80.0f, MouseButton::RIGHT);
-    f.press(70.0f, 80.0f);
-    f.release(70.0f, 80.0f);
-    f.press(90.0f, 80.0f);
-    f.release(90.0f, 80.0f);
+    fixture.press(70.0f, 80.0f, MouseButton::RIGHT);
+    fixture.release(70.0f, 80.0f, MouseButton::RIGHT);
+    fixture.press(70.0f, 80.0f);
+    fixture.release(70.0f, 80.0f);
+    fixture.press(90.0f, 80.0f);
+    fixture.release(90.0f, 80.0f);
     CHECK(presses == std::vector<unsigned>{1, 2, 3, 1, 1, 1});
     CHECK(doubleClicks == std::vector<unsigned>{2, 3});
 
     // A backend's own count is kept
-    f.window->handleMouseButtonChange({.x = 90.0f, .y = 80.0f, .button = MouseButton::LEFT, .down = true, .clickCount = 2});
-    f.release(90.0f, 80.0f);
+    fixture.window->handleMouseButtonChange({.x = 90.0f, .y = 80.0f, .button = MouseButton::LEFT, .down = true, .clickCount = 2});
+    fixture.release(90.0f, 80.0f);
     CHECK(presses.back() == 2);
     CHECK(clicks.back() == 2);
     CHECK(doubleClicks == std::vector<unsigned>{2, 3, 2});
 }
 
 TEST_CASE("Mouse events: scrolls carry their modifiers", "[div][events][mouse]") {
-    MouseFixture f;
+    MouseFixture fixture;
     std::vector<MouseEvent> scrolls{};
-    f.box.onMouseScroll([&](const MouseEvent &e) { scrolls.push_back(e); });
-    f.window->handleMouseScroll({.x = 70.0f, .y = 80.0f, .modifiers = {.shift = true}, .scrollX = 0.5, .scrollY = -2.0});
+    fixture.box.onMouseScroll([&](const MouseEvent &event) { scrolls.push_back(event); });
+    fixture.window->handleMouseScroll({.x = 70.0f, .y = 80.0f, .modifiers = {.shift = true}, .scrollX = 0.5, .scrollY = -2.0});
     REQUIRE(scrolls.size() == 1);
     CHECK(scrolls[0].x == 50.0f);
     CHECK(scrolls[0].windowX == 70.0f);
@@ -196,18 +196,18 @@ TEST_CASE("Mouse events: scrolls carry their modifiers", "[div][events][mouse]")
 }
 
 TEST_CASE("Mouse events: touches report their source and count taps on the touch clock", "[div][events][mouse][touch]") {
-    MouseFixture f;
+    MouseFixture fixture;
     std::vector<MouseEvent> entered{};
     std::vector<MouseEvent> pressed{};
     std::vector<MouseEvent> clicked{};
     unsigned doubleTaps = 0;
-    f.box.onMouseEnter([&](const MouseEvent &e) { entered.push_back(e); })
-         .onMousePress([&](const MouseEvent &e) { pressed.push_back(e); })
-         .onClick([&](const MouseEvent &e) { clicked.push_back(e); })
+    fixture.box.onMouseEnter([&](const MouseEvent &event) { entered.push_back(event); })
+         .onMousePress([&](const MouseEvent &event) { pressed.push_back(event); })
+         .onClick([&](const MouseEvent &event) { clicked.push_back(event); })
          .onDoubleClick([&] { ++doubleTaps; });
 
-    f.window->handleTouchPress(70.0f, 80.0f, 1s);
-    f.window->handleTouchRelease(70.0f, 80.0f, 1s + 50ms);
+    fixture.window->handleTouchPress(70.0f, 80.0f, 1s);
+    fixture.window->handleTouchRelease(70.0f, 80.0f, 1s + 50ms);
     REQUIRE(pressed.size() == 1);
     CHECK(pressed[0].source == InputMode::Touch);
     CHECK(pressed[0].x == 50.0f);
@@ -219,28 +219,28 @@ TEST_CASE("Mouse events: touches report their source and count taps on the touch
     CHECK(clicked[0].source == InputMode::Touch);
 
     // A second tap soon after, a finger's width away, is a double tap
-    f.window->handleTouchPress(76.0f, 84.0f, 1s + 250ms);
-    f.window->handleTouchRelease(76.0f, 84.0f, 1s + 300ms);
+    fixture.window->handleTouchPress(76.0f, 84.0f, 1s + 250ms);
+    fixture.window->handleTouchRelease(76.0f, 84.0f, 1s + 300ms);
     REQUIRE(pressed.size() == 2);
     CHECK(pressed[1].clickCount == 2);
     CHECK(doubleTaps == 1);
 
     // Much later, by the touch clock, it starts over
-    f.window->handleTouchPress(76.0f, 84.0f, 5s);
-    f.window->handleTouchRelease(76.0f, 84.0f, 5s + 50ms);
+    fixture.window->handleTouchPress(76.0f, 84.0f, 5s);
+    fixture.window->handleTouchRelease(76.0f, 84.0f, 5s + 50ms);
     REQUIRE(pressed.size() == 3);
     CHECK(pressed[2].clickCount == 1);
     CHECK(doubleTaps == 1);
 }
 
 TEST_CASE("Context menus: a right press asks once, the deepest div that listens gets it", "[div][events][mouse][context-menu]") {
-    MouseFixture f;
+    MouseFixture fixture;
     std::vector<MouseEvent> innerRequests{};
     std::vector<MouseEvent> boxRequests{};
-    f.inner.onContextMenuRequest([&](const MouseEvent &e) { innerRequests.push_back(e); });
-    f.box.onContextMenuRequest([&](const MouseEvent &e) { boxRequests.push_back(e); });
+    fixture.inner.onContextMenuRequest([&](const MouseEvent &event) { innerRequests.push_back(event); });
+    fixture.box.onContextMenuRequest([&](const MouseEvent &event) { boxRequests.push_back(event); });
 
-    f.press(35.0f, 45.0f, MouseButton::RIGHT, {.shift = true});
+    fixture.press(35.0f, 45.0f, MouseButton::RIGHT, {.shift = true});
     REQUIRE(innerRequests.size() == 1);
     CHECK(innerRequests[0].x == 5.0f);
     CHECK(innerRequests[0].windowX == 35.0f);
@@ -248,55 +248,55 @@ TEST_CASE("Context menus: a right press asks once, the deepest div that listens 
     CHECK(innerRequests[0].modifiers.shift);
     CHECK(innerRequests[0].clickCount == 1);
     CHECK(innerRequests[0].source == InputMode::Pointer);
-    f.release(35.0f, 45.0f, MouseButton::RIGHT);
+    fixture.release(35.0f, 45.0f, MouseButton::RIGHT);
     CHECK(innerRequests.size() == 1); // Not again on the release
     CHECK(boxRequests.empty());
 
     // Outside the child, the box
-    f.press(100.0f, 100.0f, MouseButton::RIGHT);
-    f.release(100.0f, 100.0f, MouseButton::RIGHT);
+    fixture.press(100.0f, 100.0f, MouseButton::RIGHT);
+    fixture.release(100.0f, 100.0f, MouseButton::RIGHT);
     REQUIRE(boxRequests.size() == 1);
     CHECK(boxRequests[0].x == 80.0f);
 
     // Other buttons don't ask
-    f.press(35.0f, 45.0f);
-    f.release(35.0f, 45.0f);
-    f.press(35.0f, 45.0f, MouseButton::MIDDLE);
-    f.release(35.0f, 45.0f, MouseButton::MIDDLE);
+    fixture.press(35.0f, 45.0f);
+    fixture.release(35.0f, 45.0f);
+    fixture.press(35.0f, 45.0f, MouseButton::MIDDLE);
+    fixture.release(35.0f, 45.0f, MouseButton::MIDDLE);
     CHECK(innerRequests.size() == 1);
     CHECK(boxRequests.size() == 1);
 }
 
 TEST_CASE("Context menus: a touch long press asks once", "[div][events][mouse][context-menu][touch]") {
-    MouseFixture f;
+    MouseFixture fixture;
     std::vector<MouseEvent> requests{};
-    f.box.onContextMenuRequest([&](const MouseEvent &e) { requests.push_back(e); });
+    fixture.box.onContextMenuRequest([&](const MouseEvent &event) { requests.push_back(event); });
 
-    f.window->handleTouchPress(70.0f, 80.0f, 1s);
-    f.window->updateGestures(1s + 600ms);
-    f.window->updateGestures(1s + 700ms);
+    fixture.window->handleTouchPress(70.0f, 80.0f, 1s);
+    fixture.window->updateGestures(1s + 600ms);
+    fixture.window->updateGestures(1s + 700ms);
     REQUIRE(requests.size() == 1);
     CHECK(requests[0].source == InputMode::Touch);
     CHECK(requests[0].button == MouseButton::RIGHT);
     CHECK(requests[0].x == 50.0f);
-    f.window->handleTouchRelease(70.0f, 80.0f, 2s);
+    fixture.window->handleTouchRelease(70.0f, 80.0f, 2s);
     CHECK(requests.size() == 1);
 
     // Lifting before the delay is a tap, which doesn't ask
-    f.window->handleTouchPress(70.0f, 80.0f, 3s);
-    f.window->handleTouchRelease(70.0f, 80.0f, 3s + 100ms);
+    fixture.window->handleTouchPress(70.0f, 80.0f, 3s);
+    fixture.window->handleTouchRelease(70.0f, 80.0f, 3s + 100ms);
     CHECK(requests.size() == 1);
 }
 
 TEST_CASE("Context menus: the Menu key and Shift+F10 ask at the focused div's center", "[div][events][context-menu][keyboard]") {
-    MouseFixture f;
+    MouseFixture fixture;
     std::vector<MouseEvent> requests{};
     int                     keys = 0;
-    f.inner.onContextMenuRequest([&](const MouseEvent &e) { requests.push_back(e); })
+    fixture.inner.onContextMenuRequest([&](const MouseEvent &event) { requests.push_back(event); })
            .onKeyPress([&] { ++keys; });
-    f.window->requestFocus(&f.inner);
+    fixture.window->requestFocus(&fixture.inner);
 
-    f.key(Key::MENU);
+    fixture.key(Key::MENU);
     REQUIRE(requests.size() == 1);
     CHECK(requests[0].x == 10.0f);
     CHECK(requests[0].y == 10.0f);
@@ -306,24 +306,24 @@ TEST_CASE("Context menus: the Menu key and Shift+F10 ask at the focused div's ce
     CHECK(requests[0].clickCount == 0); // Not made by a press
     CHECK(keys == 0); // Taken by the request
 
-    f.key(Key::F10, {.shift = true});
+    fixture.key(Key::F10, {.shift = true});
     CHECK(requests.size() == 2);
 
     // Not with other modifiers, nor F10 alone: those are keys like the others
-    f.key(Key::F10);
-    f.key(Key::MENU, {.ctrl = true});
-    f.key(Key::F10, {.shift = true, .alt = true});
+    fixture.key(Key::F10);
+    fixture.key(Key::MENU, {.ctrl = true});
+    fixture.key(Key::F10, {.shift = true, .alt = true});
     CHECK(requests.size() == 2);
     CHECK(keys == 3);
 
     // An ancestor that listens gets it at the focused div's center, in its own coordinates
     std::vector<MouseEvent> boxRequests{};
-    f.box.onContextMenuRequest([&](const MouseEvent &e) { boxRequests.push_back(e); });
-    auto &plain = f.box.add<Div>();
+    fixture.box.onContextMenuRequest([&](const MouseEvent &event) { boxRequests.push_back(event); });
+    auto &plain = fixture.box.add<Div>();
     plain.position(Position::Absolute).left(50).top(50).width(40).height(20);
-    f.systemWindow.layout();
-    f.window->requestFocus(&plain);
-    f.key(Key::MENU);
+    fixture.systemWindow.layout();
+    fixture.window->requestFocus(&plain);
+    fixture.key(Key::MENU);
     REQUIRE(boxRequests.size() == 1);
     CHECK(boxRequests[0].x == 70.0f);
     CHECK(boxRequests[0].y == 60.0f);
@@ -331,19 +331,19 @@ TEST_CASE("Context menus: the Menu key and Shift+F10 ask at the focused div's ce
     CHECK(requests.size() == 2);
 
     // Nothing listening: the key goes on as a key
-    f.window->requestFocus(nullptr);
-    CHECK_FALSE(f.window->handleKeyPress(Key::MENU, {}));
+    fixture.window->requestFocus(nullptr);
+    CHECK_FALSE(fixture.window->handleKeyPress(Key::MENU, {}));
 }
 
 TEST_CASE("Mouse events: a button clicked from the keyboard clicks at its center", "[div][events][keyboard]") {
-    MouseFixture f;
+    MouseFixture fixture;
     std::vector<MouseEvent> clicks{};
-    auto &button = f.box.add<Button>("Go");
+    auto &button = fixture.box.add<Button>("Go");
     button.position(Position::Absolute).left(50).top(40).width(40).height(20);
-    button.onClick([&](const MouseEvent &e) { clicks.push_back(e); });
-    f.systemWindow.layout();
-    f.window->requestFocus(&button);
-    f.key(Key::ENTER);
+    button.onClick([&](const MouseEvent &event) { clicks.push_back(event); });
+    fixture.systemWindow.layout();
+    fixture.window->requestFocus(&button);
+    fixture.key(Key::ENTER);
     REQUIRE(clicks.size() == 1);
     CHECK(clicks[0].x == 20.0f);
     CHECK(clicks[0].windowX == 90.0f);

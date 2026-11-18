@@ -47,81 +47,81 @@ namespace {
             window->handleMouseButtonChange({.x = x, .y = y, .button = b, .down = false});
             layout();
         }
-        void click(const Div &d) {
-            auto [x, y] = center(d);
+        void click(const Div &div) {
+            auto [x, y] = center(div);
             press(x, y);
             release(x, y);
         }
-        void key(Key k, Mod m = Mod{}) { window->handleKeyPress(k, m); layout(); }
+        void key(Key k, Mod mod = Mod{}) { window->handleKeyPress(k, mod); layout(); }
     };
 }
 
 // M1: the press's keepAlive ends, and _focusPath still holds the item the blur handler detached
 TEST_CASE("M1: a blur handler detaches the div the press focuses", "[.][asan]") {
-    F     f;
-    auto &field = f.window->appContainer().add<Div>().size(100, 20).focusEnabled(true);
-    auto &list  = f.window->appContainer().add<Div>().size(200, 200);
+    F     fixture;
+    auto &field = fixture.window->appContainer().add<Div>().size(100, 20).focusEnabled(true);
+    auto &list  = fixture.window->appContainer().add<Div>().size(200, 200);
     list.add<Div>().size(200, 50);
-    f.layout();
-    f.window->requestFocus(&field);
+    fixture.layout();
+    fixture.window->requestFocus(&field);
     field.onBlur([&] { list.removeAll(); });
-    f.press(50, 40); // the item: field is 0..20, list 20..220
-    f.release(50, 40);
-    f.key(Key::A); // walks _focusPath
+    fixture.press(50, 40); // the item: field is 0..20, list 20..220
+    fixture.release(50, 40);
+    fixture.key(Key::A); // walks _focusPath
 }
 
 // M2: requestFocus from a focused handler frees the path vector being iterated
 TEST_CASE("M2: a focused handler on an ancestor redirects the focus", "[.][asan]") {
-    F     f;
-    auto &group = f.window->appContainer().add<Div>();
+    F     fixture;
+    auto &group = fixture.window->appContainer().add<Div>();
     auto &inner = group.add<Div>().focusEnabled(true);
-    auto &other = f.window->appContainer().add<Div>().focusEnabled(true);
-    f.layout();
+    auto &other = fixture.window->appContainer().add<Div>().focusEnabled(true);
+    fixture.layout();
     bool once = false;
     group.onFocus([&] {
         if (!once) {
             once = true;
-            f.window->requestFocus(&other);
+            fixture.window->requestFocus(&other);
         }
     });
-    f.window->requestFocus(&inner); // the outer loop goes on to `inner` over the freed vector
-    CHECK(f.window->focusedDiv() == &other);
+    fixture.window->requestFocus(&inner); // the outer loop goes on to `inner` over the freed vector
+    CHECK(fixture.window->focusedDiv() == &other);
 }
 
 // M2: an ancestor's blurred handler that moves the focus recurses until the stack overflows
 TEST_CASE("M2: a blurred handler on an ancestor moves the focus", "[.][asan]") {
-    F     f;
-    auto &group = f.window->appContainer().add<Div>().size(200, 200);
-    auto &a     = group.add<Div>().size(50, 50).focusEnabled(true);
-    auto &b     = f.window->appContainer().add<Div>().size(50, 50).focusEnabled(true);
-    auto &c     = f.window->appContainer().add<Div>().size(50, 50).focusEnabled(true);
-    f.layout();
-    f.window->requestFocus(&a);
-    group.onBlur([&] { f.window->requestFocus(&c); });
-    f.window->requestFocus(&b);
-    CHECK(f.window->focusedDiv() == &c);
+    F     fixture;
+    auto &group = fixture.window->appContainer().add<Div>().size(200, 200);
+    auto &divA  = group.add<Div>().size(50, 50).focusEnabled(true);
+    auto &divB  = fixture.window->appContainer().add<Div>().size(50, 50).focusEnabled(true);
+    auto &divC  = fixture.window->appContainer().add<Div>().size(50, 50).focusEnabled(true);
+    fixture.layout();
+    fixture.window->requestFocus(&divA);
+    group.onBlur([&] { fixture.window->requestFocus(&divC); });
+    fixture.window->requestFocus(&divB);
+    CHECK(fixture.window->focusedDiv() == &divC);
 }
 
 // M5: Menu.cpp's check branch runs the item's callback in place, and closing the menu destroys it while it runs
 TEST_CASE("M5: a check item's callback closes the menu", "[.][asan]") {
-    F           f;
+    F           fixture;
     const std::string payload(200, 'x');
     std::size_t seen = 0;
-    Window     *w    = f.window.get();
+    Window     *w    = fixture.window.get();
     w->openMenu({Menu::check("Toggle", false, [w, payload, &seen](bool) {
                     w->closeMenu();
                     seen = payload.size(); // a capture of the destroyed std::function
                 })},
                 10, 10);
-    f.layout();
-    f.key(Key::DOWN);
-    f.key(Key::ENTER);
+    fixture.layout();
+    fixture.key(Key::DOWN);
+    fixture.key(Key::ENTER);
     CHECK(seen == 200);
 }
 
 // M6: ~Div doesn't clear its children's _parent
 TEST_CASE("M6: a child outlives its parent", "[.][asan]") {
-    const F f;
+    const F fixture;
     auto child = std::make_shared<Div>();
     {
         // Allocated apart from its control block (not make_shared), so that ASan sees its memory freed
@@ -129,23 +129,23 @@ TEST_CASE("M6: a child outlives its parent", "[.][asan]") {
         parent->add(child);
     }
     CHECK(child->window() == nullptr); // walks the dangling _parent
-    f.window->appContainer().add(child);
+    fixture.window->appContainer().add(child);
 }
 
 // M8: removed() fires only on the moved TreeNode, so the first tree keeps the row as its selection, and reaches it
 // after it is freed
 TEST_CASE("M8: a selected row moved to another tree, then freed", "[.][asan]") {
-    const F f;
-    auto &tree1 = f.window->appContainer().add<Tree>();
-    auto &tree2 = f.window->appContainer().add<Tree>();
+    const F fixture;
+    auto &tree1 = fixture.window->appContainer().add<Tree>();
+    auto &tree2 = fixture.window->appContainer().add<Tree>();
     auto  keep  = std::shared_ptr<TreeNode>(std::make_unique<TreeNode>("a")); // Apart, as above
     tree1.add(keep);
     tree1.node("b");
-    f.layout();
+    fixture.layout();
     tree1.select(0);
     keep->parent()->remove(*keep);
     tree2.add(keep);
-    f.layout();
+    fixture.layout();
     tree2.removeAll();
     keep.reset();    // frees the row tree1 still holds as its selection
     tree1.select(1); // deselects the freed row
@@ -153,132 +153,132 @@ TEST_CASE("M8: a selected row moved to another tree, then freed", "[.][asan]") {
 
 // M9: Tabs::_selected is null until something is selected, and the first render dereferences it
 TEST_CASE("M9: a TabContainer renders before anything is selected", "[.][asan]") {
-    const F f;
-    f.window->appContainer().add<TabContainer<std::string>>(
+    const F fixture;
+    fixture.window->appContainer().add<TabContainer<std::string>>(
         std::vector<std::string>{"a", "b"},
         [](const std::string &s) { return s; },
         [](const std::string &) { return std::make_shared<Div>(); }
     );
-    f.layout(); // DataContainer builds its tabs while rendering
+    fixture.layout(); // DataContainer builds its tabs while rendering
 }
 
 // M3 and M4, from the review's stress cases: a handler removes what is dispatching the key, and the component or
 // its row touches itself after the emit
 
 TEST_CASE("M4: delete rows during selectionChanged", "[.][asan]") {
-    F f;
-    auto &list = f.window->appContainer().add<List>();
-    auto &a    = list.row("a");
-    auto &b    = list.row("b");
-    auto &c    = list.row("c");
-    (void) c;
-    f.layout();
+    F fixture;
+    auto &list = fixture.window->appContainer().add<List>();
+    auto &rowA = list.row("a");
+    auto &rowB = list.row("b");
+    auto &rowC = list.row("c");
+    (void) rowC;
+    fixture.layout();
     list.onSelectionChange([&list](ListRow *row) {
         if (row) {
             list.remove(*row);
         }
     });
-    f.click(a);
-    f.layout();
-    f.click(b);
-    f.key(Key::DOWN);
-    f.key(Key::UP);
-    f.key(Key::HOME);
-    f.key(Key::END);
-    f.layout();
+    fixture.click(rowA);
+    fixture.layout();
+    fixture.click(rowB);
+    fixture.key(Key::DOWN);
+    fixture.key(Key::UP);
+    fixture.key(Key::HOME);
+    fixture.key(Key::END);
+    fixture.layout();
 }
 
 TEST_CASE("M4: clear all rows during selectionChanged, then keys", "[.][asan]") {
-    F f;
-    auto &list = f.window->appContainer().add<List>();
+    F fixture;
+    auto &list = fixture.window->appContainer().add<List>();
     for (int i = 0; i < 5; ++i) {
         list.row("r" + std::to_string(i));
     }
-    f.layout();
+    fixture.layout();
     list.onSelectionChange([&list](ListRow *) { list.removeAll(); });
-    f.key(Key::TAB);
-    f.key(Key::DOWN);
-    f.key(Key::DOWN);
-    f.key(Key::SPACE);
-    f.layout();
+    fixture.key(Key::TAB);
+    fixture.key(Key::DOWN);
+    fixture.key(Key::DOWN);
+    fixture.key(Key::SPACE);
+    fixture.layout();
 }
 
 TEST_CASE("M3: text input removes itself on change while typing", "[.][asan]") {
-    F f;
-    auto &parent = f.window->appContainer().add<Div>();
+    F fixture;
+    auto &parent = fixture.window->appContainer().add<Div>();
     auto &t      = parent.add<TextInput>("");
-    f.layout();
-    f.click(t);
+    fixture.layout();
+    fixture.click(t);
     t.onChange([&parent, &t]() {
         if (t.parent()) {
             parent.remove(t);
         }
     });
-    f.window->handleType("a");
-    f.window->handleType("b");
-    f.key(Key::BACKSPACE);
-    f.layout();
+    fixture.window->handleType("a");
+    fixture.window->handleType("b");
+    fixture.key(Key::BACKSPACE);
+    fixture.layout();
 }
 
 TEST_CASE("M4: sidebar removes the item on change (keys)", "[.][asan]") {
-    F f;
-    auto &sb  = f.window->appContainer().add<Sidebar>();
-    auto &sec = sb.section("S");
+    F fixture;
+    auto &sidebar = fixture.window->appContainer().add<Sidebar>();
+    auto &sec     = sidebar.section("S");
     sec.item("a");
     sec.item("b");
     sec.item("c");
-    f.layout();
-    sb.onChange([](SidebarItem *item) {
+    fixture.layout();
+    sidebar.onChange([](SidebarItem *item) {
         if (item && item->parent()) {
             item->parent()->remove(*item);
         }
     });
-    f.key(Key::TAB);
-    f.key(Key::DOWN);
-    f.key(Key::ENTER);
-    f.key(Key::DOWN);
-    f.key(Key::SPACE);
-    f.layout();
-    f.key(Key::TAB);
+    fixture.key(Key::TAB);
+    fixture.key(Key::DOWN);
+    fixture.key(Key::ENTER);
+    fixture.key(Key::DOWN);
+    fixture.key(Key::SPACE);
+    fixture.layout();
+    fixture.key(Key::TAB);
 }
 
 TEST_CASE("M4: tree removes the selected node on selection change (keys)", "[.][asan]") {
-    F f;
-    auto &tree = f.window->appContainer().add<Tree>();
+    F fixture;
+    auto &tree = fixture.window->appContainer().add<Tree>();
     auto &a    = tree.node("a");
     a.node("a1");
     a.node("a2");
     tree.node("b");
     a.expanded(true);
-    f.layout();
+    fixture.layout();
     tree.onSelectionChange([](TreeNode *n) {
         if (n && n->parent()) {
             n->parent()->remove(*n);
         }
     });
-    f.key(Key::TAB);
-    f.key(Key::DOWN);
-    f.key(Key::DOWN);
-    f.key(Key::RIGHT);
-    f.key(Key::LEFT);
-    f.layout();
+    fixture.key(Key::TAB);
+    fixture.key(Key::DOWN);
+    fixture.key(Key::DOWN);
+    fixture.key(Key::RIGHT);
+    fixture.key(Key::LEFT);
+    fixture.layout();
 }
 
 TEST_CASE("M3: list removes itself on selection change (keys)", "[.][asan]") {
-    F f;
-    auto &parent = f.window->appContainer().add<Div>();
+    F fixture;
+    auto &parent = fixture.window->appContainer().add<Div>();
     auto &list   = parent.add<List>();
     list.row("a");
     list.row("b");
-    f.layout();
+    fixture.layout();
     list.onSelectionChange([&parent, &list](ListRow *) {
         if (list.parent()) {
             parent.remove(list);
         }
     });
-    f.key(Key::TAB);
-    f.key(Key::DOWN);
-    f.layout();
+    fixture.key(Key::TAB);
+    fixture.key(Key::DOWN);
+    fixture.layout();
 }
 
 namespace {
@@ -287,21 +287,21 @@ namespace {
      */
     template<class T, class... Args>
     void removeItselfOnChange(const std::vector<Key> &keys, Args &&...args) {
-        F f;
-        auto &parent = f.window->appContainer().add<Div>();
+        F fixture;
+        auto &parent = fixture.window->appContainer().add<Div>();
         auto &w      = parent.add<T>(std::forward<Args>(args)...);
-        f.layout();
+        fixture.layout();
         w.onChange([&parent, &w]() {
             if (w.parent()) {
                 parent.remove(w);
             }
         });
-        f.key(Key::TAB);
+        fixture.key(Key::TAB);
         for (const Key k: keys) {
-            f.key(k);
+            fixture.key(k);
         }
-        f.layout();
-        f.key(Key::TAB);
+        fixture.layout();
+        fixture.key(Key::TAB);
     }
 }
 

@@ -132,92 +132,92 @@ namespace {
 }
 
 TEST_CASE("Touch: a tap clicks once where the finger landed", "[backend][touch]") {
-    TouchFixture f;
-    f.window->handleTouchPress(20.5f, 30.5f, 1s);
-    CHECK(f.window->inputMode() == InputMode::Touch);
-    CHECK(f.presses == 0); // Could still become a drag, a pan or a long press
-    f.window->handleTouchMove(23.0f, 32.0f, 1s + 50ms); // Within the slop
-    f.window->handleTouchRelease(23.0f, 32.0f, 1s + 100ms);
-    CHECK(f.presses == 1);
+    TouchFixture fixture;
+    fixture.window->handleTouchPress(20.5f, 30.5f, 1s);
+    CHECK(fixture.window->inputMode() == InputMode::Touch);
+    CHECK(fixture.presses == 0); // Could still become a drag, a pan or a long press
+    fixture.window->handleTouchMove(23.0f, 32.0f, 1s + 50ms); // Within the slop
+    fixture.window->handleTouchRelease(23.0f, 32.0f, 1s + 100ms);
+    CHECK(fixture.presses == 1);
     int originX = 0;
     int originY = 0;
-    f.target.localToGlobal(originX, originY);
-    CHECK(f.pressX == 20 - originX);
-    CHECK(f.pressY == 30 - originY);
-    CHECK(f.releases == 1);
-    CHECK(f.clicks == 1);
-    CHECK(f.buttons == std::vector{MouseButton::LEFT});
-    CHECK_FALSE(f.target.mouseOver()); // No hover left behind
+    fixture.target.localToGlobal(originX, originY);
+    CHECK(fixture.pressX == 20 - originX);
+    CHECK(fixture.pressY == 30 - originY);
+    CHECK(fixture.releases == 1);
+    CHECK(fixture.clicks == 1);
+    CHECK(fixture.buttons == std::vector{MouseButton::LEFT});
+    CHECK_FALSE(fixture.target.mouseOver()); // No hover left behind
 }
 
 TEST_CASE("Touch: a drag starts past the slop, from where the finger landed", "[backend][touch]") {
-    const TouchFixture f;
-    f.window->handleTouchPress(20.0f, 20.0f, 1s);
-    f.window->handleTouchMove(25.0f, 20.0f, 1s + 10ms);
-    CHECK(f.presses == 0);
-    const int movesBefore = f.moves;
-    f.window->handleTouchMove(40.0f, 20.0f, 1s + 20ms);
-    CHECK(f.presses == 1);
-    CHECK(f.pressX < 20); // Where it landed, in the div
-    CHECK(f.moves > movesBefore);
-    f.window->handleTouchMove(150.0f, 20.0f, 1s + 30ms); // Outside: the drag goes on
-    f.window->handleTouchRelease(150.0f, 20.0f, 1s + 40ms);
-    CHECK(f.releases == 1);
-    CHECK(f.clicks == 0); // Released outside
+    const TouchFixture fixture;
+    fixture.window->handleTouchPress(20.0f, 20.0f, 1s);
+    fixture.window->handleTouchMove(25.0f, 20.0f, 1s + 10ms);
+    CHECK(fixture.presses == 0);
+    const int movesBefore = fixture.moves;
+    fixture.window->handleTouchMove(40.0f, 20.0f, 1s + 20ms);
+    CHECK(fixture.presses == 1);
+    CHECK(fixture.pressX < 20); // Where it landed, in the div
+    CHECK(fixture.moves > movesBefore);
+    fixture.window->handleTouchMove(150.0f, 20.0f, 1s + 30ms); // Outside: the drag goes on
+    fixture.window->handleTouchRelease(150.0f, 20.0f, 1s + 40ms);
+    CHECK(fixture.releases == 1);
+    CHECK(fixture.clicks == 0); // Released outside
 }
 
 TEST_CASE("Touch: a long press is a right button press", "[backend][touch]") {
-    TouchFixture f;
-    f.window->handleTouchPress(20.0f, 20.0f, 1s);
-    f.window->updateGestures(1s + 499ms);
-    CHECK(f.presses == 0);
-    f.window->updateGestures(1s + 500ms);
-    CHECK(f.presses == 1);
-    CHECK(f.buttons == std::vector{MouseButton::RIGHT});
-    CHECK(f.releases == 0); // Until the finger lifts
-    f.window->handleTouchRelease(20.0f, 20.0f, 2s);
-    CHECK(f.releases == 1);
-    CHECK(f.buttons == std::vector{MouseButton::RIGHT}); // No tap after it
-    CHECK(f.clicks == 0); // Only the left button clicks
+    TouchFixture fixture;
+    fixture.window->handleTouchPress(20.0f, 20.0f, 1s);
+    fixture.window->updateGestures(1s + 499ms);
+    CHECK(fixture.presses == 0);
+    fixture.window->updateGestures(1s + 500ms);
+    CHECK(fixture.presses == 1);
+    CHECK(fixture.buttons == std::vector{MouseButton::RIGHT});
+    CHECK(fixture.releases == 0); // Until the finger lifts
+    fixture.window->handleTouchRelease(20.0f, 20.0f, 2s);
+    CHECK(fixture.releases == 1);
+    CHECK(fixture.buttons == std::vector{MouseButton::RIGHT}); // No tap after it
+    CHECK(fixture.clicks == 0); // Only the left button clicks
 }
 
 TEST_CASE("Touch: a long press is also noticed when the finger lifts", "[backend][touch]") {
-    TouchFixture f;
-    f.window->handleTouchPress(20.0f, 20.0f, 1s);
-    f.window->handleTouchRelease(20.0f, 20.0f, 2s); // No frame in between
-    CHECK(f.buttons == std::vector{MouseButton::RIGHT});
-    CHECK(f.releases == 1);
-    CHECK(f.clicks == 0);
+    TouchFixture fixture;
+    fixture.window->handleTouchPress(20.0f, 20.0f, 1s);
+    fixture.window->handleTouchRelease(20.0f, 20.0f, 2s); // No frame in between
+    CHECK(fixture.buttons == std::vector{MouseButton::RIGHT});
+    CHECK(fixture.releases == 1);
+    CHECK(fixture.clicks == 0);
 }
 
 TEST_CASE("Touch: a cancelled drag releases without clicking", "[backend][touch]") {
-    const TouchFixture f;
-    f.window->handleTouchPress(20.0f, 20.0f, 1s);
-    f.window->handleTouchMove(40.0f, 20.0f, 1s + 10ms);
-    f.window->handleTouchMove(30.0f, 20.0f, 1s + 20ms);
-    f.window->handleTouchCancel(1s + 30ms);
-    CHECK(f.presses == 1);
-    CHECK(f.releases == 1);
-    CHECK(f.clicks == 0);
+    const TouchFixture fixture;
+    fixture.window->handleTouchPress(20.0f, 20.0f, 1s);
+    fixture.window->handleTouchMove(40.0f, 20.0f, 1s + 10ms);
+    fixture.window->handleTouchMove(30.0f, 20.0f, 1s + 20ms);
+    fixture.window->handleTouchCancel(1s + 30ms);
+    CHECK(fixture.presses == 1);
+    CHECK(fixture.releases == 1);
+    CHECK(fixture.clicks == 0);
 }
 
 TEST_CASE("Touch: a finger drag pans, kinetic scrolling decelerates and a touch stops it", "[backend][touch][scroll]") {
-    ScrollFixture f;
-    REQUIRE(f.viewport.contentHeight() == 1000);
+    ScrollFixture fixture;
+    REQUIRE(fixture.viewport.contentHeight() == 1000);
 
-    f.swipeUp();
-    CHECK(f.viewport.scrollY() == -60); // The content followed the finger
-    CHECK(f.contentPresses == 0);       // A pan presses nothing
-    REQUIRE(f.window->flinging());
+    fixture.swipeUp();
+    CHECK(fixture.viewport.scrollY() == -60); // The content followed the finger
+    CHECK(fixture.contentPresses == 0);       // A pan presses nothing
+    REQUIRE(fixture.window->flinging());
 
     // Every frame moves less than the one before
     std::vector<int> steps{};
-    int              last = f.viewport.scrollY();
+    int              last = fixture.viewport.scrollY();
     for (int frame = 0; frame < 5; ++frame) {
-        f.time += 16ms;
-        f.window->updateGestures(f.time);
-        steps.push_back(last - f.viewport.scrollY());
-        last = f.viewport.scrollY();
+        fixture.time += 16ms;
+        fixture.window->updateGestures(fixture.time);
+        steps.push_back(last - fixture.viewport.scrollY());
+        last = fixture.viewport.scrollY();
     }
     CHECK(steps.front() > 0);
     CHECK(steps.front() <= 16); // About 1000 px/s
@@ -227,61 +227,61 @@ TEST_CASE("Touch: a finger drag pans, kinetic scrolling decelerates and a touch 
     }
 
     // A finger stops it, and isn't a tap
-    f.window->handleTouchPress(50.0f, 50.0f, f.time);
-    CHECK_FALSE(f.window->flinging());
-    const int stopped = f.viewport.scrollY();
-    f.time += 16ms;
-    f.window->updateGestures(f.time);
-    f.window->handleTouchRelease(50.0f, 50.0f, f.time);
-    CHECK(f.viewport.scrollY() == stopped);
-    CHECK(f.contentPresses == 0);
+    fixture.window->handleTouchPress(50.0f, 50.0f, fixture.time);
+    CHECK_FALSE(fixture.window->flinging());
+    const int stopped = fixture.viewport.scrollY();
+    fixture.time += 16ms;
+    fixture.window->updateGestures(fixture.time);
+    fixture.window->handleTouchRelease(50.0f, 50.0f, fixture.time);
+    CHECK(fixture.viewport.scrollY() == stopped);
+    CHECK(fixture.contentPresses == 0);
 }
 
 TEST_CASE("Touch: kinetic scrolling stops by itself", "[backend][touch][scroll]") {
-    ScrollFixture f(100000.0f);
-    f.swipeUp();
-    REQUIRE(f.window->flinging());
+    ScrollFixture fixture(100000.0f);
+    fixture.swipeUp();
+    REQUIRE(fixture.window->flinging());
     int frames = 0;
-    while (f.window->flinging() && frames < 1000) {
-        f.time += 16ms;
-        f.window->updateGestures(f.time);
+    while (fixture.window->flinging() && frames < 1000) {
+        fixture.time += 16ms;
+        fixture.window->updateGestures(fixture.time);
         ++frames;
     }
-    CHECK_FALSE(f.window->flinging());
+    CHECK_FALSE(fixture.window->flinging());
     CHECK(frames < 300); // A few seconds
     // About v0 / rate (1000 px/s over -ln(0.998) * 1000 per second: 500 px), after the 60 px panned
-    CHECK(f.viewport.scrollY() < -400);
-    CHECK(f.viewport.scrollY() > -600);
+    CHECK(fixture.viewport.scrollY() < -400);
+    CHECK(fixture.viewport.scrollY() > -600);
 }
 
 TEST_CASE("Touch: kinetic scrolling stops at the end of the content", "[backend][touch][scroll]") {
-    ScrollFixture f(200.0f);
-    f.swipeUp();
-    REQUIRE(f.window->flinging());
-    for (int frame = 0; frame < 20 && f.window->flinging(); ++frame) {
-        f.time += 16ms;
-        f.window->updateGestures(f.time);
+    ScrollFixture fixture(200.0f);
+    fixture.swipeUp();
+    REQUIRE(fixture.window->flinging());
+    for (int frame = 0; frame < 20 && fixture.window->flinging(); ++frame) {
+        fixture.time += 16ms;
+        fixture.window->updateGestures(fixture.time);
     }
-    CHECK_FALSE(f.window->flinging());
-    CHECK(f.viewport.scrollY() == -100);
+    CHECK_FALSE(fixture.window->flinging());
+    CHECK(fixture.viewport.scrollY() == -100);
 }
 
 TEST_CASE("Touch: a pan that rests before lifting doesn't fling", "[backend][touch][scroll]") {
-    const ScrollFixture f;
-    f.window->handleTouchPress(50.0f, 90.0f, 1s);
-    f.window->handleTouchMove(50.0f, 60.0f, 1s + 30ms);
-    f.window->handleTouchRelease(50.0f, 60.0f, 1s + 300ms);
-    CHECK(f.viewport.scrollY() == -30);
-    CHECK_FALSE(f.window->flinging());
+    const ScrollFixture fixture;
+    fixture.window->handleTouchPress(50.0f, 90.0f, 1s);
+    fixture.window->handleTouchMove(50.0f, 60.0f, 1s + 30ms);
+    fixture.window->handleTouchRelease(50.0f, 60.0f, 1s + 300ms);
+    CHECK(fixture.viewport.scrollY() == -30);
+    CHECK_FALSE(fixture.window->flinging());
 }
 
 TEST_CASE("Touch: a drag across a vertical scroller drags what is under the finger", "[backend][touch][scroll]") {
-    const ScrollFixture f;
-    f.window->handleTouchPress(50.0f, 50.0f, 1s);
-    f.window->handleTouchMove(80.0f, 52.0f, 1s + 20ms); // Mostly horizontal: nothing scrolls that way
-    CHECK(f.contentPresses == 1);
-    CHECK(f.viewport.scrollY() == 0);
-    f.window->handleTouchRelease(80.0f, 52.0f, 1s + 40ms);
+    const ScrollFixture fixture;
+    fixture.window->handleTouchPress(50.0f, 50.0f, 1s);
+    fixture.window->handleTouchMove(80.0f, 52.0f, 1s + 20ms); // Mostly horizontal: nothing scrolls that way
+    CHECK(fixture.contentPresses == 1);
+    CHECK(fixture.viewport.scrollY() == 0);
+    fixture.window->handleTouchRelease(80.0f, 52.0f, 1s + 40ms);
 }
 
 namespace {
@@ -321,57 +321,57 @@ namespace {
 }
 
 TEST_CASE("Hit slop: a press near a div reaches it", "[backend][touch][hitslop]") {
-    SlopFixture f;
-    f.click(12, 12);
-    CHECK(f.aClicks == 1);
-    f.click(-6, 12); // Left of it
-    CHECK(f.aClicks == 2);
-    f.click(12, -9); // Above it
-    CHECK(f.aClicks == 3);
-    f.click(-12, 12); // Too far
-    f.click(12, 40);
-    CHECK(f.aClicks == 3);
-    CHECK(f.bClicks == 0);
+    SlopFixture fixture;
+    fixture.click(12, 12);
+    CHECK(fixture.aClicks == 1);
+    fixture.click(-6, 12); // Left of it
+    CHECK(fixture.aClicks == 2);
+    fixture.click(12, -9); // Above it
+    CHECK(fixture.aClicks == 3);
+    fixture.click(-12, 12); // Too far
+    fixture.click(12, 40);
+    CHECK(fixture.aClicks == 3);
+    CHECK(fixture.bClicks == 0);
 }
 
 TEST_CASE("Hit slop: between two divs, the nearest center wins", "[backend][touch][hitslop]") {
-    SlopFixture f;
+    SlopFixture fixture;
     // a spans 0-24, b 32-56: centers at 12 and 44
-    f.click(27, 12);
-    CHECK(f.aClicks == 1);
-    f.click(29, 12);
-    CHECK(f.bClicks == 1);
-    f.click(27, 30); // Below the gap, still nearer a
-    CHECK(f.aClicks == 2);
+    fixture.click(27, 12);
+    CHECK(fixture.aClicks == 1);
+    fixture.click(29, 12);
+    CHECK(fixture.bClicks == 1);
+    fixture.click(27, 30); // Below the gap, still nearer a
+    CHECK(fixture.aClicks == 2);
 }
 
 TEST_CASE("Hit slop: what takes presses keeps them", "[backend][touch][hitslop]") {
-    SlopFixture f;
+    SlopFixture fixture;
     int coverClicks = 0;
-    auto &cover = f.window->appContainer().add<Div>();
-    cover.position(Position::Absolute).left(0).top(0).width(static_cast<float>(f.aLeft - 2)).height(100.0f);
+    auto &cover = fixture.window->appContainer().add<Div>();
+    cover.position(Position::Absolute).left(0).top(0).width(static_cast<float>(fixture.aLeft - 2)).height(100.0f);
     cover.onClick([&]() { ++coverClicks; });
-    f.systemWindow.layout();
-    f.click(-4, 12); // On the cover, within a's slop
+    fixture.systemWindow.layout();
+    fixture.click(-4, 12); // On the cover, within a's slop
     CHECK(coverClicks == 1);
-    CHECK(f.aClicks == 0);
+    CHECK(fixture.aClicks == 0);
 }
 
 TEST_CASE("Hit slop: a release away from the slop doesn't click", "[backend][touch][hitslop]") {
-    const SlopFixture f;
-    f.window->handleMouseButtonChange({.x = static_cast<float>(f.aLeft - 6), .y = static_cast<float>(f.aTop + 12), .button = MouseButton::LEFT, .down = true});
-    f.window->handleMouseButtonChange({.x = static_cast<float>(f.aLeft - 60), .y = static_cast<float>(f.aTop + 12), .button = MouseButton::LEFT, .down = false});
-    CHECK(f.aClicks == 0);
-    CHECK_FALSE(f.a.getMouseDown());
+    const SlopFixture fixture;
+    fixture.window->handleMouseButtonChange({.x = static_cast<float>(fixture.aLeft - 6), .y = static_cast<float>(fixture.aTop + 12), .button = MouseButton::LEFT, .down = true});
+    fixture.window->handleMouseButtonChange({.x = static_cast<float>(fixture.aLeft - 60), .y = static_cast<float>(fixture.aTop + 12), .button = MouseButton::LEFT, .down = false});
+    CHECK(fixture.aClicks == 0);
+    CHECK_FALSE(fixture.a.getMouseDown());
 }
 
 TEST_CASE("Hit slop: a tap near a div clicks it", "[backend][touch][hitslop]") {
     using namespace std::chrono_literals;
-    const SlopFixture f;
-    f.window->handleTouchPress(static_cast<float>(f.aLeft + 30), static_cast<float>(f.aTop - 5), 1s);
-    f.window->handleTouchRelease(static_cast<float>(f.aLeft + 30), static_cast<float>(f.aTop - 5), 1s + 50ms);
-    CHECK(f.bClicks == 1);
-    CHECK(f.aClicks == 0);
+    const SlopFixture fixture;
+    fixture.window->handleTouchPress(static_cast<float>(fixture.aLeft + 30), static_cast<float>(fixture.aTop - 5), 1s);
+    fixture.window->handleTouchRelease(static_cast<float>(fixture.aLeft + 30), static_cast<float>(fixture.aTop - 5), 1s + 50ms);
+    CHECK(fixture.bClicks == 1);
+    CHECK(fixture.aClicks == 0);
 }
 
 namespace {

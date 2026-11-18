@@ -469,32 +469,32 @@ SCENARIO("styles can be declared and computed") {
         a->setStyleManager(styleManager);
         auto b = std::make_shared<Div>();
         a->add(b);
-        auto c = std::make_shared<Div>();
-        b->add(c);
+        auto leaf = std::make_shared<Div>();
+        b->add(leaf);
 
         WHEN("skipping a node") {
             a->classNames({"first"});
-            c->classNames({"last"});
+            leaf->classNames({"last"});
 
             THEN("it should retrieve a \".first\" selector") {
                 auto &style = styleManager->style(".first");
                 style.fontFamily(".first"); // Just easier to check like this
                 a->updateStyleRecursive();
-                REQUIRE(style == styleManager->computeStyle(c.get()));
+                REQUIRE(style == styleManager->computeStyle(leaf.get()));
             }
 
             THEN("it should retrieve a \".first .last\" selector") {
                 auto &style = styleManager->style(".first .last");
                 style.fontFamily(".first .last"); // Just easier to check like this
                 a->updateStyleRecursive();
-                REQUIRE(style == styleManager->computeStyle(c.get()));
+                REQUIRE(style == styleManager->computeStyle(leaf.get()));
             }
 
             THEN("it should retrieve a \".first div .last\" selector") {
                 auto &style = styleManager->style(".first div .last");
                 style.fontFamily(".first div .last"); // Just easier to check like this
                 a->updateStyleRecursive();
-                REQUIRE(style == styleManager->computeStyle(c.get()));
+                REQUIRE(style == styleManager->computeStyle(leaf.get()));
             }
 
         }
@@ -502,13 +502,13 @@ SCENARIO("styles can be declared and computed") {
         WHEN("targeting a direct descendant") {
             a->classNames({"a"});
             b->classNames({"b"});
-            c->classNames({"c"});
+            leaf->classNames({"c"});
             auto &style = styleManager->style(".a > div");
                 style.width(123);
             a->updateStyleRecursive();
             REQUIRE_FALSE(a->computedStyle().has(Property::width));
             REQUIRE(b->computedStyle().width() == 123);
-            REQUIRE_FALSE(c->computedStyle().has(Property::width));
+            REQUIRE_FALSE(leaf->computedStyle().has(Property::width));
         }
 
     }

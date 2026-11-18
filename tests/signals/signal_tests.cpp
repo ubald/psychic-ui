@@ -233,7 +233,7 @@ TEST_CASE("Observer", "[signals]") {
     SECTION("disconnects when destroyed") {
         {
             Listener listener;
-            listener.listen(signal, [&](int v) { sum += v; });
+            listener.listen(signal, [&](int value) { sum += value; });
             signal.emit(1);
         }
         signal.emit(1);
@@ -243,7 +243,7 @@ TEST_CASE("Observer", "[signals]") {
 
     SECTION("a slot disconnected directly") {
         Listener listener;
-        auto     slot = listener.listen(signal, [&](int v) { sum += v; });
+        auto     slot = listener.listen(signal, [&](int value) { sum += value; });
         slot->disconnect();
         slot->disconnect();
         signal.emit(1);
@@ -254,8 +254,8 @@ TEST_CASE("Observer", "[signals]") {
 
     SECTION("observer destroyed by the handler it's running") {
         auto listener = std::make_unique<Listener>();
-        listener->listen(signal, [&](int v) { sum += v; listener.reset(); });
-        signal.subscribe([&](int v) { sum += 10 * v; });
+        listener->listen(signal, [&](int value) { sum += value; listener.reset(); });
+        signal.subscribe([&](int value) { sum += 10 * value; });
         signal.emit(1);
         signal.emit(1);
         REQUIRE(sum == 21);
@@ -278,8 +278,8 @@ TEST_CASE("ScopedSlot", "[signals]") {
 
     SECTION("disconnects the previous slot when reassigned") {
         ScopedSlot scoped;
-        scoped = signal.subscribe([&](int v) { sum += v; });
-        scoped = signal.subscribe([&](int v) { sum += 10 * v; });
+        scoped = signal.subscribe([&](int value) { sum += value; });
+        scoped = signal.subscribe([&](int value) { sum += 10 * value; });
         signal.emit(1);
         REQUIRE(sum == 10);
         REQUIRE(signal.subscriptionCount() == 1);
@@ -287,7 +287,7 @@ TEST_CASE("ScopedSlot", "[signals]") {
 
     SECTION("disconnects when destroyed") {
         {
-            const ScopedSlot scoped = signal.subscribe([&](int v) { sum += v; });
+            const ScopedSlot scoped = signal.subscribe([&](int value) { sum += value; });
         }
         signal.emit(1);
         REQUIRE(sum == 0);
@@ -295,8 +295,8 @@ TEST_CASE("ScopedSlot", "[signals]") {
 
     SECTION("a handler replacing its own scoped slot") {
         ScopedSlot scoped;
-        scoped = signal.subscribe([&](int v) {
-            sum += v;
+        scoped = signal.subscribe([&](int value) {
+            sum += value;
             scoped = signal.subscribe([&](int w) { sum += 100 * w; });
         });
         signal.emit(1);
@@ -307,7 +307,7 @@ TEST_CASE("ScopedSlot", "[signals]") {
     SECTION("move keeps a single owner") {
         // The slot moves out of a holder that stays in use, as a member would: what the holder keeps
         // is what this checks, an empty slot whose disconnect leaves the new owner's subscription alone
-        ScopedSlot a = signal.subscribe([&](int v) { sum += v; });
+        ScopedSlot a = signal.subscribe([&](int value) { sum += value; });
         const ScopedSlot b = takeFrom(a);
         REQUIRE_FALSE(a.connected());
         a.disconnect();

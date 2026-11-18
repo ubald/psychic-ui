@@ -47,12 +47,12 @@ namespace {
         }
 
         [[nodiscard]] SkColor at(const Div &div, int x, int y) const {
-            int gx = 0;
-            int gy = 0;
-            div.localToGlobal(gx, gy, x, y);
+            int globalX = 0;
+            int globalY = 0;
+            div.localToGlobal(globalX, globalY, x, y);
             SkPixmap pixmap;
             REQUIRE(surface->peekPixels(&pixmap));
-            return pixmap.getColor(gx, gy);
+            return pixmap.getColor(globalX, globalY);
         }
     };
 }
@@ -119,8 +119,8 @@ TEST_CASE("A hovered button's label blends its color without building a paragrap
     const Label *label = nullptr;
     std::function<void(const Div &)> find = [&](const Div &div) {
         for (const auto &child: div.children()) {
-            if (const auto *l = dynamic_cast<const Label *>(child.get()); l && l->classNames().contains("label")) {
-                label = l;
+            if (const auto *found = dynamic_cast<const Label *>(child.get()); found && found->classNames().contains("label")) {
+                label = found;
             }
             find(*child);
         }
@@ -137,8 +137,8 @@ TEST_CASE("A hovered button's label blends its color without building a paragrap
     window->handleMouseMove({.x = static_cast<float>(x), .y = static_cast<float>(y)}, false);
     system.layout();
     std::vector<Color> colors{};
-    for (auto t = 1016ms; t < 2s && window->animating(); t += 16ms) {
-        window->updateAnimations(t);
+    for (auto time = 1016ms; time < 2s && window->animating(); time += 16ms) {
+        window->updateAnimations(time);
         system.layout();
         colors.push_back(label->computedStyle().color());
     }

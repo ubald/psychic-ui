@@ -379,13 +379,13 @@ TEST_CASE("Text is painted in the color given then, without building its paragra
         REQUIRE(surface->peekPixels(&pixmap));
         SkColor darkest = SK_ColorWHITE;
         int     least   = 3 * 255;
-        for (int y = 0; y < pixmap.height(); ++y) {
-            for (int x = 0; x < pixmap.width(); ++x) {
-                const SkColor c   = pixmap.getColor(x, y);
-                const int     sum = static_cast<int>(SkColorGetR(c) + SkColorGetG(c) + SkColorGetB(c));
+        for (int row = 0; row < pixmap.height(); ++row) {
+            for (int column = 0; column < pixmap.width(); ++column) {
+                const SkColor pixel = pixmap.getColor(column, row);
+                const int     sum   = static_cast<int>(SkColorGetR(pixel) + SkColorGetG(pixel) + SkColorGetB(pixel));
                 if (sum < least) {
                     least   = sum;
-                    darkest = c;
+                    darkest = pixel;
                 }
             }
         }
@@ -416,10 +416,10 @@ TEST_CASE("One line too long ends in an ellipsis that fits, or overflows", "[tex
         SkPixmap pixmap;
         REQUIRE(surface->peekPixels(&pixmap));
         int end = -1;
-        for (int y = 0; y < pixmap.height(); ++y) {
-            for (int x = 0; x < pixmap.width(); ++x) {
-                if (pixmap.getColor(x, y) != SK_ColorWHITE) {
-                    end = std::max(end, x);
+        for (int row = 0; row < pixmap.height(); ++row) {
+            for (int column = 0; column < pixmap.width(); ++column) {
+                if (pixmap.getColor(column, row) != SK_ColorWHITE) {
+                    end = std::max(end, column);
                 }
             }
         }

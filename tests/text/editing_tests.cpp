@@ -24,13 +24,13 @@ namespace {
             window->requestFocus(&input, true);
         }
 
-        void type(UChar32 c) {
-            window->handleType(icu::UnicodeString(c));
+        void type(UChar32 character) {
+            window->handleType(icu::UnicodeString(character));
             sys.layout();
         }
 
-        void key(Key k, Mod m = Mod{}) {
-            window->handleKeyPress(k, m);
+        void key(Key k, Mod mod = Mod{}) {
+            window->handleKeyPress(k, mod);
             sys.layout();
         }
     };
@@ -39,50 +39,50 @@ namespace {
 // C2: Text.cpp advances the caret by one UTF-16 unit after typing, and steps one unit for Backspace, Delete and the
 // arrows
 TEST_CASE("C2: typing a character outside the BMP puts the caret after it", "[text][editing]") {
-    Editing f;
-    f.type(0x1F600);
-    f.type('a');
-    CHECK(f.input.text() == grinning + "a");
+    Editing fixture;
+    fixture.type(0x1F600);
+    fixture.type('a');
+    CHECK(fixture.input.text() == grinning + "a");
 }
 
 TEST_CASE("C2: Backspace removes a whole character outside the BMP", "[text][editing]") {
-    Editing f;
-    f.input.text("x" + grinning);
-    f.sys.layout();
-    f.key(Key::END);
-    f.key(Key::BACKSPACE);
-    CHECK(f.input.text() == "x");
+    Editing fixture;
+    fixture.input.text("x" + grinning);
+    fixture.sys.layout();
+    fixture.key(Key::END);
+    fixture.key(Key::BACKSPACE);
+    CHECK(fixture.input.text() == "x");
 }
 
 TEST_CASE("C2: Left steps over a whole character outside the BMP", "[text][editing]") {
-    Editing f;
-    f.input.text(grinning);
-    f.sys.layout();
-    f.key(Key::END);
-    f.key(Key::LEFT);
-    f.type('a');
-    CHECK(f.input.text() == "a" + grinning);
+    Editing fixture;
+    fixture.input.text(grinning);
+    fixture.sys.layout();
+    fixture.key(Key::END);
+    fixture.key(Key::LEFT);
+    fixture.type('a');
+    CHECK(fixture.input.text() == "a" + grinning);
 }
 
 // C2: Text.cpp checks the caret before the selection, so a selection reaching the end (Delete) or the start
 // (Backspace) isn't removed
 TEST_CASE("C2: select all then Delete with the caret at the end empties the field", "[text][editing]") {
-    Editing f;
-    for (const char c: std::string("hello")) {
-        f.type(static_cast<UChar32>(c));
+    Editing fixture;
+    for (const char character: std::string("hello")) {
+        fixture.type(static_cast<UChar32>(character));
     }
-    f.key(Key::A, Mod{.ctrl = true});
-    f.key(Key::DELETE);
-    CHECK(f.input.text().empty());
+    fixture.key(Key::A, Mod{.ctrl = true});
+    fixture.key(Key::DELETE);
+    CHECK(fixture.input.text().empty());
 }
 
 TEST_CASE("C2: select all then Backspace with the caret at the start empties the field", "[text][editing]") {
-    Editing f;
-    for (const char c: std::string("hello")) {
-        f.type(static_cast<UChar32>(c));
+    Editing fixture;
+    for (const char character: std::string("hello")) {
+        fixture.type(static_cast<UChar32>(character));
     }
-    f.key(Key::HOME);
-    f.key(Key::A, Mod{.ctrl = true});
-    f.key(Key::BACKSPACE);
-    CHECK(f.input.text().empty());
+    fixture.key(Key::HOME);
+    fixture.key(Key::A, Mod{.ctrl = true});
+    fixture.key(Key::BACKSPACE);
+    CHECK(fixture.input.text().empty());
 }

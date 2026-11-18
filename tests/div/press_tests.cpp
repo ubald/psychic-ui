@@ -25,44 +25,44 @@ namespace {
 
 // C3: Div::handleMouseRelease returns early for a hidden div, so it never hears the release of its press
 TEST_CASE("C3: a div hidden mid-press hears the release and stops being pressed", "[div][events][mouse][!shouldfail]") {
-    Presses f;
-    auto   &row = f.window->appContainer().add<Div>().position(Position::Absolute).left(0).top(0).width(400).height(100).direction(Direction::Row);
+    Presses fixture;
+    auto   &row = fixture.window->appContainer().add<Div>().position(Position::Absolute).left(0).top(0).width(400).height(100).direction(Direction::Row);
     auto   &a   = row.add<Div>().width(100).height(100);
     auto   &b   = row.add<Div>().width(100).height(100);
     int     clicks = 0;
     int     released = 0;
     b.onClick([&] { ++clicks; });
     b.onMouseRelease([&] { ++released; });
-    f.sys.layout();
+    fixture.sys.layout();
 
-    f.press(150, 50);
+    fixture.press(150, 50);
     b.visible(false);
-    f.sys.layout();
-    f.release(150, 50);
+    fixture.sys.layout();
+    fixture.release(150, 50);
     CHECK(released == 1);
 
     b.visible(true);
-    f.sys.layout();
+    fixture.sys.layout();
     CHECK_FALSE(b.active());
 
     // A press on a sibling released over b doesn't click b
-    f.press(50, 50);
+    fixture.press(50, 50);
     (void) a;
-    f.release(150, 50);
+    fixture.release(150, 50);
     CHECK(clicks == 0);
 }
 
 // C3: the pressed state is one flag for every button, so the second button's release ends the first's press
 TEST_CASE("C3: releasing a second button keeps the first button's press", "[div][events][mouse][!shouldfail]") {
-    Presses f;
-    auto   &a = f.window->appContainer().add<Div>().position(Position::Absolute).left(0).top(0).width(100).height(100);
+    Presses fixture;
+    auto   &a = fixture.window->appContainer().add<Div>().position(Position::Absolute).left(0).top(0).width(100).height(100);
     int     clicks = 0;
     a.onClick([&] { ++clicks; });
-    f.sys.layout();
-    f.press(50, 50);
-    f.press(50, 50, MouseButton::RIGHT);
-    f.release(50, 50, MouseButton::RIGHT);
+    fixture.sys.layout();
+    fixture.press(50, 50);
+    fixture.press(50, 50, MouseButton::RIGHT);
+    fixture.release(50, 50, MouseButton::RIGHT);
     CHECK(a.active());
-    f.release(50, 50);
+    fixture.release(50, 50);
     CHECK(clicks == 1);
 }

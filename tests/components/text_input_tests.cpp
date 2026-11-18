@@ -47,16 +47,16 @@ namespace {
             return {static_cast<float>(x), static_cast<float>(y)};
         }
 
-        void press(std::pair<float, float> p, unsigned int clickCount = 0, Mod mod = Mod{}) {
-            window->handleMouseButtonChange({.x = p.first, .y = p.second, .button = MouseButton::LEFT, .down = true, .modifiers = mod, .clickCount = clickCount});
+        void press(std::pair<float, float> point, unsigned int clickCount = 0, Mod mod = Mod{}) {
+            window->handleMouseButtonChange({.x = point.first, .y = point.second, .button = MouseButton::LEFT, .down = true, .modifiers = mod, .clickCount = clickCount});
         }
 
-        void move(std::pair<float, float> p) {
-            window->handleMouseMove({.x = p.first, .y = p.second}, true);
+        void move(std::pair<float, float> point) {
+            window->handleMouseMove({.x = point.first, .y = point.second}, true);
         }
 
-        void release(std::pair<float, float> p) {
-            window->handleMouseButtonChange({.x = p.first, .y = p.second, .button = MouseButton::LEFT, .down = false});
+        void release(std::pair<float, float> point) {
+            window->handleMouseButtonChange({.x = point.first, .y = point.second, .button = MouseButton::LEFT, .down = false});
             layout();
         }
 
@@ -66,8 +66,8 @@ namespace {
         }
 
         void type(const std::string &text) {
-            for (const char c: text) {
-                window->handleType(icu::UnicodeString(static_cast<UChar32>(c)));
+            for (const char character: text) {
+                window->handleType(icu::UnicodeString(static_cast<UChar32>(character)));
             }
             layout();
         }
@@ -92,217 +92,217 @@ namespace {
 }
 
 TEST_CASE("TextInput: a press on its text focuses the field, which matches :focus", "[components][text-input][focus]") {
-    Field f;
-    REQUIRE_FALSE(f.input.hasFocus());
-    CHECK_FALSE(f.view().caretVisible());
+    Field fixture;
+    REQUIRE_FALSE(fixture.input.hasFocus());
+    CHECK_FALSE(fixture.view().caretVisible());
 
-    const auto end = f.at(11);
-    f.press(end);
-    f.release(end);
-    CHECK(f.input.hasFocus());
-    CHECK(f.input.computedStyle().borderColor() == f.theme.palette.accent); // `TextInput:focus`
-    CHECK(f.view().caretVisible());
-    CHECK(f.input.caret() == 11);
+    const auto end = fixture.at(11);
+    fixture.press(end);
+    fixture.release(end);
+    CHECK(fixture.input.hasFocus());
+    CHECK(fixture.input.computedStyle().borderColor() == fixture.theme.palette.accent); // `TextInput:focus`
+    CHECK(fixture.view().caretVisible());
+    CHECK(fixture.input.caret() == 11);
 
     // The keys reach the field, whatever div under it took the press
-    f.type("!");
-    CHECK(f.input.text() == "Hello world!");
+    fixture.type("!");
+    CHECK(fixture.input.text() == "Hello world!");
 }
 
 TEST_CASE("TextInput: typing inserts at the caret and emits changed once per edit", "[components][text-input]") {
-    Field f;
-    f.focus();
-    f.key(Key::END);
-    CHECK(f.changes.empty()); // Moving the caret changes no text
+    Field fixture;
+    fixture.focus();
+    fixture.key(Key::END);
+    CHECK(fixture.changes.empty()); // Moving the caret changes no text
 
-    f.type("!?");
-    CHECK(f.input.text() == "Hello world!?");
-    CHECK(f.changes == std::vector<std::string>{"Hello world!", "Hello world!?"});
-    CHECK(f.view().text() == "Hello world!?");
-    CHECK(f.view().selection() == std::pair{13u, 13u});
+    fixture.type("!?");
+    CHECK(fixture.input.text() == "Hello world!?");
+    CHECK(fixture.changes == std::vector<std::string>{"Hello world!", "Hello world!?"});
+    CHECK(fixture.view().text() == "Hello world!?");
+    CHECK(fixture.view().selection() == std::pair{13u, 13u});
 
     // Select all then Backspace: one edit
-    f.key(Key::A, ctrl());
-    f.key(Key::BACKSPACE);
-    CHECK(f.input.text().empty());
-    CHECK(f.changes.size() == 3);
+    fixture.key(Key::A, ctrl());
+    fixture.key(Key::BACKSPACE);
+    CHECK(fixture.input.text().empty());
+    CHECK(fixture.changes.size() == 3);
 
     // Paste is one edit too
-    f.window->setClipboardText("pasted");
-    f.key(Key::V, ctrl());
-    CHECK(f.input.text() == "pasted");
-    CHECK(f.changes.size() == 4);
+    fixture.window->setClipboardText("pasted");
+    fixture.key(Key::V, ctrl());
+    CHECK(fixture.input.text() == "pasted");
+    CHECK(fixture.changes.size() == 4);
 
     // Setting the text isn't an edit
-    f.input.text("set");
-    f.layout();
-    CHECK(f.changes.size() == 4);
-    CHECK(f.view().text() == "set");
+    fixture.input.text("set");
+    fixture.layout();
+    CHECK(fixture.changes.size() == 4);
+    CHECK(fixture.view().text() == "set");
 }
 
 TEST_CASE("TextInput: Shift+arrows extend the selection from the anchor", "[components][text-input]") {
-    Field f;
-    f.focus();
-    f.key(Key::HOME);
-    f.key(Key::RIGHT, shift());
-    f.key(Key::RIGHT, shift());
-    CHECK(f.input.selection() == std::pair{0u, 2u});
-    CHECK(f.view().selection() == std::pair{0u, 2u});
+    Field fixture;
+    fixture.focus();
+    fixture.key(Key::HOME);
+    fixture.key(Key::RIGHT, shift());
+    fixture.key(Key::RIGHT, shift());
+    CHECK(fixture.input.selection() == std::pair{0u, 2u});
+    CHECK(fixture.view().selection() == std::pair{0u, 2u});
 
     // Word by word with Ctrl
     Mod both = shift();
     both.ctrl = true;
-    f.key(Key::RIGHT, both);
-    CHECK(f.input.selection() == std::pair{0u, 5u});
+    fixture.key(Key::RIGHT, both);
+    CHECK(fixture.input.selection() == std::pair{0u, 5u});
 
     // Back over the anchor
-    f.key(Key::HOME, shift());
-    CHECK(f.input.selection() == std::pair{0u, 0u});
-    f.key(Key::END, shift());
-    f.type("x");
-    CHECK(f.input.text() == "x");
+    fixture.key(Key::HOME, shift());
+    CHECK(fixture.input.selection() == std::pair{0u, 0u});
+    fixture.key(Key::END, shift());
+    fixture.type("x");
+    CHECK(fixture.input.text() == "x");
 }
 
 TEST_CASE("TextInput: the mouse selects by dragging, a word by a double click", "[components][text-input][mouse]") {
-    Field f;
-    f.press(f.at(0));
-    f.move(f.at(5));
-    f.release(f.at(5));
-    CHECK(f.input.selection() == std::pair{0u, 5u});
+    Field fixture;
+    fixture.press(fixture.at(0));
+    fixture.move(fixture.at(5));
+    fixture.release(fixture.at(5));
+    CHECK(fixture.input.selection() == std::pair{0u, 5u});
 
     // The drag ended with the release
-    f.move(f.at(11));
-    CHECK(f.input.selection() == std::pair{0u, 5u});
+    fixture.move(fixture.at(11));
+    CHECK(fixture.input.selection() == std::pair{0u, 5u});
 
     // Shift extends from the anchor
-    f.press(f.at(8), 1, shift());
-    f.release(f.at(8));
-    CHECK(f.input.selection() == std::pair{0u, 8u});
+    fixture.press(fixture.at(8), 1, shift());
+    fixture.release(fixture.at(8));
+    CHECK(fixture.input.selection() == std::pair{0u, 8u});
 
     // Two clicks: the word under the press
-    f.press(f.at(7), 2);
-    f.release(f.at(7));
-    CHECK(f.input.selection() == std::pair{6u, 11u});
+    fixture.press(fixture.at(7), 2);
+    fixture.release(fixture.at(7));
+    CHECK(fixture.input.selection() == std::pair{6u, 11u});
 }
 
 TEST_CASE("TextInput: read-only, it selects and copies but refuses edits", "[components][text-input][read-only]") {
-    Field f;
-    f.input.readOnly(true);
-    f.focus();
-    CHECK(f.input.readOnly());
-    CHECK_FALSE(f.view().caretVisible()); // No caret: nothing to type at
+    Field fixture;
+    fixture.input.readOnly(true);
+    fixture.focus();
+    CHECK(fixture.input.readOnly());
+    CHECK_FALSE(fixture.view().caretVisible()); // No caret: nothing to type at
 
-    f.type("x");
-    f.key(Key::BACKSPACE);
-    CHECK(f.input.text() == "Hello world");
+    fixture.type("x");
+    fixture.key(Key::BACKSPACE);
+    CHECK(fixture.input.text() == "Hello world");
 
-    f.key(Key::A, ctrl());
-    CHECK(f.input.selection() == std::pair{0u, 11u});
-    f.key(Key::C, ctrl());
-    CHECK(f.window->clipboardText() == "Hello world");
-    f.key(Key::X, ctrl());
-    CHECK(f.input.text() == "Hello world");
-    f.key(Key::V, ctrl());
-    CHECK(f.input.text() == "Hello world");
-    CHECK(f.changes.empty());
+    fixture.key(Key::A, ctrl());
+    CHECK(fixture.input.selection() == std::pair{0u, 11u});
+    fixture.key(Key::C, ctrl());
+    CHECK(fixture.window->clipboardText() == "Hello world");
+    fixture.key(Key::X, ctrl());
+    CHECK(fixture.input.text() == "Hello world");
+    fixture.key(Key::V, ctrl());
+    CHECK(fixture.input.text() == "Hello world");
+    CHECK(fixture.changes.empty());
 
     // Editable again
-    f.input.readOnly(false);
-    CHECK(f.view().caretVisible());
-    f.type("x");
-    CHECK(f.input.text() == "x");
+    fixture.input.readOnly(false);
+    CHECK(fixture.view().caretVisible());
+    fixture.type("x");
+    CHECK(fixture.input.text() == "x");
 }
 
 TEST_CASE("TextInput: disabled, it ignores typing, keys and presses", "[components][text-input][disabled]") {
-    Field f;
-    f.input.enabled(false);
-    f.layout();
-    f.press(f.at(11));
-    f.release(f.at(11));
-    f.type("x");
-    f.key(Key::BACKSPACE);
-    f.key(Key::A, ctrl());
-    CHECK(f.input.text() == "Hello world");
-    CHECK(f.input.selection() == std::pair{0u, 0u});
-    CHECK_FALSE(f.view().caretVisible());
-    CHECK(f.changes.empty());
+    Field fixture;
+    fixture.input.enabled(false);
+    fixture.layout();
+    fixture.press(fixture.at(11));
+    fixture.release(fixture.at(11));
+    fixture.type("x");
+    fixture.key(Key::BACKSPACE);
+    fixture.key(Key::A, ctrl());
+    CHECK(fixture.input.text() == "Hello world");
+    CHECK(fixture.input.selection() == std::pair{0u, 0u});
+    CHECK_FALSE(fixture.view().caretVisible());
+    CHECK(fixture.changes.empty());
 
-    f.input.enabled(true);
-    f.focus();
-    f.type("x");
-    CHECK(f.input.text() == "xHello world");
+    fixture.input.enabled(true);
+    fixture.focus();
+    fixture.type("x");
+    CHECK(fixture.input.text() == "xHello world");
 }
 
 TEST_CASE("TextInput: disabled, a press doesn't focus it and :focus doesn't match", "[components][text-input][disabled][focus]") {
-    Field f;
-    f.focus();
-    REQUIRE(f.input.hasFocus());
-    f.press(f.at(0)); // Its own press keeps the focus
-    f.release(f.at(0));
-    REQUIRE(f.input.hasFocus());
+    Field fixture;
+    fixture.focus();
+    REQUIRE(fixture.input.hasFocus());
+    fixture.press(fixture.at(0)); // Its own press keeps the focus
+    fixture.release(fixture.at(0));
+    REQUIRE(fixture.input.hasFocus());
 
-    f.input.enabled(false);
-    f.layout();
-    f.press(f.at(11));
-    f.release(f.at(11));
-    CHECK_FALSE(f.input.hasFocus()); // The press focused what is around it
-    CHECK(f.window->appContainer().hasFocus());
-    CHECK(f.input.computedStyle().borderColor() != f.theme.palette.accent); // Not `TextInput:focus`
-    CHECK_FALSE(f.view().caretVisible());
+    fixture.input.enabled(false);
+    fixture.layout();
+    fixture.press(fixture.at(11));
+    fixture.release(fixture.at(11));
+    CHECK_FALSE(fixture.input.hasFocus()); // The press focused what is around it
+    CHECK(fixture.window->appContainer().hasFocus());
+    CHECK(fixture.input.computedStyle().borderColor() != fixture.theme.palette.accent); // Not `TextInput:focus`
+    CHECK_FALSE(fixture.view().caretVisible());
 }
 
 TEST_CASE("TextInput: a new skin shows the text and the selection", "[components][text-input][skin]") {
-    Field f;
-    f.focus();
-    f.input.selection(6, 11);
-    const Text *before = &f.view();
+    Field fixture;
+    fixture.focus();
+    fixture.input.selection(6, 11);
+    const Text *before = &fixture.view();
 
-    f.input.skin("bare");
-    f.layout();
-    REQUIRE(&f.view() != before);
-    CHECK(f.input.skin()->classNames().contains("bare"));
-    CHECK(f.view().text() == "Hello world");
-    CHECK(f.view().selection() == std::pair{6u, 11u});
-    CHECK(f.view().caretVisible());
+    fixture.input.skin("bare");
+    fixture.layout();
+    REQUIRE(&fixture.view() != before);
+    CHECK(fixture.input.skin()->classNames().contains("bare"));
+    CHECK(fixture.view().text() == "Hello world");
+    CHECK(fixture.view().selection() == std::pair{6u, 11u});
+    CHECK(fixture.view().caretVisible());
 
     // Bare: no chrome, no padding
-    CHECK(f.input.skin()->computedStyle().paddingLeft() == Length{0});
-    CHECK(f.input.skin()->computedStyle().borderLeft() == 0.0f);
-    CHECK(f.input.skin()->computedStyle().backgroundColor().alpha() == 0);
+    CHECK(fixture.input.skin()->computedStyle().paddingLeft() == Length{0});
+    CHECK(fixture.input.skin()->computedStyle().borderLeft() == 0.0f);
+    CHECK(fixture.input.skin()->computedStyle().backgroundColor().alpha() == 0);
 
-    f.type("there");
-    CHECK(f.input.text() == "Hello there");
+    fixture.type("there");
+    CHECK(fixture.input.text() == "Hello there");
 }
 
 TEST_CASE("TextInput: the selection shows only while the field has the focus", "[components][text-input][skins]") {
-    Field f;
-    f.input.selection(0, 5);
-    f.layout();
-    CHECK(f.view().selection() == std::pair{0u, 5u});
-    CHECK(f.view().computedStyle().selectionBackgroundColor().alpha() == 0); // Pivotal hides it
+    Field fixture;
+    fixture.input.selection(0, 5);
+    fixture.layout();
+    CHECK(fixture.view().selection() == std::pair{0u, 5u});
+    CHECK(fixture.view().computedStyle().selectionBackgroundColor().alpha() == 0); // Pivotal hides it
 
-    f.focus();
-    CHECK(f.view().computedStyle().selectionBackgroundColor() == f.theme.palette.accentSoft);
+    fixture.focus();
+    CHECK(fixture.view().computedStyle().selectionBackgroundColor() == fixture.theme.palette.accentSoft);
 }
 
 TEST_CASE("TextInput: one line scrolls to show its caret", "[components][text-input]") {
-    Field f;
-    f.input.text(std::string(80, 'w'));
-    f.focus();
-    CHECK(f.view().offsetX() == 0.0f);
+    Field fixture;
+    fixture.input.text(std::string(80, 'w'));
+    fixture.focus();
+    CHECK(fixture.view().offsetX() == 0.0f);
 
-    f.key(Key::END);
-    CHECK(f.view().offsetX() > 0.0f);
-    const SkRect caret = f.view().caretRect(80);
-    CHECK(caret.fLeft <= static_cast<float>(f.view().getWidth()));
+    fixture.key(Key::END);
+    CHECK(fixture.view().offsetX() > 0.0f);
+    const SkRect caret = fixture.view().caretRect(80);
+    CHECK(caret.fLeft <= static_cast<float>(fixture.view().getWidth()));
     CHECK(caret.fLeft >= 0.0f);
 
-    f.key(Key::HOME);
-    CHECK(f.view().offsetX() == 0.0f);
+    fixture.key(Key::HOME);
+    CHECK(fixture.view().offsetX() == 0.0f);
 
     // Deleting at the end scrolls back
-    f.key(Key::END);
-    f.key(Key::A, ctrl());
-    f.key(Key::BACKSPACE);
-    CHECK(f.view().offsetX() == 0.0f);
+    fixture.key(Key::END);
+    fixture.key(Key::A, ctrl());
+    fixture.key(Key::BACKSPACE);
+    CHECK(fixture.view().offsetX() == 0.0f);
 }
