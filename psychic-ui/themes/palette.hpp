@@ -3,12 +3,10 @@
 #include <array>
 #include "psychic-ui/style/Color.hpp"
 
-namespace psychic_ui {
-
 /**
  * Named colors: a base16 gray scale and accents, the One Dark palette, and Pivotal's swatches
  */
-namespace palette {
+namespace psychic_ui::palette {
     inline constexpr Color base00 = argb(0xFF151515);
     inline constexpr Color base01 = argb(0xFF202020);
     inline constexpr Color base02 = argb(0xFF303030);
@@ -58,6 +56,4 @@ namespace palette {
      * How many of `pivotalSwatches` are hues (the rest are a brown and a grey)
      */
     inline constexpr std::size_t pivotalHueCount = 18;
-}
-
 }
