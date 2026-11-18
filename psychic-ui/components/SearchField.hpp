@@ -37,7 +37,7 @@ namespace psychic_ui {
     public:
         explicit SearchField(const std::string &text = "");
 
-        const std::string &text() const;
+        std::string text() const;
 
         template<class Self>
         Self &text(this Self &self, const std::string &text) {
@@ -64,7 +64,7 @@ namespace psychic_ui {
         std::shared_ptr<Div> clearButton();
 
         /**
-         * The input's text: Tab, or a press anywhere on the field, lets one type
+         * The input: Tab, or a press anywhere on the field, lets one type
          */
         Div *focusDelegate() override;
 

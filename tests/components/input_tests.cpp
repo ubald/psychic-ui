@@ -118,14 +118,14 @@ namespace {
 
 // region Text fields
 
-TEST_CASE("TextInput: Tab hands the focus to its text, so one can type", "[components][inputs][focus]") {
+TEST_CASE("TextInput: Tab focuses the field itself, so one can type", "[components][inputs][focus]") {
     Inputs f;
     auto &input = f.column.add<TextInput>();
     f.layout();
 
     f.tab();
     CHECK(input.hasFocus());
-    CHECK(input.textDisplay()->hasFocus()); // The delegate
+    CHECK(f.window->focusedDiv() == &input); // No delegate: the field takes the keys
     f.type("abc");
     CHECK(input.text() == "abc");
 
@@ -133,7 +133,7 @@ TEST_CASE("TextInput: Tab hands the focus to its text, so one can type", "[compo
     auto &other = f.column.add<TextInput>();
     f.layout();
     f.tab();
-    CHECK(other.textDisplay()->hasFocus());
+    CHECK(f.window->focusedDiv() == &other);
     CHECK_FALSE(input.hasFocus());
 }
 
@@ -216,7 +216,7 @@ TEST_CASE("SearchField: icon, text, and a clear button while not empty", "[compo
     CHECK(clear->visible());
     f.click(*clear);
     CHECK(search.text().empty());
-    CHECK(search.input()->textDisplay()->hasFocus());
+    CHECK(search.input()->hasFocus());
 }
 
 TEST_CASE("SearchField: a press anywhere on it lets one type", "[components][inputs][search]") {
@@ -225,7 +225,7 @@ TEST_CASE("SearchField: a press anywhere on it lets one type", "[components][inp
     f.layout();
     Div *icon = part<Icon>(search, "icon");
     f.click(*icon);
-    CHECK(search.input()->textDisplay()->hasFocus());
+    CHECK(search.input()->hasFocus());
     CHECK_FALSE(f.window->focusVisible());
     f.type("x");
     CHECK(search.text() == "x");
@@ -420,7 +420,7 @@ TEST_CASE("NumberStepper: typed, and stepped by the keys", "[components][inputs]
 
     f.tab();
     CHECK(stepper.hasFocus());
-    CHECK(stepper.input()->textDisplay()->hasFocus());
+    CHECK(stepper.input()->hasFocus());
     CHECK(stepper.computedStyle().borderColor() == f.theme.palette.accent);
 
     f.key(Key::UP);

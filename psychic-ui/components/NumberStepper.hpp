@@ -121,7 +121,7 @@ namespace psychic_ui {
         std::shared_ptr<Div> incrementButton();
 
         /**
-         * The input's text: Tab, or a press anywhere on the stepper, lets one type
+         * The input: Tab, or a press anywhere on the stepper, lets one type
          */
         Div *focusDelegate() override;
 

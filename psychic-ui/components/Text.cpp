@@ -1,32 +1,11 @@
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include "psychic-ui/Window.hpp"
+#include "psychic-ui/text/WindowClipboard.hpp"
 #include "Text.hpp"
 
 namespace psychic_ui {
-
-    namespace {
-        /**
-         * The window's clipboard, for the editing model
-         */
-        class WindowClipboard final : public TextEditing::Clipboard {
-        public:
-            explicit WindowClipboard(Window *window) : _window(window) {}
-
-            std::string clipboardText() const override {
-                return _window ? _window->clipboardText() : std::string{};
-            }
-
-            void setClipboardText(const std::string &text) override {
-                if (_window) {
-                    _window->setClipboardText(text);
-                }
-            }
-
-        private:
-            Window *_window;
-        };
-    }
 
     Text::Text(const std::string &text) :
         Div::Div() {
@@ -97,6 +76,35 @@ namespace psychic_ui {
             _textLayout.setMultiline(multiline);
             invalidate();
         }
+    }
+
+    bool Text::caretVisible() const {
+        return _caretVisible;
+    }
+
+    void Text::updateCaretVisible(const bool visible) {
+        _caretVisible = visible;
+    }
+
+    float Text::offsetX() const {
+        return _offsetX;
+    }
+
+    void Text::reveal(const unsigned int index) {
+        if (_editing.multiline()) {
+            _offsetX = 0.0f;
+            return;
+        }
+        const float width  = _paddedRect.width();
+        const float x      = _textLayout.caretRect(index).fLeft;
+        float       offset = _offsetX;
+        if (x - offset > width - 1.0f) {
+            offset = x - width + 1.0f; // The caret's bar is 2 px wide, centered on its x
+        }
+        if (x - offset < 1.0f) {
+            offset = x - 1.0f;
+        }
+        _offsetX = std::clamp(offset, 0.0f, std::max(0.0f, std::ceil(_textLayout.maxContentWidth()) + 1.0f - width));
     }
 
     std::pair<unsigned int, unsigned int> Text::selection() const {
@@ -179,12 +187,12 @@ namespace psychic_ui {
     }
 
     SkRect Text::caretRect(unsigned int index) const {
-        // The text starts inside the padding and border
-        return _textLayout.caretRect(index).makeOffset(_paddedRect.fLeft - _rect.fLeft, _paddedRect.fTop - _rect.fTop);
+        // The text starts inside the padding and border, scrolled
+        return _textLayout.caretRect(index).makeOffset(_paddedRect.fLeft - _rect.fLeft - _offsetX, _paddedRect.fTop - _rect.fTop);
     }
 
     unsigned int Text::indexAt(float x, float y) const {
-        return _textLayout.indexAt(x - (_paddedRect.fLeft - _rect.fLeft), y - (_paddedRect.fTop - _rect.fTop));
+        return _textLayout.indexAt(x - (_paddedRect.fLeft - _rect.fLeft - _offsetX), y - (_paddedRect.fTop - _rect.fTop));
     }
 
     void Text::handleKey(Key key, Mod mod) {
@@ -237,34 +245,39 @@ namespace psychic_ui {
 
     void Text::draw(SkCanvas *canvas) {
         Div::draw(canvas);
+        const float left = _paddedRect.fLeft - _offsetX;
+        // Scrolled, the line is clipped to the box (the caret's bar may reach a pixel past it); else one line of
+        // static text that doesn't fit is cut after its last whole character
+        const bool  scrolled = _offsetX != 0.0f;
+        const bool  cut      = !scrolled && _visibleWidth < _textLayout.maxContentWidth();
+        if (scrolled || cut) {
+            canvas->save();
+            // Only horizontally: glyphs can reach above and below the line
+            const float lineHeight = _textLayout.style().lineHeight;
+            const float right      = scrolled ? _paddedRect.fRight + 1.0f : _paddedRect.fLeft + _visibleWidth;
+            canvas->clipRect(SkRect::MakeLTRB(_paddedRect.fLeft - (scrolled ? 1.0f : 0.0f), _paddedRect.fTop - lineHeight, right, _paddedRect.fBottom + lineHeight));
+        }
         if (!_editing.text().isEmpty()) {
-            const bool cut = _visibleWidth < _textLayout.maxContentWidth();
-            if (cut) {
-                canvas->save();
-                // Only horizontally: glyphs can reach above and below the line
-                const float lineHeight = _textLayout.style().lineHeight;
-                canvas->clipRect(SkRect::MakeLTRB(_paddedRect.fLeft, _paddedRect.fTop - lineHeight, _paddedRect.fLeft + _visibleWidth, _paddedRect.fBottom + lineHeight));
-            }
-            _textLayout.paint(canvas, _paddedRect.fLeft, _paddedRect.fTop, _computedStyle.color().argb());
-            if (cut) {
-                canvas->restore();
-            }
-            if (_selectable && _focused) {
+            _textLayout.paint(canvas, left, _paddedRect.fTop, _computedStyle.color().argb());
+            const Color background = _computedStyle.selectionBackgroundColor();
+            if (_editing.hasSelection() && background.alpha() > 0) {
                 auto [begin, end] = _editing.selection();
                 _textLayout.paintSelection(
-                    canvas, _paddedRect.fLeft, _paddedRect.fTop, begin, end,
-                    _computedStyle.selectionBackgroundColor().argb(), _computedStyle.selectionColor().argb()
+                    canvas, left, _paddedRect.fTop, begin, end, background.argb(), _computedStyle.selectionColor().argb()
                 );
             }
         }
 
-        if (_editable && _focused) {
+        if (_caretVisible || (_editable && _focused)) {
             // A 2 px bar, in the text's color unless caretColor says otherwise
-            const SkRect caret = _textLayout.caretRect(_editing.caret()).makeOffset(_paddedRect.fLeft, _paddedRect.fTop);
+            const SkRect caret = _textLayout.caretRect(_editing.caret()).makeOffset(left, _paddedRect.fTop);
             SkPaint      paint{};
             paint.setAntiAlias(true);
             paint.setColor((_computedStyle.has(Property::caretColor) ? _computedStyle.caretColor() : _computedStyle.color()).argb());
             canvas->drawRect(caret.makeOutset(1.0f, 0.0f), paint);
+        }
+        if (scrolled || cut) {
+            canvas->restore();
         }
     }
 

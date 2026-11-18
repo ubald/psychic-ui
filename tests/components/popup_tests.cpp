@@ -982,7 +982,7 @@ TEST_CASE("A dialog focuses its first field, else its first button, else its pan
         dialog.action("Cancel");
         f.layout();
         CHECK(dialog.initialFocus() == &name);
-        CHECK(f.window->focusedDiv() == name.focusDelegate());
+        CHECK(f.window->focusedDiv() == &name); // The field itself
         CHECK_FALSE(help.hasFocus());
         f.layout();
         CHECK(name.computedStyle().borderColor() == themes::pivotalDark.palette.accent);

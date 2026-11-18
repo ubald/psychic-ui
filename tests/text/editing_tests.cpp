@@ -18,7 +18,7 @@ namespace {
 
         Editing() {
             sys.layout();
-            window->requestFocus(input.textDisplay().get(), true);
+            window->requestFocus(&input, true);
         }
 
         void type(UChar32 c) {

@@ -49,8 +49,8 @@ namespace psychic_ui {
         _input->addClassName("value")
               .focusEnabled(false); // Tab stops once, on the stepper
 
-        // The text display moves its caret on Up and Down too (to the start or the end of its line); `refresh()`
-        // sets the text again, which puts the caret back
+        // The input moves its caret on Up and Down first (to the start or the end of its line); `refresh()` sets the
+        // text again, which puts the caret back
         const auto key = [this](const Key key, const Mod modifiers) {
             if (!_enabled) {
                 return;
@@ -75,9 +75,9 @@ namespace psychic_ui {
                     break;
             }
         };
-        _input->textDisplay()->onKeyPress(key);
-        _input->textDisplay()->onKeyRepeat(key);
-        _input->textDisplay()->onBlur([this]() { commit(); });
+        _input->onKeyPress(key);
+        _input->onKeyRepeat(key);
+        _input->onBlur([this]() { commit(); });
 
         refresh();
     }
@@ -155,7 +155,7 @@ namespace psychic_ui {
     }
 
     Div *NumberStepper::focusDelegate() {
-        return _input->textDisplay().get();
+        return _input.get();
     }
 
     MouseEventStatus NumberStepper::handleMouseScroll(const MouseEvent &event) {
@@ -197,7 +197,8 @@ namespace psychic_ui {
         const std::string text = valueString();
         if (_input->text() != text) {
             _input->text(text);
-            _input->textDisplay()->caret(static_cast<unsigned int>(text.size())); // Digits: one UTF-16 unit each
+            const auto end = static_cast<unsigned int>(text.size()); // Digits: one UTF-16 unit each
+            _input->selection(end, end);
         }
         _decrement->enabled(_enabled && _value > _min);
         _increment->enabled(_enabled && _value < _max);

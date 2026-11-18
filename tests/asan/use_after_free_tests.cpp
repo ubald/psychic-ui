@@ -145,7 +145,7 @@ TEST_CASE("M6: a SearchField's input outlives the field", "[.][asan]") {
     REQUIRE(gone.expired());
     f.window->appContainer().add(input);
     f.layout();
-    f.window->requestFocus(input->textDisplay().get(), true);
+    f.window->requestFocus(input.get(), true);
     f.window->handleType(icu::UnicodeString(static_cast<UChar32>('a'))); // TextInput's changed -> the dead field
     CHECK(input->text() == "a");
 }

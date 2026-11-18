@@ -97,6 +97,7 @@ namespace psychic_ui {
              .add<RangeSkin, RangeSkinBase>()
              .add<ScrollBarSkin, ScrollBarSkinBase>()
              .add<TextInputSkin, TextInputSkinBase>()
+             .add<TextInputSkin, TextInputSkinBase>("bare")
              .add<TextAreaSkin, TextAreaSkinBase>()
              .add<MenuButtonSkin, MenuButtonSkinBase>();
 
@@ -400,6 +401,22 @@ namespace psychic_ui {
         rule("TextArea:focus").borderColor(p.accent);
         rule("TextInput:disabled").opacity(0.5f);
         rule("TextArea:disabled").opacity(0.5f);
+
+        // The selection only shows while its field has the focus (its text inherits the colors); the text inputs
+        // inside a search field or a stepper don't take the focus themselves, their field does
+        for (const char *field: {"TextInput", "TextArea"}) {
+            rule(field).selectionBackgroundColor(transparent);
+        }
+        for (const char *focused: {"TextInput:focus", "TextArea:focus", "SearchField:focus .input", "NumberStepper:focus .value"}) {
+            rule(focused).selectionBackgroundColor(p.accentSoft);
+        }
+
+        // Bare (`skin("bare")`): no chrome and no padding, for read-only text one can select
+        rule("TextInputSkinBase.bare")
+            .padding(0)
+            .border(0)
+            .borderRadius(0)
+            .backgroundColor(transparent);
 
         // endregion
 
