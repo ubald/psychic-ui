@@ -12,7 +12,7 @@ endif ()
 add_subdirectory(${PSYCHIC_UI_SOURCE_DIR} psychic-ui)
 
 # What the library builds for itself stays out of its consumers' builds
-foreach (_target psychic-ui-tests psychic-ui-demo psychic-ui-playground)
+foreach (_target psychic-ui-tests psychic-ui-demo psychic-ui-playground psychic-ui-showcase)
     if (TARGET ${_target})
         message(FATAL_ERROR "Psychic UI built its ${_target} target inside another project")
     endif ()

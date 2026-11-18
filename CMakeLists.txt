@@ -458,6 +458,7 @@ endif ()
 add_subdirectory(tests)
 add_subdirectory(example)
 add_subdirectory(playground)
+add_subdirectory(showcase)
 
 #
 # OTHER TARGETS
