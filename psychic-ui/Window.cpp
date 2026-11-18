@@ -3,6 +3,7 @@
 #include <limits>
 #include <cstring>
 #include <iostream>
+#include <ranges>
 #include <utility>
 #include <yoga/Yoga.h>
 #include "include/core/SkColorSpace.h"
@@ -675,8 +676,8 @@ namespace psychic_ui {
         if (_flinging) {
             return true;
         }
-        return std::any_of(
-            _scheduledAnimations.begin(), _scheduledAnimations.end(),
+        return std::ranges::any_of(
+            _scheduledAnimations,
             [this](const auto &weak) {
                 const auto animation = weak.lock();
                 return animation && animation->_scheduledIn == this;
@@ -774,9 +775,9 @@ namespace psychic_ui {
     Div *Window::tooltipTargetAt(const float x, const float y) {
         std::vector<Div *> path{};
         hitPath(this, x, y, path);
-        for (auto div = path.rbegin(); div != path.rend(); ++div) {
-            if (!(*div)->tooltip().empty()) {
-                return *div;
+        for (Div *div: std::views::reverse(path)) {
+            if (!div->tooltip().empty()) {
+                return div;
             }
         }
         return nullptr;
@@ -971,8 +972,8 @@ namespace psychic_ui {
                 const std::size_t size = path.size();
                 path.push_back(div);
                 const auto &children = overlay->children();
-                for (auto child = children.rbegin(); child != children.rend(); ++child) {
-                    auto *popup = static_cast<Popup *>(child->get());
+                for (const auto &child: std::views::reverse(children)) {
+                    auto *popup = static_cast<Popup *>(child.get());
                     if ((popup->mouseEnabled() || popup->mouseChildren()) && hitPath(popup, localX, localY, path)) {
                         return true;
                     }
@@ -986,8 +987,8 @@ namespace psychic_ui {
             path.push_back(div);
             if (div->mouseChildren()) {
                 const auto &children = div->children();
-                for (auto child = children.rbegin(); child != children.rend(); ++child) {
-                    if (hitPath(child->get(), localX, localY, path)) {
+                for (const auto &child: std::views::reverse(children)) {
+                    if (hitPath(child.get(), localX, localY, path)) {
                         break;
                     }
                 }
@@ -999,10 +1000,10 @@ namespace psychic_ui {
     Div *Window::scrollTargetAt(const float x, const float y, const bool horizontal) {
         std::vector<Div *> path{};
         hitPath(this, x, y, path);
-        for (auto div = path.rbegin(); div != path.rend(); ++div) {
-            if ((*div)->computedStyle().overflow() == Overflow::Scroll
-                && (horizontal ? (*div)->getWidth() < (*div)->contentWidth() : (*div)->getHeight() < (*div)->contentHeight())) {
-                return *div;
+        for (Div *div: std::views::reverse(path)) {
+            if (div->computedStyle().overflow() == Overflow::Scroll
+                && (horizontal ? div->getWidth() < div->contentWidth() : div->getHeight() < div->contentHeight())) {
+                return div;
             }
         }
         return nullptr;
@@ -1247,9 +1248,9 @@ namespace psychic_ui {
         for (auto it = path.rbegin(); it != path.rend(); ++it) {
             if ((*it)->focusEnabled()) {
                 Div *delegate = (*it)->focusDelegate();
-                if (delegate && std::find(path.cbegin(), path.cend(), delegate) == path.cend()) {
+                if (delegate && std::ranges::find(path, delegate) == path.cend()) {
                     std::vector<Div *> delegated = pathTo(delegate);
-                    if (std::find(delegated.cbegin(), delegated.cend(), *it) != delegated.cend()) {
+                    if (std::ranges::find(delegated, *it) != delegated.cend()) {
                         path = std::move(delegated);
                     }
                 }
@@ -1259,7 +1260,7 @@ namespace psychic_ui {
 
         // Compare with current and unfocus
         for (Div *div: _focusPath) {
-            auto it = std::find(path.cbegin(), path.cend(), div);
+            auto it = std::ranges::find(path, div);
             if (it == path.cend()) {
                 div->setFocused(false);
                 div->blurred.emit();
@@ -1361,7 +1362,7 @@ namespace psychic_ui {
         // What the press lands on keeps it, if anything there takes presses
         std::vector<Div *> path{};
         hitPath(this, x, y, path);
-        if (std::any_of(path.begin(), path.end(), [](const Div *div) { return takesPresses(*div); })) {
+        if (std::ranges::any_of(path, [](const Div *div) { return takesPresses(*div); })) {
             return nullptr;
         }
 
@@ -1489,8 +1490,7 @@ namespace psychic_ui {
         }
         // At the focused div's center, for the deepest div of the focus path that asks for it
         const MouseEvent center = _focusPath.back()->mouseEventAtCenter();
-        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
-            Div *div = *focused;
+        for (Div *div: std::views::reverse(_focusPath)) {
             if (!div->mouseEnabled() || !div->contextMenuRequested.hasSubscriptions()) {
                 continue;
             }
@@ -1566,13 +1566,13 @@ namespace psychic_ui {
             return false;
         }
         const Div *current = nullptr;
-        for (auto it = _focusPath.rbegin(); it != _focusPath.rend(); ++it) {
-            if ((*it)->focusEnabled()) {
-                current = *it;
+        for (Div *div: std::views::reverse(_focusPath)) {
+            if (div->focusEnabled()) {
+                current = div;
                 break;
             }
         }
-        auto       found = std::find(list.begin(), list.end(), current);
+        auto       found = std::ranges::find(list, current);
         const auto count = static_cast<std::ptrdiff_t>(list.size());
         std::ptrdiff_t index = backwards ? count - 1 : 0;
         if (found != list.end()) {
@@ -1588,7 +1588,7 @@ namespace psychic_ui {
         // Escape closes the topmost popup before anyone else sees it, unless the focus is in a field that has a use
         // for it (a search field with text, a number being typed), as browsers do
         if (key == Key::ESCAPE
-            && std::none_of(_focusPath.begin(), _focusPath.end(), [](const Div *div) { return div->takesEscape(); })
+            && std::ranges::none_of(_focusPath, [](const Div *div) { return div->takesEscape(); })
             && _overlay->dismissTop()) {
             return true;
         }
@@ -1603,9 +1603,8 @@ namespace psychic_ui {
             return true;
         }
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
+        for (Div *div: std::views::reverse(_focusPath)) {
             // Everyone in the focus path gets the key events, focusEnabled or not
-            Div *div = (*focused);
             if (div->keyPressed.hasSubscriptions()) {
                 div->keyPressed.emit(key, mod);
                 return true;
@@ -1616,9 +1615,8 @@ namespace psychic_ui {
 
     bool Window::handleKeyRepeat(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
+        for (Div *div: std::views::reverse(_focusPath)) {
             // Everyone in the focus path gets the key events, focusEnabled or not
-            Div *div = (*focused);
             if (div->keyRepeated.hasSubscriptions()) {
                 div->keyRepeated.emit(key, mod);
                 return true;
@@ -1629,9 +1627,8 @@ namespace psychic_ui {
 
     bool Window::handleKeyRelease(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
+        for (Div *div: std::views::reverse(_focusPath)) {
             // Everyone in the focus path gets the key events, focusEnabled or not
-            Div *div = (*focused);
             if (div->keyReleased.hasSubscriptions()) {
                 div->keyReleased.emit(key, mod);
                 return true;
@@ -1642,9 +1639,8 @@ namespace psychic_ui {
 
     bool Window::handleType(const icu::UnicodeString &character) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        for (auto focused = _focusPath.rbegin(); focused != _focusPath.rend(); ++focused) {
+        for (Div *div: std::views::reverse(_focusPath)) {
             // The deepest div on the focus path with a subscriber gets the characters
-            Div *div = (*focused);
             if (div->typed.hasSubscriptions()) {
                 div->typed.emit(character);
                 return true;

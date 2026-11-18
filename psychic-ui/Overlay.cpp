@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <ranges>
 #include "yoga/Yoga.h"
 #include "Overlay.hpp"
 #include "Window.hpp"
@@ -154,8 +155,8 @@ namespace psychic_ui {
 
         // What it opened first, topmost first
         auto children = _children;
-        for (auto it = children.rbegin(); it != children.rend(); ++it) {
-            auto *other = static_cast<Popup *>(it->get());
+        for (const auto &child: std::views::reverse(children)) {
+            auto *other = static_cast<Popup *>(child.get());
             if (other->_owner == &popup && other->isOpen()) {
                 other->close();
             }
@@ -315,8 +316,8 @@ namespace psychic_ui {
     bool Overlay::pressOutside(const int x, const int y, const bool contextPress) {
         bool closedModal = false;
         auto children    = _children;
-        for (auto it = children.rbegin(); it != children.rend(); ++it) {
-            auto *popup = static_cast<Popup *>(it->get());
+        for (const auto &child: std::views::reverse(children)) {
+            auto *popup = static_cast<Popup *>(child.get());
             if (popup->_parent != this || popup->exiting()) {
                 continue; // Closed with its owner, or leaving
             }
@@ -338,8 +339,8 @@ namespace psychic_ui {
 
     bool Overlay::dismissTop() {
         auto children = _children;
-        for (auto it = children.rbegin(); it != children.rend(); ++it) {
-            auto *popup = static_cast<Popup *>(it->get());
+        for (const auto &child: std::views::reverse(children)) {
+            auto *popup = static_cast<Popup *>(child.get());
             if (popup->_parent != this || popup->exiting()) {
                 continue;
             }
@@ -355,14 +356,14 @@ namespace psychic_ui {
     }
 
     bool Overlay::modal() const {
-        return std::any_of(_children.begin(), _children.end(), [](const auto &child) {
+        return std::ranges::any_of(_children, [](const auto &child) {
             return static_cast<const Popup *>(child.get())->modal();
         });
     }
 
     Popup *Overlay::focusScope() const {
-        for (auto it = _children.rbegin(); it != _children.rend(); ++it) {
-            auto *popup = static_cast<Popup *>(it->get());
+        for (const auto &child: std::views::reverse(_children)) {
+            auto *popup = static_cast<Popup *>(child.get());
             if (popup->_trapFocus && !popup->exiting()) {
                 return popup;
             }
@@ -371,8 +372,8 @@ namespace psychic_ui {
     }
 
     Popup *Overlay::popupAt(const int x, const int y) const {
-        for (auto it = _children.rbegin(); it != _children.rend(); ++it) {
-            auto *popup = static_cast<Popup *>(it->get());
+        for (const auto &child: std::views::reverse(_children)) {
+            auto *popup = static_cast<Popup *>(child.get());
             if (popup->visible() && popup->mouseEnabled() && !popup->exiting() && surfaceContains(*popup, x, y)) {
                 return popup;
             }

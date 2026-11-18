@@ -109,11 +109,11 @@ namespace psychic_ui {
         std::vector<Div *> body{};
         Window::focusables(_body, body);
         const auto isButton = [](const Div *div) { return dynamic_cast<const Button *>(div) != nullptr; };
-        if (const auto field = std::find_if_not(body.begin(), body.end(), isButton); field != body.end()) {
+        if (const auto field = std::ranges::find_if_not(body, isButton); field != body.end()) {
             return *field;
         }
         Window::focusables(_footer, body);
-        const auto button = std::find_if(body.begin(), body.end(), isButton);
+        const auto button = std::ranges::find_if(body, isButton);
         return button != body.end() ? *button : nullptr;
     }
 

@@ -248,8 +248,8 @@ namespace psychic_ui {
             }
         }
         const auto column = static_cast<std::size_t>(std::max(_sortColumn, 0));
-        std::stable_sort(
-            rows.begin(), rows.end(), [this, column](const auto &a, const auto &b) {
+        std::ranges::stable_sort(
+            rows, [this, column](const auto &a, const auto &b) {
                 if (_sortOrder == SortOrder::None) {
                     return a->_order < b->_order;
                 }

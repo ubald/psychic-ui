@@ -408,7 +408,7 @@ namespace psychic_ui {
                 mod.shift = true;
                 name      = name.substr(6);
             }
-            const auto found = std::find_if(names.begin(), names.end(), [&](const auto &n) { return n.first == name; });
+            const auto found = std::ranges::find_if(names, [&](const auto &n) { return n.first == name; });
             if (found == names.end()) {
                 return false;
             }

@@ -50,7 +50,7 @@ namespace psychic_ui {
         }
 
         const RunningTransition *StyleTransitions::find(const Property property) const {
-            auto it = std::find_if(running.begin(), running.end(), [property](const auto &r) { return r.property == property; });
+            auto it = std::ranges::find_if(running, [property](const auto &r) { return r.property == property; });
             return it == running.end() ? nullptr : &*it;
         }
 
@@ -281,7 +281,7 @@ namespace psychic_ui {
 
     namespace {
         std::string lowercase(std::string string) {
-            std::transform(string.begin(), string.end(), string.begin(), ::tolower);
+            std::ranges::transform(string, string.begin(), ::tolower);
             return string;
         }
     }
@@ -357,7 +357,7 @@ namespace psychic_ui {
     }
 
     bool Div::subtreeTransitioning() const {
-        return transitioning() || std::any_of(_children.begin(), _children.end(), [](const auto &child) {
+        return transitioning() || std::ranges::any_of(_children, [](const auto &child) {
             return child->subtreeTransitioning();
         });
     }

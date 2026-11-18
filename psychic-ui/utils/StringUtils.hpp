@@ -8,13 +8,14 @@
 #include <algorithm>
 #include <cctype>
 #include <locale>
+#include <ranges>
 
 namespace psychic_ui::string_utils {
     // trim from start (in place)
     static inline void ltrim(std::string &s) {
         s.erase(
-            s.begin(), std::find_if(
-                s.begin(), s.end(), [](int ch) {
+            s.begin(), std::ranges::find_if(
+                s, [](int ch) {
                     return !std::isspace(ch);
                 }
             ));
@@ -23,8 +24,8 @@ namespace psychic_ui::string_utils {
     // trim from end (in place)
     static inline void rtrim(std::string &s) {
         s.erase(
-            std::find_if(
-                s.rbegin(), s.rend(), [](int ch) {
+            std::ranges::find_if(
+                std::views::reverse(s), [](int ch) {
                     return !std::isspace(ch);
                 }
             ).base(), s.end());

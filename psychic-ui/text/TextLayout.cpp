@@ -300,9 +300,7 @@ namespace psychic_ui {
 
     const tl::LineMetrics &TextLayout::lineAt(unsigned int index) const {
         // The last line starting at or before the index
-        auto line = std::upper_bound(_lines.begin(), _lines.end(), index, [](unsigned int i, const tl::LineMetrics &l) {
-            return i < l.fStartIndex;
-        });
+        auto line = std::ranges::upper_bound(_lines, std::size_t{index}, std::ranges::less{}, &tl::LineMetrics::fStartIndex);
         return line == _lines.begin() ? _lines.front() : *std::prev(line);
     }
 

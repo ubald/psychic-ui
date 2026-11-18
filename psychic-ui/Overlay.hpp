@@ -3,6 +3,7 @@
 #include <chrono>
 #include <optional>
 #include <memory>
+#include <ranges>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -65,8 +66,8 @@ namespace psychic_ui {
          */
         template<class T>
         T *top() const {
-            for (auto it = _children.rbegin(); it != _children.rend(); ++it) {
-                if (auto popup = dynamic_cast<T *>(it->get()); popup && !popup->exiting()) {
+            for (const auto &child: std::views::reverse(_children)) {
+                if (auto popup = dynamic_cast<T *>(child.get()); popup && !popup->exiting()) {
                     return popup;
                 }
             }

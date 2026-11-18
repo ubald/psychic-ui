@@ -125,7 +125,7 @@ namespace psychic_ui {
         virtual std::vector<const Theme *> themes() const {
             std::vector<const Theme *> own{};
             for (const Theme *theme: {&lightTheme(), &darkTheme(), &defaultTheme()}) {
-                if (std::find(own.begin(), own.end(), theme) == own.end()) {
+                if (std::ranges::find(own, theme) == own.end()) {
                     own.push_back(theme);
                 }
             }

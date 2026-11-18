@@ -17,8 +17,8 @@ namespace psychic_ui {
         _defaultStyle.direction(Direction::Column);
 
         // When a row has an icon (or a check mark), every row keeps the column
-        const bool icons  = _iconColumn = std::any_of(items.begin(), items.end(), [](const auto &item) { return !item->icon.empty(); });
-        const bool checks = _checkColumn = std::any_of(items.begin(), items.end(), [](const auto &item) {
+        const bool icons  = _iconColumn = std::ranges::any_of(items, [](const auto &item) { return !item->icon.empty(); });
+        const bool checks = _checkColumn = std::ranges::any_of(items, [](const auto &item) {
             return dynamic_cast<CheckMenuItem *>(item.get()) || dynamic_cast<RadioMenuItem *>(item.get());
         });
 

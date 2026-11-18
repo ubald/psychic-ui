@@ -46,8 +46,8 @@ namespace psychic_ui {
     }
 
     void StyleManager::loadStyleSheet(const std::type_index type, const std::function<std::unique_ptr<StyleSheet>()> &make) {
-        auto it = std::find_if(
-            _styleSheets.begin(), _styleSheets.end(),
+        auto it = std::ranges::find_if(
+            _styleSheets,
             [type](const auto &loaded) { return loaded.first == type; }
         );
         StyleSheet *sheet = it != _styleSheets.end()
@@ -188,7 +188,7 @@ namespace psychic_ui {
     }
 
     Style &StyleManager::style(std::string selectorString) {
-        std::transform(selectorString.begin(), selectorString.end(), selectorString.begin(), ::tolower);
+        std::ranges::transform(selectorString, selectorString.begin(), ::tolower);
         auto it = _declarations.find(selectorString);
         if (it == _declarations.cend()) {
             auto selector = StyleSelector::fromSelector(selectorString);
@@ -262,8 +262,9 @@ namespace psychic_ui {
         }
         // Heaviest overlaid last; on equal weight the rule declared last wins, like CSS's order of appearance.
         // (weight, declaration index) pairs are unique once the duplicates (a tag set twice) are dropped.
-        std::sort(_matches.begin(), _matches.end());
-        _matches.erase(std::unique(_matches.begin(), _matches.end()), _matches.end());
+        std::ranges::sort(_matches);
+        const auto duplicates = std::ranges::unique(_matches);
+        _matches.erase(duplicates.begin(), duplicates.end());
     }
 
     Style StyleManager::computeStyle(const Div *component) {

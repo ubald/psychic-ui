@@ -43,7 +43,7 @@ namespace psychic_ui {
 
         // Class names are matched in lower case
         std::string lowercase(std::string string) {
-            std::transform(string.begin(), string.end(), string.begin(), ::tolower);
+            std::ranges::transform(string, string.begin(), ::tolower);
             return string;
         }
     }
@@ -244,9 +244,8 @@ namespace psychic_ui {
 
     int Div::childIndex(const Div *child) const {
         assert(child != nullptr);
-        auto it = std::find_if(
-            _children.cbegin(),
-            _children.cend(),
+        auto it = std::ranges::find_if(
+            _children,
             [child](const auto &c) {
                 return c.get() == child;
             }
@@ -402,7 +401,7 @@ namespace psychic_ui {
     }
 
     void Div::addTag(std::string tag) {
-        std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
+        std::ranges::transform(tag, tag.begin(), ::tolower);
         _tags.push_back(tag);
         invalidateStyle();
     }
@@ -420,7 +419,7 @@ namespace psychic_ui {
     }
 
     void Div::updateId(std::string id) {
-        std::transform(id.begin(), id.end(), id.begin(), ::tolower);
+        std::ranges::transform(id, id.begin(), ::tolower);
         if (id != _id) {
             _id = std::move(id);
             invalidateStyle();
@@ -434,7 +433,7 @@ namespace psychic_ui {
     void Div::updateClassNames(std::unordered_set<std::string> classNames) {
         std::unordered_set<std::string> lcClassNames;
         for (std::string className: classNames) {
-            std::transform(className.begin(), className.end(), className.begin(), ::tolower);
+            std::ranges::transform(className, className.begin(), ::tolower);
             lcClassNames.insert(std::move(className));
         }
         if (lcClassNames != _classNames) {
@@ -444,7 +443,7 @@ namespace psychic_ui {
     }
 
     void Div::updateClassName(std::string className, bool present) {
-        std::transform(className.begin(), className.end(), className.begin(), ::tolower);
+        std::ranges::transform(className, className.begin(), ::tolower);
         const bool changed = present ? _classNames.insert(std::move(className)).second : _classNames.erase(className) > 0;
         if (changed) {
             invalidateStyle();

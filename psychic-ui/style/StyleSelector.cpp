@@ -131,9 +131,8 @@ namespace psychic_ui {
         }
 
         // Match classes
-        if (!std::all_of(
-            _classes.cbegin(),
-            _classes.cend(),
+        if (!std::ranges::all_of(
+            _classes,
             [&component](const auto &className) {
                 return std::find(
                     component->classNames().cbegin(),
@@ -146,9 +145,8 @@ namespace psychic_ui {
         }
 
         // Match pseudo
-        if (!std::all_of(
-            _pseudo.cbegin(),
-            _pseudo.cend(),
+        if (!std::ranges::all_of(
+            _pseudo,
             [&component](const auto &pseudo) {
                 switch (pseudo) {
                     case Pseudo::Hover:

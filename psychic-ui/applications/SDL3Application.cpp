@@ -122,7 +122,7 @@ namespace psychic_ui {
     }
 
     SDL3Application::OwnedWindow *SDL3Application::find(SDL_Window *sdlWindow) {
-        auto it = std::find_if(_windows.begin(), _windows.end(), [sdlWindow](const auto &owned) { return owned->sdlWindow == sdlWindow; });
+        auto it = std::ranges::find_if(_windows, [sdlWindow](const auto &owned) { return owned->sdlWindow == sdlWindow; });
         return it == _windows.end() ? nullptr : it->get();
     }
 

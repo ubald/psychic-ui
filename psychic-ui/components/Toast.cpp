@@ -97,7 +97,7 @@ namespace psychic_ui {
         const auto keepAlive = shared_from_this();
         // One with another under it fades where it is, rather than sliding down over it
         const auto &siblings = stack->children();
-        const auto self      = std::find_if(siblings.begin(), siblings.end(), [this](const auto &c) { return c.get() == this; });
+        const auto self      = std::ranges::find_if(siblings, [this](const auto &c) { return c.get() == this; });
         if (std::any_of(self, siblings.end(), [this](const auto &c) { return c.get() != this && !c->exiting(); })) {
             addClassName("in-place");
         }

@@ -107,9 +107,9 @@ namespace psychic_ui {
             _skin->setFocused(_focused);
         }
         if (had) {
-            const auto found = std::find(_colors.cbegin(), _colors.cend(), previous);
-            if (found != _colors.cend()) {
-                _selected = static_cast<int>(std::distance(_colors.cbegin(), found));
+            const auto found = std::ranges::find(_colors, previous);
+            if (found != _colors.end()) {
+                _selected = static_cast<int>(std::distance(_colors.begin(), found));
             } else {
                 changed.emit(Color{});
             }
@@ -149,8 +149,8 @@ namespace psychic_ui {
     }
 
     void ColorSwatches::updateValue(const Color color) {
-        const auto found = std::find(_colors.cbegin(), _colors.cend(), color);
-        updateSelected(found != _colors.cend() ? static_cast<int>(std::distance(_colors.cbegin(), found)) : -1);
+        const auto found = std::ranges::find(_colors, color);
+        updateSelected(found != _colors.end() ? static_cast<int>(std::distance(_colors.begin(), found)) : -1);
     }
 
     void ColorSwatches::skinChanged() {

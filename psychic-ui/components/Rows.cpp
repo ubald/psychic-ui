@@ -149,7 +149,7 @@ namespace psychic_ui {
             return -1;
         }
         const auto all = rows();
-        const auto it  = std::find(all.begin(), all.end(), _selection);
+        const auto it  = std::ranges::find(all, _selection);
         return it == all.end() ? -1 : static_cast<int>(std::distance(all.begin(), it));
     }
 
@@ -193,7 +193,7 @@ namespace psychic_ui {
         }
         if (!row) {
             const auto all = rows();
-            const auto it  = std::find_if(all.begin(), all.end(), [](SelectableRow *r) { return r->enabled(); });
+            const auto it  = std::ranges::find_if(all, [](SelectableRow *r) { return r->enabled(); });
             row = it != all.end() ? *it : all.empty() ? nullptr : all.front();
         }
         if (row == _tabStop) {
@@ -248,7 +248,7 @@ namespace psychic_ui {
         if (all.empty()) {
             return false;
         }
-        const auto it = std::find(all.begin(), all.end(), row);
+        const auto it = std::ranges::find(all, row);
         switch (key) {
             case Key::DOWN:
                 if (it == all.end()) {
