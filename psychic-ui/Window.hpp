@@ -54,7 +54,7 @@ namespace psychic_ui {
 
         void toggleMaximized();
         bool maximized() const;
-        void setMaximized(bool minimized);
+        void setMaximized(bool maximized);
 
         void toggleFullscreen();
         bool getFullscreen() const;

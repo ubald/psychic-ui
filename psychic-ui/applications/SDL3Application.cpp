@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <bit>
 #include <chrono>
 #include <climits>
 #include <cstdint>
@@ -10,8 +11,10 @@
 
 namespace psychic_ui {
 
-    static std::runtime_error sdlError(const std::string &what) {
-        return std::runtime_error(what + ": " + SDL_GetError());
+    namespace {
+        std::runtime_error sdlError(const std::string &what) {
+            return std::runtime_error(what + ": " + SDL_GetError());
+        }
     }
 
     SDL3Application::SDL3Application() {
@@ -97,7 +100,7 @@ namespace psychic_ui {
 
         // With SDL_LOGGING=app=debug
         using GetString = const char *(*)(unsigned);
-        auto glGetString = reinterpret_cast<GetString>(SDL_GL_GetProcAddress("glGetString"));
+        auto glGetString = std::bit_cast<GetString>(SDL_GL_GetProcAddress("glGetString"));
         constexpr unsigned GL_RENDERER_ = 0x1F01;
         constexpr unsigned GL_VERSION_  = 0x1F02;
         SDL_LogDebug(

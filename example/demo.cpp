@@ -1,4 +1,6 @@
+#include <cstddef>
 #include <iostream>
+#include <span>
 #include <string>
 #include "demo.hpp"
 #include "example/demo/DemoWindow.hpp"
@@ -30,23 +32,24 @@ int main(int argc, char **argv) {
         std::string open{};
         std::string keys{};
         int         scroll = 0;
-        for (int i = 1; i < argc; ++i) {
-            const std::string arg  = argv[i];
-            const bool        more = i + 1 < argc;
+        const std::span<char *> args{argv, static_cast<std::size_t>(argc)};
+        for (std::size_t i = 1; i < args.size(); ++i) {
+            const std::string arg  = args[i];
+            const bool        more = i + 1 < args.size();
             if (arg == "--skin" && more) {
-                skin = argv[++i];
+                skin = args[++i];
             } else if (arg == "--density" && more) {
-                density = argv[++i];
+                density = args[++i];
             } else if (arg == "--theme" && more) {
-                theme = argv[++i];
+                theme = args[++i];
             } else if (arg == "--page" && more) {
-                page = argv[++i];
+                page = args[++i];
             } else if (arg == "--open" && more) {
-                open = argv[++i];
+                open = args[++i];
             } else if (arg == "--keys" && more) {
-                keys = argv[++i];
+                keys = args[++i];
             } else if (arg == "--scroll" && more) {
-                scroll = std::stoi(argv[++i]);
+                scroll = std::stoi(args[++i]);
             } else if (arg == "--no-fps") {
                 window->showFps(false);
             } else if (arg == "--reduced-motion") {

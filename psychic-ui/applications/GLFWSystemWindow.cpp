@@ -1,5 +1,8 @@
 #include <algorithm>
+#include <bit>
+#include <cstddef>
 #include <iostream>
+#include <span>
 #include <stdexcept>
 #include <vector>
 #include <unicode/unistr.h>
@@ -32,9 +35,11 @@ namespace psychic_ui {
     /**
      * The adapters, by GLFW window: the window's user pointer is the host's
      */
-    static std::vector<GLFWSystemWindow *> &adapters() {
-        static std::vector<GLFWSystemWindow *> adapters{};
-        return adapters;
+    namespace {
+        std::vector<GLFWSystemWindow *> &adapters() {
+            static std::vector<GLFWSystemWindow *> adapters{};
+            return adapters;
+        }
     }
 
     GLFWSystemWindow *GLFWSystemWindow::find(GLFWwindow *glfwWindow) {
@@ -219,7 +224,7 @@ namespace psychic_ui {
     }
 
     void *GLFWSystemWindow::glProcAddress(const char *name) const {
-        return reinterpret_cast<void *>(glfwGetProcAddress(name));
+        return std::bit_cast<void *>(glfwGetProcAddress(name));
     }
 
     // region Window operations
@@ -380,7 +385,8 @@ namespace psychic_ui {
     }
 
     void GLFWSystemWindow::dropEvent(int count, const char **paths) {
-        _window->dropEvent(std::vector<std::string>(paths, paths + count));
+        const std::span<const char *> dropped{paths, static_cast<std::size_t>(count)};
+        _window->dropEvent(std::vector<std::string>(dropped.begin(), dropped.end()));
     }
 
     void GLFWSystemWindow::sizeEvent() {

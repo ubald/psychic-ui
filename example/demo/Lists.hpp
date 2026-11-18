@@ -231,7 +231,16 @@ namespace psychic_ui {
         _channels->text(row->value(3));
         _universe->text(row->value(4));
         const std::string &status = row->value(2);
-        _status->label(status)
-               .tone(status == "Online" ? Tone::Success : status == "Hot" ? Tone::Warning : status == "Offline" ? Tone::Danger : status == "Armed" ? Tone::Accent : Tone::Neutral);
+        Tone tone = Tone::Neutral;
+        if (status == "Online") {
+            tone = Tone::Success;
+        } else if (status == "Hot") {
+            tone = Tone::Warning;
+        } else if (status == "Offline") {
+            tone = Tone::Danger;
+        } else if (status == "Armed") {
+            tone = Tone::Accent;
+        }
+        _status->label(status).tone(tone);
     }
 }

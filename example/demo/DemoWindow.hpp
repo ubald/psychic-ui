@@ -185,10 +185,13 @@ namespace psychic_ui {
         auto &assets   = sidebar.section("Assets");
         assets.grow(1); // Pushes the last section to the bottom
         for (Page &p: _pages) {
-            SidebarSection &section = p.name == "Divs" || p.name == "Scroller" || p.name == "Canvas" || p.name == "Motion" || p.name == "Typography"
-                                      ? layout
-                                      : p.name == "Colors" || p.name == "Icons" ? assets : controls;
-            p.item = &section.item(p.name, p.icon);
+            SidebarSection *section = &controls;
+            if (p.name == "Divs" || p.name == "Scroller" || p.name == "Canvas" || p.name == "Motion" || p.name == "Typography") {
+                section = &layout;
+            } else if (p.name == "Colors" || p.name == "Icons") {
+                section = &assets;
+            }
+            p.item = &section->item(p.name, p.icon);
             if (p.name == "Icons") {
                 p.item->count(std::to_string(IconRegistry::shared().names().size()));
             }
@@ -306,13 +309,12 @@ namespace psychic_ui {
     }
 
     inline bool DemoWindow::showPage(const std::string &name) {
-        for (const Page &p: _pages) {
-            if (p.name == name || keyOf(p.name) == name) {
-                _shell->sidebar().select(p.item);
-                return true;
-            }
+        const auto page = std::ranges::find_if(_pages, [&name](const Page &p) { return p.name == name || keyOf(p.name) == name; });
+        if (page == _pages.end()) {
+            return false;
         }
-        return false;
+        _shell->sidebar().select(page->item);
+        return true;
     }
 
     inline std::string DemoWindow::keyOf(std::string_view name) {
@@ -324,14 +326,13 @@ namespace psychic_ui {
     }
 
     inline bool DemoWindow::useSkinSet(const std::string &key) {
-        for (const NamedSkinSet &set: _skinSets) {
-            if (set.key == key) {
-                skinSet(set.make()); // The library settles the theme (see Window::skinSet)
-                themesChanged();
-                return true;
-            }
+        const auto set = std::ranges::find_if(_skinSets, [&key](const NamedSkinSet &named) { return named.key == key; });
+        if (set == _skinSets.end()) {
+            return false;
         }
-        return false;
+        skinSet(set->make()); // The library settles the theme (see Window::skinSet)
+        themesChanged();
+        return true;
     }
 
     inline bool DemoWindow::useTheme(const std::string &key) {
@@ -347,14 +348,13 @@ namespace psychic_ui {
                 candidates.push_back(other);
             }
         }
-        for (const Theme *candidate: candidates) {
-            if (keyOf(candidate->name) == key || candidate->name == key) {
-                theme(*candidate);
-                themesChanged();
-                return true;
-            }
+        const auto candidate = std::ranges::find_if(candidates, [&key](const Theme *t) { return keyOf(t->name) == key || t->name == key; });
+        if (candidate == candidates.end()) {
+            return false;
         }
-        return false;
+        theme(**candidate);
+        themesChanged();
+        return true;
     }
 
     inline void DemoWindow::themesChanged() {

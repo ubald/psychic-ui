@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <limits>
 #include <cstring>
@@ -100,7 +101,7 @@ namespace psychic_ui {
                 if (std::strncmp(name, "egl", 3) == 0) {
                     return nullptr;
                 }
-                return reinterpret_cast<GrGLFuncPtr>(static_cast<SystemWindow *>(ctx)->glProcAddress(name));
+                return std::bit_cast<GrGLFuncPtr>(static_cast<SystemWindow *>(ctx)->glProcAddress(name));
             }
         );
         if (!interface) {
@@ -292,21 +293,30 @@ namespace psychic_ui {
     /**
      * Whether the point, in `div`'s coordinates, is on a visible descendant that handles mouse buttons or clicks
      */
-    static bool interactiveChildAt(const Div &div, const int x, const int y) {
-        for (const auto &child : div.children()) {
-            const int localX = x - child->x();
-            const int localY = y - child->y();
-            if (!child->visible() || !child->mouseEnabled()
-                || localX < 0 || localY < 0 || localX >= child->getWidth() || localY >= child->getHeight()) {
-                continue;
-            }
-            if (child->mouseButtonChanged.hasSubscriptions() || child->mousePressed.hasSubscriptions()
-                || child->mouseReleased.hasSubscriptions() || child->clicked.hasSubscriptions()
-                || interactiveChildAt(*child, localX, localY)) {
-                return true;
-            }
+    namespace {
+        /**
+         * The deepest div of a path (the root first) that `accept`s, if one does
+         */
+        template<class Accept>
+        Div *deepest(const std::vector<Div *> &path, Accept accept) {
+            const auto reversed = std::views::reverse(path);
+            const auto found    = std::ranges::find_if(reversed, accept);
+            return found != reversed.end() ? *found : nullptr;
         }
-        return false;
+
+        bool interactiveChildAt(const Div &div, const int x, const int y) {
+            return std::ranges::any_of(div.children(), [x, y](const auto &child) {
+                const int localX = x - child->x();
+                const int localY = y - child->y();
+                if (!child->visible() || !child->mouseEnabled()
+                    || localX < 0 || localY < 0 || localX >= child->getWidth() || localY >= child->getHeight()) {
+                    return false;
+                }
+                return child->mouseButtonChanged.hasSubscriptions() || child->mousePressed.hasSubscriptions()
+                       || child->mouseReleased.hasSubscriptions() || child->clicked.hasSubscriptions()
+                       || interactiveChildAt(*child, localX, localY);
+            });
+        }
     }
 
     bool Window::isDragArea(const int x, const int y) {
@@ -775,12 +785,7 @@ namespace psychic_ui {
     Div *Window::tooltipTargetAt(const float x, const float y) {
         std::vector<Div *> path{};
         hitPath(this, x, y, path);
-        for (Div *div: std::views::reverse(path)) {
-            if (!div->tooltip().empty()) {
-                return div;
-            }
-        }
-        return nullptr;
+        return deepest(path, [](const Div *div) { return !div->tooltip().empty(); });
     }
 
     MouseEventStatus Window::handleMouseMove(const MouseEvent &event, const bool handled) {
@@ -875,10 +880,10 @@ namespace psychic_ui {
         // `followSystemTheme` if both are the new set's, else with the new set's own light and dark themes.
         if (!_followSystemTheme) {
             const Theme &picked = styleManager()->theme();
-            Theme        theme  = skinSet->hasTheme(picked)
+            const Theme  theme  = skinSet->hasTheme(picked)
                                       ? picked
                                       : skinSet->theme(picked.scheme == ColorScheme::Light ? ColorScheme::Light : ColorScheme::Dark);
-            styleManager()->skinSet(std::move(skinSet), std::move(theme));
+            styleManager()->skinSet(std::move(skinSet), theme);
             updateRuntimeStyles(); // Clearing the rules dropped the runtime ones too
             return;
         }
@@ -1000,13 +1005,10 @@ namespace psychic_ui {
     Div *Window::scrollTargetAt(const float x, const float y, const bool horizontal) {
         std::vector<Div *> path{};
         hitPath(this, x, y, path);
-        for (Div *div: std::views::reverse(path)) {
-            if (div->computedStyle().overflow() == Overflow::Scroll
-                && (horizontal ? div->getWidth() < div->contentWidth() : div->getHeight() < div->contentHeight())) {
-                return div;
-            }
-        }
-        return nullptr;
+        return deepest(path, [horizontal](const Div *div) {
+            return div->computedStyle().overflow() == Overflow::Scroll
+                   && (horizontal ? div->getWidth() < div->contentWidth() : div->getHeight() < div->contentHeight());
+        });
     }
 
     void Window::handleTouchPress(const float x, const float y, const GestureTime time) {
@@ -1565,13 +1567,7 @@ namespace psychic_ui {
         if (list.empty()) {
             return false;
         }
-        const Div *current = nullptr;
-        for (Div *div: std::views::reverse(_focusPath)) {
-            if (div->focusEnabled()) {
-                current = div;
-                break;
-            }
-        }
+        const Div *current = deepest(_focusPath, [](const Div *div) { return div->focusEnabled(); });
         auto       found = std::ranges::find(list, current);
         const auto count = static_cast<std::ptrdiff_t>(list.size());
         std::ptrdiff_t index = backwards ? count - 1 : 0;
@@ -1603,48 +1599,40 @@ namespace psychic_ui {
             return true;
         }
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        for (Div *div: std::views::reverse(_focusPath)) {
-            // Everyone in the focus path gets the key events, focusEnabled or not
-            if (div->keyPressed.hasSubscriptions()) {
-                div->keyPressed.emit(key, mod);
-                return true;
-            }
+        // Everyone in the focus path gets the key events, focusEnabled or not
+        if (Div *div = deepest(_focusPath, [](const Div *d) { return d->keyPressed.hasSubscriptions(); })) {
+            div->keyPressed.emit(key, mod);
+            return true;
         }
         return false;
     }
 
     bool Window::handleKeyRepeat(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        for (Div *div: std::views::reverse(_focusPath)) {
-            // Everyone in the focus path gets the key events, focusEnabled or not
-            if (div->keyRepeated.hasSubscriptions()) {
-                div->keyRepeated.emit(key, mod);
-                return true;
-            }
+        // Everyone in the focus path gets the key events, focusEnabled or not
+        if (Div *div = deepest(_focusPath, [](const Div *d) { return d->keyRepeated.hasSubscriptions(); })) {
+            div->keyRepeated.emit(key, mod);
+            return true;
         }
         return false;
     }
 
     bool Window::handleKeyRelease(Key key, Mod mod) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        for (Div *div: std::views::reverse(_focusPath)) {
-            // Everyone in the focus path gets the key events, focusEnabled or not
-            if (div->keyReleased.hasSubscriptions()) {
-                div->keyReleased.emit(key, mod);
-                return true;
-            }
+        // Everyone in the focus path gets the key events, focusEnabled or not
+        if (Div *div = deepest(_focusPath, [](const Div *d) { return d->keyReleased.hasSubscriptions(); })) {
+            div->keyReleased.emit(key, mod);
+            return true;
         }
         return false;
     }
 
     bool Window::handleType(const icu::UnicodeString &character) {
         // Go backwards since we want to cancel as soon as possible when a child handles it
-        for (Div *div: std::views::reverse(_focusPath)) {
-            // The deepest div on the focus path with a subscriber gets the characters
-            if (div->typed.hasSubscriptions()) {
-                div->typed.emit(character);
-                return true;
-            }
+        // The deepest div on the focus path with a subscriber gets the characters
+        if (Div *div = deepest(_focusPath, [](const Div *d) { return d->typed.hasSubscriptions(); })) {
+            div->typed.emit(character);
+            return true;
         }
         return false;
     }

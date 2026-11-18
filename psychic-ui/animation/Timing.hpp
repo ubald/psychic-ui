@@ -81,11 +81,11 @@ namespace psychic_ui {
         float dampingRatio() const;
 
         /**
-         * Where it is `seconds` after it had an offset of `offset0` and a velocity of `velocity0` (the closed form, so
-         * the frame rate doesn't change the motion): settled once the offset is within `tolerance` and the velocity
-         * within `tolerance` × max(ω, 1), or after `maxTime`
+         * Where it is `t` seconds after it had an offset of `x0` and a velocity of `v0` (the closed form, so the frame
+         * rate doesn't change the motion): settled once the offset is within `tolerance` and the velocity within
+         * `tolerance` × max(ω, 1), or after `maxTime`
          */
-        Approach approach(float offset0, float velocity0, float seconds, float tolerance) const;
+        Approach approach(float x0, float v0, float t, float tolerance) const;
 
         constexpr bool operator==(const Spring &) const = default;
 

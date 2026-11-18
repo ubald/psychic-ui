@@ -164,7 +164,7 @@ namespace psychic_ui {
         void updateValue(T value);
         float getPercentageFor(T value) const;
         float getLinearPercentageFor(T value) const;
-        float nearestValidValue(T value, T step) const;
+        float nearestValidValue(T value, T interval) const;
     };
 
     template<class T>
