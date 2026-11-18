@@ -10,6 +10,7 @@
 #include <psychic-ui/components/SearchField.hpp>
 #include <psychic-ui/components/SegmentedControl.hpp>
 #include <psychic-ui/components/Switch.hpp>
+#include <psychic-ui/components/Text.hpp>
 #include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/skins/base/ColorSwatchesSkinBase.hpp>
 #include <psychic-ui/skins/base/NumberStepperSkinBase.hpp>
@@ -184,44 +185,95 @@ TEST_CASE("SearchField: icon, text, and a clear button while not empty", "[compo
     f.layout();
 
     REQUIRE(is<SearchFieldSkinBase>(search.skin()));
-    Div *icon  = part<Icon>(search, "icon");
-    Div *clear = search.clearButton().get();
+    Div   *icon        = part<Icon>(search, "icon");
+    Text  *text        = part<Text>(search, "text");
+    Div   *clear       = part<Div>(search, "clear");
+    Label *placeholder = part<Label>(search, "placeholder");
     REQUIRE(icon);
+    REQUIRE(text);
+    REQUIRE(clear);
+    REQUIRE(placeholder);
+    CHECK(text == search.skin()->textView());
     CHECK(search.placeholder() == "Search");
+    CHECK(placeholder->text() == "Search");
+    CHECK(placeholder->visible());
+    CHECK(placeholder->computedStyle().color() == f.theme.palette.textMuted);
     CHECK(search.getHeight() == f.theme.metrics.pointer.controlMd);
     CHECK(search.computedStyle().backgroundColor() == f.theme.palette.raised);
-    CHECK(search.input()->computedStyle().border() == 0.0f);
-    CHECK(icon->x() < search.input()->x()); // Before the text, in the skin
+    CHECK(text->computedStyle().border() == 0.0f);
+    CHECK(icon->x() < text->parent()->x()); // Before the text, in the skin
+    CHECK(text->x() == placeholder->x());    // The placeholder where the text starts
     CHECK_FALSE(clear->visible());
+    CHECK(clear->computedStyle().cursor() == Cursor::Arrow);
 
     // Tab: the field is focused (its accent border) and typing goes to its text
     f.tab();
-    CHECK(search.hasFocus());
+    CHECK(f.window->focusedDiv() == &search); // No delegate: the field takes the keys
     CHECK(search.computedStyle().borderColor() == f.theme.palette.accent);
     f.type("cue");
     CHECK(search.text() == "cue");
+    CHECK(text->text() == "cue");
     CHECK(changes == std::vector<std::string>{"c", "cu", "cue"});
     CHECK(clear->visible());
+    CHECK_FALSE(placeholder->visible());
 
     f.key(Key::ENTER);
     CHECK(submits == std::vector<std::string>{"cue"});
+    CHECK(search.text() == "cue");
+}
 
-    // Escape clears it, once
+TEST_CASE("SearchField: Escape clears it, once, then leaves the key alone", "[components][inputs][search]") {
+    Inputs f;
+    auto &search = f.column.add<SearchField>("cue").width(240);
+    std::vector<std::string> changes{};
+    search.onChange([&](const std::string &text) { changes.push_back(text); });
+    f.layout();
+    Div *clear = part<Div>(search, "clear");
+    CHECK(clear->visible());
+
+    f.tab();
+    CHECK(search.takesEscape());
     f.key(Key::ESCAPE);
     CHECK(search.text().empty());
-    CHECK(changes.back().empty());
+    CHECK(changes == std::vector<std::string>{""});
     CHECK_FALSE(clear->visible());
-    const auto count = changes.size();
+    CHECK(part<Label>(search, "placeholder")->visible());
+    CHECK_FALSE(search.takesEscape());
     f.key(Key::ESCAPE);
-    CHECK(changes.size() == count);
+    CHECK(changes.size() == 1);
+}
 
-    // The clear button clears it, and the field keeps the focus
-    search.text("fixtures");
+TEST_CASE("SearchField: a press on the clear button clears it, and the field keeps the focus", "[components][inputs][search]") {
+    Inputs f;
+    auto &search = f.column.add<SearchField>().width(240);
+    std::vector<std::string> changes{};
+    search.onChange([&](const std::string &text) { changes.push_back(text); });
     f.layout();
-    CHECK(clear->visible());
+    f.tab();
+    f.type("fixtures");
+    changes.clear();
+
+    Div *clear = part<Div>(search, "clear");
+    REQUIRE(clear->visible());
+    const auto [cx, cy] = Inputs::center(*clear);
+    int x = 0;
+    int y = 0;
+    search.skin()->globalToLocal(x, y, cx, cy);
+    CHECK(search.skin()->clearAt(static_cast<float>(x), static_cast<float>(y)));
+    CHECK_FALSE(search.skin()->clearAt(0, 0));
+
     f.click(*clear);
     CHECK(search.text().empty());
-    CHECK(search.input()->hasFocus());
+    CHECK(changes == std::vector<std::string>{""});
+    CHECK(search.hasFocus());
+    CHECK_FALSE(clear->visible());
+    CHECK_FALSE(search.skin()->clearAt(static_cast<float>(x), static_cast<float>(y))); // Hidden: nothing to clear
+
+    // A press elsewhere on the text places the caret, and clears nothing
+    search.text("cue");
+    f.layout();
+    f.click(*part<Text>(search, "text"));
+    CHECK(search.text() == "cue");
 }
 
 TEST_CASE("SearchField: a press anywhere on it lets one type", "[components][inputs][search]") {
@@ -230,10 +282,37 @@ TEST_CASE("SearchField: a press anywhere on it lets one type", "[components][inp
     f.layout();
     Div *icon = part<Icon>(search, "icon");
     f.click(*icon);
-    CHECK(search.input()->hasFocus());
+    CHECK(search.hasFocus());
     CHECK_FALSE(f.window->focusVisible());
     f.type("x");
     CHECK(search.text() == "x");
+}
+
+TEST_CASE("SearchField: disabled, it refuses input", "[components][inputs][search]") {
+    Inputs f;
+    auto &search = f.column.add<SearchField>("cue").width(240).enabled(false);
+    std::vector<std::string> changes{};
+    std::vector<std::string> submits{};
+    search.onChange([&](const std::string &text) { changes.push_back(text); });
+    search.onSubmit([&](const std::string &text) { submits.push_back(text); });
+    f.layout();
+
+    // A press focuses nothing that takes typing, nor clears it
+    f.click(*part<Div>(search, "clear"));
+    f.click(search);
+    f.type("x");
+    CHECK(search.text() == "cue");
+
+    // Even given the focus, the keys do nothing
+    f.window->requestFocus(&search, true);
+    f.type("x");
+    f.key(Key::BACKSPACE);
+    f.key(Key::ENTER);
+    CHECK_FALSE(search.takesEscape());
+    f.key(Key::ESCAPE);
+    CHECK(search.text() == "cue");
+    CHECK(changes.empty());
+    CHECK(submits.empty());
 }
 
 // endregion

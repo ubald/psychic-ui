@@ -24,7 +24,8 @@ namespace psychic_ui {
      * state. While disabled it ignores input; read-only (`readOnly(true)`), it refuses edits but keeps the
      * selection, the caret's moves and copying, without showing the caret.
      *
-     * Subclasses see the keys first (`fieldKey`) and show what follows the text (`textChanged`).
+     * Subclasses see the keys and the presses first (`fieldKey`, `fieldPress`) and show what follows the text
+     * (`textChanged`).
      */
     template<class SkinT>
     class TextField : public Component<SkinT> {
@@ -107,6 +108,12 @@ namespace psychic_ui {
          * @return Whether it was used (then editing doesn't see it)
          */
         virtual bool fieldKey(Key /*key*/, Mod /*mod*/) { return false; }
+
+        /**
+         * A left press, before it places the caret or starts a selection (a button part of the skin's)
+         * @return Whether it was used (then the text doesn't see it)
+         */
+        virtual bool fieldPress(const MouseEvent &/*event*/) { return false; }
 
         /**
          * The text changed (edited or set), shown in the view, before `changed`: show what follows it
@@ -216,7 +223,7 @@ namespace psychic_ui {
     template<class SkinT>
     void TextField<SkinT>::handlePress(const MouseEvent &event) {
         Text *view = this->view();
-        if (!this->_enabled || !view || event.button != MouseButton::LEFT) {
+        if (!this->_enabled || !view || event.button != MouseButton::LEFT || fieldPress(event)) {
             return;
         }
         // In the view's coordinates: a press beside the text goes to its nearest index

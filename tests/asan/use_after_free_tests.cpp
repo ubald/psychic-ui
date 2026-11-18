@@ -16,7 +16,6 @@
 #include <psychic-ui/components/List.hpp>
 #include <psychic-ui/components/Menu.hpp>
 #include <psychic-ui/components/Range.hpp>
-#include <psychic-ui/components/SearchField.hpp>
 #include <psychic-ui/components/Sidebar.hpp>
 #include <psychic-ui/components/TabContainer.hpp>
 #include <psychic-ui/components/TextInput.hpp>
@@ -127,27 +126,6 @@ TEST_CASE("M6: a child outlives its parent", "[.][asan]") {
     }
     CHECK(child->window() == nullptr); // walks the dangling _parent
     f.window->appContainer().add(child);
-}
-
-// M6: a part handed out as a shared_ptr outlives its component, whose `this` its slots capture
-TEST_CASE("M6: a SearchField's input outlives the field", "[.][asan]") {
-    F                          f;
-    std::shared_ptr<TextInput> input;
-    std::weak_ptr<SearchField> gone;
-    {
-        auto  field = std::shared_ptr<SearchField>(new SearchField(""));
-        auto &added = f.window->appContainer().add(field);
-        f.layout();
-        input = added.input();
-        gone  = field;
-        f.window->appContainer().remove(added);
-    }
-    REQUIRE(gone.expired());
-    f.window->appContainer().add(input);
-    f.layout();
-    f.window->requestFocus(input.get(), true);
-    f.window->handleType(icu::UnicodeString(static_cast<UChar32>('a'))); // TextInput's changed -> the dead field
-    CHECK(input->text() == "a");
 }
 
 // M8: removed() fires only on the moved TreeNode, so the first tree keeps the row as its selection, and reaches it

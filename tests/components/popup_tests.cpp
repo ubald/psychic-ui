@@ -844,7 +844,7 @@ TEST_CASE("In a dialog, Tab hands the focus to the text fields' text and stays i
     auto &stepper = dialog.body().add<NumberStepper>(4);
     auto &cancel  = dialog.action("Cancel");
     f.layout();
-    CHECK(f.window->focusedDiv() == search.focusDelegate()); // Its first field
+    CHECK(f.window->focusedDiv() == &search); // Its first field
 
     std::vector<Div *> visited{};
     for (int i = 0; i < 4; ++i) {
@@ -854,7 +854,7 @@ TEST_CASE("In a dialog, Tab hands the focus to the text fields' text and stays i
     // The stepper's text (delegated), Cancel, the close button, the search field's text again
     CHECK(visited[0] == stepper.focusDelegate());
     CHECK(visited[1] == &cancel);
-    CHECK(visited[3] == search.focusDelegate());
+    CHECK(visited[3] == &search);
 
     f.key(Key::ESCAPE);
     CHECK(f.popupCount() == 0);
@@ -868,7 +868,7 @@ TEST_CASE("In a dialog, Escape goes to a field that has a use for it before clos
     auto &stepper = dialog.body().add<NumberStepper>(4);
     dialog.action("Cancel");
     f.layout();
-    REQUIRE(f.window->focusedDiv() == search.focusDelegate());
+    REQUIRE(f.window->focusedDiv() == &search);
 
     // With text, Escape clears the search field; empty, it closes the dialog
     search.text("cue");
