@@ -149,7 +149,7 @@ TEST_CASE("path data that doesn't parse draws nothing and is reported once", "[i
 TEST_CASE("an icon is drawn inside its box at any size", "[icons]") {
     for (const float size: {14.0f, 16.0f, 20.0f}) {
         for (const float scale: {1.0f, 2.0f}) {
-            for (auto name: {"search", "check", "settings", "more", "star-filled", "chevron-up", "circle-alert", "grip-vertical"}) {
+            for (const auto *name: {"search", "check", "settings", "more", "star-filled", "chevron-up", "circle-alert", "grip-vertical"}) {
                 INFO(name << " at " << size << " px, scale " << scale);
                 auto surface = whiteSurface(64, 64);
                 SkCanvas *canvas = surface->getCanvas();

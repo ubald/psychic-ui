@@ -46,7 +46,7 @@ namespace psychic_ui {
 
     RowGroup *SelectableRow::group() const {
         for (const Div *div = parent(); div; div = div->parent()) {
-            if (auto group = dynamic_cast<const RowGroup *>(div)) {
+            if (const auto *group = dynamic_cast<const RowGroup *>(div)) {
                 return const_cast<RowGroup *>(group);
             }
         }

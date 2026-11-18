@@ -49,7 +49,7 @@ namespace {
         if (root.classNames().contains(className)) {
             return &root;
         }
-        for (auto &child: root.children()) {
+        for (const auto &child: root.children()) {
             if (Div *found = part(*child, className)) {
                 return found;
             }

@@ -1108,8 +1108,8 @@ TEST_CASE("A toast's actions and close button dismiss it; the stack keeps a few"
 
     Button *retry = nullptr;
     std::function<void(Div &)> find = [&](Div &div) {
-        for (auto &child: div.children()) {
-            if (auto button = dynamic_cast<Button *>(child.get()); button && button->label() == "Retry") {
+        for (const auto &child: div.children()) {
+            if (auto *button = dynamic_cast<Button *>(child.get()); button && button->label() == "Retry") {
                 retry = button;
             }
             find(*child);

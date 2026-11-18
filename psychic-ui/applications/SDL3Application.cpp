@@ -187,7 +187,7 @@ namespace psychic_ui {
         if (event.type == SDL3SystemWindow::wakeEventType()) {
             return; // A window asked for a frame: it says so when asked (untilNextFrame)
         }
-        if (auto owned = find(SDL_GetWindowFromEvent(&event))) {
+        if (auto *owned = find(SDL_GetWindowFromEvent(&event))) {
             owned->systemWindow->handleEvent(event);
             owned->dirty = true; // Input may change anything: draw after it
         }
@@ -218,8 +218,8 @@ namespace psychic_ui {
     bool SDLCALL SDL3Application::liveResize(void *userdata, SDL_Event *event) {
         // Exposed while live resizing (data1 = 1): the loop is blocked, so draw from here
         if (event->type == SDL_EVENT_WINDOW_EXPOSED && event->window.data1 == 1) {
-            auto app = static_cast<SDL3Application *>(userdata);
-            if (auto owned = app->find(SDL_GetWindowFromEvent(event))) {
+            auto *app = static_cast<SDL3Application *>(userdata);
+            if (auto *owned = app->find(SDL_GetWindowFromEvent(event))) {
                 // The resize events are still queued: read the size now
                 owned->systemWindow->readSize();
                 owned->systemWindow->_window->windowResized(owned->systemWindow->getWidth(), owned->systemWindow->getHeight());

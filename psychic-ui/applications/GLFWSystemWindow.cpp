@@ -38,7 +38,7 @@ namespace psychic_ui {
     }
 
     GLFWSystemWindow *GLFWSystemWindow::find(GLFWwindow *glfwWindow) {
-        for (auto adapter : adapters()) {
+        for (auto *adapter : adapters()) {
             if (adapter->_glfwWindow == glfwWindow) {
                 return adapter;
             }
@@ -85,79 +85,79 @@ namespace psychic_ui {
         // Each callback calls the host's first, then ours
         auto &p = *_previous;
         p.cursorPos = glfwSetCursorPosCallback(_glfwWindow, [](GLFWwindow *w, double x, double y) {
-            if (auto a = find(w)) {
+            if (auto *a = find(w)) {
                 if (a->_previous->cursorPos) { a->_previous->cursorPos(w, x, y); }
                 a->cursorPosEvent(x, y);
             }
         });
         p.mouseButton = glfwSetMouseButtonCallback(_glfwWindow, [](GLFWwindow *w, int button, int action, int mods) {
-            if (auto a = find(w)) {
+            if (auto *a = find(w)) {
                 if (a->_previous->mouseButton) { a->_previous->mouseButton(w, button, action, mods); }
                 a->mouseButtonEvent(button, action, mods);
             }
         });
         p.scroll = glfwSetScrollCallback(_glfwWindow, [](GLFWwindow *w, double x, double y) {
-            if (auto a = find(w)) {
+            if (auto *a = find(w)) {
                 if (a->_previous->scroll) { a->_previous->scroll(w, x, y); }
                 a->scrollEvent(x, y);
             }
         });
         p.key = glfwSetKeyCallback(_glfwWindow, [](GLFWwindow *w, int key, int scancode, int action, int mods) {
-            if (auto a = find(w)) {
+            if (auto *a = find(w)) {
                 if (a->_previous->key) { a->_previous->key(w, key, scancode, action, mods); }
                 a->keyEvent(key, scancode, action, mods);
             }
         });
         p.character = glfwSetCharCallback(_glfwWindow, [](GLFWwindow *w, unsigned int codepoint) {
-            if (auto a = find(w)) {
+            if (auto *a = find(w)) {
                 if (a->_previous->character) { a->_previous->character(w, codepoint); }
                 a->charEvent(codepoint);
             }
         });
         p.drop = glfwSetDropCallback(_glfwWindow, [](GLFWwindow *w, int count, const char **paths) {
-            if (auto a = find(w)) {
+            if (auto *a = find(w)) {
                 if (a->_previous->drop) { a->_previous->drop(w, count, paths); }
                 a->dropEvent(count, paths);
             }
         });
         p.size = glfwSetWindowSizeCallback(_glfwWindow, [](GLFWwindow *w, int width, int height) {
-            if (auto a = find(w)) {
+            if (auto *a = find(w)) {
                 if (a->_previous->size) { a->_previous->size(w, width, height); }
                 a->sizeEvent();
             }
         });
         p.framebufferSize = glfwSetFramebufferSizeCallback(_glfwWindow, [](GLFWwindow *w, int width, int height) {
-            if (auto a = find(w)) {
+            if (auto *a = find(w)) {
                 if (a->_previous->framebufferSize) { a->_previous->framebufferSize(w, width, height); }
                 a->sizeEvent();
             }
         });
         p.position = glfwSetWindowPosCallback(_glfwWindow, [](GLFWwindow *w, int x, int y) {
-            if (auto a = find(w)) {
+            if (auto *a = find(w)) {
                 if (a->_previous->position) { a->_previous->position(w, x, y); }
                 a->positionEvent(x, y);
             }
         });
         p.focus = glfwSetWindowFocusCallback(_glfwWindow, [](GLFWwindow *w, int focused) {
-            if (auto a = find(w)) {
+            if (auto *a = find(w)) {
                 if (a->_previous->focus) { a->_previous->focus(w, focused); }
                 a->focusEvent(focused);
             }
         });
         p.iconify = glfwSetWindowIconifyCallback(_glfwWindow, [](GLFWwindow *w, int iconified) {
-            if (auto a = find(w)) {
+            if (auto *a = find(w)) {
                 if (a->_previous->iconify) { a->_previous->iconify(w, iconified); }
                 a->iconifyEvent(iconified);
             }
         });
         p.maximize = glfwSetWindowMaximizeCallback(_glfwWindow, [](GLFWwindow *w, int maximized) {
-            if (auto a = find(w)) {
+            if (auto *a = find(w)) {
                 if (a->_previous->maximize) { a->_previous->maximize(w, maximized); }
                 a->maximizeEvent(maximized);
             }
         });
         p.close = glfwSetWindowCloseCallback(_glfwWindow, [](GLFWwindow *w) {
-            if (auto a = find(w)) {
+            if (auto *a = find(w)) {
                 if (a->_previous->close) { a->_previous->close(w); }
                 a->closeEvent();
             }

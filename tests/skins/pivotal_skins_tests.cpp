@@ -44,7 +44,7 @@ namespace {
         if (root.classNames().contains(className)) {
             return &root;
         }
-        for (auto &child: root.children()) {
+        for (const auto &child: root.children()) {
             if (Div *found = part(*child, className)) {
                 return found;
             }
@@ -320,7 +320,7 @@ TEST_CASE("Pivotal skins: a menu's labels line up when some rows have an icon", 
         std::vector<float> lefts{};
         REQUIRE(f.window->overlay().children().size() == 1);
         const Div &menu = *f.window->overlay().children().front();
-        for (auto &row: menu.children()) {
+        for (const auto &row: menu.children()) {
             const Div *label = part(*row, "label");
             REQUIRE(label);
             lefts.push_back(left(*label) - left(*row));

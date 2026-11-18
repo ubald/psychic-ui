@@ -43,7 +43,7 @@ namespace psychic_ui {
     }
 
     void Popup::close() {
-        if (auto overlay = dynamic_cast<Overlay *>(_parent)) {
+        if (auto *overlay = dynamic_cast<Overlay *>(_parent)) {
             overlay->close(*this);
         }
     }

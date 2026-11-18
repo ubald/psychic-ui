@@ -408,7 +408,7 @@ TEST_CASE("Reentrancy: toast action removes all toasts and opens a dialog", "[re
     f.layout();
     Div *btn = nullptr;
     std::function<void(Div &)> find = [&](Div &d) {
-        for (auto &c: d.children()) {
+        for (const auto &c: d.children()) {
             if (auto *bb = dynamic_cast<Button *>(c.get()); bb && !btn) btn = bb;
             find(*c);
         }

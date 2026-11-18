@@ -97,7 +97,7 @@ namespace psychic_ui {
 
     Tree *TreeNode::tree() const {
         for (const Div *div = parent(); div; div = div->parent()) {
-            if (auto t = dynamic_cast<const Tree *>(div)) {
+            if (const auto *t = dynamic_cast<const Tree *>(div)) {
                 return const_cast<Tree *>(t);
             }
         }
@@ -222,7 +222,7 @@ namespace psychic_ui {
     }
 
     TreeNode *Tree::selectedNode() const {
-        auto row = dynamic_cast<TreeRow *>(_selection);
+        auto *row = dynamic_cast<TreeRow *>(_selection);
         return row ? row->node() : nullptr;
     }
 
@@ -274,7 +274,7 @@ namespace psychic_ui {
     }
 
     bool Tree::handleRowKey(SelectableRow *row, const Key key, const Mod mod) {
-        auto     treeRow = dynamic_cast<TreeRow *>(row);
+        auto *     treeRow = dynamic_cast<TreeRow *>(row);
         TreeNode *node   = treeRow ? treeRow->node() : nullptr;
         if (node) {
             switch (key) {

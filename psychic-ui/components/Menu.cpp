@@ -129,7 +129,7 @@ namespace psychic_ui {
 
     void Menu::openSubmenu(const int index, const bool focus) {
         auto *row = _rows[index];
-        auto *sub = dynamic_cast<const SubMenuItem *>(row->menuItem());
+        const auto *sub = dynamic_cast<const SubMenuItem *>(row->menuItem());
         if (!sub) {
             return;
         }
@@ -217,18 +217,18 @@ namespace psychic_ui {
             return;
         }
         auto *item = const_cast<MenuItem *>(_rows[index]->menuItem()); // Ours: the menu holds its items
-        if (auto simple = dynamic_cast<SimpleMenuItem *>(item)) {
+        if (auto *simple = dynamic_cast<SimpleMenuItem *>(item)) {
             finish(simple->callback);
         } else if (dynamic_cast<SubMenuItem *>(item)) {
             openSubmenu(index, true);
-        } else if (auto check = dynamic_cast<CheckMenuItem *>(item)) {
+        } else if (auto *check = dynamic_cast<CheckMenuItem *>(item)) {
             check->checked = !check->checked;
             highlight(index);
             refreshRows();
             if (check->callback) {
                 check->callback(check->checked);
             }
-        } else if (auto radio = dynamic_cast<RadioMenuItem *>(item)) {
+        } else if (auto *radio = dynamic_cast<RadioMenuItem *>(item)) {
             const bool changed = radio->group && radio->group->value != radio->value;
             if (radio->group) {
                 radio->group->value = radio->value;

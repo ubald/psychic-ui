@@ -111,7 +111,7 @@ TEST_CASE("A hovered button's label blends its color without building a paragrap
     const Label *label = nullptr;
     std::function<void(const Div &)> find = [&](const Div &div) {
         for (const auto &child: div.children()) {
-            if (auto *l = dynamic_cast<const Label *>(child.get()); l && l->classNames().contains("label")) {
+            if (const auto *l = dynamic_cast<const Label *>(child.get()); l && l->classNames().contains("label")) {
                 label = l;
             }
             find(*child);

@@ -3,10 +3,10 @@
 #include <yoga/Yoga.h>
 
 TEST_CASE( "Making sure yoga does what we want" ) {
-    auto config = YGConfigNew();
+    auto *config = YGConfigNew();
     YGConfigSetUseWebDefaults(config, true);
-    auto container = YGNodeNewWithConfig(config);
-    auto node = YGNodeNewWithConfig(config);
+    auto *container = YGNodeNewWithConfig(config);
+    auto *node = YGNodeNewWithConfig(config);
     YGNodeInsertChild(container, node, YGNodeGetChildCount(container));
 
 
@@ -56,12 +56,12 @@ TEST_CASE( "Making sure yoga does what we want" ) {
 
 TEST_CASE( "Wrapping container keeps the cross axis margin of flex-start items" ) {
     // Same settings as the config every Div uses (Div.cpp)
-    auto config = YGConfigNew();
+    auto *config = YGConfigNew();
     YGConfigSetUseWebDefaults(config, true);
     YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureWebFlexBasis, true);
     YGConfigSetPointScaleFactor(config, 0.0f);
 
-    auto container = YGNodeNewWithConfig(config);
+    auto *container = YGNodeNewWithConfig(config);
     YGNodeStyleSetFlexDirection(container, YGFlexDirectionRow);
     YGNodeStyleSetFlexWrap(container, YGWrapWrap);
     YGNodeStyleSetAlignItems(container, YGAlignFlexStart);

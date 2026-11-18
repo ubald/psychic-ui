@@ -966,7 +966,7 @@ namespace psychic_ui {
             }
             const float localX = x - static_cast<float>(div->x() + div->scrollX());
             const float localY = y - static_cast<float>(div->y() + div->scrollY());
-            if (auto overlay = dynamic_cast<Overlay *>(div)) {
+            if (auto *overlay = dynamic_cast<Overlay *>(div)) {
                 // Only where a popup takes the mouse, or under a modal popup
                 const std::size_t size = path.size();
                 path.push_back(div);
@@ -1549,7 +1549,7 @@ namespace psychic_ui {
         if (div->focusEnabled()) {
             list.push_back(div);
         }
-        for (auto &child: div->children()) {
+        for (const auto &child: div->children()) {
             focusables(child.get(), list);
         }
     }

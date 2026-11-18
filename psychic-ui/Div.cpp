@@ -85,7 +85,7 @@ namespace psychic_ui {
         if (!_id.empty()) {
             str += "#" + _id;
         }
-        for (auto &className: _classNames) {
+        for (const auto &className: _classNames) {
             str += "." + className;
         }
         return str;
@@ -484,7 +484,7 @@ namespace psychic_ui {
     }
 
     void Div::updateStyle() {
-        if (auto sm = styleManager()) {
+        if (auto *sm = styleManager()) {
             // Its first style in a window: with its starting class, until the window lets it go
             Window *w = window();
             if (w && !_startingClass.empty() && !_startingApplied && _styledIn != w && !w->reducedMotion()) {
@@ -639,7 +639,7 @@ namespace psychic_ui {
         YGNodeSetMeasureFunc(
             _yogaNode,
             [](YGNodeConstRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
-                auto div = static_cast<Div *>(YGNodeGetContext(node));
+                auto *div = static_cast<Div *>(YGNodeGetContext(node));
                 if (!div) {
                     std::cerr << "Could not find div to measure" << std::endl;
                     return YGSize{};

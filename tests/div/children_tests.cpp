@@ -30,7 +30,7 @@ namespace {
         REQUIRE(YGNodeGetChildCount(parent._yogaNode) == parent.childCount());
         std::string names;
         for (unsigned int i = 0; i < parent.childCount(); ++i) {
-            auto child = dynamic_cast<TestDiv *>(parent.at(i));
+            auto *child = dynamic_cast<TestDiv *>(parent.at(i));
             REQUIRE(child != nullptr);
             REQUIRE(YGNodeGetChild(parent._yogaNode, i) == child->_yogaNode);
             REQUIRE(parent.childIndex(child) == (int) i);
@@ -121,7 +121,7 @@ TEST_CASE("children are kept in document order, matching yoga", "[div][children]
         parent->removeAll();
         REQUIRE(parent->childCount() == 0);
         REQUIRE(YGNodeGetChildCount(parent->_yogaNode) == 0);
-        for (auto &child: {a, b, c}) {
+        for (const auto &child: {a, b, c}) {
             REQUIRE(child->parent() == nullptr);
             REQUIRE(YGNodeGetOwner(child->_yogaNode) == nullptr);
         }

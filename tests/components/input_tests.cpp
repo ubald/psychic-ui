@@ -95,7 +95,7 @@ namespace {
 
     template<class T>
     T *part(Div &root, const std::string &className) {
-        for (auto &child: root.children()) {
+        for (const auto &child: root.children()) {
             if (child->classNames().contains(className)) {
                 if (auto *found = dynamic_cast<T *>(child.get())) {
                     return found;
@@ -110,7 +110,7 @@ namespace {
 
     std::vector<Div *> parts(Div &root, const std::string &className) {
         std::vector<Div *> found{};
-        for (auto &child: root.children()) {
+        for (const auto &child: root.children()) {
             if (child->classNames().contains(className)) {
                 found.push_back(child.get());
             }
