@@ -82,6 +82,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         skins/float_skins_tests.cpp
         demo/canvas_page_tests.cpp
         components/app_shell_tests.cpp
+        components/button_state_tests.cpp
         components/list_tests.cpp
         components/input_tests.cpp
         components/text_area_tests.cpp
@@ -103,6 +104,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         div/opacity_tests.cpp
         div/transform_tests.cpp
         div/outline_shadow_tests.cpp
+        div/border_tests.cpp
         icons/icon_tests.cpp
         paint/crisp_tests.cpp
         backends/post_tests.cpp

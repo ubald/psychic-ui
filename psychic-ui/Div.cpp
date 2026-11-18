@@ -2,10 +2,12 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdint>
 #include <cstddef>
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
@@ -17,7 +19,9 @@
 #include "include/core/SkColor.h"
 #include "include/core/SkMaskFilter.h"
 #include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
 #include "include/core/SkPoint.h"
+#include "include/core/SkRRect.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkScalar.h"
 #include "include/effects/SkDashPathEffect.h"
@@ -37,6 +41,7 @@
 #include "style/Color.hpp"
 #include "style/Length.hpp"
 #include "style/Properties.hpp"
+#include "style/Style.hpp"
 #include "style/StyleManager.hpp"
 #include "style/Values.hpp"
 
@@ -73,6 +78,36 @@ namespace psychic_ui {
         std::string lowercase(std::string string) {
             std::ranges::transform(string, string.begin(), ::tolower);
             return string;
+        }
+
+        // A side's border color: its own, else its axis', else the border's; none when nothing sets one
+        enum class BorderSide : std::uint8_t { Left, Top, Right, Bottom };
+
+        std::optional<Color> sideBorderColor(const Style &style, const BorderSide side) {
+            using P         = Property;
+            const auto pick = [&style](P own, Color ownColor, P axis, Color axisColor) -> std::optional<Color> {
+                if (style.has(own)) {
+                    return ownColor;
+                }
+                if (style.has(axis)) {
+                    return axisColor;
+                }
+                if (style.has(P::borderColor)) {
+                    return style.borderColor();
+                }
+                return std::nullopt;
+            };
+            switch (side) {
+                case BorderSide::Left:
+                    return pick(P::borderLeftColor, style.borderLeftColor(), P::borderHorizontalColor, style.borderHorizontalColor());
+                case BorderSide::Right:
+                    return pick(P::borderRightColor, style.borderRightColor(), P::borderHorizontalColor, style.borderHorizontalColor());
+                case BorderSide::Top:
+                    return pick(P::borderTopColor, style.borderTopColor(), P::borderVerticalColor, style.borderVerticalColor());
+                case BorderSide::Bottom:
+                    return pick(P::borderBottomColor, style.borderBottomColor(), P::borderVerticalColor, style.borderVerticalColor());
+            }
+            return std::nullopt;
         }
     }
 
@@ -336,9 +371,13 @@ namespace psychic_ui {
         }
     }
 
-    bool Div::active() const {
+    bool Div::pressed() const {
         return _enabled && _mouseDown;
-    };
+    }
+
+    bool Div::active() const {
+        return pressed();
+    }
 
     // endregion
 
@@ -1265,7 +1304,7 @@ namespace psychic_ui {
         if (_drawRoundRect && _drawBorder) {
             SkRRect roundRect;
             // TODO: Offset for unequal borders
-            const float halfBorder = _computedStyle.border() / 2;
+            const float halfBorder = (_drawComplexBorders ? _computedStyle.border() : _borderLeft) / 2;
             _roundRect.inset(halfBorder, halfBorder, &roundRect);
             canvas->clipRRect(roundRect, antiAlias);
         } else if (_drawRoundRect) {
@@ -1283,11 +1322,19 @@ namespace psychic_ui {
             paint.setColor(_computedStyle.backgroundColor().argb());
             paint.setAntiAlias(_computedStyle.antiAlias());
 
-            const float halfBorder = _computedStyle.border() / 2;
-            if (_drawComplexRoundRect) {
+            // Equal sides: the layout's width, whether `border` or the sides set it
+            const float width      = _borderLeft;
+            const float halfBorder = width / 2;
+            if (_drawRoundRect && _drawComplexBorders) {
+                // Unequal sides: the background under the whole border box, the sides over it along the rounded outline
+                if (_drawBackground) {
+                    canvas->drawRRect(_roundRect, paint);
+                }
+                drawRoundedSides(canvas);
+
+            } else if (_drawComplexRoundRect) {
                 SkRRect roundRect = _roundRect;
                 if (_drawBackground && _drawBorder) {
-                    // TODO: Offset for unequal borders
                     roundRect.inset(halfBorder, halfBorder);
                 }
 
@@ -1298,7 +1345,7 @@ namespace psychic_ui {
                 if (_drawBorder) {
                     paint.setStyle(SkPaint::kStroke_Style);
                     paint.setColor(_computedStyle.borderColor().argb());
-                    paint.setStrokeWidth(_computedStyle.border());
+                    paint.setStrokeWidth(width);
                     canvas->drawRRect(roundRect, paint);
                 }
 
@@ -1312,7 +1359,7 @@ namespace psychic_ui {
                     }
                     paint.setStyle(SkPaint::kStroke_Style);
                     paint.setColor(_computedStyle.borderColor().argb());
-                    paint.setStrokeWidth(_computedStyle.border());
+                    paint.setStrokeWidth(width);
                     canvas->drawRoundRect(inset, _radiusTopLeft, _radiusTopLeft, paint);
                 }
 
@@ -1324,7 +1371,7 @@ namespace psychic_ui {
                     const SkRect inset = _rect.makeInset(halfBorder, halfBorder);
                     paint.setStyle(SkPaint::kStroke_Style);
                     paint.setColor(_computedStyle.borderColor().argb());
-                    paint.setStrokeWidth(_computedStyle.border());
+                    paint.setStrokeWidth(width);
                     canvas->drawRect(inset, paint);
                 }
             }
@@ -1333,88 +1380,144 @@ namespace psychic_ui {
 
         drawDotGrid(canvas);
 
-        // region Individual Borders
-
         // In the parent's coordinates, like _rect
         if (_drawComplexBorders && !_drawRoundRect) {
-            SkPaint paint;
-            paint.setAntiAlias(false);
-            paint.setStyle(SkPaint::kStroke_Style);
+            drawSideLines(canvas);
+        }
+    }
 
-            if (_borderLeft > 0) {
-                bool draw = true;
-                paint.setStrokeWidth(_borderLeft);
-                if (_computedStyle.has(Property::borderLeftColor)) {
-                    paint.setColor(_computedStyle.borderLeftColor().argb());
-                } else if (_computedStyle.has(Property::borderHorizontalColor)) {
-                    paint.setColor(_computedStyle.borderHorizontalColor().argb());
-                } else if (_computedStyle.has(Property::borderColor)) {
-                    paint.setColor(_computedStyle.borderColor().argb());
-                } else {
-                    draw = false;
-                }
-                if (draw) {
-                    const float halfWidth = _borderLeft / 2.0f;
-                    canvas->drawLine(_rect.left() + halfWidth, _rect.top() - 0.5f, _rect.left() + halfWidth, _rect.bottom() + 0.5f, paint);
-                }
+    void Div::drawSideLines(SkCanvas *canvas) const {
+        // Each side a line, past the corners by half a pixel so that they meet without anti-aliasing
+        constexpr float overhang = 0.5f;
+        SkPaint         paint;
+        paint.setAntiAlias(false);
+        paint.setStyle(SkPaint::kStroke_Style);
+        const auto line = [&](float sideWidth, BorderSide side, SkPoint start, SkPoint finish) {
+            const std::optional<Color> color = sideBorderColor(_computedStyle, side);
+            if (sideWidth <= 0 || !color) {
+                return;
             }
+            paint.setStrokeWidth(sideWidth);
+            paint.setColor(color->argb());
+            canvas->drawLine(start, finish, paint);
+        };
+        const float left   = _rect.left() + (_borderLeft / 2.0f);
+        const float right  = _rect.right() - (_borderRight / 2.0f);
+        const float top    = _rect.top() + (_borderTop / 2.0f);
+        const float bottom = _rect.bottom() - (_borderBottom / 2.0f);
+        line(_borderLeft, BorderSide::Left, SkPoint::Make(left, _rect.top() - overhang), SkPoint::Make(left, _rect.bottom() + overhang));
+        line(_borderRight, BorderSide::Right, SkPoint::Make(right, _rect.top() - overhang), SkPoint::Make(right, _rect.bottom() + overhang));
+        line(_borderTop, BorderSide::Top, SkPoint::Make(_rect.left() - overhang, top), SkPoint::Make(_rect.right() + overhang, top));
+        line(_borderBottom, BorderSide::Bottom, SkPoint::Make(_rect.left() - overhang, bottom), SkPoint::Make(_rect.right() + overhang, bottom));
+    }
 
-            if (_borderRight > 0) {
-                bool draw = true;
-                paint.setStrokeWidth(_borderRight);
-                if (_computedStyle.has(Property::borderRightColor)) {
-                    paint.setColor(_computedStyle.borderRightColor().argb());
-                } else if (_computedStyle.has(Property::borderHorizontalColor)) {
-                    paint.setColor(_computedStyle.borderHorizontalColor().argb());
-                } else if (_computedStyle.has(Property::borderColor)) {
-                    paint.setColor(_computedStyle.borderColor().argb());
-                } else {
-                    draw = false;
-                }
-                if (draw) {
-                    const float halfWidth = _borderRight / 2.0f;
-                    canvas->drawLine(_rect.right() - halfWidth, _rect.top() - 0.5f, _rect.right() - halfWidth, _rect.bottom() + 0.5f, paint);
-                }
+    void Div::drawRoundedSides(SkCanvas *canvas) const {
+        // As CSS: the border is the band between the rounded border box and the padding box, whose corners' radii are
+        // the border box's less the two sides' widths (elliptical when they differ), so a side thins out along a corner
+        const SkRect inner = SkRect::MakeLTRB(
+            _rect.left() + _borderLeft,
+            _rect.top() + _borderTop,
+            _rect.right() - _borderRight,
+            _rect.bottom() - _borderBottom
+        );
+        const auto radius = [](float outer, float horizontal, float vertical) {
+            return SkVector{std::max(0.0f, outer - horizontal), std::max(0.0f, outer - vertical)};
+        };
+        const std::array<SkVector, 4> innerRadii{
+            radius(_radiusTopLeft, _borderLeft, _borderTop),
+            radius(_radiusTopRight, _borderRight, _borderTop),
+            radius(_radiusBottomRight, _borderRight, _borderBottom),
+            radius(_radiusBottomLeft, _borderLeft, _borderBottom)
+        };
+        SkRRect innerRect;
+        innerRect.setRectRadii(inner, innerRadii.data());
+
+        SkPaint paint;
+        paint.setStyle(SkPaint::kFill_Style);
+        paint.setAntiAlias(_computedStyle.antiAlias());
+        const auto band = [&](const Color color) {
+            paint.setColor(color.argb());
+            if (inner.isEmpty()) {
+                canvas->drawRRect(_roundRect, paint); // The sides meet: all border
+            } else {
+                canvas->drawDRRect(_roundRect, innerRect, paint);
             }
+        };
 
-            if (_borderTop > 0) {
-                bool draw = true;
-                paint.setStrokeWidth(_borderTop);
-                if (_computedStyle.has(Property::borderTopColor)) {
-                    paint.setColor(_computedStyle.borderTopColor().argb());
-                } else if (_computedStyle.has(Property::borderVerticalColor)) {
-                    paint.setColor(_computedStyle.borderVerticalColor().argb());
-                } else if (_computedStyle.has(Property::borderColor)) {
-                    paint.setColor(_computedStyle.borderColor().argb());
-                } else {
-                    draw = false;
-                }
-                if (draw) {
-                    const float halfWidth = _borderTop / 2.0f;
-                    canvas->drawLine(_rect.left() - 0.5f, _rect.top() + halfWidth, _rect.right() + 0.5f, _rect.top() + halfWidth, paint);
-                }
+        // Left, top, right, bottom
+        const std::array<float, 4>                widths{_borderLeft, _borderTop, _borderRight, _borderBottom};
+        const std::array<std::optional<Color>, 4> colors{
+            sideBorderColor(_computedStyle, BorderSide::Left),
+            sideBorderColor(_computedStyle, BorderSide::Top),
+            sideBorderColor(_computedStyle, BorderSide::Right),
+            sideBorderColor(_computedStyle, BorderSide::Bottom)
+        };
+
+        // One color for every side that has a width: the whole band at once
+        std::optional<Color> shared;
+        bool                 single = true;
+        for (std::size_t i = 0; i < widths.size() && single; ++i) {
+            if (widths.at(i) <= 0) {
+                continue;
             }
-
-            if (_borderBottom > 0) {
-                bool draw = true;
-                paint.setStrokeWidth(_borderBottom);
-                if (_computedStyle.has(Property::borderBottomColor)) {
-                    paint.setColor(_computedStyle.borderBottomColor().argb());
-                } else if (_computedStyle.has(Property::borderVerticalColor)) {
-                    paint.setColor(_computedStyle.borderVerticalColor().argb());
-                } else if (_computedStyle.has(Property::borderColor)) {
-                    paint.setColor(_computedStyle.borderColor().argb());
-                } else {
-                    draw = false;
-                }
-                if (draw) {
-                    const float halfWidth = _borderBottom / 2.0f;
-                    canvas->drawLine(_rect.left() - 0.5f, _rect.bottom() - halfWidth, _rect.right() + 0.5f, _rect.bottom() - halfWidth, paint);
-                }
+            const std::optional<Color> &color = colors.at(i);
+            if (!color || (shared && !(*shared == *color))) {
+                single = false;
+            } else {
+                shared = color;
             }
         }
+        if (single) {
+            if (shared) {
+                band(*shared);
+            }
+            return;
+        }
 
-        // endregion
+        // Each side in its color, clipped to its part of the band: two sides with widths meet on the line from the
+        // outer corner to the inner one, as CSS's; beside a side without one, the corner is the side's whole
+        const auto end = [](float sideWidth, float neighbourWidth, SkPoint outer, SkPoint innerCorner, SkVector along, float cornerRadius) {
+            if (neighbourWidth > 0) {
+                return innerCorner;
+            }
+            return outer + (along * std::max(cornerRadius, sideWidth)); // Along the neighbour's edge, past the curve
+        };
+        const SkPoint topLeft = SkPoint::Make(_rect.left(), _rect.top());
+        const SkPoint topRight = SkPoint::Make(_rect.right(), _rect.top());
+        const SkPoint bottomRight = SkPoint::Make(_rect.right(), _rect.bottom());
+        const SkPoint bottomLeft = SkPoint::Make(_rect.left(), _rect.bottom());
+        const SkPoint innerTopLeft = SkPoint::Make(inner.left(), inner.top());
+        const SkPoint innerTopRight = SkPoint::Make(inner.right(), inner.top());
+        const SkPoint innerBottomRight = SkPoint::Make(inner.right(), inner.bottom());
+        const SkPoint innerBottomLeft = SkPoint::Make(inner.left(), inner.bottom());
+        const std::array<std::array<SkPoint, 4>, 4> parts{{
+            {topLeft,
+             end(_borderLeft, _borderTop, topLeft, innerTopLeft, {1, 0}, _radiusTopLeft),
+             end(_borderLeft, _borderBottom, bottomLeft, innerBottomLeft, {1, 0}, _radiusBottomLeft),
+             bottomLeft},
+            {topLeft,
+             end(_borderTop, _borderLeft, topLeft, innerTopLeft, {0, 1}, _radiusTopLeft),
+             end(_borderTop, _borderRight, topRight, innerTopRight, {0, 1}, _radiusTopRight),
+             topRight},
+            {topRight,
+             end(_borderRight, _borderTop, topRight, innerTopRight, {-1, 0}, _radiusTopRight),
+             end(_borderRight, _borderBottom, bottomRight, innerBottomRight, {-1, 0}, _radiusBottomRight),
+             bottomRight},
+            {bottomLeft,
+             end(_borderBottom, _borderLeft, bottomLeft, innerBottomLeft, {0, -1}, _radiusBottomLeft),
+             end(_borderBottom, _borderRight, bottomRight, innerBottomRight, {0, -1}, _radiusBottomRight),
+             bottomRight}
+        }};
+        for (std::size_t i = 0; i < parts.size(); ++i) {
+            const std::optional<Color> &color = colors.at(i);
+            if (widths.at(i) <= 0 || !color) {
+                continue;
+            }
+            canvas->save();
+            canvas->clipPath(SkPath::Polygon(parts.at(i), true), _computedStyle.antiAlias());
+            band(*color);
+            canvas->restore();
+        }
     }
 
     // endregion

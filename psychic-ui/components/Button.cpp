@@ -81,8 +81,19 @@ namespace psychic_ui {
         if (_selected != selected) {
             _selected = selected;
             invalidateStyle();
+            updateSelectedClass();
             changed.emit(_selected);
         }
+    }
+
+    void Button::updateToggle(const bool toggle) {
+        _toggle = toggle;
+        updateSelectedClass();
+    }
+
+    // A toggle button that is on has the `selected` class, as rows do; a plain button's selection is only its press
+    void Button::updateSelectedClass() {
+        updateClassName("selected", _toggle && _selected);
     }
 
     bool Button::active() const {

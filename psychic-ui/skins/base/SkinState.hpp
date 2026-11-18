@@ -5,11 +5,13 @@
 namespace psychic_ui {
     /**
      * The interaction state a skin paints, read from its component. Colors and sizes per state come from the
-     * computed style instead (rules on `:hover`, `:active`, `:focus`, `:disabled`).
+     * computed style instead (rules on `:hover`, `:active`, `:pressed`, `.selected`, `:focus`, `:disabled`).
      */
     struct SkinState {
         bool hover{false};
-        bool active{false};
+        bool active{false};   // `:active`: pressed, or selected (a toggle button that is on)
+        bool pressed{false};  // `:pressed`: held down
+        bool selected{false}; // The `selected` class: a toggle button that is on, a selected row or chip
         bool focus{false};
         bool disabled{false};
 
@@ -20,6 +22,8 @@ namespace psychic_ui {
             return {
                 .hover    = component->mouseOver(),
                 .active   = component->active(),
+                .pressed  = component->pressed(),
+                .selected = component->classNames().contains("selected"),
                 .focus    = component->hasFocus(),
                 .disabled = !component->enabled()
             };

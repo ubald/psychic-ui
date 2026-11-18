@@ -420,6 +420,14 @@ namespace psychic_ui {
             return self;
         }
 
+        /**
+         * Held down by a mouse button while enabled (`:pressed` in stylesheets), whatever a subclass adds to `active()`
+         */
+        bool pressed() const;
+
+        /**
+         * `:active` in stylesheets: `pressed()`, and what a subclass adds (a selected `Button`)
+         */
         virtual bool active() const;
         bool focusEnabled() const;
 
@@ -1229,6 +1237,8 @@ namespace psychic_ui {
         void drawShadow(SkCanvas *canvas);
         void drawDotGrid(SkCanvas *canvas);
         void drawOutline(SkCanvas *canvas);
+        void drawRoundedSides(SkCanvas *canvas) const; // Unequal borders on a rounded div
+        void drawSideLines(SkCanvas *canvas) const;    // Unequal borders on a square div
 
         bool _drawBackground{false};
         bool _drawBorder{false};

@@ -76,6 +76,8 @@ namespace psychic_ui {
                                     r->_pseudo.insert(Pseudo::Hover);
                                 } else if (pseudo == "active") {
                                     r->_pseudo.insert(Pseudo::Active);
+                                } else if (pseudo == "pressed") {
+                                    r->_pseudo.insert(Pseudo::Pressed);
                                 } else if (pseudo == "disabled") {
                                     r->_pseudo.insert(Pseudo::Disabled);
                                 } else if (pseudo == "empty") {
@@ -171,6 +173,8 @@ namespace psychic_ui {
                     }
                     case Pseudo::Active:
                         return component->active();
+                    case Pseudo::Pressed:
+                        return component->pressed();
                     case Pseudo::Disabled:
                         return !component->enabled();
                     case Pseudo::Empty:
@@ -244,6 +248,7 @@ namespace psychic_ui {
                     w += 1;
                     break;
                 case Pseudo::Active:
+                case Pseudo::Pressed:
                     w += 2;
                     break;
                 case Pseudo::Focus:

@@ -14,6 +14,7 @@ namespace psychic_ui {
         FocusVisible,
         Hover,
         Active,
+        Pressed,
         Disabled,
         Empty,
         FirstChild,
