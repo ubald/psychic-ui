@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cctype>
 #include <cstdlib>
+#include <utility>
 #include "DataGrid.hpp"
 #include "Icon.hpp"
 #include "Label.hpp"
@@ -165,7 +166,7 @@ namespace psychic_ui {
 
     void DataGrid::updateColumns(std::vector<DataGridColumn> columns) {
         _columns = std::move(columns);
-        if (_sortColumn >= static_cast<int>(_columns.size())) {
+        if (std::cmp_greater_equal(_sortColumn, _columns.size())) {
             _sortColumn = -1;
             _sortOrder  = SortOrder::None;
         }
@@ -223,7 +224,7 @@ namespace psychic_ui {
     }
 
     void DataGrid::updateSort(int column, SortOrder order) {
-        if (column < 0 || column >= static_cast<int>(_columns.size()) || order == SortOrder::None) {
+        if (column < 0 || std::cmp_greater_equal(column, _columns.size()) || order == SortOrder::None) {
             column = -1;
             order  = SortOrder::None;
         }
@@ -273,7 +274,7 @@ namespace psychic_ui {
                 continue;
             }
             Div        &sort   = *_sortButtons[i];
-            const bool sorted = static_cast<int>(i) == _sortColumn;
+            const bool sorted = std::cmp_equal(i, _sortColumn);
             if (sorted) {
                 sort.addClassName("sorted");
             } else {

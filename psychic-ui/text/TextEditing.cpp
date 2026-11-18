@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <tuple>
+#include <utility>
 #include <unicode/uchar.h>
 #include "TextEditing.hpp"
 
@@ -246,7 +247,7 @@ namespace psychic_ui {
     }
 
     bool TextEditing::isWhitespace(unsigned int begin, unsigned int end) const {
-        for (auto i = static_cast<int32_t>(begin); i < static_cast<int32_t>(end);) {
+        for (auto i = static_cast<int32_t>(begin); std::cmp_less(i, end);) {
             const UChar32 c = _text.char32At(i);
             if (!u_isUWhiteSpace(c)) {
                 return false;

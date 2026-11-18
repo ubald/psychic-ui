@@ -1,5 +1,6 @@
 #include <cmath>
 #include <limits>
+#include <utility>
 #include "psychic-ui/components/Icon.hpp"
 #include "psychic-ui/components/Label.hpp"
 #include "SegmentedControlSkinBase.hpp"
@@ -32,11 +33,11 @@ namespace psychic_ui {
     }
 
     void SegmentedControlSkinBase::setSelected(const int index) {
-        if (_selected >= 0 && _selected < static_cast<int>(_segments.size())) {
+        if (_selected >= 0 && std::cmp_less(_selected, _segments.size())) {
             _segments[static_cast<std::size_t>(_selected)]->removeClassName("selected");
         }
         _selected = index;
-        if (_selected >= 0 && _selected < static_cast<int>(_segments.size())) {
+        if (_selected >= 0 && std::cmp_less(_selected, _segments.size())) {
             _segments[static_cast<std::size_t>(_selected)]->addClassName("selected");
         }
     }

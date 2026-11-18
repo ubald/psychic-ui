@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <utility>
 #include "Menu.hpp"
 #include "Label.hpp"
 #include <psychic-ui/components/MenuButton.hpp>
@@ -91,12 +92,12 @@ namespace psychic_ui {
     }
 
     void Menu::highlight(const int index, const bool openSubmenu) {
-        if (index < -1 || index >= static_cast<int>(_rows.size())) {
+        if (index < -1 || std::cmp_greater_equal(index, _rows.size())) {
             return;
         }
         _highlighted = index;
         for (std::size_t i = 0; i < _rows.size(); ++i) {
-            _rows[i]->selected(static_cast<int>(i) == index);
+            _rows[i]->selected(std::cmp_equal(i, index));
         }
         if (!openSubmenu) {
             return;
@@ -213,7 +214,7 @@ namespace psychic_ui {
     }
 
     void Menu::choose(const int index) {
-        if (index < 0 || index >= static_cast<int>(_rows.size()) || !_rows[index]->enabled()) {
+        if (index < 0 || std::cmp_greater_equal(index, _rows.size()) || !_rows[index]->enabled()) {
             return;
         }
         auto *item = const_cast<MenuItem *>(_rows[index]->menuItem()); // Ours: the menu holds its items

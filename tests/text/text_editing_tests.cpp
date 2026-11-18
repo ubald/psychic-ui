@@ -1,6 +1,7 @@
 // The editing model alone: no Div, a fake geometry
 #include <cmath>
 #include <string>
+#include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <unicode/unistr.h>
@@ -27,7 +28,7 @@ namespace {
             const auto &text   = _editing->text();
             int         line   = 0;
             int         column = 0;
-            for (int32_t i = 0; i < static_cast<int32_t>(index) && i < text.length(); ++i) {
+            for (int32_t i = 0; std::cmp_less(i, index) && i < text.length(); ++i) {
                 if (text.charAt(i) == u'\n') {
                     ++line;
                     column = 0;

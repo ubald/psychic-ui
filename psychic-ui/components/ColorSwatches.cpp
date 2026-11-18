@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <utility>
 #include "ColorSwatches.hpp"
 #include "psychic-ui/Window.hpp"
 #include "psychic-ui/themes/palette.hpp"
@@ -124,7 +125,7 @@ namespace psychic_ui {
     }
 
     void ColorSwatches::updateSelected(const int index) {
-        const int selected = index >= 0 && index < static_cast<int>(_colors.size()) ? index : -1;
+        const int selected = index >= 0 && std::cmp_less(index, _colors.size()) ? index : -1;
         if (selected != _selected) {
             _selected = selected;
             if (_skin) {
@@ -135,7 +136,7 @@ namespace psychic_ui {
     }
 
     void ColorSwatches::updateFocused(const int index) {
-        const int focused = index >= 0 && index < static_cast<int>(_colors.size()) ? index : -1;
+        const int focused = index >= 0 && std::cmp_less(index, _colors.size()) ? index : -1;
         if (focused != _focused) {
             _focused = focused;
             if (_skin) {

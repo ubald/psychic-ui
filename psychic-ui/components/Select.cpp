@@ -1,4 +1,5 @@
 #include <string>
+#include <utility>
 #include "psychic-ui/Window.hpp"
 #include "Select.hpp"
 
@@ -22,7 +23,7 @@ namespace psychic_ui {
                 .shrink(0)
                 .marginLeft(Length{0, Length::Unit::Auto});
 
-        _selected = selected >= 0 && selected < static_cast<int>(_options.size()) ? selected : -1;
+        _selected = selected >= 0 && std::cmp_less(selected, _options.size()) ? selected : -1;
         showValue();
 
         onClick([this]() { isOpen() ? close() : open(); });
@@ -42,14 +43,14 @@ namespace psychic_ui {
     void Select::updateOptions(std::vector<std::string> options) {
         close();
         _options = std::move(options);
-        if (_selected >= static_cast<int>(_options.size())) {
+        if (std::cmp_greater_equal(_selected, _options.size())) {
             _selected = -1;
         }
         showValue();
     }
 
     void Select::updateSelected(const int index, const bool emit) {
-        const int selected = index >= 0 && index < static_cast<int>(_options.size()) ? index : -1;
+        const int selected = index >= 0 && std::cmp_less(index, _options.size()) ? index : -1;
         if (selected == _selected) {
             return;
         }

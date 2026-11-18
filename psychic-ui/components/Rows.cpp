@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <utility>
 #include "Rows.hpp"
 #include "psychic-ui/Window.hpp"
 
@@ -171,7 +172,7 @@ namespace psychic_ui {
 
     void RowGroup::updateSelection(const int index) {
         const auto all = rows();
-        updateSelection(index >= 0 && index < static_cast<int>(all.size()) ? all[static_cast<std::size_t>(index)] : nullptr);
+        updateSelection(index >= 0 && std::cmp_less(index, all.size()) ? all[static_cast<std::size_t>(index)] : nullptr);
     }
 
     void RowGroup::rowAdded(SelectableRow *row) {
