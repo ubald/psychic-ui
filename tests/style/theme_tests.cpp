@@ -1,6 +1,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/themes/desk.hpp>
@@ -10,6 +11,9 @@
 #include <psychic-ui/themes/pivotal.hpp>
 #include <psychic-ui/themes/psychic.hpp>
 #include <psychic-ui/Div.hpp>
+#include <psychic-ui/style/Color.hpp>
+#include <psychic-ui/style/StyleSheet.hpp>
+#include <psychic-ui/themes/Theme.hpp>
 
 using namespace psychic_ui;
 

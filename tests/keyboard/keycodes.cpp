@@ -1,5 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
+#include <SDL3/SDL_keycode.h>
 #include <psychic-ui/applications/SDL3SystemWindow.hpp>
+#include <psychic-ui/psychic-ui.hpp>
 
 using namespace psychic_ui;
 

@@ -1,14 +1,21 @@
 #include <memory>
 #include <string>
 #include <typeinfo>
+#include <vector>
+#include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/Skin.hpp>
 #include <psychic-ui/components/AppShell.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/CheckBox.hpp>
 #include <psychic-ui/components/ColorSwatches.hpp>
+#include <psychic-ui/components/MenuButton.hpp>
 #include <psychic-ui/components/Range.hpp>
+#include <psychic-ui/components/ScrollBar.hpp>
 #include <psychic-ui/components/Switch.hpp>
 #include <psychic-ui/components/TextInput.hpp>
+#include <psychic-ui/psychic-ui.hpp>
 #include <psychic-ui/skins/base/ButtonSkinBase.hpp>
 #include <psychic-ui/skins/base/CheckBoxSkinBase.hpp>
 #include <psychic-ui/skins/base/ColorSwatchesSkinBase.hpp>
@@ -18,8 +25,11 @@
 #include <psychic-ui/skins/base/SwitchSkinBase.hpp>
 #include <psychic-ui/skins/base/TextInputSkinBase.hpp>
 #include <psychic-ui/skins/desk/DeskSkins.hpp>
-#include <psychic-ui/skins/float/FloatSkins.hpp>
-#include <psychic-ui/skins/pivotal/PivotalSkins.hpp>
+#include <psychic-ui/skins/float/FloatSkins.hpp> // IWYU pragma: keep: skinSet<FloatSkins>(), which include-cleaner misses
+#include <psychic-ui/style/Color.hpp>
+#include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/style/Values.hpp>
+#include <psychic-ui/themes/Theme.hpp>
 #include <psychic-ui/themes/desk.hpp>
 #include <psychic-ui/themes/float.hpp>
 #include <psychic-ui/themes/pivotal.hpp>

@@ -5,14 +5,14 @@
 // Each one aborts today; a test that passes there has had its bug fixed (tick it off in the checklist). A div
 // that should be freed is allocated with shared_ptr<T>(new T) where make_shared's single block would keep its
 // memory readable after the destructor and hide the bug.
-#include <chrono>
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
-#include "include/core/SkSurface.h"
-#include <psychic-ui/components/Button.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/ColorSwatches.hpp>
 #include <psychic-ui/components/List.hpp>
 #include <psychic-ui/components/Menu.hpp>
@@ -21,6 +21,7 @@
 #include <psychic-ui/components/TabContainer.hpp>
 #include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/components/Tree.hpp>
+#include <psychic-ui/psychic-ui.hpp>
 #include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;

@@ -1,9 +1,12 @@
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <set>
 #include <span>
 #include <string>
+#include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Avatar.hpp>
@@ -21,6 +24,13 @@
 #include <psychic-ui/skins/pivotal/PivotalAvatarSkin.hpp>
 #include <psychic-ui/themes/palette.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/components/Rows.hpp>
+#include <psychic-ui/components/Tone.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Color.hpp>
+#include <psychic-ui/style/Values.hpp>
+#include <psychic-ui/themes/Theme.hpp>
 #include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;

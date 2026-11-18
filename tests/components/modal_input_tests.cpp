@@ -1,9 +1,13 @@
 // Known bugs from review-2026-11.md, tagged [!shouldfail]: remove the tag in the commit that fixes one.
 #include <chrono>
+#include <memory>
+#include <string>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Dialog.hpp>
 #include <psychic-ui/components/Menu.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Values.hpp>
 #include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;

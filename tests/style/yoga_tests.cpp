@@ -1,8 +1,12 @@
 #include <array>
 #include <cstddef>
 #include <catch2/catch_test_macros.hpp>
-#include <iostream>
-#include <yoga/Yoga.h>
+#include <yoga/YGConfig.h>
+#include <yoga/YGEnums.h>
+#include <yoga/YGNode.h>
+#include <yoga/YGNodeLayout.h>
+#include <yoga/YGNodeStyle.h>
+#include <yoga/YGValue.h>
 
 TEST_CASE( "Making sure yoga does what we want" ) {
     auto *config = YGConfigNew();

@@ -1,5 +1,7 @@
 // Known bugs from review-2026-11.md, tagged [!shouldfail]: remove the tag in the commit that fixes one.
+#include <memory>
 #include <stdexcept>
+#include <string>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/style/StyleSelector.hpp>

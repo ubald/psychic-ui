@@ -1,11 +1,16 @@
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
-#include <yoga/Yoga.h>
+#include <yoga/YGEnums.h>
+#include <yoga/YGNode.h>
+#include <yoga/YGValue.h>
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/style/Style.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Values.hpp>
 
 using namespace psychic_ui;
 

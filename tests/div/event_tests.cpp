@@ -1,12 +1,15 @@
 #include <memory>
 #include <type_traits>
+#include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
+#include <psychic-ui/Div.hpp>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/CheckBox.hpp>
 #include <psychic-ui/components/Range.hpp>
-#include <psychic-ui/components/TextInput.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/StyleManager.hpp>
 
 using namespace psychic_ui;
 

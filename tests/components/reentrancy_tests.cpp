@@ -2,6 +2,7 @@
 // (review-2026-11.md): clean under AddressSanitizer, kept as regression tests. The cases that found
 // bugs are the hidden [asan] tests in tests/asan/use_after_free_tests.cpp.
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -14,23 +15,23 @@
 #include <psychic-ui/components/MenuButton.hpp>
 #include <psychic-ui/components/Select.hpp>
 #include <psychic-ui/components/TextInput.hpp>
-#include <psychic-ui/components/Toast.hpp>
-#include <psychic-ui/components/Tooltip.hpp>
+#include <psychic-ui/components/Toast.hpp> // IWYU pragma: keep: toast({...}), a ToastOptions, which include-cleaner misses
 #include <psychic-ui/components/Tree.hpp>
 #include <psychic-ui/components/DataGrid.hpp>
 #include <psychic-ui/components/Switch.hpp>
 #include <psychic-ui/components/Chip.hpp>
-#include <psychic-ui/components/Sidebar.hpp>
 #include <psychic-ui/components/SegmentedControl.hpp>
-#include <psychic-ui/components/ColorSwatches.hpp>
 #include <psychic-ui/components/NumberStepper.hpp>
 #include <psychic-ui/components/MenuBar.hpp>
-#include <psychic-ui/components/Range.hpp>
 #include <psychic-ui/components/CheckBox.hpp>
 #include <psychic-ui/components/SearchField.hpp>
-#include <psychic-ui/skins/float/FloatSkins.hpp>
+#include <psychic-ui/skins/float/FloatSkins.hpp> // IWYU pragma: keep: skinSet<FloatSkins>(), which include-cleaner misses
 #include <psychic-ui/themes/pivotal.hpp>
-#include <psychic-ui/themes/float.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/Popup.hpp>
+#include <psychic-ui/Window.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Values.hpp>
 #include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;

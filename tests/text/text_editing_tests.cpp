@@ -1,11 +1,16 @@
 // The editing model alone: no Div, a fake geometry
+#include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <unicode/unistr.h>
+#include "include/core/SkRect.h"
+#include <psychic-ui/psychic-ui.hpp>
 #include <psychic-ui/text/TextEditing.hpp>
+#include <psychic-ui/text/TextGeometry.hpp>
 
 using namespace psychic_ui;
 using Edit      = TextEditing::Edit;

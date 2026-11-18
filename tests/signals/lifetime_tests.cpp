@@ -1,6 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <memory>
 #include <string>
+#include <vector>
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkRefCnt.h"
 #include "include/core/SkSurface.h"
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/Window.hpp>
@@ -8,7 +11,9 @@
 #include <psychic-ui/components/Menu.hpp>
 #include <psychic-ui/components/MenuBar.hpp>
 #include <psychic-ui/components/MenuButton.hpp>
-#include <psychic-ui/skins/pivotal/PivotalSkins.hpp>
+#include <psychic-ui/skins/pivotal/PivotalSkins.hpp> // IWYU pragma: keep: skinSet<PivotalSkins>(), which include-cleaner misses
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/signals/Signal.hpp>
 
 using namespace psychic_ui;
 

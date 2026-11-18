@@ -1,9 +1,12 @@
 #include <memory>
+#include <stdexcept>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/style/Style.hpp>
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/components/Button.hpp>
+#include <psychic-ui/style/Color.hpp>
+#include <psychic-ui/style/Properties.hpp>
 
 using namespace psychic_ui;
 

@@ -5,11 +5,20 @@
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkRefCnt.h"
 #include "include/core/SkSurface.h"
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/Text.hpp>
 #include <psychic-ui/components/Button.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/style/Color.hpp>
+#include <psychic-ui/style/Properties.hpp>
+#include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/style/Values.hpp>
+#include <psychic-ui/text/TextLayout.hpp>
 #include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;

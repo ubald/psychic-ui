@@ -1,7 +1,11 @@
 #include <memory>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/Measure.hpp>
 #include <psychic-ui/Window.hpp>
+#include <psychic-ui/style/StyleManager.hpp>
+#include <psychic-ui/style/Values.hpp>
 
 using namespace psychic_ui;
 

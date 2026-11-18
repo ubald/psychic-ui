@@ -2,15 +2,23 @@
 #include <cmath>
 #include <string>
 #include <filesystem>
+#include <string_view>
+#include <utility>
+#include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <unicode/unistr.h>
 #include "include/core/SkCanvas.h"
-#include "include/core/SkFont.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkString.h"
 #include "include/core/SkSurface.h"
 #include "include/core/SkTypeface.h"
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/themes/Theme.hpp>
 #include <psychic-ui/utils/ExecutablePath.hpp>
 #include <psychic-ui/text/TextLayout.hpp>
+#include <psychic-ui/style/Values.hpp>
 
 using namespace psychic_ui;
 

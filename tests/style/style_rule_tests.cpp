@@ -1,3 +1,4 @@
+#include <unordered_set>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/style/StyleSelector.hpp>
 

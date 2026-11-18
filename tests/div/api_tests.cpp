@@ -1,5 +1,7 @@
 #include <memory>
 #include <type_traits>
+#include <utility>
+#include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/components/Button.hpp>
@@ -7,6 +9,8 @@
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/Range.hpp>
 #include <psychic-ui/components/Text.hpp>
+#include <psychic-ui/style/Length.hpp>
+#include <psychic-ui/style/Values.hpp>
 
 using namespace psychic_ui;
 

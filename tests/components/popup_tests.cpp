@@ -1,9 +1,14 @@
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
+#include <unicode/unistr.h>
+#include "include/core/SkRect.h"
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Dialog.hpp>
 #include <psychic-ui/components/List.hpp>
@@ -18,6 +23,12 @@
 #include <psychic-ui/components/Toast.hpp>
 #include <psychic-ui/components/Tooltip.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
+#include <psychic-ui/Div.hpp>
+#include <psychic-ui/Overlay.hpp>
+#include <psychic-ui/Popup.hpp>
+#include <psychic-ui/Window.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Values.hpp>
 #include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;
