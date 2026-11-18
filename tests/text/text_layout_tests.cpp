@@ -63,7 +63,7 @@ namespace {
     }
 
     /**
-     * Width of the widest line, laid out with the same settings as TextBase
+     * Width of the widest line, laid out with the same settings as Text
      */
     float textWidth(const std::shared_ptr<StyleManager> &styleManager, const std::string &text, float size = 14.0f, const std::string &font = FONT) {
         TextLayout layout{};
@@ -385,4 +385,71 @@ TEST_CASE("Text is painted in the color given then, without building its paragra
     CHECK(inkOf(SK_ColorRED) == SK_ColorRED);
     CHECK(inkOf(SK_ColorBLUE) == SK_ColorBLUE);
     CHECK(TextLayout::paragraphsBuilt() == built);
+}
+
+TEST_CASE("One line too long ends in an ellipsis that fits, or overflows", "[text]") {
+    auto       styleManager = makeStyleManager();
+    TextLayout layout{};
+    auto       style = layoutStyle(styleManager);
+    layout.setText(icu::UnicodeString::fromUTF8("one two three four five six"));
+    layout.setStyle(style);
+    const float whole = layout.maxContentWidth();
+    layout.layout(60.0f);
+
+    auto surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(400, 40));
+    // The rightmost column with ink
+    auto inkEnd = [&] {
+        surface->getCanvas()->clear(SK_ColorWHITE);
+        layout.paint(surface->getCanvas(), 0.0f, 0.0f, SK_ColorBLACK);
+        SkPixmap pixmap;
+        REQUIRE(surface->peekPixels(&pixmap));
+        int end = -1;
+        for (int y = 0; y < pixmap.height(); ++y) {
+            for (int x = 0; x < pixmap.width(); ++x) {
+                if (pixmap.getColor(x, y) != SK_ColorWHITE) {
+                    end = std::max(end, x);
+                }
+            }
+        }
+        return end;
+    };
+
+    SECTION("clipped, it runs past the width") {
+        CHECK(inkEnd() > 60);
+    }
+
+    SECTION("with an ellipsis, it stops within the width and still measures as a whole") {
+        style.overflow = TextOverflow::Ellipsis;
+        CHECK(layout.setStyle(style));
+        const int end = inkEnd();
+        CHECK(end > 30);
+        CHECK(end < 60);
+        CHECK(layout.lineCountAt(60.0f) == 1);
+        CHECK(layout.maxContentWidth() == Approx(whole));
+    }
+
+    SECTION("several lines wrap instead") {
+        style.overflow = TextOverflow::Ellipsis;
+        layout.setStyle(style);
+        layout.setMultiline(true);
+        CHECK(layout.lineCountAt(60.0f) > 1);
+    }
+}
+
+TEST_CASE("A Label keeps its text as set and is as tall as its line height", "[text]") {
+    auto styleManager = makeStyleManager();
+    Root root{styleManager};
+    root.alignItems(Align::Start);
+
+    auto &label = root.add<Label>("two\nlines");
+    label.fontFamily(FONT)
+        .fontSize(14.0f)
+        .lineHeight(8.0f); // Less than the font's spacing: the glyphs overflow it, as in CSS
+    root.layout(400, 300);
+
+    CHECK(label.text() == "two\nlines");
+    CHECK(label.getHeight() == 8.0f);
+    CHECK_FALSE(label.selectable());
+    CHECK_FALSE(label.multiline());
+    CHECK(label.tags().back() == "label");
 }

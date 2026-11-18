@@ -1,4 +1,5 @@
 #include <cmath>
+#include <limits>
 #include "psychic-ui/Window.hpp"
 #include "Text.hpp"
 
@@ -28,10 +29,16 @@ namespace psychic_ui {
     }
 
     Text::Text(const std::string &text) :
-        TextBase::TextBase() {
+        Div::Div() {
         tag("Text");
 
+        _defaultStyle.shrink(0);
+        setMeasurable();
         _textLayout.setMultiline(false);
+
+        #ifdef DEBUG_LAYOUT
+        dashed = true;
+        #endif
 
         updateText(text);
 
@@ -167,7 +174,7 @@ namespace psychic_ui {
     }
 
     void Text::removedFromRender() {
-        TextBase::removedFromRender();
+        Div::removedFromRender();
         _onMouseMove.disconnect(); // Removed mid-selection: the mouse up won't reach us
     }
 
@@ -185,17 +192,43 @@ namespace psychic_ui {
         apply(_editing.handleKey(key, mod, *this, clipboard));
     }
 
+    void Text::styleUpdated() {
+        Div::styleUpdated();
+
+        const float fontSize = _computedStyle.fontSize();
+        const bool  changed  = _textLayout.setStyle(TextLayoutStyle{
+            styleManager()->fontCollection(),
+            _computedStyle.fontFamily().str(),
+            fontSize,
+            // Auto is 1.5 times the font size, a percent is of the font size
+            _computedStyle.lineHeight().resolve(fontSize, fontSize * 1.5f),
+            _computedStyle.letterSpacing(),
+            _computedStyle.fontSmoothing(),
+            _computedStyle.textAlign(),
+            _computedStyle.textOverflow()
+        });
+        // Yoga caches measures: re-measure when anything changing the text metrics changes. Colors aren't part of
+        // the layout: they are given when painting, so a color transition lays nothing out again
+        if (changed) {
+            invalidate();
+        }
+    }
+
     Size Text::measure(Constraint width, Constraint height) {
         // Pure: the layout caches measures and calls this with various constraints,
         // so the layout used for painting (at the box's width) is left as it is.
         float contentWidth = width.apply(std::ceil(_textLayout.maxContentWidth()));
         auto  lines        = std::max<size_t>(1, _textLayout.lineCountAt(contentWidth));
-        return Size{contentWidth, height.apply(linesHeight(lines))};
+        return Size{contentWidth, height.apply(static_cast<float>(lines) * _textLayout.style().lineHeight)};
     }
 
     void Text::layoutUpdated() {
-        TextBase::layoutUpdated();
+        Div::layoutUpdated();
         _textLayout.layout(_paddedRect.width());
+        // One line of static text that doesn't fit is cut after the last character that fits whole (textOverflow's
+        // Clip; Ellipsis is the layout's own)
+        const bool cut = !_editing.multiline() && !_editable && _computedStyle.textOverflow() == TextOverflow::Clip;
+        _visibleWidth  = cut ? _textLayout.fittingWidth(_paddedRect.width()) : std::numeric_limits<float>::infinity();
         if (_pendingCaretSignal) {
             caretMoved.emit(_editing.caret());
             _pendingCaretSignal = false;
@@ -205,7 +238,17 @@ namespace psychic_ui {
     void Text::draw(SkCanvas *canvas) {
         Div::draw(canvas);
         if (!_editing.text().isEmpty()) {
+            const bool cut = _visibleWidth < _textLayout.maxContentWidth();
+            if (cut) {
+                canvas->save();
+                // Only horizontally: glyphs can reach above and below the line
+                const float lineHeight = _textLayout.style().lineHeight;
+                canvas->clipRect(SkRect::MakeLTRB(_paddedRect.fLeft, _paddedRect.fTop - lineHeight, _paddedRect.fLeft + _visibleWidth, _paddedRect.fBottom + lineHeight));
+            }
             _textLayout.paint(canvas, _paddedRect.fLeft, _paddedRect.fTop, _computedStyle.color().argb());
+            if (cut) {
+                canvas->restore();
+            }
             if (_selectable && _focused) {
                 auto [begin, end] = _editing.selection();
                 _textLayout.paintSelection(

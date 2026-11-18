@@ -2,9 +2,9 @@
 
 #include <string>
 #include <unicode/unistr.h>
-#include "psychic-ui/TextBase.hpp"
 #include "psychic-ui/Div.hpp"
 #include "psychic-ui/text/TextEditing.hpp"
+#include "psychic-ui/text/TextLayout.hpp"
 
 namespace psychic_ui {
 
@@ -13,8 +13,11 @@ namespace psychic_ui {
      *
      * Displays single or multiline text that is optionally selectable and/or editable, through a TextEditing.
      * It answers the editing model's geometry questions in its own coordinates (inside its padding and border).
+     *
+     * Measured to its text: the widest line within the width it's given, and as many lines as that takes, each
+     * the computed line height (glyphs may overflow a line height smaller than the font's, as in CSS).
      */
-    class Text : public TextBase, public TextEditing::Geometry {
+    class Text : public Div, public TextEditing::Geometry {
     public:
         /**
          * Construct a Text component, optionally initializing it with text
@@ -23,13 +26,18 @@ namespace psychic_ui {
         explicit Text(const std::string &text = "");
 
         /**
-         * Get the component's text
-         * @return
+         * The text, in UTF-8, as it was set or edited
          */
         std::string text() const;
 
-        // The setter, which the getter above would hide
-        using TextBase::text;
+        /**
+         * Set the text, the caret at its start
+         */
+        template<class Self>
+        Self &text(this Self &self, const std::string &text) {
+            static_cast<Text &>(self).updateText(text);
+            return self;
+        }
 
         bool selectable() const;
 
@@ -109,9 +117,15 @@ namespace psychic_ui {
 
     protected:
 
+        float       _visibleWidth{0.0f}; // Where one line of static text is cut when it doesn't fit
         bool        _selectable{true};
         bool        _editable{false};
         TextEditing _editing{};
+
+        /**
+         * The text's layout (SkParagraph). Mutable: its queries lay the text out on demand.
+         */
+        mutable TextLayout _textLayout{};
 
         /**
          * Whether we're waiting on layout validation to sent the caret signal
@@ -127,7 +141,7 @@ namespace psychic_ui {
          */
         void updateTextInputArea();
 
-        void updateText(const std::string &text) override;
+        void updateText(const std::string &text);
         void updateSelectable(bool selectable);
         void updateEditable(bool editable);
         void updateMultiline(bool multiline);
@@ -138,6 +152,7 @@ namespace psychic_ui {
         void subscribeToEdition();
 
         void removedFromRender() override;
+        void styleUpdated() override;
         Size measure(Constraint width, Constraint height) override;
         void layoutUpdated() override;
         void draw(SkCanvas *canvas) override;

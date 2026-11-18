@@ -24,7 +24,7 @@ namespace psychic_ui {
     public:
         explicit ListRow(const std::string &title = "", const std::string &secondary = "");
 
-        const std::string &title() const { return _title->text(); }
+        std::string title() const { return _title->text(); }
 
         template<class Self>
         Self &title(this Self &self, const std::string &title) {
@@ -32,7 +32,7 @@ namespace psychic_ui {
             return self;
         }
 
-        const std::string &secondary() const { return _secondary->text(); }
+        std::string secondary() const { return _secondary->text(); }
 
         /**
          * The text under the title, smaller and muted; "" for none

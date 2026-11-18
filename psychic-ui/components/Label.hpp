@@ -1,27 +1,17 @@
 #pragma once
 
 #include <string>
-#include "psychic-ui/TextBase.hpp"
+#include "psychic-ui/components/Text.hpp"
 
 namespace psychic_ui {
     /**
      * @class Label
      *
-     * Displays single lines of non-selectable text.
-     * For more control and options see the Text class.
+     * A Text on one line that the mouse doesn't select, tagged `Label`: line returns lay out as spaces, and the text
+     * is kept as it was set.
      */
-    class Label : public TextBase {
+    class Label : public Text {
     public:
         explicit Label(const std::string &text = "");
-        const std::string &text() const;
-        using TextBase::text;
-    protected:
-        void updateText(const std::string &text) override;
-    private:
-        std::string _text;
-        float       _visibleWidth{0.0f}; // Where the text is cut when it doesn't fit
-        Size measure(Constraint width, Constraint height) override;
-        void layoutUpdated() override;
-        void draw(SkCanvas *canvas) override;
     };
 }

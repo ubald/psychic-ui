@@ -71,7 +71,7 @@ namespace psychic_ui {
 
         TreeRow &row() const { return *_row; }
 
-        const std::string &label() const;
+        std::string label() const;
 
         template<class Self>
         Self &label(this Self &self, const std::string &label) {

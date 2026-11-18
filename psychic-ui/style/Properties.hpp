@@ -55,6 +55,8 @@
     X(textAlign,                TextAlign,     TextAlign,          TextAlign::Start,       true,  false, false) \
     /* How glyph edges are smoothed; glyphs are always placed to the subpixel */ \
     X(fontSmoothing,           FontSmoothing, FontSmoothing,      FontSmoothing::Grayscale, true, false, false) \
+    /* One line too long for its box: cut after its last whole character, or before an ellipsis */ \
+    X(textOverflow,             TextOverflow,  TextOverflow,       TextOverflow::Clip,     false, false, false) \
     /* Icons (Icon, paint::icon), drawn in `color`: the side of the square, and the stroke in units of a 16-unit */ \
     /* grid whatever the icon's (Pivotal's 1.3), so every icon has the same weight at the same size */ \
     X(iconSize,                 float,         detail::FloatArg,   14.0f,                  true,  false, true ) \

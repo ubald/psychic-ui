@@ -16,7 +16,7 @@
 namespace psychic_ui {
 
     /**
-     * What a TextLayout lays its text out with, from a TextBase's computed style
+     * What a TextLayout lays its text out with, from a Text's computed style
      */
     struct TextLayoutStyle {
         sk_sp<skia::textlayout::FontCollection> fonts{nullptr};
@@ -26,6 +26,7 @@ namespace psychic_ui {
         float                                   letterSpacing{0.0f};
         FontSmoothing                           smoothing{FontSmoothing::Grayscale};
         TextAlign                               align{TextAlign::Start};
+        TextOverflow                            overflow{TextOverflow::Clip};
 
         bool operator==(const TextLayoutStyle &) const = default;
     };
@@ -36,8 +37,8 @@ namespace psychic_ui {
      * Every index is in UTF-16 code units, like icu::UnicodeString's.
      *
      * Every line is `lineHeight` tall, its glyphs centred in it (CSS's half-leading). One-line
-     * layouts never wrap: their text overflows the width instead, and line returns lay out as
-     * spaces.
+     * layouts never wrap: their text overflows the width instead, or ends in an ellipsis that fits
+     * (`TextOverflow::Ellipsis`), and line returns lay out as spaces.
      *
      * Colors are given when painting, so a color change (a transition) never builds or lays out the
      * paragraph again.
@@ -53,8 +54,11 @@ namespace psychic_ui {
 
         /**
          * Set what the text is laid out with
+         * @return Whether that changes it (then its size may have changed too)
          */
-        void setStyle(const TextLayoutStyle &style);
+        bool setStyle(const TextLayoutStyle &style);
+
+        const TextLayoutStyle &style() const;
 
         /**
          * Whether the text wraps at the width (or stays on one line, past it)
@@ -134,6 +138,11 @@ namespace psychic_ui {
         skia::textlayout::Paragraph *laidOut();
 
         void changed();
+
+        /**
+         * Whether one line too long ends in an ellipsis: laid out at the box's width, then
+         */
+        bool ellipsis() const;
 
         /**
          * The line holding the caret before the character at the index (a wrapped line's end is the next line's start)

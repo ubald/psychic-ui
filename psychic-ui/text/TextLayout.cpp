@@ -111,12 +111,17 @@ namespace psychic_ui {
         changed();
     }
 
-    void TextLayout::setStyle(const TextLayoutStyle &style) {
+    bool TextLayout::setStyle(const TextLayoutStyle &style) {
         if (style == _style) {
-            return;
+            return false;
         }
         _style = style;
         changed();
+        return true;
+    }
+
+    const TextLayoutStyle &TextLayout::style() const {
+        return _style;
     }
 
     void TextLayout::setMultiline(bool multiline) {
@@ -167,6 +172,10 @@ namespace psychic_ui {
         paragraphStyle.setTextAlign(textAlign(_style.align));
         paragraphStyle.setReplaceTabCharacters(true);
         paragraphStyle.setApplyRoundingHack(false); // Flutter's rounding of line widths, which can wrap a line early
+        if (ellipsis()) {
+            paragraphStyle.setEllipsis(std::u16string{u"\u2026"});
+            paragraphStyle.setMaxLines(1);
+        }
 
         auto fonts   = _style.fonts ? _style.fonts : sk_make_sp<tl::FontCollection>();
         auto builder = tl::ParagraphBuilder::make(paragraphStyle, fonts, unicode());
@@ -191,7 +200,7 @@ namespace psychic_ui {
             _paragraphWidth = -1.0f;
         }
         float w = std::isnan(width) ? 0.0f : std::max(0.0f, width);
-        if (!_multiline) {
+        if (!_multiline && !ellipsis()) {
             // Never wrap: as wide as the text when it overflows. The intrinsic width comes from
             // any layout.
             if (_paragraphWidth < 0.0f) {
@@ -205,6 +214,10 @@ namespace psychic_ui {
             _paragraphWidth = w;
         }
         return _paragraph.get();
+    }
+
+    bool TextLayout::ellipsis() const {
+        return !_multiline && _style.overflow == TextOverflow::Ellipsis;
     }
 
     tl::Paragraph *TextLayout::laidOut() {

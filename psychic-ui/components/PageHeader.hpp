@@ -19,7 +19,7 @@ namespace psychic_ui {
     public:
         explicit PageHeader(const std::string &title = "", const std::string &icon = "");
 
-        const std::string &title() const { return _title->text(); }
+        std::string title() const { return _title->text(); }
 
         template<class Self>
         Self &title(this Self &self, const std::string &title) {

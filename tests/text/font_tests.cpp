@@ -31,7 +31,7 @@ namespace {
         return manager;
     }
 
-    // Laid out as TextBase does: subpixel positioning, so slight hinting
+    // Laid out as Text does: subpixel positioning, so slight hinting
     TextLayout layout(const std::shared_ptr<StyleManager> &manager, const std::string &family, float size) {
         TextLayout text{};
         text.setText(icu::UnicodeString::fromUTF8("The quick brown fox jumps over the lazy dog"));

@@ -22,7 +22,7 @@ namespace psychic_ui {
     public:
         explicit EmptyState(const std::string &icon = "", const std::string &title = "", const std::string &description = "");
 
-        const std::string &title() const;
+        std::string title() const;
 
         template<class Self>
         Self &title(this Self &self, const std::string &title) {

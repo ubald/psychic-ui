@@ -18,7 +18,7 @@ namespace psychic_ui {
     public:
         explicit Tooltip(const std::string &text = "");
 
-        const std::string &text() const { return _label->text(); }
+        std::string text() const { return _label->text(); }
 
         template<class Self>
         Self &text(this Self &self, const std::string &text) {

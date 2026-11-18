@@ -27,7 +27,7 @@ namespace psychic_ui {
     public:
         explicit Chip(const std::string &label = "", Tone tone = Tone::Neutral);
 
-        const std::string &label() const { return _label->text(); }
+        std::string label() const { return _label->text(); }
 
         template<class Self>
         Self &label(this Self &self, const std::string &label) {

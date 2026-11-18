@@ -365,8 +365,6 @@ set(SOURCE_FILES
     psychic-ui/text/TextLayout.hpp
     psychic-ui/components/Text.cpp
     psychic-ui/components/Text.hpp
-    psychic-ui/TextBase.cpp
-    psychic-ui/TextBase.hpp
     )
 
 if (PSYCHIC_UI_BUILD_SDL3)

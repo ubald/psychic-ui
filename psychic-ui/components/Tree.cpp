@@ -104,7 +104,7 @@ namespace psychic_ui {
         return nullptr;
     }
 
-    const std::string &TreeNode::label() const {
+    std::string TreeNode::label() const {
         return _row->_label->text();
     }
 

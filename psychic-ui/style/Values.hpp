@@ -56,6 +56,12 @@ namespace psychic_ui {
      */
     enum class FontSmoothing : std::uint8_t { None, Grayscale, Subpixel };
 
+    /**
+     * How one line of text that doesn't fit its box ends, CSS's `text-overflow`: cut after the last whole character
+     * that fits (text being edited runs past the box instead), or before an ellipsis that fits
+     */
+    enum class TextOverflow : std::uint8_t { Clip, Ellipsis };
+
     enum class Cursor : std::uint8_t { Arrow, IBeam, Crosshair, Hand, HResize, VResize };
 
     /**
