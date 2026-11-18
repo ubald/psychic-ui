@@ -332,7 +332,8 @@ namespace psychic_ui {
 
         inline Atom toValue(StringArg argument) { return Atom{argument.value}; }
 
+        // By value: a reference to its argument would dangle once the temporary it was given is gone
         template<class T>
-        constexpr const T &toValue(const T &argument) { return argument; }
+        constexpr T toValue(T argument) { return argument; }
     }
 }
