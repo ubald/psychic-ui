@@ -1,11 +1,22 @@
 #include <algorithm>
+#include <cstdint>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <tuple>
 #include <utility>
+#include <unicode/brkiter.h>
+#include <unicode/locid.h>
 #include <unicode/uchar.h>
+#include <unicode/umachine.h>
+#include <unicode/unistr.h>
+#include <unicode/utf16.h>
+#include <unicode/utypes.h>
+#include "include/core/SkRect.h"
 #include "TextEditing.hpp"
+#include "TextGeometry.hpp"
+#include "psychic-ui/psychic-ui.hpp"
 
 namespace psychic_ui {
 

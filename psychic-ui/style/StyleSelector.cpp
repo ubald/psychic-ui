@@ -1,8 +1,16 @@
 #include <algorithm>
+#include <cstddef>
+#include <iterator>
+#include <memory>
+#include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 #include "StyleSelector.hpp"
 #include "psychic-ui/Div.hpp"
 #include "psychic-ui/Window.hpp"
 #include "../utils/StringUtils.hpp"
+#include "psychic-ui/psychic-ui.hpp"
 
 namespace psychic_ui {
 

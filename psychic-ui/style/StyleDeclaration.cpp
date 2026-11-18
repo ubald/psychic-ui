@@ -1,4 +1,9 @@
+#include <memory>
+#include <string>
+#include <utility>
+#include "Style.hpp"
 #include "StyleDeclaration.hpp"
+#include "StyleSelector.hpp"
 
 namespace psychic_ui {
 

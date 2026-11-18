@@ -1,5 +1,9 @@
 #include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <cstddef>
+#include <optional>
+#include "Timing.hpp"
 #include "Tween.hpp"
 
 namespace psychic_ui {
