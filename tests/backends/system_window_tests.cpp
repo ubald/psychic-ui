@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Button.hpp>
-#include <psychic-ui/components/Text.hpp>
+#include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/components/TitleBar.hpp>
 #include "fake_system_window.hpp"
 
@@ -80,11 +80,10 @@ TEST_CASE("Drag areas", "[backend][drag]") {
     }
 }
 
-TEST_CASE("Text copies, cuts and pastes through the clipboard", "[backend][clipboard][text]") {
+TEST_CASE("A text input copies, cuts and pastes through the clipboard", "[backend][clipboard][text]") {
     auto window = std::make_shared<TestWindow>();
     FakeSystemWindow systemWindow(window);
-    auto &text = window->appContainer().add<Text>("Hello wörld");
-    text.editable(true);
+    auto &text = window->appContainer().add<TextInput>("Hello wörld");
     systemWindow.layout();
     window->requestFocus(&text);
 

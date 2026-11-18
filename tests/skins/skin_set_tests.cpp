@@ -155,7 +155,8 @@ TEST_CASE("switching skin sets hatches every component again", "[skins][switch]"
     REQUIRE(is<TabButtonSkin>(tab.skin()));
     REQUIRE(is<CheckBoxSkinBase>(checkBox.skin()));
     REQUIRE(is<RangeSkinBase>(range.skin()));
-    REQUIRE(input.textDisplay()->parent() == input.skin().get());
+    REQUIRE(input.skin()->textView()->parent() == input.skin().get());
+    input.selection(2, 6);
     const auto rangeSkin  = range.skin();
     const auto inputSkin  = input.skin();
     const auto areaSkin   = area.skin();
@@ -181,13 +182,16 @@ TEST_CASE("switching skin sets hatches every component again", "[skins][switch]"
         CHECK(area.skin() != areaSkin);
         CHECK(window->theme().name == themes::oneLight.name);
 
-        // The text input's text display moved to its new skin, with its text
+        // The text input's new skin has a view of its own, showing its text and selection
         REQUIRE(input.skin() != inputSkin);
-        CHECK(input.textDisplay()->parent() == input.skin().get());
-        REQUIRE(inputSkin->children().size() == 1); // Only its own part, the placeholder
-        CHECK(inputSkin->children()[0]->classNames().contains("placeholder"));
+        Text *view = input.skin()->textView();
+        REQUIRE(view);
+        CHECK(view != inputSkin->textView());
+        CHECK(view->parent() == input.skin().get());
         CHECK(input.text() == "Some text");
-        CHECK(input.textDisplay()->text() == "Some text");
+        CHECK(view->text() == "Some text");
+        CHECK(input.selection() == std::pair{2u, 6u});
+        CHECK(view->selection() == std::pair{2u, 6u});
         CHECK(area.textScroller()->parent() == area.skin().get());
 
         // Every component in the scroller too (its scroll bars)

@@ -3,6 +3,7 @@
 #include <string>
 #include "psychic-ui/Component.hpp"
 #include "psychic-ui/components/Text.hpp"
+#include "psychic-ui/components/TextField.hpp"
 
 namespace psychic_ui {
     class TextInput;
@@ -14,30 +15,25 @@ namespace psychic_ui {
         }
 
         /**
-         * Show the component's text display (`TextInput::textDisplay()`), which it owns, among the skin's children;
-         * take it out again when the skin is replaced
+         * The `.text` part, which the skin creates and owns: the view showing the text, the selection and the caret
          */
-        void addedToComponent() override = 0;
-        void removedFromComponent() override = 0;
-
-        virtual void setText(const std::string &/*text*/) {};
+        virtual Text *textView() = 0;
 
         /**
-         * What the field shows while it is empty
+         * What the field shows while it is empty (the `.placeholder` part), and whether it shows now
          */
-        virtual void setPlaceholder(const std::string &/*placeholder*/) {};
+        virtual void setPlaceholder(const std::string &/*placeholder*/, bool /*shown*/) {};
     };
 
-    class TextInput : public Component<TextInputSkin> {
+    /**
+     * @class TextInput
+     *
+     * A text field on one line, with a placeholder while it is empty. Its skin's `"bare"` variant has no chrome, for
+     * read-only text one can select and copy (`readOnly(true)`).
+     */
+    class TextInput : public TextField<TextInputSkin> {
     public:
         explicit TextInput(const std::string &text = "");
-        const std::string &text() const;
-
-        template<class Self>
-        Self &text(this Self &self, const std::string &text) {
-            static_cast<TextInput &>(self).updateText(text);
-            return self;
-        }
 
         /**
          * What the field shows while it is empty (the skin's `.placeholder` part); none by default
@@ -50,26 +46,10 @@ namespace psychic_ui {
             return self;
         }
 
-        std::shared_ptr<Text> textDisplay();
-
-        /**
-         * The text display: Tab, or a press beside the text, lets one type
-         */
-        Div *focusDelegate() override;
-
-        /**
-         * The text changed, with the new text
-         */
-        Signal<std::string> changed{};
-        PSYCHIC_UI_EVENT(onChange, changed)
-
     protected:
-        void updateText(const std::string &text);
-        void updatePlaceholder(const std::string &placeholder);
-        void skinChanged() override;
+        std::string _placeholder{};
 
-        std::string           _text{};
-        std::string           _placeholder{};
-        std::shared_ptr<Text> _textDisplay{nullptr};
+        void updatePlaceholder(const std::string &placeholder);
+        void textChanged() override;
     };
 }

@@ -2,29 +2,27 @@
 
 #include "psychic-ui/components/TextInput.hpp"
 #include "psychic-ui/components/Label.hpp"
+#include "psychic-ui/components/Text.hpp"
 #include "psychic-ui/paint/Box.hpp"
 #include "SkinState.hpp"
 
 namespace psychic_ui {
     /**
-     * What every text input skin shares: it shows the component's text display (a `Text`, which the component
-     * owns, so that it keeps its text, selection and caret when the skin changes), and the `.placeholder` part
-     * under it, out of the layout, while the text is empty. A skin set's text input only paints its chrome, behind
-     * the text.
+     * What every text input skin shares: the `.text` part, the view its field drives, and the `.placeholder` part
+     * under it, out of the layout, while the field is empty; both are children, which its child list owns. A skin
+     * set's text input only paints its chrome, behind the text.
      */
     class TextInputSkinBase : public TextInputSkin {
     public:
         TextInputSkinBase();
 
-        void setText(const std::string &text) override;
-        void setPlaceholder(const std::string &placeholder) override;
+        Text *textView() override;
+        void setPlaceholder(const std::string &placeholder, bool shown) override;
 
     protected:
-        Label *_placeholder{nullptr}; // The `.placeholder` part, a child: our child list owns it
+        Label *_placeholder{nullptr}; // The `.placeholder` part
+        Text  *_text{nullptr};        // The `.text` part
 
-
-        void addedToComponent() override;
-        void removedFromComponent() override;
         void draw(SkCanvas *canvas) final;
 
         /**

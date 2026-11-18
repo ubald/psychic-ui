@@ -11,8 +11,14 @@ namespace psychic_ui {
     /**
      * @class Text
      *
-     * Displays single or multiline text that is optionally selectable and/or editable, through a TextEditing.
-     * It answers the editing model's geometry questions in its own coordinates (inside its padding and border).
+     * Displays single or multiline text. A text field (`TextField`) drives it as its view: it sets the text, the
+     * selection, whether the caret shows and, on one line, scrolls it to reveal the caret; the view paints them and
+     * answers the editing model's geometry questions in its own coordinates (its border box, scrolled). The selection
+     * is painted whenever there is one, in the inherited `selectionColor` and `selectionBackgroundColor` (none
+     * while transparent), so rules decide how it looks while its field doesn't have the focus.
+     *
+     * It can still edit itself (`editable`, `selectable`), which only `TextArea` and the demo use until they move to
+     * a field.
      *
      * Measured to its text: the widest line within the width it's given, and as many lines as that takes, each
      * the computed line height (glyphs may overflow a line height smaller than the font's, as in CSS).
@@ -104,6 +110,28 @@ namespace psychic_ui {
             return self;
         }
 
+        bool caretVisible() const;
+
+        /**
+         * Whether the caret shows, for the field driving the view (an editable text shows it while focused)
+         */
+        template<class Self>
+        Self &caretVisible(this Self &self, detail::BoolArg visible) {
+            static_cast<Text &>(self).updateCaretVisible(visible.value);
+            return self;
+        }
+
+        /**
+         * How far one line is scrolled left, to show its caret
+         */
+        float offsetX() const;
+
+        /**
+         * Scroll one line horizontally just enough for the caret before the index to show, within the text (deleting
+         * at the end scrolls it back); nothing on several lines. Needs the view laid out.
+         */
+        void reveal(unsigned int index);
+
         SkRect caretRect(unsigned int index) const override;
         unsigned int indexAt(float x, float y) const override;
 
@@ -118,6 +146,8 @@ namespace psychic_ui {
     protected:
 
         float       _visibleWidth{0.0f}; // Where one line of static text is cut when it doesn't fit
+        float       _offsetX{0.0f};
+        bool        _caretVisible{false};
         bool        _selectable{true};
         bool        _editable{false};
         TextEditing _editing{};
@@ -145,6 +175,7 @@ namespace psychic_ui {
         void updateSelectable(bool selectable);
         void updateEditable(bool editable);
         void updateMultiline(bool multiline);
+        void updateCaretVisible(bool visible);
         void updateSelection(unsigned int anchor, unsigned int caret);
         void moveCaret(unsigned int caret);
 

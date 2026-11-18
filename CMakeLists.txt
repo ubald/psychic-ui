@@ -353,6 +353,7 @@ set(SOURCE_FILES
     psychic-ui/components/Box.hpp
     psychic-ui/SystemWindow.cpp
     psychic-ui/SystemWindow.hpp
+    psychic-ui/components/TextField.hpp
     psychic-ui/components/TextInput.cpp
     psychic-ui/components/TextInput.hpp
     psychic-ui/components/TextArea.cpp
@@ -363,6 +364,7 @@ set(SOURCE_FILES
     psychic-ui/text/TextEditing.hpp
     psychic-ui/text/TextLayout.cpp
     psychic-ui/text/TextLayout.hpp
+    psychic-ui/text/WindowClipboard.hpp
     psychic-ui/components/Text.cpp
     psychic-ui/components/Text.hpp
     )

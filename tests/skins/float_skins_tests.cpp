@@ -118,7 +118,7 @@ TEST_CASE("switching to Float live re-hatches skins and keeps the components' st
     CHECK(input.skin() != inputSkin);
     CHECK(on.skin() != switchSkin);
     CHECK(input.text() == "Typed before");
-    CHECK(input.textDisplay()->parent() == input.skin().get());
+    CHECK(input.skin()->textView()->text() == "Typed before");
     CHECK(list.selection() == &grace);
     CHECK(grace.computedStyle().backgroundColor() == themes::floatLight.palette.accentSoft);
     CHECK(on.checked());

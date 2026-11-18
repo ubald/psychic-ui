@@ -11,23 +11,19 @@ namespace psychic_ui {
                     .mouseEnabled(false)
                     .position(Position::Absolute)
                     .visible(false);
+        // Over the placeholder; its field takes the mouse
+        _text = &add<Text>();
+        _text->addClassName("text")
+             .selectable(false);
     }
 
-    void TextInputSkinBase::setText(const std::string &text) {
-        _placeholder->visible(text.empty() && !_placeholder->text().empty());
+    Text *TextInputSkinBase::textView() {
+        return _text;
     }
 
-    void TextInputSkinBase::setPlaceholder(const std::string &placeholder) {
+    void TextInputSkinBase::setPlaceholder(const std::string &placeholder, const bool shown) {
         _placeholder->text(placeholder);
-        setText(component() ? component()->text() : "");
-    }
-
-    void TextInputSkinBase::addedToComponent() {
-        add(component()->textDisplay());
-    }
-
-    void TextInputSkinBase::removedFromComponent() {
-        remove(component()->textDisplay());
+        _placeholder->visible(shown);
     }
 
     void TextInputSkinBase::draw(SkCanvas *canvas) {

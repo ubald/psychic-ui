@@ -16,8 +16,8 @@ namespace psychic_ui {
               .focusEnabled(false); // Tab stops once, on the field
         _input->onChange([this](const std::string &/*text*/) { textChanged(); });
 
-        // Escape and Enter reach the text display first, which leaves them alone on one line
-        _input->textDisplay()->onKeyPress(
+        // Escape and Enter reach the input after its editing, which leaves them alone on one line
+        _input->onKeyPress(
             [this](const Key key, const Mod /*modifiers*/) {
                 if (key == Key::ESCAPE && !_input->text().empty()) {
                     updateText("");
@@ -34,7 +34,7 @@ namespace psychic_ui {
         _clear->onClick([this]() { updateText(""); });
     }
 
-    const std::string &SearchField::text() const {
+    std::string SearchField::text() const {
         return _input->text();
     }
 
@@ -51,18 +51,18 @@ namespace psychic_ui {
     }
 
     Div *SearchField::focusDelegate() {
-        return _input->textDisplay().get();
+        return _input.get();
     }
 
     void SearchField::updateText(const std::string &text) {
         if (text != _input->text()) {
             _input->text(text);
-            textChanged(); // Whether or not the text display reported it
+            textChanged(); // Setting the input's text emits nothing
         }
     }
 
     void SearchField::textChanged() {
-        const std::string &text = _input->text();
+        const std::string text = _input->text();
         _clear->visible(!text.empty());
         changed.emit(text);
     }
