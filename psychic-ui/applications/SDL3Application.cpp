@@ -1,12 +1,22 @@
 #include <algorithm>
 #include <chrono>
-#include <climits>
 #include <cstdint>
+#include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <SDL3/SDL_error.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_log.h>
+#include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_timer.h>
+#include <SDL3/SDL_version.h>
+#include <SDL3/SDL_video.h>
 #include "SDL3Application.hpp"
 #include "../Window.hpp"
+#include "SDL3SystemWindow.hpp"
 
 namespace psychic_ui {
 

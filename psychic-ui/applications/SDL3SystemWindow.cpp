@@ -1,8 +1,29 @@
+#include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <utility>
 #include <unicode/unistr.h>
+#include <SDL3/SDL_clipboard.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_keyboard.h>
+#include <SDL3/SDL_keycode.h>
+#include <SDL3/SDL_mouse.h>
+#include <SDL3/SDL_pen.h>
+#include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_timer.h>
+#include <SDL3/SDL_touch.h>
+#include <SDL3/SDL_video.h>
 #include "SDL3SystemWindow.hpp"
 #include "../Window.hpp"
+#include "../SystemWindow.hpp"
+#include "../psychic-ui.hpp"
+#include "../style/Values.hpp"
+#include "../themes/Theme.hpp"
 
 namespace psychic_ui {
 

@@ -1,10 +1,16 @@
-#include <algorithm>
 #include <cstddef>
 #include <iostream>
+#include <memory>
 #include <span>
 #include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
+#include <unicode/umachine.h>
 #include <unicode/unistr.h>
+#include "../SystemWindow.hpp"
+#include "../psychic-ui.hpp"
+#include "../style/Values.hpp"
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include "GLFWSystemWindow.hpp"
