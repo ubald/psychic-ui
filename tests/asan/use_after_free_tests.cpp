@@ -124,7 +124,8 @@ TEST_CASE("M6: a child outlives its parent", "[.][asan]") {
     const F f;
     auto child = std::make_shared<Div>();
     {
-        auto parent = std::shared_ptr<Div>(new Div());
+        // Allocated apart from its control block (not make_shared), so that ASan sees its memory freed
+        auto parent = std::shared_ptr<Div>(std::make_unique<Div>());
         parent->add(child);
     }
     CHECK(child->window() == nullptr); // walks the dangling _parent
@@ -137,7 +138,7 @@ TEST_CASE("M6: a SearchField's input outlives the field", "[.][asan]") {
     std::shared_ptr<TextInput> input;
     std::weak_ptr<SearchField> gone;
     {
-        auto  field = std::shared_ptr<SearchField>(new SearchField(""));
+        auto  field = std::shared_ptr<SearchField>(std::make_unique<SearchField>("")); // Apart, as above
         auto &added = f.window->appContainer().add(field);
         f.layout();
         input = added.input();
@@ -158,7 +159,7 @@ TEST_CASE("M8: a selected row moved to another tree, then freed", "[.][asan]") {
     F     f;
     auto &tree1 = f.window->appContainer().add<Tree>();
     auto &tree2 = f.window->appContainer().add<Tree>();
-    auto  keep  = std::shared_ptr<TreeNode>(new TreeNode("a"));
+    auto  keep  = std::shared_ptr<TreeNode>(std::make_unique<TreeNode>("a")); // Apart, as above
     tree1.add(keep);
     tree1.node("b");
     f.layout();
