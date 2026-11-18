@@ -11,7 +11,6 @@ namespace psychic_ui {
 
         _defaultStyle.shrink(0);
         setMeasurable();
-        _textLayout.setMultiline(false);
 
         #ifdef DEBUG_LAYOUT
         dashed = true;

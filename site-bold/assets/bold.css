@@ -1,0 +1,1228 @@
+/* Psychic UI's site, the bold variant: a stage lit by three lighting gels, light (house lights up) and dark */
+
+:root {
+    --bg: #f2f1f7;
+    --surface: #e8e6f0;
+    --raised: #ffffff;
+    --line: rgb(18 13 36 / 10%);
+    --line-strong: rgb(18 13 36 / 18%);
+    --text: #120d24;
+    --text-2: #423b5c;
+    --muted: #625b7d;
+    --magenta: #ff4fa3;
+    --amber: #ffb627;
+    --cyan: #3cd7ff;
+    --magenta-ink: #b8166a;
+    --amber-ink: #925c00;
+    --cyan-ink: #00728f;
+    --accent: #4c57c0;
+    --on-accent: #ffffff;
+    --beam-opacity: .34;
+    --beam-blend: multiply;
+    --glow: 0 50px 120px -40px rgb(184 22 106 / 35%), 0 30px 90px -40px rgb(0 114 143 / 35%);
+    --code-bg: #120d24;
+    --code-text: #ece8fb;
+    --code-line: rgb(255 255 255 / 8%);
+    --tok-key: #ff7dbd;
+    --tok-str: #ffc95c;
+    --tok-fn: #7fe3ff;
+    --tok-com: #8a82a8;
+    color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --bg: #0a0716;
+        --surface: #120d24;
+        --raised: #1a1430;
+        --line: rgb(255 255 255 / 8%);
+        --line-strong: rgb(255 255 255 / 15%);
+        --text: #f5f2ff;
+        --text-2: #bdb6d8;
+        --muted: #9189b0;
+        --magenta-ink: #ff6fb4;
+        --amber-ink: #ffc24d;
+        --cyan-ink: #6fe0ff;
+        --accent: #8a93ff;
+        --on-accent: #0a0716;
+        --beam-opacity: .5;
+        --beam-blend: screen;
+        --glow: 0 60px 140px -40px rgb(255 79 163 / 38%), 0 40px 120px -40px rgb(60 215 255 / 30%);
+        --code-bg: #120d24;
+        --code-line: rgb(255 255 255 / 8%);
+        color-scheme: dark;
+    }
+}
+
+:root[data-theme="dark"] {
+    --bg: #0a0716;
+    --surface: #120d24;
+    --raised: #1a1430;
+    --line: rgb(255 255 255 / 8%);
+    --line-strong: rgb(255 255 255 / 15%);
+    --text: #f5f2ff;
+    --text-2: #bdb6d8;
+    --muted: #9189b0;
+    --magenta-ink: #ff6fb4;
+    --amber-ink: #ffc24d;
+    --cyan-ink: #6fe0ff;
+    --accent: #8a93ff;
+    --on-accent: #0a0716;
+    --beam-opacity: .5;
+    --beam-blend: screen;
+    --glow: 0 60px 140px -40px rgb(255 79 163 / 38%), 0 40px 120px -40px rgb(60 215 255 / 30%);
+    --code-bg: #120d24;
+    --code-line: rgb(255 255 255 / 8%);
+    color-scheme: dark;
+}
+
+/* Each skin set lends the page its accent: Pivotal's indigo, Desk's amber, Float's violet */
+:root[data-set="desk"] {
+    --accent: #925c00;
+}
+
+:root[data-set="float"] {
+    --accent: #6b4cf0;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"])[data-set="desk"] {
+        --accent: #ffb627;
+    }
+
+    :root:not([data-theme="light"])[data-set="float"] {
+        --accent: #a58cff;
+    }
+}
+
+:root[data-theme="dark"][data-set="desk"] {
+    --accent: #ffb627;
+}
+
+:root[data-theme="dark"][data-set="float"] {
+    --accent: #a58cff;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 88px;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 400 17px/1.6 "Instrument Sans", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: clip;
+    padding-bottom: 96px;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+a {
+    color: inherit;
+}
+
+code, pre {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+:not(pre) > code {
+    font-size: .86em;
+    padding: .08em .36em;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+}
+
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+button {
+    font: inherit;
+    color: inherit;
+}
+
+.wrap {
+    width: min(1240px, 100% - 32px);
+    margin-inline: auto;
+}
+
+.skip {
+    position: absolute;
+    left: 16px;
+    top: -100px;
+    z-index: 20;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--on-accent);
+    text-decoration: none;
+}
+
+.skip:focus {
+    top: 12px;
+}
+
+/* Navigation */
+
+.nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px max(16px, (100% - 1240px) / 2);
+    background: color-mix(in srgb, var(--bg) 72%, transparent);
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    border-bottom: 1px solid var(--line);
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font: 700 19px/1 "Bricolage Grotesque", sans-serif;
+    font-variation-settings: "wdth" 88;
+    letter-spacing: -.02em;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.mark {
+    position: relative;
+    width: 26px;
+    height: 24px;
+    isolation: isolate;
+}
+
+.mark i {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    mix-blend-mode: var(--beam-blend);
+}
+
+.mark i:nth-child(1) {
+    left: 0;
+    top: 0;
+    background: var(--magenta);
+}
+
+.mark i:nth-child(2) {
+    right: 0;
+    top: 0;
+    background: var(--cyan);
+}
+
+.mark i:nth-child(3) {
+    left: 5.5px;
+    bottom: 0;
+    background: var(--amber);
+}
+
+.nav-links {
+    display: flex;
+    gap: 4px;
+}
+
+.nav-links a {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-2);
+    text-decoration: none;
+}
+
+.nav-links a:hover {
+    color: var(--text);
+    background: var(--surface);
+}
+
+/* Hero: three gels swing onto the stage, once */
+
+.hero {
+    position: relative;
+    isolation: isolate;
+    padding: clamp(48px, 9vw, 120px) 0 clamp(48px, 7vw, 96px);
+    overflow: clip;
+}
+
+.beams {
+    position: absolute;
+    inset: -80px 0 0;
+    z-index: -1;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(black 55%, transparent 92%);
+    mask-image: linear-gradient(black 55%, transparent 92%);
+}
+
+.beam {
+    position: absolute;
+    top: 0;
+    width: min(70vw, 900px);
+    height: 120%;
+    transform-origin: 50% 0;
+    filter: blur(26px);
+    opacity: var(--beam-opacity);
+    mix-blend-mode: var(--beam-blend);
+}
+
+/* The cone is clipped first, then blurred as a whole, so its edges stay soft */
+.beam::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--gel);
+    clip-path: polygon(48% 0, 52% 0, 100% 100%, 0 100%);
+}
+
+.beam.magenta {
+    left: 10%;
+    margin-left: max(-35vw, -450px);
+    --gel: linear-gradient(to bottom, var(--magenta), transparent 92%);
+    --aim: -26deg;
+    rotate: var(--aim);
+}
+
+.beam.amber {
+    left: 50%;
+    margin-left: max(-35vw, -450px);
+    --gel: linear-gradient(to bottom, var(--amber), transparent 88%);
+    --aim: 0deg;
+    rotate: var(--aim);
+}
+
+.beam.cyan {
+    left: 90%;
+    margin-left: max(-35vw, -450px);
+    --gel: linear-gradient(to bottom, var(--cyan), transparent 92%);
+    --aim: 26deg;
+    rotate: var(--aim);
+}
+
+.hero-copy {
+    width: min(1240px, 100% - 32px);
+    margin-inline: auto;
+}
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 28px;
+    padding: 6px 14px 6px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-2);
+    background: color-mix(in srgb, var(--bg) 60%, transparent);
+}
+
+.status .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--amber) 25%, transparent);
+}
+
+h1 {
+    margin: 0;
+    font: 800 clamp(2.9rem, 10.4vw, 9.6rem)/.86 "Bricolage Grotesque", sans-serif;
+    font-variation-settings: "wdth" 84, "opsz" 96;
+    letter-spacing: -.03em;
+    text-wrap: balance;
+}
+
+h1 span {
+    display: block;
+}
+
+h1 span + span {
+    padding-left: clamp(0px, 9vw, 150px);
+}
+
+.hero-foot {
+    display: grid;
+    grid-template-columns: minmax(0, 34rem) auto;
+    justify-content: space-between;
+    align-items: end;
+    gap: 24px 48px;
+    margin-top: clamp(28px, 4vw, 48px);
+}
+
+.lead {
+    margin: 0;
+    font-size: clamp(18px, 1.6vw, 21px);
+    line-height: 1.5;
+    color: var(--text-2);
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    height: 46px;
+    padding: 0 20px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: var(--raised);
+    font-weight: 600;
+    font-size: 16px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform .15s ease, border-color .15s ease;
+}
+
+.button:hover {
+    border-color: var(--text-2);
+}
+
+.button:active {
+    transform: translateY(1px);
+}
+
+.button.primary {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+}
+
+.button svg {
+    width: 18px;
+    height: 18px;
+}
+
+.hero-shot {
+    width: min(1200px, 100% - 32px);
+    margin: clamp(40px, 6vw, 80px) auto 0;
+    perspective: 1800px;
+}
+
+.screen {
+    position: relative;
+    padding: clamp(5px, .7vw, 9px);
+    border-radius: clamp(12px, 1.6vw, 22px);
+    background:
+        linear-gradient(var(--raised), var(--raised)) padding-box,
+        linear-gradient(120deg, var(--magenta), var(--amber) 50%, var(--cyan)) border-box;
+    border: 1px solid transparent;
+    box-shadow: var(--glow);
+}
+
+.screen img {
+    width: 100%;
+    border-radius: clamp(8px, 1.1vw, 15px);
+}
+
+.hero-shot .screen {
+    transform-origin: 50% 100%;
+}
+
+.hero-shot figcaption,
+.caption {
+    margin: 22px 0 0;
+    font-size: 15px;
+    color: var(--muted);
+    text-align: center;
+}
+
+.hero-shot::after {
+    content: "";
+    display: block;
+    height: 60px;
+    margin: -30px 6% 0;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--amber) 30%, transparent), transparent);
+    filter: blur(10px);
+    position: relative;
+    z-index: -1;
+}
+
+img.loading {
+    opacity: .4;
+    transition: opacity .2s;
+}
+
+/* The load sequence: beams swing from the wings onto the stage, the headline rises, the screen settles */
+@media (prefers-reduced-motion: no-preference) {
+    .beam {
+        animation: aim 1.8s cubic-bezier(.16, 1, .3, 1) both;
+    }
+
+    .beam.magenta {
+        --from: -64deg;
+        animation-delay: .1s;
+    }
+
+    .beam.amber {
+        --from: 38deg;
+        animation-delay: .25s;
+    }
+
+    .beam.cyan {
+        --from: 64deg;
+        animation-delay: .4s;
+    }
+
+    h1 span {
+        animation: rise 1s cubic-bezier(.16, 1, .3, 1) both;
+    }
+
+    h1 span + span {
+        animation-delay: .12s;
+    }
+
+    .hero-shot .screen {
+        animation: settle 1.6s .3s cubic-bezier(.16, 1, .3, 1) both;
+    }
+}
+
+@keyframes aim {
+    from {
+        rotate: var(--from);
+        opacity: 0;
+    }
+    to {
+        rotate: var(--aim);
+        opacity: var(--beam-opacity);
+    }
+}
+
+@keyframes rise {
+    from {
+        transform: translateY(.35em);
+        opacity: 0;
+    }
+}
+
+@keyframes settle {
+    from {
+        transform: rotateX(18deg) scale(.94);
+        opacity: 0;
+    }
+}
+
+/* Sections */
+
+section:not(.hero) {
+    padding: clamp(72px, 10vw, 140px) 0;
+}
+
+.display {
+    margin: 0;
+    max-width: 17ch;
+    font: 760 clamp(2.3rem, 5.6vw, 4.9rem)/.95 "Bricolage Grotesque", sans-serif;
+    font-variation-settings: "wdth" 86, "opsz" 96;
+    letter-spacing: -.022em;
+    text-wrap: balance;
+}
+
+.intro {
+    max-width: 38rem;
+    margin: 24px 0 0;
+    font-size: 19px;
+    color: var(--text-2);
+}
+
+/* How it works: one frame, then the ideas */
+
+.frame {
+    margin-top: clamp(40px, 6vw, 72px);
+    padding: clamp(24px, 3vw, 40px);
+    border-radius: 24px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+}
+
+.frame-intro {
+    margin: 0 0 28px;
+    max-width: 40rem;
+    color: var(--text-2);
+}
+
+.steps {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+}
+
+.steps li {
+    position: relative;
+    padding: 0 12px 0 0;
+    counter-increment: step;
+}
+
+.steps li::before {
+    content: counter(step);
+    display: block;
+    font: 800 clamp(2.4rem, 4vw, 3.6rem)/1 "Bricolage Grotesque", sans-serif;
+    font-variation-settings: "wdth" 75;
+    letter-spacing: -.04em;
+    margin-bottom: 14px;
+    color: var(--magenta-ink);
+}
+
+.steps li:nth-child(3n+2)::before {
+    color: var(--amber-ink);
+}
+
+.steps li:nth-child(3n)::before {
+    color: var(--cyan-ink);
+}
+
+.steps li::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(clamp(2.4rem, 4vw, 3.6rem) + 4px);
+    border-top: 1px solid var(--line-strong);
+}
+
+.steps b {
+    display: block;
+    margin-top: 14px;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.steps span {
+    display: block;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--muted);
+}
+
+.ideas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+    gap: 48px 56px;
+    margin-top: clamp(48px, 6vw, 80px);
+}
+
+.idea h3 {
+    margin: 0 0 10px;
+    font: 700 24px/1.15 "Bricolage Grotesque", sans-serif;
+    font-variation-settings: "wdth" 88;
+    letter-spacing: -.015em;
+}
+
+.idea h3::before {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin-bottom: 18px;
+    border-radius: 2px;
+    background: var(--magenta);
+}
+
+.idea:nth-child(3n+2) h3::before {
+    background: var(--amber);
+}
+
+.idea:nth-child(3n) h3::before {
+    background: var(--cyan);
+}
+
+.idea p {
+    margin: 0;
+    color: var(--text-2);
+}
+
+/* Code */
+
+.split {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: clamp(32px, 5vw, 72px);
+    align-items: start;
+}
+
+.prose p {
+    color: var(--text-2);
+    margin: 22px 0 0;
+    max-width: 34rem;
+}
+
+.prose .display {
+    max-width: 11ch;
+}
+
+.code-stack {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+}
+
+.code {
+    margin: 0;
+    padding: 24px 26px;
+    overflow-x: auto;
+    border-radius: 20px;
+    background: var(--code-bg);
+    color: var(--code-text);
+    border: 1px solid var(--code-line);
+    font-size: 13.5px;
+    line-height: 1.7;
+    tab-size: 4;
+    box-shadow: inset 4px 0 0 var(--accent);
+}
+
+.code .k {
+    color: var(--tok-key);
+}
+
+.code .s {
+    color: var(--tok-str);
+}
+
+.code .f {
+    color: var(--tok-fn);
+}
+
+.code .c {
+    color: var(--tok-com);
+    font-style: italic;
+}
+
+/* Skin sets: three big names, and the app dealt as a deck of three */
+
+.sets-section {
+    background: var(--surface);
+    border-block: 1px solid var(--line);
+}
+
+.sets {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 40px;
+}
+
+.set {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px 22px 22px;
+    text-align: left;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: transparent;
+    cursor: pointer;
+    transition: background-color .2s, border-color .2s;
+}
+
+.set:hover {
+    border-color: var(--line-strong);
+}
+
+.set-name {
+    font: 780 clamp(2rem, 4vw, 3.2rem)/1 "Bricolage Grotesque", sans-serif;
+    font-variation-settings: "wdth" 86;
+    letter-spacing: -.025em;
+    color: var(--muted);
+    transition: color .2s;
+}
+
+.set-text {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-2);
+}
+
+.set[aria-pressed="true"] {
+    background: var(--raised);
+    border-color: var(--accent);
+    box-shadow: inset 0 -4px 0 var(--accent);
+}
+
+.set[aria-pressed="true"] .set-name {
+    color: var(--text);
+}
+
+.deck {
+    position: relative;
+    margin: clamp(40px, 6vw, 72px) auto 0;
+    width: min(100%, 1000px);
+    aspect-ratio: 1280 / 800;
+}
+
+.card {
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: clamp(10px, 1.4vw, 18px);
+    overflow: hidden;
+    background: var(--raised);
+    cursor: pointer;
+    transition: transform .7s cubic-bezier(.16, 1, .3, 1), opacity .5s, filter .5s, box-shadow .5s;
+    --x: 0%;
+    --r: 0deg;
+    --s: 1;
+    transform: translateX(var(--x)) rotate(var(--r)) scale(var(--s));
+}
+
+.card img {
+    width: 100%;
+}
+
+/* The picked set in front, the next to its right, the one before to its left */
+.deck[data-front="default"] .card[data-pick-set="default"],
+.deck[data-front="desk"] .card[data-pick-set="desk"],
+.deck[data-front="float"] .card[data-pick-set="float"] {
+    z-index: 3;
+    box-shadow: var(--glow);
+    cursor: zoom-in;
+}
+
+.deck[data-front="default"] .card[data-pick-set="desk"],
+.deck[data-front="desk"] .card[data-pick-set="float"],
+.deck[data-front="float"] .card[data-pick-set="default"] {
+    z-index: 1;
+    --x: 16%;
+    --r: 4deg;
+    --s: .84;
+    filter: saturate(.7) brightness(.8);
+}
+
+.deck[data-front="default"] .card[data-pick-set="float"],
+.deck[data-front="desk"] .card[data-pick-set="default"],
+.deck[data-front="float"] .card[data-pick-set="desk"] {
+    z-index: 1;
+    --x: -16%;
+    --r: -4deg;
+    --s: .84;
+    filter: saturate(.7) brightness(.8);
+}
+
+.link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* Gallery: big group names held in place while their tiles scroll by, the tiles staggered */
+
+.group {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
+    gap: 24px clamp(24px, 4vw, 56px);
+    margin-top: clamp(56px, 8vw, 104px);
+}
+
+.group-title {
+    position: sticky;
+    top: 96px;
+    align-self: start;
+    margin: 0;
+    font: 780 clamp(2rem, 3.6vw, 3.1rem)/.95 "Bricolage Grotesque", sans-serif;
+    font-variation-settings: "wdth" 86;
+    letter-spacing: -.025em;
+    color: var(--magenta-ink);
+}
+
+.group:nth-of-type(4n+2) .group-title {
+    color: var(--amber-ink);
+}
+
+.group:nth-of-type(4n+3) .group-title {
+    color: var(--cyan-ink);
+}
+
+.group:nth-of-type(4n) .group-title {
+    color: var(--accent);
+}
+
+.tiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 40px 28px;
+    align-items: start;
+}
+
+.tile {
+    margin: 0;
+    min-width: 0;
+}
+
+.tile.wide {
+    grid-column: 1 / -1;
+}
+
+.tiles > .tile:not(.wide):nth-child(even) {
+    margin-top: 64px;
+}
+
+.tiles:has(> .wide) > .tile:nth-child(2) {
+    margin-top: 0;
+}
+
+.tiles:has(> .wide) > .tile:nth-child(3) {
+    margin-top: 64px;
+}
+
+.shot {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--raised);
+    cursor: zoom-in;
+    transition: transform .25s cubic-bezier(.16, 1, .3, 1), box-shadow .25s, border-color .25s;
+}
+
+.shot:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 24px 50px -24px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.tile figcaption {
+    padding: 16px 2px 0;
+}
+
+.tile h4 {
+    margin: 0;
+    font: 700 21px/1.2 "Bricolage Grotesque", sans-serif;
+    font-variation-settings: "wdth" 88;
+    letter-spacing: -.015em;
+}
+
+.tile figcaption p {
+    margin: 4px 0 0;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: var(--muted);
+}
+
+.hidden {
+    opacity: 0;
+    transform: translateY(40px);
+}
+
+.shown {
+    opacity: 1;
+    transform: none;
+    transition: opacity .8s cubic-bezier(.16, 1, .3, 1), transform .8s cubic-bezier(.16, 1, .3, 1);
+}
+
+/* Motion and density */
+
+.motion-section {
+    background: var(--surface);
+    border-block: 1px solid var(--line);
+}
+
+.reels,
+.density {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+    margin-top: clamp(40px, 5vw, 64px);
+}
+
+.reel {
+    margin: 0;
+    min-width: 0;
+}
+
+.reel figcaption {
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 15.5px;
+}
+
+.density {
+    max-width: 1000px;
+}
+
+/* Getting started */
+
+.start-section .split {
+    align-items: center;
+}
+
+/* Footer: the name in gel light */
+
+footer {
+    padding: 40px 0 32px;
+    border-top: 1px solid var(--line);
+    overflow: clip;
+}
+
+.wordmark {
+    width: fit-content;
+    margin: 0 auto 24px;
+    padding: 0 .04em .08em;
+    font: 800 clamp(3.5rem, 17vw, 16rem)/1 "Bricolage Grotesque", sans-serif;
+    font-variation-settings: "wdth" 80, "opsz" 96;
+    letter-spacing: -.04em;
+    white-space: nowrap;
+    background: linear-gradient(100deg, var(--magenta), var(--amber) 50%, var(--cyan));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.footer-row {
+    width: min(1240px, 100% - 32px);
+    margin-inline: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px 24px;
+    font-size: 15px;
+    color: var(--muted);
+}
+
+.footer-row nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+}
+
+.footer-row a {
+    text-decoration: none;
+    color: var(--text-2);
+}
+
+.footer-row a:hover {
+    color: var(--text);
+    text-decoration: underline;
+}
+
+/* The console: picks the skin set and theme of every capture, always at hand */
+
+.console {
+    position: fixed;
+    left: 50%;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    z-index: 15;
+    translate: -50% 0;
+    display: flex;
+    gap: 6px;
+    padding: 6px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: color-mix(in srgb, var(--raised) 80%, transparent);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    box-shadow: 0 18px 40px -16px rgb(10 7 22 / 45%);
+}
+
+.segmented {
+    display: flex;
+    gap: 2px;
+}
+
+.segmented + .segmented {
+    padding-left: 6px;
+    border-left: 1px solid var(--line-strong);
+}
+
+.segmented button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: background-color .15s, color .15s;
+}
+
+.segmented button:hover {
+    color: var(--text);
+}
+
+.segmented button[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+.segmented svg {
+    width: 16px;
+    height: 16px;
+}
+
+.segmented [data-pick-theme] .label {
+    display: none;
+}
+
+.segmented [data-pick-theme] {
+    padding: 0 10px;
+}
+
+/* Full size */
+
+dialog.zoom {
+    width: min(1440px, 100vw - 32px);
+    max-height: calc(100vh - 32px);
+    padding: 0;
+    border: 0;
+    border-radius: 14px;
+    background: transparent;
+    overflow: auto;
+    cursor: zoom-out;
+}
+
+dialog.zoom img {
+    width: 100%;
+}
+
+dialog.zoom::backdrop {
+    background: rgb(10 7 22 / 82%);
+    backdrop-filter: blur(6px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    dialog.zoom[open] {
+        animation: open .25s cubic-bezier(.16, 1, .3, 1);
+    }
+}
+
+@keyframes open {
+    from {
+        opacity: 0;
+        transform: scale(.96);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *, *::before, *::after {
+        transition-duration: 0s !important;
+    }
+}
+
+/* Narrower screens */
+
+@media (max-width: 960px) {
+    .steps {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 28px 0;
+    }
+
+    .split,
+    .group {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .group-title {
+        position: static;
+    }
+
+    .hero-foot {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 720px) {
+    body {
+        font-size: 16px;
+    }
+
+    .optional {
+        display: none;
+    }
+
+    .sets,
+    .reels,
+    .density {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .set {
+        padding: 14px 18px 16px;
+    }
+
+    .tiles {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 32px;
+    }
+
+    .tiles > .tile:not(.wide):nth-child(even),
+    .tiles:has(> .wide) > .tile:nth-child(3) {
+        margin-top: 0;
+    }
+
+    .deck[data-front="default"] .card[data-pick-set="desk"],
+    .deck[data-front="desk"] .card[data-pick-set="float"],
+    .deck[data-front="float"] .card[data-pick-set="default"] {
+        --x: 7%;
+        --r: 3deg;
+        --s: .9;
+    }
+
+    .deck[data-front="default"] .card[data-pick-set="float"],
+    .deck[data-front="desk"] .card[data-pick-set="default"],
+    .deck[data-front="float"] .card[data-pick-set="desk"] {
+        --x: -7%;
+        --r: -3deg;
+        --s: .9;
+    }
+
+    h1 span + span {
+        padding-left: 0;
+    }
+
+    .code {
+        font-size: 12px;
+        padding: 18px;
+    }
+
+    .segmented button {
+        padding: 0 11px;
+        font-size: 14px;
+    }
+
+    .segmented [data-pick-theme] {
+        padding: 0 8px;
+    }
+}

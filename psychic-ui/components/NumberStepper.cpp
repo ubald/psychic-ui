@@ -157,8 +157,7 @@ namespace psychic_ui {
     }
 
     bool NumberStepper::fieldKey(const Key key, const Mod mod) {
-        const auto keepAlive = weak_from_this().lock(); // A handler may remove this stepper from its parent
-        const int  steps     = mod.shift ? 10 : 1;
+        const int steps = mod.shift ? 10 : 1;
         switch (key) {
             case Key::UP:
                 commit();
@@ -190,7 +189,6 @@ namespace psychic_ui {
         if (part == NumberStepperSkin::Part::None) {
             return false;
         }
-        const auto keepAlive = weak_from_this().lock(); // A handler may remove this stepper from its parent
         commit();
         stepBy(part == NumberStepperSkin::Part::Increment ? 1 : -1);
         return true;

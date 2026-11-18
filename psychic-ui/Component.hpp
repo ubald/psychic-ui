@@ -7,8 +7,12 @@
 
 namespace psychic_ui {
 
-    template<class T>
-    class Component : public Div {
+    /**
+     * A Div drawn by a skin implementing `T`. `Base` is the Div subclass it extends, when the components of a kind
+     * share code that doesn't depend on their skin (`TextFieldBase`).
+     */
+    template<class T, class Base = Div>
+    class Component : public Base {
     protected:
         Component();
 
@@ -54,17 +58,17 @@ namespace psychic_ui {
         using Div::removeAll;
     };
 
-    template<class T>
-    Component<T>::Component():
-        Div() {
-        tag("Component");
+    template<class T, class Base>
+    Component<T, Base>::Component():
+        Base() {
+        this->tag("Component");
         // Our skin will inherit all of our styles but the external ones (margin)
         // But we should do our part and ignore any internal layout styling
-        _ignoreInternalLayoutContraints = true;
+        this->_ignoreInternalLayoutContraints = true;
     }
 
-    template<class T>
-    void Component<T>::updateSkin(std::shared_ptr<T> skin) {
+    template<class T, class Base>
+    void Component<T, Base>::updateSkin(std::shared_ptr<T> skin) {
         if (skin != _skin) {
             if (_skin) {
                 this->remove(_skin);
@@ -78,17 +82,17 @@ namespace psychic_ui {
         }
     }
 
-    template<class T>
-    void Component<T>::styleUpdated() {
-        Div::styleUpdated();
+    template<class T, class Base>
+    void Component<T, Base>::styleUpdated() {
+        Base::styleUpdated();
         // The `skin` property names a variant of the skin set's skin for T; "" is the default one
-        const Atom        &variant    = _computedStyle.skin();
-        const std::size_t generation = styleManager()->skinsGeneration(); // Bumped when the skin set changes
+        const Atom        &variant    = this->_computedStyle.skin();
+        const std::size_t generation = this->styleManager()->skinsGeneration(); // Bumped when the skin set changes
         if (_skinByHand) {
             _skinByHand = false;
         } else if (variant != _skinName || generation != _skinsGeneration) {
             // Typed: the variant from the set or its fallbacks, else the default; never null once a set is in use
-            updateSkin(styleManager()->template skin<T>(variant.str()));
+            updateSkin(this->styleManager()->template skin<T>(variant.str()));
         }
         _skinName        = variant;
         _skinsGeneration = generation;
