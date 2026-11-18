@@ -214,7 +214,19 @@ namespace psychic_ui {
         /**
          * The part that counts as inside it (itself unless a subclass says otherwise)
          */
-        Div &surface() const { return _surface ? *_surface : const_cast<Popup &>(*this); }
+        Div &surface() {
+            if (_surface) {
+                return *_surface;
+            }
+            return *this;
+        }
+
+        const Div &surface() const {
+            if (_surface) {
+                return *_surface;
+            }
+            return *this;
+        }
 
         // endregion
 

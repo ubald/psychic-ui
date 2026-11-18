@@ -84,7 +84,7 @@ namespace psychic_ui {
         /**
          * The sidebar it is in, or nullptr
          */
-        Sidebar *sidebar() const;
+        Sidebar *sidebar();
 
     protected:
         // Children: our child list owns them

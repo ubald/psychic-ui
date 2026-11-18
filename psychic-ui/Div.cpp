@@ -101,6 +101,10 @@ namespace psychic_ui {
         return _parent ? _parent->window() : nullptr;
     }
 
+    const Window *Div::window() const {
+        return _parent ? std::as_const(*_parent).window() : nullptr;
+    }
+
     Div *Div::parent() {
         return _parent;
     }
@@ -1548,7 +1552,10 @@ namespace psychic_ui {
         }
 
         if (!_mouseEnabled) {
-            return isOver ? (ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret) : MouseEventStatus::Out;
+            if (!isOver) {
+                return MouseEventStatus::Out;
+            }
+            return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
         }
 
         // A press that started here ends here, wherever it is released (a drag stops even outside): mouseReleased

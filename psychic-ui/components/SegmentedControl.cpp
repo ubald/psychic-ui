@@ -67,7 +67,10 @@ namespace psychic_ui {
     void SegmentedControl::updateSegments(std::vector<Segment> segments) {
         _segments = std::move(segments);
         const int count = static_cast<int>(_segments.size());
-        const int selected = count == 0 ? -1 : (_selected >= 0 && _selected < count ? _selected : 0);
+        int       selected = -1;
+        if (count > 0) {
+            selected = _selected >= 0 && _selected < count ? _selected : 0;
+        }
         if (_skin) {
             _skin->setSegments(_segments);
         }

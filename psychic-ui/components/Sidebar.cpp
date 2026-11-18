@@ -21,7 +21,7 @@ namespace psychic_ui {
               .display(Display::None);
     }
 
-    Sidebar *SidebarItem::sidebar() const {
+    Sidebar *SidebarItem::sidebar() {
         return dynamic_cast<Sidebar *>(group());
     }
 

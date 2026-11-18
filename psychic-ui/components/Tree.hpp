@@ -21,7 +21,7 @@ namespace psychic_ui {
     public:
         TreeRow();
 
-        TreeNode *node() const;
+        TreeNode *node();
 
     protected:
         friend class TreeNode;
@@ -57,12 +57,12 @@ namespace psychic_ui {
         /**
          * The node it is a child of, or nullptr at the top of the tree
          */
-        TreeNode *parentNode() const;
+        TreeNode *parentNode();
 
         /**
          * The tree it is in, or nullptr
          */
-        Tree *tree() const;
+        Tree *tree();
 
         /**
          * How deep it is: 0 at the top

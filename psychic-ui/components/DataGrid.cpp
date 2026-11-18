@@ -37,7 +37,10 @@ namespace psychic_ui {
                     return ca < cb ? -1 : 1;
                 }
             }
-            return a.size() == b.size() ? 0 : a.size() < b.size() ? -1 : 1;
+            if (a.size() == b.size()) {
+                return 0;
+            }
+            return a.size() < b.size() ? -1 : 1;
         }
     }
 

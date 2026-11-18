@@ -158,7 +158,7 @@ namespace psychic_ui {
                         if (!component->focusEnabled() || !component->hasFocus()) {
                             return false;
                         }
-                        const Window *window = const_cast<Div *>(component)->window();
+                        const Window *window = component->window();
                         return window && window->focusVisible();
                     }
                     case Pseudo::Active:
@@ -174,7 +174,7 @@ namespace psychic_ui {
                                && component->parent()->childIndex(component) == (int) component->parent()->childCount() - 1;
                     case Pseudo::Touch: {
                         // The window's input mode: `Window:touch Button` and `Button:touch` both work
-                        const Window *window = const_cast<Div *>(component)->window();
+                        const Window *window = component->window();
                         return window && window->inputMode() == InputMode::Touch;
                     }
                 }

@@ -98,7 +98,10 @@ namespace psychic_ui {
     }
 
     float Switch::thumbPosition() const {
-        return _dragging ? _dragPosition : (_checked ? 1.0f : 0.0f);
+        if (_dragging) {
+            return _dragPosition;
+        }
+        return _checked ? 1.0f : 0.0f;
     }
 
     bool Switch::active() const {

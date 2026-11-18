@@ -47,6 +47,7 @@ namespace psychic_ui {
 
             const int index = static_cast<int>(_rows.size());
             _rows.push_back(&row);
+            _rowItems.push_back(item.get());
             // The rows own these slots, and the menu owns the rows
             row.onMouseEnter([this, index]() { highlight(index, true); });
             row.onMouseExit(
@@ -217,7 +218,7 @@ namespace psychic_ui {
         if (index < 0 || std::cmp_greater_equal(index, _rows.size()) || !_rows[index]->enabled()) {
             return;
         }
-        auto *item = const_cast<MenuItem *>(_rows[index]->menuItem()); // Ours: the menu holds its items
+        MenuItem *item = _rowItems[index];
         if (auto *simple = dynamic_cast<SimpleMenuItem *>(item)) {
             finish(simple->callback);
         } else if (dynamic_cast<SubMenuItem *>(item)) {

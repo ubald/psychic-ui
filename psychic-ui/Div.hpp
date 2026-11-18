@@ -107,6 +107,7 @@ namespace psychic_ui {
          * @return Pointer to owning window, if any
          */
         virtual Window *window();
+        virtual const Window *window() const;
 
         /**
          * If the div is included in a parent, returns a pointer to that parent

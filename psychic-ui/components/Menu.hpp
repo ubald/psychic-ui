@@ -231,6 +231,7 @@ namespace psychic_ui {
     protected:
         MenuItems                 _items{};
         std::vector<MenuButton *> _rows{};      // Children: our child list owns them
+        std::vector<MenuItem *>   _rowItems{};  // Each row's item, from `_items`
         int                       _highlighted{-1};
         std::weak_ptr<Menu>       _submenu{};
         int                       _submenuRow{-1};

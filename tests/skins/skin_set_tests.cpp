@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <typeinfo>
@@ -71,12 +72,9 @@ namespace {
      * Whether a descendant of the div has the class
      */
     bool hasPart(const Div &div, const std::string &className) {
-        for (const auto &child: const_cast<Div &>(div).children()) {
-            if (child->classNames().contains(className) || hasPart(*child, className)) {
-                return true;
-            }
-        }
-        return false;
+        return std::ranges::any_of(div.children(), [&className](const auto &child) {
+            return child->classNames().contains(className) || hasPart(*child, className);
+        });
     }
 }
 

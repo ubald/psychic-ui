@@ -35,9 +35,13 @@ namespace {
         }
 
         SDL_TouchDeviceType touchDeviceType(SDL_TouchID touchID) const override {
-            return touchID == touchScreen ? SDL_TOUCH_DEVICE_DIRECT
-                   : touchID == trackpad ? SDL_TOUCH_DEVICE_INDIRECT_ABSOLUTE
-                   : SDL_TOUCH_DEVICE_INVALID;
+            if (touchID == touchScreen) {
+                return SDL_TOUCH_DEVICE_DIRECT;
+            }
+            if (touchID == trackpad) {
+                return SDL_TOUCH_DEVICE_INDIRECT_ABSOLUTE;
+            }
+            return SDL_TOUCH_DEVICE_INVALID;
         }
     };
 

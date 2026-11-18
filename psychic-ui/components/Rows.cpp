@@ -45,10 +45,10 @@ namespace psychic_ui {
         Div::removed();
     }
 
-    RowGroup *SelectableRow::group() const {
-        for (const Div *div = parent(); div; div = div->parent()) {
-            if (const auto *group = dynamic_cast<const RowGroup *>(div)) {
-                return const_cast<RowGroup *>(group);
+    RowGroup *SelectableRow::group() {
+        for (Div *div = parent(); div; div = div->parent()) {
+            if (auto *group = dynamic_cast<RowGroup *>(div)) {
+                return group;
             }
         }
         return nullptr;
@@ -195,7 +195,11 @@ namespace psychic_ui {
         if (!row) {
             const auto all = rows();
             const auto it  = std::ranges::find_if(all, [](SelectableRow *r) { return r->enabled(); });
-            row = it != all.end() ? *it : all.empty() ? nullptr : all.front();
+            if (it != all.end()) {
+                row = *it;
+            } else if (!all.empty()) {
+                row = all.front();
+            }
         }
         if (row == _tabStop) {
             return;

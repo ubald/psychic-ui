@@ -51,7 +51,12 @@ namespace psychic_ui {
             const auto  left    = static_cast<float>(segment->x());
             const float right   = left + static_cast<float>(segment->getWidth());
             const auto  px      = static_cast<float>(x);
-            const float d       = px < left ? left - px : (px >= right ? px - right + 1 : 0.0f);
+            float       d       = 0.0f; // Inside it
+            if (px < left) {
+                d = left - px;
+            } else if (px >= right) {
+                d = px - right + 1;
+            }
             if (d < distance) {
                 distance = d;
                 nearest  = static_cast<int>(i);

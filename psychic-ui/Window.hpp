@@ -38,6 +38,7 @@ namespace psychic_ui {
         Window &operator=(Window &&) = delete;
 
         Window *window() override;
+        const Window *window() const override;
 
         std::string getTitle() const;
         void setTitle(const std::string &title);

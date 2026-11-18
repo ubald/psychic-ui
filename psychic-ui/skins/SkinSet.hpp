@@ -136,12 +136,7 @@ namespace psychic_ui {
          * Whether the theme is one of the set's (`themes()`), by name
          */
         bool hasTheme(const Theme &theme) const {
-            for (const Theme *own: themes()) {
-                if (own->name == theme.name) {
-                    return true;
-                }
-            }
-            return false;
+            return std::ranges::any_of(themes(), [&theme](const Theme *own) { return own->name == theme.name; });
         }
 
         virtual void registerSkins(SkinRegistry &skins) const = 0;

@@ -46,8 +46,8 @@ namespace psychic_ui {
         );
     }
 
-    TreeNode *TreeRow::node() const {
-        return dynamic_cast<TreeNode *>(const_cast<Div *>(parent()));
+    TreeNode *TreeRow::node() {
+        return dynamic_cast<TreeNode *>(parent());
     }
 
     // endregion
@@ -89,16 +89,16 @@ namespace psychic_ui {
         return !_children->children().empty();
     }
 
-    TreeNode *TreeNode::parentNode() const {
+    TreeNode *TreeNode::parentNode() {
         // In its parent node's `.children`
-        const Div *container = parent();
-        return container ? dynamic_cast<TreeNode *>(const_cast<Div *>(container->parent())) : nullptr;
+        Div *container = parent();
+        return container ? dynamic_cast<TreeNode *>(container->parent()) : nullptr;
     }
 
-    Tree *TreeNode::tree() const {
-        for (const Div *div = parent(); div; div = div->parent()) {
-            if (const auto *t = dynamic_cast<const Tree *>(div)) {
-                return const_cast<Tree *>(t);
+    Tree *TreeNode::tree() {
+        for (Div *div = parent(); div; div = div->parent()) {
+            if (auto *t = dynamic_cast<Tree *>(div)) {
+                return t;
             }
         }
         return nullptr;
@@ -145,7 +145,11 @@ namespace psychic_ui {
     }
 
     void TreeNode::updateDisclosure() {
-        _row->_disclosure->name(!hasChildren() ? "" : _expanded ? "chevron-down" : "disclosure");
+        std::string icon{};
+        if (hasChildren()) {
+            icon = _expanded ? "chevron-down" : "disclosure";
+        }
+        _row->_disclosure->name(icon);
     }
 
     void TreeNode::added() {

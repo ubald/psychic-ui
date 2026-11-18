@@ -39,7 +39,7 @@ namespace psychic_ui {
         /**
          * The group it is in, or nullptr
          */
-        RowGroup *group() const;
+        RowGroup *group();
 
     protected:
         friend class RowGroup;

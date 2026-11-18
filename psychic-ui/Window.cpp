@@ -64,6 +64,10 @@ namespace psychic_ui {
         return this;
     }
 
+    const Window *Window::window() const {
+        return this;
+    }
+
     // endregion
 
     // region Lifecycle
