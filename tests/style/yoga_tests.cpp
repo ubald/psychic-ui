@@ -1,3 +1,5 @@
+#include <array>
+#include <cstddef>
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 #include <yoga/Yoga.h>
@@ -68,15 +70,16 @@ TEST_CASE( "Wrapping container keeps the cross axis margin of flex-start items" 
     YGNodeStyleSetWidth(container, 300);
 
     // Two items with a margin on the first line, a third without one wraps onto the second
-    YGNodeRef items[3];
-    for (int i = 0; i < 3; ++i) {
-        items[i] = YGNodeNewWithConfig(config);
-        YGNodeStyleSetWidth(items[i], 100);
-        YGNodeStyleSetHeight(items[i], 40);
+    std::array<YGNodeRef, 3> items{};
+    for (std::size_t i = 0; i < items.size(); ++i) {
+        YGNodeRef item = YGNodeNewWithConfig(config);
+        YGNodeStyleSetWidth(item, 100);
+        YGNodeStyleSetHeight(item, 40);
         if (i < 2) {
-            YGNodeStyleSetMargin(items[i], YGEdgeAll, 12);
+            YGNodeStyleSetMargin(item, YGEdgeAll, 12);
         }
-        YGNodeInsertChild(container, items[i], i);
+        YGNodeInsertChild(container, item, i);
+        items.at(i) = item;
     }
 
     YGNodeCalculateLayout(container, YGUndefined, YGUndefined, YGDirectionLTR);

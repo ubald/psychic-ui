@@ -1,6 +1,9 @@
 #pragma once
 
+#include <array>
+#include <ranges>
 #include <string>
+#include <utility>
 #include <vector>
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/components/Avatar.hpp>
@@ -156,19 +159,22 @@ namespace psychic_ui {
 
         auto &badges = group(marks, "Badges and status dots", "Neutral, accent, success, warning, danger; 20 px, 16 px with the small class");
         auto &badgeRow = badges.add<HBox>().addClassName("row");
-        const char *const toneNames[]{"Neutral", "Accent", "Success", "Warning", "Danger"};
-        for (std::size_t i = 0; i < std::size(allTones); ++i) {
-            badgeRow.add<Badge>(toneNames[i], allTones[i]);
+        const std::array<std::pair<std::string, Tone>, 5> tones{{
+            {"Neutral", Tone::Neutral}, {"Accent", Tone::Accent}, {"Success", Tone::Success}, {"Warning", Tone::Warning},
+            {"Danger", Tone::Danger}
+        }};
+        for (const auto &[name, tone]: tones) {
+            badgeRow.add<Badge>(name, tone);
         }
         auto &smallRow = badges.add<HBox>().addClassName("row");
-        for (std::size_t i = 0; i < std::size(allTones); ++i) {
-            smallRow.add<Badge>(toneNames[i], allTones[i]).addClassName("small");
+        for (const auto &[name, tone]: tones) {
+            smallRow.add<Badge>(name, tone).addClassName("small");
         }
         auto &dotRow = badges.add<HBox>().addClassName("row");
-        for (std::size_t i = 0; i < std::size(allTones); ++i) {
+        for (const auto &[name, tone]: tones) {
             auto &item = dotRow.add<HBox>().addClassName("dot-item");
-            item.add<StatusDot>(allTones[i]);
-            item.add<Label>(toneNames[i]).addClassName("text-secondary");
+            item.add<StatusDot>(tone);
+            item.add<Label>(name).addClassName("text-secondary");
         }
 
         auto &chips = group(marks, "Chips", "Filters and values: Backspace dismisses the focused one");
@@ -177,8 +183,8 @@ namespace psychic_ui {
         chipRow.add<Chip>("Moving heads").icon("device");
         chipRow.add<Chip>("Universe 1").removable(true);
         auto &toneRow = chips.add<HBox>().addClassName("row");
-        for (std::size_t i = 1; i < std::size(allTones); ++i) {
-            auto &chip = toneRow.add<Chip>(toneNames[i], allTones[i]).removable(true);
+        for (const auto &[name, tone]: tones | std::views::drop(1)) { // Neutral is the plain chip
+            auto &chip = toneRow.add<Chip>(name, tone).removable(true);
             chip.onDismiss([&toneRow, &chip]() { toneRow.remove(chip); });
         }
 

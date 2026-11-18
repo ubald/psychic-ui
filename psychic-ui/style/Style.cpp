@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <iostream>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -13,36 +15,31 @@ namespace psychic_ui {
             return *this;
         }
         // The properties leave their earlier timing; entries left without one go
-        std::uint8_t kept = 0;
-        for (std::uint8_t i = 0; i < _count; ++i) {
-            Entry entry = _entries[i];
+        const std::span<Entry> used = std::span{_entries}.first(_count);
+        for (Entry &entry: used) {
             entry.properties &= ~properties;
-            if (entry.properties.any()) {
-                _entries[kept++] = entry;
-            }
         }
-        for (std::uint8_t i = kept; i < _count; ++i) {
-            _entries[i] = Entry{};
-        }
-        _count = kept;
+        const auto gone = std::ranges::remove_if(used, [](const Entry &entry) { return entry.properties.none(); });
+        std::ranges::fill(gone, Entry{});
+        _count = static_cast<std::uint8_t>(_count - gone.size());
 
-        for (std::uint8_t i = 0; i < _count; ++i) {
-            if (_entries[i].timing == timing) {
-                _entries[i].properties |= properties;
+        for (Entry &entry: std::span{_entries}.first(_count)) {
+            if (entry.timing == timing) {
+                entry.properties |= properties;
                 return *this;
             }
         }
         if (_count == capacity) {
             throw std::length_error("A transition holds at most " + std::to_string(capacity) + " timings");
         }
-        _entries[_count++] = Entry{properties, timing};
+        _entries.at(_count++) = Entry{properties, timing};
         return *this;
     }
 
     const Timing *Transition::timing(const Property property) const {
-        for (std::uint8_t i = 0; i < _count; ++i) {
-            if (_entries[i].properties.test(index(property))) {
-                return &_entries[i].timing;
+        for (const Entry &entry: std::span{_entries}.first(_count)) {
+            if (entry.properties.test(index(property))) {
+                return &entry.timing;
             }
         }
         return nullptr;
@@ -50,8 +47,8 @@ namespace psychic_ui {
 
     PropertyMask Transition::properties() const {
         PropertyMask m;
-        for (std::uint8_t i = 0; i < _count; ++i) {
-            m |= _entries[i].properties;
+        for (const Entry &entry: std::span{_entries}.first(_count)) {
+            m |= entry.properties;
         }
         return m;
     }

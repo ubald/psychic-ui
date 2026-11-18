@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -225,9 +226,7 @@ TEST_CASE("Colors interpolate premultiplied", "[animation][color]") {
     const Channels none{};
     // Half-way from transparent: half the alpha, the same red
     Channels half{};
-    for (std::size_t i = 0; i < 4; ++i) {
-        half[i] = (red[i] + none[i]) / 2.0f;
-    }
+    std::ranges::transform(red, none, half.begin(), [](float a, float b) { return (a + b) / 2.0f; });
     CHECK(Interpolation<Color>::value(half, {}).argb() == 0x80FF0000u);
     CHECK(Interpolation<Color>::value(Interpolation<Color>::channels(argb(0x40123456)), {}).argb() == 0x40123456u);
     // A length changes unit at once, but zero is zero in any unit

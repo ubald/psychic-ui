@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -127,7 +128,7 @@ namespace psychic_ui {
         /**
          * System cursors, indexed by `Cursor`
          */
-        SDL_Cursor *_cursors[6]{};
+        std::array<SDL_Cursor *, 6> _cursors{};
 
         /**
          * Where the window was grabbed, relative to its position, while dragging it ourselves

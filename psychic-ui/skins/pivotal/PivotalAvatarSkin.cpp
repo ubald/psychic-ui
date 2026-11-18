@@ -38,7 +38,7 @@ namespace psychic_ui {
         for (const char c: name) {
             hash = (hash ^ static_cast<unsigned char>(c)) * 16777619u;
         }
-        return palette::pivotalSwatches[hash % palette::pivotalHueCount];
+        return palette::pivotalSwatches.at(hash % palette::pivotalHueCount);
     }
 
     Color PivotalAvatarSkin::initialsOn(const Color fill) {

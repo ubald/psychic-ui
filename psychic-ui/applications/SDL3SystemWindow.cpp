@@ -139,8 +139,8 @@ namespace psychic_ui {
 
     void SDL3SystemWindow::setCursor(Cursor cursor) {
         const auto index = static_cast<std::size_t>(cursor);
-        if (index < std::size(_cursors) && _cursors[index]) {
-            SDL_SetCursor(_cursors[index]);
+        if (index < _cursors.size() && _cursors.at(index)) {
+            SDL_SetCursor(_cursors.at(index));
         }
     }
 

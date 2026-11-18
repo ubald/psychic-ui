@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <memory>
 #include "../SystemWindow.hpp"
 
@@ -88,7 +89,7 @@ namespace psychic_ui {
         /**
          * System cursors, indexed by `Cursor`
          */
-        GLFWcursor *_cursors[6]{};
+        std::array<GLFWcursor *, 6> _cursors{};
 
         /**
          * Where the window was grabbed, in window coordinates, while dragging it

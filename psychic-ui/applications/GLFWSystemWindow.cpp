@@ -289,8 +289,8 @@ namespace psychic_ui {
     }
 
     void GLFWSystemWindow::setCursor(Cursor cursor) {
-        if (static_cast<std::size_t>(cursor) < std::size(_cursors)) {
-            glfwSetCursor(_glfwWindow, _cursors[static_cast<std::size_t>(cursor)]);
+        if (static_cast<std::size_t>(cursor) < _cursors.size()) {
+            glfwSetCursor(_glfwWindow, _cursors.at(static_cast<std::size_t>(cursor)));
         }
     }
 
