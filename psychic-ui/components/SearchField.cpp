@@ -30,11 +30,9 @@ namespace psychic_ui {
                 }
                 clear();
                 return true;
-            case Key::ENTER: {
-                const auto keepAlive = weak_from_this().lock(); // A handler may remove this field from its parent
+            case Key::ENTER:
                 submitted.emit(text());
                 return true;
-            }
             default:
                 return false;
         }

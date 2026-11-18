@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>
@@ -58,12 +59,7 @@ namespace psychic_ui {
             virtual void setClipboardText(const std::string &text) = 0;
         };
 
-        TextEditing();
-        ~TextEditing();
-        TextEditing(TextEditing &&) noexcept;
-        TextEditing &operator=(TextEditing &&) noexcept;
-
-        const icu::UnicodeString &text() const;
+        const icu::UnicodeString &text() const { return _text; }
 
         /**
          * The text in UTF-8
@@ -75,15 +71,14 @@ namespace psychic_ui {
          */
         Edit setText(const icu::UnicodeString &text);
 
-        unsigned int anchor() const;
-        unsigned int caret() const;
+        unsigned int anchor() const { return _anchor; }
+        unsigned int caret() const { return _caret; }
 
         /**
          * The selection, sorted: equal when nothing is selected
          */
-        std::pair<unsigned int, unsigned int> selection() const;
-        bool hasSelection() const;
-        std::u16string selectedText() const;
+        std::pair<unsigned int, unsigned int> selection() const { return std::minmax(_anchor, _caret); }
+        bool hasSelection() const { return _anchor != _caret; }
 
         /**
          * Select from the anchor to the caret (clamped to the text), forgetting the column kept
@@ -94,14 +89,14 @@ namespace psychic_ui {
          * Whether the text keeps its line returns: on one line, inserted line returns become spaces and Enter does
          * nothing
          */
-        bool multiline() const;
-        void setMultiline(bool multiline);
+        bool multiline() const { return _multiline; }
+        void setMultiline(bool multiline) { _multiline = multiline; }
 
         /**
          * Whether edits are refused
          */
-        bool readOnly() const;
-        void setReadOnly(bool readOnly);
+        bool readOnly() const { return _readOnly; }
+        void setReadOnly(bool readOnly) { _readOnly = readOnly; }
 
         /**
          * Replace the selection with the string, the caret after it
@@ -111,13 +106,13 @@ namespace psychic_ui {
         /**
          * Remove the selection, or else from the caret to where a move would go
          */
-        Edit erase(Direction direction, Unit unit, const TextGeometry *geometry = nullptr);
+        Edit erase(Direction direction, Unit unit, const TextGeometry &geometry);
 
         /**
          * Move the caret, extending the selection from the anchor or collapsing it. Without extending, a grapheme
-         * move with a selection collapses it to its side. Line and line edge moves need the geometry.
+         * move with a selection collapses it to its side.
          */
-        Edit move(Direction direction, Unit unit, bool extend, const TextGeometry *geometry = nullptr);
+        Edit move(Direction direction, Unit unit, bool extend, const TextGeometry &geometry);
 
         /**
          * A press at the index: the caret there (1 click, or extending the selection), the word (2), the sentence
@@ -138,10 +133,9 @@ namespace psychic_ui {
         Edit handleKey(Key key, Mod mod, const TextGeometry &geometry, Clipboard &clipboard);
 
         /**
-         * Word and sentence boundaries around an index, for double and triple clicks
+         * The word around an index, which a double click selects
          */
         std::pair<unsigned int, unsigned int> wordAt(unsigned int index) const;
-        std::pair<unsigned int, unsigned int> sentenceAt(unsigned int index) const;
 
     private:
         icu::UnicodeString           _text{};
@@ -161,7 +155,7 @@ namespace psychic_ui {
         icu::BreakIterator &words() const;
         icu::BreakIterator &sentences() const;
 
-        unsigned int length() const;
+        unsigned int length() const { return static_cast<unsigned int>(_text.length()); }
         unsigned int previousGrapheme(unsigned int index) const;
         unsigned int nextGrapheme(unsigned int index) const;
         unsigned int previousWordStart(unsigned int index) const;
@@ -172,7 +166,7 @@ namespace psychic_ui {
         /**
          * Where a move from the caret goes
          */
-        unsigned int target(Direction direction, Unit unit, const TextGeometry *geometry);
+        unsigned int target(Direction direction, Unit unit, const TextGeometry &geometry);
 
         /**
          * Set the anchor and the caret, saying whether they changed

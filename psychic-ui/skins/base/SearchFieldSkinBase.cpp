@@ -41,12 +41,7 @@ namespace psychic_ui {
     }
 
     bool SearchFieldSkinBase::clearAt(const float x, const float y) const {
-        // A child of ours: its place is in our coordinates
-        const auto left = static_cast<float>(_clear->x());
-        const auto top  = static_cast<float>(_clear->y());
-        return _clear->visible()
-               && x >= left && x < left + static_cast<float>(_clear->getWidth())
-               && y >= top && y < top + static_cast<float>(_clear->getHeight());
+        return _clear->visible() && _clear->contains(x, y); // A child of ours: its place is in our coordinates
     }
 
     void SearchFieldSkinBase::draw(SkCanvas *canvas) {

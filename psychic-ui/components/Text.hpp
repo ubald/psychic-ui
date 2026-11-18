@@ -23,14 +23,10 @@ namespace psychic_ui {
      */
     class Text : public Div, public TextGeometry {
     public:
-        /**
-         * Construct a Text component, optionally initializing it with text
-         * @param text
-         */
         explicit Text(const std::string &text = "");
 
         /**
-         * The text, in UTF-8, as it was set or edited
+         * The text, in UTF-8, as it was set
          */
         std::string text() const;
 
