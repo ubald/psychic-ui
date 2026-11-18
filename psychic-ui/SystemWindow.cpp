@@ -91,6 +91,17 @@ namespace psychic_ui {
         _clipboardText = text;
     }
 
+    namespace {
+        /**
+         * A GL procedure as its real type
+         */
+        template<class Procedure>
+        Procedure procedure(const SystemWindow::GLProc address) {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast): GL procedures come from the loader untyped
+            return reinterpret_cast<Procedure>(address);
+        }
+    }
+
     void SystemWindow::readFramebufferFormat() {
         // Through the window's own GL loader, so that no GL headers or link-time GL symbols are needed
         constexpr unsigned GL_SAMPLES_                           = 0x80A9;
@@ -101,9 +112,9 @@ namespace psychic_ui {
         using GetFramebufferAttachmentParameteriv  = void (*)(unsigned, unsigned, unsigned, int *);
         using GetError                             = unsigned (*)();
 
-        auto getIntegerv = reinterpret_cast<GetIntegerv>(glProcAddress("glGetIntegerv"));
-        auto getAttachment = reinterpret_cast<GetFramebufferAttachmentParameteriv>(glProcAddress("glGetFramebufferAttachmentParameteriv"));
-        auto getError = reinterpret_cast<GetError>(glProcAddress("glGetError"));
+        const auto getIntegerv   = procedure<GetIntegerv>(glProcAddress("glGetIntegerv"));
+        const auto getAttachment = procedure<GetFramebufferAttachmentParameteriv>(glProcAddress("glGetFramebufferAttachmentParameteriv"));
+        const auto getError      = procedure<GetError>(glProcAddress("glGetError"));
         if (!getIntegerv || !getAttachment || !getError) {
             return;
         }

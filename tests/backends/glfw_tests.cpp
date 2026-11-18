@@ -10,8 +10,8 @@ using namespace psychic_ui_tests;
 
 namespace {
     // What the host's own callbacks saw
-    int hostKeys    = 0;
-    int hostButtons = 0;
+    int hostKeys    = 0; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables): GLFW's C callbacks capture nothing
+    int hostButtons = 0; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables): GLFW's C callbacks capture nothing
 
     void hostKeyCallback(GLFWwindow * /*window*/, int /*key*/, int /*scancode*/, int /*action*/, int /*mods*/) { ++hostKeys; }
     void hostButtonCallback(GLFWwindow * /*window*/, int /*button*/, int /*action*/, int /*mods*/) { ++hostButtons; }

@@ -14,6 +14,7 @@
 using namespace psychic_ui;
 
 namespace {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): the style manager constructs the sheets that record here
     std::vector<std::string> loads{};
 
     /**

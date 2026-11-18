@@ -99,9 +99,11 @@ namespace psychic_ui {
 
         // With SDL_LOGGING=app=debug
         using GetString = const char *(*)(unsigned);
-        auto glGetString = reinterpret_cast<GetString>(SDL_GL_GetProcAddress("glGetString"));
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast): SDL hands GL procedures out untyped; called through its real type
+        const auto glGetString = reinterpret_cast<GetString>(SDL_GL_GetProcAddress("glGetString"));
         constexpr unsigned GL_RENDERER_ = 0x1F01;
         constexpr unsigned GL_VERSION_  = 0x1F02;
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): SDL's logging is printf-style, its arguments match the format
         SDL_LogDebug(
             SDL_LOG_CATEGORY_APPLICATION,
             "Psychic UI: SDL %d.%d.%d, %s video driver, OpenGL %s (%s), %d samples, %d stencil bits, %s, pixel density %.2f",
