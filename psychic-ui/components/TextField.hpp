@@ -103,24 +103,24 @@ namespace psychic_ui {
          * A key, before editing has it
          * @return Whether it was used (then editing doesn't see it)
          */
-        virtual bool fieldKey(Key /*key*/, Mod /*mod*/) { return false; }
+        virtual bool fieldKey(Key /*key*/, Mod /*mod*/) { return false; } // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
 
         /**
          * A left press, before it places the caret or starts a selection (a button part of the skin's)
          * @return Whether it was used (then the text doesn't see it)
          */
-        virtual bool fieldPress(const MouseEvent &/*event*/) { return false; }
+        virtual bool fieldPress(const MouseEvent &/*event*/) { return false; } // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
 
         /**
          * The text changed (edited or set), shown in the view, before `textEdited`: show what follows it
          */
-        virtual void textChanged() {}
+        virtual void textChanged() {} // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
 
         /**
          * An edit (typed, erased, cut or pasted) changed the text, once the field is consistent: tell the world. A
          * handler may remove the field from its parent; it is kept alive meanwhile.
          */
-        virtual void textEdited() {}
+        virtual void textEdited() {} // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
 
         /**
          * Show what an edit changed, then tell (`textEdited`) when the text changed, once the field is consistent
@@ -143,10 +143,10 @@ namespace psychic_ui {
         void handlePress(const MouseEvent &event);
         bool editable() const;
 
-        void skinChanged() override;
-        void enabledChanged() override;
-        void layoutUpdated() override;
-        void removedFromRender() override;
+        void skinChanged() override; // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
+        void enabledChanged() override; // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
+        void layoutUpdated() override; // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
+        void removedFromRender() override; // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
     };
 
     template<class SkinT>

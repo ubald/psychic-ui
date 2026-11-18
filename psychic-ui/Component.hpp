@@ -37,11 +37,11 @@ namespace psychic_ui {
     protected:
         void updateSkin(std::shared_ptr<T> skin);
 
-        void draw(SkCanvas */*canvas*/) override {/*Skin Manages drawing*/}
+        void draw(SkCanvas */*canvas*/) override {/*Skin Manages drawing*/} // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
 
-        virtual void skinChanged() {}
+        virtual void skinChanged() {} // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
 
-        void styleUpdated() override;
+        void styleUpdated() override; // NOLINT(portability-template-virtual-member-function): it compiles for every T, whether instantiated or not
 
         Atom               _skinName{};
         std::size_t        _skinsGeneration{0};
