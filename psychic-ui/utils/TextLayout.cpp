@@ -10,14 +10,19 @@ namespace psychic_ui {
 
     namespace tl = skia::textlayout;
 
-    SkFontHinting fontHinting(bool subpixel) {
-        // Subpixel positioning wants the glyphs' exact advances: slight hinting only snaps vertically
-        // and keeps them linear. Normal hinting rounds every advance to a whole pixel, which crowds
-        // small text when positions aren't snapped too (m73's subpixel text kept linear advances).
-        return subpixel ? SkFontHinting::kSlight : SkFontHinting::kNormal;
-    }
-
     namespace {
+        SkFont::Edging edging(FontSmoothing smoothing) {
+            switch (smoothing) {
+                case FontSmoothing::None:
+                    return SkFont::Edging::kAlias;
+                case FontSmoothing::Subpixel:
+                    return SkFont::Edging::kSubpixelAntiAlias;
+                case FontSmoothing::Grayscale:
+                default:
+                    return SkFont::Edging::kAntiAlias;
+            }
+        }
+
         sk_sp<SkUnicode> unicode() {
             static sk_sp<SkUnicode> unicode = SkUnicodes::ICU::Make();
             return unicode;
@@ -97,9 +102,11 @@ namespace psychic_ui {
         textStyle.setHeight(height);
         textStyle.setHeightOverride(true);
         textStyle.setHalfLeading(true);
-        textStyle.setFontEdging(_style.edging);
-        textStyle.setSubpixel(_style.subpixel);
-        textStyle.setFontHinting(fontHinting(_style.subpixel));
+        textStyle.setFontEdging(edging(_style.smoothing));
+        // Glyphs are always positioned to the subpixel, which wants their exact advances: slight hinting only snaps
+        // vertically and keeps them linear (normal hinting rounds every advance to a whole pixel and crowds small text)
+        textStyle.setSubpixel(true);
+        textStyle.setFontHinting(SkFontHinting::kSlight);
 
         tl::StrutStyle strut{};
         strut.setStrutEnabled(true);

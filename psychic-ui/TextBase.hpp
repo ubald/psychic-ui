@@ -26,27 +26,9 @@ namespace psychic_ui {
             return self;
         }
 
-        bool lcdRender() const;
-
-        template<class Self>
-        Self &lcdRender(this Self &self, detail::BoolArg lcdRender) {
-            static_cast<TextBase &>(self).updateTextFlags(lcdRender.value, static_cast<TextBase &>(self)._subPixelText);
-            return self;
-        }
-
-        bool subPixelText() const;
-
-        template<class Self>
-        Self &subPixelText(this Self &self, detail::BoolArg subPixelText) {
-            static_cast<TextBase &>(self).updateTextFlags(static_cast<TextBase &>(self)._lcdRender, subPixelText.value);
-            return self;
-        }
-
         unsigned int getLineHeight() const;
 
     protected:
-        bool    _lcdRender{true};
-        bool    _subPixelText{true};
         float   _fontSize{0.0f};
         float   _lineHeight{0.0f};
         SkFont  _font{};      // The font family's primary font, for its metrics
@@ -58,7 +40,6 @@ namespace psychic_ui {
 
         void styleUpdated() override;
         virtual void updateText(const std::string &text) = 0;
-        void updateTextFlags(bool lcdRender, bool subPixelText);
 
         /**
          * Height of the given number of lines, never less than the font spacing

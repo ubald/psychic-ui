@@ -39,8 +39,11 @@
     X(borderRightColor,         Color,         Color,              argb(0xFF000000),       false, false, true ) \
     X(borderTopColor,           Color,         Color,              argb(0xFF000000),       false, false, true ) \
     X(borderBottomColor,        Color,         Color,              argb(0xFF000000),       false, false, true ) \
-    X(selectionColor,           Color,         Color,              argb(0xFF000000),       false, false, true ) \
-    X(selectionBackgroundColor, Color,         Color,              argb(0xFF000000),       false, false, true ) \
+    /* Selected text and what is under it, inherited so that a field's parts take its own */ \
+    X(selectionColor,           Color,         Color,              argb(0xFF000000),       true,  false, true ) \
+    X(selectionBackgroundColor, Color,         Color,              argb(0xFF000000),       true,  false, true ) \
+    /* The text caret, CSS's caret-color; unset, it is in `color` */ \
+    X(caretColor,               Color,         Color,              argb(0xFF000000),       true,  false, true ) \
     /* Background of components drawn as an inset "well" (text inputs, some buttons) */ \
     X(contentBackgroundColor,   Color,         Color,              argb(0xFF000000),       false, false, true ) \
     /* Text */ \
@@ -50,7 +53,8 @@
     /* Auto is 1.5 times the font size; a percent is of the font size */ \
     X(lineHeight,               Length,        Length,             Auto,                   true,  false, true ) \
     X(textAlign,                TextAlign,     TextAlign,          TextAlign::Start,       true,  false, false) \
-    X(textAntiAlias,            bool,          detail::BoolArg,    false,                  false, false, false) \
+    /* How glyph edges are smoothed; glyphs are always placed to the subpixel */ \
+    X(fontSmoothing,           FontSmoothing, FontSmoothing,      FontSmoothing::Grayscale, true, false, false) \
     /* Icons (Icon, paint::icon), drawn in `color`: the side of the square, and the stroke in units of a 16-unit */ \
     /* grid whatever the icon's (Pivotal's 1.3), so every icon has the same weight at the same size */ \
     X(iconSize,                 float,         detail::FloatArg,   14.0f,                  true,  false, true ) \

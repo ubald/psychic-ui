@@ -127,6 +127,7 @@ namespace psychic_ui {
         float              _targetXPos{0.0f};
         icu::UnicodeString _text{};
         SkPaint            _selectionBackgroundPaint{};
+        SkPaint            _caretPaint{};
 
         /**
          * Whether we're waiting on layout validation to sent the caret signal

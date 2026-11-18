@@ -51,14 +51,13 @@ namespace {
         auto &node = root.add<T>(text);
         node.fontFamily(FONT)
             .fontSize(size)
-            .lineHeight(LINE_HEIGHT)
-            .textAntiAlias(true);
+            .lineHeight(LINE_HEIGHT);
         return node;
     }
 
     TextLayoutStyle layoutStyle(const std::shared_ptr<StyleManager> &styleManager, float size = 14.0f, const std::string &font = FONT) {
         return TextLayoutStyle{
-            styleManager->fontCollection(), font, size, LINE_HEIGHT, 0.0f, SkFont::Edging::kSubpixelAntiAlias, true, TextAlign::Start
+            styleManager->fontCollection(), font, size, LINE_HEIGHT, 0.0f, FontSmoothing::Grayscale, TextAlign::Start
         };
     }
 

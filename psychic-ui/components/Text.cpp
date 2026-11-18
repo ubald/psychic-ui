@@ -377,6 +377,10 @@ namespace psychic_ui {
 
         _selectionBackgroundPaint = _textPaint;
         _selectionBackgroundPaint.setColor(_computedStyle.selectionBackgroundColor().argb());
+        _caretPaint = _textPaint;
+        if (_computedStyle.has(Property::caretColor)) {
+            _caretPaint.setColor(_computedStyle.caretColor().argb());
+        }
     }
 
     Size Text::measure(Constraint width, Constraint height) {
@@ -434,7 +438,7 @@ namespace psychic_ui {
                 _paddedRect.fLeft + caret.second + 1.0f,
                 _paddedRect.fTop + ((caret.first + 1.0f) * _lineHeight),
             };
-            canvas->drawRect(caretRect, _textPaint);
+            canvas->drawRect(caretRect, _caretPaint);
         }
     }
 

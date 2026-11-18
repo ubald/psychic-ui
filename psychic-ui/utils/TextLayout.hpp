@@ -16,12 +16,6 @@
 namespace psychic_ui {
 
     /**
-     * The hinting for text with or without subpixel positioning: slight (linear advances) with it,
-     * normal (whole-pixel advances) without
-     */
-    SkFontHinting fontHinting(bool subpixel);
-
-    /**
      * What a TextLayout lays its text out with, from a TextBase's computed style
      */
     struct TextLayoutStyle {
@@ -30,8 +24,7 @@ namespace psychic_ui {
         float                                   fontSize{0.0f};
         float                                   lineHeight{0.0f};
         float                                   letterSpacing{0.0f};
-        SkFont::Edging                          edging{SkFont::Edging::kAntiAlias};
-        bool                                    subpixel{true};
+        FontSmoothing                           smoothing{FontSmoothing::Grayscale};
         TextAlign                               align{TextAlign::Start};
 
         bool operator==(const TextLayoutStyle &) const = default;

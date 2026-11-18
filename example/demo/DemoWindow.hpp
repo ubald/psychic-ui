@@ -283,7 +283,7 @@ namespace psychic_ui {
         fpsLabel = &app->add<Label>();
         fpsLabel->fontFamily("stan0755")
                 .fontSize(8)
-                .textAntiAlias(false)
+                .fontSmoothing(FontSmoothing::None)
                 .position(Position::Absolute)
                 .right(4)
                 .bottom(0);

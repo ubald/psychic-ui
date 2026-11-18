@@ -50,6 +50,12 @@ namespace psychic_ui {
 
     enum class TextAlign : std::uint8_t { Start, End, Left, Right, Center, Justify };
 
+    /**
+     * How glyph edges are smoothed, CSS's `-webkit-font-smoothing`: not at all (aliased), in grey levels, or per LCD
+     * subpixel (sharper on a still, opaque background; wrong in layers with opacity or transforms, as popups enter)
+     */
+    enum class FontSmoothing : std::uint8_t { None, Grayscale, Subpixel };
+
     enum class Cursor : std::uint8_t { Arrow, IBeam, Crosshair, Hand, HResize, VResize };
 
     /**

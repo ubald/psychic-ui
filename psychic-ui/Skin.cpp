@@ -12,9 +12,9 @@ namespace psychic_ui {
                 // Colors
                 P::color, P::backgroundColor, P::borderColor, P::borderHorizontalColor, P::borderLeftColor,
                 P::borderRightColor, P::borderVerticalColor, P::borderTopColor, P::borderBottomColor,
-                P::selectionColor, P::selectionBackgroundColor, P::contentBackgroundColor,
+                P::selectionColor, P::selectionBackgroundColor, P::caretColor, P::contentBackgroundColor,
                 // Text
-                P::fontFamily, P::fontSize, P::letterSpacing, P::lineHeight, P::textAlign, P::textAntiAlias,
+                P::fontFamily, P::fontSize, P::letterSpacing, P::lineHeight, P::textAlign, P::fontSmoothing,
                 P::iconSize, P::iconStrokeWidth,
                 // Content layout
                 P::textDirection, P::direction, P::justify, P::alignContent, P::alignItems, P::wrap, P::overflow,

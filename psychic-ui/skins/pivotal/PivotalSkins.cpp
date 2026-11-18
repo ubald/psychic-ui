@@ -153,7 +153,6 @@ namespace psychic_ui {
             .iconSize(iconMd)
             .iconStrokeWidth(m.iconStroke)
             .antiAlias(true)
-            .textAntiAlias(true)
             .transition(P::outlineColor, quick); // Every focus ring fades in
 
         // Three levels of text, by descending importance: titles, values and what was chosen; body text, labels and
