@@ -3,7 +3,7 @@
 #include "include/core/SkFont.h"
 #include "include/core/SkFontMetrics.h"
 #include "Div.hpp"
-#include "psychic-ui/utils/TextLayout.hpp"
+#include "psychic-ui/text/TextLayout.hpp"
 
 namespace psychic_ui {
 

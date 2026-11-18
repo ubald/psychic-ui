@@ -10,7 +10,7 @@
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/themes/Theme.hpp>
 #include <psychic-ui/utils/ExecutablePath.hpp>
-#include <psychic-ui/utils/TextLayout.hpp>
+#include <psychic-ui/text/TextLayout.hpp>
 
 using namespace psychic_ui;
 

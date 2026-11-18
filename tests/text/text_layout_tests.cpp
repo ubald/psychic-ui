@@ -6,7 +6,7 @@
 #include <catch2/catch_approx.hpp>
 #include "include/core/SkFont.h"
 #include "include/core/SkSurface.h"
-#include <psychic-ui/utils/TextLayout.hpp>
+#include <psychic-ui/text/TextLayout.hpp>
 #include <psychic-ui/style/StyleManager.hpp>
 #include <psychic-ui/style/Style.hpp>
 #include <psychic-ui/Div.hpp>
@@ -224,31 +224,37 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
     layout.setStyle(layoutStyle(styleManager));
     layout.setMultiline(true);
 
+    // The line a caret is on, from its rectangle
+    auto lineOf = [&](unsigned int index) {
+        return static_cast<unsigned int>(layout.caretRect(index).fTop / LINE_HEIGHT);
+    };
+
     SECTION("hard line breaks") {
         layout.setText(icu::UnicodeString::fromUTF8("ab\ncd\n"));
         layout.layout(400.0f);
-        REQUIRE(layout.lineCount() == 3);
-        REQUIRE(layout.lineStart(1) == 3);
-        REQUIRE(layout.lineEnd(0) == 2);
-        REQUIRE(layout.lineEnd(1) == 5);
-        REQUIRE(layout.lineFromIndex(2) == 0);
-        REQUIRE(layout.lineFromIndex(3) == 1);
-        REQUIRE(layout.lineFromIndex(6) == 2);
-        REQUIRE(layout.posFromIndex(0).second == 0.0f);
-        REQUIRE(layout.posFromIndex(6) == std::make_pair(2u, 0.0f));
+        REQUIRE(layout.lineCountAt(400.0f) == 3);
+        REQUIRE(lineOf(2) == 0);
+        REQUIRE(lineOf(3) == 1);
+        REQUIRE(lineOf(5) == 1);
+        REQUIRE(lineOf(6) == 2);
+        REQUIRE(layout.caretRect(0).fLeft == 0.0f);
+        REQUIRE(layout.caretRect(3).fLeft == 0.0f);
+        REQUIRE(layout.caretRect(6).fLeft == 0.0f);
+        // Past a line's end, before its line return
+        REQUIRE(layout.indexAt(1000.0f, LINE_HEIGHT / 2) == 2);
+        REQUIRE(layout.indexAt(-1000.0f, LINE_HEIGHT * 1.5f) == 3);
     }
 
     SECTION("carets advance along a line and hit testing finds them back") {
         layout.setText(icu::UnicodeString::fromUTF8("Hello world"));
         layout.layout(400.0f);
-        REQUIRE(layout.lineCount() == 1);
         float previous = -1.0f;
         for (unsigned int i = 0; i <= 11; ++i) {
-            auto [line, x] = layout.posFromIndex(i);
-            REQUIRE(line == 0);
-            REQUIRE(x > previous);
-            previous = x;
-            REQUIRE(layout.indexAt(x + 0.5f, LINE_HEIGHT / 2) == i);
+            const SkRect caret = layout.caretRect(i);
+            REQUIRE(caret.fTop == 0.0f);
+            REQUIRE(caret.fLeft > previous);
+            previous = caret.fLeft;
+            REQUIRE(layout.indexAt(caret.fLeft + 0.5f, LINE_HEIGHT / 2) == i);
         }
         REQUIRE(previous == Approx(layout.maxContentWidth()).margin(0.5));
         // Past the end, below the last line
@@ -256,18 +262,20 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
     }
 
     SECTION("wrapping keeps whole words and lines a line height apart") {
-        layout.setText(icu::UnicodeString::fromUTF8("one two three four five six"));
+        const std::string str = "one two three four five six";
+        layout.setText(icu::UnicodeString::fromUTF8(str));
         float width = layout.maxContentWidth();
         REQUIRE(layout.lineCountAt(width + 1.0f) == 1);
         layout.layout(width / 2.0f);
-        REQUIRE(layout.lineCount() >= 2);
+        const auto lines = layout.lineCountAt(width / 2.0f);
+        REQUIRE(lines >= 2);
         // Lines start on words
-        for (unsigned int line = 1; line < layout.lineCount(); ++line) {
-            auto start = layout.lineStart(line);
+        for (unsigned int line = 1; line < lines; ++line) {
+            const unsigned int start = layout.indexAt(0.0f, (line + 0.5f) * LINE_HEIGHT);
             REQUIRE(start > 0);
-            REQUIRE(layout.previousWordBoundary(start + 1) == start);
-            REQUIRE(layout.lineFromIndex(start) == line);
-            REQUIRE(layout.indexAt(0.0f, (line + 0.5f) * LINE_HEIGHT) == start);
+            REQUIRE(str[start - 1] == ' ');
+            REQUIRE(lineOf(start) == line);
+            REQUIRE(layout.caretRect(start).fLeft == 0.0f);
         }
     }
 
@@ -275,8 +283,8 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
         layout.setMultiline(false);
         layout.setText(icu::UnicodeString::fromUTF8("one two three four five six"));
         layout.layout(20.0f);
-        REQUIRE(layout.lineCount() == 1);
         REQUIRE(layout.lineCountAt(20.0f) == 1);
+        REQUIRE(lineOf(27) == 0);
         float fits = layout.fittingWidth(20.0f);
         REQUIRE(fits <= 20.0f);
         REQUIRE(fits > 0.0f);
@@ -286,24 +294,15 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
         layout.setMultiline(false);
         layout.setText(icu::UnicodeString::fromUTF8("ab\ncd"));
         layout.layout(400.0f);
-        REQUIRE(layout.lineCount() == 1);
-        REQUIRE(layout.lineFromIndex(4) == 0);
-        REQUIRE(layout.posFromIndex(3).second > layout.posFromIndex(2).second);
+        REQUIRE(lineOf(4) == 0);
+        REQUIRE(layout.caretRect(3).fLeft > layout.caretRect(2).fLeft);
     }
 
     SECTION("empty text has one line for the caret") {
         layout.setText(icu::UnicodeString{});
         layout.layout(400.0f);
-        REQUIRE(layout.lineCount() == 1);
-        REQUIRE(layout.posFromIndex(0) == std::make_pair(0u, 0.0f));
+        REQUIRE(layout.caretRect(0) == SkRect::MakeLTRB(0.0f, 0.0f, 0.0f, LINE_HEIGHT));
         REQUIRE(layout.indexAt(10.0f, 10.0f) == 0);
-    }
-
-    SECTION("words and sentences") {
-        layout.setText(icu::UnicodeString::fromUTF8("Hello brave world. Second one."));
-        REQUIRE(layout.wordAtIndex(8) == std::make_pair(6u, 11u));
-        REQUIRE(layout.nextWordBoundary(6) == 11);
-        REQUIRE(layout.sentenceAtIndex(3) == std::make_pair(0u, 19u));
     }
 }
 
@@ -324,7 +323,7 @@ TEST_CASE("Text layout caret rectangles, hit testing and selections", "[text]") 
 
         const SkRect middle = layout.caretRect(5); // After "cd"
         CHECK(middle.fTop == LINE_HEIGHT);
-        CHECK(middle.fLeft == layout.posFromIndex(5).second);
+        CHECK(middle.fLeft > layout.caretRect(3).fLeft);
         CHECK(layout.indexAt(middle.fLeft, middle.centerY()) == 5);
         CHECK(layout.caretRect(10).fTop == 2 * LINE_HEIGHT);
     }

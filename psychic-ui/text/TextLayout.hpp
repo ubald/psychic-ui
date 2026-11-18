@@ -5,7 +5,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <unicode/brkiter.h>
 #include <unicode/unistr.h>
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
@@ -33,8 +32,8 @@ namespace psychic_ui {
 
     /**
      * Lays out text with SkParagraph: shaping, font fallback, line breaking and alignment, and
-     * the queries editing needs (lines, caret positions, hit testing, word and sentence
-     * boundaries). Every index is in UTF-16 code units, like icu::UnicodeString's.
+     * the geometry editing needs (caret rectangles and hit testing; TextEditing has the rest).
+     * Every index is in UTF-16 code units, like icu::UnicodeString's.
      *
      * Every line is `lineHeight` tall, its glyphs centred in it (CSS's half-leading). One-line
      * layouts never wrap: their text overflows the width instead, and line returns lay out as
@@ -106,33 +105,13 @@ namespace psychic_ui {
          */
         float fittingWidth(float width);
 
-        unsigned int lineCount();
-        unsigned int lineStart(unsigned int line);
-
-        /**
-         * Index of the end of the line: before its line return, or before the first
-         * character of the next line when it wraps
-         */
-        unsigned int lineEnd(unsigned int line);
-        unsigned int lineFromIndex(unsigned int index);
-
-        /**
-         * The line and the x of the caret before the character at the index
-         */
-        std::pair<unsigned int, float> posFromIndex(unsigned int index);
-
-        std::pair<unsigned int, unsigned int> wordAtIndex(unsigned int index) const;
-        std::pair<unsigned int, unsigned int> sentenceAtIndex(unsigned int index) const;
-        unsigned int previousWordBoundary(unsigned int index) const;
-        unsigned int nextWordBoundary(unsigned int index) const;
-
         /**
          * How many paragraphs every TextLayout has built so far, for tests of what rebuilds them
          */
         static std::size_t paragraphsBuilt();
 
     private:
-        std::u16string                             _text{}; // The only copy, which the iterators read too
+        std::u16string                             _text{}; // The only copy
         TextLayoutStyle                            _style{};
         bool                                       _multiline{false};
         float                                      _width{0.0f};
@@ -140,8 +119,6 @@ namespace psychic_ui {
         bool                                       _linesValid{false};
         std::unique_ptr<skia::textlayout::Paragraph> _paragraph{nullptr};
         std::vector<skia::textlayout::LineMetrics>  _lines{};
-        std::unique_ptr<icu::BreakIterator>        _wordIterator{nullptr};
-        std::unique_ptr<icu::BreakIterator>        _sentenceIterator{nullptr};
 
         std::unique_ptr<skia::textlayout::Paragraph> build() const;
 
@@ -157,5 +134,10 @@ namespace psychic_ui {
         skia::textlayout::Paragraph *laidOut();
 
         void changed();
+
+        /**
+         * The line holding the caret before the character at the index (a wrapped line's end is the next line's start)
+         */
+        const skia::textlayout::LineMetrics &lineAt(unsigned int index) const;
     };
 }

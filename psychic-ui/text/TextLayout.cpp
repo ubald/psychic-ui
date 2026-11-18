@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <cmath>
 #include "TextLayout.hpp"
-#include <unicode/utext.h>
 #include "modules/skparagraph/include/ParagraphBuilder.h"
 #include "modules/skparagraph/include/ParagraphPainter.h"
 #include "modules/skparagraph/include/ParagraphStyle.h"
@@ -101,12 +100,7 @@ namespace psychic_ui {
         }
     }
 
-    TextLayout::TextLayout() {
-        UErrorCode status = U_ZERO_ERROR;
-        _wordIterator     = std::unique_ptr<icu::BreakIterator>(icu::BreakIterator::createWordInstance(icu::Locale::getDefault(), status));
-        _sentenceIterator = std::unique_ptr<icu::BreakIterator>(icu::BreakIterator::createSentenceInstance(icu::Locale::getDefault(), status));
-        setText(icu::UnicodeString{});
-    }
+    TextLayout::TextLayout() = default;
 
     std::size_t TextLayout::paragraphsBuilt() {
         return built;
@@ -114,12 +108,6 @@ namespace psychic_ui {
 
     void TextLayout::setText(const icu::UnicodeString &text) {
         _text.assign(reinterpret_cast<const char16_t *>(text.getBuffer()), static_cast<size_t>(text.length()));
-        // The iterators read the string itself, not a copy: point them at it again on every change
-        UErrorCode status = U_ZERO_ERROR;
-        UText     *utext  = utext_openUChars(nullptr, reinterpret_cast<const UChar *>(_text.data()), static_cast<int64_t>(_text.size()), &status);
-        _wordIterator->setText(utext, status);
-        _sentenceIterator->setText(utext, status);
-        utext_close(utext); // The iterators keep shallow clones
         changed();
     }
 
@@ -297,9 +285,26 @@ namespace psychic_ui {
         canvas->restore();
     }
 
+    const tl::LineMetrics &TextLayout::lineAt(unsigned int index) const {
+        // The last line starting at or before the index
+        auto line = std::upper_bound(_lines.begin(), _lines.end(), index, [](unsigned int i, const tl::LineMetrics &l) {
+            return i < l.fStartIndex;
+        });
+        return line == _lines.begin() ? _lines.front() : *std::prev(line);
+    }
+
     SkRect TextLayout::caretRect(unsigned int index) {
-        const auto [line, x] = posFromIndex(index);
-        const float top      = static_cast<float>(line) * _style.lineHeight;
+        auto                  *paragraph = laidOut();
+        const tl::LineMetrics &line      = lineAt(index);
+        float                  x         = static_cast<float>(line.fLeft);
+        if (index > line.fStartIndex) {
+            // After the grapheme before the caret
+            tl::Paragraph::GlyphInfo glyph{};
+            if (paragraph->getGlyphInfoAtUTF16Offset(index - 1, &glyph)) {
+                x = glyph.fDirection == tl::TextDirection::kRtl ? glyph.fGraphemeLayoutBounds.fLeft : glyph.fGraphemeLayoutBounds.fRight;
+            }
+        }
+        const float top = static_cast<float>(&line - _lines.data()) * _style.lineHeight;
         return SkRect::MakeLTRB(x, top, x, top + _style.lineHeight);
     }
 
@@ -315,83 +320,11 @@ namespace psychic_ui {
         return cluster.fBounds.fRight <= width ? cluster.fBounds.fRight : cluster.fBounds.fLeft;
     }
 
-    unsigned int TextLayout::lineCount() {
-        laidOut();
-        return static_cast<unsigned int>(_lines.size());
-    }
-
-    unsigned int TextLayout::lineStart(unsigned int line) {
-        laidOut();
-        return static_cast<unsigned int>(_lines[std::min<size_t>(line, _lines.size() - 1)].fStartIndex);
-    }
-
-    unsigned int TextLayout::lineEnd(unsigned int line) {
-        laidOut();
-        if (line + 1 >= _lines.size()) {
-            return static_cast<unsigned int>(_text.size());
-        }
-        return static_cast<unsigned int>(_lines[line + 1].fStartIndex) - 1;
-    }
-
-    unsigned int TextLayout::lineFromIndex(unsigned int index) {
-        laidOut();
-        unsigned int line = 0;
-        for (unsigned int i = 0; i < _lines.size(); ++i) {
-            if (index < _lines[i].fStartIndex) {
-                break;
-            }
-            line = i;
-        }
-        return line;
-    }
-
-    std::pair<unsigned int, float> TextLayout::posFromIndex(unsigned int index) {
-        auto         *paragraph = laidOut();
-        unsigned int line       = lineFromIndex(index);
-        float        x          = static_cast<float>(_lines[line].fLeft);
-        if (index > _lines[line].fStartIndex) {
-            // After the grapheme before the caret
-            tl::Paragraph::GlyphInfo glyph{};
-            if (paragraph->getGlyphInfoAtUTF16Offset(index - 1, &glyph)) {
-                x = glyph.fDirection == tl::TextDirection::kRtl ? glyph.fGraphemeLayoutBounds.fLeft : glyph.fGraphemeLayoutBounds.fRight;
-            }
-        }
-        return std::make_pair(line, x);
-    }
-
     unsigned int TextLayout::indexAt(float x, float y) {
         if (_text.empty()) {
             return 0;
         }
         auto position = laidOut()->getGlyphPositionAtCoordinate(x, y).position;
         return static_cast<unsigned int>(std::clamp<int32_t>(position, 0, static_cast<int32_t>(_text.size())));
-    }
-
-    std::pair<unsigned int, unsigned int> TextLayout::wordAtIndex(unsigned int index) const {
-        auto begin = _wordIterator->preceding(static_cast<int32_t>(index));
-        auto end   = _wordIterator->following(static_cast<int32_t>(index));
-        return std::make_pair(
-            begin != icu::BreakIterator::DONE ? static_cast<unsigned int>(begin) : 0,
-            end != icu::BreakIterator::DONE ? static_cast<unsigned int>(end) : static_cast<unsigned int>(_text.size())
-        );
-    }
-
-    std::pair<unsigned int, unsigned int> TextLayout::sentenceAtIndex(unsigned int index) const {
-        auto begin = _sentenceIterator->preceding(static_cast<int32_t>(index));
-        auto end   = _sentenceIterator->following(static_cast<int32_t>(index));
-        return std::make_pair(
-            begin != icu::BreakIterator::DONE ? static_cast<unsigned int>(begin) : 0,
-            end != icu::BreakIterator::DONE ? static_cast<unsigned int>(end) : static_cast<unsigned int>(_text.size())
-        );
-    }
-
-    unsigned int TextLayout::previousWordBoundary(unsigned int index) const {
-        auto boundary = _wordIterator->preceding(static_cast<int32_t>(index));
-        return boundary != icu::BreakIterator::DONE ? static_cast<unsigned int>(boundary) : 0;
-    }
-
-    unsigned int TextLayout::nextWordBoundary(unsigned int index) const {
-        auto boundary = _wordIterator->following(static_cast<int32_t>(index));
-        return boundary != icu::BreakIterator::DONE ? static_cast<unsigned int>(boundary) : static_cast<unsigned int>(_text.size());
     }
 }

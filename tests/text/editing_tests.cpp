@@ -1,4 +1,4 @@
-// Known bugs from docs/review-2026-11.md, tagged [!shouldfail]: remove the tag in the commit that fixes one.
+// C2 from docs/review-2026-11.md, through a TextInput: fixed by TextEditing
 #include <catch2/catch_test_macros.hpp>
 #include <unicode/unistr.h>
 #include <psychic-ui/components/Text.hpp>
@@ -35,14 +35,14 @@ namespace {
 
 // C2: Text.cpp advances the caret by one UTF-16 unit after typing, and steps one unit for Backspace, Delete and the
 // arrows
-TEST_CASE("C2: typing a character outside the BMP puts the caret after it", "[text][editing][!shouldfail]") {
+TEST_CASE("C2: typing a character outside the BMP puts the caret after it", "[text][editing]") {
     Editing f;
     f.type(0x1F600);
     f.type('a');
     CHECK(f.input.text() == grinning + "a");
 }
 
-TEST_CASE("C2: Backspace removes a whole character outside the BMP", "[text][editing][!shouldfail]") {
+TEST_CASE("C2: Backspace removes a whole character outside the BMP", "[text][editing]") {
     Editing f;
     f.input.text("x" + grinning);
     f.sys.layout();
@@ -51,7 +51,7 @@ TEST_CASE("C2: Backspace removes a whole character outside the BMP", "[text][edi
     CHECK(f.input.text() == "x");
 }
 
-TEST_CASE("C2: Left steps over a whole character outside the BMP", "[text][editing][!shouldfail]") {
+TEST_CASE("C2: Left steps over a whole character outside the BMP", "[text][editing]") {
     Editing f;
     f.input.text(grinning);
     f.sys.layout();
@@ -63,7 +63,7 @@ TEST_CASE("C2: Left steps over a whole character outside the BMP", "[text][editi
 
 // C2: Text.cpp checks the caret before the selection, so a selection reaching the end (Delete) or the start
 // (Backspace) isn't removed
-TEST_CASE("C2: select all then Delete with the caret at the end empties the field", "[text][editing][!shouldfail]") {
+TEST_CASE("C2: select all then Delete with the caret at the end empties the field", "[text][editing]") {
     Editing f;
     for (char c: std::string("hello")) {
         f.type(static_cast<UChar32>(c));
@@ -73,7 +73,7 @@ TEST_CASE("C2: select all then Delete with the caret at the end empties the fiel
     CHECK(f.input.text().empty());
 }
 
-TEST_CASE("C2: select all then Backspace with the caret at the start empties the field", "[text][editing][!shouldfail]") {
+TEST_CASE("C2: select all then Backspace with the caret at the start empties the field", "[text][editing]") {
     Editing f;
     for (char c: std::string("hello")) {
         f.type(static_cast<UChar32>(c));
