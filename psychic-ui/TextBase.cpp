@@ -1,24 +1,7 @@
-#include <utility>
 #include "TextBase.hpp"
 
 
 namespace psychic_ui {
-
-    void TextBase::updateRole(const TextRole role) {
-        _role = role;
-        constexpr std::pair<TextRole, const char *> classes[]{
-            {TextRole::Primary, "text-primary"},
-            {TextRole::Secondary, "text-secondary"},
-            {TextRole::Tertiary, "text-tertiary"},
-        };
-        for (const auto &[classRole, className]: classes) {
-            if (classRole == role) {
-                addClassName(className);
-            } else {
-                removeClassName(className);
-            }
-        }
-    }
 
     TextBase::TextBase() :
         Div::Div() {

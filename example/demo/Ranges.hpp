@@ -18,11 +18,11 @@ namespace psychic_ui {
 
             auto &left = container.add<VBox>().addClassName("column");
             left.add<Label>("Horizontal").addClassName("h4");
-            left.add<Label>("A thin track, the accent up to the value, the value after it").role(TextRole::Tertiary);
+            left.add<Label>("A thin track, the accent up to the value, the value after it").addClassName("text-tertiary");
 
             const auto field = [](Div &parent, const std::string &name) -> Div & {
                 auto &row = parent.add<HBox>().addClassName("field");
-                row.add<Label>(name).addClassName("name").role(TextRole::Tertiary);
+                row.add<Label>(name).addClassName("name").addClassName("text-tertiary");
                 return row;
             };
 
@@ -32,7 +32,7 @@ namespace psychic_ui {
 
             auto &right = container.add<VBox>().addClassName("column");
             right.add<Label>("Vertical").addClassName("h4");
-            right.add<Label>("Filled from the bottom; no room for the value").role(TextRole::Tertiary);
+            right.add<Label>("Filled from the bottom; no room for the value").addClassName("text-tertiary");
 
             auto &verticals = right.add<HBox>().addClassName("verticals");
 

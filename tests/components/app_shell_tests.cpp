@@ -239,24 +239,23 @@ TEST_CASE("AppShell: the sidebar's header moves the window, its controls and the
     CHECK(header.title() == "Lights");
 }
 
-TEST_CASE("Text roles: three levels of text, as classes the skin set colors", "[components][text]") {
+TEST_CASE("Text levels: three classes the skin set colors", "[components][text]") {
     Shell s;
     auto &label = s.shell.page().add<Label>("Text");
     s.layout();
-    CHECK(label.role() == TextRole::Inherit);
     CHECK(label.computedStyle().color() == s.theme.palette.text);
 
-    label.role(TextRole::Secondary);
+    label.addClassName("text-secondary");
     s.layout();
-    CHECK(label.classNames().contains("text-secondary"));
     CHECK(label.computedStyle().color() == s.theme.palette.textSecondary);
 
-    label.role(TextRole::Tertiary);
+    label.removeClassName("text-secondary");
+    label.addClassName("text-tertiary");
     s.layout();
-    CHECK_FALSE(label.classNames().contains("text-secondary"));
     CHECK(label.computedStyle().color() == s.theme.palette.textMuted);
 
-    label.role(TextRole::Primary);
+    label.removeClassName("text-tertiary");
+    label.addClassName("text-primary");
     s.layout();
     CHECK(label.computedStyle().color() == s.theme.palette.text);
 
