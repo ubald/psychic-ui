@@ -508,13 +508,7 @@ namespace psychic_ui {
             return;
         }
 
-        _sk_canvas->clear(0x00000000);
-        // Layout is in window units, the surface in pixels
-        _sk_canvas->save();
-        const float pixelRatio = _systemWindow->getPixelRatio();
-        _sk_canvas->scale(pixelRatio, pixelRatio);
-        render(_sk_canvas);
-        _sk_canvas->restore();
+        paint(_sk_canvas, _systemWindow->getPixelRatio());
         _sk_context->flushAndSubmit();
         _animationClockFresh = false; // Tweens started from now on start with the next frame
 
@@ -529,6 +523,15 @@ namespace psychic_ui {
             fps        = frames / (delta / 1000.0f);
             frames     = 0;
         }
+    }
+
+    void Window::paint(SkCanvas *canvas, const float pixelRatio) {
+        canvas->clear(0x00000000);
+        // Layout is in window units, the surface in pixels
+        canvas->save();
+        canvas->scale(pixelRatio, pixelRatio);
+        render(canvas);
+        canvas->restore();
     }
 
     // endregion

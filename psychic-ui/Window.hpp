@@ -113,6 +113,13 @@ namespace psychic_ui {
         void updateStylesAndLayout();
 
         /**
+         * Paint the window into a canvas sized in pixels, as `drawAll` paints its GL surface: cleared, then the tree
+         * scaled by the pixel ratio. For drawing elsewhere than the system window (an offscreen raster surface); the
+         * styles and layout are the caller's to update first.
+         */
+        void paint(SkCanvas *canvas, float pixelRatio);
+
+        /**
          * How many style passes a frame may run when `styleUpdated` callbacks keep invalidating styles
          */
         static constexpr int maxStylePasses = 4;
