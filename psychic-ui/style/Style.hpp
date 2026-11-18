@@ -44,7 +44,7 @@ namespace psychic_ui {
          * Moving is copying: the values are plain data, and the owner stays where it is
          */
         Style(Style &&other) noexcept :
-            _set(other._set), _values(std::move(other._values)) {}
+            _set(other._set), _values(other._values) {}
 
         Style &operator=(Style &&other) noexcept { return *this = other; }
 

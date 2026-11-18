@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <bit>
 #include <cstddef>
 #include <iostream>
 #include <span>
@@ -223,8 +222,8 @@ namespace psychic_ui {
         return true;
     }
 
-    void *GLFWSystemWindow::glProcAddress(const char *name) const {
-        return std::bit_cast<void *>(glfwGetProcAddress(name));
+    SystemWindow::GLProc GLFWSystemWindow::glProcAddress(const char *name) const {
+        return glfwGetProcAddress(name);
     }
 
     // region Window operations

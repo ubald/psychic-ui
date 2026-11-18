@@ -1,4 +1,3 @@
-#include <bit>
 #include <cmath>
 #include <cstring>
 #include <unicode/unistr.h>
@@ -81,8 +80,8 @@ namespace psychic_ui {
         return true;
     }
 
-    void *SDL3SystemWindow::glProcAddress(const char *name) const {
-        return std::bit_cast<void *>(SDL_GL_GetProcAddress(name));
+    SystemWindow::GLProc SDL3SystemWindow::glProcAddress(const char *name) const {
+        return SDL_GL_GetProcAddress(name);
     }
 
     // region Window operations

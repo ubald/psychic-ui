@@ -58,7 +58,7 @@ namespace psychic_ui {
         bool handleEvent(const SDL_Event &event);
 
         bool render() override;
-        void *glProcAddress(const char *name) const override;
+        GLProc glProcAddress(const char *name) const override;
 
         void setTitle(const std::string &title) override;
         void setFullscreen(bool fullscreen) override;

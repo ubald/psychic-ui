@@ -78,7 +78,7 @@ namespace psychic_ui_tests {
             return true;
         }
 
-        void *glProcAddress(const char * /*name*/) const override { return nullptr; }
+        GLProc glProcAddress(const char * /*name*/) const override { return nullptr; }
 
         void setTitle(const std::string & /*title*/) override {}
         void setFullscreen(bool /*fullscreen*/) override {}

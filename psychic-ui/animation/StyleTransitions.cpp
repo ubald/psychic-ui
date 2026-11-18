@@ -2,6 +2,7 @@
 #include <cmath>
 #include <optional>
 #include <type_traits>
+#include <utility>
 #include "Interpolation.hpp"
 #include "StyleTransitions.hpp"
 #include "psychic-ui/Div.hpp"
@@ -78,7 +79,7 @@ namespace psychic_ui {
                 #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) \
                     case Property::name: \
                         if constexpr (animatable) { \
-                            return f([](const Style &style) { return style.name(); }, \
+                            return std::forward<F>(f)([](const Style &style) { return style.name(); }, \
                                      [](Style &style, const Type &value) { style.name(value); }); \
                         } \
                         return false;

@@ -1,4 +1,3 @@
-#include <bit>
 #include <memory>
 #include "SystemWindow.hpp"
 #include "Window.hpp"
@@ -102,9 +101,9 @@ namespace psychic_ui {
         using GetFramebufferAttachmentParameteriv  = void (*)(unsigned, unsigned, unsigned, int *);
         using GetError                             = unsigned (*)();
 
-        auto getIntegerv = std::bit_cast<GetIntegerv>(glProcAddress("glGetIntegerv"));
-        auto getAttachment = std::bit_cast<GetFramebufferAttachmentParameteriv>(glProcAddress("glGetFramebufferAttachmentParameteriv"));
-        auto getError = std::bit_cast<GetError>(glProcAddress("glGetError"));
+        auto getIntegerv = reinterpret_cast<GetIntegerv>(glProcAddress("glGetIntegerv"));
+        auto getAttachment = reinterpret_cast<GetFramebufferAttachmentParameteriv>(glProcAddress("glGetFramebufferAttachmentParameteriv"));
+        auto getError = reinterpret_cast<GetError>(glProcAddress("glGetError"));
         if (!getIntegerv || !getAttachment || !getError) {
             return;
         }

@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <bit>
 #include <cmath>
 #include <limits>
 #include <cstring>
@@ -105,7 +104,7 @@ namespace psychic_ui {
                 if (std::strncmp(name, "egl", 3) == 0) {
                     return nullptr;
                 }
-                return std::bit_cast<GrGLFuncPtr>(static_cast<SystemWindow *>(ctx)->glProcAddress(name));
+                return static_cast<SystemWindow *>(ctx)->glProcAddress(name);
             }
         );
         if (!interface) {

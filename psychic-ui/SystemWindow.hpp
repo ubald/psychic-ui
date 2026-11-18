@@ -39,9 +39,14 @@ namespace psychic_ui {
         virtual bool render() = 0;
 
         /**
+         * An OpenGL function, as GL loaders return them: to be cast to its own type before it is called
+         */
+        using GLProc = void (*)();
+
+        /**
          * Address of an OpenGL function in this window's context, which Skia builds its GL interface from
          */
-        virtual void *glProcAddress(const char *name) const = 0;
+        virtual GLProc glProcAddress(const char *name) const = 0;
 
         /**
          * Whether something other than Psychic UI also draws with this GL context (a host application):

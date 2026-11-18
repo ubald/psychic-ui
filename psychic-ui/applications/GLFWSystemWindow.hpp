@@ -52,7 +52,7 @@ namespace psychic_ui {
          * GLFW window as to be closed and returns false.
          */
         bool render() override;
-        void *glProcAddress(const char *name) const override;
+        GLProc glProcAddress(const char *name) const override;
 
         void setTitle(const std::string &title) override;
         void setFullscreen(bool fullscreen) override;
