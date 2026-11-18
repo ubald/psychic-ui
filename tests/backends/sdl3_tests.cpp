@@ -59,6 +59,11 @@ namespace {
             adapter = std::make_unique<TouchAdapter>(window, sdlWindow, nullptr);
         }
 
+        SDL3Fixture(const SDL3Fixture &) = delete;
+        SDL3Fixture &operator=(const SDL3Fixture &) = delete;
+        SDL3Fixture(SDL3Fixture &&) = delete;
+        SDL3Fixture &operator=(SDL3Fixture &&) = delete;
+
         ~SDL3Fixture() {
             adapter.reset();
             window.reset();

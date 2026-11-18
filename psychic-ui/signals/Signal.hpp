@@ -32,6 +32,8 @@ namespace psychic_ui {
         Signal() = default;
         Signal(const Signal &) = delete;
         Signal &operator=(const Signal &) = delete;
+        Signal(Signal &&) = delete;
+        Signal &operator=(Signal &&) = delete;
 
         ~Signal() {
             // Disconnect every slot: a running emission skips them, and releases them once it ends
@@ -107,15 +109,20 @@ namespace psychic_ui {
 
     private:
         struct Emitting {
-            detail::SignalCore<T...> &core;
+            detail::SignalCore<T...> *core;
 
-            explicit Emitting(detail::SignalCore<T...> &core) : core(core) {
-                ++core.emitting;
+            explicit Emitting(detail::SignalCore<T...> &emitted) : core(&emitted) {
+                ++core->emitting;
             }
 
+            Emitting(const Emitting &) = delete;
+            Emitting &operator=(const Emitting &) = delete;
+            Emitting(Emitting &&) = delete;
+            Emitting &operator=(Emitting &&) = delete;
+
             ~Emitting() {
-                --core.emitting;
-                core.compact();
+                --core->emitting;
+                core->compact();
             }
         };
 

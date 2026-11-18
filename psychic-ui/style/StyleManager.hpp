@@ -34,6 +34,9 @@ namespace psychic_ui {
         StyleManager() = default;
         StyleManager(const StyleManager &) = delete;
         StyleManager &operator=(const StyleManager &) = delete;
+        StyleManager(StyleManager &&) = delete;
+        StyleManager &operator=(StyleManager &&) = delete;
+        ~StyleManager() = default;
 
         /**
          * Forget the fonts, the skin set, the loaded stylesheets and every rule.

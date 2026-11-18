@@ -43,6 +43,10 @@ namespace psychic_ui {
          */
         SDL3SystemWindow(std::shared_ptr<Window> window, SDL_Window *sdlWindow, SDL_GLContext glContext);
         ~SDL3SystemWindow() override;
+        SDL3SystemWindow(const SDL3SystemWindow &) = delete;
+        SDL3SystemWindow &operator=(const SDL3SystemWindow &) = delete;
+        SDL3SystemWindow(SDL3SystemWindow &&) = delete;
+        SDL3SystemWindow &operator=(SDL3SystemWindow &&) = delete;
 
         SDL_Window *sdlWindow() const;
 

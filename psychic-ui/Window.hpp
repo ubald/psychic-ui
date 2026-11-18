@@ -31,7 +31,11 @@ namespace psychic_ui {
     class Window : public Div {
     public:
         explicit Window(std::string title);
-        virtual ~Window();
+        ~Window() override;
+        Window(const Window &) = delete;
+        Window &operator=(const Window &) = delete;
+        Window(Window &&) = delete;
+        Window &operator=(Window &&) = delete;
 
         Window *window() override;
 

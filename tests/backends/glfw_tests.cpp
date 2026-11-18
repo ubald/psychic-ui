@@ -37,6 +37,11 @@ namespace {
             glfwSetMouseButtonCallback(glfwWindow, hostButtonCallback);
         }
 
+        GLFWHost(const GLFWHost &) = delete;
+        GLFWHost &operator=(const GLFWHost &) = delete;
+        GLFWHost(GLFWHost &&) = delete;
+        GLFWHost &operator=(GLFWHost &&) = delete;
+
         ~GLFWHost() {
             glfwDestroyWindow(glfwWindow);
             glfwTerminate();

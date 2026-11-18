@@ -60,6 +60,11 @@ namespace psychic_ui_tests {
             _window->open(this);
         }
 
+        FakeSystemWindow(const FakeSystemWindow &) = delete;
+        FakeSystemWindow &operator=(const FakeSystemWindow &) = delete;
+        FakeSystemWindow(FakeSystemWindow &&) = delete;
+        FakeSystemWindow &operator=(FakeSystemWindow &&) = delete;
+
         ~FakeSystemWindow() override {
             detach();
         }

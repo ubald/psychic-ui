@@ -91,6 +91,9 @@ namespace psychic_ui {
          */
         Div &operator=(const Div &) = delete;
 
+        Div(Div &&) = delete;
+        Div &operator=(Div &&) = delete;
+
         /**
          * Get a string representing this Div for debug purposes
          * @return String used to identify a component in a log

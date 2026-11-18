@@ -27,6 +27,8 @@ namespace psychic_ui {
 
         SystemWindow(const SystemWindow &) = delete;
         SystemWindow &operator=(const SystemWindow &) = delete;
+        SystemWindow(SystemWindow &&) = delete;
+        SystemWindow &operator=(SystemWindow &&) = delete;
 
         std::shared_ptr<Window> window() const;
 

@@ -27,6 +27,12 @@ namespace {
 
         std::string_view theme() const { return window->theme().name; }
 
+        Fixture() = default;
+        Fixture(const Fixture &) = delete;
+        Fixture &operator=(const Fixture &) = delete;
+        Fixture(Fixture &&) = delete;
+        Fixture &operator=(Fixture &&) = delete;
+
         ~Fixture() {
             window->skinSet<PivotalSkins>(); // The style manager is shared with the other tests
         }

@@ -28,6 +28,10 @@ namespace psychic_ui {
             shortcut(itemShortcut),
             icon(itemIcon) {}
 
+        MenuItem(const MenuItem &) = delete;
+        MenuItem &operator=(const MenuItem &) = delete;
+        MenuItem(MenuItem &&) = delete;
+        MenuItem &operator=(MenuItem &&) = delete;
         virtual ~MenuItem() = default;
     };
 

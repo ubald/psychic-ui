@@ -39,6 +39,10 @@ namespace psychic_ui {
     public:
         GLFWSystemWindow(std::shared_ptr<Window> window, GLFWwindow *glfwWindow);
         ~GLFWSystemWindow() override;
+        GLFWSystemWindow(const GLFWSystemWindow &) = delete;
+        GLFWSystemWindow &operator=(const GLFWSystemWindow &) = delete;
+        GLFWSystemWindow(GLFWSystemWindow &&) = delete;
+        GLFWSystemWindow &operator=(GLFWSystemWindow &&) = delete;
 
         GLFWwindow *glfwWindow() const;
 

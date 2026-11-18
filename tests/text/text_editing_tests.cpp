@@ -21,10 +21,10 @@ namespace {
      */
     class FakeGeometry final : public TextEditing::Geometry {
     public:
-        explicit FakeGeometry(const TextEditing &editing) : _editing(editing) {}
+        explicit FakeGeometry(const TextEditing &editing) : _editing(&editing) {}
 
         SkRect caretRect(unsigned int index) const override {
-            const auto &text   = _editing.text();
+            const auto &text   = _editing->text();
             int         line   = 0;
             int         column = 0;
             for (int32_t i = 0; i < static_cast<int32_t>(index) && i < text.length(); ++i) {
@@ -39,7 +39,7 @@ namespace {
         }
 
         unsigned int indexAt(float x, float y) const override {
-            const auto &text   = _editing.text();
+            const auto &text   = _editing->text();
             const int   target = std::max(0, static_cast<int>(y / 20.0f));
             int         line   = 0;
             int32_t     i      = 0;
@@ -57,7 +57,7 @@ namespace {
         }
 
     private:
-        const TextEditing &_editing;
+        const TextEditing *_editing;
     };
 
     class FakeClipboard final : public TextEditing::Clipboard {

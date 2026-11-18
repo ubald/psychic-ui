@@ -29,6 +29,11 @@ namespace psychic_ui {
             ~YogaConfig() {
                 YGConfigFree(config);
             }
+
+            YogaConfig(const YogaConfig &) = delete;
+            YogaConfig &operator=(const YogaConfig &) = delete;
+            YogaConfig(YogaConfig &&) = delete;
+            YogaConfig &operator=(YogaConfig &&) = delete;
         };
 
         YGConfigRef yogaConfig() {

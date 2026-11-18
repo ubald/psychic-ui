@@ -55,6 +55,11 @@ namespace psychic_ui {
          */
         class Geometry {
         public:
+            Geometry() = default;
+            Geometry(const Geometry &) = delete;
+            Geometry &operator=(const Geometry &) = delete;
+            Geometry(Geometry &&) = delete;
+            Geometry &operator=(Geometry &&) = delete;
             virtual ~Geometry() = default;
 
             /**
@@ -73,6 +78,11 @@ namespace psychic_ui {
          */
         class Clipboard {
         public:
+            Clipboard() = default;
+            Clipboard(const Clipboard &) = delete;
+            Clipboard &operator=(const Clipboard &) = delete;
+            Clipboard(Clipboard &&) = delete;
+            Clipboard &operator=(Clipboard &&) = delete;
             virtual ~Clipboard() = default;
             virtual std::string clipboardText() const = 0;
             virtual void setClipboardText(const std::string &text) = 0;
@@ -82,6 +92,8 @@ namespace psychic_ui {
         ~TextEditing();
         TextEditing(TextEditing &&) noexcept;
         TextEditing &operator=(TextEditing &&) noexcept;
+        TextEditing(const TextEditing &)            = delete;
+        TextEditing &operator=(const TextEditing &) = delete;
 
         const icu::UnicodeString &text() const;
 

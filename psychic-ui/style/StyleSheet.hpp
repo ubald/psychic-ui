@@ -10,6 +10,11 @@ namespace psychic_ui {
      */
     class StyleSheet {
     public:
+        StyleSheet() = default;
+        StyleSheet(const StyleSheet &) = delete;
+        StyleSheet &operator=(const StyleSheet &) = delete;
+        StyleSheet(StyleSheet &&) = delete;
+        StyleSheet &operator=(StyleSheet &&) = delete;
         virtual ~StyleSheet() = default;
         virtual void load(StyleManager *manager) = 0;
     };

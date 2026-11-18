@@ -65,6 +65,11 @@ namespace {
             window->skinSet<DeskSkins>();
         }
 
+        Fixture(const Fixture &) = delete;
+        Fixture &operator=(const Fixture &) = delete;
+        Fixture(Fixture &&) = delete;
+        Fixture &operator=(Fixture &&) = delete;
+
         ~Fixture() {
             // The style manager is shared with the other tests
             window->handleInputModeChange(InputMode::Pointer);

@@ -17,6 +17,11 @@ namespace psychic_ui {
      */
     class Animation {
     public:
+        Animation() = default;
+        Animation(const Animation &) = delete;
+        Animation &operator=(const Animation &) = delete;
+        Animation(Animation &&) = delete;
+        Animation &operator=(Animation &&) = delete;
         virtual ~Animation() = default;
 
         /**
@@ -80,6 +85,9 @@ namespace psychic_ui {
 
         Animated(const Animated &) = delete;
         Animated &operator=(const Animated &) = delete;
+        Animated(Animated &&) = delete;
+        Animated &operator=(Animated &&) = delete;
+        ~Animated() = default;
 
         /**
          * Move to `target` from the current value (a spring keeps its velocity)

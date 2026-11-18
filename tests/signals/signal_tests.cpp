@@ -43,6 +43,11 @@ namespace {
 
         explicit Owner(int *destroyed) : destroyed(destroyed) {}
 
+        Owner(const Owner &) = delete;
+        Owner &operator=(const Owner &) = delete;
+        Owner(Owner &&) = delete;
+        Owner &operator=(Owner &&) = delete;
+
         ~Owner() {
             ++*destroyed;
         }

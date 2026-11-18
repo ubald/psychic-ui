@@ -40,6 +40,15 @@ namespace psychic_ui {
          */
         Style &operator=(const Style &other);
 
+        /**
+         * Moving is copying: the values are plain data, and the owner stays where it is
+         */
+        Style(Style &&other) noexcept : Style(other) {}
+
+        Style &operator=(Style &&other) noexcept { return *this = other; }
+
+        ~Style() = default;
+
         // region Properties
 
         #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) \

@@ -60,6 +60,8 @@ namespace psychic_ui {
         SlotBase() = default;
         SlotBase(const SlotBase &) = delete;
         SlotBase &operator=(const SlotBase &) = delete;
+        SlotBase(SlotBase &&) = delete;
+        SlotBase &operator=(SlotBase &&) = delete;
         virtual ~SlotBase() = default;
 
         /**

@@ -18,6 +18,12 @@ namespace {
         std::ostringstream stream;
         std::streambuf     *previous{std::cerr.rdbuf(stream.rdbuf())};
 
+        CaptureErrors() = default;
+        CaptureErrors(const CaptureErrors &) = delete;
+        CaptureErrors &operator=(const CaptureErrors &) = delete;
+        CaptureErrors(CaptureErrors &&) = delete;
+        CaptureErrors &operator=(CaptureErrors &&) = delete;
+
         ~CaptureErrors() { std::cerr.rdbuf(previous); }
 
         std::string text() const { return stream.str(); }
