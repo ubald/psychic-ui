@@ -1,7 +1,10 @@
+#include <functional>
 #include "Compose.hpp"
 
+#include <psychic-ui/Div.hpp>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Label.hpp>
+#include <psychic-ui/style/Length.hpp>
 
 namespace psychic_ui::showcase::compose {
     using namespace psychic_ui::literals;

@@ -12,7 +12,15 @@
 #include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/components/Toast.hpp>
 #include <psychic-ui/components/ToolBar.hpp>
+#include <psychic-ui/Popup.hpp>
+#include <psychic-ui/components/Tone.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Color.hpp>
+#include <chrono>
+#include <memory>
 #include <tuple>
+#include <utility>
+#include <vector>
 #include "../Compose.hpp"
 #include "../Looks.hpp"
 #include "../Scene.hpp"

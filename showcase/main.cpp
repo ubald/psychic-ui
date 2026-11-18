@@ -1,6 +1,10 @@
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <exception>
 #include <filesystem>
 #include <iostream>
+#include <memory>
 #include <set>
 #include <span>
 #include <string>

@@ -1,3 +1,6 @@
+#include <memory>
+#include <utility>
+#include <vector>
 #include "Scene.hpp"
 
 #include <psychic-ui/Window.hpp>

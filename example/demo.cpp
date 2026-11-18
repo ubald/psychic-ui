@@ -1,10 +1,12 @@
 #include <cstddef>
+#include <exception>
 #include <iostream>
+#include <memory>
 #include <span>
 #include <string>
-#include "demo.hpp"
 #include "example/demo/DemoWindow.hpp"
 #include <psychic-ui/applications/SDL3Application.hpp>
+#include <psychic-ui/psychic-ui.hpp>
 
 using namespace psychic_ui;
 

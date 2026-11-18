@@ -1,4 +1,8 @@
 #include <memory>
+#include <string_view>
+#include <tuple>
+#include <vector>
+#include <psychic-ui/Popup.hpp>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/CheckBox.hpp>
@@ -13,7 +17,10 @@
 #include <psychic-ui/components/StatusDot.hpp>
 #include <psychic-ui/components/Switch.hpp>
 #include <psychic-ui/components/Text.hpp>
+#include <psychic-ui/components/Tone.hpp>
 #include <psychic-ui/icons/IconRegistry.hpp>
+#include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Values.hpp>
 #include "../Compose.hpp"
 #include "../Looks.hpp"
 #include "../Scene.hpp"

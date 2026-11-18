@@ -5,6 +5,9 @@
 
 #include <chrono>
 #include <iostream>
+#include <memory>
+#include <string>
+#include <psychic-ui/style/Values.hpp>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <psychic-ui/Window.hpp>
@@ -12,7 +15,7 @@
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/TextInput.hpp>
-#include <psychic-ui/skins/pivotal/PivotalSkins.hpp>
+#include <psychic-ui/skins/pivotal/PivotalSkins.hpp> // IWYU pragma: keep: skinSet<PivotalSkins>(), which include-cleaner misses
 
 using namespace psychic_ui;
 
