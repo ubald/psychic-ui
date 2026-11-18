@@ -20,8 +20,6 @@ namespace psychic_ui {
          */
         void addedToComponent() override = 0;
         void removedFromComponent() override = 0;
-
-        virtual void setText(const std::string &/*text*/) {};
     };
 
     class TextArea : public Component<TextAreaSkin> {

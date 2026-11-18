@@ -15,10 +15,6 @@ namespace psychic_ui {
         if (_selectable) {
             subscribeToSelection();
         }
-
-        if (_editable) {
-            subscribeToSelection();
-        }
     }
 
     std::string Text::text() const {
@@ -444,7 +440,7 @@ namespace psychic_ui {
 
     void Text::updateTextInputArea() {
         Window *window = this->window();
-        if (!window || !_focused || !_editable || window->inputMode() != InputMode::Touch) {
+        if (!window || !_focused || !_editable) {
             return;
         }
         // The caret's line, across the text, in window coordinates

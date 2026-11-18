@@ -138,7 +138,7 @@ namespace psychic_ui {
         std::vector<ScopedSlot>   _editionSlots{}; // Ours while editable
 
         /**
-         * In touch mode, tell the window where the caret's line is, for the on-screen keyboard
+         * Tell the window where the caret's line is, for the on-screen keyboard and the input method's candidates
          */
         void updateTextInputArea();
 

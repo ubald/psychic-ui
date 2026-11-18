@@ -633,7 +633,7 @@ TEST_CASE("SDL3: a pen works like a mouse, in pen mode", "[backend][sdl3][touch]
     CHECK(clicks == 1); // Only the tip clicks
 }
 
-TEST_CASE("SDL3: a text field focused by touch tells SDL where its caret is", "[backend][sdl3][touch]") {
+TEST_CASE("SDL3: a focused text field tells SDL where its caret is, by mouse or by touch", "[backend][sdl3][touch]") {
     SDL3Fixture sdl;
     auto &input = sdl.window->appContainer().add<TextInput>("Hello");
     input.width(200.0f);
@@ -644,18 +644,20 @@ TEST_CASE("SDL3: a text field focused by touch tells SDL where its caret is", "[
     const float x = static_cast<float>(left + 100);
     const float y = static_cast<float>(top + input.getHeight() / 2);
 
-    // With a mouse, nothing to avoid
+    // With a mouse, for an input method's candidates
     sdl.mouse(SDL_EVENT_MOUSE_MOTION, x, y, 1);
     sdl.mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, x, y, 1);
     sdl.mouse(SDL_EVENT_MOUSE_BUTTON_UP, x, y, 1);
     SDL_Rect area{};
     int      cursor = -1;
     REQUIRE(SDL_GetTextInputArea(sdl.sdlWindow, &area, &cursor));
-    CHECK(area.w == 0);
+    CHECK(area.w > 0);
+    CHECK(area.y >= top);
 
-    // Blurred, then focused again by a tap
+    // Blurred, then focused again by a tap, for the on-screen keyboard
     sdl.mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, 700.0f, 500.0f, 1);
     sdl.mouse(SDL_EVENT_MOUSE_BUTTON_UP, 700.0f, 500.0f, 1);
+    SDL_SetTextInputArea(sdl.sdlWindow, nullptr, 0);
     sdl.finger(SDL_EVENT_FINGER_DOWN, x, y, 1000);
     sdl.finger(SDL_EVENT_FINGER_UP, x, y, 1050);
     REQUIRE(SDL_GetTextInputArea(sdl.sdlWindow, &area, &cursor));
