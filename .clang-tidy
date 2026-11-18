@@ -14,6 +14,7 @@ Checks: >
   -cppcoreguidelines-prefer-member-initializer,
   misc-*,
   -misc-no-recursion,
+  -misc-non-private-member-variables-in-classes,
   modernize-*,
   -modernize-use-trailing-return-type,
   performance-*,
@@ -33,6 +34,9 @@ Checks: >
 #   app shell's parts keep their order). Members set from constructor arguments still go in the initializer list.
 # - bugprone-easily-swappable-parameters flags every (float x, float y).
 # - misc-no-recursion flags walking a UI tree, which is recursive by nature.
+# - misc-non-private-member-variables-in-classes: public members are the API by design (signals beside their on*
+#   connectors, value structs like the theme's groups), and protected members are the extension API for subclasses
+#   of Div, components and skins.
 # - portability-avoid-pragma-once: #pragma once works on every compiler the project targets.
 # - The house style: no trailing return types, lowercase literal suffixes (1.0f), `std::vector<X> v{}`
 #   member initializers (readability-redundant-member-init) and `if (ptr)` (implicit bool conversion).
@@ -47,7 +51,6 @@ CheckOptions:
   readability-identifier-length.IgnoredVariableNames: '^(x|y|z|w|h|i|j|k|n|r|g|b|a|t|s|dx|dy|it|id|ok|os)$'
   readability-identifier-length.IgnoredParameterNames: '^(x|y|z|w|h|i|j|k|n|r|g|b|a|t|s|dx|dy|it|id|os)$'
   readability-identifier-length.IgnoredLoopCounterNames: '^[ijk_]$'
-  misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic: true
   # clang-tidy 21 doesn't know <chrono> is the public header for the chrono literal operators (100ms, 1s) and only
   # offers libstdc++'s <bits/chrono.h>, which must never be included; remove this once clang-tidy maps them.
   misc-include-cleaner.IgnoreHeaders: 'bits/chrono\.h'
