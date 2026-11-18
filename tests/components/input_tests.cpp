@@ -131,7 +131,7 @@ TEST_CASE("TextInput: Tab focuses the field itself, so one can type", "[componen
 
     f.tab();
     CHECK(input.hasFocus());
-    CHECK(f.window->focusedDiv() == &input); // No delegate: the field takes the keys
+    CHECK(f.window->focusedDiv() == &input); // The field itself takes the keys
     f.type("abc");
     CHECK(input.text() == "abc");
 
@@ -208,7 +208,7 @@ TEST_CASE("SearchField: icon, text, and a clear button while not empty", "[compo
 
     // Tab: the field is focused (its accent border) and typing goes to its text
     f.tab();
-    CHECK(f.window->focusedDiv() == &search); // No delegate: the field takes the keys
+    CHECK(f.window->focusedDiv() == &search); // The field itself takes the keys
     CHECK(search.computedStyle().borderColor() == f.theme.palette.accent);
     f.type("cue");
     CHECK(search.text() == "cue");
@@ -536,7 +536,7 @@ TEST_CASE("NumberStepper: typed, and stepped by the keys", "[components][inputs]
     CHECK(stepper.text() == "1.5");
 
     f.tab();
-    CHECK(f.window->focusedDiv() == &stepper); // No delegate: the stepper takes the keys
+    CHECK(f.window->focusedDiv() == &stepper); // The stepper itself takes the keys
     CHECK(stepper.computedStyle().borderColor() == f.theme.palette.accent);
 
     f.key(Key::UP);

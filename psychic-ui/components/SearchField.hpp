@@ -60,6 +60,12 @@ namespace psychic_ui {
         }
 
         /**
+         * The text changed by an edit (typed, erased, cut, pasted or cleared), with the new text
+         */
+        Signal<std::string> changed{};
+        PSYCHIC_UI_EVENT(onChange, changed)
+
+        /**
          * Enter was pressed, with the text
          */
         Signal<std::string> submitted{};
@@ -83,5 +89,6 @@ namespace psychic_ui {
         bool fieldKey(Key key, Mod mod) override;
         bool fieldPress(const MouseEvent &event) override;
         void textChanged() override;
+        void textEdited() override;
     };
 }

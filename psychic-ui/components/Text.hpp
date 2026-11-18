@@ -3,7 +3,7 @@
 #include <string>
 #include <unicode/unistr.h>
 #include "psychic-ui/Div.hpp"
-#include "psychic-ui/text/TextEditing.hpp"
+#include "psychic-ui/text/TextGeometry.hpp"
 #include "psychic-ui/text/TextLayout.hpp"
 
 namespace psychic_ui {
@@ -21,7 +21,7 @@ namespace psychic_ui {
      * Measured to its text: the widest line within the width it's given, and as many lines as that takes, each
      * the computed line height (glyphs may overflow a line height smaller than the font's, as in CSS).
      */
-    class Text : public Div, public TextEditing::Geometry {
+    class Text : public Div, public TextGeometry {
     public:
         /**
          * Construct a Text component, optionally initializing it with text
@@ -67,11 +67,6 @@ namespace psychic_ui {
             static_cast<Text &>(self).updateSelection(anchor, caret);
             return self;
         }
-
-        /**
-         * Where the caret is: the selection's moving end
-         */
-        unsigned int caret() const;
 
         bool caretVisible() const;
 

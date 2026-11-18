@@ -18,7 +18,7 @@ namespace {
     /**
      * A monospaced layout: every UTF-16 unit 10 wide, lines 20 high, broken at line returns only
      */
-    class FakeGeometry final : public TextEditing::Geometry {
+    class FakeGeometry final : public TextGeometry {
     public:
         explicit FakeGeometry(const TextEditing &editing) : _editing(editing) {}
 

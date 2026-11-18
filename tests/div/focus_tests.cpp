@@ -22,3 +22,29 @@ TEST_CASE("C11: presses inside a focused field don't focus it again", "[div][foc
     CHECK(inputFocused == 1);
     CHECK(appFocused == 1);
 }
+
+TEST_CASE("A disabled or hidden div doesn't take the focus: the path stops at its parent", "[div][focus]") {
+    auto             window = std::make_shared<TestWindow>();
+    FakeSystemWindow sys{window, 800, 600};
+    auto            &group  = window->appContainer().add<Div>();
+    auto            &field  = group.add<Div>().focusEnabled(true).size(100, 20);
+    auto            &inner  = field.add<Div>().size(50, 10); // Not focusEnabled: the field takes the focus for it
+    sys.layout();
+
+    field.enabled(false);
+    window->requestFocus(&inner);
+    CHECK_FALSE(field.hasFocus());
+    CHECK_FALSE(inner.hasFocus());
+    CHECK(window->focusedDiv() == &group);
+
+    field.enabled(true);
+    window->requestFocus(&inner);
+    CHECK(field.hasFocus());
+    CHECK(window->focusedDiv() == &inner);
+
+    field.visible(false);
+    sys.layout();
+    window->requestFocus(&field);
+    CHECK_FALSE(field.hasFocus());
+    CHECK(window->focusedDiv() == &group);
+}

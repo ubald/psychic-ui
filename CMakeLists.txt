@@ -362,6 +362,7 @@ set(SOURCE_FILES
     psychic-ui/utils/ExecutablePath.hpp
     psychic-ui/text/TextEditing.cpp
     psychic-ui/text/TextEditing.hpp
+    psychic-ui/text/TextGeometry.hpp
     psychic-ui/text/TextLayout.cpp
     psychic-ui/text/TextLayout.hpp
     psychic-ui/text/WindowClipboard.hpp

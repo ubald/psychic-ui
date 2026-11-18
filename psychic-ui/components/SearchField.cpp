@@ -62,6 +62,10 @@ namespace psychic_ui {
         }
     }
 
+    void SearchField::textEdited() {
+        changed.emit(text());
+    }
+
     bool SearchField::takesEscape() const {
         return editable() && !_editing.text().isEmpty();
     }

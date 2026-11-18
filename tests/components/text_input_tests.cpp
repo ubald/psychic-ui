@@ -227,6 +227,24 @@ TEST_CASE("TextInput: disabled, it ignores typing, keys and presses", "[componen
     CHECK(f.input.text() == "xHello world");
 }
 
+TEST_CASE("TextInput: disabled, a press doesn't focus it and :focus doesn't match", "[components][text-input][disabled][focus]") {
+    Field f;
+    f.focus();
+    REQUIRE(f.input.hasFocus());
+    f.press(f.at(0)); // Its own press keeps the focus
+    f.release(f.at(0));
+    REQUIRE(f.input.hasFocus());
+
+    f.input.enabled(false);
+    f.layout();
+    f.press(f.at(11));
+    f.release(f.at(11));
+    CHECK_FALSE(f.input.hasFocus()); // The press focused what is around it
+    CHECK(f.window->appContainer().hasFocus());
+    CHECK(f.input.computedStyle().borderColor() != f.theme.palette.accent); // Not `TextInput:focus`
+    CHECK_FALSE(f.view().caretVisible());
+}
+
 TEST_CASE("TextInput: a new skin shows the text and the selection", "[components][text-input][skin]") {
     Field f;
     f.focus();

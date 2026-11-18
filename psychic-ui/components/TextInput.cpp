@@ -22,4 +22,8 @@ namespace psychic_ui {
         }
     }
 
+    void TextInput::textEdited() {
+        changed.emit(text());
+    }
+
 }

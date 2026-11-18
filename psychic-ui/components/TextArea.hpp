@@ -30,5 +30,14 @@ namespace psychic_ui {
     class TextArea : public TextField<TextAreaSkin> {
     public:
         explicit TextArea(const std::string &text = "");
+
+        /**
+         * The text changed by an edit (typed, erased, cut or pasted), with the new text
+         */
+        Signal<std::string> changed{};
+        PSYCHIC_UI_EVENT(onChange, changed)
+
+    protected:
+        void textEdited() override;
     };
 }

@@ -7,4 +7,8 @@ namespace psychic_ui {
         tag("TextArea");
     }
 
+    void TextArea::textEdited() {
+        changed.emit(text());
+    }
+
 }

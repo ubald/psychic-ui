@@ -89,10 +89,6 @@ namespace psychic_ui {
         _caret  = std::min(caret, length);
     }
 
-    unsigned int Text::caret() const {
-        return _caret;
-    }
-
     SkRect Text::caretRect(unsigned int index) const {
         // The text starts inside the padding and border, scrolled
         return _textLayout.caretRect(index).makeOffset(_paddedRect.fLeft - _rect.fLeft - _offsetX, _paddedRect.fTop - _rect.fTop);

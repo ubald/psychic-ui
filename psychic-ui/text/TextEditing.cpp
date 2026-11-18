@@ -156,7 +156,7 @@ namespace psychic_ui {
         return replace(begin, end, inserted);
     }
 
-    TextEditing::Edit TextEditing::erase(Direction direction, Unit unit, const Geometry *geometry) {
+    TextEditing::Edit TextEditing::erase(Direction direction, Unit unit, const TextGeometry *geometry) {
         if (_readOnly) {
             return Edit::None;
         }
@@ -168,7 +168,7 @@ namespace psychic_ui {
         return replace(begin, end, icu::UnicodeString{});
     }
 
-    TextEditing::Edit TextEditing::move(Direction direction, Unit unit, bool extend, const Geometry *geometry) {
+    TextEditing::Edit TextEditing::move(Direction direction, Unit unit, bool extend, const TextGeometry *geometry) {
         if (!extend && hasSelection() && unit == Unit::Grapheme) {
             // An arrow collapses the selection to its side
             auto [begin, end] = selection();
@@ -183,7 +183,7 @@ namespace psychic_ui {
         return place(extend ? _anchor : to, to);
     }
 
-    unsigned int TextEditing::target(Direction direction, Unit unit, const Geometry *geometry) {
+    unsigned int TextEditing::target(Direction direction, Unit unit, const TextGeometry *geometry) {
         const bool forward = direction == Direction::Forward;
         switch (unit) {
             case Unit::Grapheme:
@@ -341,7 +341,7 @@ namespace psychic_ui {
         return place(_pressed.first, std::max(index, _pressed.second));
     }
 
-    TextEditing::Edit TextEditing::handleKey(Key key, Mod mod, const Geometry &geometry, Clipboard &clipboard) {
+    TextEditing::Edit TextEditing::handleKey(Key key, Mod mod, const TextGeometry &geometry, Clipboard &clipboard) {
         const bool command = mod.ctrl || mod.super;
         switch (key) {
             case Key::A:

@@ -46,10 +46,17 @@ namespace psychic_ui {
             return self;
         }
 
+        /**
+         * The text changed by an edit (typed, erased, cut or pasted), with the new text
+         */
+        Signal<std::string> changed{};
+        PSYCHIC_UI_EVENT(onChange, changed)
+
     protected:
         std::string _placeholder{};
 
         void updatePlaceholder(const std::string &placeholder);
         void textChanged() override;
+        void textEdited() override;
     };
 }
