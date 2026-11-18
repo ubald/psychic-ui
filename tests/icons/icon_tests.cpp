@@ -84,7 +84,7 @@ TEST_CASE("every bundled icon parses to paths inside its grid", "[icons]") {
         REQUIRE_FALSE(shape->paths.empty());
         for (const auto &[paint, path]: shape->paths) {
             REQUIRE_FALSE(path.isEmpty());
-            SkRect bounds = path.computeTightBounds();
+            const SkRect bounds = path.computeTightBounds();
             REQUIRE(bounds.left() >= 0.0f);
             REQUIRE(bounds.top() >= 0.0f);
             REQUIRE(bounds.right() <= shape->grid);
@@ -119,7 +119,7 @@ TEST_CASE("an application adds its own icons, or replaces one", "[icons]") {
 TEST_CASE("an unknown icon draws nothing and is reported once", "[icons]") {
     IconRegistry registry{icons::pivotalIcons};
     auto surface = whiteSurface(32, 32);
-    CaptureErrors errors;
+    const CaptureErrors errors;
 
     REQUIRE(registry.shape("no-such-icon") == nullptr);
     REQUIRE_FALSE(paint::icon(surface->getCanvas(), "no-such-icon", SkRect::MakeWH(32, 32), argb(0xFF000000), paint::iconStroke, &registry));
@@ -133,7 +133,7 @@ TEST_CASE("path data that doesn't parse draws nothing and is reported once", "[i
     constexpr IconElement broken[]{{IconPaint::Stroke, "M1 1 Q"}};
     IconRegistry registry{};
     registry.add(IconDefinition{"broken", 16.0f, 1.3f, broken});
-    CaptureErrors errors;
+    const CaptureErrors errors;
 
     REQUIRE(registry.shape("broken") == nullptr);
     REQUIRE(registry.shape("broken") == nullptr);
@@ -141,19 +141,19 @@ TEST_CASE("path data that doesn't parse draws nothing and is reported once", "[i
 }
 
 TEST_CASE("an icon is drawn inside its box at any size", "[icons]") {
-    for (float size: {14.0f, 16.0f, 20.0f}) {
-        for (float scale: {1.0f, 2.0f}) {
+    for (const float size: {14.0f, 16.0f, 20.0f}) {
+        for (const float scale: {1.0f, 2.0f}) {
             for (auto name: {"search", "check", "settings", "more", "star-filled", "chevron-up", "circle-alert", "grip-vertical"}) {
                 INFO(name << " at " << size << " px, scale " << scale);
                 auto surface = whiteSurface(64, 64);
                 SkCanvas *canvas = surface->getCanvas();
                 canvas->scale(scale, scale);
-                SkRect box = SkRect::MakeXYWH(5, 7, size, size);
+                const SkRect box = SkRect::MakeXYWH(5, 7, size, size);
                 REQUIRE(paint::icon(canvas, name, box, argb(0xFF000000)));
 
-                SkIRect ink = inkBounds(surface.get());
+                const SkIRect ink = inkBounds(surface.get());
                 REQUIRE_FALSE(ink.isEmpty());
-                SkIRect device = SkIRect::MakeLTRB(
+                const SkIRect device = SkIRect::MakeLTRB(
                     static_cast<int>(box.left() * scale), static_cast<int>(box.top() * scale),
                     static_cast<int>(box.right() * scale), static_cast<int>(box.bottom() * scale)
                 );
@@ -204,7 +204,7 @@ TEST_CASE("Icon measures its size and draws inside its box", "[icons]") {
 
     auto surface = whiteSurface(100, 100);
     window->render(surface->getCanvas());
-    SkIRect ink = inkBounds(surface.get());
+    const SkIRect ink = inkBounds(surface.get());
     REQUIRE_FALSE(ink.isEmpty());
     int x = 0, y = 0;
     icon.localToGlobal(x, y, 0, 0);
@@ -218,7 +218,7 @@ TEST_CASE("Icon measures its size and draws inside its box", "[icons]") {
     }
 
     SECTION("an unknown name draws nothing") {
-        CaptureErrors errors;
+        const CaptureErrors errors;
         icon.name("no-such-icon-either");
         plain.name("");
         auto blank = whiteSurface(100, 100);

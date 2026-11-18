@@ -205,7 +205,7 @@ namespace psychic_ui {
 
     template<class SkinT>
     void TextField<SkinT>::handleKey(const Key key, const Mod mod) {
-        Text *view = this->view();
+        const Text *view = this->view();
         if (!this->_enabled || !view || fieldKey(key, mod)) {
             return;
         }
@@ -215,7 +215,7 @@ namespace psychic_ui {
 
     template<class SkinT>
     void TextField<SkinT>::handlePress(const MouseEvent &event) {
-        Text *view = this->view();
+        const Text *view = this->view();
         if (!this->_enabled || !view || event.button != MouseButton::LEFT) {
             return;
         }

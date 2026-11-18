@@ -221,7 +221,7 @@ TEST_CASE("AppShell: the sidebar is one Tab stop, the current item else the firs
 }
 
 TEST_CASE("AppShell: the sidebar's header moves the window, its controls and the items don't", "[components][appshell][drag]") {
-    Shell s;
+    const Shell s;
     const SidebarHeader &header = s.shell.sidebar().header();
     int x = 0;
     int y = 0;

@@ -274,7 +274,7 @@ namespace psychic_ui {
             case Key::RIGHT:
                 if (_highlighted >= 0 && dynamic_cast<const SubMenuItem *>(_rows[_highlighted]->menuItem())) {
                     openSubmenu(_highlighted, true);
-                } else if (Menu *top = root(); top->navigatedOut) {
+                } else if (const Menu *top = root(); top->navigatedOut) {
                     auto out = top->navigatedOut;
                     out(1);
                 }

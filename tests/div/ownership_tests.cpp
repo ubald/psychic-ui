@@ -11,7 +11,7 @@ using namespace psychic_ui_tests;
 // M7: Div::insertChild doesn't detach the child from its old parent
 TEST_CASE("M7: adding a child that has a parent moves it", "[div][children][!shouldfail]") {
     auto             window = std::make_shared<TestWindow>();
-    FakeSystemWindow sys{window, 800, 600};
+    const FakeSystemWindow sys{window, 800, 600};
     auto            &p1    = window->appContainer().add<Div>();
     auto            &p2    = window->appContainer().add<Div>();
     auto             child = std::make_shared<Div>();

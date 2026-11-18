@@ -243,7 +243,7 @@ TEST_CASE("Colors interpolate premultiplied", "[animation][color]") {
 // region Animated and animate
 
 TEST_CASE("Animated moves with its owner's window, and jumps without one", "[animation][animated]") {
-    Scene scene;
+    const Scene scene;
     Animated<float> value{scene.box, 0.0f, Timing{100ms, Ease::Linear}};
 
     scene.window->updateAnimations(1000ms);
@@ -266,7 +266,7 @@ TEST_CASE("Animated moves with its owner's window, and jumps without one", "[ani
 }
 
 TEST_CASE("An Animated that goes stops being ticked", "[animation][animated]") {
-    Scene scene;
+    const Scene scene;
     {
         Animated<float> value{scene.box, 0.0f, Timing{100ms}};
         scene.window->updateAnimations(0ms);
@@ -418,7 +418,7 @@ TEST_CASE("A color appearing fades in from transparent, and goes at the end", "[
 
 TEST_CASE("Children inherit the blend", "[animation][transition]") {
     Scene scene;
-    Div &child = scene.box->add<Div>();
+    const Div &child = scene.box->add<Div>();
     scene.styles().style(".box").color(rgb(0x000000)).transition(P::color, Timing{100ms, Ease::Linear});
     scene.styles().style(".box.on").color(rgb(0xFFFFFF));
     scene.frame(0ms);

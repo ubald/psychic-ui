@@ -65,7 +65,7 @@ TEST_CASE("C2: Left steps over a whole character outside the BMP", "[text][editi
 // (Backspace) isn't removed
 TEST_CASE("C2: select all then Delete with the caret at the end empties the field", "[text][editing]") {
     Editing f;
-    for (char c: std::string("hello")) {
+    for (const char c: std::string("hello")) {
         f.type(static_cast<UChar32>(c));
     }
     f.key(Key::A, Mod{.ctrl = true});
@@ -75,7 +75,7 @@ TEST_CASE("C2: select all then Delete with the caret at the end empties the fiel
 
 TEST_CASE("C2: select all then Backspace with the caret at the start empties the field", "[text][editing]") {
     Editing f;
-    for (char c: std::string("hello")) {
+    for (const char c: std::string("hello")) {
         f.type(static_cast<UChar32>(c));
     }
     f.key(Key::HOME);

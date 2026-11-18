@@ -112,7 +112,7 @@ SCENARIO("the style pass only visits invalidated subtrees", "[layout]") {
     auto &counted = left.add<CountingDiv>();
     auto &right = window->appContainer().add<Div>();
     window->updateStylesAndLayout();
-    int updates = counted.styleUpdates;
+    const int updates = counted.styleUpdates;
 
     WHEN("an unrelated div is invalidated") {
         right.addClassName("other");

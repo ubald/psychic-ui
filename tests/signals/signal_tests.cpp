@@ -63,7 +63,7 @@ TEST_CASE("Signal basics", "[signals]") {
 
     SECTION("emits rvalues and lvalues") {
         signal.emit(1, 2);
-        int x = 10;
+        const int x = 10;
         signal.emit(x, x);
         REQUIRE(sum == 23);
     }
@@ -278,7 +278,7 @@ TEST_CASE("ScopedSlot", "[signals]") {
 
     SECTION("disconnects when destroyed") {
         {
-            ScopedSlot scoped = signal.subscribe([&](int v) { sum += v; });
+            const ScopedSlot scoped = signal.subscribe([&](int v) { sum += v; });
         }
         signal.emit(1);
         REQUIRE(sum == 0);
@@ -299,7 +299,7 @@ TEST_CASE("ScopedSlot", "[signals]") {
         // The slot moves out of a holder that stays in use, as a member would: what the holder keeps
         // is what this checks, an empty slot whose disconnect leaves the new owner's subscription alone
         ScopedSlot a = signal.subscribe([&](int v) { sum += v; });
-        ScopedSlot b = takeFrom(a);
+        const ScopedSlot b = takeFrom(a);
         REQUIRE_FALSE(a.connected());
         a.disconnect();
         signal.emit(1);

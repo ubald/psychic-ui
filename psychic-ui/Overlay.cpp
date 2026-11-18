@@ -104,7 +104,7 @@ namespace psychic_ui {
             // Back before it left: it stays, on top, and its transitions head back from where they are
             popup->cancelExit();
             raise(*popup);
-            Window *w = window();
+            const Window *w = window();
             Div    *focused = w ? w->focusedDiv() : nullptr;
             popup->_focusBefore = focused ? focused->weak_from_this() : std::weak_ptr<Div>{};
             popup->opened();
@@ -115,7 +115,7 @@ namespace psychic_ui {
         } else if (popup->isOpen()) {
             popup->close();
         }
-        Window *w = window();
+        const Window *w = window();
         Div    *focused = w ? w->focusedDiv() : nullptr;
         popup->_focusBefore = focused ? focused->weak_from_this() : std::weak_ptr<Div>{};
         add(popup);

@@ -263,7 +263,7 @@ namespace psychic_ui {
 
     template<class T>
     void Range<T>::updateValue(const T value) {
-        float v = std::max(_min, std::min(value, _max));
+        const float v = std::max(_min, std::min(value, _max));
         if (v != _value) {
             _value = v;
             changed.emit(_value);
@@ -305,7 +305,7 @@ namespace psychic_ui {
 
     template<class T>
     float Range<T>::getLinearPercentageFor(const T value) const {
-        float v = getPercentageFor(value);
+        const float v = getPercentageFor(value);
         switch (_mode) {
             case RangeMode::Logarithmic:
                 return ((float) std::pow(10, v) - 1.0f) / 9.0f;

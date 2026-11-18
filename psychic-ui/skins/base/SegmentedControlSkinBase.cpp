@@ -11,7 +11,7 @@ namespace psychic_ui {
     }
 
     void SegmentedControlSkinBase::setSegments(const std::vector<Segment> &segments) {
-        for (Div *segment: _segments) {
+        for (const Div *segment: _segments) {
             remove(*segment);
         }
         _segments.clear();

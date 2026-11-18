@@ -103,7 +103,7 @@ namespace {
         CHECK(inspector->computedStyle().borderRadius() == theme.metrics.radius.surface);
 
         // One tool at a time, in the accent
-        Button *current = f.currentTool();
+        const Button *current = f.currentTool();
         REQUIRE(current != nullptr);
         CHECK(current->skin()->computedStyle().backgroundColor() == p.accent);
         CHECK(current->skin()->computedStyle().color() == p.onAccent);

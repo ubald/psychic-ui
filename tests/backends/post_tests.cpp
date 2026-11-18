@@ -106,9 +106,9 @@ TEST_CASE("Tasks still queued when the window goes are destroyed without running
     auto fake   = std::make_unique<FakeSystemWindow>(window);
     fake->layout();
 
-    bool                ran      = false;
-    auto                sentinel = std::make_shared<int>(0);
-    std::weak_ptr<int>  weak     = sentinel;
+    bool                     ran      = false;
+    auto                     sentinel = std::make_shared<int>(0);
+    const std::weak_ptr<int> weak     = sentinel;
     window->post([sentinel = std::move(sentinel), &ran] { ran = true; });
 
     fake.reset(); // It holds the window too

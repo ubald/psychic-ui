@@ -11,7 +11,7 @@ TEST_CASE("on equal specificity the rule declared last wins, whatever else is de
     auto div = std::make_shared<Div>();
     div->classNames({"a", "b"});
 
-    for (int extra: {0, 1, 5, 20, 100}) {
+    for (const int extra: {0, 1, 5, 20, 100}) {
         CAPTURE(extra);
 
         SECTION(".b declared last") {

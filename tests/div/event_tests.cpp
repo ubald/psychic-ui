@@ -39,7 +39,7 @@ static_assert(std::is_same_v<decltype(std::declval<Button &>().onChange([](bool)
 static_assert(std::is_same_v<decltype(std::declval<Range<int> &>().onChange([](int) {}).range(0, 1)), Range<int> &>);
 
 TEST_CASE("mouse up fires once per release", "[div][events]") {
-    Tree t;
+    const Tree t;
     int  ups     = 0;
     int  outside = 0;
     int  clicks  = 0;
@@ -136,7 +136,7 @@ TEST_CASE("components report changes the same way", "[div][events]") {
 }
 
 TEST_CASE("only the left button clicks", "[div][events]") {
-    Tree                     t;
+    const Tree               t;
     int                      clicks       = 0;
     int                      doubleClicks = 0;
     std::vector<MouseButton> pressed{};
@@ -185,7 +185,7 @@ TEST_CASE("a right press on a clicked div reaches its parent", "[div][events]") 
 }
 
 TEST_CASE("a button looks pressed and clicks for the left button only", "[div][events]") {
-    Tree t;
+    const Tree t;
     int  clicks = 0;
     auto &button = t.window->appContainer().add<Button>("Go").size(100, 40).onClick([&] { ++clicks; });
     t.window->updateStylesAndLayout();

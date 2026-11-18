@@ -19,7 +19,7 @@ namespace psychic_ui::paint {
         const SkMatrix matrix = canvas->getTotalMatrix();
         SkMatrix       inverse;
         if (matrix.isScaleTranslate() && matrix.invert(&inverse)) {
-            SkPoint device = matrix.mapPoint(origin);
+            const SkPoint device = matrix.mapPoint(origin);
             origin = inverse.mapPoint({std::round(device.x()), std::round(device.y())});
         }
 

@@ -46,7 +46,7 @@ namespace psychic_ui {
                 }
 
                 if (newToken) {
-                    std::size_t pos = static_cast<std::size_t >(std::distance(selectorItem.cbegin(), it)) + offset;
+                    const std::size_t pos = static_cast<std::size_t >(std::distance(selectorItem.cbegin(), it)) + offset;
                     if (pos - lastTokenPos != 0) {
                         switch (token) {
                             case Token::Tag:
@@ -59,7 +59,7 @@ namespace psychic_ui {
                                 r->_classes.push_back(selectorItem.substr(lastTokenPos, pos - lastTokenPos));
                                 break;
                             case Token::Pseudo:
-                                std::string pseudo = selectorItem.substr(lastTokenPos, pos - lastTokenPos);
+                                const std::string pseudo = selectorItem.substr(lastTokenPos, pos - lastTokenPos);
                                 if (pseudo == "focus") {
                                     r->_pseudo.insert(Pseudo::Focus);
                                 } else if (pseudo == "focus-visible") {

@@ -134,7 +134,7 @@ namespace psychic_ui {
         framebufferInfo.fFormat = GL_RGBA8_FORMAT;
 
         // In pixels; `drawAll` scales the canvas to the window's units
-        GrBackendRenderTarget backendRenderTarget = GrBackendRenderTargets::MakeGL(
+        const GrBackendRenderTarget backendRenderTarget = GrBackendRenderTargets::MakeGL(
             _systemWindow->getFramebufferWidth(),
             _systemWindow->getFramebufferHeight(),
             _systemWindow->getSamples(),
@@ -147,7 +147,7 @@ namespace psychic_ui {
         // on Linux (contrast 0.2, gamma 1.2) keep the weight the same both ways, as Pivotal looks in a browser.
         constexpr SkScalar textContrast = 0.2f;
         constexpr SkScalar textGamma    = 1.2f;
-        SkSurfaceProps props(0, kRGB_H_SkPixelGeometry, textContrast, textGamma);
+        const SkSurfaceProps props(0, kRGB_H_SkPixelGeometry, textContrast, textGamma);
 
         _sk_surface = SkSurfaces::WrapBackendRenderTarget(
             _sk_context.get(),
@@ -519,7 +519,7 @@ namespace psychic_ui {
 
         // Performance
         ++frames;
-        double delta = std::chrono::duration_cast<std::chrono::milliseconds>(
+        const double delta = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now()
             - lastReport
         ).count();
@@ -595,7 +595,7 @@ namespace psychic_ui {
 
     void Window::post(std::function<void()> task) {
         {
-            std::lock_guard lock(_postedMutex);
+            const std::lock_guard lock(_postedMutex);
             _posted.push_back(std::move(task));
             _hasPosted = true;
         }
@@ -609,7 +609,7 @@ namespace psychic_ui {
         }
         std::vector<std::function<void()>> batch{};
         {
-            std::lock_guard lock(_postedMutex);
+            const std::lock_guard lock(_postedMutex);
             batch.swap(_posted);
             _hasPosted = false;
         }
@@ -619,7 +619,7 @@ namespace psychic_ui {
                 (*task)();
             } catch (...) {
                 // The rest of the batch goes back in front of what was posted meanwhile
-                std::lock_guard lock(_postedMutex);
+                const std::lock_guard lock(_postedMutex);
                 _posted.insert(_posted.begin(), std::make_move_iterator(task + 1), std::make_move_iterator(batch.end()));
                 _hasPosted = !_posted.empty();
                 throw;
@@ -642,7 +642,7 @@ namespace psychic_ui {
         _animationClockFresh = true;
 
         // A callback may start animations: they land in the emptied list, and keep going after these
-        std::vector<std::weak_ptr<Animation>> scheduled = std::move(_scheduledAnimations);
+        const std::vector<std::weak_ptr<Animation>> scheduled = std::move(_scheduledAnimations);
         _scheduledAnimations.clear();
         std::vector<std::weak_ptr<Animation>> kept{};
         for (const auto &weak: scheduled) {
@@ -690,7 +690,7 @@ namespace psychic_ui {
             return;
         }
         // What moves gets there now
-        std::vector<std::weak_ptr<Animation>> scheduled = std::move(_scheduledAnimations);
+        const std::vector<std::weak_ptr<Animation>> scheduled = std::move(_scheduledAnimations);
         _scheduledAnimations.clear();
         for (const auto &weak: scheduled) {
             if (const auto animation = weak.lock(); animation && animation->_scheduledIn == this) {
@@ -1044,7 +1044,7 @@ namespace psychic_ui {
         _touchPhase  = TouchPhase::Pressing;
         _touchButton = button;
         const std::size_t popups = _overlay->children().size();
-        Popup *top = popups ? static_cast<Popup *>(_overlay->children().back().get()) : nullptr;
+        const Popup *top = popups ? static_cast<Popup *>(_overlay->children().back().get()) : nullptr;
 
         // Taps in a row count on the touch clock, with a finger's precision
         MouseEvent press = touchEvent(_touchStartX, _touchStartY, button, true);
@@ -1565,7 +1565,7 @@ namespace psychic_ui {
         if (list.empty()) {
             return false;
         }
-        Div *current = nullptr;
+        const Div *current = nullptr;
         for (auto it = _focusPath.rbegin(); it != _focusPath.rend(); ++it) {
             if ((*it)->focusEnabled()) {
                 current = *it;

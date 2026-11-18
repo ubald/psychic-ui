@@ -216,7 +216,7 @@ namespace psychic_ui {
 
         Div &panel = _shell->page();
 
-        std::vector<std::shared_ptr<MenuItem>> menus{
+        const std::vector<std::shared_ptr<MenuItem>> menus{
             Menu::item(
                 "File", {
                     Menu::item("New", []() {}, "Ctrl+N", "plus"),
@@ -306,7 +306,7 @@ namespace psychic_ui {
     }
 
     bool DemoWindow::showPage(const std::string &name) {
-        for (Page &p: _pages) {
+        for (const Page &p: _pages) {
             if (p.name == name || keyOf(p.name) == name) {
                 _shell->sidebar().select(p.item);
                 return true;

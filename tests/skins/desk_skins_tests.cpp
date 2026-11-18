@@ -81,7 +81,7 @@ namespace {
 }
 
 TEST_CASE("Desk skins: the set installs with its dark theme, its light one for a light system", "[skins][desk]") {
-    DeskSkins set;
+    const DeskSkins set;
     CHECK(&set.theme(ColorScheme::Light) == &themes::deskLight);
     CHECK(&set.theme(ColorScheme::Dark) == &themes::deskDark);
     CHECK(&set.theme(ColorScheme::Unknown) == &themes::deskDark);
@@ -96,7 +96,7 @@ TEST_CASE("Desk skins: the set installs with its dark theme, its light one for a
     CHECK(manager.theme().name == themes::deskDark.name);
 
     // A window follows the system with the set's pair
-    Fixture f;
+    const Fixture f;
     CHECK(f.window->theme().name == themes::deskDark.name);
     f.window->handleColorSchemeChange(ColorScheme::Light);
     CHECK(f.window->theme().name == themes::deskLight.name);
@@ -106,7 +106,7 @@ TEST_CASE("Desk skins: the set installs with its dark theme, its light one for a
 }
 
 TEST_CASE("Desk skins: a picked theme follows the scheme across sets", "[skins][desk][theme]") {
-    Fixture f;
+    const Fixture f;
     f.window->theme(themes::deskLight);
     f.window->skinSet<FloatSkins>();
     CHECK(f.window->theme().name == themes::floatLight.name);
@@ -199,10 +199,10 @@ TEST_CASE("Desk skins: the slider is a value field, the value inside it", "[skin
     auto &range = f.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.25f, nullptr).width(200);
     f.layout();
     REQUIRE(is<RangeSkinBase>(range.skin()));
-    Div *track = part(*range.skin(), "track");
-    Div *fill  = part(*range.skin(), "fill");
-    Div *thumb = part(*range.skin(), "thumb");
-    Div *value = part(*range.skin(), "value");
+    const Div *track = part(*range.skin(), "track");
+    const Div *fill  = part(*range.skin(), "fill");
+    const Div *thumb = part(*range.skin(), "thumb");
+    const Div *value = part(*range.skin(), "value");
     REQUIRE(track);
     REQUIRE(fill);
     REQUIRE(thumb);
@@ -229,10 +229,10 @@ TEST_CASE("Desk skins: touch switches to touch sizes, and back", "[skins][desk][
     auto &toggle   = f.window->appContainer().add<Switch>("Switch");
     auto &swatches = f.window->appContainer().add<ColorSwatches>(std::vector<Color>{rgb(0xFF0000), rgb(0x00FF00)});
     f.layout();
-    Div *box    = part(*checkBox.skin(), "box");
-    Div *thumb  = part(*range.skin(), "thumb");
-    Div *track  = part(*toggle.skin(), "track");
-    Div *swatch = part(*swatches.skin(), "swatch");
+    const Div *box    = part(*checkBox.skin(), "box");
+    const Div *thumb  = part(*range.skin(), "thumb");
+    const Div *track  = part(*toggle.skin(), "track");
+    const Div *swatch = part(*swatches.skin(), "swatch");
     REQUIRE(box);
     REQUIRE(thumb);
     REQUIRE(track);

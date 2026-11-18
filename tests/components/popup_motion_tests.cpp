@@ -99,7 +99,7 @@ namespace {
 
 TEST_CASE("A menu enters from its anchor: its entering style first, then settled", "[popup-motion][menu]") {
     Motions f{};
-    Menu &menu = f.window->openMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, f.first);
+    const Menu &menu = f.window->openMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, f.first);
     // Its first style has the starting class
     CHECK(hasClass(menu, "entering"));
     CHECK(opacityOf(menu) == 0.0f);
@@ -137,7 +137,7 @@ TEST_CASE("A tooltip enters from a few pixels toward its anchor", "[popup-motion
     f.hover(f.first);
     f.frame(1000ms);
     f.frame(1000ms + Window::tooltipDelay);
-    Tooltip *tooltip = f.window->tooltip();
+    const Tooltip *tooltip = f.window->tooltip();
     REQUIRE(tooltip != nullptr);
     // Below its anchor (no room above): it starts up, toward it
     CHECK(tooltip->placedSide() == Side::Bottom);
@@ -151,7 +151,7 @@ TEST_CASE("A tooltip enters from a few pixels toward its anchor", "[popup-motion
 
 TEST_CASE("A dialog's scrim fades in and its panel scales up", "[popup-motion][dialog]") {
     Motions f{};
-    Dialog &dialog = f.window->overlay().open<Dialog>("Rename");
+    const Dialog &dialog = f.window->overlay().open<Dialog>("Rename");
     f.frame(0ms);
     CHECK(opacityOf(dialog) == 0.0f);
     CHECK(dialog.panel().computedStyle().scale() == Approx(0.97f));
@@ -257,7 +257,7 @@ TEST_CASE("Opening a menu while another leaves", "[popup-motion][menu]") {
 
 TEST_CASE("Hovering back onto a submenu's row while it leaves brings it back", "[popup-motion][menu]") {
     Motions f{};
-    Menu &menu = f.window->openMenu(
+    const Menu &menu = f.window->openMenu(
         {Menu::item("Recent", {Menu::item("A", []() {}), Menu::item("B", []() {})}), Menu::item("Other", []() {})},
         f.first
     );
@@ -266,7 +266,7 @@ TEST_CASE("Hovering back onto a submenu's row while it leaves brings it back", "
     f.hover(*menu.rows()[0]);
     f.frame(2 * motion.medium);
     f.frame(3 * motion.medium);
-    Menu *sub = menu.submenu();
+    const Menu *sub = menu.submenu();
     REQUIRE(sub != nullptr);
     CHECK(opacityOf(*sub) == 1.0f);
 
@@ -400,7 +400,7 @@ TEST_CASE("Toasts slide in from under the stack's edge and out fading; those lea
 
     // One more: the oldest only fades, where it is
     f.frame(1000ms);
-    Toast *oldest = f.window->toasts().toasts().front();
+    const Toast *oldest = f.window->toasts().toasts().front();
     f.window->toast({.title = "Toast 3", .timeout = 0s});
     CHECK(oldest->exiting());
     CHECK(hasClass(*oldest, "limited"));

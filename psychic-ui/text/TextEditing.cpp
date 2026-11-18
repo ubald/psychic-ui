@@ -64,7 +64,7 @@ namespace psychic_ui {
     }
 
     TextEditing::Edit TextEditing::setText(const icu::UnicodeString &text) {
-        Edit edit = _text == text ? Edit::None : Edit::Text;
+        const Edit edit = _text == text ? Edit::None : Edit::Text;
         _text     = text;
         _goalX.reset();
         _pressed = {0, 0};
@@ -297,8 +297,8 @@ namespace psychic_ui {
         }
         // The segment the character at the index starts or is in (the last one at the end)
         auto at = static_cast<int32_t>(std::min(index, length() - 1));
-        int32_t begin = iterator.isBoundary(at) ? at : iterator.preceding(at);
-        int32_t end   = iterator.following(begin);
+        const int32_t begin = iterator.isBoundary(at) ? at : iterator.preceding(at);
+        const int32_t end   = iterator.following(begin);
         return {
             begin == icu::BreakIterator::DONE ? 0 : static_cast<unsigned int>(begin),
             end == icu::BreakIterator::DONE ? length() : static_cast<unsigned int>(end)

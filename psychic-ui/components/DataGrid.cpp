@@ -204,7 +204,7 @@ namespace psychic_ui {
             );
             _sortButtons.push_back(&sort);
         }
-        for (DataGridRow *row: dataRows()) {
+        for (const DataGridRow *row: dataRows()) {
             for (std::size_t i = 0; i < row->cellCount(); ++i) {
                 styleCell(row->cell(i), i);
             }

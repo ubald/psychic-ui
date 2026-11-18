@@ -45,7 +45,7 @@ namespace {
 }
 
 TEST_CASE("derived state follows the computed style both ways", "[style][computed]") {
-    Tree t;
+    const Tree t;
     t.styleManager->style(".hidden").visible(false);
     t.styleManager->style(".round").borderRadius(12);
     t.styleManager->style(".corner").borderRadiusTopLeft(4);
@@ -102,7 +102,7 @@ TEST_CASE("derived state follows the computed style both ways", "[style][compute
 }
 
 TEST_CASE("only the changed layout properties reach Yoga", "[style][computed][layout]") {
-    Tree t;
+    const Tree t;
     t.styleManager->style(".tinted").backgroundColor(rgb(0xFF0000)).borderRadius(4).color(rgb(0x00FF00));
     t.styleManager->style(".tall").height(40);
     t.div->width(100);
@@ -144,7 +144,7 @@ TEST_CASE("only the changed layout properties reach Yoga", "[style][computed][la
 }
 
 TEST_CASE("gap is Yoga's gap", "[style][computed][layout]") {
-    Tree t;
+    const Tree t;
     auto &row = t.div->add<HBox>(10);
     std::vector<Div *> children;
     for (int i = 0; i < 3; ++i) {
@@ -175,7 +175,7 @@ TEST_CASE("gap is Yoga's gap", "[style][computed][layout]") {
 }
 
 TEST_CASE("lengths reach Yoga in their unit", "[style][computed][layout]") {
-    Tree t;
+    const Tree t;
     t.root->padding(10);
 
     SECTION("percent is 0-100") {

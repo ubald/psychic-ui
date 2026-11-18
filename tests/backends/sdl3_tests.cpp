@@ -355,7 +355,7 @@ TEST_CASE("SDL3: hit testing", "[backend][sdl3][drag]") {
 
     // The title bar's empty part moves the window, its buttons don't
     CHECK(sdl.adapter->hitTest(700, titleBar.getHeight() / 2) == SDL_HITTEST_DRAGGABLE);
-    Button &close = titleBar.controls().closeButton();
+    const Button &close = titleBar.controls().closeButton();
     int closeX = 0;
     int closeY = 0;
     close.localToGlobal(closeX, closeY, close.getWidth() / 2, close.getHeight() / 2);
@@ -374,7 +374,7 @@ TEST_CASE("SDL3: hit testing", "[backend][sdl3][drag]") {
 }
 
 TEST_CASE("SDL3: the clipboard", "[backend][sdl3][clipboard]") {
-    SDL3Fixture sdl;
+    const SDL3Fixture sdl;
     sdl.window->setClipboardText("from Psychic UI ✓");
     CHECK(sdl.window->clipboardText() == "from Psychic UI ✓");
     CHECK(SDL_HasClipboardText());
@@ -466,7 +466,7 @@ TEST_CASE("SDL3: dragging a scroll bar's thumb scrolls its viewport", "[backend]
     sdl.layout();
     sdl.layout(); // The thumb is sized from the first layout
 
-    ScrollBar *scrollBar = nullptr;
+    const ScrollBar *scrollBar = nullptr;
     for (const auto &child: scroller.children()) {
         for (const auto &grandChild: child->children()) { // Beside the viewport, in a row
             auto bar = std::dynamic_pointer_cast<ScrollBar>(grandChild);

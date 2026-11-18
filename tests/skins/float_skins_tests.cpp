@@ -41,7 +41,7 @@ TEST_CASE("Float's themes", "[skins][float]") {
     CHECK(themes::floatLight.metrics.radius.button == 7);     // No pills
     CHECK(themes::floatDark.elevation.panel.color.alpha() > 0);
 
-    FloatSkins set;
+    const FloatSkins set;
     CHECK(&set.theme(ColorScheme::Light) == &themes::floatLight);
     CHECK(&set.theme(ColorScheme::Dark) == &themes::floatDark);
     CHECK(&set.theme(ColorScheme::Unknown) == &themes::floatLight); // Light first
@@ -60,7 +60,7 @@ TEST_CASE("Float's themes", "[skins][float]") {
     CHECK(themes::floatDark.palette.canvasDot == themes::floatDark.palette.line);
 
     // The default set keeps Pivotal Dark when the system doesn't say, and lists its other themes
-    PivotalSkins defaults;
+    const PivotalSkins defaults;
     CHECK(&defaults.theme(ColorScheme::Unknown) == &themes::pivotalDark);
     CHECK(&defaults.theme(ColorScheme::Dark) == &themes::pivotalDark);
     CHECK(defaults.hasTheme(themes::oneLight));
@@ -132,7 +132,7 @@ TEST_CASE("switching to Float live re-hatches skins and keeps the components' st
 }
 
 TEST_CASE("which theme a skin set switch picks", "[skins][theme]") {
-    Fixture f;
+    const Fixture f;
 
     SECTION("following the system, the new set's theme for the scheme") {
         f.window->skinSet<FloatSkins>();

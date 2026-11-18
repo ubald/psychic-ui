@@ -77,7 +77,7 @@ namespace psychic_ui {
         };
 
         sk_sp<SkUnicode> unicode() {
-            static sk_sp<SkUnicode> unicode = SkUnicodes::ICU::Make();
+            static const sk_sp<SkUnicode> unicode = SkUnicodes::ICU::Make();
             return unicode;
         }
 
@@ -140,8 +140,8 @@ namespace psychic_ui {
     std::unique_ptr<tl::Paragraph> TextLayout::build() const {
         ++built;
         // Line heights are multiples of the font size; every line gets exactly the line height
-        float height = _style.fontSize > 0.0f ? _style.lineHeight / _style.fontSize : 1.0f;
-        std::vector<SkString> families{SkString(_style.fontFamily.c_str())};
+        const float height = _style.fontSize > 0.0f ? _style.lineHeight / _style.fontSize : 1.0f;
+        const std::vector<SkString> families{SkString(_style.fontFamily.c_str())};
 
         tl::TextStyle textStyle{};
         textStyle.setColor(SK_ColorBLACK); // Painted in the color given to `paint`

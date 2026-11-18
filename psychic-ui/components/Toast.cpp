@@ -90,7 +90,7 @@ namespace psychic_ui {
     }
 
     void Toast::dismiss() {
-        Div *stack = parent();
+        const Div *stack = parent();
         if (!stack || exiting()) {
             return;
         }

@@ -84,7 +84,7 @@ namespace {
         }
 
         void type(const std::string &text) {
-            for (char c: text) {
+            for (const char c: text) {
                 window->handleType(icu::UnicodeString(static_cast<UChar32>(c)));
             }
             layout();
@@ -146,7 +146,7 @@ TEST_CASE("TextInput: a placeholder while it is empty", "[components][inputs]") 
     Inputs f;
     auto &input = f.column.add<TextInput>().placeholder("Name");
     f.layout();
-    Label *placeholder = part<Label>(input, "placeholder");
+    const Label *placeholder = part<Label>(input, "placeholder");
     REQUIRE(placeholder);
     CHECK(placeholder->text() == "Name");
     CHECK(placeholder->visible());
@@ -184,8 +184,8 @@ TEST_CASE("SearchField: icon, text, and a clear button while not empty", "[compo
     f.layout();
 
     REQUIRE(is<SearchFieldSkinBase>(search.skin()));
-    Div *icon  = part<Icon>(search, "icon");
-    Div *clear = search.clearButton().get();
+    const Div *icon  = part<Icon>(search, "icon");
+    const Div *clear = search.clearButton().get();
     REQUIRE(icon);
     CHECK(search.placeholder() == "Search");
     CHECK(search.getHeight() == f.theme.metrics.pointer.controlMd);
@@ -228,7 +228,7 @@ TEST_CASE("SearchField: a press anywhere on it lets one type", "[components][inp
     Inputs f;
     auto &search = f.column.add<SearchField>().width(240);
     f.layout();
-    Div *icon = part<Icon>(search, "icon");
+    const Div *icon = part<Icon>(search, "icon");
     f.click(*icon);
     CHECK(search.input()->hasFocus());
     CHECK_FALSE(f.window->focusVisible());
@@ -248,8 +248,8 @@ TEST_CASE("Switch: a click, Space or Enter flips it", "[components][inputs][swit
     f.layout();
 
     REQUIRE(is<SwitchSkinBase>(toggle.skin()));
-    Div *track = part<Div>(toggle, "track");
-    Div *thumb = part<Div>(toggle, "thumb");
+    const Div *track = part<Div>(toggle, "track");
+    const Div *thumb = part<Div>(toggle, "thumb");
     REQUIRE(track);
     REQUIRE(thumb);
     CHECK(track->getWidth() == 30);
@@ -285,7 +285,7 @@ TEST_CASE("Switch: the thumb drags, and lands on the nearer side", "[components]
     std::vector<bool> changes{};
     toggle.onChange([&](bool on) { changes.push_back(on); });
     f.layout();
-    Div *thumb = part<Div>(toggle, "thumb");
+    const Div *thumb = part<Div>(toggle, "thumb");
     auto [x, y] = Inputs::center(*thumb);
 
     // A little way: back off, no change and no click
@@ -388,8 +388,8 @@ TEST_CASE("NumberStepper: the buttons step it within its range", "[components][i
     f.layout();
 
     REQUIRE(is<NumberStepperSkinBase>(stepper.skin()));
-    Div &minus = *stepper.decrementButton();
-    Div &plus  = *stepper.incrementButton();
+    const Div &minus = *stepper.decrementButton();
+    const Div &plus  = *stepper.incrementButton();
     CHECK(stepper.getWidth() == f.theme.metrics.pointer.controlMd * 4);
     CHECK(stepper.getHeight() == f.theme.metrics.pointer.controlMd);
     CHECK(minus.x() < stepper.input()->x());
@@ -585,7 +585,7 @@ TEST_CASE("Inputs: by touch, they look the same and take presses from around the
     };
     f.layout();
     std::vector<int> sizes{};
-    for (Div *control: controls) {
+    for (const Div *control: controls) {
         CHECK(control->computedStyle().hitSlop() == 0.0f);
         sizes.push_back(control->getWidth());
         sizes.push_back(control->getHeight());
@@ -594,7 +594,7 @@ TEST_CASE("Inputs: by touch, they look the same and take presses from around the
     f.window->handleInputModeChange(InputMode::Touch);
     f.layout();
     std::vector<int> touchSizes{};
-    for (Div *control: controls) {
+    for (const Div *control: controls) {
         CHECK(control->computedStyle().hitSlop() == f.theme.metrics.touch.hitSlop);
         touchSizes.push_back(control->getWidth());
         touchSizes.push_back(control->getHeight());

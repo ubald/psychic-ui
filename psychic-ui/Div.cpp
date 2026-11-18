@@ -32,7 +32,7 @@ namespace psychic_ui {
         };
 
         YGConfigRef yogaConfig() {
-            static YogaConfig yogaConfig;
+            static const YogaConfig yogaConfig;
             return yogaConfig.config;
         }
 
@@ -204,7 +204,7 @@ namespace psychic_ui {
     }
 
     void Div::remove(const Div &child) {
-        int index = childIndex(&child);
+        const int index = childIndex(&child);
         if (index >= 0) {
             remove((unsigned int) index);
         }
@@ -212,7 +212,7 @@ namespace psychic_ui {
 
     void Div::remove(unsigned int index) {
         assert(index < childCount());
-        std::shared_ptr<Div> child = _children[index];
+        const std::shared_ptr<Div> child = _children[index];
         _children.erase(_children.cbegin() + index);
         YGNodeRemoveChild(_yogaNode, child->_yogaNode);
         // The new first/last children gain their :first-child/:last-child state
@@ -441,7 +441,7 @@ namespace psychic_ui {
 
     void Div::updateClassName(std::string className, bool present) {
         std::transform(className.begin(), className.end(), className.begin(), ::tolower);
-        bool changed = present ? _classNames.insert(std::move(className)).second : _classNames.erase(className) > 0;
+        const bool changed = present ? _classNames.insert(std::move(className)).second : _classNames.erase(className) > 0;
         if (changed) {
             invalidateStyle();
         }
@@ -494,7 +494,7 @@ namespace psychic_ui {
             _styledIn         = window();
             _styledGeneration = sm->rulesGeneration();
             // Only what changed reaches Yoga, everything the first time
-            PropertyMask changed = _layoutInitialized ? _computedStyle.diff(computed) : PropertyMask{}.set();
+            const PropertyMask changed = _layoutInitialized ? _computedStyle.diff(computed) : PropertyMask{}.set();
             _computedStyle     = computed;
             _layoutInitialized = true;
             updateLayout(changed);
@@ -639,7 +639,7 @@ namespace psychic_ui {
                     std::cerr << "Could not find div to measure" << std::endl;
                     return YGSize{};
                 }
-                Size size = div->measure(toConstraint(width, widthMode), toConstraint(height, heightMode));
+                const Size size = div->measure(toConstraint(width, widthMode), toConstraint(height, heightMode));
                 return YGSize{size.width, size.height};
             }
         );
@@ -907,8 +907,8 @@ namespace psychic_ui {
         _x = (int) std::ceil(YGNodeLayoutGetLeft(_yogaNode));
         _y = (int) std::ceil(YGNodeLayoutGetTop(_yogaNode));
 
-        int previousWidth  = _width;
-        int previousHeight = _height;
+        const int previousWidth  = _width;
+        const int previousHeight = _height;
 
         _width  = (int) std::ceil(YGNodeLayoutGetWidth(_yogaNode));
         _height = (int) std::ceil(YGNodeLayoutGetHeight(_yogaNode));
@@ -970,7 +970,7 @@ namespace psychic_ui {
             _boundsRight  = std::max(_boundsRight, _x + child->boundsRight() + endPaddingX);
             _boundsBottom = std::max(_boundsBottom, _y + child->boundsBottom() + endPaddingY);
         }
-        SkRect previousBoundsRect = _boundsRect;
+        const SkRect previousBoundsRect = _boundsRect;
         _boundsRect.setLTRB(_boundsLeft, _boundsTop, _boundsRight, _boundsBottom);
 
         layoutReady = true;
@@ -1006,7 +1006,7 @@ namespace psychic_ui {
         const float translateX = computed.translateX().resolve(_rect.width()) + layoutOffsetX();
         const float translateY = computed.translateY().resolve(_rect.height()) + layoutOffsetY();
         const bool  transformed = translateX != 0.0f || translateY != 0.0f || scaleX != 1.0f || scaleY != 1.0f;
-        SkAutoCanvasRestore transform(canvas, transformed);
+        const SkAutoCanvasRestore transform(canvas, transformed);
         if (transformed) {
             const float originX = _rect.left() + computed.transformOriginX().resolve(_rect.width());
             const float originY = _rect.top() + computed.transformOriginY().resolve(_rect.height());
@@ -1053,15 +1053,15 @@ namespace psychic_ui {
             paint.setStrokeWidth(SkIntToScalar(1));
 
             paint.setColor(0x7FFF0000);
-            SkRect mRect = _marginRect.makeInset(0.5f, 0.5f);
+            const SkRect mRect = _marginRect.makeInset(0.5f, 0.5f);
             canvas->drawRect(mRect, paint);
 
             paint.setColor(0x7F00FF00);
-            SkRect dRect = _rect.makeInset(0.5f, 0.5f);
+            const SkRect dRect = _rect.makeInset(0.5f, 0.5f);
             canvas->drawRect(dRect, paint);
 
             paint.setColor(0x7F0000FF);
-            SkRect pRect = _paddedRect.makeInset(0.5f, 0.5f);
+            const SkRect pRect = _paddedRect.makeInset(0.5f, 0.5f);
             canvas->drawRect(pRect, paint);
 
             paint.setColor(0x30FFFF00);
@@ -1206,16 +1206,16 @@ namespace psychic_ui {
     }
 
     void Div::clip(SkCanvas *canvas) {
-        bool clip = _computedStyle.overflow() != Overflow::Visible;
+        const bool clip = _computedStyle.overflow() != Overflow::Visible;
         if (!clip) {
             return;
         }
 
-        bool aa = _computedStyle.antiAlias();
+        const bool aa = _computedStyle.antiAlias();
         if (_drawRoundRect && _drawBorder) {
             SkRRect roundRect;
             // TODO: Offset for unequal borders
-            float   hb = _computedStyle.border() / 2;
+            const float hb = _computedStyle.border() / 2;
             _roundRect.inset(hb, hb, &roundRect);
             canvas->clipRRect(roundRect, aa);
         } else if (_drawRoundRect) {
@@ -1233,7 +1233,7 @@ namespace psychic_ui {
             paint.setColor(_computedStyle.backgroundColor().argb());
             paint.setAntiAlias(_computedStyle.antiAlias());
 
-            float hb = _computedStyle.border() / 2;
+            const float hb = _computedStyle.border() / 2;
             if (_drawComplexRoundRect) {
                 SkRRect roundRect = _roundRect;
                 if (_drawBackground && _drawBorder) {
@@ -1256,7 +1256,7 @@ namespace psychic_ui {
                 if (_drawBackground && !_drawBorder) {
                     canvas->drawRoundRect(_rect, _radiusTopLeft, _radiusTopLeft, paint);
                 } else if (_drawBorder) {
-                    SkRect inset = _rect.makeInset(hb, hb);
+                    const SkRect inset = _rect.makeInset(hb, hb);
                     if (_drawBackground) {
                         canvas->drawRoundRect(inset, _radiusTopLeft, _radiusTopLeft, paint);
                     }
@@ -1271,7 +1271,7 @@ namespace psychic_ui {
                     canvas->drawRect(_rect, paint);
                 }
                 if (_drawBorder && !_drawComplexBorders) {
-                    SkRect inset = _rect.makeInset(hb, hb);
+                    const SkRect inset = _rect.makeInset(hb, hb);
                     paint.setStyle(SkPaint::kStroke_Style);
                     paint.setColor(_computedStyle.borderColor().argb());
                     paint.setStrokeWidth(_computedStyle.border());
@@ -1304,7 +1304,7 @@ namespace psychic_ui {
                     draw = false;
                 }
                 if (draw) {
-                    float hw = _borderLeft / 2.0f;
+                    const float hw = _borderLeft / 2.0f;
                     canvas->drawLine(_rect.left() + hw, _rect.top() - 0.5f, _rect.left() + hw, _rect.bottom() + 0.5f, paint);
                 }
             }
@@ -1322,7 +1322,7 @@ namespace psychic_ui {
                     draw = false;
                 }
                 if (draw) {
-                    float hw = _borderRight / 2.0f;
+                    const float hw = _borderRight / 2.0f;
                     canvas->drawLine(_rect.right() - hw, _rect.top() - 0.5f, _rect.right() - hw, _rect.bottom() + 0.5f, paint);
                 }
             }
@@ -1340,7 +1340,7 @@ namespace psychic_ui {
                     draw = false;
                 }
                 if (draw) {
-                    float hw = _borderTop / 2.0f;
+                    const float hw = _borderTop / 2.0f;
                     canvas->drawLine(_rect.left() - 0.5f, _rect.top() + hw, _rect.right() + 0.5f, _rect.top() + hw, paint);
                 }
             }
@@ -1358,7 +1358,7 @@ namespace psychic_ui {
                     draw = false;
                 }
                 if (draw) {
-                    float hw = _borderBottom / 2.0f;
+                    const float hw = _borderBottom / 2.0f;
                     canvas->drawLine(_rect.left() - 0.5f, _rect.bottom() - hw, _rect.right() + 0.5f, _rect.bottom() - hw, paint);
                 }
             }
@@ -1443,7 +1443,7 @@ namespace psychic_ui {
         event.windowX = static_cast<float>(windowX) + event.x;
         event.windowY = static_cast<float>(windowY) + event.y;
         event.fromKeyboard = true;
-        if (Window *w = window()) {
+        if (const Window *w = window()) {
             event.source = w->inputMode();
         }
         return event;
@@ -1525,8 +1525,8 @@ namespace psychic_ui {
             return Out;
         }
 
-        bool isOver  = boundsContains(event.x, event.y);
-        bool wasDown = _mouseDown;
+        const bool isOver  = boundsContains(event.x, event.y);
+        const bool wasDown = _mouseDown;
 
         if (isOver || wasDown) {
             setMouseDown(false);
@@ -1712,14 +1712,14 @@ namespace psychic_ui {
             return Out;
         }
 
-        bool isOver  = boundsContains(event.x, event.y);
-        bool wasOver = _mouseOver;
+        const bool isOver  = boundsContains(event.x, event.y);
+        const bool wasOver = _mouseOver;
 
         if (!isOver && wasOver) {
             handleMouseExit(event);
         }
 
-        bool allowOutsideMovement = this == window();
+        const bool allowOutsideMovement = this == window();
 
         if (!isOver && !allowOutsideMovement) {
             return Out;
@@ -1787,7 +1787,7 @@ namespace psychic_ui {
         bool moved = false;
 
         if (_width < _boundsRight - _boundsLeft) {
-            int sx = std::min(
+            const int sx = std::min(
                 0, std::max(
                     _width - (_boundsRight - _boundsLeft),
                     _scrollX + ((int) std::ceil(scrollX) * 2)
@@ -1798,7 +1798,7 @@ namespace psychic_ui {
         }
 
         if (_height < _boundsBottom - _boundsTop) {
-            int sy = std::min(
+            const int sy = std::min(
                 0, std::max(
                     _height - (_boundsBottom - _boundsTop),
                     _scrollY + ((int) std::ceil(scrollY) * 2)

@@ -91,13 +91,13 @@ namespace psychic_ui {
                 return;
             }
             // From here on, only use locals: a handler can destroy this signal
-            std::shared_ptr<detail::SignalCore<T...>> core = _core;
-            Emitting emitting{*core};
+            const std::shared_ptr<detail::SignalCore<T...>> core = _core;
+            const Emitting emitting{*core};
             // By index over a snapshot of the size: slots connected by a handler wait for the next emission
             for (std::size_t i = 0, n = core->slots.size(); i < n; ++i) {
                 // The core keeps the slot, and only compacts once no emission runs, so the callback stays valid even
                 // if the slot disconnects itself
-                Slot<T...> &slot = *core->slots[i];
+                const Slot<T...> &slot = *core->slots[i];
                 if (!slot._connected) {
                     continue;
                 }

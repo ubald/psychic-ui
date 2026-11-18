@@ -104,7 +104,7 @@ TEST_CASE("M2: a blurred handler on an ancestor moves the focus", "[.][asan]") {
 // M5: Menu.cpp's check branch runs the item's callback in place, and closing the menu destroys it while it runs
 TEST_CASE("M5: a check item's callback closes the menu", "[.][asan]") {
     F           f;
-    std::string payload(200, 'x');
+    const std::string payload(200, 'x');
     std::size_t seen = 0;
     Window     *w    = f.window.get();
     w->openMenu({Menu::check("Toggle", false, [w, payload, &seen](bool) {
@@ -120,7 +120,7 @@ TEST_CASE("M5: a check item's callback closes the menu", "[.][asan]") {
 
 // M6: ~Div doesn't clear its children's _parent
 TEST_CASE("M6: a child outlives its parent", "[.][asan]") {
-    F    f;
+    const F f;
     auto child = std::make_shared<Div>();
     {
         auto parent = std::shared_ptr<Div>(new Div());

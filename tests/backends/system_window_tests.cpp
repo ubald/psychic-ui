@@ -9,7 +9,7 @@ using namespace psychic_ui_tests;
 
 TEST_CASE("The window reads its size from the system window", "[backend]") {
     auto window = std::make_shared<TestWindow>();
-    FakeSystemWindow systemWindow(window, 640, 480, 2.0f);
+    const FakeSystemWindow systemWindow(window, 640, 480, 2.0f);
     CHECK(window->windowWidth() == 640);
     CHECK(window->windowHeight() == 480);
     CHECK(systemWindow.getFramebufferWidth() == 1280);
@@ -31,7 +31,7 @@ TEST_CASE("The clipboard goes through the system window", "[backend][clipboard]"
     CHECK(window->clipboardText().empty()); // No system window yet
     window->setClipboardText("lost");
 
-    FakeSystemWindow systemWindow(window);
+    const FakeSystemWindow systemWindow(window);
     CHECK(window->clipboardText().empty());
     window->setClipboardText("Ünïcödé");
     CHECK(systemWindow.getClipboardText() == "Ünïcödé");
@@ -54,7 +54,7 @@ TEST_CASE("Drag areas", "[backend][drag]") {
     CHECK(window->isDragArea(barX, barY));
 
     // Its buttons still take presses
-    Button &close = titleBar.controls().closeButton();
+    const Button &close = titleBar.controls().closeButton();
     REQUIRE(close.getWidth() > 0);
     int closeX = 0;
     int closeY = 0;

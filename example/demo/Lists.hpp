@@ -156,7 +156,7 @@ namespace psychic_ui {
 
         auto &badges = group(marks, "Badges and status dots", "Neutral, accent, success, warning, danger; 20 px, 16 px with the small class");
         auto &badgeRow = badges.add<HBox>().addClassName("row");
-        const char *toneNames[]{"Neutral", "Accent", "Success", "Warning", "Danger"};
+        const char *const toneNames[]{"Neutral", "Accent", "Success", "Warning", "Danger"};
         for (std::size_t i = 0; i < std::size(allTones); ++i) {
             badgeRow.add<Badge>(toneNames[i], allTones[i]);
         }

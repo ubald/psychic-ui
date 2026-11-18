@@ -178,8 +178,8 @@ TEST_CASE("Reentrancy: a menu item callback closes the menu itself and the windo
     F f;
     auto &b = f.window->appContainer().add<Button>("a");
     f.layout();
-    Window *w = f.window.get();
-    Menu   &m = w->openMenu({Menu::item("One", [w]() { w->closeMenu(); w->overlay().closeAll<Popup>(); })}, b);
+    Window     *w = f.window.get();
+    const Menu &m = w->openMenu({Menu::item("One", [w]() { w->closeMenu(); w->overlay().closeAll<Popup>(); })}, b);
     (void) m;
     f.layout();
     auto *row = m.rows().at(0); (void) row;
@@ -443,7 +443,7 @@ TEST_CASE("Reentrancy: dialog action closes and removes the opener", "[reentranc
     auto &b      = parent.add<Button>("open");
     f.layout();
     f.key(Key::TAB);
-    Window *w = f.window.get();
+    const Window *w = f.window.get();
     auto   &d = w->overlay().open<Dialog>("Hi");
     d.action("OK", [&parent, &b]() { parent.remove(b); });
     d.body().add<TextInput>("x");
@@ -637,7 +637,7 @@ TEST_CASE("Reentrancy: menu bar removed by its own item", "[reentrancy]") {
         Menu::item("File", {Menu::item("Quit", [&parent, &bar]() { parent.remove(*bar); })}),
         Menu::item("Edit", {Menu::item("Copy", []() {})})});
     f.layout();
-    Div *trigger = bar->children().size() > 1 ? bar->children()[1].get() : bar->children()[0].get();
+    const Div *trigger = bar->children().size() > 1 ? bar->children()[1].get() : bar->children()[0].get();
     f.click(*trigger);
     f.key(Key::DOWN);
     f.key(Key::ENTER);

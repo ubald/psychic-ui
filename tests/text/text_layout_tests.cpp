@@ -264,7 +264,7 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
     SECTION("wrapping keeps whole words and lines a line height apart") {
         const std::string str = "one two three four five six";
         layout.setText(icu::UnicodeString::fromUTF8(str));
-        float width = layout.maxContentWidth();
+        const float width = layout.maxContentWidth();
         REQUIRE(layout.lineCountAt(width + 1.0f) == 1);
         layout.layout(width / 2.0f);
         const auto lines = layout.lineCountAt(width / 2.0f);
@@ -285,7 +285,7 @@ TEST_CASE("Text layout lines, carets and hit testing", "[text]") {
         layout.layout(20.0f);
         REQUIRE(layout.lineCountAt(20.0f) == 1);
         REQUIRE(lineOf(27) == 0);
-        float fits = layout.fittingWidth(20.0f);
+        const float fits = layout.fittingWidth(20.0f);
         REQUIRE(fits <= 20.0f);
         REQUIRE(fits > 0.0f);
     }

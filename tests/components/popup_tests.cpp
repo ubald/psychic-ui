@@ -172,7 +172,7 @@ namespace {
 
 TEST_CASE("A menu opens under its anchor, and above it at the window's bottom", "[popup][menu]") {
     Popups f{};
-    Menu &menu = f.window->openMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, f.first);
+    const Menu &menu = f.window->openMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, f.first);
     f.layout();
     const auto [ax, ay] = Popups::origin(f.first);
     const auto [mx, my] = Popups::origin(menu);
@@ -219,7 +219,7 @@ TEST_CASE("A press outside a menu closes it and goes no further", "[popup][menu]
 
 TEST_CASE("A press inside a menu doesn't close it, Escape does", "[popup][menu][dismiss]") {
     Popups f{};
-    Menu &menu = f.window->openMenu({Menu::check("Check", false)}, f.first);
+    const Menu &menu = f.window->openMenu({Menu::check("Check", false)}, f.first);
     f.layout();
     f.click(*menu.rows()[0]); // A check item keeps the menu open
     CHECK(f.popupCount() == 1);
@@ -316,7 +316,7 @@ TEST_CASE("Submenus open by hover, Right and Enter, and close by Left and Escape
 
     SECTION("hover") {
         f.hover(*menu.rows()[1]);
-        Menu *sub = menu.submenu();
+        const Menu *sub = menu.submenu();
         REQUIRE(sub != nullptr);
         CHECK(sub->owner() == &menu);
         CHECK(f.window->focusedDiv() == &menu); // Hovering leaves the focus
@@ -334,7 +334,7 @@ TEST_CASE("Submenus open by hover, Right and Enter, and close by Left and Escape
         f.key(Key::DOWN);
         f.key(Key::DOWN);
         f.key(Key::RIGHT);
-        Menu *sub = menu.submenu();
+        const Menu *sub = menu.submenu();
         REQUIRE(sub != nullptr);
         CHECK(f.window->focusedDiv() == sub);
         CHECK(sub->highlighted() == 0);
@@ -368,10 +368,10 @@ TEST_CASE("A submenu flips to the left at the window's right edge", "[popup][men
     Popups f{};
     f.bar.justify(Justify::End);
     f.layout();
-    Menu &menu = f.window->openMenu({Menu::item("More", {Menu::item("Deep", []() {})})}, f.second, Side::Bottom, PopupAlign::End);
+    const Menu &menu = f.window->openMenu({Menu::item("More", {Menu::item("Deep", []() {})})}, f.second, Side::Bottom, PopupAlign::End);
     f.layout();
     f.hover(*menu.rows()[0]);
-    Menu *sub = menu.submenu();
+    const Menu *sub = menu.submenu();
     REQUIRE(sub != nullptr);
     f.layout();
     CHECK(sub->placedSide() == Side::Left);
@@ -383,13 +383,13 @@ TEST_CASE("Check and radio items keep their state and the menu open", "[popup][m
     std::vector<bool> toggles{};
     std::string       picked{};
     auto group = std::make_shared<MenuRadioGroup>("a", [&](const std::string &value) { picked = value; });
-    MenuItems items{
+    const MenuItems items{
         Menu::check("Check", false, [&](bool on) { toggles.push_back(on); }),
         Menu::radio(group, "A", "a"),
         Menu::radio(group, "B", "b"),
         Menu::item("Plain", []() {}),
     };
-    Menu &menu = f.window->openMenu(items, f.first);
+    const Menu &menu = f.window->openMenu(items, f.first);
     f.layout();
     CHECK(menu.rows()[1]->checked());
     CHECK(hasClass(*menu.rows()[1], "checked"));
@@ -405,13 +405,13 @@ TEST_CASE("Check and radio items keep their state and the menu open", "[popup][m
     CHECK(menu.rows()[2]->checked());
 
     // Every row keeps the check column
-    for (MenuButton *button: menu.rows()) {
+    for (const MenuButton *button: menu.rows()) {
         CHECK(button->checkColumn());
     }
 
     // The items remember, the next menu shows it
     f.key(Key::ESCAPE);
-    Menu &again = f.window->openMenu(items, f.first);
+    const Menu &again = f.window->openMenu(items, f.first);
     f.layout();
     CHECK(again.rows()[0]->checked());
     CHECK(again.rows()[2]->checked());
@@ -440,7 +440,7 @@ TEST_CASE("Menu bars switch menus with Left and Right", "[popup][menu][keyboard]
 
 TEST_CASE("A context menu opens at a point, inside the window", "[popup][menu]") {
     Popups f{};
-    Menu &menu = f.window->openContextMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, 790, 590);
+    const Menu &menu = f.window->openContextMenu({Menu::item("One", []() {}), Menu::item("Two", []() {})}, 790, 590);
     f.layout();
     CHECK(hasClass(menu, "context"));
     const auto [x, y] = Popups::origin(menu);
@@ -711,7 +711,7 @@ TEST_CASE("A select opens its options under it and changes by the keyboard", "[p
     CHECK(select.value() == "Medium");
 
     f.click(select);
-    Menu *list = select.menu();
+    const Menu *list = select.menu();
     REQUIRE(list != nullptr);
     CHECK(hasClass(select, "open"));
     CHECK(hasClass(*list, "listbox"));
@@ -809,7 +809,7 @@ TEST_CASE("A tooltip sits above its anchor when there is room", "[popup][tooltip
     f.window->updatePopups(Window::tooltipDelay);
     REQUIRE(f.window->tooltip() != nullptr);
     f.layout();
-    Tooltip &tooltip = *f.window->tooltip();
+    const Tooltip &tooltip = *f.window->tooltip();
     CHECK(tooltip.placedSide() == Side::Top);
     CHECK(Popups::origin(tooltip).second + tooltip.getHeight() == Popups::origin(f.first).second - 6);
     // It takes no mouse
@@ -909,7 +909,7 @@ TEST_CASE("A list scrolling in a dialog ends with its padding after the last row
     auto &dialog = f.window->overlay().open<Dialog>("People");
     auto &list   = dialog.body().add<List>();
     list.height(120.0f).padding(8.0f).overflow(Overflow::Scroll);
-    ListRow *last = nullptr;
+    const ListRow *last = nullptr;
     for (int i = 0; i < 12; ++i) {
         last = &list.row("Row " + std::to_string(i));
     }
@@ -1064,10 +1064,10 @@ TEST_CASE("A menu over a dialog closes first", "[popup][dialog][menu]") {
 
 TEST_CASE("Toasts time out, held while the mouse is over them", "[popup][toast]") {
     Popups f{};
-    ToastOptions options{.title = "Saved", .timeout = 5s};
-    Toast &toast = f.window->toast(options);
+    const ToastOptions options{.title = "Saved", .timeout = 5s};
+    const Toast &toast = f.window->toast(options);
     f.layout();
-    ToastStack &stack = f.window->toasts();
+    const ToastStack &stack = f.window->toasts();
     CHECK(hasClass(toast, "info"));
     // In the bottom right corner, inside the window's 1 px border
     const auto [x, y] = Popups::origin(toast);

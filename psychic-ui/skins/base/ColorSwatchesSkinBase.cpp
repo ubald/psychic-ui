@@ -8,7 +8,7 @@ namespace psychic_ui {
     }
 
     void ColorSwatchesSkinBase::setColors(const std::vector<Color> &colors) {
-        for (Div *swatch: _swatches) {
+        for (const Div *swatch: _swatches) {
             remove(*swatch);
         }
         _swatches.clear();

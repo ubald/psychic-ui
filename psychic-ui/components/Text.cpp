@@ -225,7 +225,7 @@ namespace psychic_ui {
     Size Text::measure(Constraint width, Constraint height) {
         // Pure: the layout caches measures and calls this with various constraints,
         // so the layout used for painting (at the box's width) is left as it is.
-        float contentWidth = width.apply(std::ceil(_textLayout.maxContentWidth()));
+        const float contentWidth = width.apply(std::ceil(_textLayout.maxContentWidth()));
         auto  lines        = std::max<size_t>(1, _textLayout.lineCountAt(contentWidth));
         return Size{contentWidth, height.apply(static_cast<float>(lines) * _textLayout.style().lineHeight)};
     }

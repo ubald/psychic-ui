@@ -95,7 +95,7 @@ TEST_CASE("List: rows of a title, secondary text, leading and trailing parts", "
     CHECK(f.ada->computedStyle().paddingRight() == f.theme.metrics.gutter);
 
     // The parts: an avatar leads Ada, a meta and a badge trail
-    Div &lead = f.ada->leading();
+    const Div &lead = f.ada->leading();
     REQUIRE(lead.children().size() == 1);
     auto avatar = std::dynamic_pointer_cast<Avatar>(lead.children()[0]);
     REQUIRE(avatar);
@@ -617,7 +617,7 @@ TEST_CASE("Avatar: initials, sizes, a status and a tint", "[components][avatar]"
 
     avatar.colorful(true);
     f.layout();
-    Div *initials = skin->children()[0].get();
+    const Div *initials = skin->children()[0].get();
     CHECK(initials->computedStyle().color() == PivotalAvatarSkin::initialsOn(tint));
     avatar.colorful(false);
     f.layout();

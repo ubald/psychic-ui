@@ -59,12 +59,12 @@ TEST_CASE("Inter is bundled and loads by family name", "[text][fonts]") {
 TEST_CASE("text lays out in Inter at small sizes, slightly hinted", "[text][fonts]") {
     auto manager = withInter();
 
-    for (float size: {11.0f, 12.0f, 13.0f, 14.0f}) {
+    for (const float size: {11.0f, 12.0f, 13.0f, 14.0f}) {
         INFO(size << " px");
         auto regular  = layout(manager, "Inter", size);
         auto medium   = layout(manager, "Inter Medium", size);
         auto fallback = layout(manager, "No Such Family", size);
-        float width = regular.maxContentWidth();
+        const float width = regular.maxContentWidth();
         REQUIRE(width > 0.0f);
         // Inter itself, not the system's fallback; medium is a little wider than regular
         REQUIRE(width != fallback.maxContentWidth());

@@ -49,7 +49,7 @@ namespace psychic_ui {
         }
         #elif defined(__linux__)
         std::error_code       error;
-        std::filesystem::path executable = std::filesystem::read_symlink("/proc/self/exe", error);
+        const std::filesystem::path executable = std::filesystem::read_symlink("/proc/self/exe", error);
         if (error) {
             return {};
         }

@@ -82,7 +82,7 @@ TEST_CASE("GLFW: the adapter chains to the host's callbacks and gives them back"
     div.onMousePress([&]() { ++downs; });
 
     {
-        GLFWSystemWindow adapter(host.window, host.glfwWindow);
+        const GLFWSystemWindow adapter(host.window, host.glfwWindow);
         CHECK(host.window->windowWidth() == 800);
         host.layout();
         host.window->requestFocus(&div);
@@ -109,14 +109,14 @@ TEST_CASE("GLFW: the adapter chains to the host's callbacks and gives them back"
 }
 
 TEST_CASE("GLFW: a window has one adapter at a time", "[backend][glfw]") {
-    GLFWHost host;
-    GLFWSystemWindow adapter(host.window, host.glfwWindow);
+    const GLFWHost host;
+    const GLFWSystemWindow adapter(host.window, host.glfwWindow);
     CHECK_THROWS_AS(GLFWSystemWindow(std::make_shared<TestWindow>(), host.glfwWindow), std::invalid_argument);
 }
 
 TEST_CASE("GLFW: drops, clipboard and window dragging", "[backend][glfw]") {
-    GLFWHost host;
-    GLFWSystemWindow adapter(host.window, host.glfwWindow);
+    const GLFWHost host;
+    const GLFWSystemWindow adapter(host.window, host.glfwWindow);
 
     auto drop = glfwSetDropCallback(host.glfwWindow, nullptr);
     glfwSetDropCallback(host.glfwWindow, drop);
@@ -134,7 +134,7 @@ TEST_CASE("GLFW: drops, clipboard and window dragging", "[backend][glfw]") {
 
 TEST_CASE("GLFW: no touch input, the window stays in pointer mode", "[backend][glfw][touch]") {
     GLFWHost host;
-    GLFWSystemWindow adapter(host.window, host.glfwWindow);
+    const GLFWSystemWindow adapter(host.window, host.glfwWindow);
     host.layout();
     host.cursorCallback()(host.glfwWindow, 50.0, 50.0);
     host.buttonCallback()(host.glfwWindow, GLFW_MOUSE_BUTTON_LEFT, GLFW_PRESS, 0);
@@ -172,7 +172,7 @@ TEST_CASE("GLFW: scrolls carry the modifiers of the last key or button event", "
     GLFWHost host;
     auto &div = host.window->appContainer().add<Div>();
     div.width(100.0f).height(100.0f);
-    GLFWSystemWindow adapter(host.window, host.glfwWindow);
+    const GLFWSystemWindow adapter(host.window, host.glfwWindow);
     host.layout();
     std::vector<MouseEvent> scrolls{};
     std::vector<MouseEvent> presses{};

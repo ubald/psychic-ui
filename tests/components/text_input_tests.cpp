@@ -60,7 +60,7 @@ namespace {
         }
 
         void type(const std::string &text) {
-            for (char c: text) {
+            for (const char c: text) {
                 window->handleType(icu::UnicodeString(static_cast<UChar32>(c)));
             }
             layout();
@@ -231,7 +231,7 @@ TEST_CASE("TextInput: a new skin shows the text and the selection", "[components
     Field f;
     f.focus();
     f.input.selection(6, 11);
-    Text *before = &f.view();
+    const Text *before = &f.view();
 
     f.input.skin("bare");
     f.layout();

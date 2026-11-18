@@ -18,7 +18,7 @@ namespace psychic_ui {
 
     std::shared_ptr<StyleManager> StyleManager::getInstance() {
         // Built on first use, so it doesn't depend on the initialization order of other translation units
-        static std::shared_ptr<StyleManager> instance = std::make_shared<StyleManager>();
+        static const std::shared_ptr<StyleManager> instance = std::make_shared<StyleManager>();
         return instance;
     }
 
@@ -115,7 +115,7 @@ namespace psychic_ui {
     }
 
     sk_sp<SkFontMgr> StyleManager::fontManager() {
-        static sk_sp<SkFontMgr> manager =
+        static const sk_sp<SkFontMgr> manager =
             #if defined(__APPLE__)
             SkFontMgr_New_CoreText(nullptr);
             #elif defined(_WIN32)
@@ -230,7 +230,7 @@ namespace psychic_ui {
     }
 
     void StyleManager::matchCandidates(const std::vector<std::size_t> &candidates, const Div *component) {
-        for (std::size_t i: candidates) {
+        for (const std::size_t i: candidates) {
             if (_rules[i]->selector()->matches(component)) {
                 _matches.emplace_back(_rules[i]->weight(), i);
             }

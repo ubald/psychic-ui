@@ -164,7 +164,7 @@ namespace psychic_ui {
     }
 
     void TreeNode::updateLevel(const float indent) {
-        if (TreeNode *parentNode = this->parentNode()) {
+        if (const TreeNode *parentNode = this->parentNode()) {
             _level = parentNode->_level + 1;
         }
         _row->_indent->width(static_cast<float>(_level) * indent);
@@ -199,7 +199,7 @@ namespace psychic_ui {
 
     namespace {
         void visibleRows(const std::vector<TreeNode *> &nodes, std::vector<SelectableRow *> &rows) {
-            for (TreeNode *node: nodes) {
+            for (const TreeNode *node: nodes) {
                 rows.push_back(&node->row());
                 if (node->expanded()) {
                     visibleRows(node->nodes(), rows);
@@ -240,7 +240,7 @@ namespace psychic_ui {
     void Tree::adopt(TreeNode &node) {
         std::vector<TreeNode *> subtree{};
         allNodes(node, subtree);
-        for (TreeNode *n: subtree) {
+        for (const TreeNode *n: subtree) {
             rowAdded(n->_row);
         }
         if (!_tabStop || !_selection) {
@@ -290,7 +290,7 @@ namespace psychic_ui {
                 case Key::LEFT:
                     if (node->hasChildren() && node->expanded()) {
                         node->expanded(false);
-                    } else if (TreeNode *up = node->parentNode()) {
+                    } else if (const TreeNode *up = node->parentNode()) {
                         moveTo(&up->row());
                     }
                     return true;
