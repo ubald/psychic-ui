@@ -11,6 +11,7 @@ Checks: >
   -cppcoreguidelines-narrowing-conversions,
   -cppcoreguidelines-avoid-c-arrays,
   -cppcoreguidelines-explicit-virtual-functions,
+  -cppcoreguidelines-prefer-member-initializer,
   misc-*,
   -misc-no-recursion,
   modernize-*,
@@ -26,6 +27,10 @@ Checks: >
 # - The cppcoreguidelines ones (avoid-magic-numbers, non-private-member-variables-in-classes,
 #   narrowing-conversions, avoid-c-arrays, explicit-virtual-functions) are aliases of readability,
 #   misc, bugprone and modernize checks that stay on: one report per warning, not two.
+# - cppcoreguidelines-prefer-member-initializer wants the child parts a constructor creates (`_label = &add<Label>()`)
+#   in its initializer list, which would add them in member declaration order, before the constructor's tag and
+#   styles: they must be added in its body, in order (the overlay stays the window's last child; a dialog's and an
+#   app shell's parts keep their order). Members set from constructor arguments still go in the initializer list.
 # - bugprone-easily-swappable-parameters flags every (float x, float y).
 # - misc-no-recursion flags walking a UI tree, which is recursive by nature.
 # - portability-avoid-pragma-once: #pragma once works on every compiler the project targets.
