@@ -391,6 +391,7 @@ public:
                .right(metrics.space(4))
                .top(metrics.space(4))
                .width(300)
+               .borderLeft(0)               // Not the docked inspector's: floating, its ring is the panel elevation's
                .overflow(Overflow::Hidden); // Its sections' hairlines end at its corners
 
         manager->style("CanvasPage .inspector .actions")
