@@ -51,7 +51,7 @@ namespace psychic_ui {
     }
 
     TextEditing::Edit TextEditing::setText(const icu::UnicodeString &text) {
-        Edit edit = _text == text ? Edit::None : Edit::Text;
+        const Edit edit = _text == text ? Edit::None : Edit::Text;
         _text     = text;
         _goalX.reset();
         _pressed = {0, 0};
