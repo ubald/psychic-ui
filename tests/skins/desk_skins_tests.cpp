@@ -16,7 +16,7 @@
 #include <psychic-ui/skins/base/RangeSkinBase.hpp>
 #include <psychic-ui/skins/base/ScrollBarSkinBase.hpp>
 #include <psychic-ui/skins/base/SwitchSkinBase.hpp>
-#include <psychic-ui/skins/base/TextFieldSkinBase.hpp>
+#include <psychic-ui/skins/base/TextInputSkinBase.hpp>
 #include <psychic-ui/skins/desk/DeskSkins.hpp>
 #include <psychic-ui/skins/float/FloatSkins.hpp>
 #include <psychic-ui/skins/pivotal/PivotalSkins.hpp>

@@ -270,8 +270,10 @@ set(SOURCE_FILES
     psychic-ui/skins/base/ScrollBarSkinBase.cpp
     psychic-ui/skins/base/ScrollBarSkinBase.hpp
     psychic-ui/skins/base/SkinState.hpp
-    psychic-ui/skins/base/TextFieldSkinBase.cpp
-    psychic-ui/skins/base/TextFieldSkinBase.hpp
+    psychic-ui/skins/base/TextAreaSkinBase.cpp
+    psychic-ui/skins/base/TextAreaSkinBase.hpp
+    psychic-ui/skins/base/TextInputSkinBase.cpp
+    psychic-ui/skins/base/TextInputSkinBase.hpp
     psychic-ui/skins/base/ColorSwatchesSkinBase.cpp
     psychic-ui/skins/base/ColorSwatchesSkinBase.hpp
     psychic-ui/skins/base/NumberStepperSkinBase.cpp

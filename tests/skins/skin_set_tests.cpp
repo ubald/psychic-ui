@@ -14,7 +14,8 @@
 #include <psychic-ui/skins/base/MenuButtonSkinBase.hpp>
 #include <psychic-ui/skins/base/RangeSkinBase.hpp>
 #include <psychic-ui/skins/base/ScrollBarSkinBase.hpp>
-#include <psychic-ui/skins/base/TextFieldSkinBase.hpp>
+#include <psychic-ui/skins/base/TextAreaSkinBase.hpp>
+#include <psychic-ui/skins/base/TextInputSkinBase.hpp>
 #include <psychic-ui/skins/pivotal/PivotalSkins.hpp>
 #include <psychic-ui/skins/pivotal/TabButtonSkin.hpp>
 #include <psychic-ui/skins/pivotal/TitleBarButtonSkin.hpp>
