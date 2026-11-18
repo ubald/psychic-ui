@@ -70,12 +70,12 @@ namespace psychic_ui {
         /**
          * Whether the property is set
          */
-        bool has(Property property) const { return _set.test(index(property)); }
+        [[nodiscard]] bool has(Property property) const { return _set.test(index(property)); }
 
         /**
          * The set properties
          */
-        const PropertyMask &properties() const { return _set; }
+        [[nodiscard]] const PropertyMask &properties() const { return _set; }
 
         /**
          * Unset a property, its getter returns the default again
@@ -100,7 +100,7 @@ namespace psychic_ui {
         /**
          * The properties whose value differs, or that are set in only one of the two styles
          */
-        PropertyMask diff(const Style &other) const;
+        [[nodiscard]] PropertyMask diff(const Style &other) const;
 
         bool operator==(const Style &other) const { return _set == other._set && _values == other._values; }
 

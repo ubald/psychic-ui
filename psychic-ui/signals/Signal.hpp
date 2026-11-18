@@ -49,14 +49,14 @@ namespace psychic_ui {
         /**
          * Check if the signal has any subscriptions
          */
-        bool hasSubscriptions() const {
+        [[nodiscard]] bool hasSubscriptions() const {
             return subscriptionCount() > 0;
         }
 
         /**
          * Get the number of subscriptions
          */
-        std::size_t subscriptionCount() const {
+        [[nodiscard]] std::size_t subscriptionCount() const {
             return _core ? std::count_if(_core->slots.cbegin(), _core->slots.cend(), [](const SlotPtr &slot) { return slot->_connected; }) : 0;
         }
 

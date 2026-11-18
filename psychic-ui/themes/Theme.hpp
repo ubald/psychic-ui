@@ -168,15 +168,15 @@ namespace psychic_ui {
         Ease                      out{.x1 = 0.16f, .y1 = 1.0f, .x2 = 0.3f, .y2 = 1.0f}; // Things arriving (--ease-out-quick)
         Spring                    spring{.stiffness = 500.0f, .damping = 40.0f};          // Things thrown or dragged: a switch's thumb, barely overshooting
 
-        constexpr Timing quick() const { return {fast, standard}; }
+        [[nodiscard]] constexpr Timing quick() const { return {fast, standard}; }
 
-        constexpr Timing moderate() const { return {medium, standard}; }
+        [[nodiscard]] constexpr Timing moderate() const { return {medium, standard}; }
 
-        constexpr Timing arrive() const { return {medium, out}; }
+        [[nodiscard]] constexpr Timing arrive() const { return {medium, out}; }
 
-        constexpr Timing enter() const { return {medium, out}; } // A popup appearing (Pivotal's floating motion)
+        [[nodiscard]] constexpr Timing enter() const { return {medium, out}; } // A popup appearing (Pivotal's floating motion)
 
-        constexpr Timing leave() const { return {fast, out}; } // A popup going: a little quicker than it came
+        [[nodiscard]] constexpr Timing leave() const { return {fast, out}; } // A popup going: a little quicker than it came
     };
 
     struct Metrics {
@@ -206,9 +206,9 @@ namespace psychic_ui {
         Sizes touch{.hitSlop = 10}; // A 24 px control reaches 44 px for a finger, and looks the same
         Motion motion{};
 
-        constexpr float space(float steps) const { return steps * spaceUnit; }
+        [[nodiscard]] constexpr float space(float steps) const { return steps * spaceUnit; }
 
-        constexpr const Sizes &sizes(Density density) const {
+        [[nodiscard]] constexpr const Sizes &sizes(Density density) const {
             return density == Density::Touch ? touch : pointer;
         }
     };

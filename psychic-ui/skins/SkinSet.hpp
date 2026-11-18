@@ -88,27 +88,27 @@ namespace psychic_ui {
      */
     class SkinSet : public StyleSheet {
     public:
-        virtual std::string_view name() const = 0;
+        [[nodiscard]] virtual std::string_view name() const = 0;
 
         /**
          * The theme the set ships with, for a system that doesn't say whether it is light or dark
          */
-        virtual const Theme &defaultTheme() const = 0;
+        [[nodiscard]] virtual const Theme &defaultTheme() const = 0;
 
         /**
          * The set's theme for a light system: its default theme unless it has a light one
          */
-        virtual const Theme &lightTheme() const { return defaultTheme(); }
+        [[nodiscard]] virtual const Theme &lightTheme() const { return defaultTheme(); }
 
         /**
          * The set's theme for a dark system: its default theme unless it has a dark one
          */
-        virtual const Theme &darkTheme() const { return defaultTheme(); }
+        [[nodiscard]] virtual const Theme &darkTheme() const { return defaultTheme(); }
 
         /**
          * The set's theme for a system color scheme: light, dark, or the default when it is unknown
          */
-        const Theme &theme(ColorScheme scheme) const {
+        [[nodiscard]] const Theme &theme(ColorScheme scheme) const {
             switch (scheme) {
                 case ColorScheme::Light:
                     return lightTheme();
@@ -122,7 +122,7 @@ namespace psychic_ui {
         /**
          * The themes made for the set, as a picker lists them: its light, dark and default themes unless it says more
          */
-        virtual std::vector<const Theme *> themes() const {
+        [[nodiscard]] virtual std::vector<const Theme *> themes() const {
             std::vector<const Theme *> own{};
             for (const Theme *theme: {&lightTheme(), &darkTheme(), &defaultTheme()}) {
                 if (std::ranges::find(own, theme) == own.end()) {
@@ -135,7 +135,7 @@ namespace psychic_ui {
         /**
          * Whether the theme is one of the set's (`themes()`), by name
          */
-        bool hasTheme(const Theme &theme) const {
+        [[nodiscard]] bool hasTheme(const Theme &theme) const {
             return std::ranges::any_of(themes(), [&theme](const Theme *own) { return own->name == theme.name; });
         }
 
@@ -144,6 +144,6 @@ namespace psychic_ui {
         /**
          * Where the skins this set lacks come from; the default set has none
          */
-        virtual std::unique_ptr<SkinSet> fallback() const { return nullptr; }
+        [[nodiscard]] virtual std::unique_ptr<SkinSet> fallback() const { return nullptr; }
     };
 }

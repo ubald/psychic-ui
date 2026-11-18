@@ -30,7 +30,7 @@ namespace psychic_ui {
         SystemWindow(SystemWindow &&) = delete;
         SystemWindow &operator=(SystemWindow &&) = delete;
 
-        std::shared_ptr<Window> window() const;
+        [[nodiscard]] std::shared_ptr<Window> window() const;
 
         /**
          * Draws the window into its framebuffer, without presenting it.
@@ -53,24 +53,24 @@ namespace psychic_ui {
          * Skia then forgets the GL state it caches before each frame. True for the adapters that wrap
          * a host's window; a host that draws nothing else can turn it off.
          */
-        bool sharesContext() const;
+        [[nodiscard]] bool sharesContext() const;
         void setSharesContext(bool sharesContext);
 
-        int getX() const;
-        int getY() const;
-        int getWidth() const;
-        int getHeight() const;
-        int getFramebufferWidth() const;
-        int getFramebufferHeight() const;
-        float getPixelRatio() const;
-        int getSamples() const;
-        int getStencilBits() const;
+        [[nodiscard]] int getX() const;
+        [[nodiscard]] int getY() const;
+        [[nodiscard]] int getWidth() const;
+        [[nodiscard]] int getHeight() const;
+        [[nodiscard]] int getFramebufferWidth() const;
+        [[nodiscard]] int getFramebufferHeight() const;
+        [[nodiscard]] float getPixelRatio() const;
+        [[nodiscard]] int getSamples() const;
+        [[nodiscard]] int getStencilBits() const;
 
         virtual void setTitle(const std::string &title) = 0;
         virtual void setFullscreen(bool fullscreen) = 0;
-        virtual bool getMinimized() const = 0;
+        [[nodiscard]] virtual bool getMinimized() const = 0;
         virtual void setMinimized(bool minimized) = 0;
-        virtual bool getMaximized() const = 0;
+        [[nodiscard]] virtual bool getMaximized() const = 0;
         virtual void setMaximized(bool maximized) = 0;
         virtual void setVisible(bool visible) = 0;
         virtual void setCursor(Cursor cursor) = 0;
@@ -80,7 +80,7 @@ namespace psychic_ui {
         /**
          * Whether the window can be moved from inside it, by `Window::isDragArea` or `startDrag()`
          */
-        virtual bool supportsDrag() const;
+        [[nodiscard]] virtual bool supportsDrag() const;
         virtual void setSize(int width, int height) = 0;
         virtual void setPosition(int x, int y) = 0;
 
@@ -88,7 +88,7 @@ namespace psychic_ui {
          * The clock the backend's touch events are timed with, for `Window::updateGestures`: the steady clock
          * unless the platform has its own
          */
-        virtual std::chrono::nanoseconds gestureTime() const;
+        [[nodiscard]] virtual std::chrono::nanoseconds gestureTime() const;
 
         /**
          * Wake the loop that waits for this window's events, so that it draws (`Window::requestFrame`). May be called
@@ -100,7 +100,7 @@ namespace psychic_ui {
          * Whether the system is in light or dark mode, `Unknown` when it doesn't say (this default). An adapter
          * that knows calls `Window::handleColorSchemeChange` when it changes.
          */
-        virtual ColorScheme colorScheme() const { return ColorScheme::Unknown; }
+        [[nodiscard]] virtual ColorScheme colorScheme() const { return ColorScheme::Unknown; }
 
         virtual void startTextInput();
         virtual void stopTextInput();
@@ -115,7 +115,7 @@ namespace psychic_ui {
          * The system clipboard's text, in UTF-8. Without a system clipboard (this default), a clipboard
          * that only lives in this system window.
          */
-        virtual std::string getClipboardText() const;
+        [[nodiscard]] virtual std::string getClipboardText() const;
         virtual void setClipboardText(const std::string &text);
 
     protected:

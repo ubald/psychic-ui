@@ -16,11 +16,11 @@ namespace psychic_ui {
         Atom();
         explicit Atom(std::string_view string);
 
-        const std::string &str() const { return *_string; }
+        [[nodiscard]] const std::string &str() const { return *_string; }
 
-        const char *c_str() const { return _string->c_str(); }
+        [[nodiscard]] const char *c_str() const { return _string->c_str(); }
 
-        bool empty() const { return _string->empty(); }
+        [[nodiscard]] bool empty() const { return _string->empty(); }
 
         bool operator==(const Atom &other) const { return _string == other._string; }
 

@@ -95,7 +95,7 @@ namespace {
             return {x - div.scrollX() + (div.getWidth() / 2), y - div.scrollY() + (div.getHeight() / 2)};
         }
 
-        std::size_t inOverlay() const { return window->overlay().children().size(); }
+        [[nodiscard]] std::size_t inOverlay() const { return window->overlay().children().size(); }
     };
 
     bool hasClass(const Div &div, const std::string &name) {

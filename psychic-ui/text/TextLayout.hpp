@@ -58,7 +58,7 @@ namespace psychic_ui {
          */
         bool setStyle(const TextLayoutStyle &style);
 
-        const TextLayoutStyle &style() const;
+        [[nodiscard]] const TextLayoutStyle &style() const;
 
         /**
          * Whether the text wraps at the width (or stays on one line, past it)
@@ -124,7 +124,7 @@ namespace psychic_ui {
         std::unique_ptr<skia::textlayout::Paragraph> _paragraph{nullptr};
         std::vector<skia::textlayout::LineMetrics>  _lines{};
 
-        std::unique_ptr<skia::textlayout::Paragraph> build() const;
+        [[nodiscard]] std::unique_ptr<skia::textlayout::Paragraph> build() const;
 
         /**
          * The paragraph, built if needed and laid out at `width` (another width than the
@@ -142,11 +142,11 @@ namespace psychic_ui {
         /**
          * Whether one line too long ends in an ellipsis: laid out at the box's width, then
          */
-        bool ellipsis() const;
+        [[nodiscard]] bool ellipsis() const;
 
         /**
          * The line holding the caret before the character at the index (a wrapped line's end is the next line's start)
          */
-        const skia::textlayout::LineMetrics &lineAt(unsigned int index) const;
+        [[nodiscard]] const skia::textlayout::LineMetrics &lineAt(unsigned int index) const;
     };
 }

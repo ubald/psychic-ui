@@ -34,12 +34,12 @@ namespace {
 
         void layout() { systemWindow.layout(); }
 
-        Text &view() const { return *input.skin()->textView(); }
+        [[nodiscard]] Text &view() const { return *input.skin()->textView(); }
 
         /**
          * Where the caret before the index is, in window coordinates, halfway down its line
          */
-        std::pair<float, float> at(unsigned int index) const {
+        [[nodiscard]] std::pair<float, float> at(unsigned int index) const {
             const SkRect caret = view().caretRect(index);
             int          x     = 0;
             int          y     = 0;

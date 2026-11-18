@@ -25,17 +25,17 @@ namespace psychic_ui::paint {
         /**
          * The border box inset on every side (radii shrink with it)
          */
-        SkRRect inset(float amount) const;
+        [[nodiscard]] SkRRect inset(float amount) const;
 
         /**
          * Inside the border
          */
-        SkRRect inner() const { return inset(border); }
+        [[nodiscard]] SkRRect inner() const { return inset(border); }
 
         /**
          * Where a stroke of the border's width goes to fill the border: its center line
          */
-        SkRRect strokeLine() const { return inset(border / 2.0f); }
+        [[nodiscard]] SkRRect strokeLine() const { return inset(border / 2.0f); }
     };
 
     void fill(SkCanvas *canvas, const SkRRect &shape, Color color, bool antiAlias = true);

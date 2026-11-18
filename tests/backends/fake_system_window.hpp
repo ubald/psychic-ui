@@ -82,9 +82,9 @@ namespace psychic_ui_tests {
 
         void setTitle(const std::string & /*title*/) override {}
         void setFullscreen(bool /*fullscreen*/) override {}
-        bool getMinimized() const override { return false; }
+        [[nodiscard]] bool getMinimized() const override { return false; }
         void setMinimized(bool /*minimized*/) override {}
-        bool getMaximized() const override { return false; }
+        [[nodiscard]] bool getMaximized() const override { return false; }
         void setMaximized(bool /*maximized*/) override {}
         void setVisible(bool /*visible*/) override {}
         void setCursor(Cursor /*cursor*/) override {}

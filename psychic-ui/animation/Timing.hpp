@@ -34,18 +34,18 @@ namespace psychic_ui {
         /**
          * The eased progress at a share of the duration (clamped to 0-1)
          */
-        float at(float progress) const;
+        [[nodiscard]] float at(float progress) const;
 
         /**
          * How fast the eased progress changes at a share of the duration (dy/dx, clamped to 0-1)
          */
-        float slope(float progress) const;
+        [[nodiscard]] float slope(float progress) const;
 
         /**
          * Along this curve for `duration` seconds from an offset of `offset0` at rest, where it is `seconds` later:
          * `offset0 × (1 − at(seconds / duration))`, settled once the duration is over
          */
-        Approach approach(float offset0, float seconds, float duration) const;
+        [[nodiscard]] Approach approach(float offset0, float seconds, float duration) const;
 
         constexpr bool operator==(const Ease &) const = default;
 
@@ -78,14 +78,14 @@ namespace psychic_ui {
         /**
          * Its damping ratio: below 1 it overshoots
          */
-        float dampingRatio() const;
+        [[nodiscard]] float dampingRatio() const;
 
         /**
          * Where it is `t` seconds after it had an offset of `x0` and a velocity of `v0` (the closed form, so the frame
          * rate doesn't change the motion): settled once the offset is within `tolerance` and the velocity within
          * `tolerance` × max(ω, 1), or after `maxTime`
          */
-        Approach approach(float x0, float v0, float t, float tolerance) const;
+        [[nodiscard]] Approach approach(float x0, float v0, float t, float tolerance) const;
 
         constexpr bool operator==(const Spring &) const = default;
 
@@ -125,27 +125,27 @@ namespace psychic_ui {
         /**
          * Whether values jump to their end: no duration and no spring
          */
-        constexpr bool instant() const { return !_isSpring && _duration <= std::chrono::nanoseconds::zero(); }
+        [[nodiscard]] constexpr bool instant() const { return !_isSpring && _duration <= std::chrono::nanoseconds::zero(); }
 
-        constexpr bool isSpring() const { return _isSpring; }
+        [[nodiscard]] constexpr bool isSpring() const { return _isSpring; }
 
-        constexpr std::chrono::nanoseconds duration() const { return _duration; }
+        [[nodiscard]] constexpr std::chrono::nanoseconds duration() const { return _duration; }
 
-        constexpr const Ease &ease() const { return _ease; }
+        [[nodiscard]] constexpr const Ease &ease() const { return _ease; }
 
-        constexpr const Spring &spring() const { return _spring; }
+        [[nodiscard]] constexpr const Spring &spring() const { return _spring; }
 
         /**
          * Whether a retarget keeps the velocity: a spring does, a curve starts from rest
          */
-        constexpr bool keepsVelocity() const { return _isSpring; }
+        [[nodiscard]] constexpr bool keepsVelocity() const { return _isSpring; }
 
         /**
          * Where a value moving with this timing is, `seconds` after it had an offset of `offset0` from its target and
          * a velocity of `velocity0`: along the curve (from rest, whatever the velocity) or pulled by the spring.
          * `tolerance` is how close a spring settles (a curve settles when its duration is over).
          */
-        Approach approach(float offset0, float velocity0, float seconds, float tolerance) const;
+        [[nodiscard]] Approach approach(float offset0, float velocity0, float seconds, float tolerance) const;
 
         constexpr bool operator==(const Timing &) const = default;
 

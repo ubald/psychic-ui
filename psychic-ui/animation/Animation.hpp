@@ -119,22 +119,22 @@ namespace psychic_ui {
             return *this;
         }
 
-        const Timing &timing() const { return _timing; }
+        [[nodiscard]] const Timing &timing() const { return _timing; }
 
         /**
          * Where it is, as of the window's last `updateAnimations`
          */
-        T value() const { return Interpolation<T>::value(_animation->tween.value(), _target); }
+        [[nodiscard]] T value() const { return Interpolation<T>::value(_animation->tween.value(), _target); }
 
         /**
          * Where it goes
          */
-        const T &target() const { return _target; }
+        [[nodiscard]] const T &target() const { return _target; }
 
         /**
          * Whether it is on its way
          */
-        bool animating() const { return _animation->tween.running(); }
+        [[nodiscard]] bool animating() const { return _animation->tween.running(); }
 
     private:
         Div                                      *_owner;

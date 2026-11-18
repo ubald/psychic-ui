@@ -106,7 +106,7 @@ namespace {
             list->add(index, keep);
         }
 
-        bool settled() const {
+        [[nodiscard]] bool settled() const {
             return !window->animating() && !window->needsFrame();
         }
     };
@@ -332,7 +332,7 @@ namespace {
             systemWindow.layout();
         }
 
-        bool settled() const {
+        [[nodiscard]] bool settled() const {
             return !window->animating() && !window->needsFrame();
         }
 

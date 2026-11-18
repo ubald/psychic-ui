@@ -12,10 +12,10 @@ namespace psychic_ui {
      */
     class PivotalSkins : public SkinSet {
     public:
-        std::string_view name() const override;
-        const Theme &defaultTheme() const override;
-        const Theme &lightTheme() const override;
-        std::vector<const Theme *> themes() const override; // Pivotal's two, then One Dark, One Light, Psychic
+        [[nodiscard]] std::string_view name() const override;
+        [[nodiscard]] const Theme &defaultTheme() const override;
+        [[nodiscard]] const Theme &lightTheme() const override;
+        [[nodiscard]] std::vector<const Theme *> themes() const override; // Pivotal's two, then One Dark, One Light, Psychic
         void registerSkins(SkinRegistry &skins) const override;
         void load(StyleManager *manager) override;
     };

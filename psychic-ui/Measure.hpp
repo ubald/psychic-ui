@@ -43,7 +43,7 @@ namespace psychic_ui {
         /**
          * The size to report for content that needs `content`
          */
-        constexpr float apply(float content) const {
+        [[nodiscard]] constexpr float apply(float content) const {
             switch (fit) {
                 case Fit::Exact:
                     return size;

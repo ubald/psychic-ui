@@ -30,7 +30,7 @@ namespace {
 
         void layout() { systemWindow.layout(); }
 
-        std::string_view theme() const { return window->theme().name; }
+        [[nodiscard]] std::string_view theme() const { return window->theme().name; }
 
         Fixture() = default;
         Fixture(const Fixture &) = delete;

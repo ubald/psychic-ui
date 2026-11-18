@@ -47,11 +47,11 @@ namespace {
      */
     class PartialSkins : public SkinSet {
     public:
-        std::string_view name() const override { return "Partial"; }
+        [[nodiscard]] std::string_view name() const override { return "Partial"; }
 
-        const Theme &defaultTheme() const override { return themes::oneLight; }
+        [[nodiscard]] const Theme &defaultTheme() const override { return themes::oneLight; }
 
-        std::unique_ptr<SkinSet> fallback() const override { return std::make_unique<PivotalSkins>(); }
+        [[nodiscard]] std::unique_ptr<SkinSet> fallback() const override { return std::make_unique<PivotalSkins>(); }
 
         void registerSkins(SkinRegistry &skins) const override {
             skins.add<ButtonSkin, GlowButtonSkin>()

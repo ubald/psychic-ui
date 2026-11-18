@@ -63,7 +63,7 @@ namespace psychic_ui {
             Clipboard(Clipboard &&) = delete;
             Clipboard &operator=(Clipboard &&) = delete;
             virtual ~Clipboard() = default;
-            virtual std::string clipboardText() const = 0;
+            [[nodiscard]] virtual std::string clipboardText() const = 0;
             virtual void setClipboardText(const std::string &text) = 0;
         };
 

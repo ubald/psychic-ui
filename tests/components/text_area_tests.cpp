@@ -35,12 +35,12 @@ namespace {
 
         void layout() { systemWindow.layout(); }
 
-        Text &view() const { return *area.skin()->textView(); }
+        [[nodiscard]] Text &view() const { return *area.skin()->textView(); }
 
         /**
          * The view's viewport: its nearest scrolling ancestor
          */
-        Div &viewport() const {
+        [[nodiscard]] Div &viewport() const {
             Div *div = view().parent();
             while (div && div->computedStyle().overflow() != Overflow::Scroll) {
                 div = div->parent();
@@ -52,7 +52,7 @@ namespace {
         /**
          * Where the caret before the index is, in window coordinates, halfway down its line
          */
-        std::pair<float, float> at(unsigned int index) const {
+        [[nodiscard]] std::pair<float, float> at(unsigned int index) const {
             const SkRect caret = view().caretRect(index);
             int          x     = 0;
             int          y     = 0;
@@ -63,7 +63,7 @@ namespace {
         /**
          * Whether the caret's line shows whole in the viewport
          */
-        bool caretShows() const {
+        [[nodiscard]] bool caretShows() const {
             const SkRect caret = view().caretRect(area.caret());
             int          x     = 0;
             int          top   = 0;
