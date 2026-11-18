@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include "include/core/SkColor.h"
 //#include <rxcpp/rx.hpp>
 
@@ -15,7 +16,7 @@
 
 namespace psychic_ui {
 
-    enum MouseButton {
+    enum class MouseButton : std::uint8_t {
         NONE = 0,
         LEFT = 1,
         MIDDLE = 2,

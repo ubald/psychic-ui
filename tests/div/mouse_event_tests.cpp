@@ -7,8 +7,8 @@ using namespace psychic_ui_tests;
 using namespace std::chrono_literals;
 
 namespace {
-    constexpr unsigned left  = MouseButton::LEFT;
-    constexpr unsigned right = MouseButton::RIGHT;
+    constexpr unsigned left  = static_cast<unsigned>(MouseButton::LEFT);
+    constexpr unsigned right = static_cast<unsigned>(MouseButton::RIGHT);
 
     /**
      * A 100 x 100 box at (20, 30) of the window, with a 20 x 20 child at (10, 10) of the box

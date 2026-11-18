@@ -213,7 +213,7 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
     layout();
 
     SECTION("the last child added is hit") {
-        REQUIRE(root->handleMouseButtonChange({.x = 50, .y = 50, .button = LEFT, .down = true}) == Handled);
+        REQUIRE(root->handleMouseButtonChange({.x = 50, .y = 50, .button = MouseButton::LEFT, .down = true}) == MouseEventStatus::Handled);
         REQUIRE(hits == "c");
     }
 
@@ -223,13 +223,13 @@ TEST_CASE("mouse events go to the topmost (last) child first", "[div][children][
         d->position(Position::Absolute).width(100).height(100);
         d->mouseButtonChanged.subscribe([&hits]() { hits += "d"; });
         layout();
-        root->handleMouseButtonChange({.x = 50, .y = 50, .button = LEFT, .down = true});
+        root->handleMouseButtonChange({.x = 50, .y = 50, .button = MouseButton::LEFT, .down = true});
         REQUIRE(hits == "c");
         root->remove(children[2]);
         root->remove(children[1]);
         root->remove(children[0]);
         layout();
-        root->handleMouseButtonChange({.x = 50, .y = 50, .button = LEFT, .down = true});
+        root->handleMouseButtonChange({.x = 50, .y = 50, .button = MouseButton::LEFT, .down = true});
         REQUIRE(hits == "cd");
     }
 

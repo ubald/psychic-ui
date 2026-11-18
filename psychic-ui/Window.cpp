@@ -1409,11 +1409,11 @@ namespace psychic_ui {
             if (_overlay->pressOutside(static_cast<int>(e.x), static_cast<int>(e.y), e.button == MouseButton::RIGHT)) {
                 _pressSwallowed  = true;
                 _swallowedButton = e.button;
-                return Handled;
+                return MouseEventStatus::Handled;
             }
         } else if (_pressSwallowed && e.button == _swallowedButton) {
             _pressSwallowed = false;
-            return Handled;
+            return MouseEventStatus::Handled;
         }
 
         // Through hit slop, the press and its release land on the target's edge

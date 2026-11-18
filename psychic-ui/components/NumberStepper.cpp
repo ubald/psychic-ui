@@ -162,7 +162,7 @@ namespace psychic_ui {
         if (_enabled && hasFocus() && event.scrollY != 0 && boundsContains(event.x, event.y)) {
             commit();
             stepBy(event.scrollY > 0 ? 1 : -1);
-            return Handled;
+            return MouseEventStatus::Handled;
         }
         return Component::handleMouseScroll(event);
     }

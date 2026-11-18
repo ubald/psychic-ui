@@ -146,7 +146,7 @@ namespace psychic_ui {
         /**
          * Buttons held with the pen, mouse style (the tip is the left button)
          */
-        int _penButtons{0};
+        unsigned _penButtons{0};
 
         /**
          * What kind of touch device sent finger events: only touch screens (direct) are followed,

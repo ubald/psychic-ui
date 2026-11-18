@@ -1451,11 +1451,11 @@ namespace psychic_ui {
     MouseEventStatus Div::handleMouseButtonChange(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(event.x, event.y)) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1464,31 +1464,31 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleMouseButtonChange(local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     ret = res;
                     break;
                 }
             }
         }
 
-        if (_mouseEnabled && ret != Handled && mouseButtonChanged.hasSubscriptions()) {
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && mouseButtonChanged.hasSubscriptions()) {
             mouseButtonChanged.emit(local);
-            ret = Handled;
+            ret = MouseEventStatus::Handled;
         }
 
-        return ret == Out ? Over : ret;
+        return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
     }
 
     MouseEventStatus Div::handleMousePress(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(event.x, event.y)) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         setMouseDown(true);
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1497,31 +1497,31 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleMousePress(local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     ret = res;
                     break;
                 }
             }
         }
 
-        if (ret == Out) {
+        if (ret == MouseEventStatus::Out) {
             // We're the deepest we're gonna get, do a focus request
             window()->requestFocus(this);
         }
 
-        if (_mouseEnabled && ret != Handled && mousePressed.hasSubscriptions()) {
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && mousePressed.hasSubscriptions()) {
             mousePressed.emit(local);
-            ret = Handled;
+            ret = MouseEventStatus::Handled;
         }
 
         // onClick swallows left button presses, otherwise a parent might hijack them
-        return ret == Handled || (event.button == MouseButton::LEFT && clicked.hasSubscriptions()) ? Handled : Over;
+        return ret == MouseEventStatus::Handled || (event.button == MouseButton::LEFT && clicked.hasSubscriptions()) ? MouseEventStatus::Handled : MouseEventStatus::Over;
     }
 
     MouseEventStatus Div::handleMouseRelease(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         const bool isOver  = boundsContains(event.x, event.y);
@@ -1532,7 +1532,7 @@ namespace psychic_ui {
         }
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren && (isOver || wasDown)) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1541,14 +1541,14 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleMouseRelease(local);
-                if (res == Over) {
+                if (res == MouseEventStatus::Over) {
                     ret = res;
                 }
             }
         }
 
         if (!_mouseEnabled) {
-            return isOver ? (ret == Out ? Over : ret) : Out;
+            return isOver ? (ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret) : MouseEventStatus::Out;
         }
 
         // A press that started here ends here, wherever it is released (a drag stops even outside): mouseReleased
@@ -1558,33 +1558,33 @@ namespace psychic_ui {
         if (wasDown && !isOver) {
             mouseReleasedOutside.emit(local);
         }
-        if (wasDown || (isOver && ret != Handled)) {
+        if (wasDown || (isOver && ret != MouseEventStatus::Handled)) {
             mouseReleased.emit(local);
             if (isOver && hadSubscriptions) {
-                ret = Handled;
+                ret = MouseEventStatus::Handled;
             }
         }
 
         if (!isOver) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
-        return ret == Out ? Over : ret;
+        return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
     }
 
     MouseEventStatus Div::handleClick(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(event.x, event.y)) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         // Only the left button clicks: a right click (or a touch long press, which is one) is for mousePressed
         if (!_mouseDown || event.button != MouseButton::LEFT) {
-            return Over;
+            return MouseEventStatus::Over;
         }
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1593,33 +1593,33 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleClick(local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     ret = res;
                     break;
                 }
             }
         }
 
-        if (_mouseEnabled && ret != Handled && clicked.hasSubscriptions()) {
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && clicked.hasSubscriptions()) {
             clicked.emit(local);
-            ret = Handled;
+            ret = MouseEventStatus::Handled;
         }
 
-        return ret == Out ? Over : ret;
+        return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
     }
 
     MouseEventStatus Div::handleDoubleClick(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(event.x, event.y)) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         if (!_mouseDown) {
-            return Over;
+            return MouseEventStatus::Over;
         }
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1628,29 +1628,29 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleDoubleClick(local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     ret = res;
                     break;
                 }
             }
         }
 
-        if (_mouseEnabled && ret != Handled && doubleClicked.hasSubscriptions()) {
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && doubleClicked.hasSubscriptions()) {
             doubleClicked.emit(local);
-            ret = Handled;
+            ret = MouseEventStatus::Handled;
         }
 
-        return ret == Out ? Over : ret;
+        return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
     }
 
     MouseEventStatus Div::handleContextMenuRequest(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(event.x, event.y)) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1659,7 +1659,7 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleContextMenuRequest(local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     ret = res;
                     break;
                 }
@@ -1667,12 +1667,12 @@ namespace psychic_ui {
         }
 
         // The deepest div that asks for it gets it, once
-        if (_mouseEnabled && ret != Handled && contextMenuRequested.hasSubscriptions()) {
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && contextMenuRequested.hasSubscriptions()) {
             contextMenuRequested.emit(local);
-            ret = Handled;
+            ret = MouseEventStatus::Handled;
         }
 
-        return ret == Out ? Over : ret;
+        return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
     }
 
     // endregion
@@ -1708,7 +1708,7 @@ namespace psychic_ui {
     MouseEventStatus Div::handleMouseMove(const MouseEvent &event, bool handled) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         const bool isOver  = boundsContains(event.x, event.y);
@@ -1721,13 +1721,13 @@ namespace psychic_ui {
         const bool allowOutsideMovement = this == window();
 
         if (!isOver && !allowOutsideMovement) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         // From now on we're over the div, unless we"re on window, which allow for the mouse to move outside
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (isOver) {
             if (!handled) {
@@ -1741,9 +1741,9 @@ namespace psychic_ui {
                         continue; // Removed by an earlier handler
                     }
                     auto res = child->handleMouseMove(local, handled);
-                    if (res != Out) {
+                    if (res != MouseEventStatus::Out) {
                         handled = true;
-                        if (ret != Handled) {
+                        if (ret != MouseEventStatus::Handled) {
                             ret = res;
                         }
                     }
@@ -1756,11 +1756,11 @@ namespace psychic_ui {
                 mouseEntered.emit(local);
             }
             mouseMoved.emit(local);
-            if (!handled && isOver && ret != Handled) {
+            if (!handled && isOver && ret != MouseEventStatus::Handled) {
                 window()->setCursor(_computedStyle.cursor());
-                ret = Handled;
+                ret = MouseEventStatus::Handled;
             } else if (isOver) {
-                ret = Over;
+                ret = MouseEventStatus::Over;
             }
         }
 
@@ -1831,11 +1831,11 @@ namespace psychic_ui {
     MouseEventStatus Div::handleMouseScroll(const MouseEvent &event) {
         const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
         if (!_visible || !boundsContains(event.x, event.y)) {
-            return Out;
+            return MouseEventStatus::Out;
         }
 
         const MouseEvent local = localMouseEvent(event);
-        MouseEventStatus ret   = Out;
+        MouseEventStatus ret   = MouseEventStatus::Out;
 
         if (_mouseChildren) {
             // Topmost first, over a copy since handlers can add or remove children
@@ -1844,24 +1844,24 @@ namespace psychic_ui {
                     continue; // Removed by an earlier handler
                 }
                 auto res = child->handleMouseScroll(local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     ret = res;
                     break;
                 }
             }
         }
 
-        if (_mouseEnabled && ret != Handled && mouseScrolled.hasSubscriptions()) {
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && mouseScrolled.hasSubscriptions()) {
             mouseScrolled.emit(local);
-            ret = Handled;
+            ret = MouseEventStatus::Handled;
         }
 
-        if (ret != Handled && _computedStyle.overflow() == Overflow::Scroll) {
+        if (ret != MouseEventStatus::Handled && _computedStyle.overflow() == Overflow::Scroll) {
             // TODO: Cancel if already handled, we can't scroll two divs at the same time
             scroll(event.scrollX, event.scrollY);
         }
 
-        return ret == Out ? Over : ret;
+        return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
     }
 
     // endregion

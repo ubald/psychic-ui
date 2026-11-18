@@ -307,10 +307,11 @@ namespace psychic_ui {
 
     void SDL3SystemWindow::handlePenButton(const MouseButton button, const bool down, const float x, const float y) {
         _window->handleInputModeChange(InputMode::Pen);
-        if (button == 0 || ((_penButtons & button) != 0) == down) {
+        const auto bit = static_cast<unsigned>(button);
+        if (button == MouseButton::NONE || ((_penButtons & bit) != 0) == down) {
             return;
         }
-        _penButtons = down ? (_penButtons | button) : (_penButtons & ~button);
+        _penButtons = down ? (_penButtons | bit) : (_penButtons & ~bit);
         _mouseX     = x;
         _mouseY     = y;
         _window->handleMouseButtonChange({
@@ -443,7 +444,7 @@ namespace psychic_ui {
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
             case SDL_EVENT_MOUSE_BUTTON_UP: {
                 const MouseButton button = mapButton(e.button.button);
-                if (button == 0 || !fromMouse(e.button.which)) {
+                if (button == MouseButton::NONE || !fromMouse(e.button.which)) {
                     break;
                 }
                 _window->handleInputModeChange(InputMode::Pointer);

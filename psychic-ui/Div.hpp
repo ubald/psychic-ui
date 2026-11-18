@@ -37,7 +37,7 @@ namespace psychic_ui {
     /**
      * Return status of the mouse event methods
      */
-    enum MouseEventStatus {
+    enum class MouseEventStatus : std::uint8_t {
         /**
          * Mouse was outside the component
          */

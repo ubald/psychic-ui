@@ -436,7 +436,7 @@ namespace psychic_ui {
     MouseEventStatus Overlay::dispatch(const MouseEvent &event, F &&handler) {
         const auto keepAlive = weak_from_this().lock(); // A handler may close popups
         if (!_visible) {
-            return Out;
+            return MouseEventStatus::Out;
         }
         const MouseEvent local = movedTo(
             event,
@@ -450,7 +450,7 @@ namespace psychic_ui {
             auto *popup = static_cast<Popup *>(child.get());
             if (popup->mouseEnabled() || popup->mouseChildren()) {
                 auto res = handler(*popup, local);
-                if (res != Out) {
+                if (res != MouseEventStatus::Out) {
                     return res;
                 }
             }
@@ -461,33 +461,33 @@ namespace psychic_ui {
                         continue;
                     }
                     auto res = handler(*div, inParentOf(*div, event));
-                    if (res != Out) {
+                    if (res != MouseEventStatus::Out) {
                         return res;
                     }
                 }
-                return Handled; // Nothing under it gets it
+                return MouseEventStatus::Handled; // Nothing under it gets it
             }
         }
-        return Out;
+        return MouseEventStatus::Out;
     }
 
     MouseEventStatus Overlay::handleMouseMove(const MouseEvent &event, bool handled) {
         const auto keepAlive = weak_from_this().lock();
         if (!_visible) {
-            return Out;
+            return MouseEventStatus::Out;
         }
         const MouseEvent local = movedTo(
             event,
             event.x - static_cast<float>(_x + _scrollX),
             event.y - static_cast<float>(_y + _scrollY)
         );
-        MouseEventStatus ret     = Out;
+        MouseEventStatus ret     = MouseEventStatus::Out;
         bool             blocked = false;
         const auto       move    = [&](Div &div, const MouseEvent &moved) {
             auto res = div.handleMouseMove(moved, handled);
-            if (res != Out) {
+            if (res != MouseEventStatus::Out) {
                 handled = true;
-                if (ret != Handled) {
+                if (ret != MouseEventStatus::Handled) {
                     ret = res;
                 }
             }
@@ -513,7 +513,7 @@ namespace psychic_ui {
                 handled = true;
             }
         }
-        return blocked ? Handled : ret;
+        return blocked ? MouseEventStatus::Handled : ret;
     }
 
     MouseEventStatus Overlay::handleMouseButtonChange(const MouseEvent &event) {
