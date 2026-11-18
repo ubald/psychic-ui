@@ -1,6 +1,8 @@
 #include <algorithm>
 #include "Range.hpp"
+#include "psychic-ui/Component.hpp"
 #include "psychic-ui/Window.hpp"
+#include "psychic-ui/psychic-ui.hpp"
 
 namespace psychic_ui::internal {
 

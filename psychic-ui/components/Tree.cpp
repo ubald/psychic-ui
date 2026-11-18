@@ -1,8 +1,14 @@
-#include <algorithm>
+#include <memory>
+#include <string_view>
+#include <vector>
 #include "Tree.hpp"
 #include "Icon.hpp"
 #include "Label.hpp"
 #include "psychic-ui/Window.hpp"
+#include "psychic-ui/Div.hpp"
+#include "Rows.hpp"
+#include "psychic-ui/psychic-ui.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
 

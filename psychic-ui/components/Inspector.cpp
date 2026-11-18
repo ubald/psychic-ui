@@ -1,6 +1,10 @@
+#include <string>
+#include <string_view>
 #include "Inspector.hpp"
 #include "Icon.hpp"
 #include "Label.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
 

@@ -1,7 +1,17 @@
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <limits>
+#include <string>
+#include <utility>
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
 #include "Text.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/Measure.hpp"
+#include "psychic-ui/style/Properties.hpp"
+#include "psychic-ui/style/Values.hpp"
+#include "psychic-ui/text/TextLayout.hpp"
 
 namespace psychic_ui {
 

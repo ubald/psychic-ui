@@ -1,5 +1,9 @@
+#include <string>
 #include <utility>
 #include "Button.hpp"
+#include "psychic-ui/Component.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/psychic-ui.hpp"
 
 namespace psychic_ui {
 

@@ -1,8 +1,19 @@
 #include <algorithm>
+#include <functional>
+#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 #include "psychic-ui/Window.hpp"
 #include "Dialog.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/Popup.hpp"
+#include "Button.hpp"
+#include "Icon.hpp"
+#include "Label.hpp"
+#include "Text.hpp"
+#include "psychic-ui/style/Length.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
 

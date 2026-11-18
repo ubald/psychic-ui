@@ -1,5 +1,9 @@
 #include <algorithm>
+#include <utility>
+#include <vector>
 #include "SegmentedControl.hpp"
+#include "psychic-ui/Component.hpp"
+#include "psychic-ui/psychic-ui.hpp"
 
 namespace psychic_ui {
 

@@ -1,7 +1,13 @@
 #include <algorithm>
+#include <cstddef>
+#include <iterator>
 #include <utility>
+#include <vector>
 #include "ColorSwatches.hpp"
+#include "psychic-ui/Component.hpp"
 #include "psychic-ui/Window.hpp"
+#include "psychic-ui/psychic-ui.hpp"
+#include "psychic-ui/style/Color.hpp"
 #include "psychic-ui/themes/palette.hpp"
 
 namespace psychic_ui {

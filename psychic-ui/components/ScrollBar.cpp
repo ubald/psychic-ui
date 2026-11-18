@@ -1,5 +1,11 @@
+#include <algorithm>
+#include <cmath>
+#include "include/core/SkRect.h"
 #include "ScrollBar.hpp"
+#include "psychic-ui/Component.hpp"
+#include "psychic-ui/Div.hpp"
 #include "psychic-ui/Window.hpp"
+#include "psychic-ui/psychic-ui.hpp"
 
 namespace psychic_ui {
     ScrollBar::ScrollBar(Div &viewport, ScrollDirection direction) :

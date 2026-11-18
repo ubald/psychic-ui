@@ -1,8 +1,12 @@
 #include <algorithm>
 #include <cstdlib>
+#include <functional>
+#include <string>
 #include <utility>
 #include "Switch.hpp"
+#include "psychic-ui/Component.hpp"
 #include "psychic-ui/Window.hpp"
+#include "psychic-ui/psychic-ui.hpp"
 
 namespace psychic_ui {
 

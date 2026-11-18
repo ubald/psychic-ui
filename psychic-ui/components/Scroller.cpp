@@ -1,4 +1,10 @@
+#include <memory>
+#include <utility>
+#include "ScrollBar.hpp"
 #include "Scroller.hpp"
+#include "psychic-ui/Div.hpp"
+#include "psychic-ui/style/Length.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
 

@@ -1,8 +1,15 @@
+#include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstddef>
+#include <optional>
+#include <string>
 #include <string_view>
 #include <vector>
 #include "Avatar.hpp"
+#include "Tone.hpp"
+#include "psychic-ui/Component.hpp"
+#include "psychic-ui/style/Values.hpp"
 
 namespace psychic_ui {
     namespace {

@@ -2,6 +2,9 @@
 #include "TitleBar.hpp"
 #include "WindowControls.hpp"
 #include "../Window.hpp"
+#include "../Div.hpp"
+#include "Label.hpp"
+#include "../style/Values.hpp"
 
 namespace psychic_ui {
 

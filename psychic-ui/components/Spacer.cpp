@@ -1,4 +1,5 @@
 #include "Spacer.hpp"
+#include "psychic-ui/Div.hpp"
 
 namespace psychic_ui {
 
