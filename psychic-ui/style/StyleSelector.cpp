@@ -237,6 +237,7 @@ namespace psychic_ui {
                     w += 2;
                     break;
                 case Pseudo::Focus:
+                case Pseudo::FocusVisible:
                     w += 3;
                     break;
                 case Pseudo::Disabled:

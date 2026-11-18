@@ -1166,10 +1166,13 @@ namespace psychic_ui {
         const float half   = spacing / 2.0f;
         const float firstX = _rect.left() + half + std::floor((visible.left() - _rect.left()) / spacing) * spacing;
         const float firstY = _rect.top() + half + std::floor((visible.top() - _rect.top()) / spacing) * spacing;
+        const int columns = std::max(0, static_cast<int>(std::ceil((visible.right() + radius - firstX) / spacing)));
+        const int rows    = std::max(0, static_cast<int>(std::ceil((visible.bottom() + radius - firstY) / spacing)));
         std::vector<SkPoint> dots{};
-        for (float y = firstY; y < visible.bottom() + radius; y += spacing) {
-            for (float x = firstX; x < visible.right() + radius; x += spacing) {
-                dots.push_back({x, y});
+        dots.reserve(static_cast<size_t>(columns) * rows);
+        for (int row = 0; row < rows; ++row) {
+            for (int column = 0; column < columns; ++column) {
+                dots.push_back({firstX + column * spacing, firstY + row * spacing});
             }
         }
         // Round points are discs of the stroke's width, in one call

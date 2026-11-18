@@ -233,8 +233,11 @@ def write(path, symbol, header, icons, grid, stroke):
         "namespace psychic_ui::icons {",
         "",
         "    namespace {",
-        "        constexpr auto S = IconPaint::Stroke;",
-        "        constexpr auto F = IconPaint::Fill;",
+    ]
+    # Only the paints the icons use, so the table compiles without an unused constant
+    used = {paint for _, elements in icons for paint, _ in elements}
+    lines += [f"        constexpr auto {paint[0]} = IconPaint::{paint};" for paint in ("Stroke", "Fill") if paint in used]
+    lines += [
         "",
     ]
     for name, elements in icons:

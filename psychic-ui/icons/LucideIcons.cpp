@@ -15,7 +15,6 @@ namespace psychic_ui::icons {
 
     namespace {
         constexpr auto S = IconPaint::Stroke;
-        constexpr auto F = IconPaint::Fill;
 
         constexpr IconElement icon_chevron_up[]{
             {S, "m18 15-6-6-6 6"},

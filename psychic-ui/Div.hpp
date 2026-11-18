@@ -83,7 +83,7 @@ namespace psychic_ui {
          */
         Div(const Div &) = delete;
 
-        ~Div();
+        virtual ~Div();
 
         /**
          * Just as a safety for now, delete the copy constructor

@@ -10,7 +10,7 @@ namespace psychic_ui {
 
         _textLayout.setMultiline(_multiline);
 
-        updateText(text);
+        Text::updateText(text);
 
         if (_selectable) {
             subscribeToSelection();
@@ -312,7 +312,7 @@ namespace psychic_ui {
                 break;
 
             case Key::RIGHT:
-                if (_caret < _text.length()) {
+                if (_caret < static_cast<unsigned int>(_text.length())) {
                     if (mod.ctrl) {
                         moveCaret(_textLayout.nextWordBoundary(_caret));
                     } else {
@@ -341,7 +341,7 @@ namespace psychic_ui {
                 break;
 
             case Key::DELETE:
-                if (_caret < _text.length()) {
+                if (_caret < static_cast<unsigned int>(_text.length())) {
                     if (_selectBegin != _selectEnd) {
                         // Delete selection
                         _text.remove(_selectBegin, _selectEnd - _selectBegin);

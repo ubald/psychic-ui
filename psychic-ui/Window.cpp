@@ -1659,7 +1659,7 @@ namespace psychic_ui {
 
     // region Callback Delegates
 
-    void Window::windowMoved(const int x, const int y) {
+    void Window::windowMoved(const int /*x*/, const int /*y*/) {
         // std::cout << "Moved" << std::endl;
     }
 

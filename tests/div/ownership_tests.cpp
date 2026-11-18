@@ -22,8 +22,8 @@ TEST_CASE("M7: adding a child that has a parent moves it", "[div][children][!sho
     CHECK(child->parent() == &p2);
 }
 
-// M12: Div and Observer are polymorphic without a virtual destructor; only make_shared<Concrete> keeps deleting
+// M12: Div and Observer were polymorphic without a virtual destructor; only make_shared<Concrete> kept deleting
 // through a base pointer safe
-TEST_CASE("M12: Div has a virtual destructor", "[div][!shouldfail]") {
+TEST_CASE("M12: Div has a virtual destructor", "[div]") {
     CHECK(std::has_virtual_destructor_v<Div>);
 }

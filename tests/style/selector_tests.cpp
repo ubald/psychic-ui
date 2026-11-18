@@ -32,8 +32,8 @@ TEST_CASE("S1: pseudo-classes weigh the same, so the one declared last wins", "[
     CHECK(weight("button:focus") == weight("button:active"));
 }
 
-// S2: :focus-visible is missing from weight()'s switch
-TEST_CASE("S2: :focus-visible weighs like any pseudo-class", "[style][selector][!shouldfail]") {
+// S2: :focus-visible was missing from weight()'s switch
+TEST_CASE("S2: :focus-visible weighs like any pseudo-class", "[style][selector]") {
     CHECK(weight("button:focus-visible") > weight("button"));
     CHECK(weight("button:focus-visible") == weight("button:focus"));
 }

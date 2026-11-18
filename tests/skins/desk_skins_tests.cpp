@@ -34,7 +34,12 @@ namespace {
      */
     template<class T>
     bool is(const std::shared_ptr<internal::SkinBase> &skin) {
-        return skin && typeid(*skin) == typeid(T);
+        if (!skin) {
+            return false;
+        }
+        // Dereferenced outside typeid, which would otherwise evaluate a call in its operand
+        const internal::SkinBase &base = *skin;
+        return typeid(base) == typeid(T);
     }
 
     /**
