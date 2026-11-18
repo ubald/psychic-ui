@@ -54,39 +54,39 @@ int main(int argc, char **argv) {
             } else if (arg == "--slow-motion") {
                 window->animationSpeed(0.1f); // Ten times slower, to look at animations
             } else {
-                std::cerr << "Unknown argument: " << arg << std::endl;
+                std::cerr << "Unknown argument: " << arg << '\n';
             }
         }
 
         if (!skin.empty() && !window->useSkinSet(skin)) {
-            std::cerr << "Unknown skin set: " << skin << std::endl;
+            std::cerr << "Unknown skin set: " << skin << '\n';
         }
         if (density == "touch" || density == "pointer") {
             window->forceInputMode(density == "touch" ? InputMode::Touch : InputMode::Pointer);
         } else if (!density.empty()) {
-            std::cerr << "Unknown density: " << density << std::endl;
+            std::cerr << "Unknown density: " << density << '\n';
         }
         if (!theme.empty() && !window->useTheme(theme)) {
-            std::cerr << "Unknown theme: " << theme << std::endl;
+            std::cerr << "Unknown theme: " << theme << '\n';
         }
         if (!page.empty() && !window->showPage(page)) {
-            std::cerr << "Unknown page: " << page << std::endl;
+            std::cerr << "Unknown page: " << page << '\n';
         }
         // For screenshots
         if (!open.empty() && !window->openPopup(open)) {
-            std::cerr << "Unknown popup: " << open << std::endl;
+            std::cerr << "Unknown popup: " << open << '\n';
         }
         if (scroll != 0) {
             window->scrollPage(scroll);
         }
         // For screenshots of the keyboard's focus
         if (!keys.empty() && !window->pressKeys(keys)) {
-            std::cerr << "Unknown key in: " << keys << std::endl;
+            std::cerr << "Unknown key in: " << keys << '\n';
         }
 
         app.run();
     } catch (const std::exception &e) {
-        std::cerr << "Caught a fatal error: " << e.what() << std::endl;
+        std::cerr << "Caught a fatal error: " << e.what() << '\n';
         return -1;
     }
 

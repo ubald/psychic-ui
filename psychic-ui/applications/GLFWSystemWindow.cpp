@@ -303,7 +303,7 @@ namespace psychic_ui {
             if (!_warnedAboutDrag) {
                 _warnedAboutDrag = true;
                 std::cerr << "Psychic UI: GLFW can't move windows on Wayland; use system decorations "
-                             "instead of a custom title bar (see Window::supportsDrag)" << std::endl;
+                             "instead of a custom title bar (see Window::supportsDrag)" << '\n';
             }
             return;
         }

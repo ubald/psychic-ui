@@ -8,7 +8,7 @@ int main(int /* argc */, char ** /* argv */) {
         app.open(std::make_shared<psychic_ui_playground::PlaygroundWindow>());
         app.run();
     } catch (const std::exception &e) {
-        std::cerr << "Caught a fatal error: " << e.what() << std::endl;
+        std::cerr << "Caught a fatal error: " << e.what() << '\n';
         return -1;
     }
 
