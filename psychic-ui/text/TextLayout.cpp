@@ -25,7 +25,13 @@ namespace psychic_ui {
             }
         }
 
-        std::size_t built = 0; // Paragraphs built, by every TextLayout
+        /**
+         * The paragraphs every TextLayout has built
+         */
+        std::size_t &built() {
+            static std::size_t count = 0;
+            return count;
+        }
 
         /**
          * Paints a paragraph in one color, whatever the color it was built with: SkParagraph keeps the
@@ -103,7 +109,7 @@ namespace psychic_ui {
     TextLayout::TextLayout() = default;
 
     std::size_t TextLayout::paragraphsBuilt() {
-        return built;
+        return built();
     }
 
     void TextLayout::setText(const icu::UnicodeString &text) {
@@ -138,7 +144,7 @@ namespace psychic_ui {
     }
 
     std::unique_ptr<tl::Paragraph> TextLayout::build() const {
-        ++built;
+        ++built();
         // Line heights are multiples of the font size; every line gets exactly the line height
         const float height = _style.fontSize > 0.0f ? _style.lineHeight / _style.fontSize : 1.0f;
         const std::vector<SkString> families{SkString(_style.fontFamily.c_str())};

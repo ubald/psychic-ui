@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <string>
 #include "psychic-ui/psychic-ui.hpp"
@@ -17,7 +18,7 @@ namespace psychic_ui {
         /**
          * What a press lands on
          */
-        enum class Part { None, Decrement, Increment };
+        enum class Part : std::uint8_t { None, Decrement, Increment };
 
         NumberStepperSkin() : Skin<NumberStepper>() {
             tag("NumberStepperSkin");

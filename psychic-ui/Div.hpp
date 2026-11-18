@@ -237,10 +237,11 @@ namespace psychic_ui {
         //
         //     add<Button>("Toggle").enabled(false).toggle(true).padding(24).direction(Direction::Row);
         //
-        // Read values back from computedStyle(), as of the last style pass.
+        // Read values back from computedStyle(), as of the last style pass. They return `Self &`, written
+        // `decltype(auto)` (of `self`, a `Self &`) so that the macro's text has no operator outside parentheses.
         #define PSYCHIC_UI_X(name, Type, Argument, defaultValue, inherited, layout, animatable) \
             template<class Self> \
-            Self &name(this Self &self, Argument value) { \
+            decltype(auto) name(this Self &self, Argument value) { \
                 static_cast<Div &>(self)._inlineStyle.name(value); \
                 return self; \
             }
