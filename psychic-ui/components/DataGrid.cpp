@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <cassert>
 #include <cctype>
 #include <cstdlib>
 #include <utility>
@@ -56,8 +55,7 @@ namespace psychic_ui {
     }
 
     Div &DataGridRow::cell(const std::size_t column) const {
-        assert(column < _cells.size());
-        return *_cells[column];
+        return *_cells.at(column);
     }
 
     std::string DataGridRow::value(const std::size_t column) const {

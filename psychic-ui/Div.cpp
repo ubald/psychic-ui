@@ -1,7 +1,7 @@
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 #include "include/core/SkBlurTypes.h"
 #include "include/core/SkMaskFilter.h"
 #include "include/core/SkPaint.h"
@@ -196,8 +196,12 @@ namespace psychic_ui {
     }
 
     void Div::insertChild(unsigned int index, std::shared_ptr<Div> child) {
-        assert(child != nullptr);
-        assert(index <= childCount());
+        if (!child) {
+            throw std::invalid_argument("Div: adding no child");
+        }
+        if (index > childCount()) {
+            throw std::out_of_range("Div: adding a child past the end of the children");
+        }
         // The current first/last children may lose their :first-child/:last-child state
         invalidateEndChildrenStyle();
         // Insert before setting the parent so that the child's first style pass sees its index
@@ -208,8 +212,9 @@ namespace psychic_ui {
     }
 
     void Div::remove(const std::shared_ptr<Div> &child) {
-        assert(child != nullptr);
-        remove(*child);
+        if (child) {
+            remove(*child);
+        }
     }
 
     void Div::remove(const Div &child) {
@@ -220,8 +225,7 @@ namespace psychic_ui {
     }
 
     void Div::remove(unsigned int index) {
-        assert(index < childCount());
-        const std::shared_ptr<Div> child = _children[index];
+        const std::shared_ptr<Div> child = _children.at(index);
         _children.erase(_children.cbegin() + index);
         YGNodeRemoveChild(_yogaNode, child->_yogaNode);
         // The new first/last children gain their :first-child/:last-child state
@@ -242,12 +246,10 @@ namespace psychic_ui {
     }
 
     int Div::childIndex(const std::shared_ptr<Div> &child) const {
-        assert(child != nullptr);
         return childIndex(child.get());
     }
 
     int Div::childIndex(const Div *child) const {
-        assert(child != nullptr);
         auto it = std::ranges::find_if(
             _children,
             [child](const auto &c) {
@@ -258,13 +260,11 @@ namespace psychic_ui {
     }
 
     const Div *Div::at(unsigned int index) const {
-        assert(index < childCount());
-        return _children[index].get();
+        return _children.at(index).get();
     }
 
     Div *Div::at(unsigned int index) {
-        assert(index < childCount());
-        return _children[index].get();
+        return _children.at(index).get();
     }
 
     std::vector<std::shared_ptr<Div>> Div::childrenTopmostFirst() const {

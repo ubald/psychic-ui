@@ -161,7 +161,8 @@ namespace psychic_ui {
         }
 
         /**
-         * Add an existing child at index (in document order)
+         * Add an existing child at index (in document order), at most childCount(): std::out_of_range past it,
+         * std::invalid_argument for no child
          * @return The child
          */
         template<class T>
@@ -184,12 +185,12 @@ namespace psychic_ui {
 
         /**
          * Remove a child by index
-         * @param index Index of the child to remove, must be < childCount()
+         * @param index Index of the child to remove, < childCount() (std::out_of_range otherwise)
          */
         void remove(unsigned int index);
 
         /**
-         * Remove a child, does nothing if it isn't one
+         * Remove a child, does nothing if it isn't one (nullptr included)
          */
         void remove(const std::shared_ptr<Div> &child);
         void remove(const Div &child);
@@ -201,14 +202,14 @@ namespace psychic_ui {
 
         /**
          * Get the child at index, in document order (0 is the first child, drawn at the back)
-         * @param index Index of the child to retrieve, must be < childCount()
+         * @param index Index of the child to retrieve, < childCount() (std::out_of_range otherwise)
          * @return Const pointer to the Div at index
          */
         const Div *at(unsigned int index) const;
 
         /**
          * Get the child at index, in document order (0 is the first child, drawn at the back)
-         * @param index Index of the child to retrieve, must be < childCount()
+         * @param index Index of the child to retrieve, < childCount() (std::out_of_range otherwise)
          * @return Pointer to the Div at index
          */
         Div *at(unsigned int index);
