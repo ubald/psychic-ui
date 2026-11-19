@@ -62,7 +62,16 @@ namespace psychic_ui {
      */
     enum class TextOverflow : std::uint8_t { Clip, Ellipsis };
 
-    enum class Cursor : std::uint8_t { Arrow, IBeam, Crosshair, Hand, HResize, VResize };
+    /**
+     * The mouse cursor over a div; each backend maps every value to a system cursor. `Move` shows that a drag can
+     * drop here, `NotAllowed` that it can't
+     */
+    enum class Cursor : std::uint8_t { Arrow, IBeam, Crosshair, Hand, HResize, VResize, Move, NotAllowed };
+
+    /**
+     * How many cursors there are, for the backends' tables: the last cursor's index plus one
+     */
+    inline constexpr std::size_t cursorCount = static_cast<std::size_t>(Cursor::NotAllowed) + 1;
 
     /**
      * Orientation of sliders and scroll bars

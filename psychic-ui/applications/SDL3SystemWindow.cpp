@@ -1,5 +1,6 @@
 #include <chrono>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <memory>
@@ -53,13 +54,9 @@ namespace psychic_ui {
             readFramebufferFormat();
         }
 
-        // In the order of `Cursor`
-        _cursors[static_cast<int>(Cursor::Arrow)]     = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT);
-        _cursors[static_cast<int>(Cursor::IBeam)]     = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_TEXT);
-        _cursors[static_cast<int>(Cursor::Crosshair)] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_CROSSHAIR);
-        _cursors[static_cast<int>(Cursor::Hand)]      = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_POINTER);
-        _cursors[static_cast<int>(Cursor::HResize)]   = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_EW_RESIZE);
-        _cursors[static_cast<int>(Cursor::VResize)]   = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NS_RESIZE);
+        for (std::size_t index = 0; index < _cursors.size(); ++index) {
+            _cursors.at(index) = SDL_CreateSystemCursor(systemCursor(static_cast<Cursor>(index)));
+        }
 
         _window->open(this);
     }
@@ -173,10 +170,36 @@ namespace psychic_ui {
     }
 
     void SDL3SystemWindow::setCursor(Cursor cursor) {
-        const auto index = static_cast<std::size_t>(cursor);
-        if (index < _cursors.size() && _cursors.at(index)) {
-            SDL_SetCursor(_cursors.at(index));
+        if (SDL_Cursor *sdlCursor = this->cursor(cursor)) {
+            SDL_SetCursor(sdlCursor);
         }
+    }
+
+    SDL_Cursor *SDL3SystemWindow::cursor(Cursor cursor) const {
+        const auto index = static_cast<std::size_t>(cursor);
+        return index < _cursors.size() ? _cursors.at(index) : nullptr;
+    }
+
+    SDL_SystemCursor SDL3SystemWindow::systemCursor(Cursor cursor) {
+        switch (cursor) {
+            case Cursor::Arrow:
+                return SDL_SYSTEM_CURSOR_DEFAULT;
+            case Cursor::IBeam:
+                return SDL_SYSTEM_CURSOR_TEXT;
+            case Cursor::Crosshair:
+                return SDL_SYSTEM_CURSOR_CROSSHAIR;
+            case Cursor::Hand:
+                return SDL_SYSTEM_CURSOR_POINTER;
+            case Cursor::HResize:
+                return SDL_SYSTEM_CURSOR_EW_RESIZE;
+            case Cursor::VResize:
+                return SDL_SYSTEM_CURSOR_NS_RESIZE;
+            case Cursor::Move:
+                return SDL_SYSTEM_CURSOR_MOVE;
+            case Cursor::NotAllowed:
+                return SDL_SYSTEM_CURSOR_NOT_ALLOWED;
+        }
+        return SDL_SYSTEM_CURSOR_DEFAULT;
     }
 
     void SDL3SystemWindow::startDrag() {

@@ -1,6 +1,8 @@
 #include <chrono>
 #include <memory>
+#include <cstddef>
 #include <optional>
+#include <set>
 #include <thread>
 #include <vector>
 #include <catch2/catch_approx.hpp>
@@ -33,6 +35,7 @@
 #include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/components/TitleBar.hpp>
 #include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Values.hpp>
 #include <psychic-ui/themes/Theme.hpp>
 #include <psychic-ui/themes/one-dark.hpp>
 #include <psychic-ui/themes/one-light.hpp>
@@ -175,6 +178,26 @@ TEST_CASE("SDL3: the adapter reads the SDL window", "[backend][sdl3]") {
     CHECK(sdl.window->windowWidth() == 800);
     CHECK(sdl.window->windowHeight() == 600);
     CHECK(sdl.adapter->getFramebufferWidth() == 800);
+}
+
+TEST_CASE("SDL3: every cursor has a system cursor of its own", "[backend][sdl3][drag]") {
+    CHECK(SDL3SystemWindow::systemCursor(Cursor::Move) == SDL_SYSTEM_CURSOR_MOVE);
+    CHECK(SDL3SystemWindow::systemCursor(Cursor::NotAllowed) == SDL_SYSTEM_CURSOR_NOT_ALLOWED);
+    std::set<SDL_SystemCursor> systemCursors;
+    for (std::size_t index = 0; index < cursorCount; ++index) {
+        const SDL_SystemCursor systemCursor = SDL3SystemWindow::systemCursor(static_cast<Cursor>(index));
+        CHECK(systemCursor < SDL_SYSTEM_CURSOR_COUNT);
+        systemCursors.insert(systemCursor);
+    }
+    CHECK(systemCursors.size() == cursorCount);
+
+    // The dummy driver has no system cursors to make: the adapter keeps none, and setting one changes nothing
+    const SDL3Fixture sdl;
+    for (std::size_t index = 0; index < cursorCount; ++index) {
+        CAPTURE(index);
+        CHECK(sdl.adapter->cursor(static_cast<Cursor>(index)) == nullptr);
+        sdl.adapter->setCursor(static_cast<Cursor>(index));
+    }
 }
 
 TEST_CASE("SDL3: the theme follows the system's light and dark mode", "[backend][sdl3][theme]") {

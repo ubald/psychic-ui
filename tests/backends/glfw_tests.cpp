@@ -1,5 +1,6 @@
 #include <array>
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -10,6 +11,7 @@
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkSurface.h"
 #include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Values.hpp>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <psychic-ui/applications/GLFWSystemWindow.hpp>
@@ -235,6 +237,19 @@ TEST_CASE("GLFW keys map to Psychic UI keys", "[keyboard][glfw]") {
     CHECK_FALSE(mod.ctrl);
     CHECK_FALSE(mod.alt);
     CHECK(mod.super);
+}
+
+TEST_CASE("GLFW: every cursor has a standard cursor", "[backend][glfw][drag]") {
+    CHECK(GLFWSystemWindow::standardCursorShape(Cursor::Move) == GLFW_RESIZE_ALL_CURSOR);
+    CHECK(GLFWSystemWindow::standardCursorShape(Cursor::NotAllowed) == GLFW_NOT_ALLOWED_CURSOR);
+
+    // The null platform makes every standard cursor
+    GLFWHost host;
+    const GLFWSystemWindow adapter(host.window, host.glfwWindow);
+    for (std::size_t index = 0; index < cursorCount; ++index) {
+        CAPTURE(index);
+        CHECK(adapter.cursor(static_cast<Cursor>(index)) != nullptr);
+    }
 }
 
 TEST_CASE("GLFW: ctrl + scroll zooms instead of scrolling", "[backend][glfw][zoom]") {

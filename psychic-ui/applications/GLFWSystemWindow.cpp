@@ -84,13 +84,9 @@ namespace psychic_ui {
             readFramebufferFormat();
         }
 
-        // In the order of `Cursor`
-        _cursors[static_cast<int>(Cursor::Arrow)]     = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-        _cursors[static_cast<int>(Cursor::IBeam)]     = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
-        _cursors[static_cast<int>(Cursor::Crosshair)] = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
-        _cursors[static_cast<int>(Cursor::Hand)]      = glfwCreateStandardCursor(GLFW_POINTING_HAND_CURSOR);
-        _cursors[static_cast<int>(Cursor::HResize)]   = glfwCreateStandardCursor(GLFW_RESIZE_EW_CURSOR);
-        _cursors[static_cast<int>(Cursor::VResize)]   = glfwCreateStandardCursor(GLFW_RESIZE_NS_CURSOR);
+        for (std::size_t index = 0; index < _cursors.size(); ++index) {
+            _cursors.at(index) = glfwCreateStandardCursor(standardCursorShape(static_cast<Cursor>(index)));
+        }
 
         adapters().push_back(this);
 
@@ -323,9 +319,34 @@ namespace psychic_ui {
     }
 
     void GLFWSystemWindow::setCursor(Cursor cursor) {
-        if (static_cast<std::size_t>(cursor) < _cursors.size()) {
-            glfwSetCursor(_glfwWindow, _cursors.at(static_cast<std::size_t>(cursor)));
+        glfwSetCursor(_glfwWindow, this->cursor(cursor));
+    }
+
+    GLFWcursor *GLFWSystemWindow::cursor(Cursor cursor) const {
+        const auto index = static_cast<std::size_t>(cursor);
+        return index < _cursors.size() ? _cursors.at(index) : nullptr;
+    }
+
+    int GLFWSystemWindow::standardCursorShape(Cursor cursor) {
+        switch (cursor) {
+            case Cursor::Arrow:
+                return GLFW_ARROW_CURSOR;
+            case Cursor::IBeam:
+                return GLFW_IBEAM_CURSOR;
+            case Cursor::Crosshair:
+                return GLFW_CROSSHAIR_CURSOR;
+            case Cursor::Hand:
+                return GLFW_POINTING_HAND_CURSOR;
+            case Cursor::HResize:
+                return GLFW_RESIZE_EW_CURSOR;
+            case Cursor::VResize:
+                return GLFW_RESIZE_NS_CURSOR;
+            case Cursor::Move:
+                return GLFW_RESIZE_ALL_CURSOR;
+            case Cursor::NotAllowed:
+                return GLFW_NOT_ALLOWED_CURSOR;
         }
+        return GLFW_ARROW_CURSOR;
     }
 
     bool GLFWSystemWindow::supportsDrag() const {

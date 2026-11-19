@@ -1,12 +1,14 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
 #include <SDL3/SDL.h>
 #include "../SystemWindow.hpp"
 #include "../WindowScale.hpp"
+#include "../style/Values.hpp"
 
 namespace psychic_ui {
 
@@ -76,6 +78,18 @@ namespace psychic_ui {
         void setMaximized(bool maximized) override;
         void setVisible(bool visible) override;
         void setCursor(Cursor cursor) override;
+
+        /**
+         * The SDL cursor made for `cursor`, null where the platform has none to make (its video driver has no
+         * system cursors); `setCursor` then leaves the cursor as it is
+         */
+        [[nodiscard]] SDL_Cursor *cursor(Cursor cursor) const;
+
+        /**
+         * The SDL system cursor that shows `cursor`
+         */
+        [[nodiscard]] static SDL_SystemCursor systemCursor(Cursor cursor);
+
         void startDrag() override;
         void stopDrag() override;
         [[nodiscard]] bool supportsDrag() const override;
@@ -146,7 +160,7 @@ namespace psychic_ui {
         /**
          * System cursors, indexed by `Cursor`
          */
-        std::array<SDL_Cursor *, 6> _cursors{};
+        std::array<SDL_Cursor *, cursorCount> _cursors{};
 
         /**
          * Where the window was grabbed, relative to its position, while dragging it ourselves

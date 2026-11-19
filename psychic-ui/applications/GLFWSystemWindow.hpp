@@ -1,9 +1,11 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <memory>
 #include "../SystemWindow.hpp"
 #include "../WindowScale.hpp"
+#include "../style/Values.hpp"
 
 struct GLFWwindow;
 struct GLFWcursor;
@@ -69,6 +71,18 @@ namespace psychic_ui {
         void setMaximized(bool maximized) override;
         void setVisible(bool visible) override;
         void setCursor(Cursor cursor) override;
+
+        /**
+         * The GLFW cursor made for `cursor`, null where the platform has none for it (X11 and Wayland may lack
+         * `NotAllowed`); `setCursor` then shows the default arrow
+         */
+        [[nodiscard]] GLFWcursor *cursor(Cursor cursor) const;
+
+        /**
+         * The GLFW standard cursor shape that shows `cursor` (`GLFW_ARROW_CURSOR`...)
+         */
+        [[nodiscard]] static int standardCursorShape(Cursor cursor);
+
         void startDrag() override;
         void stopDrag() override;
         [[nodiscard]] bool supportsDrag() const override;
@@ -103,7 +117,7 @@ namespace psychic_ui {
         /**
          * System cursors, indexed by `Cursor`
          */
-        std::array<GLFWcursor *, 6> _cursors{};
+        std::array<GLFWcursor *, cursorCount> _cursors{};
 
         /**
          * Where the window was grabbed, in window coordinates, while dragging it
