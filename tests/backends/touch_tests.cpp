@@ -1,9 +1,16 @@
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <memory>
+#include <optional>
+#include <string>
 #include <vector>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <psychic-ui/DragEvent.hpp>
+#include <psychic-ui/DragPayload.hpp>
+#include <psychic-ui/DragPreview.hpp>
+#include <psychic-ui/Overlay.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/CheckBox.hpp>
 #include <psychic-ui/components/Range.hpp>
@@ -420,6 +427,166 @@ TEST_CASE("Touch: a third finger is ignored", "[backend][touch][zoom]") {
     CHECK(fixture.zooms[0].scale == Catch::Approx(2.0f));
     CHECK(fixture.zooms[0].windowX == Catch::Approx(100.0f));
     CHECK(fixture.presses == 0);
+}
+
+namespace {
+    /**
+     * A 100 x 100 scrollable list at (0, 0) of ten 40 px drag sources, and a 100 x 100 drop target at (200, 0) that
+     * takes their payloads. The drag signals, the sources' clicks and context requests are logged.
+     */
+    struct TouchDragFixture {
+        std::shared_ptr<TestWindow> window{std::make_shared<TestWindow>()};
+        FakeSystemWindow            systemWindow{window};
+        Div                         &list{window->appContainer().add<Div>()};
+        Div                         &target{window->appContainer().add<Div>()};
+        std::vector<Div *>          items{};
+        std::vector<std::string>    log{};
+        int                         sourceCalls{0};
+        int                         clicks{0};
+        int                         contextRequests{0};
+
+        TouchDragFixture() {
+            list.position(Position::Absolute).left(0).top(0).width(100).height(100).overflow(Overflow::Scroll);
+            for (int i = 0; i < 10; ++i) {
+                auto &item = list.add<Div>().height(40).shrink(0);
+                item.dragSource([this, i](const MouseEvent &) -> std::optional<DragPayload> {
+                    ++sourceCalls;
+                    return DragPayload{.type = "test/chip", .label = "item" + std::to_string(i)};
+                });
+                item.onClick([this] { ++clicks; });
+                item.onContextMenuRequest([this] { ++contextRequests; });
+                item.onDragStart([this, i] { log.push_back("item" + std::to_string(i) + " start"); });
+                item.onDragEnd([this, i](const DragEvent &event) {
+                    log.push_back("item" + std::to_string(i) + " end" + (event.accepted ? " accepted" : ""));
+                });
+                items.push_back(&item);
+            }
+            target.position(Position::Absolute).left(200).top(0).width(100).height(100)
+                  .dropTarget([](const DragPayload &payload) { return payload.type == "test/chip"; })
+                  .onDragEnter([this] { log.emplace_back("target enter"); })
+                  .onDragExit([this] { log.emplace_back("target exit"); })
+                  .onDrop([this](const DragEvent &event) {
+                      log.emplace_back("target drop");
+                      CHECK(event.source == InputMode::Touch);
+                  });
+            systemWindow.layout();
+        }
+
+        /**
+         * A finger held on (50, 20), the first item, until it's a long press
+         */
+        void longPress() const {
+            window->handleTouchPress(50.0f, 20.0f, 1s);
+            window->updateGestures(1s + 500ms);
+        }
+    };
+}
+
+TEST_CASE("a long press on a source starts a touch drag", "[backend][touch][drag]") {
+    TouchDragFixture fixture;
+    fixture.window->handleTouchPress(50.0f, 90.0f, 1s);
+    fixture.window->updateGestures(1s + 499ms);
+    CHECK_FALSE(fixture.window->dragAndDrop().active());
+    CHECK(fixture.sourceCalls == 0);
+
+    fixture.window->updateGestures(1s + 500ms);
+    REQUIRE(fixture.window->dragAndDrop().active());
+    CHECK(fixture.window->dragAndDrop().inputMode() == InputMode::Touch);
+    CHECK(fixture.window->dragAndDrop().source().get() == fixture.items[2]);
+    CHECK(fixture.items[2]->classNames().contains("dragging"));
+    CHECK(fixture.log == std::vector<std::string>{"item2 start"});
+    CHECK(fixture.contextRequests == 0); // The drag takes the long press
+
+    // The preview shows above the finger, centered on it
+    fixture.systemWindow.layout();
+    const DragPreview *preview = fixture.window->dragPreview();
+    REQUIRE(preview != nullptr);
+    int overlayX = 0;
+    int overlayY = 0;
+    fixture.window->overlay().localToGlobal(overlayX, overlayY);
+    CHECK(static_cast<float>(overlayY + preview->y() + preview->getHeight()) <= 90.0f - DragPreview::fingerOffset);
+    CHECK(std::abs(static_cast<float>(overlayX + preview->x()) + (static_cast<float>(preview->getWidth()) / 2.0f) - 50.0f) <= 1.0f);
+
+    // The finger drives it, and drops where it lifts
+    fixture.window->handleTouchMove(150.0f, 40.0f, 1s + 600ms);
+    fixture.window->handleTouchMove(250.0f, 50.0f, 1s + 700ms);
+    CHECK(fixture.log == std::vector<std::string>{"item2 start", "target enter"});
+    CHECK(fixture.target.classNames().contains("drag-over"));
+    CHECK(fixture.list.scrollY() == 0);
+    fixture.window->handleTouchRelease(250.0f, 50.0f, 1s + 800ms);
+    CHECK_FALSE(fixture.window->dragAndDrop().active());
+    CHECK(fixture.log == std::vector<std::string>{"item2 start", "target enter", "target drop", "item2 end accepted"});
+    CHECK(fixture.clicks == 0);
+    CHECK(fixture.contextRequests == 0);
+    fixture.systemWindow.layout();
+    CHECK(fixture.window->dragPreview() == nullptr);
+}
+
+TEST_CASE("a touch swipe on a source pans its scroller; a long press drags", "[backend][touch][drag][scroll]") {
+    const TouchDragFixture fixture;
+    fixture.window->handleTouchPress(50.0f, 90.0f, 1s);
+    fixture.window->handleTouchMove(50.0f, 70.0f, 1s + 10ms);
+    fixture.window->handleTouchMove(50.0f, 50.0f, 1s + 20ms);
+    fixture.window->updateGestures(1s + 600ms); // Panning: no long press
+    fixture.window->handleTouchRelease(50.0f, 50.0f, 1s + 600ms);
+    CHECK(fixture.list.scrollY() < 0);
+    CHECK_FALSE(fixture.window->dragAndDrop().active());
+    CHECK(fixture.sourceCalls == 0);
+    CHECK(fixture.log.empty());
+
+    // A swipe across, which nothing scrolls along, presses and moves, without a drag
+    fixture.window->handleTouchPress(50.0f, 50.0f, 3s);
+    fixture.window->handleTouchMove(90.0f, 52.0f, 3s + 20ms);
+    fixture.window->handleTouchMove(250.0f, 52.0f, 3s + 40ms);
+    CHECK_FALSE(fixture.window->dragAndDrop().active());
+    fixture.window->handleTouchRelease(250.0f, 52.0f, 3s + 60ms);
+    CHECK(fixture.sourceCalls == 0);
+    CHECK(fixture.log.empty());
+
+    // Held, it drags what is under the finger
+    fixture.window->handleTouchPress(50.0f, 50.0f, 5s);
+    fixture.window->updateGestures(5s + 500ms);
+    REQUIRE(fixture.window->dragAndDrop().active());
+    int itemX = 0;
+    int itemY = 0;
+    const Div *source = fixture.window->dragAndDrop().source().get();
+    REQUIRE(source != nullptr);
+    source->localToGlobal(itemX, itemY);
+    CHECK(static_cast<float>(itemY) <= 50.0f);
+    CHECK(static_cast<float>(itemY + source->getHeight()) > 50.0f);
+    fixture.window->handleTouchRelease(50.0f, 50.0f, 5s + 600ms);
+    CHECK_FALSE(fixture.window->dragAndDrop().active());
+}
+
+TEST_CASE("a touch cancel ends the drag without a drop", "[backend][touch][drag]") {
+    TouchDragFixture fixture;
+    fixture.longPress();
+    REQUIRE(fixture.window->dragAndDrop().active());
+    fixture.window->handleTouchMove(250.0f, 50.0f, 1s + 600ms);
+    CHECK(fixture.log == std::vector<std::string>{"item0 start", "target enter"});
+
+    fixture.window->handleTouchCancel(1s + 700ms);
+    CHECK_FALSE(fixture.window->dragAndDrop().active());
+    CHECK(fixture.log == std::vector<std::string>{"item0 start", "target enter", "target exit", "item0 end"});
+    CHECK_FALSE(fixture.target.classNames().contains("drag-over"));
+    CHECK_FALSE(fixture.items[0]->classNames().contains("dragging"));
+    fixture.systemWindow.layout();
+    CHECK(fixture.window->dragPreview() == nullptr);
+
+    // The finger lifting after does nothing more
+    fixture.window->handleTouchRelease(250.0f, 50.0f, 1s + 800ms);
+    CHECK(fixture.log.size() == 4);
+    CHECK(fixture.clicks == 0);
+
+    // A second finger neither pinches nor ends a drag: the first one's lifting does, outside the target
+    fixture.log.clear();
+    fixture.longPress();
+    REQUIRE(fixture.window->dragAndDrop().active());
+    fixture.window->handleTouchPress(80.0f, 80.0f, 1s + 600ms, 1);
+    fixture.window->handleTouchRelease(80.0f, 80.0f, 1s + 700ms, 1);
+    CHECK(fixture.window->dragAndDrop().active());
+    fixture.window->handleTouchRelease(50.0f, 20.0f, 1s + 800ms);
+    CHECK(fixture.log == std::vector<std::string>{"item0 start", "item0 end"});
 }
 
 namespace {

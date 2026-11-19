@@ -160,6 +160,101 @@ public:
 
         // endregion
 
+        // region Drag and drop
+
+        manager->style("DragAndDropPage")
+               .gap(metrics.space(1));
+
+        manager->style("DragAndDropPage .event")
+               .marginBottom(metrics.space(3));
+
+        // The chips in a column beside the two boxes
+        manager->style("DragAndDropPage .stage")
+               .direction(Direction::Row)
+               .alignItems(Align::Start)
+               .gap(metrics.space(6))
+               .marginBottom(metrics.space(6));
+
+        manager->style("DragAndDropPage .chips")
+               .gap(metrics.space(1))
+               .width(160)
+               .shrink(0);
+
+        manager->style("DragAndDropPage .chip")
+               .direction(Direction::Row)
+               .alignItems(Align::Center)
+               .gap(metrics.space(2))
+               .padding(metrics.space(1))
+               .paddingHorizontal(metrics.space(2))
+               .border(metrics.border)
+               .borderColor(palette.line)
+               .borderRadius(metrics.radius.row)
+               .backgroundColor(palette.raised);
+
+        manager->style("DragAndDropPage .chip:hover")
+               .borderColor(palette.lineStrong);
+
+        manager->style("DragAndDropPage .swatch")
+               .width(16)
+               .height(16)
+               .shrink(0)
+               .borderRadius(metrics.radius.check);
+
+        manager->style("DragAndDropPage .boxes")
+               .direction(Direction::Row)
+               .grow(1)
+               .gap(metrics.space(4));
+
+        manager->style("DragAndDropPage .drop-box")
+               .grow(1)
+               .basis(0)
+               .minHeight(160)
+               .gap(metrics.space(2))
+               .padding(metrics.space(4))
+               .border(metrics.border)
+               .borderColor(palette.line)
+               .borderRadius(metrics.radius.surface)
+               .backgroundColor(palette.surface);
+
+        manager->style("DragAndDropPage .dropped")
+               .direction(Direction::Row)
+               .wrap(Wrap::Wrap)
+               .gap(metrics.space(1));
+
+        // The zoomed canvas: a 4 x 4 grid in a clipped frame, the scale in its corner
+        manager->style("DragAndDropPage .zoom-canvas")
+               .height(240)
+               .shrink(0)
+               .marginTop(metrics.space(2))
+               .alignItems(Align::Center)
+               .justify(Justify::Center)
+               .border(metrics.border)
+               .borderColor(palette.line)
+               .borderRadius(metrics.radius.surface)
+               .backgroundColor(palette.surface)
+               .overflow(Overflow::Hidden);
+
+        manager->style("DragAndDropPage .zoom-content")
+               .direction(Direction::Row)
+               .wrap(Wrap::Wrap)
+               .width((4 * 32) + (3 * 4))
+               .gap(4);
+
+        manager->style("DragAndDropPage .cell")
+               .width(32)
+               .height(32)
+               .borderRadius(metrics.radius.check)
+               .backgroundColor(palette.accentSoft)
+               .border(metrics.border)
+               .borderColor(palette.accent);
+
+        manager->style("DragAndDropPage .scale")
+               .position(Position::Absolute)
+               .right(metrics.space(2))
+               .bottom(metrics.space(2));
+
+        // endregion
+
         // region Motion
 
         manager->style("Motion")

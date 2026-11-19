@@ -349,6 +349,8 @@ set(SOURCE_FILES
     psychic-ui/DragAndDrop.hpp
     psychic-ui/DragEvent.hpp
     psychic-ui/DragPayload.hpp
+    psychic-ui/DragPreview.cpp
+    psychic-ui/DragPreview.hpp
     psychic-ui/Measure.hpp
     psychic-ui/Overlay.cpp
     psychic-ui/Overlay.hpp

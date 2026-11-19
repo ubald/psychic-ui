@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <any>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
@@ -10,6 +12,10 @@
 #include <psychic-ui/DragAndDrop.hpp>
 #include <psychic-ui/DragEvent.hpp>
 #include <psychic-ui/DragPayload.hpp>
+#include <psychic-ui/DragPreview.hpp>
+#include <psychic-ui/Overlay.hpp>
+#include <psychic-ui/Popup.hpp>
+#include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/Dialog.hpp>
 #include <psychic-ui/psychic-ui.hpp>
 #include <psychic-ui/style/Values.hpp>
@@ -244,6 +250,7 @@ namespace {
         std::vector<std::string>    carried{};  // Each event's payload's data
         int                         sourceCalls{0};
         int                         clicks{0};
+        std::shared_ptr<Div>        previewDiv{}; // The sources' payloads' preview, when set
 
         static Div &box(Div &parent, float left, float top, float width, float height) {
             return parent.add<Div>().position(Position::Absolute).left(left).top(top).width(width).height(height);
@@ -253,7 +260,7 @@ namespace {
             auto &item = list->add<Div>().height(40).shrink(0);
             item.dragSource([this, name](const MouseEvent &) -> std::optional<DragPayload> {
                 ++sourceCalls;
-                return DragPayload{.type = "test/chip", .data = std::any(name), .label = name};
+                return DragPayload{.type = "test/chip", .data = std::any(name), .label = name, .preview = previewDiv};
             });
             item.onClick([this] { ++clicks; });
             listen(item, name);
@@ -569,4 +576,115 @@ TEST_CASE("hover doesn't change under a drag", "[drag]") {
     CHECK(drag.cold->mouseOver());
     CHECK_FALSE(drag.item0->mouseOver());
     CHECK(coldEntered == 1);
+}
+
+namespace {
+    /**
+     * The drag previews in the window's overlay, open or leaving
+     */
+    std::size_t previews(const TestWindow &window) {
+        return static_cast<std::size_t>(std::ranges::count_if(window.overlay().allPopups(), [](const auto &popup) {
+            return dynamic_cast<const DragPreview *>(popup.get()) != nullptr;
+        }));
+    }
+
+    /**
+     * Where the popup is, in window coordinates
+     */
+    std::pair<float, float> placed(const TestWindow &window, const Popup &popup) {
+        int x = 0;
+        int y = 0;
+        window.overlay().localToGlobal(x, y);
+        return {static_cast<float>(x + popup.x()), static_cast<float>(y + popup.y())};
+    }
+}
+
+TEST_CASE("the preview follows the pointer and closes at the end", "[drag]") {
+    Dragging drag;
+    CHECK(drag.window->dragPreview() == nullptr);
+    drag.startDrag();
+    drag.sys.layout();
+
+    const DragPreview *preview = drag.window->dragPreview();
+    REQUIRE(preview != nullptr);
+    CHECK(preview->isOpen());
+    CHECK(previews(*drag.window) == 1);
+    CHECK_FALSE(preview->mouseEnabled());
+    CHECK_FALSE(preview->mouseChildren());
+    // The payload's label, beside the pointer
+    REQUIRE(preview->label() != nullptr);
+    CHECK(preview->label()->text() == "item0");
+    CHECK(preview->content() == preview->label());
+    CHECK(placed(*drag.window, *preview) == std::pair{60.0f + DragPreview::pointerOffset, 20.0f + DragPreview::pointerOffset});
+
+    drag.move(300, 200);
+    drag.sys.layout();
+    CHECK(drag.window->dragPreview() == preview);
+    CHECK(placed(*drag.window, *preview) == std::pair{300.0f + DragPreview::pointerOffset, 200.0f + DragPreview::pointerOffset});
+
+    drag.release(300, 200);
+    drag.sys.layout();
+    CHECK(drag.window->dragPreview() == nullptr);
+    CHECK(previews(*drag.window) == 0);
+
+    // A cancelled drag closes it too
+    drag.startDrag();
+    drag.sys.layout();
+    CHECK(previews(*drag.window) == 1);
+    drag.window->cancelDrag();
+    drag.sys.layout();
+    CHECK(drag.window->dragPreview() == nullptr);
+    CHECK(previews(*drag.window) == 0);
+}
+
+TEST_CASE("the preview shows the payload's own div when given", "[drag]") {
+    Dragging drag;
+    drag.previewDiv = std::make_shared<Div>();
+    drag.previewDiv->size(30, 20);
+    drag.startDrag();
+    drag.sys.layout();
+
+    const DragPreview *preview = drag.window->dragPreview();
+    REQUIRE(preview != nullptr);
+    CHECK(preview->label() == nullptr);
+    CHECK(preview->content() == drag.previewDiv.get());
+    CHECK(drag.previewDiv->parent() == preview);
+    CHECK(preview->children().size() == 1);
+
+    drag.release(60, 20);
+    drag.sys.layout();
+    CHECK(previews(*drag.window) == 0);
+}
+
+TEST_CASE("a pen drags like a mouse", "[drag]") {
+    Dragging drag;
+    const auto pen = [&drag](float x, float y, std::optional<bool> down) {
+        MouseEvent event{.x = x, .y = y};
+        event.source = InputMode::Pen;
+        if (down) {
+            event.button = MouseButton::LEFT;
+            event.down   = *down;
+            drag.window->handleMouseButtonChange(event);
+        } else {
+            drag.window->handleMouseMove(event, false);
+        }
+    };
+    pen(50, 20, true);
+    pen(53, 20, std::nullopt); // Not past the threshold
+    CHECK_FALSE(drag.window->dragAndDrop().active());
+    pen(60, 20, std::nullopt);
+    REQUIRE(drag.window->dragAndDrop().active());
+    CHECK(drag.window->dragAndDrop().inputMode() == InputMode::Pen);
+    drag.sys.layout();
+    REQUIRE(drag.window->dragPreview() != nullptr);
+    CHECK(placed(*drag.window, *drag.window->dragPreview())
+          == std::pair{60.0f + DragPreview::pointerOffset, 20.0f + DragPreview::pointerOffset});
+
+    pen(220, 30, std::nullopt);
+    pen(220, 30, false);
+    CHECK(drag.log == std::vector<std::string>{
+        "item0 start", "warm enter", "warm move", "warm move", "warm drop", "item0 end accepted"
+    });
+    CHECK(drag.events.back().source == InputMode::Pen);
+    CHECK(drag.clicks == 0);
 }

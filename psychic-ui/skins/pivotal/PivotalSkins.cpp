@@ -219,6 +219,19 @@ namespace psychic_ui {
             .outlineWidth(metrics.focusRing)
             .backgroundColor(palette.accentSoft);
 
+        // What a drag carries, at the pointer, a little see-through: its label on a small floating chip (a payload's
+        // own preview div brings its own look)
+        rule("DragPreview").opacity(0.9f);
+        floating(text(rule("DragPreview .label"), t.xs, t.medium, s), theme.elevation)
+            .paddingVertical(metrics.space(1))
+            .paddingHorizontal(metrics.space(2))
+            .maxWidth(metrics.popoverWidth)
+            .border(metrics.border)
+            .borderColor(palette.accent)
+            .borderRadius(r.row)
+            .backgroundColor(palette.overlay)
+            .color(palette.text);
+
         // endregion
 
         // region Window

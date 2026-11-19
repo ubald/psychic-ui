@@ -38,6 +38,7 @@
 #include "DragAndDrop.hpp"
 #include "DragEvent.hpp"
 #include "DragPayload.hpp"
+#include "DragPreview.hpp"
 #include "Overlay.hpp"
 #include "Popup.hpp"
 #include "SystemWindow.hpp"
@@ -1130,6 +1131,28 @@ namespace psychic_ui {
         }
     }
 
+    bool Window::touchDragStart() {
+        // Where the finger landed, through hit slop as a press would be
+        float x = _touchStartX;
+        float y = _touchStartY;
+        hitSlopTarget(_touchStartX, _touchStartY, x, y);
+        dragArm(touchEvent(x, y, MouseButton::LEFT, true));
+        if (_dragAndDrop.state() != DragAndDrop::State::Armed) {
+            return false;
+        }
+        if (!_dragAndDrop.start()) {
+            _dragAndDrop.cancel();
+            return false; // The source refused: the long press is the context press
+        }
+        _touchPhase = TouchPhase::Dragging;
+        _dragAndDrop.move(_touchX, _touchY);
+        dragBegin();
+        if (_dragAndDrop.active()) {
+            dragOver(_touchX, _touchY);
+        }
+        return true;
+    }
+
     void Window::touchAbort() {
         // A finger's drag ends with its gesture, without a drop
         if (_dragAndDrop.state() != DragAndDrop::State::Idle && _dragAndDrop.inputMode() == InputMode::Touch) {
@@ -1263,6 +1286,12 @@ namespace psychic_ui {
                 handleMouseMove(touchEvent(x, y), false);
                 break;
 
+            case TouchPhase::Dragging:
+                if (!dragMove(x, y)) {
+                    _touchPhase = TouchPhase::Ignored; // Cancelled meanwhile: nothing more until it lifts
+                }
+                break;
+
             case TouchPhase::Panning:
                 panBy(dx, dy);
                 if (elapsed > 0) {
@@ -1306,6 +1335,10 @@ namespace psychic_ui {
                 handleMouseButtonChange(touchEvent(_touchX, _touchY, _touchButton, false));
                 break;
 
+            case TouchPhase::Dragging:
+                dragRelease(_touchX, _touchY); // Drops where it lifts
+                break;
+
             case TouchPhase::Panning:
                 if (time - _touchTime <= flingRestDelay
                     && std::hypot(_panVelocityX, _panVelocityY) >= flingMinVelocity) {
@@ -1333,8 +1366,9 @@ namespace psychic_ui {
     }
 
     void Window::updateGestures(const GestureTime now) {
-        if (_touchPhase == TouchPhase::Pending && now - _touchStart >= longPressDelay) {
-            // A long press: the context press, a right button press, released when the finger lifts
+        if (_touchPhase == TouchPhase::Pending && now - _touchStart >= longPressDelay && !touchDragStart()) {
+            // A long press elsewhere than on a drag source: the context press, a right button press, released when
+            // the finger lifts
             touchPressButton(MouseButton::RIGHT);
         }
         if (_touchPhase == TouchPhase::Pinching) {
@@ -1475,10 +1509,19 @@ namespace psychic_ui {
             }
         }
 
+        // What it carries shows at the pointer
+        _dragPreview = std::make_shared<DragPreview>(*payload);
+        _dragPreview->pointer(_dragAndDrop.windowX(), _dragAndDrop.windowY(), _dragAndDrop.inputMode());
+        _overlay->open(_dragPreview);
+
         source->dragStarted.emit(dragEvent(*source, *payload));
     }
 
     void Window::dragOver(const float x, const float y) {
+        if (_dragPreview) {
+            _dragPreview->pointer(x, y, _dragAndDrop.inputMode());
+            requestFrame();
+        }
         const auto         payload = _dragPayload;
         std::vector<Div *> path{};
         hitPath(*_overlay, this, x, y, path);
@@ -1531,6 +1574,9 @@ namespace psychic_ui {
             source->removeClassName(draggingClass);
         }
         setCursor(_cursorBeforeDrag);
+        if (const auto preview = std::exchange(_dragPreview, nullptr)) {
+            preview->close();
+        }
 
         bool accepted = false;
         if (target) {

@@ -30,6 +30,7 @@ namespace psychic_ui {
     class Toast;
     struct ToastOptions;
     class ToastStack;
+    class DragPreview;
     class Tooltip;
 
     class Window : public Div {
@@ -372,7 +373,8 @@ namespace psychic_ui {
         static constexpr float touchSlop = 8.0f;
 
         /**
-         * How long a finger stays down, within the slop, to raise a context press (a right button press)
+         * How long a finger stays down, within the slop, to start a drag from a drag source, or elsewhere to raise a
+         * context press (a right button press)
          */
         static constexpr GestureTime longPressDelay = std::chrono::milliseconds(500);
 
@@ -395,12 +397,13 @@ namespace psychic_ui {
          * It makes mouse events of the first: a tap clicks where the finger landed; past `touchSlop` it pans
          * the scrollable div under the finger when it can scroll along the drag's main axis (with kinetic
          * scrolling after), otherwise it presses where the finger landed and drags; held `longPressDelay`
-         * without moving is a right button press, released when the finger lifts. A finger landing while
-         * kinetic scrolling runs only stops it.
-         * A second finger ends the first one's gesture without a click, a tap or a fling, and both pinch: the
-         * next `updateGestures` after they moved emits a `ZoomEvent` around their center (`scale` their
-         * distance's change, `pan` their center's move), one for all the moves in between. Lifting either ends
-         * the pinch, and the other does nothing until it lifts. Other fingers are ignored.
+         * without moving, it starts a drag from the drag source where it landed (see `dragAndDrop`), which then
+         * follows the finger and drops where it lifts, or elsewhere it is a right button press, released when
+         * the finger lifts. A finger landing while kinetic scrolling runs only stops it.
+         * A second finger ends the first one's gesture without a click, a tap or a fling (except a drag, which
+         * ignores it), and both pinch: the next `updateGestures` after they moved emits a `ZoomEvent` around their
+         * center (`scale` their distance's change, `pan` their center's move), one for all the moves in between.
+         * Lifting either ends the pinch, and the other does nothing until it lifts. Other fingers are ignored.
          */
         void handleTouchPress(float x, float y, GestureTime time, std::uint64_t finger = 0);
         void handleTouchMove(float x, float y, GestureTime time, std::uint64_t finger = 0);
@@ -430,13 +433,20 @@ namespace psychic_ui {
 
         /**
          * The drag session: a left press on a div with a `dragSource` (or inside it, without a deeper one) arms it, a
-         * move past `DragAndDrop::dragThreshold` starts the drag. While it lasts, the session takes every move and the
+         * move past `DragAndDrop::dragThreshold` starts the drag; a finger starts it by a long press instead
+         * (`longPressDelay`), and drops where it lifts (a touch cancel cancels). A `DragPreview` shows the payload
+         * at the pointer while it lasts (`dragPreview`). While it lasts, the session takes every move and the
          * release before the divs do (no hover changes, no `mouseMoved`, no click from the press): the deepest div
          * under the pointer whose `dropTarget` accepts the payload gets `dragEntered`, `dragMoved` and `dragExited`,
          * and `dropped` on the release, then the source gets `dragEnded`. Escape and the window losing the focus
          * cancel it.
          */
         const DragAndDrop &dragAndDrop() const { return _dragAndDrop; }
+
+        /**
+         * What the live drag shows under the pointer (in the overlay), or nullptr
+         */
+        DragPreview *dragPreview() const { return _dragPreview.get(); }
 
         /**
          * Ends the drag without a drop (the target under the pointer gets `dragExited`, the source `dragEnded`), or
@@ -865,6 +875,7 @@ namespace psychic_ui {
             Pressing, // Pressing a mouse button (_touchButton): a drag or a long press
             Panning,  // Scrolling _panTarget
             Pinching, // Two fingers down: zooming
+            Dragging, // Dragging from a drag source, since a long press on it
             Ignored   // Stopped kinetic scrolling, or left of a pinch: nothing more until it lifts
         };
 
@@ -893,6 +904,12 @@ namespace psychic_ui {
 
         void touchPressButton(MouseButton button);
         void touchEnd();
+
+        /**
+         * A long press: starts a drag from the drag source where the finger landed
+         * @return whether a drag started, which then takes the finger's moves and its lifting
+         */
+        bool touchDragStart();
 
         /**
          * End the first finger's gesture without a click, a tap or a fling, the finger still down: a press is
@@ -938,6 +955,7 @@ namespace psychic_ui {
         std::vector<std::weak_ptr<Div>>   _dropTargets{};   // With the `drop-target` class
         Cursor                            _cursorBeforeDrag{Cursor::Arrow};
         bool                              _dragClickCancelled{false}; // The left press started a drag: no click
+        std::shared_ptr<DragPreview>      _dragPreview{};   // Open while a drag lasts
 
         /**
          * Arms the session for a left press on the deepest drag source under it

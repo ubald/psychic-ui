@@ -35,6 +35,7 @@
 #include "Inputs.hpp"
 #include "Popups.hpp"
 #include "Motion.hpp"
+#include "DragAndDrop.hpp"
 #include "../demo-stylesheet.hpp"
 
 namespace psychic_ui {
@@ -180,6 +181,7 @@ namespace psychic_ui {
             {"Inputs", "settings", page([] { return std::make_shared<Inputs>(); })}, // In Controls, after Text Input
             {"Lists", "list", page([] { return std::make_shared<Lists>(); })},
             {"Popups", "layout", page([] { return std::make_shared<Popups>(); })},
+            {"Drag and Drop", "move", page([] { return std::make_shared<DragAndDropPage>(); })},
         };
 
         auto &controls = sidebar.section("Controls");
