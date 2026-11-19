@@ -229,6 +229,7 @@ set(SOURCE_FILES
     psychic-ui/components/Tone.hpp
     psychic-ui/components/WindowControls.cpp
     psychic-ui/components/WindowControls.hpp
+    psychic-ui/components/WindowControlsStyle.hpp
     psychic-ui/components/ToolBar.cpp
     psychic-ui/components/ToolBar.hpp
     psychic-ui/components/ColorSwatches.cpp

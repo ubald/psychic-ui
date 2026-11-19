@@ -9,6 +9,7 @@
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include <psychic-ui/components/Sidebar.hpp>
+#include <psychic-ui/components/WindowControlsStyle.hpp>
 #include <psychic-ui/psychic-ui.hpp>
 #include <psychic-ui/style/Length.hpp>
 #include <psychic-ui/style/Values.hpp>
@@ -223,7 +224,9 @@ TEST_CASE("AppShell: the sidebar is one Tab stop, the current item else the firs
 }
 
 TEST_CASE("AppShell: the sidebar's header moves the window, its controls and the items don't", "[components][appshell][drag]") {
-    const Shell s;
+    Shell s;
+    s.shell.sidebar().header().controls().controlsStyle(WindowControlsStyle::Mac); // Whatever the platform
+    s.layout();
     const SidebarHeader &header = s.shell.sidebar().header();
     int x = 0;
     int y = 0;
@@ -232,7 +235,7 @@ TEST_CASE("AppShell: the sidebar's header moves the window, its controls and the
 
     const auto [closeX, closeY] = Shell::center(header.controls().closeButton());
     CHECK_FALSE(s.window->isDragArea(closeX, closeY));
-    // Grey until the pointer is over them
+    // macOS's dots, grey until the pointer is over them
     CHECK(header.controls().closeButton().computedStyle().backgroundColor() == s.theme.palette.lineStrong);
     CHECK(header.controls().maximizeButton().computedStyle().backgroundColor() == s.theme.palette.lineStrong);
 

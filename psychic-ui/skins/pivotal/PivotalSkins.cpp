@@ -235,10 +235,11 @@ namespace psychic_ui {
             .color(palette.text)
             .grow(1);
 
-        // The three dots: neutral at rest, all three in the theme's semantic colors while the pointer is over the group
-        rule("WindowControls").gap(7);
+        // macOS's three dots: neutral at rest, all three in the theme's semantic colors while the pointer is over the
+        // group
+        rule("WindowControls.mac").gap(7);
 
-        rule("WindowControls Button")
+        rule("WindowControls.mac Button")
             .skin("title-bar")
             .width(11)
             .height(11)
@@ -247,9 +248,9 @@ namespace psychic_ui {
             .backgroundColor(palette.lineStrong)
             .transition({P::backgroundColor, P::outlineColor}, quick); // Its skin paints the component's color
 
-        rule("WindowControls:hover Button.close").backgroundColor(palette.danger);
-        rule("WindowControls:hover Button.minimize").backgroundColor(palette.warning);
-        rule("WindowControls:hover Button.maximize").backgroundColor(palette.success);
+        rule("WindowControls.mac:hover Button.close").backgroundColor(palette.danger);
+        rule("WindowControls.mac:hover Button.minimize").backgroundColor(palette.warning);
+        rule("WindowControls.mac:hover Button.maximize").backgroundColor(palette.success);
 
         // endregion
 

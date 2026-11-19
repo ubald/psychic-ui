@@ -12,6 +12,7 @@
 #include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/components/ToolBar.hpp>
 #include <psychic-ui/components/WindowControls.hpp>
+#include <psychic-ui/components/WindowControlsStyle.hpp>
 #include <psychic-ui/psychic-ui.hpp>
 #include <psychic-ui/style/Values.hpp>
 #include <psychic-ui/themes/Theme.hpp>
@@ -277,9 +278,9 @@ TEST_CASE("Pivotal skins: menus float on the theme's two-layer shadow", "[skins]
     CHECK(menu.shadow2Blur() == fixture.theme.elevation.overlayContact.blur);
 }
 
-TEST_CASE("Pivotal skins: the window controls are grey until the pointer is over them", "[skins][pivotal][window-controls]") {
+TEST_CASE("Pivotal skins: macOS's window controls are grey until the pointer is over them", "[skins][pivotal][window-controls]") {
     Fixture fixture;
-    auto &controls = fixture.window->appContainer().add<WindowControls>();
+    auto &controls = fixture.window->appContainer().add<WindowControls>().controlsStyle(WindowControlsStyle::Mac);
     fixture.layout();
     const std::array dots{&controls.closeButton(), &controls.minimizeButton(), &controls.maximizeButton()};
     const Palette &palette = fixture.theme.palette;
