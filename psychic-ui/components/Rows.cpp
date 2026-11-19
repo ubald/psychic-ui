@@ -23,11 +23,11 @@ namespace psychic_ui {
             .shrink(0);
 
         clicked.subscribe(
-            [this]() {
+            [this](const MouseEvent &click) {
                 if (!_enabled) {
                     return;
                 }
-                if (selectsOnClick()) {
+                if (selectsOnClick(click)) {
                     updateSelected(true);
                 } else if (_owner) {
                     _owner->updateTabStop(this); // Tab goes on from here, until the focus leaves the group
@@ -198,7 +198,7 @@ namespace psychic_ui {
 
     void RowGroup::updateTabStop(SelectableRow *row) {
         if (!row) {
-            row = _selection;
+            row = restingTabStop();
         }
         if (!row) {
             const auto all = rows();

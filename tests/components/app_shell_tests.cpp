@@ -289,3 +289,171 @@ TEST_CASE("AppShell: a page's scroller ends with the page panel, so its content'
     s.layout();
     CHECK(scroller.scrollY() == static_cast<int>(scroller.getHeight()) - (24 + 2000 + 24));
 }
+
+namespace {
+    // A session item holding two banks, then a patch item, in a section after the show's
+    struct Nested : Shell {
+        SidebarItem *session{nullptr};
+        SidebarItem *bank1{nullptr};
+        SidebarItem *bank2{nullptr};
+        SidebarItem *patch{nullptr};
+
+        Nested() {
+            auto &section = shell.sidebar().section("Session");
+            session       = &section.item("Session", "layers");
+            bank1         = &session->item("Bank 1", "list");
+            bank2         = &session->item("Bank 2", "list");
+            patch         = &section.item("Patch", "settings");
+            layout();
+        }
+    };
+}
+
+TEST_CASE("Sidebar: items nested under an item, the parent marked while one is current", "[components][appshell][sidebar]") {
+    Nested s;
+    Sidebar &sidebar = s.shell.sidebar();
+    CHECK(sidebar.items() == std::vector{s.inbox, s.cues, s.fixtures, s.session, s.bank1, s.bank2, s.patch});
+    CHECK(s.session->items() == std::vector{s.bank1, s.bank2});
+    CHECK(s.bank1->parentItem() == s.session);
+    CHECK(s.session->parentItem() == nullptr);
+
+    // Collapsed at first: the banks don't show
+    CHECK_FALSE(s.session->expanded());
+    CHECK(s.bank1->getHeight() == 0);
+
+    // A bank made current: the session expands and says it holds the current item
+    std::vector<SidebarItem *> changes{};
+    sidebar.onChange([&](SidebarItem *item) { changes.push_back(item); });
+    sidebar.select(s.bank2);
+    s.layout();
+    CHECK(sidebar.current() == s.bank2);
+    CHECK_FALSE(s.session->current());
+    CHECK(s.session->expanded());
+    CHECK(s.session->classNames().contains("has-current"));
+    CHECK_FALSE(s.session->classNames().contains("current"));
+    CHECK(s.session->computedStyle().color() == s.theme.palette.text);
+    CHECK(s.bank2->getHeight() == s.theme.metrics.pointer.rowSm);
+
+    // Indented by the rules
+    const auto [sessionX, sessionY] = Shell::origin(*s.session);
+    const auto [bankX, bankY]       = Shell::origin(*s.bank2);
+    CHECK(bankX > sessionX);
+    CHECK(bankY > sessionY);
+
+    // Another item current: the session isn't marked any more, and stays expanded
+    s.click(*s.patch);
+    CHECK(s.patch->current());
+    CHECK_FALSE(s.session->classNames().contains("has-current"));
+    CHECK(s.session->expanded());
+    s.click(*s.bank1);
+    CHECK(s.bank1->current());
+    CHECK(s.session->classNames().contains("has-current"));
+    CHECK(changes == std::vector<SidebarItem *>{s.bank2, s.patch, s.bank1});
+
+    // Several levels: every parent up the line is marked
+    auto &deep = s.bank1->item("Deep");
+    sidebar.select(&deep);
+    s.layout();
+    CHECK(s.bank1->classNames().contains("has-current"));
+    CHECK(s.session->classNames().contains("has-current"));
+    CHECK(s.bank1->expanded());
+}
+
+TEST_CASE("Sidebar: collapsing hides the nested items, expanding shows them", "[components][appshell][sidebar]") {
+    Nested s;
+    Sidebar &sidebar = s.shell.sidebar();
+    s.session->expanded(true);
+    s.layout();
+    CHECK(s.session->classNames().contains("expanded"));
+    CHECK(s.bank1->getHeight() == s.theme.metrics.pointer.rowSm);
+    const auto [patchX, patchY] = Shell::origin(*s.patch);
+
+    s.session->expanded(false);
+    s.layout();
+    CHECK_FALSE(s.session->classNames().contains("expanded"));
+    CHECK(s.bank1->getHeight() == 0);
+    CHECK(s.bank2->getHeight() == 0);
+    const auto [patchX2, patchY2] = Shell::origin(*s.patch);
+    CHECK(patchY2 < patchY); // The items after move up
+    s.session->toggle();
+    s.layout();
+    CHECK(s.session->expanded());
+    CHECK(s.bank1->getHeight() == s.theme.metrics.pointer.rowSm);
+
+    // A click on the chevron expands or collapses without making the parent current
+    Div &chevron = *s.session->at(s.session->childCount() - 1);
+    REQUIRE(chevron.classNames().contains("disclosure"));
+    s.click(chevron);
+    CHECK_FALSE(s.session->expanded());
+    CHECK(sidebar.current() == nullptr);
+    s.click(chevron);
+    CHECK(s.session->expanded());
+    CHECK(sidebar.current() == nullptr);
+    s.click(*s.session); // On the rest of the row: current
+    CHECK(sidebar.current() == s.session);
+    CHECK(s.session->expanded());
+
+    // A collapsed parent keeps its current child current, and is the Tab stop in its place
+    sidebar.select(s.bank2);
+    s.layout();
+    s.session->expanded(false);
+    s.layout();
+    CHECK(sidebar.current() == s.bank2);
+    CHECK(s.session->classNames().contains("has-current"));
+    CHECK(s.session->focusEnabled());
+    CHECK_FALSE(s.bank2->focusEnabled());
+
+    // Collapsing the parent of the focused item focuses the parent
+    s.session->expanded(true);
+    s.layout();
+    s.window->requestFocus(s.bank1, true);
+    s.session->expanded(false);
+    s.layout();
+    CHECK(s.session->hasFocus());
+}
+
+TEST_CASE("Sidebar: the keyboard walks the nested items", "[components][appshell][sidebar]") {
+    Nested s;
+    Sidebar &sidebar = s.shell.sidebar();
+    s.window->requestFocus(s.fixtures, true);
+
+    // Collapsed: the arrows skip the banks
+    s.key(Key::DOWN);
+    CHECK(s.session->hasFocus());
+    s.key(Key::DOWN);
+    CHECK(s.patch->hasFocus());
+    s.key(Key::UP);
+    CHECK(s.session->hasFocus());
+
+    // Right expands, then goes down into the banks with Down
+    s.key(Key::RIGHT);
+    CHECK(s.session->expanded());
+    CHECK(s.session->hasFocus());
+    s.key(Key::DOWN);
+    CHECK(s.bank1->hasFocus());
+    s.key(Key::DOWN);
+    CHECK(s.bank2->hasFocus());
+    s.key(Key::DOWN);
+    CHECK(s.patch->hasFocus());
+    s.key(Key::UP);
+    CHECK(s.bank2->hasFocus());
+    s.key(Key::END);
+    CHECK(s.patch->hasFocus());
+    s.key(Key::HOME);
+    CHECK(s.inbox->hasFocus());
+
+    // Enter makes a nested item current
+    s.window->requestFocus(s.bank2, true);
+    s.key(Key::ENTER);
+    CHECK(sidebar.current() == s.bank2);
+
+    // Left on a nested item goes to its parent, then collapses it
+    s.key(Key::LEFT);
+    CHECK(s.session->hasFocus());
+    CHECK(s.session->expanded());
+    s.key(Key::LEFT);
+    CHECK_FALSE(s.session->expanded());
+    s.key(Key::DOWN);
+    CHECK(s.patch->hasFocus());
+    CHECK(sidebar.current() == s.bank2);
+}

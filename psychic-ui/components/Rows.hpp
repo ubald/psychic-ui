@@ -51,9 +51,10 @@ namespace psychic_ui {
         void added() override;
 
         /**
-         * Whether a click selects it (true): a row that acts instead (a sidebar item opening a menu) says no
+         * Whether this click selects it (true): a row that acts instead (a sidebar item opening a menu, or the
+         * click is on its chevron) says no
          */
-        virtual bool selectsOnClick() const { return true; }
+        virtual bool selectsOnClick(const MouseEvent & /*click*/) const { return true; }
 
         /**
          * The class it has while it is the selection: `selected` (a sidebar's item says `current`)
@@ -159,9 +160,15 @@ namespace psychic_ui {
         void rowAdded(SelectableRow *row);
 
         /**
-         * Put a single row in the Tab order: this one, else the selection, else the first row
+         * Put a single row in the Tab order: this one, else `restingTabStop()`, else the first row
          */
         void updateTabStop(SelectableRow *row = nullptr);
+
+        /**
+         * The row the Tab stop goes back to: the selection (a sidebar's collapsed parent in place of its current
+         * item, which it hides)
+         */
+        virtual SelectableRow *restingTabStop() const { return _selection; }
 
         /**
          * A row is going away: it can't stay selected

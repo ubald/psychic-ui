@@ -1108,6 +1108,17 @@ namespace psychic_ui {
             .color(palette.text)
             .backgroundColor(palette.raised);
         rule("SidebarItem.current .icon").color(palette.accent);
+
+        // Nested items: their icons under their parent's label, a chevron at the end of the parent, which stays lit
+        // while one of them is current
+        rule("SidebarItem .disclosure")
+            .iconSize(iconSm)
+            .color(palette.textMuted);
+        rule("Sidebar .children")
+            .gap(metrics.space(0.5f))
+            .paddingLeft(iconMd + metrics.space(2));
+        rule("SidebarItem.has-current").color(palette.text);
+        rule("SidebarItem.has-current .icon").color(palette.accent);
         focusRing(rule("SidebarItem:focus-visible"), palette, metrics).outlineOffset(-metrics.focusRing);
 
         // A page's title bar: the sidebar header's height, so that their lines meet
