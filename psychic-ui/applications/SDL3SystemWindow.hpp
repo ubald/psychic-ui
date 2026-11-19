@@ -6,6 +6,7 @@
 #include <vector>
 #include <SDL3/SDL.h>
 #include "../SystemWindow.hpp"
+#include "../WindowScale.hpp"
 
 namespace psychic_ui {
 
@@ -35,6 +36,13 @@ namespace psychic_ui {
      *
      * The adapter never creates, shows, destroys or polls anything of the host's: destroy it before
      * the SDL window and the GL context.
+     *
+     * Sizes and input are in logical units: SDL's window units scaled by the display scale they don't
+     * already carry (`WindowScale`). On macOS and Wayland, with `SDL_WINDOW_HIGH_PIXEL_DENSITY`, they are
+     * SDL's window units; on Windows and X11, where those are pixels, they are pixels divided by the user's
+     * scale. A host that creates its window on Windows makes it as many pixels as `readWindowScale` says
+     * its logical size is (`SDL3Application::open` does). Positions (`setPosition`, `windowMoved`) stay
+     * in SDL's desktop coordinates.
      */
     class SDL3SystemWindow : public SystemWindow {
     public:
@@ -111,10 +119,15 @@ namespace psychic_ui {
         bool installHitTest();
 
         /**
-         * What a point of the window (window coordinates) is for: moving the window on the `Window`'s
+         * What a point of the window (SDL's window coordinates, as SDL asks) is for: moving the window on the `Window`'s
          * drag areas, resizing it on the borders of an undecorated resizable window, otherwise normal input
          */
-        SDL_HitTestResult hitTest(int x, int y);
+        SDL_HitTestResult hitTest(int windowX, int windowY);
+
+        /**
+         * How SDL's window units map to logical units, from the window's pixel density and display scale
+         */
+        [[nodiscard]] static WindowScale readWindowScale(SDL_Window *sdlWindow);
 
         static Mod mapMods(SDL_Keymod mods);
         static Key mapKey(SDL_Keycode keycode);
@@ -137,6 +150,17 @@ namespace psychic_ui {
         float _dragOffsetY{0};
 
         bool _hitTestInstalled{false};
+
+        /**
+         * SDL's window units to logical units, read with the size
+         */
+        WindowScale _scale{};
+
+        /**
+         * `readWindowScale` of the window: read again when it is resized or its display scale changes.
+         * Virtual so that tests can make up a display scale.
+         */
+        [[nodiscard]] virtual WindowScale windowScale() const;
 
         /**
          * The finger the window follows (the first one down on a touch screen), while one is down
@@ -163,6 +187,10 @@ namespace psychic_ui {
          */
         std::vector<std::string> _droppedFiles{};
 
-        void readSize();
+        /**
+         * Reads the window's size and pixel size, in logical units at `scale` (`windowScale()`, or
+         * `readWindowScale` while constructing, where the override isn't there yet)
+         */
+        void readSize(WindowScale scale);
     };
 }

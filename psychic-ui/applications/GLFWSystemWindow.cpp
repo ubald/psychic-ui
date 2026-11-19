@@ -15,6 +15,7 @@
 #include <GLFW/glfw3.h>
 #include "GLFWSystemWindow.hpp"
 #include "../Window.hpp"
+#include "../WindowScale.hpp"
 
 namespace psychic_ui {
 
@@ -30,6 +31,7 @@ namespace psychic_ui {
         GLFWdropfun            drop{nullptr};
         GLFWwindowsizefun      size{nullptr};
         GLFWframebuffersizefun framebufferSize{nullptr};
+        GLFWwindowcontentscalefun contentScale{nullptr};
         GLFWwindowposfun       position{nullptr};
         GLFWwindowfocusfun     focus{nullptr};
         GLFWwindowiconifyfun   iconify{nullptr};
@@ -72,7 +74,7 @@ namespace psychic_ui {
         _sharesContext = true;
 
         glfwGetWindowPos(_glfwWindow, &_x, &_y);
-        readSize();
+        readSize(readContentScale(_glfwWindow));
         _minimized = glfwGetWindowAttrib(_glfwWindow, GLFW_ICONIFIED) != 0;
         _maximized = glfwGetWindowAttrib(_glfwWindow, GLFW_MAXIMIZED) != 0;
         _focused   = glfwGetWindowAttrib(_glfwWindow, GLFW_FOCUSED) != 0;
@@ -142,6 +144,13 @@ namespace psychic_ui {
                 a->sizeEvent();
             }
         });
+        previous.contentScale = glfwSetWindowContentScaleCallback(_glfwWindow, [](GLFWwindow *w, float x, float y) {
+            if (auto *a = find(w)) {
+                if (a->_previous->contentScale) { a->_previous->contentScale(w, x, y); }
+                // Moved to a monitor of another scale, or the user changed it: laid out again at the new scale
+                a->sizeEvent();
+            }
+        });
         previous.position = glfwSetWindowPosCallback(_glfwWindow, [](GLFWwindow *w, int x, int y) {
             if (auto *a = find(w)) {
                 if (a->_previous->position) { a->_previous->position(w, x, y); }
@@ -192,6 +201,7 @@ namespace psychic_ui {
         glfwSetDropCallback(_glfwWindow, previous.drop);
         glfwSetWindowSizeCallback(_glfwWindow, previous.size);
         glfwSetFramebufferSizeCallback(_glfwWindow, previous.framebufferSize);
+        glfwSetWindowContentScaleCallback(_glfwWindow, previous.contentScale);
         glfwSetWindowPosCallback(_glfwWindow, previous.position);
         glfwSetWindowFocusCallback(_glfwWindow, previous.focus);
         glfwSetWindowIconifyCallback(_glfwWindow, previous.iconify);
@@ -211,9 +221,28 @@ namespace psychic_ui {
         return _glfwWindow;
     }
 
-    void GLFWSystemWindow::readSize() {
-        glfwGetWindowSize(_glfwWindow, &_width, &_height);
+    float GLFWSystemWindow::readContentScale(GLFWwindow *glfwWindow) {
+        float xScale = 1.0f;
+        float yScale = 1.0f;
+        glfwGetWindowContentScale(glfwWindow, &xScale, &yScale);
+        return xScale;
+    }
+
+    float GLFWSystemWindow::contentScale() const {
+        return readContentScale(_glfwWindow);
+    }
+
+    void GLFWSystemWindow::readSize(const float contentScale) {
+        int width  = 0;
+        int height = 0;
+        glfwGetWindowSize(_glfwWindow, &width, &height);
         glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
+        // Minimized, a window has no size to tell its density from: it keeps its scale
+        if (width > 0 && _fbWidth > 0) {
+            _scale = WindowScale::fromFramebuffer(width, _fbWidth, contentScale);
+        }
+        _width  = _scale.toLogical(width);
+        _height = _scale.toLogical(height);
     }
 
     bool GLFWSystemWindow::render() {
@@ -235,7 +264,7 @@ namespace psychic_ui {
     // region Window operations
 
     void GLFWSystemWindow::setSize(int width, int height) {
-        glfwSetWindowSize(_glfwWindow, width, height);
+        glfwSetWindowSize(_glfwWindow, _scale.toWindow(width), _scale.toWindow(height));
     }
 
     void GLFWSystemWindow::setPosition(int x, int y) {
@@ -339,8 +368,8 @@ namespace psychic_ui {
     // region Events
 
     void GLFWSystemWindow::cursorPosEvent(double x, double y) {
-        _mouseX = static_cast<float>(x);
-        _mouseY = static_cast<float>(y);
+        _mouseX = _scale.toLogical(static_cast<float>(x));
+        _mouseY = _scale.toLogical(static_cast<float>(y));
 
         if (_dragging) {
             // The grabbed point follows the mouse; once moved, the cursor is back at it in window coordinates
@@ -395,7 +424,7 @@ namespace psychic_ui {
     }
 
     void GLFWSystemWindow::sizeEvent() {
-        readSize();
+        readSize(contentScale());
         // Minimized
         if (_width == 0 || _height == 0) {
             return;

@@ -23,6 +23,7 @@
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkSurface.h"
+#include <psychic-ui/WindowScale.hpp>
 #include <psychic-ui/applications/SDL3SystemWindow.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/Range.hpp>
@@ -58,6 +59,15 @@ namespace {
 
         [[nodiscard]] ColorScheme colorScheme() const override {
             return scheme ? *scheme : SDL3SystemWindow::colorScheme();
+        }
+
+        /**
+         * The display scale, made up: the dummy driver's is 1
+         */
+        std::optional<WindowScale> scale{};
+
+        [[nodiscard]] WindowScale windowScale() const override {
+            return scale ? *scale : SDL3SystemWindow::windowScale();
         }
 
         [[nodiscard]] SDL_TouchDeviceType touchDeviceType(SDL_TouchID touchID) const override {
@@ -361,6 +371,133 @@ TEST_CASE("SDL3: resizing changes the size the window is laid out at", "[backend
 
     sdl.layout();
     CHECK(sdl.window->getWidth() == 1024);
+}
+
+TEST_CASE("SDL3: at Windows' 200 %, the window is laid out in logical units, painted at 2 pixels per unit", "[backend][sdl3][scale]") {
+    // Window units are pixels (density 1) and the user's scale is in the display scale, as on Windows and X11
+    SDL3Fixture sdl;
+    sdl.adapter->scale = WindowScale::fromDisplay(1.0f, 2.0f);
+    sdl.adapter->handleEvent(sdl.event(SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED));
+    CHECK(sdl.window->windowWidth() == 400);
+    CHECK(sdl.window->windowHeight() == 300);
+    CHECK(sdl.adapter->getFramebufferWidth() == 800);
+    CHECK(sdl.adapter->getPixelRatio() == 2.0f);
+    sdl.layout();
+    CHECK(sdl.window->getWidth() == 400);
+
+    // Resized to 1600×1200 pixels
+    auto resized = sdl.event(SDL_EVENT_WINDOW_RESIZED);
+    resized.window.data1 = 1600;
+    resized.window.data2 = 1200;
+    sdl.adapter->handleEvent(resized);
+    CHECK(sdl.window->windowWidth() == 800);
+    CHECK(sdl.window->windowHeight() == 600);
+    CHECK(sdl.adapter->getFramebufferWidth() == 1600);
+    CHECK(sdl.adapter->getPixelRatio() == 2.0f);
+
+    // Back on a 100 % display
+    sdl.adapter->scale = WindowScale::fromDisplay(1.0f, 1.0f);
+    sdl.adapter->handleEvent(sdl.event(SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED));
+    CHECK(sdl.window->windowWidth() == 800);
+    CHECK(sdl.adapter->getPixelRatio() == 1.0f);
+}
+
+TEST_CASE("SDL3: at Windows' 200 %, the mouse, the wheel and the pen are in logical units", "[backend][sdl3][scale]") {
+    SDL3Fixture sdl;
+    sdl.adapter->scale = WindowScale::fromDisplay(1.0f, 2.0f);
+    sdl.adapter->handleEvent(sdl.event(SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED));
+    auto &div = sdl.window->appContainer().add<Div>();
+    div.width(100.0f).height(100.0f);
+    sdl.layout();
+    int divX = 0;
+    int divY = 0;
+    div.localToGlobal(divX, divY);
+
+    float pressX = -1;
+    float pressY = -1;
+    div.onMousePress([&](const MouseEvent &event) {
+        pressX = event.x;
+        pressY = event.y;
+    });
+    double scrolledY = 0;
+    div.onMouseScroll([&](const MouseEvent &event) { scrolledY = event.scrollY; });
+
+    // 81 × 121 pixels is 40.5 × 60.5 units, inside the 100 units square
+    auto motion = sdl.event(SDL_EVENT_MOUSE_MOTION);
+    motion.motion.x = 81.0f;
+    motion.motion.y = 121.0f;
+    sdl.adapter->handleEvent(motion);
+    CHECK(div.mouseOver());
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_DOWN, 81.0f, 121.0f));
+    CHECK(pressX == Catch::Approx(40.5f - static_cast<float>(divX)));
+    CHECK(pressY == Catch::Approx(60.5f - static_cast<float>(divY)));
+    CHECK(sdl.button(SDL_EVENT_MOUSE_BUTTON_UP, 81.0f, 121.0f));
+
+    // 300 pixels is 150 units, outside the square
+    auto away = sdl.event(SDL_EVENT_MOUSE_MOTION);
+    away.motion.x = 300.0f;
+    away.motion.y = 300.0f;
+    sdl.adapter->handleEvent(away);
+    CHECK_FALSE(div.mouseOver());
+
+    auto wheel = sdl.event(SDL_EVENT_MOUSE_WHEEL);
+    wheel.wheel.mouse_x = 150; // 75 units: in the square
+    wheel.wheel.mouse_y = 150;
+    wheel.wheel.y       = 1.0f;
+    sdl.adapter->handleEvent(wheel);
+    CHECK(scrolledY == 1.0);
+
+    // A pen's tip, mouse style
+    pressX = -1;
+    auto pen = sdl.event(SDL_EVENT_PEN_DOWN);
+    pen.ptouch.x    = 40.0f;
+    pen.ptouch.y    = 40.0f;
+    pen.ptouch.down = true;
+    sdl.adapter->handleEvent(pen);
+    CHECK(pressX == Catch::Approx(20.0f - static_cast<float>(divX)));
+}
+
+TEST_CASE("SDL3: at Windows' 200 %, sizes asked for, hit tests and the text input area are in logical units", "[backend][sdl3][scale]") {
+    SDL3Fixture sdl(SDL_WINDOW_BORDERLESS | SDL_WINDOW_RESIZABLE);
+    sdl.adapter->scale = WindowScale::fromDisplay(1.0f, 2.0f);
+    sdl.adapter->handleEvent(sdl.event(SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED));
+
+    // A 320×240 window is 640×480 pixels
+    sdl.adapter->setSize(320, 240);
+    int width  = 0;
+    int height = 0;
+    SDL_GetWindowSize(sdl.sdlWindow, &width, &height);
+    CHECK(width == 640);
+    CHECK(height == 480);
+    sdl.adapter->handleEvent(sdl.event(SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED));
+    CHECK(sdl.window->windowWidth() == 320);
+
+    // SDL asks the hit test in pixels: the right border is 4 units wide, 8 pixels
+    CHECK(sdl.adapter->hitTest(639, 200) == SDL_HITTEST_RESIZE_RIGHT);
+    CHECK(sdl.adapter->hitTest(633, 200) == SDL_HITTEST_RESIZE_RIGHT);
+    CHECK(sdl.adapter->hitTest(600, 200) == SDL_HITTEST_NORMAL);
+
+    // SDL takes the text input area in pixels
+    sdl.adapter->setTextInputArea(10, 20, 30, 40, 5);
+    SDL_Rect area{};
+    int      cursor = -1;
+    REQUIRE(SDL_GetTextInputArea(sdl.sdlWindow, &area, &cursor));
+    CHECK(area.x == 20);
+    CHECK(area.y == 40);
+    CHECK(area.w == 60);
+    CHECK(area.h == 80);
+}
+
+TEST_CASE("SDL3: on macOS and Wayland, the scale is the density's and window units are logical", "[backend][sdl3][scale]") {
+    SDL3Fixture sdl;
+    sdl.adapter->scale = WindowScale::fromDisplay(2.0f, 2.0f);
+    sdl.adapter->handleEvent(sdl.event(SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED));
+    CHECK(sdl.window->windowWidth() == 800);
+    sdl.adapter->setSize(640, 480);
+    int width = 0;
+    SDL_GetWindowSize(sdl.sdlWindow, &width, nullptr);
+    CHECK(width == 640);
+    CHECK(sdl.adapter->hitTest(400, 300) == SDL_HITTEST_NORMAL);
 }
 
 TEST_CASE("SDL3: dropped files arrive together", "[backend][sdl3]") {

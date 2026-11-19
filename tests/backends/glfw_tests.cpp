@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkRefCnt.h"
@@ -161,6 +162,59 @@ TEST_CASE("GLFW: no touch input, the window stays in pointer mode", "[backend][g
     host.window->handleTouchRelease(50.0f, 50.0f, std::chrono::seconds(1));
     host.cursorCallback()(host.glfwWindow, 50.0, 50.0);
     CHECK(host.window->inputMode() == InputMode::Touch);
+}
+
+namespace {
+    /**
+     * A monitor's content scale, made up: the null platform's is 1
+     */
+    struct ScaledAdapter : GLFWSystemWindow {
+        using GLFWSystemWindow::GLFWSystemWindow;
+        float scale{1.0f};
+
+        [[nodiscard]] float contentScale() const override { return scale; }
+    };
+}
+
+TEST_CASE("GLFW: at Windows' 200 %, the window is laid out in logical units and the mouse converted", "[backend][glfw][scale]") {
+    // Window units are pixels: the framebuffer is the window's size, the content scale apart
+    GLFWHost host;
+    auto &div = host.window->appContainer().add<Div>();
+    div.width(100.0f).height(100.0f);
+    ScaledAdapter adapter(host.window, host.glfwWindow);
+    adapter.scale = 2.0f;
+    auto contentScale = glfwSetWindowContentScaleCallback(host.glfwWindow, nullptr);
+    glfwSetWindowContentScaleCallback(host.glfwWindow, contentScale);
+    REQUIRE(contentScale != nullptr);
+    contentScale(host.glfwWindow, 2.0f, 2.0f);
+    CHECK(host.window->windowWidth() == 400);
+    CHECK(host.window->windowHeight() == 300);
+    CHECK(adapter.getPixelRatio() == 2.0f);
+    host.layout();
+
+    float pressX = -1;
+    div.onMousePress([&](const MouseEvent &event) { pressX = event.x; });
+    int divX = 0;
+    int divY = 0;
+    div.localToGlobal(divX, divY);
+    host.cursorCallback()(host.glfwWindow, 81.0, 81.0); // 40.5 units
+    host.buttonCallback()(host.glfwWindow, GLFW_MOUSE_BUTTON_LEFT, GLFW_PRESS, 0);
+    CHECK(pressX == Catch::Approx(40.5f - static_cast<float>(divX)));
+    host.buttonCallback()(host.glfwWindow, GLFW_MOUSE_BUTTON_LEFT, GLFW_RELEASE, 0);
+
+    // A 320×240 window asked for is 640×480 pixels
+    adapter.setSize(320, 240);
+    int width  = 0;
+    int height = 0;
+    glfwGetWindowSize(host.glfwWindow, &width, &height);
+    CHECK(width == 640);
+    CHECK(height == 480);
+
+    // Back on a 100 % monitor
+    adapter.scale = 1.0f;
+    contentScale(host.glfwWindow, 1.0f, 1.0f);
+    CHECK(host.window->windowWidth() == 640);
+    CHECK(adapter.getPixelRatio() == 1.0f);
 }
 
 TEST_CASE("GLFW keys map to Psychic UI keys", "[keyboard][glfw]") {
