@@ -57,11 +57,21 @@ namespace psychic_ui {
         double value() const;
 
         /**
-         * Set the value, clamped to the range
+         * Set the value, clamped to the range, emitting `changed` if it changed
          */
         template<class Self>
         Self &value(this Self &self, double value) {
             static_cast<NumberStepper &>(self).updateValue(value);
+            return self;
+        }
+
+        /**
+         * Set the value, clamped to the range, without emitting `changed`: for a value that mirrors one changed
+         * elsewhere, so only the user's edits emit
+         */
+        template<class Self>
+        Self &sync(this Self &self, double value) {
+            static_cast<NumberStepper &>(self).updateValue(value, false);
             return self;
         }
 
@@ -131,7 +141,8 @@ namespace psychic_ui {
         MouseEventStatus handleMouseScroll(const MouseEvent &event) override;
 
         /**
-         * The value changed, with the new value (the text's own edits aren't changes until they are set)
+         * The value changed, with the new value (the text's own edits aren't changes until they are set): from the
+         * user, or `value(v)`; `sync(v)` doesn't emit it
          */
         Signal<double> changed{};
         PSYCHIC_UI_EVENT(onChange, changed)
@@ -148,7 +159,7 @@ namespace psychic_ui {
         double _step{1};
         int    _decimals{-1};
 
-        void updateValue(double value);
+        void updateValue(double value, bool emit = true);
         void updateRange(double min, double max);
         void updateStep(double step);
         void updateDecimals(int decimals);

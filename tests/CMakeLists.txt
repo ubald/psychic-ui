@@ -85,6 +85,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         components/button_state_tests.cpp
         components/list_tests.cpp
         components/input_tests.cpp
+        components/range_tests.cpp
         components/text_area_tests.cpp
         components/text_input_tests.cpp
         components/popup_tests.cpp
