@@ -184,14 +184,22 @@ namespace psychic_ui {
         auto &layout   = sidebar.section("Layout");
         auto &assets   = sidebar.section("Assets");
         assets.grow(1); // Pushes the last section to the bottom
+        SidebarItem *divs = nullptr;
         for (Page &entry: _pages) {
             SidebarSection *section = &controls;
-            if (entry.name == "Divs" || entry.name == "Scroller" || entry.name == "Canvas" || entry.name == "Motion" || entry.name == "Typography") {
+            if (entry.name == "Divs" || entry.name == "Canvas" || entry.name == "Motion" || entry.name == "Typography") {
                 section = &layout;
             } else if (entry.name == "Colors" || entry.name == "Icons") {
                 section = &assets;
             }
+            if (entry.name == "Scroller" && divs) {
+                entry.item = &divs->item(entry.name, entry.icon); // Nested under Divs
+                continue;
+            }
             entry.item = &section->item(entry.name, entry.icon);
+            if (entry.name == "Divs") {
+                divs = entry.item;
+            }
             if (entry.name == "Icons") {
                 entry.item->count(std::to_string(IconRegistry::shared().names().size()));
             }
