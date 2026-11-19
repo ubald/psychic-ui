@@ -102,6 +102,37 @@ public:
 
         // endregion
 
+        // region Splitters
+
+        manager->style("Splitters")
+               .gap(metrics.space(1));
+
+        manager->style("Splitters .event")
+               .marginBottom(metrics.space(3));
+
+        // An editor's frame filling the page: the panes on the surface, the inspector filling its own
+        manager->style("Splitters .frame")
+               .grow(1)
+               .minHeight(320)
+               .border(metrics.border)
+               .borderColor(palette.line)
+               .borderRadius(metrics.radius.surface)
+               .backgroundColor(palette.surface)
+               .overflow(Overflow::Hidden);
+
+        manager->style("Splitters Splitter")
+               .grow(1);
+
+        manager->style("Splitters .demo-pane")
+               .direction(Direction::Column)
+               .padding(metrics.space(4))
+               .gap(metrics.space(1));
+
+        manager->style("Splitters Inspector")
+               .grow(1);
+
+        // endregion
+
         // region Inputs
 
         manager->style("Inputs")

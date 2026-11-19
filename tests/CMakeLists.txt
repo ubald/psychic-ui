@@ -132,6 +132,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         components/modal_input_tests.cpp
         components/rows_tests.cpp
         components/number_stepper_tests.cpp
+        components/splitter_tests.cpp
         asan/use_after_free_tests.cpp)
 
     if (PSYCHIC_UI_BUILD_SDL3)

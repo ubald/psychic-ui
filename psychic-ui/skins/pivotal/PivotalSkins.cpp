@@ -14,6 +14,7 @@
 #include "psychic-ui/skins/base/ScrollBarSkinBase.hpp"
 #include "psychic-ui/skins/base/SearchFieldSkinBase.hpp"
 #include "psychic-ui/skins/base/SegmentedControlSkinBase.hpp"
+#include "psychic-ui/skins/base/SplitterDividerSkinBase.hpp"
 #include "psychic-ui/skins/base/SwitchSkinBase.hpp"
 #include "psychic-ui/skins/base/TextAreaSkinBase.hpp"
 #include "psychic-ui/skins/base/TextInputSkinBase.hpp"
@@ -32,6 +33,7 @@
 #include "psychic-ui/components/ScrollBar.hpp"
 #include "psychic-ui/components/SearchField.hpp"
 #include "psychic-ui/components/SegmentedControl.hpp"
+#include "psychic-ui/components/SplitterDivider.hpp"
 #include "psychic-ui/components/Switch.hpp"
 #include "psychic-ui/components/TextArea.hpp"
 #include "psychic-ui/components/TextInput.hpp"
@@ -133,6 +135,9 @@ namespace psychic_ui {
              .add<ColorSwatchesSkin, ColorSwatchesSkinBase>()
              .add<NumberStepperSkin, NumberStepperSkinBase>()
              .add<SearchFieldSkin, SearchFieldSkinBase>();
+
+        // Layout
+        skins.add<SplitterDividerSkin, SplitterDividerSkinBase>();
     }
 
     void PivotalSkins::load(StyleManager *manager) {
@@ -665,6 +670,23 @@ namespace psychic_ui {
         rule("ScrollBar:disabled .thumb").visible(false);
 
         rule("Scroller ScrollBar.horizontal").marginRight(metrics.scrollBar);
+
+        // endregion
+
+        // region Splitters
+
+        // A hairline between the panes, strong under the mouse, the accent while held or focused by the keyboard. The
+        // divider reaches over both panes; fingers get it from further away.
+        rule("SplitterDivider.horizontal").width(SplitterDivider::defaultReach + (2 * s.hitSlop));
+        rule("SplitterDivider.vertical").height(SplitterDivider::defaultReach + (2 * s.hitSlop));
+        rule("SplitterDivider.horizontal .line").width(metrics.border);
+        rule("SplitterDivider.vertical .line").height(metrics.border);
+        rule("SplitterDivider .line")
+            .backgroundColor(palette.line)
+            .transition(P::backgroundColor, quick);
+        rule("SplitterDivider:hover .line").backgroundColor(palette.lineStrong);
+        rule("SplitterDivider:pressed .line").backgroundColor(palette.accent);
+        rule("SplitterDivider:focus-visible .line").backgroundColor(palette.accent);
 
         // endregion
 
