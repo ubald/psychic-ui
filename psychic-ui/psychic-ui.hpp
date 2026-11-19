@@ -99,12 +99,12 @@ namespace psychic_ui {
      */
     struct ZoomEvent {
         /**
-         * The zoom's centre, in the receiving div's content coordinates
+         * The zoom's center, in the receiving div's content coordinates
          */
         float     x{0};
         float     y{0};
         /**
-         * The zoom's centre, in window coordinates, whichever div receives it
+         * The zoom's center, in window coordinates, whichever div receives it
          */
         float     windowX{0};
         float     windowY{0};
@@ -113,7 +113,7 @@ namespace psychic_ui {
          */
         float     scale{1.0f};
         /**
-         * How far the centre moved since the previous event of the gesture, in window units
+         * How far the center moved since the previous event of the gesture, in window units
          */
         float     panX{0};
         float     panY{0};

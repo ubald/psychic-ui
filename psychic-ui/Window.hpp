@@ -572,7 +572,9 @@ namespace psychic_ui {
          */
         MouseEventStatus handleMouseMove(const MouseEvent &event, bool handled) override;
         /**
-         * With Ctrl (or Cmd on macOS), the wheel zooms instead (`handleZoom`), `wheelZoomStep` per step
+         * With Ctrl (or Cmd on macOS), the wheel is a zoom (`handleZoom`, `wheelZoomStep` per step) and never a scroll:
+         * `mouseScrolled` doesn't get it and no div scrolls, even when nothing takes the zoom or the wheel only moved
+         * sideways (then nothing happens)
          */
         MouseEventStatus handleMouseScroll(const MouseEvent &event) override;
 

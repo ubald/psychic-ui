@@ -2072,7 +2072,8 @@ namespace psychic_ui {
             }
         }
 
-        if (_mouseEnabled && ret != MouseEventStatus::Handled && zoomed.hasSubscriptions() && zoomed.emit(local)) {
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && zoomed.hasSubscriptions()) {
+            zoomed.emit(local);
             ret = MouseEventStatus::Handled;
         }
 

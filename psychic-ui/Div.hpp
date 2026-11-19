@@ -8,7 +8,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <type_traits>
 #include <vector>
 #include <unordered_set>
 #include "psychic-ui/Measure.hpp"
@@ -721,8 +720,7 @@ namespace psychic_ui {
         Signal<MouseEvent> contextMenuRequested{};
         /**
          * A zoom around a point: a trackpad pinch, or the wheel with Ctrl (or Cmd on macOS), which then doesn't scroll.
-         * Goes to the deepest div with a subscriber that uses it: a callback returns whether it did (one that returns
-         * nothing did, through `onZoom`), otherwise the next div up gets it.
+         * Goes to the deepest div with a subscriber, once, as the mouse signals do.
          */
         Signal<ZoomEvent>  zoomed{};
 
@@ -801,31 +799,7 @@ namespace psychic_ui {
         PSYCHIC_UI_EVENT(onDoubleClick, doubleClicked)
         PSYCHIC_UI_EVENT(onContextMenuRequest, contextMenuRequested)
 
-        /**
-         * Subscribes to `zoomed`: a callback that returns nothing uses every zoom it gets, one that returns a bool says
-         * whether it did
-         */
-        template<class Self, class F>
-        Self &onZoom(this Self &self, F &&callback) {
-            if constexpr (std::invocable<F &, const ZoomEvent &>) {
-                if constexpr (std::same_as<std::invoke_result_t<F &, const ZoomEvent &>, bool>) {
-                    self.zoomed.subscribe(std::forward<F>(callback));
-                } else {
-                    self.zoomed.subscribe([callback = std::forward<F>(callback)](const ZoomEvent &event) mutable {
-                        callback(event);
-                        return true;
-                    });
-                }
-            } else if constexpr (std::same_as<std::invoke_result_t<F &>, bool>) {
-                self.zoomed.subscribe(std::forward<F>(callback));
-            } else {
-                self.zoomed.subscribe([callback = std::forward<F>(callback)]() mutable {
-                    callback();
-                    return true;
-                });
-            }
-            return self;
-        }
+        PSYCHIC_UI_EVENT(onZoom, zoomed)
 
         PSYCHIC_UI_EVENT(onKeyPress, keyPressed)
         PSYCHIC_UI_EVENT(onKeyRepeat, keyRepeated)

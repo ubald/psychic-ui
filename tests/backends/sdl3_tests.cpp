@@ -354,9 +354,26 @@ TEST_CASE("SDL3: pinch events zoom around the pointer", "[backend][sdl3][zoom]")
     int originY = 0;
     div.localToGlobal(originX, originY);
     CHECK(zooms[0].x == static_cast<float>(40 - originX));
+    CHECK(zooms[0].y == static_cast<float>(30 - originY));
     CHECK(zooms[0].source == InputMode::Pointer);
     CHECK(zooms[1].panX == 0);
     CHECK(zooms[1].panY == 0);
+}
+
+TEST_CASE("SDL3: a pinch that names no window goes to the one under the mouse", "[backend][sdl3][zoom]") {
+    SDL3Fixture sdl;
+    auto        pinch = sdl.event(SDL_EVENT_PINCH_UPDATE);
+    pinch.pinch.scale    = 1.1f;
+    pinch.pinch.windowID = SDL_GetWindowID(sdl.sdlWindow);
+    CHECK(SDL3SystemWindow::eventWindow(pinch) == sdl.sdlWindow);
+
+    // As macOS sends them: the window with the mouse focus (none under the dummy driver)
+    pinch.pinch.windowID = 0;
+    CHECK(SDL3SystemWindow::eventWindow(pinch) == SDL_GetMouseFocus());
+
+    // Other events keep SDL's window
+    auto motion = sdl.event(SDL_EVENT_MOUSE_MOTION);
+    CHECK(SDL3SystemWindow::eventWindow(motion) == sdl.sdlWindow);
 }
 #endif
 

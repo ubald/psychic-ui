@@ -4,6 +4,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include "../backends/fake_system_window.hpp"
 #include <psychic-ui/Div.hpp>
+#include <psychic-ui/Popup.hpp>
+#include <psychic-ui/components/Dialog.hpp>
 #include <psychic-ui/Window.hpp>
 #include <psychic-ui/psychic-ui.hpp>
 #include <psychic-ui/style/Values.hpp>
@@ -103,27 +105,58 @@ TEST_CASE("a zoom goes to the deepest subscriber first", "[zoom]") {
     auto   &inner = fixture.box(outer, 0, 0, 100, 100);
     fixture.sys.layout();
 
-    int  outerZooms = 0;
-    int  innerZooms = 0;
-    bool innerUses  = true;
+    int outerZooms = 0;
+    int innerZooms = 0;
     outer.onZoom([&] { ++outerZooms; });
-    inner.onZoom([&](const ZoomEvent &) {
-        ++innerZooms;
-        return innerUses;
-    });
+    inner.onZoom([&] { ++innerZooms; });
 
     fixture.window->handleZoom({.x = 50, .y = 50, .scale = 1.1f});
     CHECK(innerZooms == 1);
     CHECK(outerZooms == 0);
 
-    // A callback returning false passes it to the next div up
-    innerUses = false;
-    fixture.window->handleZoom({.x = 50, .y = 50, .scale = 1.1f});
-    CHECK(innerZooms == 2);
-    CHECK(outerZooms == 1);
-
     // Outside the inner div, the outer one gets it
     fixture.window->handleZoom({.x = 200, .y = 200, .scale = 1.1f});
-    CHECK(innerZooms == 2);
-    CHECK(outerZooms == 2);
+    CHECK(innerZooms == 1);
+    CHECK(outerZooms == 1);
+}
+
+TEST_CASE("a zoom over a popup reaches the popup", "[zoom][popup]") {
+    Zooming fixture;
+    int     underZooms = 0;
+    fixture.box(0, 0, 800, 600).onZoom([&] { ++underZooms; });
+    fixture.sys.layout();
+
+    auto &popup = fixture.window->overlay().open<Popup>();
+    popup.anchor(200, 200).width(100).height(100);
+    fixture.sys.layout();
+    int popupZooms = 0;
+    popup.onZoom([&] { ++popupZooms; });
+
+    int originX = 0;
+    int originY = 0;
+    popup.localToGlobal(originX, originY);
+    const auto x = static_cast<float>(originX + 50);
+    const auto y = static_cast<float>(originY + 50);
+    fixture.window->handleZoom({.x = x, .y = y, .scale = 1.1f});
+    CHECK(popupZooms == 1);
+    CHECK(underZooms == 0);
+
+    // Beside a popup that isn't modal, the div under it still gets it
+    fixture.window->handleZoom({.x = 700, .y = 550, .scale = 1.1f});
+    CHECK(popupZooms == 1);
+    CHECK(underZooms == 1);
+}
+
+TEST_CASE("a zoom doesn't reach the div under a modal popup", "[zoom][popup][modal]") {
+    Zooming fixture;
+    int     underZooms = 0;
+    fixture.box(0, 0, 800, 600).onZoom([&] { ++underZooms; });
+    fixture.sys.layout();
+
+    fixture.window->overlay().open<Dialog>("Modal");
+    fixture.sys.layout();
+    REQUIRE(fixture.window->overlay().modal());
+    fixture.window->handleZoom({.x = 10, .y = 10, .scale = 1.1f});
+    fixture.window->handleMouseScroll({.x = 10, .y = 10, .modifiers = {.ctrl = true}, .scrollY = 1});
+    CHECK(underZooms == 0);
 }
