@@ -199,6 +199,8 @@ set(SOURCE_FILES
     psychic-ui/components/TitleBar.hpp
     psychic-ui/components/AppShell.cpp
     psychic-ui/components/AppShell.hpp
+    psychic-ui/components/AppShellPage.cpp
+    psychic-ui/components/AppShellPage.hpp
     psychic-ui/components/PageHeader.cpp
     psychic-ui/components/PageHeader.hpp
     psychic-ui/components/Sidebar.cpp

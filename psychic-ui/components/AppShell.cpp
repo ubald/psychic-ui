@@ -1,4 +1,5 @@
 #include "AppShell.hpp"
+#include "AppShellPage.hpp"
 #include "Sidebar.hpp"
 #include "WindowControls.hpp"
 #include "WindowControlsStyle.hpp"
@@ -22,16 +23,13 @@ namespace psychic_ui {
              .grow(1)
              .shrink(1);
 
-        _page = &_main->add<Div>();
-        _page->addClassName("page")
-             .direction(Direction::Column)
-             .grow(1)
-             .shrink(1);
+        _page = &_main->add<AppShellPage>();
 
         // The sidebar's header holds macOS's controls; Windows's are ours to place, after it on a change
         SidebarHeader &header = _sidebar->header();
-        header.controls().onChange([this](WindowControlsStyle /*style*/) { placeWindowControls(); });
-        header.windowControlsToggled.subscribe([this](bool /*shown*/) { placeWindowControls(); });
+        subscribeTo(header.controls().changed, [this](WindowControlsStyle /*style*/) { placeWindowControls(); });
+        subscribeTo(header.windowControlsToggled, [this](bool /*shown*/) { placeWindowControls(); });
+        subscribeTo(_page->headerChanged, [this](bool /*hasHeader*/) { placeWindowControls(); });
         placeWindowControls();
     }
 
@@ -50,11 +48,22 @@ namespace psychic_ui {
             }
             removeClassName("controls-top-right");
         }
+        // Whether the page has a header to carry them, which gives them its band
+        if (_page->hasHeader()) {
+            addClassName("page-has-header");
+        } else {
+            removeClassName("page-has-header");
+        }
     }
 
     void AppShell::addedToRender() {
         Div::addedToRender();
-        // At the window's top right, the controls' room around their buttons moves the window
-        window()->addDragArea(_sidebar->header().controls().shared_from_this());
+        // At the window's top right, the room around the buttons moves the window while a page header carries it;
+        // over a page without one, the content under it takes its presses
+        window()->addDragArea(_sidebar->header().controls().shared_from_this(), [this] { return controlsDrag(); });
+    }
+
+    bool AppShell::controlsDrag() const {
+        return classNames().contains("controls-top-right") && _page->hasHeader();
     }
 }

@@ -323,15 +323,45 @@ TEST_CASE("AppShell: without a page header, Windows's window controls sit over t
     auto &content = s.shell.page().add<Div>().grow(1);
     s.layout();
 
+    // As tight as their buttons, where a page header would center them, at its end padding
     const Div &page = s.shell.page();
     const auto [pageX, pageY]         = Shell::origin(page);
     const auto [controlsX, controlsY] = Shell::origin(controls);
-    CHECK(controlsY == pageY);
-    CHECK(controlsX + controls.getWidth() == pageX + page.getWidth());
-    CHECK(controls.getHeight() == s.theme.metrics.barHeader);
+    CHECK(controls.getHeight() == controls.closeButton().getHeight());
+    CHECK(controlsY - pageY == static_cast<int>((s.theme.metrics.barHeader - controls.getHeight()) / 2));
+    CHECK(controlsX + controls.getWidth() == pageX + page.getWidth() - static_cast<int>(s.theme.metrics.space(3)));
     // Over the content, which keeps the page's whole width
     CHECK(content.getWidth() == page.getWidth());
     CHECK(inside(controls, page));
+}
+
+TEST_CASE("AppShell: without a page header, the content under Windows's window controls takes its presses", "[components][appshell][window-controls][drag]") {
+    Shell s;
+    WindowControls &controls = s.shell.sidebar().header().controls();
+    controls.controlsStyle(WindowControlsStyle::Windows);
+    auto &content = s.shell.page().add<Div>().grow(1);
+    int  presses  = 0;
+    content.onMousePress([&]() { ++presses; });
+    s.layout();
+
+    // Left of minimize, in the band a page header would have: not the window's drag area, the content's press
+    const auto [minimizeX, minimizeY] = Shell::origin(controls.minimizeButton());
+    const int x = minimizeX - 4;
+    const int y = minimizeY + 2;
+    CHECK_FALSE(s.window->isDragArea(x, y));
+    s.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = true});
+    s.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = false});
+    CHECK(presses == 1);
+
+    // A page header carries them: the room around the buttons moves the window again
+    s.shell.page().add(0, std::make_shared<PageHeader>("Fixtures"));
+    s.layout();
+    CHECK(s.window->isDragArea(x, y));
+
+    // macOS's style: the band is the content's again
+    controls.controlsStyle(WindowControlsStyle::Mac);
+    s.layout();
+    CHECK_FALSE(s.window->isDragArea(x, y));
 }
 
 TEST_CASE("AppShell: switching the window controls' style moves them", "[components][appshell][window-controls]") {

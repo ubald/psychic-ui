@@ -154,7 +154,7 @@ namespace psychic_ui {
 
         // Ours in macOS's style, which puts them at the start of the bar; they follow a change of style
         _controls = std::make_shared<WindowControls>();
-        _controls->onChange([this](WindowControlsStyle /*style*/) { placeWindowControls(); });
+        subscribeTo(_controls->changed, [this](WindowControlsStyle /*style*/) { placeWindowControls(); });
 
         _identity = &add<Div>();
         _identity->addClassName("identity")

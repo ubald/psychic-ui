@@ -232,6 +232,7 @@ namespace psychic_ui {
          * The window controls were shown or taken out (`windowControls`), with whether they are shown
          */
         Signal<bool> windowControlsToggled{};
+        PSYCHIC_UI_EVENT(onWindowControlsToggle, windowControlsToggled)
 
         /**
          * The `.brand` part: the app's mark, its name and a chevron

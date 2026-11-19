@@ -25,5 +25,10 @@ namespace psychic_ui {
          * and the gaps between them, for the room a set's rules leave them
          */
         [[nodiscard]] static float windowsControlsWidth(const Metrics &metrics);
+
+        /**
+         * How tall Windows's window controls are under these rules, a caption button's height
+         */
+        [[nodiscard]] static float windowsControlsHeight();
     };
 }
