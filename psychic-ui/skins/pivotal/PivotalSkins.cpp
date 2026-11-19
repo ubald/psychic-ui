@@ -21,6 +21,7 @@
 #include "PivotalSkins.hpp"
 #include "PivotalAvatarSkin.hpp"
 #include "TabButtonSkin.hpp"
+#include "CaptionButtonSkin.hpp"
 #include "TitleBarButtonSkin.hpp"
 #include "psychic-ui/animation/Timing.hpp"
 #include "psychic-ui/components/Avatar.hpp"
@@ -118,6 +119,7 @@ namespace psychic_ui {
              .add<ButtonSkin, ButtonSkinBase>("danger")
              .add<ButtonSkin, TabButtonSkin>("tab")
              .add<ButtonSkin, TitleBarButtonSkin>("title-bar")
+             .add<ButtonSkin, CaptionButtonSkin>("caption")
              .add<CheckBoxSkin, CheckBoxSkinBase>()
              .add<RangeSkin, RangeSkinBase>()
              .add<ScrollBarSkin, ScrollBarSkinBase>()
@@ -251,6 +253,30 @@ namespace psychic_ui {
         rule("WindowControls.mac:hover Button.close").backgroundColor(palette.danger);
         rule("WindowControls.mac:hover Button.minimize").backgroundColor(palette.warning);
         rule("WindowControls.mac:hover Button.maximize").backgroundColor(palette.success);
+
+        // Windows's and Linux's glyph buttons: the glyph in the secondary text, raised under the pointer, close in
+        // the danger color with a light glyph
+        rule("WindowControls.windows").gap(metrics.space(0.5f));
+
+        rule("WindowControls.windows Button")
+            .skin("caption")
+            .width(28)
+            .height(24)
+            .paddingHorizontal(0) // Over the button's
+            .border(0)
+            .borderRadius(r.small)
+            .color(palette.textSecondary)
+            .backgroundColor(transparent)
+            .iconSize(10)
+            .transition({P::backgroundColor, P::color, P::outlineColor}, quick); // Its skin paints the component's colors
+
+        rule("WindowControls.windows Button:hover")
+            .color(palette.text)
+            .backgroundColor(palette.raised);
+
+        rule("WindowControls.windows Button.close:hover")
+            .color(palette.onAccent)
+            .backgroundColor(palette.danger);
 
         // endregion
 
