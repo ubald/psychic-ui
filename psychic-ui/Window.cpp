@@ -326,9 +326,9 @@ namespace psychic_ui {
         return _systemWindow && _systemWindow->supportsDrag();
     }
 
-    void Window::addDragArea(const std::shared_ptr<Div> &div) {
-        std::erase_if(_dragAreas, [](const auto &area) { return area.expired(); });
-        _dragAreas.push_back(div);
+    void Window::addDragArea(const std::shared_ptr<Div> &div, std::function<bool()> when) {
+        std::erase_if(_dragAreas, [](const DragArea &area) { return area.div.expired(); });
+        _dragAreas.push_back({.div = div, .when = std::move(when)});
     }
 
     /**
@@ -366,9 +366,9 @@ namespace psychic_ui {
             return false;
         }
 
-        for (const auto &weak : _dragAreas) {
-            auto area = weak.lock();
-            if (!area || !area->visible() || area->window() != this) {
+        for (const DragArea &entry : _dragAreas) {
+            auto area = entry.div.lock();
+            if (!area || !area->visible() || area->window() != this || (entry.when && !entry.when())) {
                 continue;
             }
 

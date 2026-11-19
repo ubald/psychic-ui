@@ -83,6 +83,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         demo/canvas_page_tests.cpp
         demo/drag_and_drop_page_tests.cpp
         components/app_shell_tests.cpp
+        components/window_controls_tests.cpp
         components/button_state_tests.cpp
         components/list_tests.cpp
         components/input_tests.cpp

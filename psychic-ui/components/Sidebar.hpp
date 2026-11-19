@@ -192,8 +192,9 @@ namespace psychic_ui {
     /**
      * @class SidebarHeader
      *
-     * The sidebar's top band, the window's drag area: the window controls (`windowControls(false)` leaves them out,
-     * for an app that puts them elsewhere), then the `.identity` column: the `.brand` row (the app's `.mark`, its
+     * The sidebar's top band, the window's drag area: the window controls in macOS's style (Windows's go at the
+     * window's top right, where its `AppShell` puts them; `windowControls(false)` leaves them out in either style, for
+     * an app that puts them elsewhere), then the `.identity` column: the `.brand` row (the app's `.mark`, its
      * `.title` and a `.chevron`), and the `.details` under it. What the app adds to `mark()` takes the letters'
      * place (its own drawing), what it adds to `details()` goes under the brand (a document's name, a place), and
      * the brand becomes a menu trigger once it has a `clicked` subscriber (which the drag area leaves to it).
@@ -208,23 +209,30 @@ namespace psychic_ui {
         SidebarHeader();
 
         /**
-         * The window controls, in the header unless `windowControls(false)`
+         * The window controls, in the platform's style at first: first in the header in macOS's style, at the
+         * window's top right in Windows's (its `AppShell` places them), unless `windowControls(false)`
          */
         WindowControls &controls() const { return *_controls; }
 
         /**
-         * Whether the window controls are in the header (they are at first)
+         * Whether the window controls are shown, wherever their style puts them (they are at first)
          */
-        bool windowControls() const;
+        bool windowControls() const { return _windowControls; }
 
         /**
-         * Put the window controls first in the header, or take them out of it
+         * Show the window controls, or take them out whatever their style
          */
         template<class Self>
         Self &windowControls(this Self &self, detail::BoolArg shown) {
             static_cast<SidebarHeader &>(self).updateWindowControls(shown.value);
             return self;
         }
+
+        /**
+         * The window controls were shown or taken out (`windowControls`), with whether they are shown
+         */
+        Signal<bool> windowControlsToggled{};
+        PSYCHIC_UI_EVENT(onWindowControlsToggle, windowControlsToggled)
 
         /**
          * The `.brand` part: the app's mark, its name and a chevron
@@ -252,7 +260,8 @@ namespace psychic_ui {
         void setMark(const std::string &mark);
 
     protected:
-        std::shared_ptr<WindowControls> _controls{}; // Ours, and our child while shown
+        std::shared_ptr<WindowControls> _controls{}; // Ours, and our child while shown in macOS's style
+        bool                            _windowControls{true};
         // Children: our child list owns them
         Div   *_identity{nullptr};
         Div   *_brand{nullptr};
@@ -262,6 +271,7 @@ namespace psychic_ui {
         Div   *_details{nullptr};
 
         void updateWindowControls(bool shown);
+        void placeWindowControls();
         void addedToRender() override;
     };
 

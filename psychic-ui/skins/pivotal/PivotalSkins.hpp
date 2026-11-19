@@ -1,6 +1,7 @@
 #pragma once
 
 #include "psychic-ui/skins/SkinSet.hpp"
+#include "psychic-ui/themes/Theme.hpp"
 
 namespace psychic_ui {
     /**
@@ -18,5 +19,16 @@ namespace psychic_ui {
         [[nodiscard]] std::vector<const Theme *> themes() const override; // Pivotal's two, then One Dark, One Light, Psychic
         void registerSkins(SkinRegistry &skins) const override;
         void load(StyleManager *manager) override;
+
+        /**
+         * How wide Windows's window controls are under these rules (`WindowControls.windows`): three caption buttons
+         * and the gaps between them, for the room a set's rules leave them
+         */
+        [[nodiscard]] static float windowsControlsWidth(const Metrics &metrics);
+
+        /**
+         * How tall Windows's window controls are under these rules, a caption button's height
+         */
+        [[nodiscard]] static float windowsControlsHeight();
     };
 }

@@ -85,8 +85,8 @@ namespace psychic_ui_tests {
         void setFullscreen(bool /*fullscreen*/) override {}
         [[nodiscard]] bool getMinimized() const override { return false; }
         void setMinimized(bool /*minimized*/) override {}
-        [[nodiscard]] bool getMaximized() const override { return false; }
-        void setMaximized(bool /*maximized*/) override {}
+        [[nodiscard]] bool getMaximized() const override { return _maximized; }
+        void setMaximized(bool maximized) override { _maximized = maximized; }
         void setVisible(bool /*visible*/) override {}
         void setCursor(Cursor shown) override { cursor = shown; }
         void startDrag() override { ++dragsStarted; }

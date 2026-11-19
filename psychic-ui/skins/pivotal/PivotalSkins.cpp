@@ -21,6 +21,7 @@
 #include "PivotalSkins.hpp"
 #include "PivotalAvatarSkin.hpp"
 #include "TabButtonSkin.hpp"
+#include "CaptionButtonSkin.hpp"
 #include "TitleBarButtonSkin.hpp"
 #include "psychic-ui/animation/Timing.hpp"
 #include "psychic-ui/components/Avatar.hpp"
@@ -49,6 +50,13 @@
 namespace psychic_ui {
     namespace {
         constexpr Color transparent{};
+
+        /**
+         * Windows's window controls: a caption button's size, the space between two
+         */
+        constexpr float captionWidth  = 28;
+        constexpr float captionHeight = 24;
+        constexpr float captionGap    = 0.5f; // On the spacing scale
 
         /**
          * A step of the type scale on a style, in a font of the theme
@@ -118,6 +126,7 @@ namespace psychic_ui {
              .add<ButtonSkin, ButtonSkinBase>("danger")
              .add<ButtonSkin, TabButtonSkin>("tab")
              .add<ButtonSkin, TitleBarButtonSkin>("title-bar")
+             .add<ButtonSkin, CaptionButtonSkin>("caption")
              .add<CheckBoxSkin, CheckBoxSkinBase>()
              .add<RangeSkin, RangeSkinBase>()
              .add<ScrollBarSkin, ScrollBarSkinBase>()
@@ -138,6 +147,14 @@ namespace psychic_ui {
 
         // Layout
         skins.add<SplitterDividerSkin, SplitterDividerSkinBase>();
+    }
+
+    float PivotalSkins::windowsControlsWidth(const Metrics &metrics) {
+        return (3 * captionWidth) + (2 * metrics.space(captionGap));
+    }
+
+    float PivotalSkins::windowsControlsHeight() {
+        return captionHeight;
     }
 
     void PivotalSkins::load(StyleManager *manager) {
@@ -261,10 +278,11 @@ namespace psychic_ui {
             .color(palette.text)
             .grow(1);
 
-        // The three dots: neutral at rest, all three in the theme's semantic colors while the pointer is over the group
-        rule("WindowControls").gap(7);
+        // macOS's three dots: neutral at rest, all three in the theme's semantic colors while the pointer is over the
+        // group
+        rule("WindowControls.mac").gap(7);
 
-        rule("WindowControls Button")
+        rule("WindowControls.mac Button")
             .skin("title-bar")
             .width(11)
             .height(11)
@@ -273,9 +291,35 @@ namespace psychic_ui {
             .backgroundColor(palette.lineStrong)
             .transition({P::backgroundColor, P::outlineColor}, quick); // Its skin paints the component's color
 
-        rule("WindowControls:hover Button.close").backgroundColor(palette.danger);
-        rule("WindowControls:hover Button.minimize").backgroundColor(palette.warning);
-        rule("WindowControls:hover Button.maximize").backgroundColor(palette.success);
+        rule("WindowControls.mac:hover Button.close").backgroundColor(palette.danger);
+        rule("WindowControls.mac:hover Button.minimize").backgroundColor(palette.warning);
+        rule("WindowControls.mac:hover Button.maximize").backgroundColor(palette.success);
+
+        // Windows's and Linux's glyph buttons: the glyph in the secondary text, raised under the pointer, close in
+        // the danger color with a light glyph. Their size and gap are the `caption*` constants, which
+        // `windowsControlsWidth` and `windowsControlsHeight` also read for the room the app shell's rules leave them:
+        // change the constants, not the values here
+        rule("WindowControls.windows").gap(metrics.space(captionGap));
+
+        rule("WindowControls.windows Button")
+            .skin("caption")
+            .width(captionWidth)
+            .height(captionHeight)
+            .paddingHorizontal(0) // Over the button's
+            .border(0)
+            .borderRadius(r.small)
+            .color(palette.textSecondary)
+            .backgroundColor(transparent)
+            .iconSize(10)
+            .transition({P::backgroundColor, P::color, P::outlineColor}, quick); // Its skin paints the component's colors
+
+        rule("WindowControls.windows Button:hover")
+            .color(palette.text)
+            .backgroundColor(palette.raised);
+
+        rule("WindowControls.windows Button.close:hover")
+            .color(palette.onAccent)
+            .backgroundColor(palette.danger);
 
         // endregion
 
@@ -1081,13 +1125,15 @@ namespace psychic_ui {
             .width(metrics.sidebarWidth)
             .backgroundColor(palette.frame);
 
-        // The header: the window controls, then the app's mark and name, lit like the rows, and what the app puts
-        // under them
+        // The header: macOS's window controls 14 px in, then the app's mark and name, lit like the rows, and what the
+        // app puts under them; without the controls, the mark lines up with the items' icons
         rule("SidebarHeader")
             .gap(metrics.space(2.5f))
             .minHeight(metrics.barHeader)
-            .paddingLeft(metrics.space(3.5f))
+            .paddingLeft(metrics.space(2.5f))
             .paddingRight(metrics.space(2.5f));
+
+        rule("SidebarHeader WindowControls").marginLeft(metrics.space(1));
 
         rule("SidebarHeader .brand")
             .direction(Direction::Row)
@@ -1181,6 +1227,26 @@ namespace psychic_ui {
 
         rule("PageHeader .icon").color(palette.textMuted);
         text(rule("PageHeader .title"), t.md, t.medium, s).color(palette.text);
+
+        // Windows's window controls at the window's top right (`controls-top-right`): over the page's top-right
+        // corner, centered in the band of a page header and ending where its content does, as tight as their buttons
+        // so that the page's content around them takes its presses
+        const float controlsStart = metrics.space(2); // The page header's gap
+        const float controlsEnd   = metrics.space(3); // Its end padding
+        rule("AppShell .main > WindowControls")
+            .position(Position::Absolute)
+            .top(metrics.frameInset + ((metrics.barHeader - captionHeight) / 2))
+            .right(metrics.frameInset + controlsEnd);
+        // With a page header to carry them, its whole band from its gap to its end, the room around the buttons the
+        // window's drag area; the header leaves them that room at its end
+        rule("AppShell.page-has-header .main > WindowControls")
+            .top(metrics.frameInset)
+            .right(metrics.frameInset)
+            .height(metrics.barHeader)
+            .paddingLeft(controlsStart)
+            .paddingRight(controlsEnd);
+        rule("AppShell.controls-top-right .page > PageHeader")
+            .paddingRight(controlsStart + windowsControlsWidth(metrics) + controlsEnd);
 
         // endregion
 

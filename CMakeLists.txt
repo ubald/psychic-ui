@@ -199,6 +199,8 @@ set(SOURCE_FILES
     psychic-ui/components/TitleBar.hpp
     psychic-ui/components/AppShell.cpp
     psychic-ui/components/AppShell.hpp
+    psychic-ui/components/AppShellPage.cpp
+    psychic-ui/components/AppShellPage.hpp
     psychic-ui/components/PageHeader.cpp
     psychic-ui/components/PageHeader.hpp
     psychic-ui/components/Sidebar.cpp
@@ -229,6 +231,7 @@ set(SOURCE_FILES
     psychic-ui/components/Tone.hpp
     psychic-ui/components/WindowControls.cpp
     psychic-ui/components/WindowControls.hpp
+    psychic-ui/components/WindowControlsStyle.hpp
     psychic-ui/components/ToolBar.cpp
     psychic-ui/components/ToolBar.hpp
     psychic-ui/components/ColorSwatches.cpp
@@ -309,6 +312,8 @@ set(SOURCE_FILES
     psychic-ui/skins/pivotal/PivotalSkins.hpp
     psychic-ui/skins/pivotal/TabButtonSkin.cpp
     psychic-ui/skins/pivotal/TabButtonSkin.hpp
+    psychic-ui/skins/pivotal/CaptionButtonSkin.cpp
+    psychic-ui/skins/pivotal/CaptionButtonSkin.hpp
     psychic-ui/skins/pivotal/TitleBarButtonSkin.cpp
     psychic-ui/skins/pivotal/TitleBarButtonSkin.hpp
     psychic-ui/style/Atom.cpp

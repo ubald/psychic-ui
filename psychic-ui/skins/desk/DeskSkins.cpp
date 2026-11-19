@@ -299,6 +299,17 @@ namespace psychic_ui {
             .height(bar(metrics.barHeader))
             .paddingRight(metrics.gutter);
 
+        // Windows's window controls at the window's top right: centered in the page header's band, at its end
+        // padding; with a page header, its band
+        rule("AppShell .main > WindowControls")
+            .top((bar(metrics.barHeader) - PivotalSkins::windowsControlsHeight()) / 2)
+            .right(metrics.gutter);
+        rule("AppShell.page-has-header .main > WindowControls")
+            .height(bar(metrics.barHeader))
+            .paddingRight(metrics.gutter);
+        rule("AppShell.controls-top-right .page > PageHeader")
+            .paddingRight(metrics.space(2) + PivotalSkins::windowsControlsWidth(metrics) + metrics.gutter);
+
         // endregion
 
         // region Lists

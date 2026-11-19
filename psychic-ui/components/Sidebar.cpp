@@ -9,6 +9,7 @@
 #include "Rows.hpp"
 #include "Sidebar.hpp"
 #include "WindowControls.hpp"
+#include "WindowControlsStyle.hpp"
 #include "psychic-ui/Div.hpp"
 #include "psychic-ui/Window.hpp"
 #include "psychic-ui/psychic-ui.hpp"
@@ -151,8 +152,9 @@ namespace psychic_ui {
             .alignItems(Align::Center)
             .shrink(0);
 
+        // Ours in macOS's style, which puts them at the start of the bar; they follow a change of style
         _controls = std::make_shared<WindowControls>();
-        add(_controls);
+        subscribeTo(_controls->changed, [this](WindowControlsStyle /*style*/) { placeWindowControls(); });
 
         _identity = &add<Div>();
         _identity->addClassName("identity")
@@ -167,16 +169,26 @@ namespace psychic_ui {
         _title->addClassName("title");
 
         _brand->add<Icon>("chevron-down").addClassName("chevron");
-    }
 
-    bool SidebarHeader::windowControls() const {
-        return _controls->parent() == this;
+        placeWindowControls();
     }
 
     void SidebarHeader::updateWindowControls(const bool shown) {
-        if (shown && !windowControls()) {
-            add(0, _controls);
-        } else if (!shown) {
+        if (shown == _windowControls) {
+            return;
+        }
+        _windowControls = shown;
+        placeWindowControls();
+        windowControlsToggled.emit(shown);
+    }
+
+    void SidebarHeader::placeWindowControls() {
+        // First in the header while shown in macOS's style; out of it otherwise (Windows's are the shell's to place)
+        if (_windowControls && windowControlsLead(_controls->controlsStyle())) {
+            if (_controls->parent() != this) {
+                add(0, _controls);
+            }
+        } else if (_controls->parent() == this) {
             remove(*_controls);
         }
     }

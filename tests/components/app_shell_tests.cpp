@@ -9,6 +9,8 @@
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include <psychic-ui/components/Sidebar.hpp>
+#include <psychic-ui/components/WindowControls.hpp>
+#include <psychic-ui/components/WindowControlsStyle.hpp>
 #include <psychic-ui/psychic-ui.hpp>
 #include <psychic-ui/style/Length.hpp>
 #include <psychic-ui/style/Values.hpp>
@@ -223,8 +225,10 @@ TEST_CASE("AppShell: the sidebar is one Tab stop, the current item else the firs
 }
 
 TEST_CASE("AppShell: the sidebar's header moves the window, its controls and the items don't", "[components][appshell][drag]") {
-    const Shell s;
-    const SidebarHeader &header = s.shell.sidebar().header();
+    Shell s;
+    SidebarHeader &header = s.shell.sidebar().header();
+    header.controls().controlsStyle(WindowControlsStyle::Mac);
+    s.layout();
     int x = 0;
     int y = 0;
     header.localToGlobal(x, y, header.getWidth() - 4, header.getHeight() / 2);
@@ -232,13 +236,212 @@ TEST_CASE("AppShell: the sidebar's header moves the window, its controls and the
 
     const auto [closeX, closeY] = Shell::center(header.controls().closeButton());
     CHECK_FALSE(s.window->isDragArea(closeX, closeY));
-    // Grey until the pointer is over them
+    // macOS's dots, grey until the pointer is over them
     CHECK(header.controls().closeButton().computedStyle().backgroundColor() == s.theme.palette.lineStrong);
     CHECK(header.controls().maximizeButton().computedStyle().backgroundColor() == s.theme.palette.lineStrong);
 
     const auto [itemX, itemY] = Shell::center(*s.inbox);
     CHECK_FALSE(s.window->isDragArea(itemX, itemY));
     CHECK(header.title() == "Lights");
+}
+
+namespace {
+    // Whether a div is in another one, at any depth
+    bool within(const Div &div, const Div &ancestor) {
+        for (const Div *parent = div.parent(); parent; parent = parent->parent()) {
+            if (parent == &ancestor) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Whether a div's box is inside another's, in window coordinates
+    bool inside(const Div &div, const Div &box) {
+        const auto [x, y]       = Shell::origin(div);
+        const auto [boxX, boxY] = Shell::origin(box);
+        return x >= boxX && y >= boxY && x + div.getWidth() <= boxX + box.getWidth()
+               && y + div.getHeight() <= boxY + box.getHeight();
+    }
+}
+
+TEST_CASE("AppShell: macOS's window controls go first in the sidebar's header", "[components][appshell][window-controls]") {
+    Shell s;
+    SidebarHeader  &header   = s.shell.sidebar().header();
+    WindowControls &controls = header.controls();
+    controls.controlsStyle(WindowControlsStyle::Mac);
+    s.layout();
+    CHECK(controls.classNames().contains("mac"));
+    CHECK(controls.parent() == &header);
+    CHECK(header.at(0) == &controls);
+    CHECK(inside(controls, header));
+}
+
+TEST_CASE("AppShell: Windows's window controls go at the window's top right, at the end of the page's header", "[components][appshell][window-controls]") {
+    Shell s;
+    SidebarHeader  &header   = s.shell.sidebar().header();
+    WindowControls &controls = header.controls();
+    controls.controlsStyle(WindowControlsStyle::Windows);
+    auto &pageHeader = s.shell.page().add<PageHeader>("Fixtures", "layers");
+    auto &action     = pageHeader.add<Button>("Add");
+    s.layout();
+
+    // Not in the sidebar's header, which keeps no room for them: its brand starts where it does without them
+    CHECK(header.windowControls());
+    CHECK_FALSE(within(controls, header));
+    const auto [brandX, brandY] = Shell::origin(header.brand());
+    header.windowControls(false);
+    s.layout();
+    CHECK(Shell::origin(header.brand()).first == brandX);
+    header.windowControls(true);
+    s.layout();
+
+    // In the page's top-right corner, in the band of its header, after what the header holds
+    const Div &page = s.shell.page();
+    const auto [pageX, pageY]         = Shell::origin(page);
+    const auto [controlsX, controlsY] = Shell::origin(controls);
+    const auto [headerX, headerY]     = Shell::origin(pageHeader);
+    const auto [actionX, actionY]     = Shell::origin(action);
+    CHECK(controls.parent() != nullptr);
+    CHECK(controls.getHeight() == pageHeader.getHeight());
+    CHECK(controlsY == headerY);
+    CHECK(controlsY == pageY);
+    CHECK(controlsX + controls.getWidth() == pageX + page.getWidth());
+    CHECK(actionX + action.getWidth() <= controlsX);
+    CHECK(headerX + pageHeader.getWidth() == controlsX + controls.getWidth());
+    CHECK(inside(controls.closeButton(), pageHeader));
+    // Last in the row: close at the right end
+    const auto [minimizeX, minimizeY] = Shell::origin(controls.minimizeButton());
+    const auto [closeX, closeY]       = Shell::origin(controls.closeButton());
+    CHECK(minimizeX < closeX);
+}
+
+TEST_CASE("AppShell: without a page header, Windows's window controls sit over the page's top-right corner", "[components][appshell][window-controls]") {
+    Shell s;
+    WindowControls &controls = s.shell.sidebar().header().controls();
+    controls.controlsStyle(WindowControlsStyle::Windows);
+    auto &content = s.shell.page().add<Div>().grow(1);
+    s.layout();
+
+    // As tight as their buttons, where a page header would center them, at its end padding
+    const Div &page = s.shell.page();
+    const auto [pageX, pageY]         = Shell::origin(page);
+    const auto [controlsX, controlsY] = Shell::origin(controls);
+    CHECK(controls.getHeight() == controls.closeButton().getHeight());
+    CHECK(controlsY - pageY == static_cast<int>((s.theme.metrics.barHeader - controls.getHeight()) / 2));
+    CHECK(controlsX + controls.getWidth() == pageX + page.getWidth() - static_cast<int>(s.theme.metrics.space(3)));
+    // Over the content, which keeps the page's whole width
+    CHECK(content.getWidth() == page.getWidth());
+    CHECK(inside(controls, page));
+}
+
+TEST_CASE("AppShell: without a page header, the content under Windows's window controls takes its presses", "[components][appshell][window-controls][drag]") {
+    Shell s;
+    WindowControls &controls = s.shell.sidebar().header().controls();
+    controls.controlsStyle(WindowControlsStyle::Windows);
+    auto &content = s.shell.page().add<Div>().grow(1);
+    int  presses  = 0;
+    content.onMousePress([&]() { ++presses; });
+    s.layout();
+
+    // Left of minimize, in the band a page header would have: not the window's drag area, the content's press
+    const auto [minimizeX, minimizeY] = Shell::origin(controls.minimizeButton());
+    const int x = minimizeX - 4;
+    const int y = minimizeY + 2;
+    CHECK_FALSE(s.window->isDragArea(x, y));
+    s.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = true});
+    s.window->handleMouseButtonChange({.x = static_cast<float>(x), .y = static_cast<float>(y), .button = MouseButton::LEFT, .down = false});
+    CHECK(presses == 1);
+
+    // A page header carries them: the room around the buttons moves the window again
+    s.shell.page().add(0, std::make_shared<PageHeader>("Fixtures"));
+    s.layout();
+    CHECK(s.window->isDragArea(x, y));
+
+    // macOS's style: the band is the content's again
+    controls.controlsStyle(WindowControlsStyle::Mac);
+    s.layout();
+    CHECK_FALSE(s.window->isDragArea(x, y));
+}
+
+TEST_CASE("AppShell: switching the window controls' style moves them", "[components][appshell][window-controls]") {
+    Shell s;
+    SidebarHeader  &header   = s.shell.sidebar().header();
+    WindowControls &controls = header.controls();
+    s.shell.page().add<PageHeader>("Fixtures");
+
+    controls.controlsStyle(WindowControlsStyle::Mac);
+    s.layout();
+    CHECK(header.at(0) == &controls);
+
+    controls.controlsStyle(WindowControlsStyle::Windows);
+    s.layout();
+    CHECK_FALSE(within(controls, header));
+    CHECK(within(controls, s.shell));
+    const auto [pageX, pageY]         = Shell::origin(s.shell.page());
+    const auto [controlsX, controlsY] = Shell::origin(controls);
+    CHECK(controlsX + controls.getWidth() == pageX + s.shell.page().getWidth());
+
+    controls.controlsStyle(WindowControlsStyle::Mac);
+    s.layout();
+    CHECK(header.at(0) == &controls);
+    CHECK(inside(controls, header));
+}
+
+TEST_CASE("AppShell: windowControls(false) takes the window controls out in either style", "[components][appshell][window-controls]") {
+    Shell s;
+    SidebarHeader  &header   = s.shell.sidebar().header();
+    WindowControls &controls = header.controls();
+    s.shell.page().add<PageHeader>("Fixtures");
+
+    for (const WindowControlsStyle style: allWindowControlsStyles) {
+        controls.controlsStyle(style);
+        header.windowControls(false);
+        s.layout();
+        CHECK_FALSE(header.windowControls());
+        CHECK(controls.parent() == nullptr);
+    }
+
+    // Hidden, a change of style leaves them out; shown again, they go where the style puts them
+    controls.controlsStyle(WindowControlsStyle::Windows);
+    controls.controlsStyle(WindowControlsStyle::Mac);
+    s.layout();
+    CHECK(controls.parent() == nullptr);
+    controls.controlsStyle(WindowControlsStyle::Windows);
+    header.windowControls(true);
+    s.layout();
+    CHECK(within(controls, s.shell));
+    CHECK_FALSE(within(controls, header));
+    header.windowControls(false);
+    controls.controlsStyle(WindowControlsStyle::Mac);
+    header.windowControls(true);
+    s.layout();
+    CHECK(header.at(0) == &controls);
+}
+
+TEST_CASE("AppShell: around Windows's window controls the window drags, their buttons click", "[components][appshell][window-controls][drag]") {
+    Shell s;
+    WindowControls &controls = s.shell.sidebar().header().controls();
+    controls.controlsStyle(WindowControlsStyle::Windows);
+    s.shell.page().add<PageHeader>("Fixtures");
+    s.layout();
+
+    // Above the buttons, and between the left edge of the area and minimize
+    const auto [minimizeX, minimizeY] = Shell::origin(controls.minimizeButton());
+    const auto [controlsX, controlsY] = Shell::origin(controls);
+    REQUIRE(minimizeY > controlsY);
+    CHECK(s.window->isDragArea(minimizeX + 2, controlsY + 1));
+    REQUIRE(minimizeX > controlsX);
+    CHECK(s.window->isDragArea(controlsX + 1, minimizeY + 2));
+
+    for (const Button *button: {&controls.minimizeButton(), &controls.maximizeButton(), &controls.closeButton()}) {
+        const auto [x, y] = Shell::center(*button);
+        CHECK_FALSE(s.window->isDragArea(x, y));
+    }
+
+    CHECK(s.window->windowVisible());
+    s.click(controls.closeButton());
+    CHECK_FALSE(s.window->windowVisible());
 }
 
 TEST_CASE("Text levels: three classes the skin set colors", "[components][text]") {
@@ -461,6 +664,8 @@ TEST_CASE("Sidebar: the keyboard walks the nested items", "[components][appshell
 TEST_CASE("Sidebar: a header without window controls, with the app's mark and lines under its name", "[components][appshell][sidebar][drag]") {
     Shell s;
     SidebarHeader &header = s.shell.sidebar().header();
+    header.controls().controlsStyle(WindowControlsStyle::Mac); // macOS's, which the header holds
+    s.layout();
     CHECK(header.windowControls());
     CHECK(header.controls().parent() == &header);
 
