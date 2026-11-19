@@ -40,20 +40,38 @@ namespace psychic_ui::internal {
 
         onMousePress(
             [this](const MouseEvent &event) {
-                dragTo(static_cast<int>(event.windowX), static_cast<int>(event.windowY));
+                if (!_enabled || !_skin || event.button != MouseButton::LEFT || _onMouseMove.connected()) {
+                    return;
+                }
                 _onMouseMove = window()->mouseMoved.subscribe(
                     [this](const MouseEvent &move) {
                         dragTo(static_cast<int>(move.windowX), static_cast<int>(move.windowY));
                     }
                 );
+                const auto keepAlive = weak_from_this().lock(); // A handler may remove this range from its parent
+                dragStarted.emit();
+                if (_onMouseMove.connected()) { // Unless a handler ended it
+                    dragTo(static_cast<int>(event.windowX), static_cast<int>(event.windowY));
+                }
             }
         );
 
         onMouseRelease(
-            [this] {
-                _onMouseMove.disconnect();
+            [this](const MouseEvent &event) {
+                if (event.button == MouseButton::LEFT) {
+                    endDrag();
+                }
             }
         );
+    }
+
+    void RangeBase::endDrag() {
+        if (!_onMouseMove.connected()) {
+            return;
+        }
+        _onMouseMove.disconnect();
+        const auto keepAlive = weak_from_this().lock(); // A handler may remove this range from its parent
+        dragEnded.emit();
     }
 
     void RangeBase::dragTo(const int windowX, const int windowY) {
@@ -68,6 +86,6 @@ namespace psychic_ui::internal {
 
     void RangeBase::removedFromRender() {
         Component<RangeSkin>::removedFromRender();
-        _onMouseMove.disconnect(); // Removed mid-drag: the mouse up won't reach us
+        endDrag(); // Removed mid-drag: the mouse up won't reach us
     }
 }

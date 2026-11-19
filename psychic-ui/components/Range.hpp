@@ -1,9 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <numbers>
 #include <sstream>
+#include <string>
 #include <iomanip>
 #include <functional>
 #include <utility>
@@ -48,14 +50,31 @@ namespace psychic_ui {
         class RangeBase : public Component<RangeSkin> {
         protected:
             /**
-             * Pressing sets the value under the mouse, then dragging (anywhere in the window) follows it
+             * Pressing the left button (or a finger) sets the value under it, then dragging (anywhere in the window)
+             * follows it until the release
              */
             RangeBase();
 
         public:
             virtual float getLinearPercentage() const = 0;
             virtual void setLinearPercentage(float percent) = 0;
+
+            /**
+             * The value as the `.value` part shows it
+             */
             virtual std::string valueString() const = 0;
+
+            /**
+             * A drag started: the left button or a finger pressed it, before the value under it is set
+             */
+            Signal<> dragStarted{};
+            PSYCHIC_UI_EVENT(onDragStart, dragStarted)
+
+            /**
+             * The drag ended: released (anywhere), cancelled, or the range was removed. Each drag ends once.
+             */
+            Signal<> dragEnded{};
+            PSYCHIC_UI_EVENT(onDragEnd, dragEnded)
 
         protected:
             ScopedSlot _onMouseMove{}; // On the window, only while dragging
@@ -64,6 +83,11 @@ namespace psychic_ui {
              * Set the value the skin has at this point, in window coordinates
              */
             void dragTo(int windowX, int windowY);
+
+            /**
+             * Stop following the mouse and emit `dragEnded`, if dragging
+             */
+            void endDrag();
 
             void removedFromRender() override;
         };
@@ -131,7 +155,7 @@ namespace psychic_ui {
         T value() const;
 
         /**
-         * Set the value, clamped to the range
+         * Set the value, clamped to the range, emitting `changed` if it changed
          */
         template<class Self>
         Self &value(this Self &self, T value) {
@@ -139,7 +163,27 @@ namespace psychic_ui {
             return self;
         }
 
+        /**
+         * Set the value, clamped to the range, without emitting `changed`: for a value that mirrors one changed
+         * elsewhere, so only the user's edits (presses, drags, keys and the wheel) emit
+         */
+        template<class Self>
+        Self &sync(this Self &self, T value) {
+            static_cast<Range &>(self).updateValue(value, false);
+            return self;
+        }
+
         // endregion
+
+        /**
+         * How the `.value` part shows the value; without one (or with `nullptr`), a floating point value shows
+         * three decimals and an integer as it is
+         */
+        template<class Self>
+        Self &format(this Self &self, std::function<std::string(T)> format) {
+            static_cast<Range &>(self).updateFormat(std::move(format));
+            return self;
+        }
 
         std::string valueString() const override;
 
@@ -147,7 +191,7 @@ namespace psychic_ui {
         void setLinearPercentage(float percent) override;
 
         /**
-         * The value changed, with the new value
+         * The value changed, with the new value: from the user, or `value(v)`; `sync(v)` doesn't emit it
          */
         Signal<T> changed{};
         PSYCHIC_UI_EVENT(onChange, changed)
@@ -158,11 +202,13 @@ namespace psychic_ui {
         T         _max{1};
         T         _step{0};
         T         _value{0};
+        std::function<std::string(T)> _format{};
         void checkRange();
         void updateRange(T min, T max);
         void updateMin(T min);
         void updateMax(T max);
-        void updateValue(T value);
+        void updateValue(T value, bool emit = true);
+        void updateFormat(std::function<std::string(T)> format);
         float getPercentageFor(T value) const;
         float getLinearPercentageFor(T value) const;
         float nearestValidValue(T value, T interval) const;
@@ -264,14 +310,24 @@ namespace psychic_ui {
     }
 
     template<class T>
-    void Range<T>::updateValue(const T value) {
-        const float clamped = std::max(_min, std::min(value, _max));
+    void Range<T>::updateValue(const T value, const bool emit) {
+        const T clamped = std::clamp(value, _min, _max);
         if (clamped != _value) {
             _value = clamped;
-            changed.emit(_value);
+            if (emit) {
+                changed.emit(_value);
+            }
             if (_skin) {
                 _skin->setValue(getLinearPercentage());
             }
+        }
+    }
+
+    template<class T>
+    void Range<T>::updateFormat(std::function<std::string(T)> format) {
+        _format = std::move(format);
+        if (_skin) {
+            _skin->setValue(getLinearPercentage()); // Shows the value again
         }
     }
 
@@ -293,8 +349,9 @@ namespace psychic_ui {
             default:
                 break;
         }
-        fraction = (fraction * (static_cast<float>(_max) - static_cast<float >(_min))) + static_cast<float >(_min);
-        updateValue(static_cast<T>(std::is_floating_point_v<T> ? fraction : std::round(fraction)));
+        // In double, so a Range<double> keeps its precision
+        const double value = (fraction * (static_cast<double>(_max) - static_cast<double>(_min))) + static_cast<double>(_min);
+        updateValue(static_cast<T>(std::is_floating_point_v<T> ? value : std::round(value)));
     }
 
     template<class T>
@@ -384,6 +441,9 @@ namespace psychic_ui {
 
     template<class T>
     std::string Range<T>::valueString() const {
+        if (_format) {
+            return _format(_value);
+        }
         std::stringstream stream;
         stream << std::fixed << std::setprecision(3) << _value;
         return stream.str();
