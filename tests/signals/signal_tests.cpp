@@ -356,3 +356,18 @@ TEST_CASE("A callback that takes nothing ignores the arguments", "[signals]") {
     CHECK(ran == 1);
     CHECK(sum == 3);
 }
+
+TEST_CASE("A callback returning a bool says whether it used the emission", "[signals]") {
+    Signal<int> signal;
+    CHECK_FALSE(signal.emit(1)); // No slot
+    int ran = 0;
+    signal.subscribe([&](int) { ++ran; });
+    CHECK_FALSE(signal.emit(1)); // Returning nothing doesn't use it
+    signal.subscribe([&](int value) { return value > 2; });
+    CHECK_FALSE(signal.emit(1));
+    CHECK(signal.emit(3));
+    // The slots after the one that used it still run
+    signal.subscribe([&] { ++ran; return false; });
+    CHECK(signal.emit(3));
+    CHECK(ran == 5);
+}
