@@ -1092,13 +1092,15 @@ namespace psychic_ui {
             .width(metrics.sidebarWidth)
             .backgroundColor(palette.frame);
 
-        // The header: the window controls, then the app's mark and name, lit like the rows, and what the app puts
-        // under them
+        // The header: macOS's window controls 14 px in, then the app's mark and name, lit like the rows, and what the
+        // app puts under them; without the controls, the mark lines up with the items' icons
         rule("SidebarHeader")
             .gap(metrics.space(2.5f))
             .minHeight(metrics.barHeader)
-            .paddingLeft(metrics.space(3.5f))
+            .paddingLeft(metrics.space(2.5f))
             .paddingRight(metrics.space(2.5f));
+
+        rule("SidebarHeader WindowControls").marginLeft(metrics.space(1));
 
         rule("SidebarHeader .brand")
             .direction(Direction::Row)
