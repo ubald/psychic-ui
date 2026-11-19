@@ -26,6 +26,7 @@
 #include "Buttons.hpp"
 #include "Divs.hpp"
 #include "Scrollers.hpp"
+#include "Splitters.hpp"
 #include "Canvas.hpp"
 #include "Ranges.hpp"
 #include "Colors.hpp"
@@ -171,6 +172,7 @@ namespace psychic_ui {
             {"Typography", "file-text", page([] { return std::make_shared<TypographyPanel>(); })},
             {"Divs", "layers", page([] { return std::make_shared<Divs>(); })},
             {"Scroller", "arrow-up-down", page([] { return std::make_shared<Scrollers>(); })},
+            {"Splitter", "grip-vertical", page([] { return std::make_shared<Splitters>(); })},
             {"Canvas", "hash", page([] { return std::make_shared<CanvasPage>(); })},
             {"Motion", "play", page([] { return std::make_shared<MotionPanel>(); })}, // In Layout, after Canvas
             {"Colors", "eyedropper", page([] { return std::make_shared<Colors>(); })},
@@ -186,7 +188,7 @@ namespace psychic_ui {
         assets.grow(1); // Pushes the last section to the bottom
         for (Page &entry: _pages) {
             SidebarSection *section = &controls;
-            if (entry.name == "Divs" || entry.name == "Scroller" || entry.name == "Canvas" || entry.name == "Motion" || entry.name == "Typography") {
+            if (entry.name == "Divs" || entry.name == "Scroller" || entry.name == "Splitter" || entry.name == "Canvas" || entry.name == "Motion" || entry.name == "Typography") {
                 section = &layout;
             } else if (entry.name == "Colors" || entry.name == "Icons") {
                 section = &assets;
