@@ -20,9 +20,11 @@ namespace psychic_ui {
 
         keyPressed.subscribe(
             [this](const Key key, const Mod /*modifiers*/) {
-                if (_enabled && (key == Key::SPACE || key == Key::ENTER)) {
-                    updateChecked(!_checked);
+                if (!_enabled || (key != Key::SPACE && key != Key::ENTER)) {
+                    return false;
                 }
+                updateChecked(!_checked);
+                return true;
             }
         );
 

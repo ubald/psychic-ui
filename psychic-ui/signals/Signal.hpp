@@ -16,6 +16,8 @@ namespace psychic_ui {
      * Signal
      * Create a signal with template arguments matching the arguments required for `emit` and parameters that will be
      * used in the callback/lambda. Callbacks receive the arguments as `const T &`, or take no parameters to ignore them.
+     * A callback may return a bool, whether it used the emission (a key it acted on): `emit` returns true when one
+     * did, and still calls the others. A callback that returns nothing didn't use it.
      *
      * Handlers may connect, disconnect (themselves or others) and destroy the signal while it is emitting:
      * - a slot connected during an emission is first called by the next emission;
@@ -73,11 +75,29 @@ namespace psychic_ui {
             }
             SlotPtr slot;
             if constexpr (std::invocable<F &, const T &...>) {
-                slot = std::make_shared<Slot<T...>>(_core, std::forward<F>(callback));
+                if constexpr (std::same_as<std::invoke_result_t<F &, const T &...>, bool>) {
+                    slot = std::make_shared<Slot<T...>>(_core, std::forward<F>(callback));
+                } else {
+                    slot = std::make_shared<Slot<T...>>(
+                        _core,
+                        [callback = std::forward<F>(callback)](const T &...args) mutable {
+                            callback(args...);
+                            return false;
+                        }
+                    );
+                }
             } else {
                 // A callback that takes nothing ignores the arguments: `onClick([] { ... })`
                 slot = std::make_shared<Slot<T...>>(
-                    _core, [callback = std::forward<F>(callback)](const T &...) mutable { callback(); }
+                    _core,
+                    [callback = std::forward<F>(callback)](const T &...) mutable {
+                        if constexpr (std::same_as<std::invoke_result_t<F &>, bool>) {
+                            return callback();
+                        } else {
+                            callback();
+                            return false;
+                        }
+                    }
                 );
             }
             _core->slots.push_back(slot);
@@ -87,14 +107,16 @@ namespace psychic_ui {
         /**
          * Emit a signal
          * @param args Arguments matching the types used as template arguments, converted once for all the slots
+         * @return Whether a callback used it (returned true)
          */
-        void emit(const T &... args) {
+        bool emit(const T &... args) {
             if (!_core) {
-                return;
+                return false;
             }
             // From here on, only use locals: a handler can destroy this signal
             const std::shared_ptr<detail::SignalCore<T...>> core = _core;
             const Emitting emitting{*core};
+            bool           used = false;
             // By index over a snapshot of the size: slots connected by a handler wait for the next emission
             for (std::size_t i = 0, count = core->slots.size(); i < count; ++i) {
                 // The core keeps the slot, and only compacts once no emission runs, so the callback stays valid even
@@ -103,8 +125,9 @@ namespace psychic_ui {
                 if (!slot._connected) {
                     continue;
                 }
-                slot._callback(args...);
+                used = slot._callback(args...) || used;
             }
+            return used;
         }
 
     private:

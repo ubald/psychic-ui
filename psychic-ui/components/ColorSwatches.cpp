@@ -26,7 +26,7 @@ namespace psychic_ui {
 
         const auto key = [this](const Key key, const Mod /*modifiers*/) {
             if (!_enabled || _colors.empty()) {
-                return;
+                return false;
             }
             const int last = static_cast<int>(_colors.size()) - 1;
             const int from = _focused >= 0 ? _focused : _selected;
@@ -51,15 +51,16 @@ namespace psychic_ui {
                 case Key::KP_ENTER:
                     updateSelected(from < 0 ? 0 : from);
                     updateFocused(from < 0 ? 0 : from);
-                    return;
+                    return true;
                 default:
-                    return;
+                    return false;
             }
             updateFocused(next);
             // The keyboard is in use: the ring shows even after a click focused the group
             if (window() && !window()->focusVisible()) {
                 window()->requestFocus(this, true);
             }
+            return true;
         };
         keyPressed.subscribe(key);
         keyRepeated.subscribe(key);

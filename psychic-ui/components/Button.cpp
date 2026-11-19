@@ -17,11 +17,13 @@ namespace psychic_ui {
 
         keyPressed.subscribe(
             [this](const Key key, const Mod /*modifiers*/) {
-                if (_enabled && (key == Key::SPACE || key == Key::ENTER || key == Key::KP_ENTER)) {
-                    MouseEvent click = mouseEventAtCenter();
-                    click.button     = MouseButton::LEFT;
-                    clicked.emit(click);
+                if (!_enabled || (key != Key::SPACE && key != Key::ENTER && key != Key::KP_ENTER)) {
+                    return false;
                 }
+                MouseEvent click = mouseEventAtCenter();
+                click.button     = MouseButton::LEFT;
+                clicked.emit(click);
+                return true;
             }
         );
 

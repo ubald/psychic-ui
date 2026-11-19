@@ -17,25 +17,25 @@ namespace psychic_ui {
 
         const auto key = [this](const Key key, const Mod /*modifiers*/) {
             if (!_enabled || _segments.empty()) {
-                return;
+                return false;
             }
             switch (key) {
                 case Key::LEFT:
                 case Key::UP:
                     updateSelected(_selected - 1);
-                    break;
+                    return true;
                 case Key::RIGHT:
                 case Key::DOWN:
                     updateSelected(_selected + 1);
-                    break;
+                    return true;
                 case Key::HOME:
                     updateSelected(0);
-                    break;
+                    return true;
                 case Key::END:
                     updateSelected(static_cast<int>(_segments.size()) - 1);
-                    break;
+                    return true;
                 default:
-                    break;
+                    return false;
             }
         };
         keyPressed.subscribe(key);

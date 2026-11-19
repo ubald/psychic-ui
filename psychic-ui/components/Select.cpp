@@ -39,9 +39,11 @@ namespace psychic_ui {
         onClick([this]() { isOpen() ? close() : open(); });
         keyPressed.subscribe(
             [this](const Key key, const Mod /*modifiers*/) {
-                if (key == Key::ENTER || key == Key::KP_ENTER || key == Key::SPACE || key == Key::DOWN || key == Key::UP) {
-                    open();
+                if (key != Key::ENTER && key != Key::KP_ENTER && key != Key::SPACE && key != Key::DOWN && key != Key::UP) {
+                    return false;
                 }
+                open();
+                return true;
             }
         );
     }

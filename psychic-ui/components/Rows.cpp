@@ -105,7 +105,7 @@ namespace psychic_ui {
         keyPressed.subscribe(
             [this](const Key key, const Mod mod) {
                 if (!_enabled) {
-                    return;
+                    return false;
                 }
                 // The row with the focus (the focus is in the group, maybe deeper), else the selection
                 SelectableRow *row = nullptr;
@@ -115,7 +115,7 @@ namespace psychic_ui {
                         break;
                     }
                 }
-                handleRowKey(row ? row : _selection, key, mod);
+                return handleRowKey(row ? row : _selection, key, mod);
             }
         );
 

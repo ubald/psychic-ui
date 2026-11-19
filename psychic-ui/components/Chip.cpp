@@ -34,13 +34,17 @@ namespace psychic_ui {
         keyPressed.subscribe(
             [this](const Key key, const Mod /*mod*/) {
                 if (!_enabled) {
-                    return;
+                    return false;
                 }
                 if (key == Key::ENTER || key == Key::KP_ENTER || key == Key::SPACE) {
                     clicked.emit(mouseEventAtCenter());
-                } else if (key == Key::BACKSPACE || key == Key::DELETE) {
-                    dismiss();
+                    return true;
                 }
+                if (key == Key::BACKSPACE || key == Key::DELETE) {
+                    dismiss();
+                    return true;
+                }
+                return false;
             }
         );
 

@@ -329,4 +329,47 @@ namespace psychic_ui {
                 return Edit::None;
         }
     }
+
+    namespace {
+        /**
+         * A key that types a character: a printable one, the keypad's, or one the backend doesn't name (a letter of
+         * another alphabet)
+         */
+        bool types(const Key key) {
+            return key == Key::UNKNOWN || (key >= Key::SPACE && key <= Key::WORLD_2)
+                   || (key >= Key::KP_0 && key <= Key::KP_EQUAL && key != Key::KP_ENTER);
+        }
+    }
+
+    bool TextEditing::keeps(const Key key, const Mod mod) const {
+        if (mod.alt) {
+            return false;
+        }
+        const bool command = mod.ctrl || mod.super;
+        switch (key) {
+            case Key::A:
+            case Key::C:
+            case Key::X:
+            case Key::V:
+                return command || !_readOnly;
+
+            case Key::HOME:
+            case Key::END:
+            case Key::UP:
+            case Key::DOWN:
+            case Key::LEFT:
+            case Key::RIGHT:
+                return true;
+
+            case Key::BACKSPACE:
+            case Key::DELETE:
+                return !_readOnly;
+
+            case Key::ENTER:
+                return _multiline && !_readOnly;
+
+            default:
+                return !command && !_readOnly && types(key);
+        }
+    }
 }

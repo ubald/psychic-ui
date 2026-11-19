@@ -85,7 +85,7 @@ namespace psychic_ui {
     template<class... T>
     class Slot final : public SlotBase {
     public:
-        using Callback = std::function<void(const T &...)>;
+        using Callback = std::function<bool(const T &...)>; // Whether it used the emission
 
         Slot(std::weak_ptr<detail::SignalCore<T...>> core, Callback callback) :
             _core(std::move(core)),
