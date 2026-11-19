@@ -16,7 +16,7 @@
 
 namespace psychic_ui {
     namespace {
-        // The grid icons' stroke widths are given in
+        // The grid, in units, that icons' stroke widths are given on
         constexpr float iconGrid = 16.0f;
 
         // How far restore's back square sits from its front one, a share of the glyph

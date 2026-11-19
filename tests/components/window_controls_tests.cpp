@@ -198,6 +198,13 @@ TEST_CASE("Windows's maximize button maximizes the window and then shows restore
     CHECK_FALSE(fixture.window->getFullscreen());
     const auto restore = glyph();
     CHECK(restore != square);
+    // The 10 px glyph's square is (9, 7) to (19, 17) in the 28 × 24 button. Restore's back square, 2 px up and right,
+    // shows its left edge above the front square, which starts 2 px lower; the square's top left corner is gone
+    const Color background = fixture.at(maximize, 1, 12);
+    CHECK(fixture.at(maximize, 11, 8) != background);  // The back square's left edge, above the front one
+    CHECK(fixture.at(maximize, 12, 9) != background);  // The front square's top edge
+    CHECK(fixture.at(maximize, 9, 7) == background);   // Where the unmaximized square's corner was
+    CHECK(square[(8 * maximize.getWidth()) + 11] == background); // The square has nothing there
 
     fixture.click(maximize);
     CHECK_FALSE(fixture.window->maximized());

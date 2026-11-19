@@ -9,6 +9,7 @@
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/themes/pivotal.hpp>
 #include <psychic-ui/components/Sidebar.hpp>
+#include <psychic-ui/components/WindowControls.hpp>
 #include <psychic-ui/components/WindowControlsStyle.hpp>
 #include <psychic-ui/psychic-ui.hpp>
 #include <psychic-ui/style/Length.hpp>
@@ -224,9 +225,7 @@ TEST_CASE("AppShell: the sidebar is one Tab stop, the current item else the firs
 }
 
 TEST_CASE("AppShell: the sidebar's header moves the window, its controls and the items don't", "[components][appshell][drag]") {
-    Shell s;
-    s.shell.sidebar().header().controls().controlsStyle(WindowControlsStyle::Mac); // Whatever the platform
-    s.layout();
+    const Shell s;
     const SidebarHeader &header = s.shell.sidebar().header();
     int x = 0;
     int y = 0;
@@ -242,6 +241,19 @@ TEST_CASE("AppShell: the sidebar's header moves the window, its controls and the
     const auto [itemX, itemY] = Shell::center(*s.inbox);
     CHECK_FALSE(s.window->isDragArea(itemX, itemY));
     CHECK(header.title() == "Lights");
+}
+
+TEST_CASE("AppShell: the sidebar's header shows macOS's window controls on every platform", "[components][appshell][window-controls]") {
+    Shell s;
+    WindowControls &controls = s.shell.sidebar().header().controls();
+    CHECK(controls.controlsStyle() == WindowControlsStyle::Mac);
+    CHECK(controls.classNames().contains("mac"));
+    CHECK_FALSE(controls.classNames().contains("windows"));
+    CHECK(s.shell.sidebar().header().children().front().get() == &controls);
+
+    // The app may still pick another style
+    controls.controlsStyle(WindowControlsStyle::Windows);
+    CHECK(controls.classNames().contains("windows"));
 }
 
 TEST_CASE("Text levels: three classes the skin set colors", "[components][text]") {

@@ -208,7 +208,7 @@ namespace psychic_ui {
         SidebarHeader();
 
         /**
-         * The window controls, in the header unless `windowControls(false)`
+         * The window controls, in the header unless `windowControls(false)`; in macOS's style whatever the platform
          */
         WindowControls &controls() const { return *_controls; }
 

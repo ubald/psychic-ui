@@ -9,6 +9,7 @@
 #include "Rows.hpp"
 #include "Sidebar.hpp"
 #include "WindowControls.hpp"
+#include "WindowControlsStyle.hpp"
 #include "psychic-ui/Div.hpp"
 #include "psychic-ui/Window.hpp"
 #include "psychic-ui/psychic-ui.hpp"
@@ -151,7 +152,9 @@ namespace psychic_ui {
             .alignItems(Align::Center)
             .shrink(0);
 
+        // The header's layout is sized for macOS's dots; where Windows's controls go in an app shell is undecided
         _controls = std::make_shared<WindowControls>();
+        _controls->controlsStyle(WindowControlsStyle::Mac);
         add(_controls);
 
         _identity = &add<Div>();
