@@ -110,6 +110,7 @@ if (PSYCHIC_UI_BUILD_TESTS)
         backends/post_tests.cpp
         backends/system_window_tests.cpp
         backends/touch_tests.cpp
+        backends/window_scale_tests.cpp
         text/text_layout_tests.cpp
         text/font_tests.cpp
         text/text_style_tests.cpp

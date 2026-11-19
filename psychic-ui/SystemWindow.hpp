@@ -16,9 +16,10 @@ namespace psychic_ui {
      * An implementation translates the platform's input and window events into calls on its `Window`
      * and draws it with `render()`, with the window's GL context current.
      *
-     * Sizes: `getWidth()`/`getHeight()` are the window's size in the units the platform reports the mouse in,
-     * which is what the UI is laid out in. `getFramebufferWidth()`/`getFramebufferHeight()` are the size of
-     * what is drawn, in pixels: larger on a high pixel density display, by `getPixelRatio()`.
+     * Sizes: `getWidth()`/`getHeight()` are the window's size in logical units, which the UI is laid out in
+     * and the mouse is reported in: the platform's window units scaled by the user's display scale where
+     * they don't already carry it (`WindowScale`). `getFramebufferWidth()`/`getFramebufferHeight()` are the
+     * size of what is drawn, in pixels: larger by `getPixelRatio()`, the framebuffer's pixels per logical unit.
      */
     class SystemWindow {
     public:

@@ -4,6 +4,7 @@
 #include <utility>
 #include "SystemWindow.hpp"
 #include "Window.hpp"
+#include "WindowScale.hpp"
 
 namespace psychic_ui {
 
@@ -61,7 +62,7 @@ namespace psychic_ui {
     }
 
     float SystemWindow::getPixelRatio() const {
-        return _width > 0 ? static_cast<float>(_fbWidth) / static_cast<float>(_width) : 1.0f;
+        return WindowScale::pixelRatio(_fbWidth, _width);
     }
 
     int SystemWindow::getSamples() const {

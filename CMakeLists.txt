@@ -356,6 +356,8 @@ set(SOURCE_FILES
     psychic-ui/components/Box.hpp
     psychic-ui/SystemWindow.cpp
     psychic-ui/SystemWindow.hpp
+    psychic-ui/WindowScale.cpp
+    psychic-ui/WindowScale.hpp
     psychic-ui/components/TextField.cpp
     psychic-ui/components/TextField.hpp
     psychic-ui/components/TextInput.cpp
