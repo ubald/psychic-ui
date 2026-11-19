@@ -239,6 +239,10 @@ set(SOURCE_FILES
     psychic-ui/components/SearchField.hpp
     psychic-ui/components/SegmentedControl.cpp
     psychic-ui/components/SegmentedControl.hpp
+    psychic-ui/components/Splitter.cpp
+    psychic-ui/components/Splitter.hpp
+    psychic-ui/components/SplitterDivider.cpp
+    psychic-ui/components/SplitterDivider.hpp
     psychic-ui/components/Switch.cpp
     psychic-ui/components/Switch.hpp
     psychic-ui/components/Dialog.cpp
@@ -291,6 +295,8 @@ set(SOURCE_FILES
     psychic-ui/skins/base/SearchFieldSkinBase.hpp
     psychic-ui/skins/base/SegmentedControlSkinBase.cpp
     psychic-ui/skins/base/SegmentedControlSkinBase.hpp
+    psychic-ui/skins/base/SplitterDividerSkinBase.cpp
+    psychic-ui/skins/base/SplitterDividerSkinBase.hpp
     psychic-ui/skins/base/SwitchSkinBase.cpp
     psychic-ui/skins/base/SwitchSkinBase.hpp
     psychic-ui/skins/desk/DeskSkins.cpp
