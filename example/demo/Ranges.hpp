@@ -1,5 +1,6 @@
 #pragma once
 
+#include <format>
 #include <string>
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/components/Box.hpp>
@@ -28,6 +29,9 @@ namespace psychic_ui {
 
             field(left, "Intensity").add<Range<int>>(0, 100, 60, nullptr).grow(1);
             field(left, "Zoom").add<Range<float>>(1.23f, 4.56f, 2.0f, nullptr).grow(1);
+            field(left, "Level").add<Range<float>>(0.0f, 1.0f, 0.8f, nullptr)
+                                .format([](const float value) { return std::format("{:.0f} %", value * 100.0f); })
+                                .grow(1);
             field(left, "Disabled").add<Range<int>>(0, 10, 3, nullptr).grow(1).enabled(false);
 
             auto &right = container.add<VBox>().addClassName("column");
