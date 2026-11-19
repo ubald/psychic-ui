@@ -215,7 +215,7 @@ namespace psychic_ui {
         if (event.type == SDL3SystemWindow::wakeEventType()) {
             return; // A window asked for a frame: it says so when asked (untilNextFrame)
         }
-        if (auto *owned = find(SDL_GetWindowFromEvent(&event))) {
+        if (auto *owned = find(SDL3SystemWindow::eventWindow(event))) {
             owned->systemWindow->handleEvent(event);
             owned->dirty = true; // Input may change anything: draw after it
         }

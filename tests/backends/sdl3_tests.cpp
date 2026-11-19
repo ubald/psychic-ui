@@ -17,6 +17,7 @@
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_touch.h>
+#include <SDL3/SDL_version.h>
 #include <SDL3/SDL_video.h>
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkPoint.h"
@@ -310,6 +311,54 @@ TEST_CASE("SDL3: wheel events scroll at the pointer", "[backend][sdl3]") {
     sdl.adapter->handleEvent(wheel);
     CHECK(scrolledY == -2.0);
 }
+
+#if SDL_VERSION_ATLEAST(3, 4, 0)
+TEST_CASE("SDL3: pinch events zoom around the pointer", "[backend][sdl3][zoom]") {
+    SDL3Fixture sdl;
+    auto &div = sdl.window->appContainer().add<Div>();
+    div.width(100.0f).height(100.0f);
+    sdl.layout();
+
+    std::vector<ZoomEvent> zooms{};
+    div.onZoom([&](const ZoomEvent &event) { zooms.push_back(event); });
+
+    auto motion = sdl.event(SDL_EVENT_MOUSE_MOTION);
+    motion.motion.x = 40;
+    motion.motion.y = 30;
+    sdl.adapter->handleEvent(motion);
+
+    auto pinch = [&](SDL_EventType type, float scale) {
+        auto event           = sdl.event(type);
+        event.pinch.scale    = scale;
+        event.pinch.windowID = SDL_GetWindowID(sdl.sdlWindow);
+        sdl.adapter->handleEvent(event);
+    };
+    pinch(SDL_EVENT_PINCH_BEGIN, 0.0f);
+    #ifdef __APPLE__
+    // macOS reports each update's change
+    pinch(SDL_EVENT_PINCH_UPDATE, 1.2f);
+    pinch(SDL_EVENT_PINCH_UPDATE, 1.1f);
+    #else
+    // Wayland and X11 report the scale since the gesture began
+    pinch(SDL_EVENT_PINCH_UPDATE, 1.2f);
+    pinch(SDL_EVENT_PINCH_UPDATE, 1.32f);
+    #endif
+    pinch(SDL_EVENT_PINCH_END, 0.0f);
+
+    REQUIRE(zooms.size() == 2);
+    CHECK(zooms[0].scale == Catch::Approx(1.2f));
+    CHECK(zooms[1].scale == Catch::Approx(1.1f));
+    CHECK(zooms[0].windowX == 40);
+    CHECK(zooms[0].windowY == 30);
+    int originX = 0;
+    int originY = 0;
+    div.localToGlobal(originX, originY);
+    CHECK(zooms[0].x == static_cast<float>(40 - originX));
+    CHECK(zooms[0].source == InputMode::Pointer);
+    CHECK(zooms[1].panX == 0);
+    CHECK(zooms[1].panY == 0);
+}
+#endif
 
 TEST_CASE("SDL3: keys and text reach the focused div", "[backend][sdl3]") {
     SDL3Fixture sdl;

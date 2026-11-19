@@ -2046,6 +2046,39 @@ namespace psychic_ui {
         return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
     }
 
+    MouseEventStatus Div::handleZoom(const ZoomEvent &event) {
+        const auto keepAlive = weak_from_this().lock(); // A handler may remove this div from its parent
+        if (!_visible || !boundsContains(event.x, event.y)) {
+            return MouseEventStatus::Out;
+        }
+
+        // Into this div's content coordinates
+        ZoomEvent local = event;
+        local.x         = event.x - static_cast<float>(_x + _scrollX);
+        local.y         = event.y - static_cast<float>(_y + _scrollY);
+        MouseEventStatus ret = MouseEventStatus::Out;
+
+        if (_mouseChildren) {
+            // Topmost first, over a copy since handlers can add or remove children
+            for (auto &child: childrenTopmostFirst()) {
+                if (child->_parent != this) {
+                    continue; // Removed by an earlier handler
+                }
+                auto res = child->handleZoom(local);
+                if (res != MouseEventStatus::Out) {
+                    ret = res;
+                    break;
+                }
+            }
+        }
+
+        if (_mouseEnabled && ret != MouseEventStatus::Handled && zoomed.hasSubscriptions() && zoomed.emit(local)) {
+            ret = MouseEventStatus::Handled;
+        }
+
+        return ret == MouseEventStatus::Out ? MouseEventStatus::Over : ret;
+    }
+
     // endregion
 
     // endregion

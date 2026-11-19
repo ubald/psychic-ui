@@ -435,8 +435,9 @@ namespace psychic_ui {
         /**
          * The event at this point (in the receiving div's parent's coordinates)
          */
-        MouseEvent movedTo(const MouseEvent &event, const float x, const float y) {
-            MouseEvent moved = event;
+        template<class Event>
+        Event movedTo(const Event &event, const float x, const float y) {
+            Event moved = event;
             moved.x          = x;
             moved.y          = y;
             return moved;
@@ -445,7 +446,8 @@ namespace psychic_ui {
         /**
          * The event in the coordinates of a div's parent (its content's, scrolled), from its window coordinates
          */
-        MouseEvent inParentOf(const Div &div, const MouseEvent &event) {
+        template<class Event>
+        Event inParentOf(const Div &div, const Event &event) {
             int originX = 0;
             int originY = 0;
             div.parent()->localToGlobal(originX, originY);
@@ -457,13 +459,13 @@ namespace psychic_ui {
         }
     }
 
-    template<class F>
-    MouseEventStatus Overlay::dispatch(const MouseEvent &event, const F &handler) {
+    template<class Event, class F>
+    MouseEventStatus Overlay::dispatch(const Event &event, const F &handler) {
         const auto keepAlive = weak_from_this().lock(); // A handler may close popups
         if (!_visible) {
             return MouseEventStatus::Out;
         }
-        const MouseEvent local = movedTo(
+        const Event local = movedTo(
             event,
             event.x - static_cast<float>(_x + _scrollX),
             event.y - static_cast<float>(_y + _scrollY)
@@ -563,6 +565,10 @@ namespace psychic_ui {
 
     MouseEventStatus Overlay::handleContextMenuRequest(const MouseEvent &event) {
         return dispatch(event, [](Div &div, const MouseEvent &popupEvent) { return div.handleContextMenuRequest(popupEvent); });
+    }
+
+    MouseEventStatus Overlay::handleZoom(const ZoomEvent &event) {
+        return dispatch(event, [](Div &div, const ZoomEvent &popupEvent) { return div.handleZoom(popupEvent); });
     }
 
     // endregion

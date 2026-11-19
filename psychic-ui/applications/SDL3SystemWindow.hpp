@@ -103,6 +103,11 @@ namespace psychic_ui {
         static Uint32 wakeEventType();
 
         /**
+         * The window an event is for: SDL's, or the one under the mouse for a pinch that names none (macOS)
+         */
+        static SDL_Window *eventWindow(const SDL_Event &event);
+
+        /**
          * SDL_GetSystemTheme. `handleEvent` passes SDL_EVENT_SYSTEM_THEME_CHANGED on to the window, whatever
          * window the event names (it names none). Virtual so that tests can make up a system.
          */
@@ -180,12 +185,25 @@ namespace psychic_ui {
         [[nodiscard]] virtual SDL_TouchDeviceType touchDeviceType(SDL_TouchID touchID) const;
 
         void handleFingerEvent(const SDL_TouchFingerEvent &finger);
+        #if SDL_VERSION_ATLEAST(3, 4, 0)
+        /**
+         * A trackpad pinch: a zoom around the mouse
+         */
+        void handlePinch(const SDL_PinchFingerEvent &pinch);
+        #endif
         void handlePenButton(MouseButton button, bool down, float x, float y);
 
         /**
          * Files of the drop in progress, dispatched together when it completes
          */
         std::vector<std::string> _droppedFiles{};
+
+        /**
+         * The trackpad pinch in progress: the scale SDL last reported, and where the mouse was then
+         */
+        float _pinchScale{1.0f};
+        float _pinchX{0};
+        float _pinchY{0};
 
         /**
          * Reads the window's size and pixel size, in logical units at `scale` (`windowScale()`, or

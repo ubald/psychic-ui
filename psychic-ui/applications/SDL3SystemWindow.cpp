@@ -17,6 +17,7 @@
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_touch.h>
+#include <SDL3/SDL_version.h>
 #include <SDL3/SDL_video.h>
 #include "SDL3SystemWindow.hpp"
 #include "../Window.hpp"
@@ -271,6 +272,15 @@ namespace psychic_ui {
         return type;
     }
 
+    SDL_Window *SDL3SystemWindow::eventWindow(const SDL_Event &event) {
+        #if SDL_VERSION_ATLEAST(3, 4, 0)
+        if (event.type >= SDL_EVENT_PINCH_BEGIN && event.type <= SDL_EVENT_PINCH_END && event.pinch.windowID == 0) {
+            return SDL_GetMouseFocus();
+        }
+        #endif
+        return SDL_GetWindowFromEvent(&event);
+    }
+
     void SDL3SystemWindow::wake() {
         SDL_Event event{};
         event.type             = wakeEventType();
@@ -314,6 +324,37 @@ namespace psychic_ui {
     SDL_TouchDeviceType SDL3SystemWindow::touchDeviceType(const SDL_TouchID touchID) const {
         return SDL_GetTouchDeviceType(touchID);
     }
+
+    #if SDL_VERSION_ATLEAST(3, 4, 0)
+    void SDL3SystemWindow::handlePinch(const SDL_PinchFingerEvent &pinch) {
+        if (pinch.type != SDL_EVENT_PINCH_UPDATE) {
+            // Begun or ended: the next update starts from here
+            _pinchScale = 1.0f;
+            _pinchX     = _mouseX;
+            _pinchY     = _mouseY;
+            return;
+        }
+        #ifdef __APPLE__
+        // Each update's change
+        const float scale = pinch.scale;
+        #else
+        // The scale since the gesture began (Wayland, X11)
+        const float scale = _pinchScale > 0 ? pinch.scale / _pinchScale : 1.0f;
+        _pinchScale       = pinch.scale;
+        #endif
+        const float panX = _mouseX - _pinchX;
+        const float panY = _mouseY - _pinchY;
+        _pinchX          = _mouseX;
+        _pinchY          = _mouseY;
+        if (scale > 0) {
+            // Around the mouse
+            _window->handleZoom({
+                .x = _mouseX, .y = _mouseY, .scale = scale, .panX = panX, .panY = panY, .source = InputMode::Pointer,
+                .modifiers = mapMods(SDL_GetModState())
+            });
+        }
+    }
+    #endif
 
     void SDL3SystemWindow::handleFingerEvent(const SDL_TouchFingerEvent &finger) {
         // Trackpads move the mouse too, a pen's touches come as pen events and the mouse's (SDL's hint) as mouse events
@@ -389,7 +430,7 @@ namespace psychic_ui {
             return true;
         }
 
-        if (SDL_GetWindowFromEvent(&event) != _sdlWindow) {
+        if (eventWindow(event) != _sdlWindow) {
             return false;
         }
 
@@ -552,6 +593,14 @@ namespace psychic_ui {
             case SDL_EVENT_FINGER_CANCELED:
                 handleFingerEvent(event.tfinger);
                 break;
+
+            #if SDL_VERSION_ATLEAST(3, 4, 0)
+            case SDL_EVENT_PINCH_BEGIN:
+            case SDL_EVENT_PINCH_UPDATE:
+            case SDL_EVENT_PINCH_END:
+                handlePinch(event.pinch);
+                break;
+            #endif
 
             // A pen works like a mouse, its tip being the left button, but reports the pen mode
             case SDL_EVENT_PEN_PROXIMITY_IN:

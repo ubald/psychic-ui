@@ -94,6 +94,34 @@ namespace psychic_ui {
     };
 
     /**
+     * What `zoomed` passes: a trackpad pinch, or the wheel with Ctrl (or Cmd on macOS). Like a MouseEvent, each div
+     * gets it in its own coordinates.
+     */
+    struct ZoomEvent {
+        /**
+         * The zoom's centre, in the receiving div's content coordinates
+         */
+        float     x{0};
+        float     y{0};
+        /**
+         * The zoom's centre, in window coordinates, whichever div receives it
+         */
+        float     windowX{0};
+        float     windowY{0};
+        /**
+         * The change since the previous event of the gesture: 1.1 is 10 % closer, below 1 is farther
+         */
+        float     scale{1.0f};
+        /**
+         * How far the centre moved since the previous event of the gesture, in window units
+         */
+        float     panX{0};
+        float     panY{0};
+        InputMode source{InputMode::Pointer};
+        Mod       modifiers{};
+    };
+
+    /**
      * Since we support either SDL2 or GLFW, we have to map keyboard keys
      * to something we can use (they don't use the same values)
      *

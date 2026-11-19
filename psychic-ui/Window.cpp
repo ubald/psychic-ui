@@ -1411,11 +1411,35 @@ namespace psychic_ui {
     }
 
     MouseEventStatus Window::handleMouseScroll(const MouseEvent &event) {
+        const Mod &mod = event.modifiers;
+        #ifdef __APPLE__
+        const bool zooms = mod.ctrl || mod.super;
+        #else
+        const bool zooms = mod.ctrl;
+        #endif
+        if (zooms) {
+            // Not a scroll, even when nothing takes the zoom
+            if (event.scrollY == 0) {
+                return MouseEventStatus::Over;
+            }
+            return handleZoom({
+                .x = event.x, .y = event.y, .scale = std::pow(wheelZoomStep, static_cast<float>(event.scrollY)),
+                .source = event.source, .modifiers = event.modifiers
+            });
+        }
+
         MouseEvent windowEvent = event;
         windowEvent.windowX    = event.x;
         windowEvent.windowY    = event.y;
         windowEvent.buttons    = _buttons;
         return Div::handleMouseScroll(windowEvent);
+    }
+
+    MouseEventStatus Window::handleZoom(const ZoomEvent &event) {
+        ZoomEvent windowEvent = event;
+        windowEvent.windowX   = event.x;
+        windowEvent.windowY   = event.y;
+        return Div::handleZoom(windowEvent);
     }
 
     MouseEventStatus Window::handleMouseButtonChange(const MouseEvent &event) {

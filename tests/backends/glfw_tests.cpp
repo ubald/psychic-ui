@@ -237,6 +237,29 @@ TEST_CASE("GLFW keys map to Psychic UI keys", "[keyboard][glfw]") {
     CHECK(mod.super);
 }
 
+TEST_CASE("GLFW: ctrl + scroll zooms instead of scrolling", "[backend][glfw][zoom]") {
+    GLFWHost host;
+    auto &div = host.window->appContainer().add<Div>();
+    div.width(100.0f).height(100.0f);
+    const GLFWSystemWindow adapter(host.window, host.glfwWindow);
+    host.layout();
+    std::vector<ZoomEvent> zooms{};
+    int                    scrolls = 0;
+    div.onZoom([&](const ZoomEvent &event) { zooms.push_back(event); });
+    div.onMouseScroll([&] { ++scrolls; });
+
+    host.cursorCallback()(host.glfwWindow, 50.0, 40.0);
+    host.keyCallback()(host.glfwWindow, GLFW_KEY_LEFT_CONTROL, 0, GLFW_PRESS, GLFW_MOD_CONTROL);
+    auto scroll = glfwSetScrollCallback(host.glfwWindow, nullptr);
+    glfwSetScrollCallback(host.glfwWindow, scroll);
+    scroll(host.glfwWindow, 0.0, -1.0);
+    REQUIRE(zooms.size() == 1);
+    CHECK(zooms[0].scale == Catch::Approx(1.0f / Window::wheelZoomStep));
+    CHECK(zooms[0].windowX == 50);
+    CHECK(zooms[0].windowY == 40);
+    CHECK(scrolls == 0);
+}
+
 TEST_CASE("GLFW: scrolls carry the modifiers of the last key or button event", "[backend][glfw][mouse]") {
     GLFWHost host;
     auto &div = host.window->appContainer().add<Div>();
@@ -249,12 +272,12 @@ TEST_CASE("GLFW: scrolls carry the modifiers of the last key or button event", "
     div.onMousePress([&](const MouseEvent &event) { presses.push_back(event); });
 
     host.cursorCallback()(host.glfwWindow, 50.0, 50.0);
-    host.keyCallback()(host.glfwWindow, GLFW_KEY_LEFT_CONTROL, 0, GLFW_PRESS, GLFW_MOD_CONTROL);
+    host.keyCallback()(host.glfwWindow, GLFW_KEY_LEFT_SHIFT, 0, GLFW_PRESS, GLFW_MOD_SHIFT);
     auto scroll = glfwSetScrollCallback(host.glfwWindow, nullptr);
     glfwSetScrollCallback(host.glfwWindow, scroll);
     scroll(host.glfwWindow, 0.0, -1.0);
     REQUIRE(scrolls.size() == 1);
-    CHECK(scrolls[0].modifiers.ctrl);
+    CHECK(scrolls[0].modifiers.shift);
     CHECK(scrolls[0].scrollY == -1.0);
 
     // The window counts GLFW's clicks

@@ -571,7 +571,21 @@ namespace psychic_ui {
          * Also follows the div under the mouse with a `tooltip`, to show it after `tooltipDelay`
          */
         MouseEventStatus handleMouseMove(const MouseEvent &event, bool handled) override;
+        /**
+         * With Ctrl (or Cmd on macOS), the wheel zooms instead (`handleZoom`), `wheelZoomStep` per step
+         */
         MouseEventStatus handleMouseScroll(const MouseEvent &event) override;
+
+        /**
+         * A zoom around a point in window coordinates (a trackpad pinch, from the backends), for the deepest div
+         * under it with a `zoomed` subscriber that uses it
+         */
+        MouseEventStatus handleZoom(const ZoomEvent &event) override;
+
+        /**
+         * The zoom of one wheel step with Ctrl (or Cmd on macOS)
+         */
+        static constexpr float wheelZoomStep = 1.1f;
 
         /**
          * A press first closes the popups it is outside of (`Overlay::pressOutside`); one that closed a modal popup

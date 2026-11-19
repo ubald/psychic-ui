@@ -147,6 +147,7 @@ namespace psychic_ui {
         MouseEventStatus handleDoubleClick(const MouseEvent &event) override;
         MouseEventStatus handleMouseScroll(const MouseEvent &event) override;
         MouseEventStatus handleContextMenuRequest(const MouseEvent &event) override;
+        MouseEventStatus handleZoom(const ZoomEvent &event) override;
 
     protected:
         friend class Popup;
@@ -173,10 +174,10 @@ namespace psychic_ui {
         static bool surfaceContains(const Popup &popup, int x, int y);
 
         /**
-         * Send a mouse event to the popups, topmost first, until one takes it; under a modal popup, to its
+         * Send a mouse or zoom event to the popups, topmost first, until one takes it; under a modal popup, to its
          * pass-through divs and no further
          */
-        template<class F>
-        MouseEventStatus dispatch(const MouseEvent &event, const F &handler);
+        template<class Event, class F>
+        MouseEventStatus dispatch(const Event &event, const F &handler);
     };
 }
