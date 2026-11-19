@@ -18,7 +18,8 @@ namespace psychic_ui {
      * press does) and the source gives a payload, then idle again on the release or `cancel`.
      *
      * Holds its source weakly: a source removed before the drag starts starts nothing, and one removed while
-     * dragging ends the drag at the next move.
+     * dragging ends the drag at the next move. Holds the target under the pointer weakly too, which the window
+     * finds and sets (`Window` dispatches the drag's signals to the source and the targets).
      */
     class DragAndDrop {
     public:
@@ -45,6 +46,16 @@ namespace psychic_ui {
          * The div the drag starts or started from, null when idle or once it's gone
          */
         [[nodiscard]] std::shared_ptr<Div> source() const;
+
+        /**
+         * The drop target under the pointer that accepts the payload, null when there is none or once it's gone
+         */
+        [[nodiscard]] std::shared_ptr<Div> target() const;
+
+        /**
+         * Sets the drop target under the pointer, while dragging (nothing otherwise)
+         */
+        void setTarget(const std::weak_ptr<Div> &target);
 
         /**
          * What presses and drags: the mouse, a finger or a pen
@@ -90,6 +101,7 @@ namespace psychic_ui {
     private:
         State                      _state{State::Idle};
         std::weak_ptr<Div>         _source{};
+        std::weak_ptr<Div>         _target{};
         DragSourceFn               _sourceFn{};
         MouseEvent                 _press{};
         std::optional<DragPayload> _payload{};
@@ -98,7 +110,7 @@ namespace psychic_ui {
         float                      _windowY{0};
 
         /**
-         * Back to idle, forgetting the source and the payload
+         * Back to idle, forgetting the source, the target and the payload
          */
         void reset();
     };

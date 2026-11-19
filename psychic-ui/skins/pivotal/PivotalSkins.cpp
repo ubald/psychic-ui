@@ -208,6 +208,19 @@ namespace psychic_ui {
 
         // endregion
 
+        // region Drag and drop
+
+        // While a drag lasts: what it started from fades, where it can drop shows a hairline, and the target under the
+        // pointer the accent's outline over a soft fill
+        rule(".dragging").opacity(0.5f);
+        rule(".drop-target").outlineColor(palette.lineStrong).outlineWidth(metrics.border);
+        rule(".drag-over")
+            .outlineColor(palette.accent)
+            .outlineWidth(metrics.focusRing)
+            .backgroundColor(palette.accentSoft);
+
+        // endregion
+
         // region Window
 
         rule("Window")

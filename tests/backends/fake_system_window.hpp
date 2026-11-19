@@ -48,6 +48,7 @@ namespace psychic_ui_tests {
         sk_sp<SkSurface> surface{SkSurfaces::Raster(SkImageInfo::MakeN32Premul(800, 600))};
         int              dragsStarted{0};
         int              wakes{0}; // `wake` calls: the window asking for a frame from outside the loop
+        Cursor           cursor{Cursor::Arrow}; // The last one the window asked for
 
         std::shared_ptr<TestWindow> testWindow;
 
@@ -87,7 +88,7 @@ namespace psychic_ui_tests {
         [[nodiscard]] bool getMaximized() const override { return false; }
         void setMaximized(bool /*maximized*/) override {}
         void setVisible(bool /*visible*/) override {}
-        void setCursor(Cursor /*cursor*/) override {}
+        void setCursor(Cursor shown) override { cursor = shown; }
         void startDrag() override { ++dragsStarted; }
         void wake() override { ++wakes; }
         void stopDrag() override {}

@@ -2,14 +2,20 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
+#include <vector>
 #include <catch2/catch_test_macros.hpp>
+#include "../backends/fake_system_window.hpp"
 #include <psychic-ui/Div.hpp>
 #include <psychic-ui/DragAndDrop.hpp>
 #include <psychic-ui/DragEvent.hpp>
 #include <psychic-ui/DragPayload.hpp>
+#include <psychic-ui/components/Dialog.hpp>
 #include <psychic-ui/psychic-ui.hpp>
+#include <psychic-ui/style/Values.hpp>
 
 using namespace psychic_ui;
+using namespace psychic_ui_tests;
 
 namespace {
     /**
@@ -193,9 +199,374 @@ TEST_CASE("a press while dragging doesn't restart the drag", "[drag]") {
     CHECK(s.calls == 1);
 }
 
+TEST_CASE("a drag session holds its target weakly, while dragging only", "[drag]") {
+    Session s;
+    auto    target = std::make_shared<Div>();
+    s.press(10, 10);
+    s.session.setTarget(target); // Armed: not yet
+    CHECK(s.session.target() == nullptr);
+    REQUIRE(s.session.move(40, 40));
+    s.session.setTarget(target);
+    CHECK(s.session.target() == target);
+    target.reset();
+    CHECK(s.session.target() == nullptr);
+
+    auto other = std::make_shared<Div>();
+    s.session.setTarget(other);
+    s.session.cancel();
+    CHECK(s.session.target() == nullptr);
+}
+
 TEST_CASE("a drag event defaults to an unaccepted pointer event", "[drag]") {
     const DragEvent event{};
     CHECK(event.payload == nullptr);
     CHECK(event.source == InputMode::Pointer);
     CHECK_FALSE(event.accepted);
+}
+
+namespace {
+    /**
+     * A window with a list of two drag sources (`item0`, `item1`) on the left, and two drop targets: `warm` takes
+     * the sources' payload type and holds a child that takes nothing (`inner`), `cold` takes another type only.
+     * Every drag signal, and every click on the sources, is logged.
+     */
+    struct Dragging {
+        std::shared_ptr<TestWindow> window{std::make_shared<TestWindow>()};
+        FakeSystemWindow            sys{window, 800, 600};
+        Div                        *list{nullptr};
+        Div                        *item0{nullptr};
+        Div                        *item1{nullptr};
+        Div                        *warm{nullptr};
+        Div                        *inner{nullptr};
+        Div                        *cold{nullptr};
+        std::vector<std::string>    log{};
+        std::vector<DragEvent>      events{};   // Their payloads are only valid during the call: see `carried`
+        std::vector<std::string>    carried{};  // Each event's payload's data
+        int                         sourceCalls{0};
+        int                         clicks{0};
+
+        static Div &box(Div &parent, float left, float top, float width, float height) {
+            return parent.add<Div>().position(Position::Absolute).left(left).top(top).width(width).height(height);
+        }
+
+        Div &source(const std::string &name) {
+            auto &item = list->add<Div>().height(40).shrink(0);
+            item.dragSource([this, name](const MouseEvent &) -> std::optional<DragPayload> {
+                ++sourceCalls;
+                return DragPayload{.type = "test/chip", .data = std::any(name), .label = name};
+            });
+            item.onClick([this] { ++clicks; });
+            listen(item, name);
+            return item;
+        }
+
+        void listen(Div &div, const std::string &name) {
+            const auto logged = [this, name](const std::string &what) {
+                return [this, name, what](const DragEvent &event) {
+                    log.push_back(name + " " + what + (what == "end" && event.accepted ? " accepted" : ""));
+                    events.push_back(event);
+                    carried.push_back(event.payload ? std::any_cast<std::string>(event.payload->data) : "");
+                };
+            };
+            div.onDragStart(logged("start"))
+                .onDragEnd(logged("end"))
+                .onDragEnter(logged("enter"))
+                .onDragMove(logged("move"))
+                .onDragExit(logged("exit"))
+                .onDrop(logged("drop"));
+        }
+
+        Dragging() {
+            auto &app = window->appContainer();
+            list      = &box(app, 0, 0, 100, 200).column();
+            item0     = &source("item0");
+            item1     = &source("item1");
+            warm      = &box(app, 200, 0, 100, 100).dropTarget([](const DragPayload &payload) {
+                return payload.type == "test/chip";
+            });
+            inner     = &box(*warm, 50, 50, 40, 40).dropTarget([](const DragPayload &) { return false; });
+            cold      = &box(app, 400, 0, 100, 100).dropTarget([](const DragPayload &payload) {
+                return payload.type == "other";
+            });
+            listen(*warm, "warm");
+            listen(*inner, "inner");
+            listen(*cold, "cold");
+            sys.layout();
+        }
+
+        void press(float x, float y) const {
+            window->handleMouseButtonChange({.x = x, .y = y, .button = MouseButton::LEFT, .down = true});
+        }
+
+        void move(float x, float y) const {
+            window->handleMouseMove({.x = x, .y = y}, false);
+        }
+
+        void release(float x, float y) const {
+            window->handleMouseButtonChange({.x = x, .y = y, .button = MouseButton::LEFT, .down = false});
+        }
+
+        /**
+         * Presses on the first item and drags past the threshold
+         */
+        void startDrag() {
+            press(50, 20);
+            move(60, 20);
+            REQUIRE(window->dragAndDrop().active());
+        }
+
+        /**
+         * Where the div's content starts, in window coordinates
+         */
+        static std::pair<float, float> origin(const Div &div) {
+            int x = 0;
+            int y = 0;
+            div.localToGlobal(x, y);
+            return {static_cast<float>(x), static_cast<float>(y)};
+        }
+
+        static bool has(const Div &div, const std::string &className) {
+            return div.classNames().contains(className);
+        }
+    };
+}
+
+TEST_CASE("dragging past the threshold starts a drag and marks the source", "[drag]") {
+    Dragging drag;
+    drag.press(50, 20);
+    drag.move(53, 20); // Not past the threshold
+    CHECK_FALSE(drag.window->dragAndDrop().active());
+    CHECK_FALSE(Dragging::has(*drag.item0, "dragging"));
+    CHECK(drag.sourceCalls == 0);
+
+    drag.move(60, 22);
+    CHECK(drag.window->dragAndDrop().active());
+    CHECK(drag.sourceCalls == 1);
+    CHECK(Dragging::has(*drag.item0, "dragging"));
+    CHECK_FALSE(Dragging::has(*drag.item1, "dragging"));
+    REQUIRE(drag.log == std::vector<std::string>{"item0 start"});
+    const DragEvent &started = drag.events.back();
+    const auto [item0X, item0Y] = Dragging::origin(*drag.item0);
+    CHECK(started.x == 60.0f - item0X);
+    CHECK(started.y == 22.0f - item0Y);
+    CHECK(started.windowX == 60.0f);
+    CHECK(drag.carried.back() == "item0");
+    CHECK(drag.window->dragAndDrop().source().get() == drag.item0);
+
+    drag.release(60, 22);
+    CHECK_FALSE(drag.window->dragAndDrop().active());
+    CHECK_FALSE(Dragging::has(*drag.item0, "dragging"));
+    CHECK(drag.log == std::vector<std::string>{"item0 start", "item0 end"});
+    CHECK(drag.clicks == 0); // The press's click is the drag's
+
+    // A drag from the second item: its coordinates are its own
+    drag.events.clear();
+    drag.press(50, 60);
+    drag.move(50, 70);
+    REQUIRE(drag.window->dragAndDrop().active());
+    CHECK(drag.window->dragAndDrop().source().get() == drag.item1);
+    CHECK(drag.events.back().y == 70.0f - Dragging::origin(*drag.item1).second);
+    CHECK(drag.events.back().windowY == 70.0f);
+    CHECK(drag.carried.back() == "item1");
+}
+
+TEST_CASE("a press that doesn't move is still a click", "[drag]") {
+    const Dragging drag;
+    drag.press(50, 20);
+    drag.move(52, 21);
+    drag.release(52, 21);
+    CHECK(drag.clicks == 1);
+    CHECK(drag.sourceCalls == 0);
+    CHECK(drag.log.empty());
+    CHECK_FALSE(drag.window->dragAndDrop().active());
+    CHECK(drag.window->dragAndDrop().state() == DragAndDrop::State::Idle);
+}
+
+TEST_CASE("only accepting targets enter, move, exit and drop", "[drag]") {
+    Dragging drag;
+    drag.startDrag();
+    drag.log.clear();
+
+    drag.move(450, 50); // Over the target that refuses
+    CHECK(drag.log.empty());
+
+    drag.move(220, 30); // Over the one that accepts
+    CHECK(drag.log == std::vector<std::string>{"warm enter", "warm move"});
+    const auto [warmX, warmY] = Dragging::origin(*drag.warm);
+    CHECK(drag.events.back().x == 220.0f - warmX);
+    CHECK(drag.events.back().y == 30.0f - warmY);
+    CHECK(Dragging::has(*drag.warm, "drag-over"));
+
+    drag.move(230, 30);
+    drag.move(260, 60); // Over its child, which refuses: still the accepting one
+    CHECK(drag.log == std::vector<std::string>{"warm enter", "warm move", "warm move", "warm move"});
+    CHECK_FALSE(Dragging::has(*drag.inner, "drag-over"));
+
+    drag.move(450, 50);
+    CHECK(drag.log.back() == "warm exit");
+    CHECK_FALSE(Dragging::has(*drag.warm, "drag-over"));
+
+    drag.log.clear();
+    drag.move(220, 30);
+    drag.release(222, 30);
+    CHECK(drag.log == std::vector<std::string>{
+        "warm enter", "warm move", "warm move", "warm drop", "item0 end accepted"
+    });
+    CHECK_FALSE(Dragging::has(*drag.warm, "drag-over"));
+    const DragEvent &drop = drag.events[drag.events.size() - 2];
+    CHECK(drop.x == 222.0f - warmX);
+    CHECK(drag.carried[drag.carried.size() - 2] == "item0");
+    CHECK(drag.events.back().accepted);
+    CHECK(drag.clicks == 0);
+}
+
+TEST_CASE("accepting targets show drop-target while the drag lasts", "[drag]") {
+    Dragging drag;
+    CHECK_FALSE(Dragging::has(*drag.warm, "drop-target"));
+    drag.startDrag();
+    CHECK(Dragging::has(*drag.warm, "drop-target"));
+    CHECK_FALSE(Dragging::has(*drag.inner, "drop-target"));
+    CHECK_FALSE(Dragging::has(*drag.cold, "drop-target"));
+    drag.move(220, 30);
+    CHECK(Dragging::has(*drag.warm, "drop-target"));
+    drag.release(600, 300);
+    CHECK_FALSE(Dragging::has(*drag.warm, "drop-target"));
+}
+
+TEST_CASE("dropping outside a target ends without a drop", "[drag]") {
+    Dragging drag;
+    drag.startDrag();
+    drag.move(220, 30);
+    drag.log.clear();
+    drag.move(600, 300);
+    drag.release(600, 300);
+    CHECK(drag.log == std::vector<std::string>{"warm exit", "item0 end"});
+    CHECK_FALSE(drag.events.back().accepted);
+    CHECK_FALSE(drag.window->dragAndDrop().active());
+    CHECK(drag.clicks == 0);
+
+    // Dropped on the target that refuses: no drop either
+    drag.log.clear();
+    drag.startDrag();
+    drag.move(450, 50);
+    drag.release(450, 50);
+    CHECK(drag.log == std::vector<std::string>{"item0 start", "item0 end"});
+}
+
+TEST_CASE("escape cancels a drag", "[drag]") {
+    Dragging drag;
+    drag.startDrag();
+    drag.move(220, 30);
+    drag.log.clear();
+
+    SECTION("escape") {
+        CHECK(drag.window->handleKeyPress(Key::ESCAPE, Mod{}));
+    }
+
+    SECTION("the window losing the focus") {
+        drag.window->windowDeactivated();
+    }
+
+    CHECK_FALSE(drag.window->dragAndDrop().active());
+    CHECK(drag.log == std::vector<std::string>{"warm exit", "item0 end"});
+    CHECK_FALSE(Dragging::has(*drag.warm, "drag-over"));
+    CHECK_FALSE(Dragging::has(*drag.warm, "drop-target"));
+    CHECK_FALSE(Dragging::has(*drag.item0, "dragging"));
+
+    // The rest of the press drags nothing and clicks nothing
+    drag.move(230, 30);
+    drag.release(230, 30);
+    drag.move(52, 20);
+    drag.release(52, 20);
+    CHECK(drag.log.size() == 2);
+    CHECK(drag.clicks == 0);
+}
+
+TEST_CASE("the cursor shows whether a drop is possible", "[drag]") {
+    Dragging drag;
+    drag.move(50, 20);
+    const Cursor before = drag.sys.cursor;
+    drag.startDrag();
+    CHECK(drag.sys.cursor == Cursor::NotAllowed);
+    drag.move(220, 30);
+    CHECK(drag.sys.cursor == Cursor::Move);
+    drag.move(450, 50);
+    CHECK(drag.sys.cursor == Cursor::NotAllowed);
+    drag.move(220, 30);
+    drag.release(220, 30);
+    CHECK(drag.sys.cursor == before);
+}
+
+TEST_CASE("a target removed mid-drag stops receiving", "[drag]") {
+    Dragging drag;
+    const auto keep = drag.warm->shared_from_this(); // Still alive, out of the window
+    drag.startDrag();
+    drag.move(220, 30);
+    drag.log.clear();
+    drag.window->appContainer().remove(*drag.warm);
+    drag.sys.layout();
+
+    drag.move(230, 30);
+    drag.move(240, 30);
+    drag.release(240, 30);
+    CHECK(drag.log == std::vector<std::string>{"item0 end"});
+    CHECK_FALSE(drag.events.back().accepted);
+    CHECK_FALSE(Dragging::has(*keep, "drag-over"));
+    CHECK_FALSE(Dragging::has(*keep, "drop-target"));
+}
+
+TEST_CASE("the source removed mid-drag cancels the drag", "[drag]") {
+    Dragging drag;
+    drag.startDrag();
+    drag.move(220, 30);
+    drag.log.clear();
+    drag.list->remove(*drag.item0); // Gone: nothing else holds it
+    drag.sys.layout();
+
+    drag.move(230, 30);
+    CHECK_FALSE(drag.window->dragAndDrop().active());
+    CHECK(drag.log == std::vector<std::string>{"warm exit"});
+    CHECK_FALSE(Dragging::has(*drag.warm, "drag-over"));
+    CHECK_FALSE(Dragging::has(*drag.warm, "drop-target"));
+    drag.release(230, 30);
+    CHECK(drag.log == std::vector<std::string>{"warm exit"});
+}
+
+TEST_CASE("targets under a modal popup aren't reachable", "[drag][modal]") {
+    Dragging drag;
+    drag.startDrag();
+    drag.window->overlay().open<Dialog>("Modal");
+    drag.sys.layout();
+    REQUIRE(drag.window->overlay().modal());
+    drag.log.clear();
+
+    drag.move(220, 30);
+    CHECK(drag.log.empty());
+    CHECK(drag.sys.cursor == Cursor::NotAllowed);
+    drag.release(220, 30);
+    CHECK(drag.log == std::vector<std::string>{"item0 end"});
+}
+
+TEST_CASE("hover doesn't change under a drag", "[drag]") {
+    Dragging drag;
+    int coldEntered = 0;
+    int coldMoved   = 0;
+    drag.cold->onMouseEnter([&] { ++coldEntered; }).onMouseMove([&] { ++coldMoved; });
+    drag.move(50, 20);
+    CHECK(drag.item0->mouseOver());
+    drag.startDrag();
+
+    drag.move(450, 50);
+    drag.move(460, 50);
+    CHECK_FALSE(drag.cold->mouseOver());
+    CHECK(coldEntered == 0);
+    CHECK(coldMoved == 0);
+    CHECK(drag.item0->mouseOver());
+
+    // Once it ends, the next move hovers again
+    drag.release(460, 50);
+    drag.move(461, 50);
+    CHECK(drag.cold->mouseOver());
+    CHECK_FALSE(drag.item0->mouseOver());
+    CHECK(coldEntered == 1);
 }

@@ -15,6 +15,9 @@
 #include "include/core/SkSurface.h"
 #include "include/gpu/ganesh/GrDirectContext.h"
 #include "Div.hpp"
+#include "DragAndDrop.hpp"
+#include "DragEvent.hpp"
+#include "DragPayload.hpp"
 #include "Overlay.hpp"
 #include "style/StyleManager.hpp"
 #include "style/Style.hpp"
@@ -420,6 +423,26 @@ namespace psychic_ui {
          * Whether kinetic scrolling is moving a div
          */
         bool flinging() const { return _flinging; }
+
+        // endregion
+
+        // region Drag and drop
+
+        /**
+         * The drag session: a left press on a div with a `dragSource` (or inside it, without a deeper one) arms it, a
+         * move past `DragAndDrop::dragThreshold` starts the drag. While it lasts, the session takes every move and the
+         * release before the divs do (no hover changes, no `mouseMoved`, no click from the press): the deepest div
+         * under the pointer whose `dropTarget` accepts the payload gets `dragEntered`, `dragMoved` and `dragExited`,
+         * and `dropped` on the release, then the source gets `dragEnded`. Escape and the window losing the focus
+         * cancel it.
+         */
+        const DragAndDrop &dragAndDrop() const { return _dragAndDrop; }
+
+        /**
+         * Ends the drag without a drop (the target under the pointer gets `dragExited`, the source `dragEnded`), or
+         * disarms the press
+         */
+        void cancelDrag();
 
         // endregion
 
@@ -905,6 +928,53 @@ namespace psychic_ui {
 
         //int _mouseX{0};
         //int _mouseY{0};
+
+        // endregion
+
+        // region Drag and drop
+
+        DragAndDrop                       _dragAndDrop{};
+        std::shared_ptr<const DragPayload> _dragPayload{};  // The live drag's, kept alive through its signals
+        std::vector<std::weak_ptr<Div>>   _dropTargets{};   // With the `drop-target` class
+        Cursor                            _cursorBeforeDrag{Cursor::Arrow};
+        bool                              _dragClickCancelled{false}; // The left press started a drag: no click
+
+        /**
+         * Arms the session for a left press on the deepest drag source under it
+         */
+        void dragArm(const MouseEvent &press);
+
+        /**
+         * Moves an armed or live drag
+         * @return whether the move is the drag's, which the divs then don't get
+         */
+        bool dragMove(float x, float y);
+
+        /**
+         * Ends the left press: drops a live drag where it is released
+         * @return whether the press started a drag, so that it doesn't click
+         */
+        bool dragRelease(float x, float y);
+
+        /**
+         * The drag just started: marks the source and the targets, then tells the source
+         */
+        void dragBegin();
+
+        /**
+         * Finds the target under the pointer, and tells the one left and the one reached
+         */
+        void dragOver(float x, float y);
+
+        /**
+         * Ends the live drag, with a drop on the target under the pointer or cancelled
+         */
+        void dragEnd(bool drop);
+
+        /**
+         * The drag at the pointer, in `div`'s content coordinates
+         */
+        DragEvent dragEvent(const Div &div, const DragPayload &payload, bool accepted = false) const;
 
         // endregion
 

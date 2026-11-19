@@ -15,6 +15,16 @@ namespace psychic_ui {
         return _state == State::Idle ? nullptr : _source.lock();
     }
 
+    std::shared_ptr<Div> DragAndDrop::target() const {
+        return _state == State::Dragging ? _target.lock() : nullptr;
+    }
+
+    void DragAndDrop::setTarget(const std::weak_ptr<Div> &target) {
+        if (_state == State::Dragging) {
+            _target = target;
+        }
+    }
+
     void DragAndDrop::press(const std::weak_ptr<Div> &source, const MouseEvent &press, DragSourceFn sourceFn) {
         if (_state == State::Dragging) {
             return;
@@ -95,6 +105,7 @@ namespace psychic_ui {
     void DragAndDrop::reset() {
         _state = State::Idle;
         _source.reset();
+        _target.reset();
         _sourceFn = nullptr;
         _payload.reset();
     }

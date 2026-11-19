@@ -39,4 +39,9 @@ namespace psychic_ui {
      */
     using DragSourceFn = std::function<std::optional<DragPayload>(const MouseEvent &press)>;
 
+    /**
+     * Whether a drop target takes what a drag carries (by its type, by its data)
+     */
+    using DropAcceptFn = std::function<bool(const DragPayload &payload)>;
+
 }

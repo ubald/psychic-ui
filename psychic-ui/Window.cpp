@@ -35,6 +35,9 @@
 #include "include/gpu/ganesh/gl/GrGLInterface.h"
 #include "include/gpu/ganesh/gl/GrGLTypes.h"
 #include "Div.hpp"
+#include "DragAndDrop.hpp"
+#include "DragEvent.hpp"
+#include "DragPayload.hpp"
 #include "Overlay.hpp"
 #include "Popup.hpp"
 #include "SystemWindow.hpp"
@@ -828,6 +831,9 @@ namespace psychic_ui {
     }
 
     MouseEventStatus Window::handleMouseMove(const MouseEvent &event, const bool handled) {
+        if (dragMove(event.x, event.y)) {
+            return MouseEventStatus::Handled; // The drag's: nothing under it hovers
+        }
         MouseEvent windowEvent = event;
         windowEvent.windowX    = event.x;
         windowEvent.windowY    = event.y;
@@ -1125,6 +1131,10 @@ namespace psychic_ui {
     }
 
     void Window::touchAbort() {
+        // A finger's drag ends with its gesture, without a drop
+        if (_dragAndDrop.state() != DragAndDrop::State::Idle && _dragAndDrop.inputMode() == InputMode::Touch) {
+            cancelDrag();
+        }
         if (_touchPhase == TouchPhase::Pressing) {
             // Released, without a click
             _buttons &= ~static_cast<unsigned>(_touchButton);
@@ -1349,6 +1359,207 @@ namespace psychic_ui {
         if (blocked || std::hypot(_panVelocityX, _panVelocityY) < flingStopVelocity) {
             _flinging = false;
         }
+    }
+
+    // endregion
+
+    // region Drag and drop
+
+    namespace {
+        /**
+         * The visible divs with a drop target, from `div` down
+         */
+        void dropTargets(Div &div, std::vector<std::shared_ptr<Div>> &targets) {
+            if (!div.visible()) {
+                return;
+            }
+            if (div.dropTarget() && div.enabled()) {
+                if (auto target = div.weak_from_this().lock()) {
+                    targets.push_back(std::move(target));
+                }
+            }
+            for (const auto &child: div.children()) {
+                dropTargets(*child, targets);
+            }
+        }
+
+        constexpr const char *draggingClass   = "dragging";
+        constexpr const char *dropTargetClass = "drop-target";
+        constexpr const char *dragOverClass   = "drag-over";
+    }
+
+    void Window::cancelDrag() {
+        if (_dragAndDrop.active()) {
+            dragEnd(false);
+        } else {
+            _dragAndDrop.cancel();
+        }
+    }
+
+    void Window::dragArm(const MouseEvent &press) {
+        _dragClickCancelled = false;
+        if (_dragAndDrop.active()) {
+            return;
+        }
+        std::vector<Div *> path{};
+        hitPath(*_overlay, this, press.x, press.y, path);
+        Div *source = deepest(path, [](const Div *div) { return div->dragSource() && div->enabled(); });
+        if (!source) {
+            _dragAndDrop.cancel();
+            return;
+        }
+        int originX = 0;
+        int originY = 0;
+        source->localToGlobal(originX, originY);
+        MouseEvent local = press;
+        local.x          = press.windowX - static_cast<float>(originX);
+        local.y          = press.windowY - static_cast<float>(originY);
+        _dragAndDrop.press(source->weak_from_this(), local, source->dragSource());
+    }
+
+    bool Window::dragMove(const float x, const float y) {
+        if (_dragAndDrop.state() == DragAndDrop::State::Idle) {
+            return false;
+        }
+        if (const auto source = _dragAndDrop.source(); !source || source->window() != this) {
+            // A source gone from the window ends its drag, or starts none
+            cancelDrag();
+            return false;
+        }
+        if (_dragAndDrop.active()) {
+            _dragAndDrop.move(x, y);
+            dragOver(x, y);
+            return true;
+        }
+        if (!_dragAndDrop.move(x, y)) {
+            return false;
+        }
+        dragBegin();
+        if (_dragAndDrop.active()) {
+            dragOver(x, y);
+        }
+        return true;
+    }
+
+    bool Window::dragRelease(const float x, const float y) {
+        if (!_dragAndDrop.active()) {
+            _dragAndDrop.release(x, y); // Disarms
+        } else if (const auto source = _dragAndDrop.source(); !source || source->window() != this) {
+            cancelDrag();
+        } else {
+            _dragAndDrop.move(x, y);
+            dragOver(x, y);
+            if (_dragAndDrop.active()) {
+                dragEnd(true);
+            }
+        }
+        return std::exchange(_dragClickCancelled, false);
+    }
+
+    void Window::dragBegin() {
+        const auto source = _dragAndDrop.source();
+        _dragPayload       = std::make_shared<const DragPayload>(*_dragAndDrop.payload());
+        const auto payload = _dragPayload;
+        _dragClickCancelled = true;
+        _cursorBeforeDrag   = _cursor;
+        hideTooltip(false);
+        source->addClassName(draggingClass);
+
+        // Every target that takes the payload shows it while the drag lasts
+        std::vector<std::shared_ptr<Div>> targets{};
+        dropTargets(*this, targets);
+        for (const auto &target: targets) {
+            if (target->dropTarget()(*payload)) {
+                target->addClassName(dropTargetClass);
+                _dropTargets.push_back(target);
+            }
+        }
+
+        source->dragStarted.emit(dragEvent(*source, *payload));
+    }
+
+    void Window::dragOver(const float x, const float y) {
+        const auto         payload = _dragPayload;
+        std::vector<Div *> path{};
+        hitPath(*_overlay, this, x, y, path);
+        Div *deepestTarget = deepest(path, [&payload](const Div *div) {
+            return div->dropTarget() && div->enabled() && div->dropTarget()(*payload);
+        });
+        const auto found   = deepestTarget ? deepestTarget->weak_from_this().lock() : nullptr;
+        const auto current = _dragAndDrop.target();
+        setCursor(found ? Cursor::Move : Cursor::NotAllowed);
+
+        if (found != current) {
+            // Forgotten first: a handler that ends the drag doesn't tell it again
+            _dragAndDrop.setTarget({});
+            if (current) {
+                current->removeClassName(dragOverClass);
+                if (current->window() == this) { // A target removed from the window hears no more
+                    current->dragExited.emit(dragEvent(*current, *payload));
+                }
+            }
+            if (!_dragAndDrop.active()) {
+                return;
+            }
+            _dragAndDrop.setTarget(found);
+            if (found) {
+                found->addClassName(dragOverClass);
+                found->dragEntered.emit(dragEvent(*found, *payload));
+            }
+        }
+        if (found && _dragAndDrop.active() && _dragAndDrop.target() == found) {
+            found->dragMoved.emit(dragEvent(*found, *payload));
+        }
+    }
+
+    void Window::dragEnd(const bool drop) {
+        // The session is idle before any handler runs: one that starts or cancels another drag changes nothing here
+        const auto payload = std::move(_dragPayload);
+        const auto source  = _dragAndDrop.source();
+        const auto target  = _dragAndDrop.target();
+        if (drop) {
+            _dragAndDrop.release(_dragAndDrop.windowX(), _dragAndDrop.windowY());
+        } else {
+            _dragAndDrop.cancel();
+        }
+        for (const auto &weak: std::exchange(_dropTargets, {})) {
+            if (const auto marked = weak.lock()) {
+                marked->removeClassName(dropTargetClass);
+            }
+        }
+        if (source) {
+            source->removeClassName(draggingClass);
+        }
+        setCursor(_cursorBeforeDrag);
+
+        bool accepted = false;
+        if (target) {
+            target->removeClassName(dragOverClass);
+            if (target->window() == this) {
+                if (drop) {
+                    accepted = true;
+                    target->dropped.emit(dragEvent(*target, *payload));
+                } else {
+                    target->dragExited.emit(dragEvent(*target, *payload));
+                }
+            }
+        }
+        if (source) {
+            source->dragEnded.emit(dragEvent(*source, *payload, accepted));
+        }
+    }
+
+    DragEvent Window::dragEvent(const Div &div, const DragPayload &payload, const bool accepted) const {
+        int originX = 0;
+        int originY = 0;
+        div.localToGlobal(originX, originY);
+        const float windowX = _dragAndDrop.windowX();
+        const float windowY = _dragAndDrop.windowY();
+        return DragEvent{
+            .x = windowX - static_cast<float>(originX), .y = windowY - static_cast<float>(originY),
+            .windowX = windowX, .windowY = windowY, .payload = &payload, .source = _dragAndDrop.inputMode(),
+            .accepted = accepted
+        };
     }
 
     // endregion
@@ -1605,6 +1816,17 @@ namespace psychic_ui {
         }
         changed.buttons = _buttons;
 
+        // A left press on a drag source arms a drag; a release ends it, and its press doesn't click (fingers drag
+        // by a long press)
+        if (changed.button == MouseButton::LEFT && changed.source != InputMode::Touch) {
+            if (changed.down) {
+                dragArm(changed);
+            } else if (dragRelease(event.x, event.y)) {
+                handleMouseRelease(changed);
+                return MouseEventStatus::Handled;
+            }
+        }
+
         auto res = Div::handleMouseButtonChange(changed);
 
         // The context menu on the right button's press, as on macOS and Linux, or its release, as on Windows; a touch
@@ -1746,6 +1968,11 @@ namespace psychic_ui {
     bool Window::handleKeyPress(Key key, Mod mod) {
         hideTooltip(false);
         _tooltipSuppressed = true;
+        // Escape cancels a drag before anything else
+        if (key == Key::ESCAPE && _dragAndDrop.active()) {
+            cancelDrag();
+            return true;
+        }
         // Escape closes the topmost popup before anyone else sees it, unless the focus is in a field that has a use
         // for it (a search field with text, a number being typed), as browsers do
         if (key == Key::ESCAPE
@@ -1801,7 +2028,8 @@ namespace psychic_ui {
     }
 
     void Window::windowDeactivated() {
-        // std::cout << "Deactivated" << std::endl;
+        // The pointer's release may never come back to this window
+        cancelDrag();
     }
 
     void Window::windowMinimized() {

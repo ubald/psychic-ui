@@ -15,6 +15,8 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkRRect.h"
 #include "psychic-ui.hpp"
+#include "psychic-ui/DragEvent.hpp"
+#include "psychic-ui/DragPayload.hpp"
 #include "psychic-ui/style/Style.hpp"
 #include "psychic-ui/style/StyleManager.hpp"
 #include "psychic-ui/signals/Signal.hpp"
@@ -489,6 +491,46 @@ namespace psychic_ui {
 
         // endregion
 
+        // region Drag and drop
+
+        /**
+         * What a drag from this div carries, asked for when one starts (the mouse moved past the threshold from a
+         * left press on it, or on a descendant without a source of its own); no payload refuses the drag. While it
+         * lasts, the div has the `dragging` class. Empty for none.
+         */
+        const DragSourceFn &dragSource() const { return _dragSource; }
+
+        template<class Self>
+        Self &dragSource(this Self &self, DragSourceFn source) {
+            static_cast<Div &>(self).updateDragSource(std::move(source));
+            return self;
+        }
+
+        /**
+         * Whether a drag can drop on this div: while a drag whose payload it accepts lasts, the div has the
+         * `drop-target` class, and the `drag-over` class while it is the deepest accepting div under the pointer,
+         * which then gets the drag's events. Empty for none.
+         */
+        const DropAcceptFn &dropTarget() const { return _dropTarget; }
+
+        template<class Self>
+        Self &dropTarget(this Self &self, DropAcceptFn accepts) {
+            static_cast<Div &>(self).updateDropTarget(std::move(accepts));
+            return self;
+        }
+
+        // On the source: the drag started, and ended (`accepted` when a target took the drop)
+        Signal<DragEvent> dragStarted{};
+        Signal<DragEvent> dragEnded{};
+        // On the target under the pointer: the drag came over it, moved over it, left it (or was cancelled over it),
+        // and dropped on it
+        Signal<DragEvent> dragEntered{};
+        Signal<DragEvent> dragMoved{};
+        Signal<DragEvent> dragExited{};
+        Signal<DragEvent> dropped{};
+
+        // endregion
+
         // region Position & Dimensions
 
         // The setters are style properties (`left`, `top`, `width`, `height`, ...), which go through the computed
@@ -801,6 +843,13 @@ namespace psychic_ui {
 
         PSYCHIC_UI_EVENT(onZoom, zoomed)
 
+        PSYCHIC_UI_EVENT(onDragStart, dragStarted)
+        PSYCHIC_UI_EVENT(onDragEnd, dragEnded)
+        PSYCHIC_UI_EVENT(onDragEnter, dragEntered)
+        PSYCHIC_UI_EVENT(onDragMove, dragMoved)
+        PSYCHIC_UI_EVENT(onDragExit, dragExited)
+        PSYCHIC_UI_EVENT(onDrop, dropped)
+
         PSYCHIC_UI_EVENT(onKeyPress, keyPressed)
         PSYCHIC_UI_EVENT(onKeyRepeat, keyRepeated)
         PSYCHIC_UI_EVENT(onKeyRelease, keyReleased)
@@ -817,6 +866,10 @@ namespace psychic_ui {
         std::vector<std::shared_ptr<MenuItem>> _contextMenu{};
         ScopedSlot _contextMenuSlot{}; // Our subscription to contextMenuRequested while there is a context menu
         void updateContextMenu(std::vector<std::shared_ptr<MenuItem>> items);
+        DragSourceFn _dragSource{};
+        DropAcceptFn _dropTarget{};
+        void updateDragSource(DragSourceFn source);
+        void updateDropTarget(DropAcceptFn accepts);
         bool _enabled{true};
         bool _visible{true};
         int  _x{0};

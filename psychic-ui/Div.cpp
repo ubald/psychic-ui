@@ -32,6 +32,7 @@
 #include "yoga/YGNodeStyle.h"
 #include "yoga/YGValue.h"
 #include "Div.hpp"
+#include "DragPayload.hpp"
 #include "Window.hpp"
 #include "components/Menu.hpp"
 #include "animation/StyleTransitions.hpp"
@@ -1583,6 +1584,14 @@ namespace psychic_ui {
                 }
             );
         }
+    }
+
+    void Div::updateDragSource(DragSourceFn source) {
+        _dragSource = std::move(source);
+    }
+
+    void Div::updateDropTarget(DropAcceptFn accepts) {
+        _dropTarget = std::move(accepts);
     }
 
     MouseEvent Div::mouseEventAtCenter() {
