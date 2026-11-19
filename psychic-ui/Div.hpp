@@ -749,6 +749,8 @@ namespace psychic_ui {
          */
         MouseEvent localMouseEvent(const MouseEvent &event) const;
 
+        // Keys and characters bubble up the focus path, deepest first, to the window: a handler returns true when it
+        // used one, which stops it there (see Window::handleKeyPress)
         Signal<Key, Mod>           keyPressed{};
         Signal<Key, Mod>           keyRepeated{};
         Signal<Key, Mod>           keyReleased{};
