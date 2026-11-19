@@ -3,6 +3,7 @@
 #include <array>
 #include <memory>
 #include "../SystemWindow.hpp"
+#include "../WindowScale.hpp"
 
 struct GLFWwindow;
 struct GLFWcursor;
@@ -35,6 +36,12 @@ namespace psychic_ui {
      * rather than a custom title bar. GLFW has no touch input either: the window stays in pointer mode,
      * whatever the system makes of fingers, and the adapter never changes the mode, so a host with touch
      * input of its own can hand it to `Window::handleTouchPress` and the others.
+     *
+     * Sizes and input are in logical units: GLFW's window units scaled by the content scale they don't
+     * already carry (`WindowScale`). On macOS and Wayland they are GLFW's window units; on Windows and X11,
+     * where those are pixels, they are pixels divided by the user's scale. A host that wants the size it
+     * creates its window with to be logical there too sets `GLFW_SCALE_TO_MONITOR` first. Positions
+     * (`setPosition`, `windowMoved`) stay in GLFW's screen coordinates.
      */
     class GLFWSystemWindow : public SystemWindow {
     public:
@@ -80,6 +87,13 @@ namespace psychic_ui {
         static Mod mapMods(int mods);
         static Key mapKey(int key);
 
+    protected:
+        /**
+         * The window's content scale (`glfwGetWindowContentScale`), read with the size.
+         * Virtual so that tests can make up a monitor's scale.
+         */
+        [[nodiscard]] virtual float contentScale() const;
+
     private:
         struct Callbacks;
 
@@ -104,6 +118,11 @@ namespace psychic_ui {
         int _windowedHeight{0};
 
         Mod _modifiers{};
+
+        /**
+         * GLFW's window units to logical units, read with the size
+         */
+        WindowScale _scale{};
 
         static GLFWSystemWindow *find(GLFWwindow *glfwWindow);
         void readSize();
