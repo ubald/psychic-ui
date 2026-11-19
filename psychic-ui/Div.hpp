@@ -495,8 +495,8 @@ namespace psychic_ui {
 
         /**
          * What a drag from this div carries, asked for when one starts (the mouse moved past the threshold from a
-         * left press on it, or on a descendant without a source of its own); no payload refuses the drag. While it
-         * lasts, the div has the `dragging` class. Empty for none.
+         * left press on it, or on a descendant that doesn't take presses itself); no payload refuses the drag. While
+         * it lasts, the div has the `dragging` class. Empty for none.
          */
         const DragSourceFn &dragSource() const { return _dragSource; }
 
@@ -761,7 +761,8 @@ namespace psychic_ui {
          */
         Signal<MouseEvent> contextMenuRequested{};
         /**
-         * A zoom around a point: a trackpad pinch, or the wheel with Ctrl (or Cmd on macOS), which then doesn't scroll.
+         * A zoom around a point: a trackpad pinch, two fingers on a touch screen, or the wheel with Ctrl (or Cmd on
+         * macOS), which then doesn't scroll.
          * Goes to the deepest div with a subscriber, once, as the mouse signals do.
          */
         Signal<ZoomEvent>  zoomed{};

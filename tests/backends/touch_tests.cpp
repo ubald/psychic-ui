@@ -7,6 +7,7 @@
 #include <vector>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <psychic-ui/DragAndDrop.hpp>
 #include <psychic-ui/DragEvent.hpp>
 #include <psychic-ui/DragPayload.hpp>
 #include <psychic-ui/DragPreview.hpp>
@@ -587,6 +588,98 @@ TEST_CASE("a touch cancel ends the drag without a drop", "[backend][touch][drag]
     CHECK(fixture.window->dragAndDrop().active());
     fixture.window->handleTouchRelease(50.0f, 20.0f, 1s + 800ms);
     CHECK(fixture.log == std::vector<std::string>{"item0 start", "item0 end"});
+}
+
+TEST_CASE("a long press on a source that refuses is the context press", "[backend][touch][drag]") {
+    auto             window = std::make_shared<TestWindow>();
+    FakeSystemWindow systemWindow(window);
+    int              sourceCalls     = 0;
+    int              contextRequests = 0;
+    window->appContainer().add<Div>().width(100).height(40)
+          .dragSource([&sourceCalls](const MouseEvent &) -> std::optional<DragPayload> {
+              ++sourceCalls;
+              return std::nullopt;
+          })
+          .onContextMenuRequest([&contextRequests] { ++contextRequests; });
+    systemWindow.layout();
+
+    window->handleTouchPress(50.0f, 20.0f, 1s);
+    window->updateGestures(1s + 500ms);
+    CHECK(sourceCalls == 1);
+    CHECK(contextRequests == 1);
+    CHECK_FALSE(window->dragAndDrop().active());
+    CHECK(window->dragAndDrop().state() == DragAndDrop::State::Idle);
+    window->handleTouchRelease(50.0f, 20.0f, 1s + 600ms);
+    CHECK(sourceCalls == 1);
+}
+
+TEST_CASE("a long press on a control inside a source is the context press", "[backend][touch][drag]") {
+    auto             window = std::make_shared<TestWindow>();
+    FakeSystemWindow systemWindow(window);
+    int              sourceCalls     = 0;
+    int              contextRequests = 0;
+    auto &row = window->appContainer().add<Div>().direction(Direction::Row).width(300).height(40);
+    row.add<Div>().width(150).height(40);
+    auto &range = row.add<Range<float>>(0.0f, 1.0f, 0.5f, nullptr).width(150);
+    row.dragSource([&sourceCalls](const MouseEvent &) -> std::optional<DragPayload> {
+           ++sourceCalls;
+           return DragPayload{.type = "test/row", .label = "row"};
+       })
+       .onContextMenuRequest([&contextRequests] { ++contextRequests; });
+    systemWindow.layout();
+    int x = 0;
+    int y = 0;
+    range.localToGlobal(x, y, range.getWidth() / 2, range.getHeight() / 2);
+
+    window->handleTouchPress(static_cast<float>(x), static_cast<float>(y), 1s);
+    window->updateGestures(1s + 500ms);
+    CHECK(sourceCalls == 0);
+    CHECK(contextRequests == 1);
+    CHECK_FALSE(window->dragAndDrop().active());
+    window->handleTouchRelease(static_cast<float>(x), static_cast<float>(y), 1s + 600ms);
+
+    // On the row's plain part, it drags
+    window->handleTouchPress(20.0f, 20.0f, 3s);
+    window->updateGestures(3s + 500ms);
+    CHECK(sourceCalls == 1);
+    CHECK(window->dragAndDrop().active());
+    window->handleTouchRelease(20.0f, 20.0f, 3s + 600ms);
+}
+
+TEST_CASE("a source keeps a long press from a neighbour's hit slop", "[backend][touch][drag]") {
+    auto             window = std::make_shared<TestWindow>();
+    FakeSystemWindow systemWindow(window);
+    int              sourceCalls       = 0;
+    int              neighbourRequests = 0;
+    window->appContainer().add<Div>().position(Position::Absolute).left(0).top(0).width(100).height(40)
+          .dragSource([&sourceCalls](const MouseEvent &) -> std::optional<DragPayload> {
+              ++sourceCalls;
+              return DragPayload{.type = "test/chip", .label = "chip"};
+          });
+    window->appContainer().add<Div>().position(Position::Absolute).left(105).top(0).width(24).height(24).hitSlop(10)
+          .onContextMenuRequest([&neighbourRequests] { ++neighbourRequests; });
+    systemWindow.layout();
+
+    window->handleTouchPress(97.0f, 10.0f, 1s); // On the source, within the neighbour's slop
+    window->updateGestures(1s + 500ms);
+    CHECK(sourceCalls == 1);
+    CHECK(window->dragAndDrop().active());
+    CHECK(neighbourRequests == 0);
+    window->handleTouchRelease(97.0f, 10.0f, 1s + 600ms);
+}
+
+TEST_CASE("a cancelled touch drag leaves the next mouse release alone", "[backend][touch][drag]") {
+    TouchDragFixture fixture;
+    std::vector<bool> changes{};
+    fixture.items[0]->onMouseButtonChange([&changes](const MouseEvent &event) { changes.push_back(event.down); });
+    fixture.longPress();
+    REQUIRE(fixture.window->dragAndDrop().active());
+    fixture.window->handleTouchCancel(1s + 600ms);
+    CHECK_FALSE(fixture.window->dragAndDrop().active());
+
+    // A release with no press first (a mouse button held from before) reaches the divs
+    fixture.window->handleMouseButtonChange({.x = 50, .y = 20, .button = MouseButton::LEFT, .down = false});
+    CHECK(changes == std::vector<bool>{false});
 }
 
 namespace {

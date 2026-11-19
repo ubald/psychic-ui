@@ -28,7 +28,8 @@ namespace psychic_ui {
          */
         std::string          label{};
         /**
-         * Shown under the pointer instead of the label, when set
+         * Shown under the pointer instead of the label, when set: the div is moved into the preview (it leaves its
+         * parent, if it had one)
          */
         std::shared_ptr<Div> preview{};
     };

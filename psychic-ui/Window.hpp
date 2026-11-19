@@ -432,14 +432,15 @@ namespace psychic_ui {
         // region Drag and drop
 
         /**
-         * The drag session: a left press on a div with a `dragSource` (or inside it, without a deeper one) arms it, a
-         * move past `DragAndDrop::dragThreshold` starts the drag; a finger starts it by a long press instead
-         * (`longPressDelay`), and drops where it lifts (a touch cancel cancels). A `DragPreview` shows the payload
+         * The drag session: a left press on a div with a `dragSource` (or on a descendant that doesn't take presses
+         * itself) arms it, a move past `DragAndDrop::dragThreshold` starts the drag; a finger starts it by a long
+         * press instead (`longPressDelay`), and drops where it lifts (a touch cancel cancels; a second finger is
+         * ignored). A `DragPreview` shows the payload
          * at the pointer while it lasts (`dragPreview`). While it lasts, the session takes every move and the
          * release before the divs do (no hover changes, no `mouseMoved`, no click from the press): the deepest div
          * under the pointer whose `dropTarget` accepts the payload gets `dragEntered`, `dragMoved` and `dragExited`,
          * and `dropped` on the release, then the source gets `dragEnded`. Escape and the window losing the focus
-         * cancel it.
+         * cancel it, and so does another button's press, which goes nowhere.
          */
         const DragAndDrop &dragAndDrop() const { return _dragAndDrop; }
 
@@ -619,8 +620,8 @@ namespace psychic_ui {
         MouseEventStatus handleMouseScroll(const MouseEvent &event) override;
 
         /**
-         * A zoom around a point in window coordinates (a trackpad pinch, from the backends), for the deepest div
-         * under it with a `zoomed` subscriber that uses it
+         * A zoom around a point in window coordinates (a trackpad pinch from the backends, or two fingers on a touch
+         * screen), for the deepest div under it with a `zoomed` subscriber
          */
         MouseEventStatus handleZoom(const ZoomEvent &event) override;
 
@@ -631,7 +632,8 @@ namespace psychic_ui {
 
         /**
          * A press first closes the popups it is outside of (`Overlay::pressOutside`); one that closed a modal popup
-         * goes no further, and neither does its release.
+         * goes no further, and neither does its release. During a drag, a press of another button than the left one
+         * cancels the drag and goes no further either, nor does its release.
          * A press on nothing that takes presses goes to the nearest div whose `hitSlop` reaches it, as if it
          * landed on its edge, and so does its release while still within that slop
          */
@@ -665,7 +667,8 @@ namespace psychic_ui {
 
         /**
          * The div a press here goes to through its `hitSlop`, and the point on it the press moves to; nullptr
-         * when the press lands on something that takes presses, or no slop reaches it
+         * when the press lands on something that takes presses (a subscriber to a press, click or context signal, or
+         * a drag source), or no slop reaches it
          */
         Div *hitSlopTarget(float x, float y, float &targetX, float &targetY);
 

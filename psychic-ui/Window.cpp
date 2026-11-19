@@ -1047,6 +1047,19 @@ namespace psychic_ui {
         }
     }
 
+    namespace {
+        /**
+         * Whether a div handles presses itself: what a press lands on keeps it, from hit slop and from a drag source
+         * around it
+         */
+        bool takesPresses(const Div &div) {
+            return div.mouseEnabled()
+                   && (div.mouseButtonChanged.hasSubscriptions() || div.mousePressed.hasSubscriptions()
+                       || div.mouseReleased.hasSubscriptions() || div.clicked.hasSubscriptions()
+                       || div.contextMenuRequested.hasSubscriptions() || static_cast<bool>(div.dragSource()));
+        }
+    }
+
     Div *Window::scrollTargetAt(const float x, const float y, const bool horizontal) {
         std::vector<Div *> path{};
         hitPath(*_overlay, this, x, y, path);
@@ -1438,6 +1451,12 @@ namespace psychic_ui {
         std::vector<Div *> path{};
         hitPath(*_overlay, this, press.x, press.y, path);
         Div *source = deepest(path, [](const Div *div) { return div->dragSource() && div->enabled(); });
+        // A control inside the source keeps its press
+        if (source && std::any_of(std::next(std::ranges::find(path, source)), path.end(), [](const Div *div) {
+                return takesPresses(*div);
+            })) {
+            source = nullptr;
+        }
         if (!source) {
             _dragAndDrop.cancel();
             return;
@@ -1560,6 +1579,9 @@ namespace psychic_ui {
         const auto payload = std::move(_dragPayload);
         const auto source  = _dragAndDrop.source();
         const auto target  = _dragAndDrop.target();
+        if (_dragAndDrop.inputMode() == InputMode::Touch) {
+            _dragClickCancelled = false; // No mouse release follows a finger's drag
+        }
         if (drop) {
             _dragAndDrop.release(_dragAndDrop.windowX(), _dragAndDrop.windowY());
         } else {
@@ -1658,16 +1680,6 @@ namespace psychic_ui {
     // region MouseEvents
 
     namespace {
-        /**
-         * Whether a div handles presses itself
-         */
-        bool takesPresses(const Div &div) {
-            return div.mouseEnabled()
-                   && (div.mouseButtonChanged.hasSubscriptions() || div.mousePressed.hasSubscriptions()
-                       || div.mouseReleased.hasSubscriptions() || div.clicked.hasSubscriptions()
-                       || div.contextMenuRequested.hasSubscriptions());
-        }
-
         struct SlopSearch {
             float x{0};
             float y{0};
@@ -1801,6 +1813,14 @@ namespace psychic_ui {
                 changed.button = MouseButton::RIGHT;
                 _ctrlClickHeld = false;
             }
+        }
+
+        // Another button's press during a drag cancels it, and that press and its release go nowhere
+        if (changed.down && changed.button != MouseButton::LEFT && _dragAndDrop.active()) {
+            cancelDrag();
+            _pressSwallowed  = true;
+            _swallowedButton = changed.button;
+            return MouseEventStatus::Handled;
         }
 
         // A press hides the tooltip (a touch long press shows it after this) and closes the popups it is outside of:

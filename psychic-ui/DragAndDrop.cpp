@@ -76,6 +76,7 @@ namespace psychic_ui {
         }
         // Called from copies: the source's function may cancel the session or remove the source
         const auto       sourceFn = std::move(_sourceFn);
+        _sourceFn                   = nullptr;
         const MouseEvent press    = _press;
         auto             payload  = sourceFn(press);
         if (_state != State::Armed) {

@@ -94,8 +94,8 @@ namespace psychic_ui {
     };
 
     /**
-     * What `zoomed` passes: a trackpad pinch, or the wheel with Ctrl (or Cmd on macOS). Like a MouseEvent, each div
-     * gets it in its own coordinates.
+     * What `zoomed` passes: a trackpad pinch, two fingers on a touch screen, or the wheel with Ctrl (or Cmd on
+     * macOS). Like a MouseEvent, each div gets it in its own coordinates.
      */
     struct ZoomEvent {
         /**

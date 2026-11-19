@@ -17,6 +17,7 @@
 #include <psychic-ui/Popup.hpp>
 #include <psychic-ui/components/Label.hpp>
 #include <psychic-ui/components/Dialog.hpp>
+#include <psychic-ui/components/Range.hpp>
 #include <psychic-ui/psychic-ui.hpp>
 #include <psychic-ui/style/Values.hpp>
 
@@ -687,4 +688,88 @@ TEST_CASE("a pen drags like a mouse", "[drag]") {
     });
     CHECK(drag.events.back().source == InputMode::Pen);
     CHECK(drag.clicks == 0);
+}
+
+namespace {
+    /**
+     * A source row, 300 x 40, holding a Range on its right half: its left half is plain
+     */
+    struct ControlInSource {
+        std::shared_ptr<TestWindow> window{std::make_shared<TestWindow>()};
+        FakeSystemWindow            sys{window, 800, 600};
+        Div                        &row{window->appContainer().add<Div>()};
+        Div                        &plain{row.add<Div>().width(150).height(40)};
+        Range<float>               &range{row.add<Range<float>>(0.0f, 1.0f, 0.5f, nullptr).width(150)};
+        int                         sourceCalls{0};
+        int                         starts{0};
+
+        ControlInSource() {
+            row.direction(Direction::Row).width(300).height(40).alignItems(Align::Center);
+            row.dragSource([this](const MouseEvent &) -> std::optional<DragPayload> {
+                ++sourceCalls;
+                return DragPayload{.type = "test/row", .label = "row"};
+            });
+            row.onDragStart([this] { ++starts; });
+            sys.layout();
+        }
+
+        /**
+         * The range's center, in window coordinates
+         */
+        [[nodiscard]] std::pair<float, float> rangeCenter() const {
+            int x = 0;
+            int y = 0;
+            range.localToGlobal(x, y, range.getWidth() / 2, range.getHeight() / 2);
+            return {static_cast<float>(x), static_cast<float>(y)};
+        }
+    };
+}
+
+TEST_CASE("a control inside a source keeps its press: no drag starts", "[drag]") {
+    ControlInSource fixture;
+    const auto [x, y] = fixture.rangeCenter();
+    fixture.window->handleMouseButtonChange({.x = x, .y = y, .button = MouseButton::LEFT, .down = true});
+    CHECK(fixture.window->dragAndDrop().state() == DragAndDrop::State::Idle);
+    fixture.window->handleMouseMove({.x = x + 10, .y = y}, false);
+    const float before = fixture.range.value();
+    fixture.window->handleMouseMove({.x = x + 30, .y = y}, false);
+    CHECK_FALSE(fixture.window->dragAndDrop().active());
+    CHECK(fixture.sourceCalls == 0);
+    CHECK(fixture.starts == 0);
+    CHECK_FALSE(fixture.row.classNames().contains("dragging"));
+    CHECK(fixture.range.value() > before); // The range followed the pointer
+    fixture.window->handleMouseButtonChange({.x = x + 30, .y = y, .button = MouseButton::LEFT, .down = false});
+
+    // A press on the row's plain part still drags
+    fixture.window->handleMouseButtonChange({.x = 20, .y = 20, .button = MouseButton::LEFT, .down = true});
+    fixture.window->handleMouseMove({.x = 30, .y = 20}, false);
+    CHECK(fixture.window->dragAndDrop().active());
+    CHECK(fixture.starts == 1);
+    CHECK(fixture.row.classNames().contains("dragging"));
+    fixture.window->handleMouseButtonChange({.x = 30, .y = 20, .button = MouseButton::LEFT, .down = false});
+    CHECK_FALSE(fixture.window->dragAndDrop().active());
+}
+
+TEST_CASE("another button's press during a drag cancels it and goes nowhere", "[drag]") {
+    Dragging drag;
+    int contextRequests = 0;
+    std::vector<MouseButton> buttons{};
+    drag.item0->onContextMenuRequest([&contextRequests] { ++contextRequests; });
+    drag.warm->onContextMenuRequest([&contextRequests] { ++contextRequests; });
+    drag.warm->onMouseButtonChange([&buttons](const MouseEvent &event) { buttons.push_back(event.button); });
+
+    for (const MouseButton other: {MouseButton::RIGHT, MouseButton::MIDDLE}) {
+        drag.log.clear();
+        drag.startDrag();
+        drag.move(220, 30);
+        drag.window->handleMouseButtonChange({.x = 220, .y = 30, .button = other, .down = true});
+        CHECK_FALSE(drag.window->dragAndDrop().active());
+        CHECK(drag.log == std::vector<std::string>{"item0 start", "warm enter", "warm move", "warm exit", "item0 end"});
+        drag.window->handleMouseButtonChange({.x = 220, .y = 30, .button = other, .down = false});
+        drag.release(220, 30); // The left button's release, after: no drop, no click
+        CHECK(drag.log.size() == 5);
+        CHECK(contextRequests == 0);
+        CHECK(buttons.empty());
+        CHECK(drag.clicks == 0);
+    }
 }
