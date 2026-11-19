@@ -1,5 +1,6 @@
 #include <algorithm>
-#include <yoga/Yoga.h>
+#include <yoga/YGEnums.h>
+#include <yoga/YGNodeLayout.h>
 #include "Splitter.hpp"
 #include "SplitterDivider.hpp"
 #include "psychic-ui/Div.hpp"
@@ -21,23 +22,7 @@ namespace psychic_ui {
         // Last, so it is on top of the panes where it reaches over them
         _divider = &add<SplitterDivider>();
 
-        _divider->onMousePress(
-            [this](const MouseEvent &event) {
-                if (!_enabled || event.button != MouseButton::LEFT) {
-                    return;
-                }
-                _pressAt       = _orientation == Orientation::Horizontal ? event.windowX : event.windowY;
-                _pressPosition = position();
-                _onMouseMove   = window()->mouseMoved.subscribe(
-                    [this](const MouseEvent &move) {
-                        // Toward the end grows the first pane: the kept one when it is the first
-                        const float along = _orientation == Orientation::Horizontal ? move.windowX : move.windowY;
-                        const float delta = along - _pressAt;
-                        moveTo(_pressPosition + (_kept == SplitterPane::First ? delta : -delta));
-                    }
-                );
-            }
-        );
+        _divider->onMousePress([this](const MouseEvent &event) { pressDivider(event); });
 
         // Wherever the button is released, the drag ends
         _divider->onMouseRelease(
@@ -56,27 +41,43 @@ namespace psychic_ui {
             }
         );
 
-        // The arrows along the splitter move the divider toward them
-        _divider->onKeyPress(
-            [this](const Key key, const Mod modifiers) {
-                if (!_enabled) {
-                    return;
-                }
-                const bool horizontal = _orientation == Orientation::Horizontal;
-                float      toward     = 0; // -1 toward the start, 1 toward the end
-                if (key == (horizontal ? Key::LEFT : Key::UP)) {
-                    toward = -1;
-                } else if (key == (horizontal ? Key::RIGHT : Key::DOWN)) {
-                    toward = 1;
-                } else {
-                    return;
-                }
-                const float step = toward * keyStep * (modifiers.shift ? 10.0f : 1.0f);
-                moveTo(position() + (_kept == SplitterPane::First ? step : -step));
-            }
-        );
+        _divider->onKeyPress([this](const Key key, const Mod modifiers) { keyDivider(key, modifiers); });
 
         place();
+    }
+
+    void Splitter::pressDivider(const MouseEvent &event) {
+        if (!_enabled || event.button != MouseButton::LEFT) {
+            return;
+        }
+        _pressAt       = _orientation == Orientation::Horizontal ? event.windowX : event.windowY;
+        _pressPosition = position();
+        _onMouseMove   = window()->mouseMoved.subscribe([this](const MouseEvent &move) { dragDivider(move); });
+    }
+
+    void Splitter::dragDivider(const MouseEvent &event) {
+        // Toward the end grows the first pane: the kept one when it is the first
+        const float along = _orientation == Orientation::Horizontal ? event.windowX : event.windowY;
+        const float delta = along - _pressAt;
+        moveTo(_pressPosition + (_kept == SplitterPane::First ? delta : -delta));
+    }
+
+    void Splitter::keyDivider(const Key key, const Mod modifiers) {
+        // The arrows along the splitter move the divider toward them
+        if (!_enabled) {
+            return;
+        }
+        const bool horizontal = _orientation == Orientation::Horizontal;
+        float      toward     = 0; // -1 toward the start, 1 toward the end
+        if (key == (horizontal ? Key::LEFT : Key::UP)) {
+            toward = -1;
+        } else if (key == (horizontal ? Key::RIGHT : Key::DOWN)) {
+            toward = 1;
+        } else {
+            return;
+        }
+        const float step = toward * keyStep * (modifiers.shift ? shiftSteps : 1.0f);
+        moveTo(position() + (_kept == SplitterPane::First ? step : -step));
     }
 
     float Splitter::position() const {

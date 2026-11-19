@@ -1,5 +1,6 @@
 #include <memory>
 #include <typeinfo>
+#include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/Div.hpp>
@@ -9,8 +10,6 @@
 #include <psychic-ui/psychic-ui.hpp>
 #include <psychic-ui/skins/base/SplitterDividerSkinBase.hpp>
 #include <psychic-ui/style/Values.hpp>
-#include <psychic-ui/themes/Theme.hpp>
-#include <psychic-ui/themes/pivotal.hpp>
 #include "../backends/fake_system_window.hpp"
 
 using namespace psychic_ui;

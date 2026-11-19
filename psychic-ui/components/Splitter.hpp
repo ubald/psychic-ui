@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include "psychic-ui/Div.hpp"
+#include "psychic-ui/psychic-ui.hpp"
 #include "psychic-ui/signals/Signal.hpp"
 #include "psychic-ui/signals/Slot.hpp"
 #include "psychic-ui/style/Values.hpp"
@@ -39,27 +40,27 @@ namespace psychic_ui {
         /**
          * The first pane, at the start: add its content to it
          */
-        Div &first() const { return *_first; }
+        [[nodiscard]] Div &first() const { return *_first; }
 
         /**
          * The second pane, at the end
          */
-        Div &second() const { return *_second; }
+        [[nodiscard]] Div &second() const { return *_second; }
 
         /**
          * A pane, by name
          */
-        Div &pane(SplitterPane pane) const { return pane == SplitterPane::First ? *_first : *_second; }
+        [[nodiscard]] Div &pane(SplitterPane pane) const { return pane == SplitterPane::First ? *_first : *_second; }
 
         /**
          * The divider between the panes
          */
-        SplitterDivider &divider() const { return *_divider; }
+        [[nodiscard]] SplitterDivider &divider() const { return *_divider; }
 
         /**
          * The pane that keeps its size when the splitter resizes (the first by default)
          */
-        SplitterPane kept() const { return _kept; }
+        [[nodiscard]] SplitterPane kept() const { return _kept; }
 
         template<class Self>
         Self &kept(this Self &self, SplitterPane pane) {
@@ -70,7 +71,7 @@ namespace psychic_ui {
         /**
          * The kept pane's size along the splitter (window units), within the minimums once laid out
          */
-        float position() const;
+        [[nodiscard]] float position() const;
 
         /**
          * Set the position, without emitting `changed`
@@ -84,7 +85,7 @@ namespace psychic_ui {
         /**
          * Where a double-click on the divider puts it back (240 by default)
          */
-        float defaultPosition() const { return _defaultPosition; }
+        [[nodiscard]] float defaultPosition() const { return _defaultPosition; }
 
         /**
          * Set the default position, and the position with it
@@ -100,7 +101,7 @@ namespace psychic_ui {
         /**
          * The smallest a pane gets from the divider (0 by default)
          */
-        float minimum(SplitterPane pane) const { return _minimums.at(index(pane)); }
+        [[nodiscard]] float minimum(SplitterPane pane) const { return _minimums.at(index(pane)); }
 
         template<class Self>
         Self &minimum(this Self &self, SplitterPane pane, float minimum) {
@@ -112,6 +113,16 @@ namespace psychic_ui {
          * How far an arrow moves the divider (window units); ten times that with Shift
          */
         static constexpr float keyStep = 10;
+
+        /**
+         * How many steps an arrow moves it with Shift
+         */
+        static constexpr float shiftSteps = 10;
+
+        /**
+         * The default position of a new splitter
+         */
+        static constexpr float initialPosition = 240;
 
         /**
          * The divider moved, from a drag, a key or a double-click, with the new position
@@ -127,8 +138,8 @@ namespace psychic_ui {
         SplitterDivider *_divider{nullptr};
 
         SplitterPane         _kept{SplitterPane::First};
-        float                _position{240};
-        float                _defaultPosition{240};
+        float                _position{initialPosition};
+        float                _defaultPosition{initialPosition};
         std::array<float, 2> _minimums{0, 0};
         Orientation          _orientation{Orientation::Horizontal};
         bool                 _oriented{false}; // Whether `_orientation` was applied yet
@@ -148,12 +159,19 @@ namespace psychic_ui {
         /**
          * The position within the minimums and the room the panes have
          */
-        float fit(float position) const;
+        [[nodiscard]] float fit(float position) const;
 
         /**
          * A position from the user: fitted, applied, and emitted when it changed
          */
         void moveTo(float position);
+
+        /**
+         * The divider's input: a press starts a drag, followed on the window until the release; a key moves it
+         */
+        void pressDivider(const MouseEvent &event);
+        void dragDivider(const MouseEvent &event);
+        void keyDivider(Key key, Mod modifiers);
 
         /**
          * Push the position to the panes and the divider
