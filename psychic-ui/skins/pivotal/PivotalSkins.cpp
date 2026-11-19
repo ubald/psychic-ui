@@ -52,6 +52,12 @@ namespace psychic_ui {
         constexpr Color transparent{};
 
         /**
+         * Windows's window controls: a caption button's width, the space between two
+         */
+        constexpr float captionWidth = 28;
+        constexpr float captionGap   = 0.5f; // On the spacing scale
+
+        /**
          * A step of the type scale on a style, in a font of the theme
          */
         Style &text(Style &style, const TextStep &step, const Font &font, const Sizes &sizes) {
@@ -140,6 +146,10 @@ namespace psychic_ui {
 
         // Layout
         skins.add<SplitterDividerSkin, SplitterDividerSkinBase>();
+    }
+
+    float PivotalSkins::windowsControlsWidth(const Metrics &metrics) {
+        return (3 * captionWidth) + (2 * metrics.space(captionGap));
     }
 
     void PivotalSkins::load(StyleManager *manager) {
@@ -256,11 +266,11 @@ namespace psychic_ui {
 
         // Windows's and Linux's glyph buttons: the glyph in the secondary text, raised under the pointer, close in
         // the danger color with a light glyph
-        rule("WindowControls.windows").gap(metrics.space(0.5f));
+        rule("WindowControls.windows").gap(metrics.space(captionGap));
 
         rule("WindowControls.windows Button")
             .skin("caption")
-            .width(28)
+            .width(captionWidth)
             .height(24)
             .paddingHorizontal(0) // Over the button's
             .border(0)
@@ -1182,6 +1192,21 @@ namespace psychic_ui {
 
         rule("PageHeader .icon").color(palette.textMuted);
         text(rule("PageHeader .title"), t.md, t.medium, s).color(palette.text);
+
+        // Windows's window controls at the window's top right (`controls-top-right`): over the page's top-right
+        // corner, in the band of its header, ending where the header's content does; the room around the buttons is
+        // the window's drag area. The page's header leaves them that room at its end
+        const float controlsStart = metrics.space(2); // The page header's gap
+        const float controlsEnd   = metrics.space(3); // Its end padding
+        rule("AppShell .main > WindowControls")
+            .position(Position::Absolute)
+            .top(metrics.frameInset)
+            .right(metrics.frameInset)
+            .height(metrics.barHeader)
+            .paddingLeft(controlsStart)
+            .paddingRight(controlsEnd);
+        rule("AppShell.controls-top-right .page > PageHeader")
+            .paddingRight(controlsStart + windowsControlsWidth(metrics) + controlsEnd);
 
         // endregion
 

@@ -15,7 +15,8 @@ namespace psychic_ui {
      * (`platformWindowControlsStyle`): `Mac` orders them close, minimize, maximize, and maximize toggles full
      * screen; `Windows` orders them minimize, maximize, close, and maximize toggles the window's maximized state.
      * The style is a class on it (`mac`, `windows`) from which the skin set's rules pick the buttons' skin and
-     * colors. A `TitleBar` and an `AppShell`'s sidebar header show them.
+     * colors. A `TitleBar` shows them, and an `AppShell` (in its sidebar's header for macOS's style, at the window's
+     * top right for Windows's).
      */
     class WindowControls : public Div {
     public:
