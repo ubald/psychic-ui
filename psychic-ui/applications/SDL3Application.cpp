@@ -17,6 +17,7 @@
 #include "SDL3Application.hpp"
 #include "../Window.hpp"
 #include "SDL3SystemWindow.hpp"
+#include "../WindowScale.hpp"
 
 namespace psychic_ui {
 
@@ -50,10 +51,9 @@ namespace psychic_ui {
     }
 
     SDL3SystemWindow &SDL3Application::open(std::shared_ptr<Window> window) {
-        SDL_WindowFlags flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-        if (!window->windowVisible()) {
-            flags |= SDL_WINDOW_HIDDEN;
-        }
+        // Hidden until it has its size in pixels where window units are pixels (see below)
+        SDL_WindowFlags flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_HIDDEN;
+        const bool visible = window->windowVisible();
         if (window->getResizable()) {
             flags |= SDL_WINDOW_RESIZABLE;
         }
@@ -92,6 +92,14 @@ namespace psychic_ui {
             throw sdlError("Could not create an SDL window");
         }
 
+        // The size asked for is logical: on Windows and X11, where window units are pixels and the user's
+        // scale is apart, the window is as many pixels as the scale makes it (2880×1800 for 1440×900 at 200 %)
+        const WindowScale scale = SDL3SystemWindow::readWindowScale(owned->sdlWindow);
+        if (scale.logicalPerWindowUnit != 1.0f) {
+            SDL_SetWindowSize(owned->sdlWindow, scale.toWindow(window->windowWidth()), scale.toWindow(window->windowHeight()));
+            SDL_SyncWindow(owned->sdlWindow);
+        }
+
         owned->glContext = SDL_GL_CreateContext(owned->sdlWindow);
         if (!owned->glContext) {
             throw sdlError("Could not create an OpenGL context");
@@ -106,6 +114,9 @@ namespace psychic_ui {
         // Nothing else draws with this context
         owned->systemWindow->setSharesContext(false);
         const bool hitTest = owned->systemWindow->installHitTest();
+        if (visible) {
+            SDL_ShowWindow(owned->sdlWindow);
+        }
 
         // With SDL_LOGGING=app=debug
         using GetString = const char *(*)(unsigned);
@@ -116,7 +127,7 @@ namespace psychic_ui {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): SDL's logging is printf-style, its arguments match the format
         SDL_LogDebug(
             SDL_LOG_CATEGORY_APPLICATION,
-            "Psychic UI: SDL %d.%d.%d, %s video driver, OpenGL %s (%s), %d samples, %d stencil bits, %s, pixel density %.2f",
+            "Psychic UI: SDL %d.%d.%d, %s video driver, OpenGL %s (%s), %d samples, %d stencil bits, %s, pixel density %.2f, display scale %.2f, pixel ratio %.2f",
             SDL_VERSIONNUM_MAJOR(SDL_GetVersion()), SDL_VERSIONNUM_MINOR(SDL_GetVersion()), SDL_VERSIONNUM_MICRO(SDL_GetVersion()),
             SDL_GetCurrentVideoDriver(),
             glGetString ? glGetString(GL_VERSION_) : "?",
@@ -124,7 +135,9 @@ namespace psychic_ui {
             owned->systemWindow->getSamples(),
             owned->systemWindow->getStencilBits(),
             hitTest ? "hit testing" : "no hit testing",
-            owned->systemWindow->getPixelRatio()
+            static_cast<double>(SDL_GetWindowPixelDensity(owned->sdlWindow)),
+            static_cast<double>(SDL_GetWindowDisplayScale(owned->sdlWindow)),
+            static_cast<double>(owned->systemWindow->getPixelRatio())
         );
 
         auto &systemWindow = *owned->systemWindow;

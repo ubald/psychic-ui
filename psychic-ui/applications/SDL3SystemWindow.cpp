@@ -79,11 +79,24 @@ namespace psychic_ui {
         return _sdlWindow;
     }
 
+    WindowScale SDL3SystemWindow::readWindowScale(SDL_Window *sdlWindow) {
+        return WindowScale::fromDisplay(SDL_GetWindowPixelDensity(sdlWindow), SDL_GetWindowDisplayScale(sdlWindow));
+    }
+
+    WindowScale SDL3SystemWindow::windowScale() const {
+        return readWindowScale(_sdlWindow);
+    }
+
     void SDL3SystemWindow::readSize() {
-        SDL_GetWindowSize(_sdlWindow, &_width, &_height);
+        _scale     = windowScale();
+        int width  = 0;
+        int height = 0;
+        SDL_GetWindowSize(_sdlWindow, &width, &height);
+        _width  = _scale.toLogical(width);
+        _height = _scale.toLogical(height);
         if (!SDL_GetWindowSizeInPixels(_sdlWindow, &_fbWidth, &_fbHeight)) {
-            _fbWidth  = _width;
-            _fbHeight = _height;
+            _fbWidth  = width;
+            _fbHeight = height;
         }
     }
 
@@ -110,7 +123,7 @@ namespace psychic_ui {
     // SDL3 applies most of these asynchronously: the state is updated from the events that confirm them
 
     void SDL3SystemWindow::setSize(int width, int height) {
-        SDL_SetWindowSize(_sdlWindow, width, height);
+        SDL_SetWindowSize(_sdlWindow, _scale.toWindow(width), _scale.toWindow(height));
     }
 
     void SDL3SystemWindow::setPosition(int x, int y) {
@@ -198,7 +211,10 @@ namespace psychic_ui {
         return _hitTestInstalled;
     }
 
-    SDL_HitTestResult SDL3SystemWindow::hitTest(const int x, const int y) {
+    SDL_HitTestResult SDL3SystemWindow::hitTest(const int windowX, const int windowY) {
+        const int x = _scale.toLogical(windowX);
+        const int y = _scale.toLogical(windowY);
+
         // An undecorated window has no borders to resize it by but these
         const SDL_WindowFlags flags = SDL_GetWindowFlags(_sdlWindow);
         if ((flags & SDL_WINDOW_BORDERLESS) && (flags & SDL_WINDOW_RESIZABLE)
@@ -241,7 +257,7 @@ namespace psychic_ui {
     }
 
     void SDL3SystemWindow::setTextInputArea(const int x, const int y, const int width, const int height, const int cursor) {
-        const SDL_Rect rect{x, y, width, height};
+        const SDL_Rect rect{_scale.toWindow(x), _scale.toWindow(y), _scale.toWindow(width), _scale.toWindow(height)};
         SDL_SetTextInputArea(_sdlWindow, &rect, cursor);
     }
 
@@ -346,8 +362,8 @@ namespace psychic_ui {
             return;
         }
         _penButtons = down ? (_penButtons | bit) : (_penButtons & ~bit);
-        _mouseX     = x;
-        _mouseY     = y;
+        _mouseX     = _scale.toLogical(x);
+        _mouseY     = _scale.toLogical(y);
         _window->handleMouseButtonChange({
             .x = _mouseX, .y = _mouseY, .button = button, .down = down, .modifiers = mapMods(SDL_GetModState()),
             .source = InputMode::Pen
@@ -384,15 +400,22 @@ namespace psychic_ui {
                 break;
 
             case SDL_EVENT_WINDOW_RESIZED: {
-                _width  = event.window.data1;
-                _height = event.window.data2;
+                _scale  = windowScale();
+                _width  = _scale.toLogical(event.window.data1);
+                _height = _scale.toLogical(event.window.data2);
                 // SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED follows when the pixel size changed too
                 const float density = SDL_GetWindowPixelDensity(_sdlWindow);
-                _fbWidth  = static_cast<int>(std::lround(static_cast<float>(_width) * (density > 0 ? density : 1.0f)));
-                _fbHeight = static_cast<int>(std::lround(static_cast<float>(_height) * (density > 0 ? density : 1.0f)));
+                _fbWidth  = static_cast<int>(std::lround(static_cast<float>(event.window.data1) * (density > 0 ? density : 1.0f)));
+                _fbHeight = static_cast<int>(std::lround(static_cast<float>(event.window.data2) * (density > 0 ? density : 1.0f)));
                 _window->windowResized(_width, _height);
                 break;
             }
+
+            case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
+                // Moved to a display of another scale, or the user changed it: laid out again at the new scale
+                readSize();
+                _window->windowResized(_width, _height);
+                break;
 
             case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
                 _fbWidth  = event.window.data1;
@@ -458,8 +481,8 @@ namespace psychic_ui {
                 }
                 // A real mouse moved: back to the pointer density
                 _window->handleInputModeChange(InputMode::Pointer);
-                _mouseX = event.motion.x;
-                _mouseY = event.motion.y;
+                _mouseX = _scale.toLogical(event.motion.x);
+                _mouseY = _scale.toLogical(event.motion.y);
 
                 if (_dragging) {
                     float mouseX = 0;
@@ -483,8 +506,8 @@ namespace psychic_ui {
                 }
                 _window->handleInputModeChange(InputMode::Pointer);
                 const bool down = event.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
-                _mouseX = event.button.x;
-                _mouseY = event.button.y;
+                _mouseX = _scale.toLogical(event.button.x);
+                _mouseY = _scale.toLogical(event.button.y);
                 // SDL counts the clicks with the system's double click time and distance
                 _window->handleMouseButtonChange({
                     .x = _mouseX, .y = _mouseY, .button = button, .down = down, .modifiers = mapMods(SDL_GetModState()),
@@ -516,7 +539,7 @@ namespace psychic_ui {
                 }
                 const float direction = event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1.0f : 1.0f;
                 _window->handleMouseScroll({
-                    .x = event.wheel.mouse_x, .y = event.wheel.mouse_y, .modifiers = mapMods(SDL_GetModState()),
+                    .x = _scale.toLogical(event.wheel.mouse_x), .y = _scale.toLogical(event.wheel.mouse_y), .modifiers = mapMods(SDL_GetModState()),
                     .scrollX = event.wheel.x * direction, .scrollY = event.wheel.y * direction
                 });
                 break;
@@ -551,8 +574,8 @@ namespace psychic_ui {
 
             case SDL_EVENT_PEN_MOTION:
                 _window->handleInputModeChange(InputMode::Pen);
-                _mouseX = event.pmotion.x;
-                _mouseY = event.pmotion.y;
+                _mouseX = _scale.toLogical(event.pmotion.x);
+                _mouseY = _scale.toLogical(event.pmotion.y);
                 _window->handleMouseMove({
                     .x = _mouseX, .y = _mouseY, .modifiers = mapMods(SDL_GetModState()), .source = InputMode::Pen
                 }, false);
