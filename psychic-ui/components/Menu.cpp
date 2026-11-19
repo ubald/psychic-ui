@@ -68,7 +68,7 @@ namespace psychic_ui {
             row.onClick([this, index]() { choose(index); });
         }
 
-        keyPressed.subscribe([this](const Key key, const Mod /*modifiers*/) { handleKey(key); });
+        keyPressed.subscribe([this](const Key key, const Mod /*modifiers*/) { return handleKey(key); });
     }
 
     void Menu::opened() {

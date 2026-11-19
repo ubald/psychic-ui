@@ -38,13 +38,15 @@ namespace psychic_ui {
     TextFieldBase::TextFieldBase() {
         _focusEnabled = true;
 
-        keyPressed.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); });
-        keyRepeated.subscribe([this](const Key key, const Mod mod) { handleKey(key, mod); });
+        keyPressed.subscribe([this](const Key key, const Mod mod) { return handleKey(key, mod); });
+        keyRepeated.subscribe([this](const Key key, const Mod mod) { return handleKey(key, mod); });
         typed.subscribe(
             [this](const icu::UnicodeString &str) {
-                if (_enabled) {
-                    apply(_editing.insert(str));
+                if (!editable()) {
+                    return false;
                 }
+                apply(_editing.insert(str));
+                return true;
             }
         );
         focused.subscribe(
@@ -91,17 +93,21 @@ namespace psychic_ui {
         }
     }
 
-    void TextFieldBase::handleKey(const Key key, const Mod mod) {
+    bool TextFieldBase::handleKey(const Key key, const Mod mod) {
         const Text *view = this->view();
         if (!_enabled || !view) {
-            return;
+            return false;
         }
         const auto keepAlive = weak_from_this().lock(); // What a key does may remove this field from its parent
         if (fieldKey(key, mod)) {
-            return;
+            return true;
+        }
+        if (!_editing.keeps(key, mod)) {
+            return false;
         }
         WindowClipboard clipboard{window()};
         apply(_editing.handleKey(key, mod, *view, clipboard));
+        return true;
     }
 
     void TextFieldBase::handlePress(const MouseEvent &event) {

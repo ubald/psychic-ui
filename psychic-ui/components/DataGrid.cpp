@@ -207,9 +207,11 @@ namespace psychic_ui {
             sort.onClick([this, index]() { cycleSort(index); });
             sort.onKeyPress(
                 [this, index](const Key key, Mod) {
-                    if (key == Key::ENTER || key == Key::KP_ENTER || key == Key::SPACE) {
-                        cycleSort(index);
+                    if (key != Key::ENTER && key != Key::KP_ENTER && key != Key::SPACE) {
+                        return false;
                     }
+                    cycleSort(index);
+                    return true;
                 }
             );
             _sortButtons.push_back(&sort);

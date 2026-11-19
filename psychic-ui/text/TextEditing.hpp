@@ -141,6 +141,13 @@ namespace psychic_ui {
         Edit handleKey(Key key, Mod mod, const TextGeometry &geometry, Clipboard &clipboard);
 
         /**
+         * Whether a field editing this text keeps the key, from the app's shortcuts too: the keys `handleKey` knows,
+         * whatever they change (Backspace at the start still isn't the app's), and those that type a character
+         * (without Ctrl or Super), unless the text is read only. Not with Alt, which the app's shortcuts get.
+         */
+        [[nodiscard]] bool keeps(Key key, Mod mod) const;
+
+        /**
          * The word around an index, which a double click selects
          */
         std::pair<unsigned int, unsigned int> wordAt(unsigned int index) const;

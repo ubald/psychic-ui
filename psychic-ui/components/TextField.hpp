@@ -130,7 +130,11 @@ namespace psychic_ui {
 
         void updateText(const std::string &text);
         void updateReadOnly(bool readOnly);
-        void handleKey(Key key, Mod mod);
+        /**
+         * A key on the field: its own (`fieldKey`), then editing's, for those it keeps (`TextEditing::keeps`)
+         * @return Whether it used the key
+         */
+        bool handleKey(Key key, Mod mod);
         void handlePress(const MouseEvent &event);
         bool editable() const;
 

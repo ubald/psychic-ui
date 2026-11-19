@@ -1609,6 +1609,28 @@ namespace psychic_ui {
         return true;
     }
 
+    template<class... T>
+    bool Window::bubble(Signal<T...> Div::*signal, const T &...args) {
+        // Decided before any handler runs (one may move the focus), each div kept alive meanwhile (one may remove it)
+        std::vector<Div *> path{};
+        const Div         *scope = _overlay->focusScope();
+        for (Div *div: std::views::reverse(_focusPath)) {
+            path.push_back(div);
+            if (div == scope) {
+                break; // A key doesn't leave a menu or a dialog
+            }
+        }
+        if (path.empty()) {
+            path.push_back(this);
+        }
+        std::vector<std::shared_ptr<Div>> keepAlive{};
+        keepAlive.reserve(path.size());
+        for (Div *div: path) {
+            keepAlive.push_back(div->weak_from_this().lock());
+        }
+        return std::ranges::any_of(path, [&](Div *div) { return (div->*signal).emit(args...); });
+    }
+
     bool Window::handleKeyPress(Key key, Mod mod) {
         hideTooltip(false);
         _tooltipSuppressed = true;
@@ -1629,43 +1651,19 @@ namespace psychic_ui {
             && requestContextMenuFromKeyboard()) {
             return true;
         }
-        // Go backwards since we want to cancel as soon as possible when a child handles it
-        // Everyone in the focus path gets the key events, focusEnabled or not
-        if (Div *div = deepest(_focusPath, [](const Div *candidate) { return candidate->keyPressed.hasSubscriptions(); })) {
-            div->keyPressed.emit(key, mod);
-            return true;
-        }
-        return false;
+        return bubble(&Div::keyPressed, key, mod);
     }
 
     bool Window::handleKeyRepeat(Key key, Mod mod) {
-        // Go backwards since we want to cancel as soon as possible when a child handles it
-        // Everyone in the focus path gets the key events, focusEnabled or not
-        if (Div *div = deepest(_focusPath, [](const Div *candidate) { return candidate->keyRepeated.hasSubscriptions(); })) {
-            div->keyRepeated.emit(key, mod);
-            return true;
-        }
-        return false;
+        return bubble(&Div::keyRepeated, key, mod);
     }
 
     bool Window::handleKeyRelease(Key key, Mod mod) {
-        // Go backwards since we want to cancel as soon as possible when a child handles it
-        // Everyone in the focus path gets the key events, focusEnabled or not
-        if (Div *div = deepest(_focusPath, [](const Div *candidate) { return candidate->keyReleased.hasSubscriptions(); })) {
-            div->keyReleased.emit(key, mod);
-            return true;
-        }
-        return false;
+        return bubble(&Div::keyReleased, key, mod);
     }
 
     bool Window::handleType(const icu::UnicodeString &character) {
-        // Go backwards since we want to cancel as soon as possible when a child handles it
-        // The deepest div on the focus path with a subscriber gets the characters
-        if (Div *div = deepest(_focusPath, [](const Div *candidate) { return candidate->typed.hasSubscriptions(); })) {
-            div->typed.emit(character);
-            return true;
-        }
-        return false;
+        return bubble(&Div::typed, character);
     }
 
     // endregion

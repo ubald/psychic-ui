@@ -647,6 +647,13 @@ namespace psychic_ui {
          */
         void setTextInputArea(int x, int y, int width, int height, int cursor);
 
+        /**
+         * A key or a character from the system window. Escape closes the topmost popup and Tab moves the focus
+         * first; otherwise it bubbles up the focus path, deepest first, until a handler returns true (it used it),
+         * not past the topmost popup that traps the focus: up to the window's own handlers, which also get it when
+         * nothing has the focus, so that the app's shortcuts work wherever the focus is.
+         * @return Whether something used it
+         */
         bool handleKeyPress(Key key, Mod mod);
         bool handleKeyRepeat(Key key, Mod mod);
         bool handleKeyRelease(Key key, Mod mod);
@@ -884,6 +891,12 @@ namespace psychic_ui {
         int _windowHeight{0};
 
     private:
+        /**
+         * Emit a key signal up the focus path until a handler uses it (see `handleKeyPress`)
+         */
+        template<class... T>
+        bool bubble(Signal<T...> Div::*signal, const T &...args);
+
         // Dont allow direct manipulation by others than the window itself
         using Div::add;
         using Div::remove;
