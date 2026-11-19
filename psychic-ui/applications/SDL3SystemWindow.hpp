@@ -187,6 +187,10 @@ namespace psychic_ui {
          */
         std::vector<std::string> _droppedFiles{};
 
-        void readSize();
+        /**
+         * Reads the window's size and pixel size, in logical units at `scale` (`windowScale()`, or
+         * `readWindowScale` while constructing, where the override isn't there yet)
+         */
+        void readSize(WindowScale scale);
     };
 }

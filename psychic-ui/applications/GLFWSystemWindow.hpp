@@ -125,7 +125,16 @@ namespace psychic_ui {
         WindowScale _scale{};
 
         static GLFWSystemWindow *find(GLFWwindow *glfwWindow);
-        void readSize();
+        /**
+         * The window's content scale, from GLFW
+         */
+        [[nodiscard]] static float readContentScale(GLFWwindow *glfwWindow);
+
+        /**
+         * Reads the window's size and framebuffer size, in logical units at `contentScale` (`contentScale()`,
+         * or `readContentScale` while constructing, where the override isn't there yet)
+         */
+        void readSize(float contentScale);
 
         void cursorPosEvent(double x, double y);
         void mouseButtonEvent(int button, int action, int mods);

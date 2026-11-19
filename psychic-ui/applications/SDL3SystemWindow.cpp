@@ -21,6 +21,7 @@
 #include "SDL3SystemWindow.hpp"
 #include "../Window.hpp"
 #include "../SystemWindow.hpp"
+#include "../WindowScale.hpp"
 #include "../psychic-ui.hpp"
 #include "../style/Values.hpp"
 #include "../themes/Theme.hpp"
@@ -40,7 +41,7 @@ namespace psychic_ui {
         _sharesContext = true;
 
         SDL_GetWindowPosition(_sdlWindow, &_x, &_y);
-        readSize();
+        readSize(readWindowScale(_sdlWindow));
 
         const SDL_WindowFlags flags = SDL_GetWindowFlags(_sdlWindow);
         _minimized = (flags & SDL_WINDOW_MINIMIZED) != 0;
@@ -87,8 +88,8 @@ namespace psychic_ui {
         return readWindowScale(_sdlWindow);
     }
 
-    void SDL3SystemWindow::readSize() {
-        _scale     = windowScale();
+    void SDL3SystemWindow::readSize(const WindowScale scale) {
+        _scale     = scale;
         int width  = 0;
         int height = 0;
         SDL_GetWindowSize(_sdlWindow, &width, &height);
@@ -413,7 +414,7 @@ namespace psychic_ui {
 
             case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
                 // Moved to a display of another scale, or the user changed it: laid out again at the new scale
-                readSize();
+                readSize(windowScale());
                 _window->windowResized(_width, _height);
                 break;
 

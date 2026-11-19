@@ -249,7 +249,7 @@ namespace psychic_ui {
             auto *app = static_cast<SDL3Application *>(userdata);
             if (auto *owned = app->find(SDL_GetWindowFromEvent(event))) {
                 // The resize events are still queued: read the size now
-                owned->systemWindow->readSize();
+                owned->systemWindow->readSize(owned->systemWindow->windowScale());
                 owned->systemWindow->_window->windowResized(owned->systemWindow->getWidth(), owned->systemWindow->getHeight());
                 if (owned->systemWindow->render()) {
                     SDL_GL_SwapWindow(owned->sdlWindow);

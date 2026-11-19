@@ -74,7 +74,7 @@ namespace psychic_ui {
         _sharesContext = true;
 
         glfwGetWindowPos(_glfwWindow, &_x, &_y);
-        readSize();
+        readSize(readContentScale(_glfwWindow));
         _minimized = glfwGetWindowAttrib(_glfwWindow, GLFW_ICONIFIED) != 0;
         _maximized = glfwGetWindowAttrib(_glfwWindow, GLFW_MAXIMIZED) != 0;
         _focused   = glfwGetWindowAttrib(_glfwWindow, GLFW_FOCUSED) != 0;
@@ -221,21 +221,25 @@ namespace psychic_ui {
         return _glfwWindow;
     }
 
-    float GLFWSystemWindow::contentScale() const {
+    float GLFWSystemWindow::readContentScale(GLFWwindow *glfwWindow) {
         float xScale = 1.0f;
         float yScale = 1.0f;
-        glfwGetWindowContentScale(_glfwWindow, &xScale, &yScale);
+        glfwGetWindowContentScale(glfwWindow, &xScale, &yScale);
         return xScale;
     }
 
-    void GLFWSystemWindow::readSize() {
+    float GLFWSystemWindow::contentScale() const {
+        return readContentScale(_glfwWindow);
+    }
+
+    void GLFWSystemWindow::readSize(const float contentScale) {
         int width  = 0;
         int height = 0;
         glfwGetWindowSize(_glfwWindow, &width, &height);
         glfwGetFramebufferSize(_glfwWindow, &_fbWidth, &_fbHeight);
         // Minimized, a window has no size to tell its density from: it keeps its scale
         if (width > 0 && _fbWidth > 0) {
-            _scale = WindowScale::fromFramebuffer(width, _fbWidth, contentScale());
+            _scale = WindowScale::fromFramebuffer(width, _fbWidth, contentScale);
         }
         _width  = _scale.toLogical(width);
         _height = _scale.toLogical(height);
@@ -420,7 +424,7 @@ namespace psychic_ui {
     }
 
     void GLFWSystemWindow::sizeEvent() {
-        readSize();
+        readSize(contentScale());
         // Minimized
         if (_width == 0 || _height == 0) {
             return;
