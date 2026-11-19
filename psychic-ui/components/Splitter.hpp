@@ -168,10 +168,11 @@ namespace psychic_ui {
 
         /**
          * The divider's input: a press starts a drag, followed on the window until the release; a key moves it
+         * (`keyDivider` returns whether it used the key)
          */
         void pressDivider(const MouseEvent &event);
         void dragDivider(const MouseEvent &event);
-        void keyDivider(Key key, Mod modifiers);
+        bool keyDivider(Key key, Mod modifiers);
 
         /**
          * Push the position to the panes and the divider

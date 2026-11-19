@@ -4,6 +4,9 @@
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/List.hpp>
 #include <psychic-ui/components/Menu.hpp>
+#include <psychic-ui/components/Range.hpp>
+#include <psychic-ui/components/Splitter.hpp>
+#include <psychic-ui/components/SplitterDivider.hpp> // NOLINT(misc-include-cleaner): complete, to convert to a Div *
 #include <psychic-ui/components/TextInput.hpp>
 #include <psychic-ui/psychic-ui.hpp>
 #include "../backends/fake_system_window.hpp"
@@ -105,6 +108,64 @@ TEST_CASE("A key a focused Button uses doesn't reach the window", "[keyboard][fo
     shortcuts.window->handleKeyPress(Key::SPACE, Mod{});
     CHECK(clicks == 1);
     CHECK(shortcuts.keys == 0);
+}
+
+TEST_CASE("A focused Range keeps the keys it moves by and lets the shortcuts through", "[keyboard][focus][range]") {
+    Shortcuts shortcuts{};
+    auto     &range = shortcuts.window->appContainer().add<Range<float>>(0.0f, 1.0f, 0.5f, nullptr);
+    shortcuts.sys.layout();
+    shortcuts.window->requestFocus(&range, true);
+
+    // The arrows, Home and End, bare, held or with Shift
+    shortcuts.window->handleKeyPress(Key::RIGHT, Mod{});
+    CHECK(shortcuts.window->handleKeyRepeat(Key::UP, Mod{}));
+    shortcuts.window->handleKeyPress(Key::LEFT, Mod{.shift = true});
+    shortcuts.window->handleKeyPress(Key::DOWN, Mod{});
+    shortcuts.window->handleKeyPress(Key::END, Mod{});
+    CHECK(range.value() == 1.0f);
+    shortcuts.window->handleKeyPress(Key::HOME, Mod{});
+    CHECK(range.value() == 0.0f);
+    CHECK(shortcuts.keys == 0);
+
+    // Keys it has no use for, and the arrows with Ctrl or Alt, which don't move it
+    shortcuts.window->handleKeyPress(Key::I, Mod{.ctrl = true});
+    shortcuts.window->handleKeyPress(Key::RIGHT, Mod{.alt = true});
+    shortcuts.window->handleKeyPress(Key::RIGHT, Mod{.ctrl = true});
+    shortcuts.window->handleKeyPress(Key::F5, Mod{});
+    CHECK(shortcuts.keys == 4);
+    CHECK(range.value() == 0.0f);
+
+    // Disabled, it keeps none
+    range.enabled(false);
+    shortcuts.window->handleKeyPress(Key::RIGHT, Mod{});
+    CHECK(shortcuts.keys == 5);
+    CHECK(range.value() == 0.0f);
+}
+
+TEST_CASE("A focused Splitter divider keeps the arrows it moves by and lets the rest through", "[keyboard][focus][splitter]") {
+    Shortcuts shortcuts{};
+    auto     &splitter = shortcuts.window->appContainer().add<Splitter>();
+    splitter.width(600).height(400).defaultPosition(200);
+    shortcuts.sys.layout();
+    shortcuts.window->requestFocus(&splitter.divider(), true);
+
+    // The arrows along it, pressed, held or with Shift
+    shortcuts.window->handleKeyPress(Key::RIGHT, Mod{});
+    CHECK(shortcuts.window->handleKeyRepeat(Key::RIGHT, Mod{}));
+    shortcuts.window->handleKeyPress(Key::LEFT, Mod{.shift = true});
+    CHECK(splitter.position() == 200 + (2 * Splitter::keyStep) - (Splitter::shiftSteps * Splitter::keyStep));
+    CHECK(shortcuts.keys == 0);
+
+    // The arrows across it, the arrows with Ctrl or Alt, and keys it has no use for
+    const float position = splitter.position();
+    shortcuts.window->handleKeyPress(Key::UP, Mod{});
+    CHECK_FALSE(shortcuts.window->handleKeyRepeat(Key::DOWN, Mod{}));
+    shortcuts.window->handleKeyPress(Key::LEFT, Mod{.alt = true});
+    shortcuts.window->handleKeyPress(Key::RIGHT, Mod{.ctrl = true});
+    shortcuts.window->handleKeyPress(Key::HOME, Mod{});
+    shortcuts.window->handleKeyPress(Key::I, Mod{.ctrl = true});
+    CHECK(shortcuts.keys == 5);
+    CHECK(splitter.position() == position);
 }
 
 TEST_CASE("A text field keeps the keys it types and lets the shortcuts through", "[keyboard][focus]") {
