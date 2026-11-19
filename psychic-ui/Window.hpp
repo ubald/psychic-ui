@@ -85,9 +85,10 @@ namespace psychic_ui {
         /**
          * Marks a div as a part of the window that moves it when dragged, like a title bar. Pressing on its
          * interactive children (anything with mouse button or click handlers) still reaches them.
-         * Held weakly: a div that goes away stops being one.
+         * Held weakly: a div that goes away stops being one. With `when`, it is one only while `when` answers true
+         * (asked for each press), for a part that moves the window in some states only.
          */
-        void addDragArea(const std::shared_ptr<Div> &div);
+        void addDragArea(const std::shared_ptr<Div> &div, std::function<bool()> when = {});
 
         /**
          * Whether a press at this point (window coordinates) should move the window. The system window
@@ -872,7 +873,15 @@ namespace psychic_ui {
 
         std::vector<Div *> _focusPath{};
 
-        std::vector<std::weak_ptr<Div>> _dragAreas{};
+        /**
+         * A div that moves the window, while `when` answers true if it is set
+         */
+        struct DragArea {
+            std::weak_ptr<Div>    div;
+            std::function<bool()> when;
+        };
+
+        std::vector<DragArea> _dragAreas{};
 
         // endregion
 
