@@ -387,24 +387,31 @@ namespace psychic_ui {
         static constexpr GestureTime flingRestDelay = std::chrono::milliseconds(100);
 
         /**
-         * The primary finger of a direct touch screen, from the backends (window coordinates), which turns
-         * the input mode to touch. The window makes mouse events of it: a tap clicks where the finger
-         * landed; past `touchSlop` it pans the scrollable div under the finger when it can scroll along the
-         * drag's main axis (with kinetic scrolling after), otherwise it presses where the finger landed and
-         * drags; held `longPressDelay` without moving is a right button press, released when the finger lifts.
-         * A finger landing while kinetic scrolling runs only stops it.
+         * The fingers of a direct touch screen, from the backends (window coordinates, and the finger's id
+         * among those down), which turn the input mode to touch. The window follows up to two fingers.
+         * It makes mouse events of the first: a tap clicks where the finger landed; past `touchSlop` it pans
+         * the scrollable div under the finger when it can scroll along the drag's main axis (with kinetic
+         * scrolling after), otherwise it presses where the finger landed and drags; held `longPressDelay`
+         * without moving is a right button press, released when the finger lifts. A finger landing while
+         * kinetic scrolling runs only stops it.
+         * A second finger ends the first one's gesture without a click, a tap or a fling, and both pinch: the
+         * next `updateGestures` after they moved emits a `ZoomEvent` around their center (`scale` their
+         * distance's change, `pan` their center's move), one for all the moves in between. Lifting either ends
+         * the pinch, and the other does nothing until it lifts. Other fingers are ignored.
          */
-        void handleTouchPress(float x, float y, GestureTime time);
-        void handleTouchMove(float x, float y, GestureTime time);
-        void handleTouchRelease(float x, float y, GestureTime time);
+        void handleTouchPress(float x, float y, GestureTime time, std::uint64_t finger = 0);
+        void handleTouchMove(float x, float y, GestureTime time, std::uint64_t finger = 0);
+        void handleTouchRelease(float x, float y, GestureTime time, std::uint64_t finger = 0);
 
         /**
-         * The system took the touch away: a press in progress is released without a click, no fling
+         * The system took a finger away: a press in progress is released without a click, no fling; a pinch
+         * ends as if the finger lifted
          */
-        void handleTouchCancel(GestureTime time);
+        void handleTouchCancel(GestureTime time, std::uint64_t finger = 0);
 
         /**
-         * Advance what goes on without events: a long press fires, kinetic scrolling moves and slows down.
+         * Advance what goes on without events: a long press fires, a pinch's moves zoom, kinetic scrolling
+         * moves and slows down.
          * `drawAll` calls it every frame with the system window's `gestureTime()`; tests call it with theirs.
          */
         void updateGestures(GestureTime now);
@@ -834,10 +841,18 @@ namespace psychic_ui {
             Pending,  // Down, within the slop: a tap, a long press, a drag or a pan
             Pressing, // Pressing a mouse button (_touchButton): a drag or a long press
             Panning,  // Scrolling _panTarget
-            Ignored   // Stopped kinetic scrolling: nothing more until it lifts
+            Pinching, // Two fingers down: zooming
+            Ignored   // Stopped kinetic scrolling, or left of a pinch: nothing more until it lifts
         };
 
         TouchPhase                _touchPhase{TouchPhase::None};
+        std::uint64_t             _touchFinger{0};   // The first finger's id
+        std::uint64_t             _pinchFinger{0};   // The second finger's id, while pinching
+        float                     _pinchX{0};        // And where it is
+        float                     _pinchY{0};
+        float                     _pinchCenterX{0};  // The fingers' center and distance at the last zoom
+        float                     _pinchCenterY{0};
+        float                     _pinchDistance{0};
         MouseButton               _touchButton{MouseButton::LEFT};
         float                     _touchStartX{0};
         float                     _touchStartY{0};
@@ -855,6 +870,28 @@ namespace psychic_ui {
 
         void touchPressButton(MouseButton button);
         void touchEnd();
+
+        /**
+         * End the first finger's gesture without a click, a tap or a fling, the finger still down: a press is
+         * released without clicking, a pan stops, a pending tap or long press is dropped
+         */
+        void touchAbort();
+
+        /**
+         * Two fingers pinch, from where they are
+         */
+        void pinchStart(std::uint64_t finger, float x, float y);
+
+        /**
+         * Zoom by the fingers' moves since the last zoom, if they moved
+         */
+        void pinchZoom();
+
+        /**
+         * A pinch's finger lifted: its last moves zoom, and the other finger does nothing more until it lifts
+         */
+        void pinchEnd(std::uint64_t finger);
+
         /**
          * Scroll the pan target, keeping the fractions for the next move
          * @return Whether it couldn't move at all (at the end of its content)

@@ -367,30 +367,19 @@ namespace psychic_ui {
         const float x    = finger.x * static_cast<float>(_width);
         const float y    = finger.y * static_cast<float>(_height);
 
-        if (finger.type == SDL_EVENT_FINGER_DOWN) {
-            if (_fingerDown) {
-                return; // Only the first finger down counts
-            }
-            _fingerDown = true;
-            _finger     = finger.fingerID;
-            _window->handleTouchPress(x, y, time);
-            return;
-        }
-
-        if (!_fingerDown || finger.fingerID != _finger) {
-            return;
-        }
+        // The window follows the fingers by their ids
         switch (finger.type) {
+            case SDL_EVENT_FINGER_DOWN:
+                _window->handleTouchPress(x, y, time, finger.fingerID);
+                break;
             case SDL_EVENT_FINGER_MOTION:
-                _window->handleTouchMove(x, y, time);
+                _window->handleTouchMove(x, y, time, finger.fingerID);
                 break;
             case SDL_EVENT_FINGER_UP:
-                _fingerDown = false;
-                _window->handleTouchRelease(x, y, time);
+                _window->handleTouchRelease(x, y, time, finger.fingerID);
                 break;
             case SDL_EVENT_FINGER_CANCELED:
-                _fingerDown = false;
-                _window->handleTouchCancel(time);
+                _window->handleTouchCancel(time, finger.fingerID);
                 break;
             default:
                 break;

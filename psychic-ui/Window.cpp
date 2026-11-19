@@ -1049,11 +1049,27 @@ namespace psychic_ui {
         });
     }
 
-    void Window::handleTouchPress(const float x, const float y, const GestureTime time) {
+    void Window::handleTouchPress(const float x, const float y, const GestureTime time, const std::uint64_t finger) {
         handleInputModeChange(InputMode::Touch);
-        if (_touchPhase != TouchPhase::None) {
-            return; // One finger at a time
+        switch (_touchPhase) {
+            case TouchPhase::None:
+                break;
+
+            case TouchPhase::Pending:
+            case TouchPhase::Pressing:
+            case TouchPhase::Panning:
+                if (finger == _touchFinger) {
+                    return;
+                }
+                // A second finger: the first one's gesture ends, and both pinch
+                touchAbort();
+                pinchStart(finger, x, y);
+                return;
+
+            default:
+                return; // A third finger, or one beside a finger that does nothing
         }
+        _touchFinger = finger;
         _touchStartX = _touchX = x;
         _touchStartY = _touchY = y;
         _touchStart  = _touchTime = time;
@@ -1108,6 +1124,54 @@ namespace psychic_ui {
         }
     }
 
+    void Window::touchAbort() {
+        if (_touchPhase == TouchPhase::Pressing) {
+            // Released, without a click
+            _buttons &= ~static_cast<unsigned>(_touchButton);
+            Div::handleMouseRelease(touchEvent(_touchX, _touchY, _touchButton, false));
+        }
+        // A pan stops without a fling, which only starts when its finger lifts
+        touchEnd();
+    }
+
+    void Window::pinchStart(const std::uint64_t finger, const float x, const float y) {
+        _touchPhase    = TouchPhase::Pinching;
+        _pinchFinger   = finger;
+        _pinchX        = x;
+        _pinchY        = y;
+        _pinchCenterX  = (_touchX + _pinchX) / 2.0f;
+        _pinchCenterY  = (_touchY + _pinchY) / 2.0f;
+        _pinchDistance = std::hypot(_pinchX - _touchX, _pinchY - _touchY);
+    }
+
+    void Window::pinchZoom() {
+        const float centerX  = (_touchX + _pinchX) / 2.0f;
+        const float centerY  = (_touchY + _pinchY) / 2.0f;
+        const float distance = std::hypot(_pinchX - _touchX, _pinchY - _touchY);
+        if (centerX == _pinchCenterX && centerY == _pinchCenterY && distance == _pinchDistance) {
+            return;
+        }
+        const ZoomEvent zoom{
+            .x = centerX, .y = centerY, .scale = _pinchDistance > 0 && distance > 0 ? distance / _pinchDistance : 1.0f,
+            .panX = centerX - _pinchCenterX, .panY = centerY - _pinchCenterY, .source = InputMode::Touch
+        };
+        _pinchCenterX  = centerX;
+        _pinchCenterY  = centerY;
+        _pinchDistance = distance;
+        handleZoom(zoom);
+    }
+
+    void Window::pinchEnd(const std::uint64_t finger) {
+        pinchZoom();
+        if (finger == _touchFinger) {
+            // The second finger is the one left
+            _touchFinger = _pinchFinger;
+            _touchX      = _pinchX;
+            _touchY      = _pinchY;
+        }
+        _touchPhase = TouchPhase::Ignored;
+    }
+
     void Window::touchEnd() {
         // Nothing stays under the mouse once the finger is gone
         handleMouseExit(touchEvent(_touchX, _touchY));
@@ -1136,8 +1200,21 @@ namespace psychic_ui {
         return !target->scrollBy(static_cast<int>(stepX), static_cast<int>(stepY));
     }
 
-    void Window::handleTouchMove(const float x, const float y, const GestureTime time) {
-        if (_touchPhase == TouchPhase::None || _touchPhase == TouchPhase::Ignored) {
+    void Window::handleTouchMove(const float x, const float y, const GestureTime time, const std::uint64_t finger) {
+        if (_touchPhase == TouchPhase::Pinching) {
+            // The next frame zooms, once for both fingers' moves
+            if (finger == _touchFinger) {
+                _touchX = x;
+                _touchY = y;
+                requestFrame();
+            } else if (finger == _pinchFinger) {
+                _pinchX = x;
+                _pinchY = y;
+                requestFrame();
+            }
+            return;
+        }
+        if (_touchPhase == TouchPhase::None || _touchPhase == TouchPhase::Ignored || finger != _touchFinger) {
             return;
         }
         updateGestures(time); // A long press may be due first
@@ -1192,12 +1269,19 @@ namespace psychic_ui {
         }
     }
 
-    void Window::handleTouchRelease(const float x, const float y, const GestureTime time) {
-        if (_touchPhase == TouchPhase::None) {
+    void Window::handleTouchRelease(const float x, const float y, const GestureTime time, const std::uint64_t finger) {
+        if (_touchPhase == TouchPhase::Pinching) {
+            if (finger == _touchFinger || finger == _pinchFinger) {
+                handleTouchMove(x, y, time, finger); // Where it lifted
+                pinchEnd(finger);
+            }
+            return;
+        }
+        if (_touchPhase == TouchPhase::None || finger != _touchFinger) {
             return;
         }
         if (x != _touchX || y != _touchY) {
-            handleTouchMove(x, y, time);
+            handleTouchMove(x, y, time, finger);
         }
         updateGestures(time); // A long press may be due first
 
@@ -1226,14 +1310,15 @@ namespace psychic_ui {
         touchEnd();
     }
 
-    void Window::handleTouchCancel(const GestureTime /*time*/) {
-        if (_touchPhase == TouchPhase::Pressing) {
-            // Released, without a click
-            _buttons &= ~static_cast<unsigned>(_touchButton);
-            Div::handleMouseRelease(touchEvent(_touchX, _touchY, _touchButton, false));
+    void Window::handleTouchCancel(const GestureTime /*time*/, const std::uint64_t finger) {
+        if (_touchPhase == TouchPhase::Pinching) {
+            if (finger == _touchFinger || finger == _pinchFinger) {
+                pinchEnd(finger);
+            }
+            return;
         }
-        if (_touchPhase != TouchPhase::None) {
-            touchEnd();
+        if (_touchPhase != TouchPhase::None && finger == _touchFinger) {
+            touchAbort();
         }
     }
 
@@ -1241,6 +1326,9 @@ namespace psychic_ui {
         if (_touchPhase == TouchPhase::Pending && now - _touchStart >= longPressDelay) {
             // A long press: the context press, a right button press, released when the finger lifts
             touchPressButton(MouseButton::RIGHT);
+        }
+        if (_touchPhase == TouchPhase::Pinching) {
+            pinchZoom();
         }
 
         if (!_flinging) {

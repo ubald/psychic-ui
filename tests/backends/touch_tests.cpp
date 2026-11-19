@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <memory>
 #include <vector>
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <psychic-ui/components/Button.hpp>
 #include <psychic-ui/components/CheckBox.hpp>
@@ -83,6 +84,7 @@ namespace {
         int                      pressX{-1};
         int                      pressY{-1};
         int                      moves{0};
+        std::vector<ZoomEvent>   zooms{};
 
         TouchFixture() {
             target.width(100.0f).height(100.0f);
@@ -96,6 +98,7 @@ namespace {
             target.onMouseRelease([this]() { ++releases; });
             target.onClick([this]() { ++clicks; });
             window->onMouseMove([this]() { ++moves; });
+            window->onZoom([this](const ZoomEvent &event) { zooms.push_back(event); });
         }
     };
 
@@ -282,6 +285,141 @@ TEST_CASE("Touch: a drag across a vertical scroller drags what is under the fing
     CHECK(fixture.contentPresses == 1);
     CHECK(fixture.viewport.scrollY() == 0);
     fixture.window->handleTouchRelease(80.0f, 52.0f, 1s + 40ms);
+}
+
+TEST_CASE("Touch: two fingers spreading zoom in around their center", "[backend][touch][zoom]") {
+    TouchFixture fixture;
+    fixture.window->handleTouchPress(100.0f, 50.0f, 1s, 1);
+    fixture.window->handleTouchPress(200.0f, 50.0f, 1s + 10ms, 2);
+    fixture.window->updateGestures(1s + 10ms);
+    CHECK(fixture.zooms.empty());
+
+    // Both fingers' moves, then a frame: one zoom, twice as close around 150
+    fixture.window->handleTouchMove(50.0f, 50.0f, 1s + 20ms, 1);
+    fixture.window->handleTouchMove(250.0f, 50.0f, 1s + 20ms, 2);
+    CHECK(fixture.zooms.empty());
+    fixture.window->updateGestures(1s + 25ms);
+    REQUIRE(fixture.zooms.size() == 1);
+    const ZoomEvent &zoom = fixture.zooms.front();
+    CHECK(zoom.scale == Catch::Approx(2.0f));
+    CHECK(zoom.windowX == Catch::Approx(150.0f));
+    CHECK(zoom.windowY == Catch::Approx(50.0f));
+    CHECK(zoom.panX == Catch::Approx(0.0f));
+    CHECK(zoom.panY == Catch::Approx(0.0f));
+    CHECK(zoom.source == InputMode::Touch);
+    fixture.window->updateGestures(1s + 30ms);
+    CHECK(fixture.zooms.size() == 1); // Nothing moved since
+
+    // A finger lifting elsewhere than it last moved zooms at once
+    fixture.window->handleTouchRelease(0.0f, 50.0f, 1s + 40ms, 1);
+    REQUIRE(fixture.zooms.size() == 2);
+    CHECK(fixture.zooms[1].scale == Catch::Approx(1.25f));
+    fixture.window->handleTouchRelease(250.0f, 50.0f, 1s + 50ms, 2);
+    CHECK(fixture.zooms.size() == 2);
+    CHECK(fixture.presses == 0);
+    CHECK(fixture.clicks == 0);
+}
+
+TEST_CASE("Touch: two fingers moving together pan", "[backend][touch][zoom]") {
+    TouchFixture fixture;
+    fixture.window->handleTouchPress(100.0f, 50.0f, 1s, 1);
+    fixture.window->handleTouchPress(200.0f, 50.0f, 1s + 10ms, 2);
+    fixture.window->handleTouchMove(130.0f, 50.0f, 1s + 20ms, 1);
+    fixture.window->handleTouchMove(230.0f, 50.0f, 1s + 20ms, 2);
+    fixture.window->updateGestures(1s + 25ms);
+    REQUIRE(fixture.zooms.size() == 1);
+    const ZoomEvent &zoom = fixture.zooms.front();
+    CHECK(zoom.scale == Catch::Approx(1.0f));
+    CHECK(zoom.panX == Catch::Approx(30.0f));
+    CHECK(zoom.panY == Catch::Approx(0.0f));
+    CHECK(zoom.windowX == Catch::Approx(180.0f));
+}
+
+TEST_CASE("Touch: a second finger turns a pan into a pinch", "[backend][touch][scroll][zoom]") {
+    ScrollFixture          fixture;
+    std::vector<ZoomEvent> zooms{};
+    fixture.viewport.onZoom([&](const ZoomEvent &event) { zooms.push_back(event); });
+
+    // A fast pan, which would fling if lifted
+    fixture.window->handleTouchPress(50.0f, 90.0f, 1s, 1);
+    fixture.window->handleTouchMove(50.0f, 70.0f, 1s + 10ms, 1);
+    fixture.window->handleTouchMove(50.0f, 50.0f, 1s + 20ms, 1);
+    REQUIRE(fixture.viewport.scrollY() == -40);
+
+    fixture.window->handleTouchPress(50.0f, 10.0f, 1s + 25ms, 2);
+    fixture.window->handleTouchMove(50.0f, 70.0f, 1s + 30ms, 1);
+    fixture.window->handleTouchMove(50.0f, 5.0f, 1s + 30ms, 2);
+    fixture.window->updateGestures(1s + 32ms);
+    CHECK(fixture.viewport.scrollY() == -40); // The pan stopped
+    REQUIRE(zooms.size() == 1);
+    CHECK(zooms.front().source == InputMode::Touch);
+    CHECK(zooms.front().scale == Catch::Approx(65.0f / 40.0f));
+
+    fixture.window->handleTouchRelease(50.0f, 70.0f, 1s + 35ms, 1);
+    fixture.window->handleTouchRelease(50.0f, 5.0f, 1s + 35ms, 2);
+    CHECK_FALSE(fixture.window->flinging());
+    CHECK(fixture.contentPresses == 0);
+}
+
+TEST_CASE("Touch: a second finger releases a drag without clicking", "[backend][touch][zoom]") {
+    TouchFixture fixture;
+    fixture.window->handleTouchPress(20.0f, 20.0f, 1s, 1);
+    fixture.window->handleTouchMove(40.0f, 20.0f, 1s + 10ms, 1);
+    REQUIRE(fixture.presses == 1);
+    fixture.window->handleTouchPress(60.0f, 60.0f, 1s + 20ms, 2);
+    CHECK(fixture.releases == 1);
+    CHECK(fixture.clicks == 0);
+    const int movesBefore = fixture.moves;
+    fixture.window->handleTouchMove(45.0f, 20.0f, 1s + 30ms, 1);
+    fixture.window->updateGestures(1s + 35ms);
+    CHECK(fixture.moves == movesBefore); // Pinching, no longer dragging
+    CHECK(fixture.zooms.size() == 1);
+    fixture.window->handleTouchRelease(45.0f, 20.0f, 1s + 40ms, 1);
+    fixture.window->handleTouchRelease(60.0f, 60.0f, 1s + 40ms, 2);
+    CHECK(fixture.presses == 1);
+    CHECK(fixture.releases == 1);
+    CHECK(fixture.clicks == 0);
+}
+
+TEST_CASE("Touch: lifting one finger of a pinch doesn't tap", "[backend][touch][zoom]") {
+    TouchFixture fixture;
+    fixture.window->handleTouchPress(20.0f, 20.0f, 1s, 1);
+    fixture.window->handleTouchPress(60.0f, 60.0f, 1s + 10ms, 2);
+    fixture.window->handleTouchRelease(20.0f, 20.0f, 1s + 50ms, 1);
+
+    // The other finger does nothing more: no zoom, no tap, no drag, no long press
+    const int movesBefore = fixture.moves;
+    fixture.window->handleTouchMove(90.0f, 60.0f, 1s + 60ms, 2);
+    fixture.window->updateGestures(3s);
+    CHECK(fixture.moves == movesBefore);
+    fixture.window->handleTouchRelease(90.0f, 60.0f, 3s, 2);
+    CHECK(fixture.zooms.empty());
+    CHECK(fixture.presses == 0);
+    CHECK(fixture.clicks == 0);
+
+    // The next finger taps again
+    fixture.window->handleTouchPress(20.0f, 20.0f, 4s, 3);
+    fixture.window->handleTouchRelease(20.0f, 20.0f, 4s + 50ms, 3);
+    CHECK(fixture.clicks == 1);
+}
+
+TEST_CASE("Touch: a third finger is ignored", "[backend][touch][zoom]") {
+    TouchFixture fixture;
+    fixture.window->handleTouchPress(100.0f, 50.0f, 1s, 1);
+    fixture.window->handleTouchPress(200.0f, 50.0f, 1s + 10ms, 2);
+    fixture.window->handleTouchPress(150.0f, 90.0f, 1s + 20ms, 3);
+    fixture.window->handleTouchMove(150.0f, 10.0f, 1s + 30ms, 3);
+    fixture.window->updateGestures(1s + 35ms);
+    CHECK(fixture.zooms.empty());
+    fixture.window->handleTouchRelease(150.0f, 10.0f, 1s + 40ms, 3);
+
+    // The pinch goes on
+    fixture.window->handleTouchMove(0.0f, 50.0f, 1s + 50ms, 1);
+    fixture.window->updateGestures(1s + 55ms);
+    REQUIRE(fixture.zooms.size() == 1);
+    CHECK(fixture.zooms[0].scale == Catch::Approx(2.0f));
+    CHECK(fixture.zooms[0].windowX == Catch::Approx(100.0f));
+    CHECK(fixture.presses == 0);
 }
 
 namespace {

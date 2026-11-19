@@ -168,12 +168,6 @@ namespace psychic_ui {
         [[nodiscard]] virtual WindowScale windowScale() const;
 
         /**
-         * The finger the window follows (the first one down on a touch screen), while one is down
-         */
-        bool         _fingerDown{false};
-        SDL_FingerID _finger{0};
-
-        /**
          * Buttons held with the pen, mouse style (the tip is the left button)
          */
         unsigned _penButtons{0};

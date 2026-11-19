@@ -787,9 +787,57 @@ TEST_CASE("SDL3: a trackpad's fingers don't switch to touch", "[backend][sdl3][t
     CHECK(sdl.finger(SDL_EVENT_FINGER_UP, 40.0f, 40.0f, 1080, trackpad));
     CHECK(sdl.window->inputMode() == InputMode::Pointer);
     CHECK(presses == 0); // The mouse it moves does the clicking
+
+    // Nor do two of them pinch: the trackpad's own pinch events do
+    std::vector<ZoomEvent> zooms{};
+    sdl.window->onZoom([&](const ZoomEvent &event) { zooms.push_back(event); });
+    CHECK(sdl.finger(SDL_EVENT_FINGER_DOWN, 20.0f, 20.0f, 2000, trackpad, 1));
+    CHECK(sdl.finger(SDL_EVENT_FINGER_DOWN, 60.0f, 20.0f, 2010, trackpad, 2));
+    CHECK(sdl.finger(SDL_EVENT_FINGER_MOTION, 90.0f, 20.0f, 2020, trackpad, 2));
+    CHECK(sdl.finger(SDL_EVENT_FINGER_UP, 20.0f, 20.0f, 2030, trackpad, 1));
+    CHECK(sdl.finger(SDL_EVENT_FINGER_UP, 90.0f, 20.0f, 2030, trackpad, 2));
+    CHECK(zooms.empty());
+    CHECK(sdl.window->inputMode() == InputMode::Pointer);
 }
 
-TEST_CASE("SDL3: touch drags, long presses and a second finger", "[backend][sdl3][touch]") {
+TEST_CASE("SDL3: a second finger on a touch screen pinches", "[backend][sdl3][touch][zoom]") {
+    SDL3Fixture sdl;
+    auto &div = sdl.window->appContainer().add<Div>();
+    div.width(300.0f).height(300.0f);
+    sdl.layout();
+    int                    presses  = 0;
+    int                    releases = 0;
+    int                    clicks   = 0;
+    std::vector<ZoomEvent> zooms{};
+    div.onMousePress([&]() { ++presses; });
+    div.onMouseRelease([&]() { ++releases; });
+    div.onClick([&]() { ++clicks; });
+    div.onZoom([&](const ZoomEvent &event) { zooms.push_back(event); });
+
+    // A drag, which the second finger ends without a click
+    CHECK(sdl.finger(SDL_EVENT_FINGER_DOWN, 100.0f, 50.0f, 1000));
+    CHECK(sdl.finger(SDL_EVENT_FINGER_MOTION, 120.0f, 50.0f, 1010));
+    CHECK(presses == 1);
+    CHECK(sdl.finger(SDL_EVENT_FINGER_DOWN, 220.0f, 50.0f, 1020, touchScreen, 2));
+    CHECK(releases == 1);
+    CHECK(zooms.empty());
+
+    // Spread apart, twice as far, then lifted
+    CHECK(sdl.finger(SDL_EVENT_FINGER_MOTION, 70.0f, 50.0f, 1030));
+    CHECK(sdl.finger(SDL_EVENT_FINGER_MOTION, 270.0f, 50.0f, 1030, touchScreen, 2));
+    sdl.window->updateGestures(std::chrono::milliseconds(1035));
+    REQUIRE(zooms.size() == 1);
+    CHECK(zooms[0].scale == Catch::Approx(2.0f));
+    CHECK(zooms[0].windowX == Catch::Approx(170.0f));
+    CHECK(zooms[0].source == InputMode::Touch);
+    CHECK(sdl.finger(SDL_EVENT_FINGER_UP, 270.0f, 50.0f, 1040, touchScreen, 2));
+    CHECK(sdl.finger(SDL_EVENT_FINGER_UP, 70.0f, 50.0f, 1050));
+    CHECK(zooms.size() == 1);
+    CHECK(presses == 1);
+    CHECK(clicks == 0);
+}
+
+TEST_CASE("SDL3: touch drags and long presses", "[backend][sdl3][touch]") {
     SDL3Fixture sdl;
     auto &div = sdl.window->appContainer().add<Div>();
     div.width(100.0f).height(100.0f);
@@ -805,13 +853,8 @@ TEST_CASE("SDL3: touch drags, long presses and a second finger", "[backend][sdl3
     CHECK(presses.empty());
     CHECK(sdl.finger(SDL_EVENT_FINGER_MOTION, 60.0f, 20.0f, 1020));
     CHECK(presses == std::vector{MouseButton::LEFT});
-    const int movesBefore = moves;
-    // A second finger is ignored
-    CHECK(sdl.finger(SDL_EVENT_FINGER_DOWN, 80.0f, 80.0f, 1025, touchScreen, 2));
-    CHECK(sdl.finger(SDL_EVENT_FINGER_MOTION, 90.0f, 90.0f, 1030, touchScreen, 2));
-    CHECK(moves == movesBefore);
+    CHECK(moves > 0);
     CHECK(sdl.finger(SDL_EVENT_FINGER_UP, 60.0f, 20.0f, 1040));
-    CHECK(sdl.finger(SDL_EVENT_FINGER_UP, 90.0f, 90.0f, 1045, touchScreen, 2));
 
     // Held, a right button press, timed by SDL's timestamps
     CHECK(sdl.finger(SDL_EVENT_FINGER_DOWN, 20.0f, 20.0f, 2000));
