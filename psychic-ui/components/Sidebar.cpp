@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -30,10 +31,90 @@ namespace psychic_ui {
         _count = &add<Label>();
         _count->addClassName("count")
               .display(Display::None);
+        _disclosure = &add<Icon>("disclosure");
+        _disclosure->addClassName("disclosure")
+                   .display(Display::None);
+
+        clicked.subscribe(
+            [this](const MouseEvent &click) {
+                if (_enabled && onDisclosure(click)) {
+                    toggle();
+                }
+            }
+        );
     }
 
     Sidebar *SidebarItem::sidebar() {
         return dynamic_cast<Sidebar *>(group());
+    }
+
+    SidebarItem &SidebarItem::item(const std::string &label, const std::string &icon) {
+        if (!_children) {
+            _children = std::make_shared<Div>();
+            _children->addClassName("children")
+                     .display(_expanded ? Display::Flex : Display::None);
+            _disclosure->display(Display::Flex);
+            placeChildren();
+        }
+        auto &child       = _children->add<SidebarItem>(label, icon);
+        child._parentItem = this;
+        return child;
+    }
+
+    std::vector<SidebarItem *> SidebarItem::items() const {
+        std::vector<SidebarItem *> items{};
+        if (_children) {
+            for (const auto &child: _children->children()) {
+                if (auto item = std::dynamic_pointer_cast<SidebarItem>(child)) {
+                    items.push_back(item.get());
+                }
+            }
+        }
+        return items;
+    }
+
+    void SidebarItem::added() {
+        SelectableRow::added();
+        placeChildren();
+    }
+
+    void SidebarItem::placeChildren() {
+        Div *container = parent();
+        if (_children && container && _children->parent() != container) {
+            container->add(static_cast<unsigned int>(container->childIndex(this) + 1), _children);
+        }
+    }
+
+    void SidebarItem::removed() {
+        if (_children && _children->parent()) {
+            _children->parent()->remove(*_children);
+        }
+        SelectableRow::removed();
+    }
+
+    void SidebarItem::updateExpanded(const bool expanded) {
+        if (expanded == _expanded) {
+            return;
+        }
+        _expanded = expanded;
+        _disclosure->name(_expanded ? "chevron-down" : "disclosure");
+        if (_children) {
+            _children->display(_expanded ? Display::Flex : Display::None);
+        }
+        if (_expanded) {
+            addClassName("expanded");
+        } else {
+            removeClassName("expanded");
+            if (Sidebar *bar = sidebar()) {
+                bar->collapsed(*this);
+            }
+        }
+    }
+
+    bool SidebarItem::onDisclosure(const MouseEvent &click) const {
+        // From the chevron's left edge to the row's end; a click made by a key is the row's
+        return !click.fromKeyboard && _disclosure->visible() && _children && !_children->children().empty()
+               && click.x >= static_cast<float>(_disclosure->x());
     }
 
     void SidebarItem::updateIcon(const std::string_view icon) {
@@ -70,15 +151,17 @@ namespace psychic_ui {
             .alignItems(Align::Center)
             .shrink(0);
 
-        _controls = &add<WindowControls>();
+        _controls = std::make_shared<WindowControls>();
+        add(_controls);
 
-        _brand = &add<Div>();
+        _identity = &add<Div>();
+        _identity->addClassName("identity")
+                 .direction(Direction::Column)
+                 .grow(1)
+                 .shrink(1);
+
+        _brand = &_identity->add<Div>();
         _brand->addClassName("brand");
-
-        auto &mark = _brand->add<Div>();
-        mark.addClassName("mark")
-            .display(Display::None);
-        _mark = &mark.add<Label>();
 
         _title = &_brand->add<Label>();
         _title->addClassName("title");
@@ -86,13 +169,54 @@ namespace psychic_ui {
         _brand->add<Icon>("chevron-down").addClassName("chevron");
     }
 
+    bool SidebarHeader::windowControls() const {
+        return _controls->parent() == this;
+    }
+
+    void SidebarHeader::updateWindowControls(const bool shown) {
+        if (shown && !windowControls()) {
+            add(0, _controls);
+        } else if (!shown) {
+            remove(*_controls);
+        }
+    }
+
+    Div &SidebarHeader::mark() {
+        if (!_mark) {
+            _mark = &_brand->add(0, std::make_shared<Div>());
+            _mark->addClassName("mark");
+        }
+        return *_mark;
+    }
+
+    Div &SidebarHeader::details() {
+        if (!_details) {
+            _details = &_identity->add<Div>();
+            _details->addClassName("details");
+        }
+        return *_details;
+    }
+
     void SidebarHeader::setTitle(const std::string &title) {
         _title->text(title);
     }
 
     void SidebarHeader::setMark(const std::string &mark) {
-        _mark->text(mark);
-        _mark->parent()->display(mark.empty() ? Display::None : Display::Flex);
+        if (!mark.empty()) {
+            if (!_letters) {
+                _letters = &this->mark().add<Label>();
+            }
+            _letters->text(mark);
+            return;
+        }
+        if (_letters) {
+            _mark->remove(*_letters);
+            _letters = nullptr;
+        }
+        if (_mark && _mark->childCount() == 0) {
+            _brand->remove(*_mark);
+            _mark = nullptr;
+        }
     }
 
     void SidebarHeader::addedToRender() {
@@ -140,6 +264,51 @@ namespace psychic_ui {
         return items;
     }
 
+    namespace {
+        /**
+         * Whether an item isn't hidden in a collapsed parent
+         */
+        bool shown(const SidebarItem &item) {
+            for (const SidebarItem *parent = item.parentItem(); parent; parent = parent->parentItem()) {
+                if (!parent->expanded()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /**
+         * The item itself if it shows, else its outermost collapsed parent, which shows
+         */
+        const SidebarItem *shownItem(const SidebarItem &item) {
+            const SidebarItem *found = &item;
+            for (const SidebarItem *parent = item.parentItem(); parent; parent = parent->parentItem()) {
+                if (!parent->expanded()) {
+                    found = parent;
+                }
+            }
+            return found;
+        }
+
+        /**
+         * Whether an item is nested in another one, at any depth
+         */
+        bool nestedIn(const SidebarItem *item, const SidebarItem &ancestor) {
+            for (const SidebarItem *parent = item ? item->parentItem() : nullptr; parent; parent = parent->parentItem()) {
+                if (parent == &ancestor) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    std::vector<SelectableRow *> Sidebar::rows() const {
+        std::vector<SelectableRow *> rows{};
+        std::ranges::copy_if(items(), std::back_inserter(rows), [](const SidebarItem *item) { return shown(*item); });
+        return rows;
+    }
+
     SidebarItem *Sidebar::current() const {
         // The selection, found among the items (a row of another kind is none of them)
         const auto all = items();
@@ -148,20 +317,72 @@ namespace psychic_ui {
     }
 
     void Sidebar::selectionUpdated() {
+        const SidebarItem *item = current();
+        for (SidebarItem *parent = item ? item->parentItem() : nullptr; parent; parent = parent->parentItem()) {
+            parent->expanded(true);
+        }
+        for (SidebarItem *other: items()) {
+            if (nestedIn(item, *other)) {
+                other->addClassName("has-current");
+            } else {
+                other->removeClassName("has-current");
+            }
+        }
         changed.emit(current());
     }
 
-    bool Sidebar::handleRowKey(SelectableRow *row, const Key key, const Mod mod) {
-        if (key == Key::ENTER || key == Key::KP_ENTER || key == Key::SPACE) {
-            // Clicks the focused item, at its center
-            if (row && row->enabled() && row->hasFocus()) {
-                MouseEvent click = row->mouseEventAtCenter();
-                click.button     = MouseButton::LEFT;
-                row->clicked.emit(click);
-            }
-            return true;
+    SelectableRow *Sidebar::restingTabStop() const {
+        const SidebarItem *item = current();
+        if (!item) {
+            return _selection;
         }
-        return RowGroup::handleRowKey(row, key, mod);
+        // Among the rows the keyboard moves along, which it shows in
+        const auto all = rows();
+        const auto it  = std::ranges::find(all, shownItem(*item));
+        return it != all.end() ? *it : _selection;
+    }
+
+    void Sidebar::collapsed(SidebarItem &item) {
+        bool refocus = false;
+        for (const SidebarItem *other: items()) {
+            refocus = refocus || (other->hasFocus() && nestedIn(other, item));
+        }
+        if (Window *win = window(); win && refocus) {
+            win->requestFocus(&item, win->focusVisible());
+        }
+        if (nestedIn(dynamic_cast<SidebarItem *>(_tabStop), item)) {
+            updateTabStop(&item);
+        }
+    }
+
+    bool Sidebar::handleRowKey(SelectableRow *row, const Key key, const Mod mod) {
+        auto *item = dynamic_cast<SidebarItem *>(row);
+        switch (key) {
+            case Key::ENTER:
+            case Key::KP_ENTER:
+            case Key::SPACE:
+                // Clicks the focused item, at its center
+                if (row && row->enabled() && row->hasFocus()) {
+                    MouseEvent click = row->mouseEventAtCenter();
+                    click.button     = MouseButton::LEFT;
+                    row->clicked.emit(click);
+                }
+                return true;
+            case Key::RIGHT:
+                if (item && !item->items().empty()) {
+                    item->expanded(true);
+                }
+                return true;
+            case Key::LEFT:
+                if (item && !item->items().empty() && item->expanded()) {
+                    item->expanded(false);
+                } else if (item && item->parentItem()) {
+                    moveTo(item->parentItem());
+                }
+                return true;
+            default:
+                return RowGroup::handleRowKey(row, key, mod);
+        }
     }
 
     // endregion

@@ -277,7 +277,7 @@ namespace psychic_ui {
             .backgroundColor(palette.surface);
 
         rule("SidebarHeader")
-            .height(bar(metrics.barHeader))
+            .minHeight(bar(metrics.barHeader))
             .borderBottom(metrics.border)
             .borderColor(palette.line);
 
