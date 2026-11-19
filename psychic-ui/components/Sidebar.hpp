@@ -192,27 +192,76 @@ namespace psychic_ui {
     /**
      * @class SidebarHeader
      *
-     * The sidebar's top band: the window controls, then the app's mark and name (the `.brand` part, with `.mark`,
-     * `.title` and `.chevron`). It is the window's drag area.
+     * The sidebar's top band, the window's drag area: the window controls (`windowControls(false)` leaves them out,
+     * for an app that puts them elsewhere), then the `.identity` column: the `.brand` row (the app's `.mark`, its
+     * `.title` and a `.chevron`), and the `.details` under it. What the app adds to `mark()` takes the letters'
+     * place (its own drawing), what it adds to `details()` goes under the brand (a document's name, a place), and
+     * the brand becomes a menu trigger once it has a `clicked` subscriber (which the drag area leaves to it).
+     *
+     *     auto &header = sidebar.header().windowControls(false);
+     *     header.mark().add<Logo>();
+     *     header.details().add<Label>("Summer Tour");
+     *     header.brand().onClick([this] { openAppMenu(); });
      */
     class SidebarHeader : public Div {
     public:
         SidebarHeader();
 
+        /**
+         * The window controls, in the header unless `windowControls(false)`
+         */
         WindowControls &controls() const { return *_controls; }
+
+        /**
+         * Whether the window controls are in the header (they are at first)
+         */
+        bool windowControls() const;
+
+        /**
+         * Put the window controls first in the header, or take them out of it
+         */
+        template<class Self>
+        Self &windowControls(this Self &self, detail::BoolArg shown) {
+            static_cast<SidebarHeader &>(self).updateWindowControls(shown.value);
+            return self;
+        }
+
+        /**
+         * The `.brand` part: the app's mark, its name and a chevron
+         */
+        Div &brand() const { return *_brand; }
+
+        /**
+         * The `.mark` part, first in the brand, made when first set or asked for: the letters `setMark` puts in it,
+         * or what the app adds to it in their place
+         */
+        Div &mark();
+
+        /**
+         * The `.details` part, under the brand, made when first asked for: what the app adds to it
+         */
+        Div &details();
 
         std::string title() const { return _title->text(); }
 
         void setTitle(const std::string &title);
+
+        /**
+         * A letter or two on the accent, in the `.mark` part; "" for none (the part goes when nothing else is in it)
+         */
         void setMark(const std::string &mark);
 
     protected:
+        std::shared_ptr<WindowControls> _controls{}; // Ours, and our child while shown
         // Children: our child list owns them
-        WindowControls *_controls{nullptr};
-        Div            *_brand{nullptr};
-        Label          *_mark{nullptr};
-        Label          *_title{nullptr};
+        Div   *_identity{nullptr};
+        Div   *_brand{nullptr};
+        Div   *_mark{nullptr};
+        Label *_letters{nullptr};
+        Label *_title{nullptr};
+        Div   *_details{nullptr};
 
+        void updateWindowControls(bool shown);
         void addedToRender() override;
     };
 

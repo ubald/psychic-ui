@@ -1033,10 +1033,11 @@ namespace psychic_ui {
             .width(metrics.sidebarWidth)
             .backgroundColor(palette.frame);
 
-        // The header: the window controls, then the app's mark and name, lit like the rows
+        // The header: the window controls, then the app's mark and name, lit like the rows, and what the app puts
+        // under them
         rule("SidebarHeader")
             .gap(metrics.space(2.5f))
-            .height(metrics.barHeader)
+            .minHeight(metrics.barHeader)
             .paddingLeft(metrics.space(3.5f))
             .paddingRight(metrics.space(2.5f));
 

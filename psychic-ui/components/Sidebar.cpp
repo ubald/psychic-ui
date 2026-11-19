@@ -151,15 +151,17 @@ namespace psychic_ui {
             .alignItems(Align::Center)
             .shrink(0);
 
-        _controls = &add<WindowControls>();
+        _controls = std::make_shared<WindowControls>();
+        add(_controls);
 
-        _brand = &add<Div>();
+        _identity = &add<Div>();
+        _identity->addClassName("identity")
+                 .direction(Direction::Column)
+                 .grow(1)
+                 .shrink(1);
+
+        _brand = &_identity->add<Div>();
         _brand->addClassName("brand");
-
-        auto &mark = _brand->add<Div>();
-        mark.addClassName("mark")
-            .display(Display::None);
-        _mark = &mark.add<Label>();
 
         _title = &_brand->add<Label>();
         _title->addClassName("title");
@@ -167,13 +169,54 @@ namespace psychic_ui {
         _brand->add<Icon>("chevron-down").addClassName("chevron");
     }
 
+    bool SidebarHeader::windowControls() const {
+        return _controls->parent() == this;
+    }
+
+    void SidebarHeader::updateWindowControls(const bool shown) {
+        if (shown && !windowControls()) {
+            add(0, _controls);
+        } else if (!shown) {
+            remove(*_controls);
+        }
+    }
+
+    Div &SidebarHeader::mark() {
+        if (!_mark) {
+            _mark = &_brand->add(0, std::make_shared<Div>());
+            _mark->addClassName("mark");
+        }
+        return *_mark;
+    }
+
+    Div &SidebarHeader::details() {
+        if (!_details) {
+            _details = &_identity->add<Div>();
+            _details->addClassName("details");
+        }
+        return *_details;
+    }
+
     void SidebarHeader::setTitle(const std::string &title) {
         _title->text(title);
     }
 
     void SidebarHeader::setMark(const std::string &mark) {
-        _mark->text(mark);
-        _mark->parent()->display(mark.empty() ? Display::None : Display::Flex);
+        if (!mark.empty()) {
+            if (!_letters) {
+                _letters = &this->mark().add<Label>();
+            }
+            _letters->text(mark);
+            return;
+        }
+        if (_letters) {
+            _mark->remove(*_letters);
+            _letters = nullptr;
+        }
+        if (_mark && _mark->childCount() == 0) {
+            _brand->remove(*_mark);
+            _mark = nullptr;
+        }
     }
 
     void SidebarHeader::addedToRender() {

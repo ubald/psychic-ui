@@ -457,3 +457,49 @@ TEST_CASE("Sidebar: the keyboard walks the nested items", "[components][appshell
     CHECK(s.patch->hasFocus());
     CHECK(sidebar.current() == s.bank2);
 }
+
+TEST_CASE("Sidebar: a header without window controls, with the app's mark and lines under its name", "[components][appshell][sidebar][drag]") {
+    Shell s;
+    SidebarHeader &header = s.shell.sidebar().header();
+    CHECK(header.windowControls());
+    CHECK(header.controls().parent() == &header);
+
+    header.windowControls(false);
+    s.layout();
+    CHECK_FALSE(header.windowControls());
+    CHECK(header.controls().parent() == nullptr);
+    // Nothing of it is left to Tab to: the first Tab lands on the first item
+    s.key(Key::TAB);
+    CHECK(s.inbox->hasFocus());
+
+    // The app's own mark in place of the letters, and lines under the name
+    auto &mark = header.mark().add<Div>().size(20, 20);
+    auto &show = header.details().add<Label>("Summer Tour");
+    auto &venue = header.details().add<Label>("Main Hall");
+    s.layout();
+    const auto [markX, markY]   = Shell::origin(mark);
+    const auto [titleX, titleY] = Shell::origin(*header.brand().at(1));
+    const auto [showX, showY]   = Shell::origin(show);
+    const auto [venueX, venueY] = Shell::origin(venue);
+    CHECK(mark.getWidth() == 20);
+    CHECK(markX < titleX);
+    CHECK(showY > titleY);
+    CHECK(venueY > showY);
+    CHECK(header.getHeight() >= header.brand().getHeight() + show.getHeight() + venue.getHeight());
+
+    // Still the drag area, over the lines too; the brand made a menu trigger isn't
+    const auto [lineX, lineY] = Shell::center(venue);
+    CHECK(s.window->isDragArea(lineX, lineY));
+    int menus = 0;
+    header.brand().onClick([&]() { ++menus; });
+    const auto [brandX, brandY] = Shell::center(header.brand());
+    CHECK_FALSE(s.window->isDragArea(brandX, brandY));
+    s.click(header.brand());
+    CHECK(menus == 1);
+
+    // Back on: first again
+    header.windowControls(true);
+    s.layout();
+    CHECK(header.controls().parent() == &header);
+    CHECK(header.at(0) == &header.controls());
+}
