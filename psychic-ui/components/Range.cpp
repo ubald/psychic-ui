@@ -10,9 +10,10 @@ namespace psychic_ui::internal {
         Component<RangeSkin>() {
         _focusEnabled = true; // Tab reaches it; the arrows, Home and End move it
 
+        // Uses the arrows, Home and End, bare or with Shift (a larger step); the rest goes up to the app's shortcuts
         const auto key = [this](const Key key, const Mod modifiers) {
-            if (!_enabled) {
-                return;
+            if (!_enabled || modifiers.ctrl || modifiers.alt || modifiers.super) {
+                return false;
             }
             const float step  = modifiers.shift ? 0.1f : 0.01f;
             const float value = getLinearPercentage();
@@ -20,19 +21,19 @@ namespace psychic_ui::internal {
                 case Key::RIGHT:
                 case Key::UP:
                     setLinearPercentage(std::clamp(value + step, 0.0f, 1.0f));
-                    break;
+                    return true;
                 case Key::LEFT:
                 case Key::DOWN:
                     setLinearPercentage(std::clamp(value - step, 0.0f, 1.0f));
-                    break;
+                    return true;
                 case Key::HOME:
                     setLinearPercentage(0.0f);
-                    break;
+                    return true;
                 case Key::END:
                     setLinearPercentage(1.0f);
-                    break;
+                    return true;
                 default:
-                    break;
+                    return false;
             }
         };
         keyPressed.subscribe(key);

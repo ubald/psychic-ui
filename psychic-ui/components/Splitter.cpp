@@ -41,7 +41,8 @@ namespace psychic_ui {
             }
         );
 
-        _divider->onKeyPress([this](const Key key, const Mod modifiers) { keyDivider(key, modifiers); });
+        _divider->onKeyPress([this](const Key key, const Mod modifiers) { return keyDivider(key, modifiers); });
+        _divider->onKeyRepeat([this](const Key key, const Mod modifiers) { return keyDivider(key, modifiers); });
 
         place();
     }
@@ -62,10 +63,11 @@ namespace psychic_ui {
         moveTo(_pressPosition + (_kept == SplitterPane::First ? delta : -delta));
     }
 
-    void Splitter::keyDivider(const Key key, const Mod modifiers) {
-        // The arrows along the splitter move the divider toward them
-        if (!_enabled) {
-            return;
+    bool Splitter::keyDivider(const Key key, const Mod modifiers) {
+        // The arrows along the splitter, bare or with Shift (ten steps), move the divider toward them; the rest goes
+        // up to the app's shortcuts
+        if (!_enabled || modifiers.ctrl || modifiers.alt || modifiers.super) {
+            return false;
         }
         const bool horizontal = _orientation == Orientation::Horizontal;
         float      toward     = 0; // -1 toward the start, 1 toward the end
@@ -74,10 +76,11 @@ namespace psychic_ui {
         } else if (key == (horizontal ? Key::RIGHT : Key::DOWN)) {
             toward = 1;
         } else {
-            return;
+            return false;
         }
         const float step = toward * keyStep * (modifiers.shift ? shiftSteps : 1.0f);
         moveTo(position() + (_kept == SplitterPane::First ? step : -step));
+        return true;
     }
 
     float Splitter::position() const {
